@@ -1,0 +1,65 @@
+{
+  "out": "/tmp/photonz-playtest/appearance-min",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        320,
+        260
+      ],
+      "to": [
+        620,
+        460
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "a-one"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "b-two"
+    },
+    {
+      "do": "snapshot",
+      "name": "b-two"
+    }
+  ]
+}

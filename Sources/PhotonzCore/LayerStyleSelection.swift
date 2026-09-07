@@ -119,6 +119,15 @@ public struct LayerStyleSelection: Hashable, Sendable {
         !members.isEmpty && members.allSatisfy { $0.style.shadow != nil }
     }
 
+    /// The picked layers with a shadow in a given place in their list, which is
+    /// what one Shadow row in the Appearance list speaks for. A box with two
+    /// shadows picked beside a box with one leaves the second box out of the
+    /// second row, and the row says so.
+    public func shadows(at index: Int) -> LayerStyleSelection {
+        LayerStyleSelection(members: members.filter { $0.style.shadow(at: index) != nil },
+                            selectionCount: selectionCount)
+    }
+
     /// True while some of the picked layers throw a shadow and the rest do not.
     ///
     /// Off is a true answer — none of them have one — so a selection where
@@ -205,7 +214,7 @@ extension PhotonzDocument {
             if isOnDesignedSurface(id) {
                 var probe = layer
                 probe.style = resolved
-                resolved.shadow = probe.drawnShadow(onDesignedSurface: true)
+                resolved.shadows = probe.drawnShadows(onDesignedSurface: true)
             }
             let bounds = layer.localBounds
             members.append(LayerStyleSelection.Member(

@@ -525,7 +525,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         image = blurred(image, radius: layer.style.blurRadius)
         image = rounded(image, box: box, radius: layer.style.cornerRadius)
         image = bordered(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
-        image = shadowed(image, shadow: layer.drawnShadow(onDesignedSurface: onDesignedSurface))
+        image = shadowed(image, shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return faded(image, opacity: layer.style.opacity)
     }
 
@@ -563,7 +563,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         // out of: a label inside a button must not sprout a halo in a drag
         // preview or a layers-list thumbnail that the canvas does not show.
         if document.isOnDesignedSurface(id) {
-            layer.style.shadow = layer.drawnShadow(onDesignedSurface: true)
+            layer.style.shadows = layer.drawnShadows(onDesignedSurface: true)
         }
         // The box the layer occupies: its frame, or for a group the box its
         // contents make (a group's own frame is an anchor with no size). Slide
@@ -781,7 +781,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         // Style: shadow, then opacity last so it fades content, border and
         // shadow together. Text on a designed surface leaves its contrast halo
         // undrawn: a label on a control is not a caption over a screenshot.
-        image = shadowed(image, shadow: layer.drawnShadow(onDesignedSurface: onDesignedSurface))
+        image = shadowed(image, shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return faded(image, opacity: layer.style.opacity)
     }
 
@@ -829,11 +829,36 @@ public final class DocumentRenderer: @unchecked Sendable {
         return ring.composited(over: image).cropped(to: image.extent)
     }
 
-    /// The silhouette tinted, blurred, offset (model y-down → CI y-up), and
-    /// composited underneath. For a group the silhouette is the whole group,
-    /// which is what makes a card cast one shadow instead of three.
-    private func shadowed(_ image: CIImage, shadow: ShadowStyle?) -> CIImage {
-        guard let shadow, shadow.opacity > 0 else { return image }
+    /// Every shadow the layer throws, in the order the Appearance list holds
+    /// them: index 0 is the top of the list and therefore the one nearest the
+    /// eye, so it is composited over the ones below it.
+    ///
+    /// A layer used to have one shadow. It has a list now, because a card wants
+    /// a tight contact shadow AND a wide soft lift, and a field wants one cast
+    /// into it (`docs/design/shape-parts.md`, "How the list grows"). A list of
+    /// one drop shadow paints exactly what one shadow always painted.
+    private func shadowed(_ image: CIImage, shadows: [ShadowStyle]) -> CIImage {
+        let painted = shadows.filter(\.paints)
+        guard !painted.isEmpty else { return image }
+        var result = image
+        // Inside first, so what is cast INTO the layer is part of the layer by
+        // the time anything is thrown behind it. Reversed, so the entry nearest
+        // the top of the list ends up on top of the others.
+        for shadow in painted.filter({ $0.kind == .inner }).reversed() {
+            result = innerShadowed(result, shadow: shadow)
+        }
+        // Then behind, nearest the eye first: each one goes UNDER what is
+        // already there, so the last entry in the list ends up furthest back.
+        for shadow in painted where shadow.kind == .drop {
+            result = result.composited(over: cast(image, shadow: shadow))
+        }
+        return result
+    }
+
+    /// The layer's silhouette tinted, spread, blurred and offset (model y-down
+    /// → CI y-up). For a group the silhouette is the whole group, which is what
+    /// makes a card cast one shadow instead of three.
+    private func cast(_ image: CIImage, shadow: ShadowStyle) -> CIImage {
         let color = ciColor(hex: shadow.colorHex, alpha: shadow.opacity)
         var silhouette = image.applyingFilter("CIColorMatrix", parameters: [
             "inputRVector": CIVector(x: 0, y: 0, z: 0, w: color.red * color.alpha),
@@ -851,11 +876,54 @@ public final class DocumentRenderer: @unchecked Sendable {
             silhouette = silhouette.applyingFilter("CIMorphologyMinimum",
                                                    parameters: ["inputRadius": -shadow.spread])
         }
-        let cast = silhouette
+        return silhouette
             .applyingGaussianBlur(sigma: shadow.radius)
             .transformed(by: CGAffineTransform(translationX: shadow.offset.width,
                                                y: -shadow.offset.height))
-        return image.composited(over: cast)
+    }
+
+    /// The same shadow cast INTO the layer instead of behind it: what makes a
+    /// field look pressed in rather than raised.
+    ///
+    /// Everything OUTSIDE the silhouette is what does the casting, so the band
+    /// of darkness lands under whichever edge the shadow is thrown from. It is
+    /// then clipped back to the silhouette, which is the whole difference from
+    /// a drop shadow: an inner shadow never puts a pixel outside its layer.
+    private func innerShadowed(_ image: CIImage, shadow: ShadowStyle) -> CIImage {
+        let box = image.extent
+        guard !box.isInfinite, !box.isEmpty else { return image }
+        let color = ciColor(hex: shadow.colorHex, alpha: shadow.opacity)
+        // The layer's own alpha, as a mask: what is in, and how much.
+        let mask = image.applyingFilter("CIColorMatrix", parameters: [
+            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 1)
+        ])
+        // How far outside the layer the cast can start and still reach in.
+        let reach = shadow.radius * 3 + max(abs(shadow.offset.width), abs(shadow.offset.height))
+            + max(shadow.spread, 0) + 1
+        let field = box.insetBy(dx: -reach, dy: -reach)
+        // Everything the layer is not, in the shadow's colour.
+        var outside = CIImage(color: color).cropped(to: field)
+            .applyingFilter("CISourceOutCompositing", parameters: [kCIInputBackgroundImageKey: mask])
+        // Spread pulls the darkness further in (or lets it back out), the same
+        // number meaning the same thing as it does on a drop shadow.
+        if shadow.spread > 0 {
+            outside = outside.applyingFilter("CIMorphologyMaximum",
+                                             parameters: ["inputRadius": shadow.spread])
+        } else if shadow.spread < 0 {
+            outside = outside.applyingFilter("CIMorphologyMinimum",
+                                             parameters: ["inputRadius": -shadow.spread])
+        }
+        let inner = outside
+            .applyingGaussianBlur(sigma: shadow.radius)
+            .transformed(by: CGAffineTransform(translationX: shadow.offset.width,
+                                               y: -shadow.offset.height))
+            // Back inside the layer, softly, so a rounded corner or an
+            // antialiased stroke keeps its own edge.
+            .applyingFilter("CISourceInCompositing", parameters: [kCIInputBackgroundImageKey: mask])
+        return inner.composited(over: image).cropped(to: box)
     }
 
     /// Fades the whole picture. For a group that is one fade for the group, not

@@ -48,6 +48,59 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
         case .outline: return "an"
         }
     }
+
+    /// Whether a layer can have more than one of these.
+    ///
+    /// This is the whole difference between a fixed row and a row you added. A
+    /// countable part is added from the plus, removed with a cross and dragged
+    /// into the order it paints in; a part that can only be had once is simply
+    /// there, with a tick, and nothing to remove.
+    ///
+    /// A second shadow is the common want — one tight and dark for contact, one
+    /// wide and soft for lift — and a fixed row cannot hold two. Nobody has
+    /// asked for two fills, and promoting a part when they do is this one word.
+    public var isCountable: Bool {
+        switch self {
+        case .fill, .outline: return false
+        case .shadow: return true
+        }
+    }
+}
+
+/// What the plus at the foot of Appearance offers.
+///
+/// The list is the extension point: a glow or a bevel arrives as another case
+/// here, with the words the menu should say and the part its row becomes, and
+/// nothing about the switch, the remove, the drag or the saved file changes to
+/// accept it.
+///
+/// Inner and outer are a SETTING on one effect rather than two effects, so both
+/// entries below build the same kind of row. The menu still names them in full,
+/// because somebody hunting for an inner shadow is scanning for those two words
+/// and a popup they have not opened yet is not something you can scan.
+public enum AppearanceKind: String, CaseIterable, Hashable, Sendable, Identifiable {
+    case dropShadow
+    case innerShadow
+
+    public var id: String { rawValue }
+
+    /// What the plus menu calls it.
+    public var title: String { shadowKind.addTitle }
+
+    /// The row it becomes once added.
+    public var part: LayerPart {
+        switch self {
+        case .dropShadow, .innerShadow: return .shadow
+        }
+    }
+
+    /// The setting the new entry is born with.
+    public var shadowKind: ShadowKind {
+        switch self {
+        case .dropShadow: return .drop
+        case .innerShadow: return .inner
+        }
+    }
 }
 
 extension Layer {
@@ -138,10 +191,14 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
     /// How many layers are picked altogether, so a row can say what it is
     /// leaving out.
     public let selectionCount: Int
+    /// Where this entry sits in a countable part's list, nearest the eye first.
+    /// Nil for a part a layer can only have one of, which is every row that was
+    /// here before the list could grow.
+    public let index: Int?
 
     public init(part: LayerPart?, colors: [PartColor], title: String,
                 switchIDs: [UUID], onCount: Int, widthIDs: [UUID],
-                selectionCount: Int) {
+                selectionCount: Int, index: Int? = nil) {
         self.part = part
         self.colors = colors
         self.title = title
@@ -149,7 +206,21 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
         self.onCount = onCount
         self.widthIDs = widthIDs
         self.selectionCount = selectionCount
+        self.index = index
     }
+
+    /// Whether this row carries a cross that takes the entry out of the list.
+    ///
+    /// Only an entry of a countable kind does. Two ways to make something go
+    /// away is the real hazard in a list you add to, so on a plain rectangle
+    /// there is exactly one gesture — the tick — and a cross only appears on
+    /// something that was added.
+    public var canRemove: Bool { index != nil && (part?.isCountable ?? false) }
+
+    /// Whether this row can be dragged into a different place. The same rule:
+    /// the order of a list you added to is yours, and the two rows that are
+    /// simply there hold their place.
+    public var canReorder: Bool { canRemove }
 
     /// The colour this row leads with: the one its name field, its saved
     /// colours menu and its picker speak for. Nil for the shadow.
@@ -168,7 +239,10 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
     /// had just opened folded itself away the moment they clicked the other
     /// kind of layer.
     public var id: String {
-        if let part { return part.rawValue }
+        if let part {
+            guard let index else { return part.rawValue }
+            return "\(part.rawValue).\(index)"
+        }
         return "color.\(slot?.rawValue ?? "none")"
     }
 
@@ -213,11 +287,20 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
             lines.append("Applies to \(reach) of the \(selectionCount) selected layers.")
         }
         if isMixed, let part {
-            let verb = onCount == 1 ? "has" : "have"
-            let noun = "\(part.article) \(part.title.lowercased())"
             let of = skips ? "\(onCount) of those"
                 : "\(onCount) of the \(selectionCount) selected layers"
-            lines.append("\(of) \(verb) \(noun). Switching this on gives the rest one too.")
+            if part.isCountable {
+                // Every layer this row reaches HAS the entry — it is the same
+                // place in each of their lists — so what they disagree about is
+                // whether it is switched on.
+                let verb = onCount == 1 ? "has" : "have"
+                lines.append("\(of) \(verb) it switched on. "
+                    + "Switching this on turns the rest on too.")
+            } else {
+                let verb = onCount == 1 ? "has" : "have"
+                let noun = "\(part.article) \(part.title.lowercased())"
+                lines.append("\(of) \(verb) \(noun). Switching this on gives the rest one too.")
+            }
         }
         return lines.isEmpty ? nil : lines.joined(separator: " ")
     }
@@ -316,12 +399,23 @@ extension PhotonzDocument {
                 switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
         }
 
-        // What the layer throws behind it. Every layer can have one.
-        rows.append(LayerPartRow(
-            part: .shadow, colors: [], title: LayerPart.shadow.title,
-            switchIDs: picked.map(\.id),
-            onCount: picked.filter { $0.style.shadow != nil }.count,
-            widthIDs: [], selectionCount: count))
+        // What the layer throws, one row per shadow it has, nearest the eye
+        // first. None until one is added: a shadow is countable, so it arrives
+        // from the plus at the foot of the list rather than being a fixed row
+        // that is off nearly all the time.
+        //
+        // Rows line up by POSITION, not by kind. A box with two shadows picked
+        // beside a box with one shows the second row speaking for one layer,
+        // and the row says so in the sentence Fill already uses.
+        let depth = picked.map { $0.style.shadows.count }.max() ?? 0
+        for index in 0..<depth {
+            let holders = picked.filter { $0.style.shadow(at: index) != nil }
+            rows.append(LayerPartRow(
+                part: .shadow, colors: [], title: LayerPart.shadow.title,
+                switchIDs: holders.map(\.id),
+                onCount: holders.filter { $0.style.shadow(at: index)?.isOn == true }.count,
+                widthIDs: [], selectionCount: count, index: index))
+        }
 
         return rows
     }
@@ -362,7 +456,8 @@ extension PhotonzDocument {
     /// fresh one wears otherwise. Returns how many layers changed.
     @discardableResult
     public mutating func turnOnPart(_ part: LayerPart, layerIDs: [UUID], paint: Paint,
-                                    restoring: [UUID: CGFloat] = [:]) -> Int {
+                                    restoring: [UUID: CGFloat] = [:],
+                                    index: Int = 0) -> Int {
         var changed = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
@@ -397,10 +492,19 @@ extension PhotonzDocument {
                 updateLayer(id: id) { target in
                     // A layer that already throws one keeps the shadow it
                     // tuned and only changes colour, exactly as its own switch
-                    // promises.
-                    var shadow = target.style.shadow ?? ShadowStyle()
-                    shadow.colorHex = paint.hex
-                    target.style.shadow = shadow
+                    // promises. Letting a colour go over a switched-off entry
+                    // switches it back on, because that is what the person just
+                    // said they wanted.
+                    if target.style.shadow(at: index) != nil {
+                        target.style.updateShadow(at: index) {
+                            $0.colorHex = paint.hex
+                            $0.isOn = true
+                        }
+                    } else {
+                        var shadow = ShadowStyle()
+                        shadow.colorHex = paint.hex
+                        target.style.shadows.append(shadow)
+                    }
                 }
             }
             changed += 1
@@ -436,6 +540,98 @@ extension PhotonzDocument {
                     target.style.borderWidth = width
                 }
             }
+            changed += 1
+        }
+        return changed
+    }
+}
+
+// MARK: - A list you add to
+
+extension PhotonzDocument {
+
+    /// Adds one effect to every picked layer, at the foot of its list.
+    ///
+    /// It goes at the FOOT, which is furthest from the eye, so the rows already
+    /// in the list hold still: adding a second shadow must never move the one
+    /// somebody has just tuned. Returns how many layers took it.
+    @discardableResult
+    public mutating func addAppearance(_ kind: AppearanceKind, layerIDs: [UUID]) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked else { continue }
+            _ = layer
+            updateLayer(id: id) { target in
+                switch kind.part {
+                case .shadow:
+                    target.style.shadows.append(ShadowStyle(kind: kind.shadowKind))
+                case .fill, .outline:
+                    break
+                }
+            }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// Takes one entry out of the list, on every picked layer that has it.
+    ///
+    /// Different from switching it off, which keeps everything about it. A row
+    /// only offers this once it is an entry somebody added.
+    @discardableResult
+    public mutating func removeShadow(layerIDs: [UUID], at index: Int) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  layer.style.shadows.indices.contains(index) else { continue }
+            updateLayer(id: id) { $0.style.shadows.remove(at: index) }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// Drags one entry into a different place in the list, which is a change to
+    /// what paints over what: the top of the list is nearest the eye.
+    @discardableResult
+    public mutating func moveShadow(layerIDs: [UUID], from: Int, to: Int) -> Int {
+        guard from != to else { return 0 }
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  layer.style.shadows.indices.contains(from),
+                  layer.style.shadows.indices.contains(to) else { continue }
+            updateLayer(id: id) { target in
+                let moved = target.style.shadows.remove(at: from)
+                target.style.shadows.insert(moved, at: to)
+            }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// The tick on one entry: stops it drawing, and keeps every number on it.
+    @discardableResult
+    public mutating func setShadowEnabled(layerIDs: [UUID], at index: Int, on: Bool) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  let shadow = layer.style.shadow(at: index), shadow.isOn != on else { continue }
+            updateLayer(id: id) { $0.style.updateShadow(at: index) { $0.isOn = on } }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// The Kind popup: the same shadow, thrown behind the layer or cast into
+    /// it. Everything else about it survives, because it is one effect drawn in
+    /// a different place rather than a different effect.
+    @discardableResult
+    public mutating func setShadowKind(layerIDs: [UUID], at index: Int, to kind: ShadowKind) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  let shadow = layer.style.shadow(at: index), shadow.kind != kind else { continue }
+            updateLayer(id: id) { $0.style.updateShadow(at: index) { $0.kind = kind } }
             changed += 1
         }
         return changed

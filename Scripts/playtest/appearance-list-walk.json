@@ -1,0 +1,147 @@
+{
+  "out": "/tmp/photonz-playtest/appearance-list",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        320,
+        260
+      ],
+      "to": [
+        620,
+        460
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-box",
+      "note": "one rectangle drawn and picked; Appearance holds Fill and Outline and nothing else"
+    },
+    {
+      "do": "panel",
+      "stage": "1-box"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-appearance-before"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "shot": "2-add-menu"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panel",
+      "stage": "2-one-shadow"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-one-shadow"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panel",
+      "stage": "3-two-shadows"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-two-shadows"
+    },
+    {
+      "do": "press",
+      "control": "Remove",
+      "in": "Shadow 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panel",
+      "stage": "4-removed"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-after-remove"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Inner Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panel",
+      "stage": "5-inner"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-inner-shadow"
+    },
+    {
+      "do": "render",
+      "name": "5-inner-shadow-canvas"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Shadow 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panel",
+      "stage": "6-off"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-first-shadow-off"
+    },
+    {
+      "do": "describe",
+      "stage": "6-off",
+      "note": "off keeps the entry and everything set on it; the cross beside it is what takes it away"
+    }
+  ]
+}

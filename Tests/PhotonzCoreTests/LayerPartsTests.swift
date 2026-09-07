@@ -77,18 +77,19 @@ struct LayerPartsTests {
 
     // MARK: - The rows a selection gets
 
-    @Test func aRectangleGetsFillOutlineAndShadow() {
+    @Test func aRectangleGetsFillAndOutline() {
         let box = shape(.rectangle, fillHex: "#00FF00")
         let doc = document([box])
         let rows = doc.layerPartRows(layerIDs: [box.id])
-        #expect(rows.map(\.title) == ["Fill", "Outline", "Shadow"])
-        #expect(rows.map(\.hasSwitch) == [true, true, true])
-        // Fill and outline are both on; the shadow is not.
+        // A shadow is countable, so it is not a fixed row that is off nearly
+        // all the time: it arrives from the plus at the foot of the list
+        // (`AppearanceListTests`).
+        #expect(rows.map(\.title) == ["Fill", "Outline"])
+        #expect(rows.map(\.hasSwitch) == [true, true])
         #expect(rows[0].isOn)
         #expect(rows[1].isOn)
-        #expect(!rows[2].isOn)
-        // Only the outline and the shadow have anything to unfold.
-        #expect(rows.map(\.hasSettings) == [false, true, true])
+        // Only the outline has anything under it.
+        #expect(rows.map(\.hasSettings) == [false, true])
     }
 
     @Test func anArrowsOneColorIsNotCalledAnOutlineAndHasNoSwitch() {
@@ -97,7 +98,7 @@ struct LayerPartsTests {
         let rows = doc.layerPartRows(layerIDs: [arrow.id])
         // No Outline row at all: the arrow's line IS its colour, and a ring
         // round its bounding box is not something anyone reaches for.
-        #expect(rows.map(\.title) == ["Color", "Shadow"])
+        #expect(rows.map(\.title) == ["Color"])
         let ink = rows[0]
         #expect(ink.part == nil)
         #expect(!ink.hasSwitch)
@@ -142,7 +143,7 @@ struct LayerPartsTests {
         let shot = picture()
         let doc = document([shot])
         let rows = doc.layerPartRows(layerIDs: [shot.id])
-        #expect(rows.map(\.title) == ["Outline", "Shadow"])
+        #expect(rows.map(\.title) == ["Outline"])
         // The same model as a rectangle's, on a layer that is not a shape at
         // all: the ring is off, and one switch turns it on.
         #expect(rows[0].part == .outline)
@@ -174,7 +175,7 @@ struct LayerPartsTests {
         let wash = shape(.highlight)
         let doc = document([wash])
         let rows = doc.layerPartRows(layerIDs: [wash.id])
-        #expect(rows.map(\.title) == ["Color", "Outline", "Shadow"])
+        #expect(rows.map(\.title) == ["Color", "Outline"])
         let ink = rows[0]
         #expect(ink.slot == .stroke)
         #expect(ink.part == nil)
@@ -284,8 +285,9 @@ struct LayerPartsTests {
         let doc = document([box, caption])
         let rows = doc.layerPartRows(layerIDs: [box.id, caption.id])
         #expect(rows.filter { $0.title == "Outline" }.count == 1)
-        // Fill, Outline, Text, Shadow: the order the parts list documents.
-        #expect(rows.map(\.title) == ["Fill", "Outline", "Text", "Shadow"])
+        // Fill, Outline, Text: the order the parts list documents, with any
+        // shadows somebody added coming under them.
+        #expect(rows.map(\.title) == ["Fill", "Outline", "Text"])
     }
 
     @Test func aLoneTextBlockGetsItsInkAndTheRingItCanWear() {
@@ -297,20 +299,20 @@ struct LayerPartsTests {
         // never moves when a shape joins the selection. It used to sit below,
         // which meant picking a box beside a caption reordered the panel.
         #expect(doc.layerPartRows(layerIDs: [caption.id]).map(\.title)
-                == ["Outline", "Text", "Shadow"])
+                == ["Outline", "Text"])
     }
 
-    @Test func aLoneArrowIsStillJustAColorAndAShadow() {
+    @Test func aLoneArrowIsStillJustAColor() {
         let arrow = shape(.arrow)
         let doc = document([arrow])
-        #expect(doc.layerPartRows(layerIDs: [arrow.id]).map(\.title) == ["Color", "Shadow"])
+        #expect(doc.layerPartRows(layerIDs: [arrow.id]).map(\.title) == ["Color"])
     }
 
-    @Test func anEllipseStillGetsFillOutlineAndShadow() {
+    @Test func anEllipseStillGetsFillAndOutline() {
         let oval = shape(.ellipse, fillHex: "#00FF00")
         let doc = document([oval])
         let rows = doc.layerPartRows(layerIDs: [oval.id])
-        #expect(rows.map(\.title) == ["Fill", "Outline", "Shadow"])
+        #expect(rows.map(\.title) == ["Fill", "Outline"])
         #expect(rows[1].slot == .stroke)
         #expect(rows[1].widthIDs == [oval.id])
     }
@@ -387,17 +389,17 @@ struct LayerPartsTests {
         #expect(fill.reachNote == "Applies to 2 of the 3 selected layers.")
     }
 
-    @Test func aShadowRowSaysHowManyOfThemAlreadyThrowOne() throws {
+    @Test func aShadowRowSaysHowManyOfThemHaveOneAtAll() throws {
         var shadowed = picture()
         shadowed.style.shadow = ShadowStyle()
         let plain = picture()
         let doc = document([shadowed, plain, picture()])
         let rows = doc.layerPartRows(layerIDs: doc.layers.map(\.id))
+        // Rows line up by POSITION in the list, so the first Shadow row speaks
+        // for the one picture that has a first shadow, and says so.
         let shadow = try #require(rows.first { $0.part == .shadow })
-        #expect(shadow.isMixed)
-        #expect(shadow.reachNote
-                == "1 of the 3 selected layers has a shadow. "
-                + "Switching this on gives the rest one too.")
+        #expect(shadow.switchIDs == [shadowed.id])
+        #expect(shadow.reachNote == "Applies to 1 of the 3 selected layers.")
     }
 
     @Test func aLockedLayerIsLeftOutOfEveryRow() {
@@ -413,9 +415,8 @@ struct LayerPartsTests {
         let rows = doc.layerPartRows(layerIDs: [box.id, arrow.id])
         let fill = try #require(rows.first { $0.slot == .fill })
         #expect(fill.reachNote == "Applies to 1 of the 2 selected layers.")
-        // The shadow reaches both, so it says nothing.
-        let shadow = try #require(rows.first { $0.part == .shadow })
-        #expect(shadow.reachNote == nil)
+        // Neither has a shadow yet, so there is no Shadow row to say anything.
+        #expect(rows.contains { $0.part == .shadow } == false)
     }
 
     // MARK: - Switching the outline off, which could not be done at all

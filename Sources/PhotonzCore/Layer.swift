@@ -753,8 +753,32 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     public var cornerRadius: CGFloat
     public var borderWidth: CGFloat
     public var borderColorHex: String
-    public var shadow: ShadowStyle?
+    /// Every shadow this layer throws, nearest the eye FIRST.
+    ///
+    /// It used to be one, and one is not enough: a card wants a tight dark
+    /// contact shadow and a wide soft lift at the same time, and a field wants
+    /// a shadow cast INTO it rather than behind it. So the Appearance list is
+    /// a list you add to, and this is what it adds to
+    /// (`docs/design/shape-parts.md`, "How the list grows").
+    ///
+    /// The order is the panel's order, and the panel paints the bottom of the
+    /// list first, so index 0 is the one nearest the eye and the last entry is
+    /// the one furthest back.
+    public var shadows: [ShadowStyle]
     public var blendMode: BlendMode
+
+    /// The first shadow, for everything written before a layer could have two.
+    ///
+    /// Reading gives the one nearest the eye. Writing nil clears the lot,
+    /// because every caller that ever wrote nil meant "this layer has no
+    /// shadow" rather than "drop the top one".
+    public var shadow: ShadowStyle? {
+        get { shadows.first }
+        set {
+            guard let newValue else { shadows = []; return }
+            if shadows.isEmpty { shadows = [newValue] } else { shadows[0] = newValue }
+        }
+    }
 
     public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CGFloat = 0,
                 borderWidth: CGFloat = 0, borderColorHex: String = "#000000", shadow: ShadowStyle? = nil,
@@ -764,9 +788,81 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         self.cornerRadius = cornerRadius
         self.borderWidth = borderWidth
         self.borderColorHex = borderColorHex
-        self.shadow = shadow
+        self.shadows = shadow.map { [$0] } ?? []
         self.blendMode = blendMode
     }
+
+    public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CGFloat = 0,
+                borderWidth: CGFloat = 0, borderColorHex: String = "#000000",
+                shadows: [ShadowStyle], blendMode: BlendMode = .normal) {
+        self.opacity = opacity
+        self.blurRadius = blurRadius
+        self.cornerRadius = cornerRadius
+        self.borderWidth = borderWidth
+        self.borderColorHex = borderColorHex
+        self.shadows = shadows
+        self.blendMode = blendMode
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case opacity, blurRadius, cornerRadius, borderWidth, borderColorHex
+        case shadow, shadows, blendMode
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        opacity = try c.decodeIfPresent(Double.self, forKey: .opacity) ?? 1
+        blurRadius = try c.decodeIfPresent(CGFloat.self, forKey: .blurRadius) ?? 0
+        cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
+        borderWidth = try c.decodeIfPresent(CGFloat.self, forKey: .borderWidth) ?? 0
+        borderColorHex = try c.decodeIfPresent(String.self, forKey: .borderColorHex) ?? "#000000"
+        blendMode = try c.decodeIfPresent(BlendMode.self, forKey: .blendMode) ?? .normal
+        // Every document written before a layer could hold two shadows has the
+        // single `shadow` and no `shadows`, so it opens as a list of one and
+        // paints exactly as it always did.
+        if let list = try c.decodeIfPresent([ShadowStyle].self, forKey: .shadows) {
+            shadows = list
+        } else if let one = try c.decodeIfPresent(ShadowStyle.self, forKey: .shadow) {
+            shadows = [one]
+        } else {
+            shadows = []
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(opacity, forKey: .opacity)
+        try c.encode(blurRadius, forKey: .blurRadius)
+        try c.encode(cornerRadius, forKey: .cornerRadius)
+        try c.encode(borderWidth, forKey: .borderWidth)
+        try c.encode(borderColorHex, forKey: .borderColorHex)
+        try c.encode(blendMode, forKey: .blendMode)
+        // The first shadow is written where it has always been written, so a
+        // file saved today still opens in a build from yesterday with its
+        // shadow on. The rest go in the list beside it, which older builds
+        // ignore, so what they lose is the extra shadows and never the layer.
+        try c.encodeIfPresent(shadows.first, forKey: .shadow)
+        if shadows.count > 1 { try c.encode(shadows, forKey: .shadows) }
+    }
+}
+
+extension LayerStyle {
+    /// The shadow at a place in the list, or nil when the list is shorter than
+    /// that. Every panel row that speaks for one entry reads through here, so a
+    /// row left over from a longer selection cannot crash on a shorter layer.
+    public func shadow(at index: Int) -> ShadowStyle? {
+        shadows.indices.contains(index) ? shadows[index] : nil
+    }
+
+    /// Changes one entry in place, and does nothing at all when there is no
+    /// such entry.
+    public mutating func updateShadow(at index: Int, _ mutate: (inout ShadowStyle) -> Void) {
+        guard shadows.indices.contains(index) else { return }
+        mutate(&shadows[index])
+    }
+
+    /// The shadows that actually paint: switched on, and not invisible.
+    public var paintedShadows: [ShadowStyle] { shadows.filter(\.paints) }
 }
 
 extension LayerStyle {
@@ -775,10 +871,13 @@ extension LayerStyle {
     /// and blur aren't clipped. 3σ covers a gaussian's visible tail.
     public var previewPadding: CGFloat {
         var padding = blurRadius * 3
-        if let shadow, shadow.opacity > 0 {
-            padding += shadow.radius * 3 + max(abs(shadow.offset.width), abs(shadow.offset.height))
-                + max(shadow.spread, 0)
+        // The furthest-reaching shadow decides, not the sum of them: two
+        // shadows overlap rather than stacking end to end. An inner shadow
+        // never leaves the layer, so it asks for nothing.
+        let reach = shadows.filter { $0.paints && $0.kind == .drop }.map {
+            $0.radius * 3 + max(abs($0.offset.width), abs($0.offset.height)) + max($0.spread, 0)
         }
+        padding += reach.max() ?? 0
         return padding.rounded(.up)
     }
 
@@ -789,7 +888,7 @@ extension LayerStyle {
     /// so a resize of a layer with any of it must re-render the frame instead.
     var hasNoFixedSizeDecoration: Bool {
         borderWidth == 0 && cornerRadius == 0 && blurRadius == 0
-            && (shadow?.opacity ?? 0) == 0
+            && paintedShadows.isEmpty
     }
 
     /// True when this style draws nothing of its own: no fade, no blur, no
@@ -798,7 +897,39 @@ extension LayerStyle {
     /// straight onto the canvas and grouping changes no pixels.
     public var isPlain: Bool {
         opacity >= 1 && blurRadius <= 0 && cornerRadius <= 0 && borderWidth <= 0
-            && (shadow?.opacity ?? 0) <= 0 && blendMode == .normal
+            && paintedShadows.isEmpty && blendMode == .normal
+    }
+}
+
+/// Which way a shadow is thrown: behind the layer, or into it.
+///
+/// The same effect in two places rather than two effects. That is the whole
+/// reason the Appearance list does not need six more rows: an inner shadow is a
+/// shadow with its Kind set, so it carries the same colour, the same blur, the
+/// same distance and the same direction, and there is nothing new to learn
+/// (`docs/design/shape-parts.md`, "How the list grows").
+public enum ShadowKind: String, Hashable, Codable, Sendable, CaseIterable {
+    /// Cast behind the layer, on the canvas. What every shadow was until now.
+    case drop
+    /// Cast into the layer, clipped to its own silhouette: what makes a field
+    /// look pressed in rather than raised.
+    case inner
+
+    /// What the Kind popup calls it.
+    public var title: String {
+        switch self {
+        case .drop: return "Drop"
+        case .inner: return "Inner"
+        }
+    }
+
+    /// The full name, for the menu that ADDS one, where a person is scanning
+    /// for the words they came looking for rather than opening popups.
+    public var addTitle: String {
+        switch self {
+        case .drop: return "Shadow"
+        case .inner: return "Inner Shadow"
+        }
     }
 }
 
@@ -813,14 +944,33 @@ public struct ShadowStyle: Hashable, Codable, Sendable {
     public var spread: CGFloat
     public var colorHex: String
     public var opacity: Double
+    /// Behind the layer, or into it.
+    public var kind: ShadowKind
+    /// Whether this entry paints at all.
+    ///
+    /// A list you can add to needs off and remove to mean different things.
+    /// Off keeps everything about the shadow and stops it drawing, which is the
+    /// move people make constantly — look at it with and without. Remove takes
+    /// the entry out of the list.
+    public var isOn: Bool
 
     public init(radius: CGFloat = 12, offset: CGSize = CGSize(width: 0, height: 4), spread: CGFloat = 0,
-                colorHex: String = "#000000", opacity: Double = 0.4) {
+                colorHex: String = "#000000", opacity: Double = 0.4,
+                kind: ShadowKind = .drop, isOn: Bool = true) {
         self.radius = radius
         self.offset = offset
         self.spread = spread
         self.colorHex = colorHex
         self.opacity = opacity
+        self.kind = kind
+        self.isOn = isOn
+    }
+
+    /// Whether this entry puts anything on the canvas.
+    public var paints: Bool { isOn && opacity > 0 }
+
+    private enum CodingKeys: String, CodingKey {
+        case radius, offset, spread, colorHex, opacity, kind, isOn
     }
 
     public init(from decoder: Decoder) throws {
@@ -831,6 +981,23 @@ public struct ShadowStyle: Hashable, Codable, Sendable {
         opacity = try c.decode(Double.self, forKey: .opacity)
         // `spread` postdates ShadowStyle; old payloads omit it.
         spread = try c.decodeIfPresent(CGFloat.self, forKey: .spread) ?? 0
+        // So do `kind` and `isOn`: every shadow written before the Appearance
+        // list grew is a drop shadow that is switched on.
+        kind = try c.decodeIfPresent(ShadowKind.self, forKey: .kind) ?? .drop
+        isOn = try c.decodeIfPresent(Bool.self, forKey: .isOn) ?? true
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(radius, forKey: .radius)
+        try c.encode(offset, forKey: .offset)
+        try c.encode(spread, forKey: .spread)
+        try c.encode(colorHex, forKey: .colorHex)
+        try c.encode(opacity, forKey: .opacity)
+        // Written only when it is not the answer an older build would assume,
+        // so an ordinary drop shadow still saves exactly the bytes it did.
+        if kind != .drop { try c.encode(kind, forKey: .kind) }
+        if !isOn { try c.encode(isOn, forKey: .isOn) }
     }
 }
 

@@ -54,10 +54,19 @@ extension Layer {
     /// layer, so taking the text back off the surface brings it back, and no
     /// pixels are ever baked.
     public func drawnShadow(onDesignedSurface: Bool) -> ShadowStyle? {
-        guard onDesignedSurface, case .text(let text) = content,
-              style.shadow == TextBuilder.autoContrastShadow(forColorHex: text.colorHex)
-        else { return style.shadow }
-        return nil
+        drawnShadows(onDesignedSurface: onDesignedSurface).first
+    }
+
+    /// Every shadow this layer actually draws with, nearest the eye first.
+    ///
+    /// The halo rule above, applied entry by entry: a label on a surface
+    /// somebody designed drops the halo it was born with and keeps every
+    /// shadow somebody chose, so adding a second shadow to a heading on a card
+    /// does not bring the smudge back with it.
+    public func drawnShadows(onDesignedSurface: Bool) -> [ShadowStyle] {
+        guard onDesignedSurface, case .text(let text) = content else { return style.shadows }
+        let halo = TextBuilder.autoContrastShadow(forColorHex: text.colorHex)
+        return style.shadows.filter { $0 != halo }
     }
 }
 

@@ -100,12 +100,13 @@ extension LayerStyle {
         style.blurRadius = blurRadius * scale
         style.cornerRadius = cornerRadius * scale
         style.borderWidth = borderWidth * scale
-        if var shadow = style.shadow {
-            shadow.radius *= scale
-            shadow.spread *= scale
-            shadow.offset = CGSize(width: shadow.offset.width * scale,
+        style.shadows = style.shadows.map { shadow in
+            var scaled = shadow
+            scaled.radius *= scale
+            scaled.spread *= scale
+            scaled.offset = CGSize(width: shadow.offset.width * scale,
                                    height: shadow.offset.height * scale)
-            style.shadow = shadow
+            return scaled
         }
         return style
     }

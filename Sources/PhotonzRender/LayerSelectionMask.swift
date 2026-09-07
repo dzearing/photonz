@@ -17,7 +17,7 @@ extension DocumentRenderer {
         layer.isVisible = true
         // Soft effects would bleed the selection past the shape (shadow/blur) or
         // empty it (a translucent layer) — strip them to a hard silhouette.
-        layer.style.shadow = nil
+        layer.style.shadows = []
         layer.style.blurRadius = 0
         layer.style.opacity = 1
 

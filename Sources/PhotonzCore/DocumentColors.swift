@@ -28,7 +28,7 @@ extension PhotonzDocument {
 
         for layer in allLayers {
             for slot in ColorSlot.allCases { record(layer.colorHex(for: slot)) }
-            record(layer.style.shadow?.colorHex)
+            for shadow in layer.style.shadows { record(shadow.colorHex) }
             switch layer.content {
             case .measure(let measure):
                 record(measure.strokeColorHex)

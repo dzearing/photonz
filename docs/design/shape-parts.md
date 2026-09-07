@@ -218,8 +218,11 @@ Two things did not go where the original report asked, and both are deliberate:
 
 ## How the list grows
 
-Status: **proposed, decision open** (2026-09-07). Three parts fit in a fixed
-list. The ones people ask for next do not: an inner and an outer border, an
+Status: **built in Next** (2026-09-07), from the user's answer *one list you add
+to*. Shadows are countable, an inner shadow is a Kind rather than an effect of
+its own, and the plus that adds one rides the Appearance header. What is NOT
+built is the Outline's Position, for the reason in "What existing documents must
+keep drawing" below. Three parts fit in a fixed list. The ones people ask for next do not: an inner and an outer border, an
 inner and an outer shadow, a glow, a bevel. Adding six more fixed rows is how a
 panel turns into a wall. This section writes down how the list scales instead,
 so that the next effect costs one entry and no new idea.
@@ -263,7 +266,7 @@ document format changes to accept it.
 | Kind | Count | Colour | Settings |
 | --- | --- | --- | --- |
 | Fill | one | the fill colour | none (a gradient is a kind of colour, not a setting) |
-| Outline | one for now | the outline colour | Width · **Position** (Inside · Centre · Outside) |
+| Outline | one for now | the outline colour | Width · *(Position: not built, see below)* |
 | Shadow | **many** | the shadow colour | **Kind** (Drop · Inner) · Blur · Size · Distance · Direction · Opacity |
 | *Glow (next)* | many | the glow colour | Kind (Outer · Inner) · Blur · Size · Opacity |
 | *Bevel (next)* | one | two colours, light and dark | Depth · Softness · Direction · Opacity |
@@ -315,22 +318,32 @@ is that only countable things can be removed, so on a plain rectangle there is
 exactly one gesture, the tick, and remove appears only once you have added a
 second of something.
 
-### What existing documents must keep drawing
+### What existing documents must keep drawing, and why Position is not built
 
-Two facts, read out of `DocumentRenderer` rather than assumed, and both bind the
-defaults:
+Two facts, read out of the renderer rather than assumed. The second corrects
+what this document said on 2026-09-07 before the code was read closely:
 
 - **A picture, frame, label or group's ring is already an INSIDE border.**
   `bordered(_:box:radius:style:)` insets the box by the full width and cuts the
   middle out, so the ring sits wholly within the layer's edge.
-- **A shape's own stroke is already CENTRED.** `AnnotationRasterizer` sets a
-  line width and strokes the path, which CoreGraphics straddles.
+- **A shape's own stroke is already inside its frame too.**
+  `AnnotationRasterizer` insets the box by half the stroke width and then
+  strokes it, so the stroke straddles that inset path and its OUTER edge lands
+  exactly on the frame. Centred on the path, inside the frame.
 
-So Position cannot have one default across every layer. It defaults to **Inside**
-for a ring and **Centre** for a shape's stroke, which is the value each already
-has. Anything else repaints documents that exist, which the model forbids. A
-person who never opens the popup never sees the difference; a person who does is
-being told the truth about what their layer is doing.
+So Inside is not one default among three: it is the only position anything in
+the app has ever drawn, and it is what every existing document is wearing.
+
+Outside is the one people ask for, and it is what makes Position expensive
+rather than a popup. A shape is rasterized into a bitmap exactly the size of its
+frame, and the ring round everything else is cropped to the layer's own extent,
+so an outline that sits past the edge has nowhere to be drawn: the rasterizer
+would need padding, the layer's reach (`renderBounds`, `previewPadding`) would
+need to grow with it, and selection and hit testing follow from those. That is a
+piece of work of its own and it would have swamped the list this task is about,
+so Position is written down here and filed rather than half-built. Nothing about
+the list has to change to accept it: it is one more setting under the Outline
+row.
 
 ### More than one layer picked
 
@@ -342,11 +355,35 @@ row and the second saying it reaches one of the two layers, the same sentence
 Fill already says. Adding an effect adds it to every picked layer, so the lists
 stay the same length as each other from then on.
 
-### Where the code will be
+### Where the code is
 
-- `PhotonzCore/LayerParts.swift` — kinds, count, and the list itself.
-- `PhotonzCore/Layer.swift` — `LayerStyle.shadow` becomes a list. The single
-  optional stays readable so every document on disk opens unchanged.
-- `PhotonzRender/DocumentRenderer.swift` — walks the list instead of applying
-  one shadow, one border, in a fixed order.
-- `Photonz/PartsInspector.swift` — the add menu, the remove, the drag.
+- `PhotonzCore/LayerParts.swift` — `LayerPart.isCountable`, `AppearanceKind`
+  (what the plus offers), the shadow rows, and the four list edits: add,
+  remove, move, switch. Tested in `Tests/PhotonzCoreTests/AppearanceListTests.swift`.
+- `PhotonzCore/Layer.swift` — `LayerStyle.shadows` is the list, nearest the eye
+  first; `shadow` still reads and writes the first one, so every caller written
+  before this goes on working. `ShadowStyle` gains `kind` and `isOn`. A file
+  with one shadow saves exactly the bytes it always did, and one with two writes
+  the first where it has always been written so an older build still draws it.
+- `PhotonzRender/DocumentRenderer.swift` — `shadowed(_:shadows:)` walks the
+  list: inner shadows are cast into the layer and clipped to its silhouette,
+  drop shadows go behind it nearest the eye first. Tested in
+  `Tests/PhotonzRenderTests/ShadowListRenderTests.swift`.
+- `Photonz/PartsInspector.swift` — the plus (on the section header, since the
+  dock caps a section's height and scrolls the rest inside it), the Kind popup,
+  the cross, the grip, and the row menu that does the same three things in
+  words.
+
+### What is rough, as built
+
+- **Two shadows do not fit.** A shadow costs seven rows, so the second one's
+  own row is already below the fold of the Appearance section and has to be
+  scrolled to. This is the density the decision's option B was about; the user
+  chose A, and the cost is now real rather than predicted.
+- **A part's settings have no visible owner.** Blur, Size and Opacity under a
+  Shadow row read like a second copy of the layer's own Blur and Opacity in
+  Effects underneath. Reported by the user on 2026-09-07 from this very build.
+- **The grip's drag is not scripted.** A synthesized press cannot start a
+  SwiftUI drag, so the walk cannot carry out the reorder; the row's own menu
+  (Move Up, Move Down, Remove) does the same thing and what both call is
+  covered by tests.

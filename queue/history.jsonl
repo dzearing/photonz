@@ -1837,3 +1837,24 @@
 {"t":"2026-09-07T15:01:05.655Z","ev":"decision_resolved","id":"the-appearance-list-grows-to-hold-every-effect-w-how-should-the-appearance-list-g","taskId":"the-appearance-list-grows-to-hold-every-effect-w","choice":"a"}
 {"t":"2026-09-07T15:01:05.666Z","ev":"task_unblocked","id":"the-appearance-list-grows-to-hold-every-effect-w","decision":"the-appearance-list-grows-to-hold-every-effect-w-how-should-the-appearance-list-g"}
 {"t":"2026-09-07T15:02:16.225Z","ev":"task_dropped","id":"the-panel-says-once-that-a-change-reaches-everyt","from":"dropped","note":"Reproduced the 34pt overflow with dock-fits-the-window-walk before building (two text: Effects 838-1030 in a 996 dock; every other case fits). User answered the decision mid-run with 'Leave the words alone', which declines the task, so no UI change shipped. Recorded the accepted residual in DockHeightBudget's doc comment so it is not filed a fifth time. Scripts/test.sh green at 4391."}
+{"t":"2026-09-07T15:03:16.239Z","ev":"task_started","id":"the-appearance-list-grows-to-hold-every-effect-w","title":"The Appearance list grows to hold every effect without growing a new idea","priority":"p1-high"}
+{"t":"2026-09-07T15:19:30.228Z","ev":"task_created","id":"with-the-grid-off-only-the-grid-switch-is-on-the","priority":"p2-normal","title":"With the grid off, only the grid switch is on the tool bar"}
+{"t":"2026-09-07T15:19:30.265Z","ev":"task_resequenced","id":"with-the-grid-off-only-the-grid-switch-is-on-the","from":1680,"to":7}
+{"t":"2026-09-07T15:21:38.121Z","ev":"task_reprioritized","id":"with-the-grid-off-only-the-grid-switch-is-on-the","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-07T15:21:38.189Z","ev":"task_resequenced","id":"with-the-grid-off-only-the-grid-switch-is-on-the","from":7,"to":1}
+{"t":"2026-09-07T15:22:35.109Z","ev":"task_created","id":"the-zoom-group-matches-the-other-tool-bar-groups","priority":"p2-normal","title":"The zoom group matches the other tool bar groups, and double clicking the number goes to full size"}
+{"t":"2026-09-07T15:22:35.147Z","ev":"task_resequenced","id":"the-zoom-group-matches-the-other-tool-bar-groups","from":1680,"to":8}
+{"t":"2026-09-07T15:23:56.175Z","ev":"task_created","id":"the-colour-swatches-appear-only-for-tools-that-p","priority":"p2-normal","title":"The colour swatches appear only for tools that paint"}
+{"t":"2026-09-07T15:23:56.212Z","ev":"task_resequenced","id":"the-colour-swatches-appear-only-for-tools-that-p","from":1680,"to":9}
+{"t":"2026-09-07T15:35:09.130Z","ev":"task_created","id":"plain-copy-takes-the-layer-you-picked-copy-merge","priority":"p1-high","title":"Plain copy takes the layer you picked, copy merged takes everything"}
+{"t":"2026-09-07T15:35:09.165Z","ev":"task_resequenced","id":"plain-copy-takes-the-layer-you-picked-copy-merge","from":190,"to":10}
+{"t":"2026-09-07T15:35:45.720Z","ev":"task_created","id":"a-marquee-selection-follows-the-pointer-and-neve","priority":"p1-high","title":"A marquee selection follows the pointer and never snaps"}
+{"t":"2026-09-07T15:35:45.758Z","ev":"task_resequenced","id":"a-marquee-selection-follows-the-pointer-and-neve","from":190,"to":11}
+{"t":"2026-09-07T15:36:40.269Z","ev":"task_created","id":"arrow-keys-move-a-marquee-selection","priority":"p2-normal","title":"Arrow keys move a marquee selection"}
+{"t":"2026-09-07T15:36:40.308Z","ev":"task_resequenced","id":"arrow-keys-move-a-marquee-selection","from":1680,"to":12}
+{"t":"2026-09-07T15:37:34.045Z","ev":"task_created","id":"pasting-hands-you-the-pointer-with-the-new-layer","priority":"p2-normal","title":"Pasting hands you the pointer with the new layer picked"}
+{"t":"2026-09-07T15:37:34.083Z","ev":"task_resequenced","id":"pasting-hands-you-the-pointer-with-the-new-layer","from":1680,"to":13}
+{"t":"2026-09-07T15:39:15.757Z","ev":"task_created","id":"the-red-dashed-outline-around-the-panel-always-c","priority":"p1-high","title":"The red dashed outline around the panel always clears itself"}
+{"t":"2026-09-07T15:39:15.798Z","ev":"task_resequenced","id":"the-red-dashed-outline-around-the-panel-always-c","from":190,"to":2}
+{"t":"2026-09-07T15:40:09.390Z","ev":"task_created","id":"everything-on-the-panel-s-right-edge-sits-on-one","priority":"p2-normal","title":"Everything on the panel's right edge sits on one line"}
+{"t":"2026-09-07T15:40:09.430Z","ev":"task_resequenced","id":"everything-on-the-panel-s-right-edge-sits-on-one","from":1680,"to":14}

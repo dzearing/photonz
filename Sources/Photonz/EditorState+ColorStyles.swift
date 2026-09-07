@@ -367,6 +367,58 @@ extension EditorState {
         }
     }
 
+    // MARK: - The Appearance list, which is a list you add to
+
+    /// The plus at the foot of Appearance: gives every picked layer one more
+    /// effect, at the foot of its own list, in one undo step.
+    ///
+    /// It reaches every picked layer so that the lists stay the same length as
+    /// each other, which is what lets one row go on speaking for all of them.
+    func addAppearance(_ kind: AppearanceKind) {
+        let ids = layerStyleSelection.layerIDs
+        guard !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.addAppearance(kind, layerIDs: ids) }
+        rememberStyleDefault(of: ids)
+    }
+
+    /// The cross on a row: takes that entry out of the list. Different from the
+    /// tick beside it, which keeps everything about the effect and stops it
+    /// drawing.
+    func removeAppearance(part: LayerPart, index: Int, ids: [UUID]) {
+        guard part == .shadow, !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.removeShadow(layerIDs: ids, at: index) }
+    }
+
+    /// A row dragged into a different place, which is a change to what paints
+    /// over what: the top of the list is nearest the eye.
+    func moveAppearance(part: LayerPart, from: Int, to: Int, ids: [UUID]) {
+        guard part == .shadow, from != to, !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.moveShadow(layerIDs: ids, from: from, to: to) }
+    }
+
+    /// The tick on one entry in the list.
+    func setShadowEnabled(index: Int, ids: [UUID], on: Bool) {
+        guard !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.setShadowEnabled(layerIDs: ids, at: index, on: on) }
+    }
+
+    /// The Kind popup on one entry: behind the layer, or cast into it.
+    func setShadowKind(index: Int, ids: [UUID], to kind: ShadowKind) {
+        guard !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.setShadowKind(layerIDs: ids, at: index, to: kind) }
+        rememberStyleDefault(of: ids)
+    }
+
     // MARK: - The parts a layer is made of (`next-shape-parts`)
 
     /// The rows the parts list shows: Fill, Outline, Text, Shadow, each one
@@ -432,7 +484,7 @@ extension EditorState {
         discardDragPreview()
         perform { doc in
             _ = doc.turnOnPart(part, layerIDs: ids, paint: landing.paint,
-                               restoring: remembered)
+                               restoring: remembered, index: row.index ?? 0)
             guard let brings = landing.brings else { return }
             for (slot, group) in Self.styleSlots(part, ids: ids, in: doc) {
                 _ = doc.bindColorStyle(layerIDs: group, slot: slot, styleID: brings.id)

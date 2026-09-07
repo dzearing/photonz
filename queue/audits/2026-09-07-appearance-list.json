@@ -1,0 +1,31 @@
+{
+  "feature": "A layer can have more than one effect",
+  "epic": "ui-building",
+  "summary": "A shape can now carry two shadows at once, or a shadow cast into it instead of behind it. Effects are added from a plus on the Appearance header, removed with a cross, switched off without losing their settings, and the order they sit in is the order they paint in.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-shape-parts is on by default there. Draw a rectangle and look at the Appearance section.",
+  "try": [
+    { "do": "Draw a rectangle. Appearance holds Fill and Outline and nothing else: there is no Shadow row until you ask for one." },
+    { "do": "Press the plus at the right of the Appearance header. The menu says Shadow and Inner Shadow.", "shot": "2026-09-07-appearance-list-add-menu.png" },
+    { "do": "Choose Shadow. One Shadow row arrives, already casting, with its Kind, Blur, Size, Distance, Direction and Opacity under it.", "shot": "2026-09-07-appearance-list-two-shadows.png" },
+    { "do": "Press the plus again and choose Shadow. A second row appears, called Shadow 2, with its own settings and its own colour." },
+    { "do": "Set the two shadows to different colours and distances, then compare: two shadows really paint, not one." },
+    { "do": "Press the plus and choose Inner Shadow. The row is the same as the others, with Kind already reading Inner, and the darkness lands inside the rectangle instead of behind it.", "shot": "2026-09-07-appearance-list-two-effects.png" },
+    { "do": "Uncheck a shadow's tick, then check it again: it comes back exactly as you left it." },
+    { "do": "Press the cross on a shadow row: that entry leaves the list and the others are untouched." }
+  ],
+  "evaluate": [
+    "Is the plus on the section header where you would look for it, or did you go hunting at the foot of the list?",
+    "Does Shadow and Inner Shadow as two menu entries read right, given both add the same row and only preset its Kind?",
+    "With two shadows on, can you tell which Blur belongs to which shadow without counting rows?",
+    "Is a tick and a cross on the same row ever ambiguous: did you reach for the wrong one?",
+    "Does an inner shadow look like what you expect an inner shadow to look like?"
+  ],
+  "rough": [
+    "Two shadows do not fit. A shadow costs seven rows, so the second shadow's own row is already below the fold of the Appearance section and has to be scrolled to. This is the density the decision's option B was about; you chose A, so the cost is now real rather than predicted.",
+    "A part's settings carry no visible owner, which is the thing you reported from this very build: a shadow's Blur, Size and Opacity read like a second copy of the layer's own Blur and Opacity in Effects underneath. Not changed here, because a previous request was for no indent under a part, so where the line goes is your call and it is in the new decision card.",
+    "The Outline's Position (inside, centre, outside) is NOT built. Reading the renderer showed that every outline the app draws today already sits inside the layer's frame, and an outside one has nowhere to be drawn: a shape is rasterized into a bitmap exactly its frame's size and the ring round anything else is cropped to the layer's extent, so outside needs the rasterizer padded and the layer's reach grown. Filed as its own task rather than half-built.",
+    "The grip drags a row up and down, but a scripted walk cannot carry out a SwiftUI drag, so the reorder in the pictures above was not driven by the script. The row's own right-click menu does the same three things in words (Move Up, Move Down, Remove), and what both of them call is covered by tests, including one that proves two shadows of different colours swap which is on top.",
+    "The next two effects cost one entry each and nothing else. A GLOW is a new case in AppearanceKind, a new count-many part beside Shadow, and one filter in the renderer (the silhouette blurred and tinted, kept outside the layer for an outer glow and inside it for an inner one). A BEVEL is one more case, a count-one part with two colours instead of one, and a light-and-dark pair of offset silhouettes. Neither touches the plus, the cross, the grip, the tick, the saved file or the panel.",
+    "Found and fixed on the way: with two shadows the whole right hand dock closed itself. The Kind popup asked for its ideal width, which pushed the pane wider than the window, and the shell answered by auto-collapsing the dock the moment a second popup appeared. The popup has a width now."
+  ]
+}

@@ -87,7 +87,9 @@ extension LayerStyle {
         case .cornerRadius: style.cornerRadius = other.cornerRadius
         case .border: style.borderWidth = other.borderWidth
         case .borderColor: style.borderColorHex = other.borderColorHex
-        case .shadow: style.shadow = other.shadow
+        // Every shadow the layer throws is ONE thing a person means by
+        // "the shadow", so the whole list travels together.
+        case .shadow: style.shadows = other.shadows
         case .blendMode: style.blendMode = other.blendMode
         }
         return style

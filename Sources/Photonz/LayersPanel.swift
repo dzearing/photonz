@@ -567,6 +567,14 @@ struct InspectorPanel: View {
     /// collapsed Library still says what it is set to.
     private func sectionAccessory(_ id: InspectorSectionID) -> AnyView? {
         switch id {
+        case .color where Experiments.shared.shapePartsEnabled:
+            // The plus that makes Appearance a list you add to. It rides the
+            // HEADER rather than the foot of the list, because the dock gives a
+            // section a height and scrolls the rest inside it: one shadow is
+            // already enough to push a foot button out of sight, and the one
+            // gesture that adds an effect may never be the thing you have to go
+            // looking for.
+            return AnyView(AddAppearanceButton())
         case .measurements:
             return AnyView(MeasurementsSectionAccessory())
         case .library:
@@ -2950,6 +2958,11 @@ struct ShadowInspector: View {
     /// the parts list the list supplies the margins, so the shadow's rows sit
     /// in the same column as every part above them.
     var inset = true
+    /// Which of the layer's shadows these rows are for, nearest the eye first.
+    /// A layer can throw more than one since the Appearance list became a list
+    /// you add to; the Shadow section of the old panel only ever means the
+    /// first one.
+    var index = 0
 
     var body: some View {
         // The layers that have a shadow to talk about. A label whose halo its
@@ -2957,7 +2970,7 @@ struct ShadowInspector: View {
         // would be describing a shadow nobody can see, so off is the truth and
         // switching it on gives that label a real shadow.
         let selection = editorState.layerStyleSelection
-        let shadows = selection.shadows
+        let shadows = selection.shadows(at: index)
         let ids = shadows.layerIDs
         VStack(alignment: .leading, spacing: 8) {
             let isMixed = selection.shadowIsMixed
@@ -3024,39 +3037,40 @@ struct ShadowInspector: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             if !shadows.isEmpty {
+                let at = index
                 HStack(spacing: 8) {
                     LayerStyleSlider(layerIDs: ids, label: "Blur",
-                                     reading: shadows.number { $0.shadow?.radius ?? 0 },
+                                     reading: shadows.number { $0.shadow(at: at)?.radius ?? 0 },
                                      range: 0...40, format: points) { style, v in
-                        style.shadow?.radius = CGFloat(v)
+                        style.updateShadow(at: at) { $0.radius = CGFloat(v) }
                     }
-                    if showsColor { ShadowColorWell() }
+                    if showsColor { ShadowColorWell(index: at) }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Size",
-                                 reading: shadows.number { $0.shadow?.spread ?? 0 },
+                                 reading: shadows.number { $0.shadow(at: at)?.spread ?? 0 },
                                  range: 0...80, format: points) { style, v in
-                    style.shadow?.spread = CGFloat(v)
+                    style.updateShadow(at: at) { $0.spread = CGFloat(v) }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Distance",
-                                 reading: shadows.number { $0.shadow?.distance ?? 0 },
+                                 reading: shadows.number { $0.shadow(at: at)?.distance ?? 0 },
                                  range: 0...40, format: points) { style, v in
                     // Each layer keeps the way its own shadow points; only how
                     // far it is thrown is set from here.
-                    style.shadow?.setDistance(CGFloat(v))
+                    style.updateShadow(at: at) { $0.setDistance(CGFloat(v)) }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Direction",
-                                 reading: shadows.number { $0.shadow?.directionDegrees ?? 90 },
+                                 reading: shadows.number { $0.shadow(at: at)?.directionDegrees ?? 90 },
                                  range: 0...360,
                                  format: { "\(Int($0.rounded()))°" }) { style, v in
-                    style.shadow?.setDirectionDegrees(CGFloat(v))
+                    style.updateShadow(at: at) { $0.setDirectionDegrees(CGFloat(v)) }
                 }
                 LayerStyleSlider(layerIDs: ids, label: "Opacity",
-                                 reading: shadows.reading { $0.shadow?.opacity ?? 0 },
+                                 reading: shadows.reading { $0.shadow(at: at)?.opacity ?? 0 },
                                  range: 0...1,
                                  format: { "\(Int(($0 * 100).rounded()))%" }) { style, v in
-                    style.shadow?.opacity = v
+                    style.updateShadow(at: at) { $0.opacity = v }
                 }
-                SelectionStyleNotes(notes: [showsColor ? shadowColorNote(shadows) : nil],
+                SelectionStyleNotes(notes: [showsColor ? shadowColorNote(shadows, at: at) : nil],
                                     caption: nil)
             }
         }
@@ -3092,8 +3106,8 @@ struct ShadowInspector: View {
             : "Turns the shadow on or off"
     }
 
-    private func shadowColorNote(_ shadows: LayerStyleSelection) -> String? {
-        guard shadows.reading({ $0.shadow?.colorHex ?? "#000000" }).isMixed else { return nil }
+    private func shadowColorNote(_ shadows: LayerStyleSelection, at index: Int) -> String? {
+        guard shadows.reading({ $0.shadow(at: index)?.colorHex ?? "#000000" }).isMixed else { return nil }
         return "Shadow colors differ. Picking one paints them all."
     }
 }
@@ -3105,11 +3119,14 @@ struct ShadowInspector: View {
 /// keeps its colour.
 struct ShadowColorWell: View {
     @Environment(EditorState.self) private var editorState
+    /// Which shadow in the layer's list this well paints.
+    var index = 0
 
     var body: some View {
-        let shadows = editorState.layerStyleSelection.shadows
+        let at = index
+        let shadows = editorState.layerStyleSelection.shadows(at: at)
         let ids = shadows.layerIDs
-        let reading = shadows.reading { $0.shadow?.colorHex ?? "#000000" }
+        let reading = shadows.reading { $0.shadow(at: at)?.colorHex ?? "#000000" }
         // The same picker every other color row opens. A shadow keeps its own
         // Opacity slider in its settings, so the picker is not offered a second
         // one that would fight with it.
@@ -3120,9 +3137,9 @@ struct ShadowColorWell: View {
                         // sliders take, so a shadow recolours under the drag
                         // and lands in one step.
                         onPreview: { hex in
-            editorState.previewLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
+            editorState.previewLayerStyle(ids: ids) { $0.updateShadow(at: at) { $0.colorHex = hex } }
         }) { hex in
-            editorState.previewLayerStyle(ids: ids) { $0.shadow?.colorHex = hex }
+            editorState.previewLayerStyle(ids: ids) { $0.updateShadow(at: at) { $0.colorHex = hex } }
             editorState.commitLayerStyle(ids: ids)
             editorState.recordRecentColor(hex: hex)
         }
