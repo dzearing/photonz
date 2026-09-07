@@ -116,6 +116,28 @@ struct ViewportTests {
 
     // MARK: View resize
 
+    // MARK: Going back to actual size
+
+    @Test func goingToActualSizeKeepsWhatWasInTheMiddleInTheMiddle() {
+        // Double clicking the zoom percentage goes to actual size, and what
+        // makes that feel like a zoom rather than a jump is that whatever you
+        // were looking at is still under the middle of the window afterwards.
+        // Scrolled well off the middle of a big document, zoomed in to 4x.
+        let vp = Viewport(documentSize: CGSize(width: 4000, height: 4000),
+                          viewSize: CGSize(width: 800, height: 600),
+                          zoom: 4,
+                          origin: CGPoint(x: -3000, y: -2400))
+        let middle = CGPoint(x: 400, y: 300)
+        let wasInTheMiddle = vp.documentPoint(fromView: middle)
+        // Actual size for a 2x screenshot is a zoom of a half, which is what
+        // the readout calls a hundred percent.
+        let actual = vp.zoomed(to: 0.5, anchorInView: middle)
+        let stillInTheMiddle = actual.documentPoint(fromView: middle)
+        #expect(abs(stillInTheMiddle.x - wasInTheMiddle.x) < 1e-6)
+        #expect(abs(stillInTheMiddle.y - wasInTheMiddle.y) < 1e-6)
+        #expect(actual.zoom == 0.5)
+    }
+
     @Test func resizingTheViewKeepsTheCenteredDocumentPointCentered() {
         // Doc point at the view's center stays at the view's center across a resize.
         let vp = Viewport(documentSize: CGSize(width: 4000, height: 4000),

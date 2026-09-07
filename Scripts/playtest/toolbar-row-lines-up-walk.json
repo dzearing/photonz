@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/toolbar-row",
+  "setup": { "forget": ["grid", "tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "toolBar", "stage": "1-wide" },
+    { "do": "snapshot", "name": "1-wide" },
+
+    { "do": "action", "action": "showGrid" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "2-wide-grid-on" },
+    { "do": "snapshot", "name": "2-wide-grid-on" },
+    { "do": "action", "action": "hideGrid" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "3-wide-shape-tool" },
+    { "do": "snapshot", "name": "3-wide-shape-tool" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "wand" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "4-wide-wand-options" },
+    { "do": "snapshot", "name": "4-wide-wand-options" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "5-wide-text-tool" },
+
+    { "do": "tool", "tool": "crop" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "6-wide-crop-tool" },
+    { "do": "snapshot", "name": "6-wide-crop-tool" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "showGrid" },
+    { "do": "action", "action": "adjustGrid" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "toolBar", "stage": "7-adjusting-the-grid" },
+    { "do": "snapshot", "name": "7-adjusting-the-grid" }
+  ]
+}

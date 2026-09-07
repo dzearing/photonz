@@ -1,0 +1,59 @@
+{
+  "out": "/tmp/photonz-playtest/zoom-double-click",
+  "setup": { "forget": ["grid", "tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-opened", "note": "the picture as it opens, fitted: displayZoom is whatever fit gave it" },
+
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-zoomed-in", "note": "zoomed in twice: displayZoom is well past 100, and viewCentre names the document point in the middle of the picture" },
+    { "do": "snapshot", "name": "1-zoomed-in" },
+
+    { "do": "press", "control": "Zoom level", "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-after-double-click", "note": "double clicking the percentage: displayZoom must read 100, viewCentre must be the same document point as step 2, and canUndo must be untouched" },
+    { "do": "toolBar", "stage": "4-after-double-click" },
+    { "do": "snapshot", "name": "2-actual-size" },
+
+    { "do": "press", "control": "Zoom level", "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-double-clicked-again", "note": "double clicking again at a hundred percent: nothing moves" },
+
+    { "do": "panelMenu", "menu": "100%", "clicking": "Zoom level", "shot": "3-zoom-menu" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-menu-closed", "note": "one click opened the stop menu and it closed having chosen nothing: displayZoom must still read 100" },
+    { "do": "toolBar", "stage": "7-after-single-click" },
+
+    { "do": "panelMenu", "menu": "100%", "clicking": "Zoom level", "choose": "400%" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-picked-400", "note": "a click, then a row: picking 400% from the menu still zooms" },
+
+    { "do": "press", "control": "Zoom level", "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "9-back-to-actual", "note": "and a double click brings it straight back to 100" },
+    { "do": "snapshot", "name": "4-back-to-actual" },
+
+    { "do": "move", "at": [300, 200] },
+    { "do": "pinch", "to": 3 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "10-pinched-off-centre", "note": "pinched in over the top left of the picture, so the middle of the window is no longer the middle of the document" },
+    { "do": "press", "control": "Zoom level", "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "11-actual-size-off-centre", "note": "the double click must go to 100 and leave viewCentre where step 10 had it: whatever was in the middle of the window stays there" },
+    { "do": "snapshot", "name": "5-off-centre-actual-size" },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 760, "height": 700 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "12-narrow-zoomed", "note": "a narrow window, where the zoom capsule has dropped its slider and is only the number" },
+    { "do": "press", "control": "Zoom level", "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "13-narrow-actual-size", "note": "the number alone still answers a double click: displayZoom must read 100" },
+    { "do": "toolBar", "stage": "14-narrow" },
+    { "do": "snapshot", "name": "6-narrow" }
+  ]
+}

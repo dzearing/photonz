@@ -53,6 +53,49 @@ struct EditorChromeLayoutTests {
         #expect(EditorChromeLayout.inspectorAutoCollapseWidth > EditorChromeLayout.minWindowWidth)
     }
 
+    // MARK: One height for every group in the bottom row
+
+    @Test func everyGroupInTheRowIsDrawnAtOneHeight() {
+        // The row along the bottom of the canvas is several separate glass
+        // capsules. Each used to set its own height from its own padding, and
+        // they came out 48, 45 and 35pt tall on the same row (measured in the
+        // running app on 2026-09-07), so the row did not line up. One number
+        // decides it now.
+        #expect(EditorChromeLayout.toolBarGroupHeight == 48)
+    }
+
+    @Test func theGroupHeightIsTheHeightThePlacementReservesForTheBar() {
+        // Everything that has to clear the bar — the notice pill, the tool
+        // settings capsule, the measure legend — measures from
+        // `toolBarHeight`. If a group could be taller than that, it would poke
+        // through whatever was placed above it.
+        #expect(EditorChromeLayout.toolBarHeight == EditorChromeLayout.toolBarGroupHeight)
+    }
+
+    // MARK: Double clicking the zoom percentage
+
+    @Test func theZoomMenuWaitsLongEnoughToSeeASecondClick() {
+        // A menu opens on the press, so the second click of a double click
+        // would land inside the menu. The readout waits to see whether one is
+        // coming; the wait is what makes a double click possible at all.
+        #expect(EditorChromeLayout.zoomReadoutDoubleClickWindow(systemInterval: 0.5) > 0)
+    }
+
+    @Test func theWaitBeforeTheZoomMenuStaysShort() {
+        // The system interval is half a second by default, and half a second
+        // of nothing after a click reads as a broken control. The wait is
+        // capped well under that, so a single click still feels like a click.
+        #expect(EditorChromeLayout.zoomReadoutDoubleClickWindow(systemInterval: 0.5) <= 0.25)
+        #expect(EditorChromeLayout.zoomReadoutDoubleClickWindow(systemInterval: 1.5) <= 0.25)
+    }
+
+    @Test func aFastDoubleClickSettingIsHonoured() {
+        // Someone who has set a fast double click gets an even shorter wait:
+        // there is no point waiting longer than the machine will ever call a
+        // double click.
+        #expect(EditorChromeLayout.zoomReadoutDoubleClickWindow(systemInterval: 0.15) == 0.15)
+    }
+
     // MARK: Tool bar fit
 
     @Test func theBudgetIsTheCanvasLessOneInsetEachSide() {

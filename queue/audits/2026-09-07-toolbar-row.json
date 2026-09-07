@@ -1,0 +1,28 @@
+{
+  "feature": "The bottom row lines up, and double clicking the zoom goes to actual size",
+  "epic": "ui-building",
+  "summary": "Every glass group along the bottom of the canvas is now the same height on one centre line, and double clicking the zoom percentage takes the picture back to a hundred percent while a single click still opens the stop menu.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Open any screenshot.",
+  "try": [
+    { "do": "Look along the bottom of the canvas: tools, colours, grid, zoom.", "shot": "2026-09-07-toolbar-row-wide.png" },
+    { "do": "Zoom in a few times with the slider or a pinch." },
+    { "do": "Double click the percentage. The picture goes to a hundred percent and stays on what you were looking at." },
+    { "do": "Click the percentage once. The stop menu opens as it always did.", "shot": "2026-09-07-toolbar-row-zoom-menu.png" },
+    { "do": "Pick 400% from that menu, then double click the number again." },
+    { "do": "Switch to the wand, the text tool and the crop tool in turn and watch the row stay level." },
+    { "do": "Drag the window narrow until the slider and the grid chip step out.", "shot": "2026-09-07-toolbar-row-narrow.png" }
+  ],
+  "evaluate": [
+    "Does the row read as one strip now, or does something still sit high or low?",
+    "Is 48pt the right height for the whole row, or should the row be slimmer than the tool bar was?",
+    "After a single click, does the stop menu open fast enough? It waits up to a quarter of a second to see whether a second click is coming.",
+    "Is double clicking the number the gesture you reach for, or would you rather it landed somewhere else?",
+    "When you go back to actual size, does the picture stay where you expected it to?"
+  ],
+  "rough": [
+    "The single click now waits before opening the menu: up to a quarter of a second, or your own double click interval if you have set a faster one. It cannot be avoided while both gestures live on the same number, because a menu takes every event the moment it opens, so the second click of a double click would land inside it. If the wait ever reads as lag, say so and the double click can move somewhere else.",
+    "Going back to actual size is not on the undo stack. Zoom never has been in Photonz: undo is for edits to the picture, and undoing a zoom would put back a view you did not ask to keep. The double click leaves the document and its history untouched, which the walk checks.",
+    "The heights were measured, not eyeballed. Before: tools 48pt, colours 45pt, zoom 35pt, all on centre line 800. After, in every state a walk could reach (wide, narrow, grid on, shape tool, wand, text, crop, adjusting the grid): 48pt each, one centre line. One number in EditorChromeLayout decides it now, so a new group cannot drift.",
+    "Screen Recording was granted, so the pictures here are real captures of the window rather than offscreen renders."
+  ]
+}

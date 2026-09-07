@@ -789,8 +789,9 @@ private final class Run {
             try writePNG(image, name: name)
             note(number, step.name, "\(name).png \(image.width)x\(image.height) px at \(scale)x")
 
-        case .panelMenu(let menu, let shot, let choose):
-            try await openPanelMenu(menu, shot: shot, choose: choose, number: number)
+        case .panelMenu(let menu, let shot, let choose, let clicking):
+            try await openPanelMenu(menu, shot: shot, choose: choose, clicking: clicking,
+                                    number: number)
 
         case .menuShot(let menu, let name, let ticked, let unticked):
             try await photographMenuBarMenu(menu, name: name, ticked: ticked,
@@ -874,6 +875,11 @@ private final class Run {
                  + "new \(arrived.isEmpty ? "none" : arrived.joined(separator: ", "))"
                  + "; " + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report,
                  state: describe())
+
+        case .toolBar(let stage):
+            let row = Self.readToolBar()
+            write(json: row, to: "toolbar-\(stage).json")
+            note(number, step.name, Self.outlineToolBar(row), state: row)
 
         case .describe(let stage, let text):
             note(number, stage, text ?? "", state: describe())
@@ -1825,6 +1831,48 @@ private final class Run {
             : "no \(thing.rawValue) \"\(named)\" in the panel, as claimed"
     }
 
+    /// Every glass group along the bottom of the canvas, left to right, with
+    /// the numbers that decide whether the row lines up.
+    private static func readToolBar() -> [String: Any] {
+        let groups = ToolBarLayoutProbe.shared.measured.map { group -> [String: Any] in
+            ["name": group.name,
+             "x": Int(group.frame.minX.rounded()), "width": Int(group.frame.width.rounded()),
+             "height": Int(group.frame.height.rounded()),
+             "top": Int(group.frame.minY.rounded()), "bottom": Int(group.frame.maxY.rounded()),
+             "centerY": Int(group.frame.midY.rounded())]
+        }
+        let heights = Set(groups.compactMap { $0["height"] as? Int })
+        let centers = Set(groups.compactMap { $0["centerY"] as? Int })
+        let zoom = ZoomReadoutProbe.shared
+        return ["groups": groups,
+                "heights": heights.sorted(), "centerLines": centers.sorted(),
+                "linedUp": heights.count <= 1 && centers.count <= 1,
+                // What the zoom percentage has been asked to do, since it is
+                // the one group in the row that answers two different clicks.
+                "zoomDoubleClicks": zoom.doubleClicks,
+                "zoomMenuOpens": zoom.menuOpens,
+                "zoomMenuFound": zoom.foundMenu.map { $0 as Any } ?? NSNull(),
+                "zoomMenuRows": zoom.menuRows,
+                "zoomClicks": zoom.clicks,
+                "zoomWaitsEnded": zoom.waitsEnded]
+    }
+
+    private static func outlineToolBar(_ row: [String: Any]) -> String {
+        let groups = row["groups"] as? [[String: Any]] ?? []
+        guard !groups.isEmpty else { return "no groups along the bottom of the canvas" }
+        let line = groups.map { group -> String in
+            let name = group["name"] as? String ?? "?"
+            return "\(name) \(group["height"] ?? "?")pt tall, centre \(group["centerY"] ?? "?")"
+        }.joined(separator: "; ")
+        let zoom = "; the zoom percentage has taken \(row["zoomDoubleClicks"] ?? 0) double "
+            + "click(s) to actual size and opened its stops \(row["zoomMenuOpens"] ?? 0) time(s)"
+            + ((row["zoomMenuRows"] as? [String]).map { $0.isEmpty ? "" : " (\($0.joined(separator: ", ")))" } ?? "")
+        let linedUp = (row["linedUp"] as? Bool ?? false)
+            ? "they line up"
+            : "they DO NOT line up: heights \(row["heights"] ?? []), centres \(row["centerLines"] ?? [])"
+        return line + " — " + linedUp + zoom
+    }
+
     private func readPanel() throws -> [String: Any] {
         func describe(_ target: PanelTargetView) -> [String: Any] {
             let frame = target.convert(target.bounds, to: nil)
@@ -2178,7 +2226,8 @@ private final class Run {
                                    isEnabled: true, window: match.window)
     }
 
-    private func openPanelMenu(_ name: String, shot: String?, choose: String?, number: Int) async throws {
+    private func openPanelMenu(_ name: String, shot: String?, choose: String?,
+                               clicking: String?, number: Int) async throws {
         let host = try requireWindow()
         guard let content = host.contentView else {
             throw Failure(description: "the window has no content view")
@@ -2253,8 +2302,19 @@ private final class Run {
         }
         // Long enough for the menu to be up and drawn, short enough that it is
         // not sitting over whatever the person at this machine is looking at.
-        hop.schedule(after: 0.55)
-        button.performClick(nil)
+        // A control that has to tell a single click from a double one cannot
+        // open its menu on the press: it waits first. So a walk that opens the
+        // menu with a real click has to leave that wait, and the walk's way
+        // out, room to happen.
+        let opener = try clicking.map { try pressTarget($0, in: nil) }
+        hop.schedule(after: opener == nil ? 0.55 : 1.1)
+        var opened = "pressed the button in code"
+        if let opener {
+            try clickToOpen(opener)
+            opened = "opened by clicking \"\(opener.name)\" at \(short(opener.point))"
+        } else {
+            button.performClick(nil)
+        }
         await sleep(0.25)
 
         // The picture is written on a background queue, so wait for its note.
@@ -2279,9 +2339,35 @@ private final class Run {
         if !dimmed.isEmpty { detail += "; dimmed: \(dimmed.joined(separator: ", "))" }
         if let chose = reading.chose { detail += "; picked \"\(chose)\"" }
         detail += "; picture: \(outcome)"
+        detail += "; \(opened)"
         note(number, "panelMenu", detail,
              state: ["rows": reading.rows, "dimmed": reading.dimmed,
                      "chose": reading.chose ?? NSNull(), "shot": reading.shot ?? NSNull()])
+    }
+
+    /// One plain click on a control, posted and left to land: the caller is
+    /// about to be taken hostage by whatever the click opens, so nothing here
+    /// waits for it.
+    private func clickToOpen(_ target: PlaytestPressTarget) throws {
+        guard target.isEnabled else {
+            throw Failure(description: "the control \"\(target.name)\" is dimmed, so clicking it would do nothing")
+        }
+        guard let window = target.window, Self.isInReach(target) else {
+            throw Failure(description: "the control \"\(target.name)\" is not where a person could click it")
+        }
+        let stamp = ProcessInfo.processInfo.systemUptime
+        guard let down = NSEvent.mouseEvent(
+                with: .leftMouseDown, location: target.point, modifierFlags: [], timestamp: stamp,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                clickCount: 1, pressure: 1),
+              let up = NSEvent.mouseEvent(
+                with: .leftMouseUp, location: target.point, modifierFlags: [], timestamp: stamp + 0.05,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 1,
+                clickCount: 1, pressure: 0) else {
+            throw Failure(description: "could not make a mouse event for \"\(target.name)\"")
+        }
+        NSApp.postEvent(down, atStart: false)
+        NSApp.postEvent(up, atStart: false)
     }
 
     /// Picks a tile up off the Library shelf and lets it go on the picture,
@@ -3705,6 +3791,15 @@ private final class Run {
             // it. Zeros mean there is no capsule at all.
             "toolSettingsWidth": editor.toolSettingsSize.width,
             "toolSettingsHeight": editor.toolSettingsSize.height,
+            // What the zoom readout is showing, as a whole percent, and the
+            // document point in the middle of the picture. The two together
+            // are how a walk proves a zoom kept its place instead of jumping
+            // the picture somewhere else.
+            "displayZoom": Int((editor.displayZoom * 100).rounded()),
+            "viewCentre": editor.viewport.map { viewport in
+                short(viewport.documentPoint(fromView: CGPoint(x: viewport.viewSize.width / 2,
+                                                               y: viewport.viewSize.height / 2)))
+            } ?? "none",
             "measureMode": editor.measureToolMode.rawValue,
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",

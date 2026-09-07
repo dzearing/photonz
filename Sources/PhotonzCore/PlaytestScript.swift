@@ -921,7 +921,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// open, which is why a walk could not do this before: clicking the button
     /// never returns until the menu closes, and nothing was left running to
     /// close it. The driver arranges its own way out first.
-    case panelMenu(menu: String, shot: String?, choose: String?)
+    /// `clicking` names a control to CLICK to open it, instead of pressing the
+    /// menu button in code. It is how a walk proves that a person's click still
+    /// opens a menu, on a control that answers a single click and a double
+    /// click differently — the zoom percentage is the one that does.
+    case panelMenu(menu: String, shot: String?, choose: String?, clicking: String?)
     /// Open one of the app's OWN menu-bar menus inside the probe window and
     /// photograph it.
     ///
@@ -1057,6 +1061,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// app's menus needs an Accessibility grant only a person can give, but the
     /// probe is our own app and can always say what is in its own menu bar.
     case menus(stage: String, menu: String?)
+    /// Write the measured frame of every glass group along the bottom of the
+    /// canvas to the log and to `toolbar-<stage>.json`: its height, its top and
+    /// bottom edge, and its centre line, left to right.
+    ///
+    /// The row is a set of separate capsules that each set their own size, so
+    /// "they line up" is a claim about numbers. This is how a walk proves it
+    /// rather than photographing it and hoping.
+    case toolBar(stage: String)
     /// Put the probe into light or dark for the shots that follow, so one walk
     /// can photograph a surface both ways. It changes THIS app only, never the
     /// machine's setting, so nothing outside the probe notices.
@@ -1123,6 +1135,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .clearClipboard: "clearClipboard"
         case .readClipboard: "readClipboard"
         case .menus: "menus"
+        case .toolBar: "toolBar"
         case .action: "action"
         }
     }
@@ -1243,7 +1256,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "panelMenu":
             self = .panelMenu(menu: try f.string("menu"),
                               shot: try f.optionalString("shot"),
-                              choose: try f.optionalString("choose"))
+                              choose: try f.optionalString("choose"),
+                              clicking: try f.optionalString("clicking"))
         case "rightClick":
             self = .rightClick(on: try f.string("on"),
                                shot: try f.optionalString("shot"),
@@ -1335,6 +1349,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .readClipboard(stage: try f.string("stage"))
         case "menus":
             self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"))
+        case "toolBar":
+            self = .toolBar(stage: try f.string("stage"))
         case "appearance":
             self = .appearance(try f.enumValue("value", PlaytestAppearance.self))
         case "action":

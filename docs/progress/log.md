@@ -2,6 +2,49 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-07 — The bottom row lines up, and the zoom answers a double click (go loop)
+
+Queue task `the-zoom-group-matches-the-other-tool-bar-groups` (epic
+`ui-building`), reported by the user.
+
+**Reproduced before touching anything.** The row along the bottom of the canvas
+is several separate glass capsules, each setting its own height from its own
+padding. A new `ToolBarLayoutProbe` and a `toolBar` playtest step report every
+group's live frame, and they said it plainly: tools 48pt, colours 45pt, zoom
+35pt, all on centre line 800. The zoom is the extreme case because its content
+is a small slider and a borderless menu, 15pt of it, so no padding chosen by
+hand keeps it level with a bar of buttons.
+
+**One number decides the row now.** `EditorChromeLayout.toolBarGroupHeight` is
+48, `toolBarHeight` reads from it so the placement math cannot drift from the
+drawing, and every group takes `.frame(height:)` instead of its own padding.
+Measured after, in every state a walk can reach — wide, narrow, grid on, shape
+tool, wand, text, crop, adjusting the grid — 48pt each, one centre line.
+
+**Double clicking the percentage goes to actual size.** The collision is real
+and worth writing down: a menu opens on the press and owns every event until it
+closes, so the second click of a double click lands inside the menu. Either the
+menu waits a moment or the double click cannot exist at all.
+`ZoomReadoutClickLid` is a transparent AppKit lid over the readout that takes
+clicks only — hover, highlight and tooltip fall through to the menu button
+underneath — waits `EditorChromeLayout.zoomReadoutDoubleClickWindow` (a quarter
+of a second, or the machine's own interval when that is shorter), and then
+either opens the same SwiftUI menu or goes to a hundred percent. It also
+answers a click in an unfocused window, which a tool bar should.
+
+**Verified in the running app, not by eye.** 156% to 100% with the document
+point in the middle of the window unchanged and the undo stack untouched; a real
+click opens the menu with all ten rows and a picture of it; picking 400% still
+zooms; and the same holds in a narrow window where the capsule is only the
+number. The harness grew what that needed: the `toolBar` step, `clicking` on
+`panelMenu` so a walk can open a menu with a real click rather than pressing the
+button in code, and `displayZoom` plus the middle-of-the-window document point
+in `describe`.
+
+Audit: `queue/audits/2026-09-07-toolbar-row.json`. Open question for the user,
+asked there: whether the quarter-second wait before the stop menu ever reads as
+lag, and whether 48pt is the right height for the whole row.
+
 ## 2026-09-04 — A speed check reads the work, not the machine (go loop)
 
 Queue task `the-gradient-speed-check-fails-now-and-then-on-a` (epic

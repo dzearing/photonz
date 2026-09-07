@@ -628,9 +628,10 @@ struct EditorView: View {
                 .playtestControl("Done", detail: "Adjust Grid bar")
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 10)
+        .frame(height: EditorChromeLayout.toolBarGroupHeight)
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
+        .toolBarGroupProbe("Adjust Grid")
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
@@ -715,9 +716,10 @@ struct EditorView: View {
             }
             .fixedSize()
             .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .frame(height: EditorChromeLayout.toolBarGroupHeight)
             .glassEffect(.regular, in: .capsule)
             .contentShape(.capsule)
+            .toolBarGroupProbe("Grid")
         }
     }
 
@@ -750,7 +752,7 @@ struct EditorView: View {
         }
         .buttonStyle(.borderless)
         .padding(.horizontal, 18)
-        .padding(.vertical, 10)
+        .frame(height: EditorChromeLayout.toolBarGroupHeight)
         .glassEffect(.regular, in: .capsule)
         // The bar absorbs clicks on the whole capsule it draws, not just
         // on the controls: the glass has a 10pt rim above and below the
@@ -759,6 +761,7 @@ struct EditorView: View {
         // active, aiming slightly high at a tool started a measurement on
         // the image instead of picking the tool.
         .contentShape(.capsule)
+        .toolBarGroupProbe("Tools")
         // One spring drives every toolbar transition: the accent circle
         // sliding between tools, conditional segments, and the capsule resize.
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
@@ -845,9 +848,10 @@ struct EditorView: View {
         .background { overflowShortcuts(overflow) }
         .buttonStyle(.borderless)
         .padding(.horizontal, 18)
-        .padding(.vertical, 10)
+        .frame(height: EditorChromeLayout.toolBarGroupHeight)
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
+        .toolBarGroupProbe("Tools")
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
     }
 
@@ -1187,9 +1191,10 @@ struct EditorView: View {
         }
         .buttonStyle(.borderless)
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .frame(height: EditorChromeLayout.toolBarGroupHeight)
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
+        .toolBarGroupProbe("Color")
     }
 
     /// Rectangle/ellipse have TWO tones — an interior fill and a border — so the
@@ -1470,6 +1475,10 @@ struct EditorView: View {
 
     private static let zoomStops: [Double] = [0.25, 0.5, 1, 2, 4, 8]
 
+    /// What the zoom readout says on a hover: both of the things a click on it
+    /// can mean, since the second one has nothing else to announce it.
+    static let zoomMenuHelp = "Choose a zoom level. Double click for actual size"
+
     /// Zoom: a log-scale slider plus a % readout that opens a stop menu.
     private var zoomBar: some View {
         HStack(spacing: 8) {
@@ -1505,12 +1514,25 @@ struct EditorView: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-            .help("Choose a zoom level")
+            .help(Self.zoomMenuHelp)
+            // Double clicking the number goes back to a hundred percent, which
+            // is what a person reaches for when the picture has wandered off
+            // its real size. It has to be a lid over the menu rather than a
+            // gesture on it: a menu opens on the press and owns every event
+            // after that, so the second click would land inside the menu.
+            // `ZoomReadoutClickLid` explains the wait that buys.
+            .overlay {
+                ZoomReadoutClickLid(isLive: editorState.document != nil) {
+                    editorState.zoomToActualSize()
+                }
+            }
+            .playtestControl("Zoom level", detail: "Tool bar")
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .frame(height: EditorChromeLayout.toolBarGroupHeight)
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
+        .toolBarGroupProbe("Zoom")
         .disabled(editorState.document == nil)
     }
 

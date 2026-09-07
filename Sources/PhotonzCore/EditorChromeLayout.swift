@@ -30,9 +30,22 @@ public enum EditorChromeLayout {
 
     /// How far the floating tool bar floats off the bottom of the canvas.
     public static let toolBarInset: CGFloat = 16
-    /// The bar's own height. Measured off the running app rather than guessed:
-    /// the glass capsule around its 28pt controls comes out at 48pt.
-    public static let toolBarHeight: CGFloat = 48
+    /// The height EVERY glass group along the bottom of the canvas is drawn
+    /// at: the tools, the colours, the grid chip, the zoom.
+    ///
+    /// Measured off the running app rather than guessed: the capsule around a
+    /// 28pt control row comes out at 48pt. It is one number because the groups
+    /// sit side by side and a person reads them as one row — and because each
+    /// group used to take its height from whatever was inside it, which on
+    /// 2026-09-07 had the tools at 48pt, the colours at 45pt and the zoom at
+    /// 35pt on the same row. The zoom is the extreme case: a small slider and
+    /// a borderless menu are only 15pt of content, so no amount of padding
+    /// picked by hand keeps it level with a bar of buttons.
+    public static let toolBarGroupHeight: CGFloat = 48
+
+    /// The bar's own height, which is one group's height: everything that has
+    /// to clear the bar measures from this.
+    public static let toolBarHeight: CGFloat = toolBarGroupHeight
     /// The breathing room between the bar and whatever stacks on top of it, so
     /// the two read as two surfaces rather than one sitting on the other.
     public static let toolBarStackGap: CGFloat = 12
@@ -191,6 +204,27 @@ public enum EditorChromeLayout {
     /// Whether the tool bar's zoom capsule shows its slider at this canvas width.
     public static func showsZoomSlider(canvasWidth: CGFloat) -> Bool {
         canvasWidth >= zoomSliderMinCanvasWidth
+    }
+
+    /// How long the zoom percentage waits, after a click, to see whether a
+    /// second one is coming — which is how double clicking it can mean "back
+    /// to a hundred percent" while a single click still opens the stop menu.
+    ///
+    /// The wait is unavoidable: a menu opens on the press and then owns every
+    /// event until it closes, so the second click of a double click would land
+    /// inside the menu rather than on the number. The only way to tell the two
+    /// apart is to let the first click sit for a moment.
+    ///
+    /// So the number is capped. The system's own interval is half a second by
+    /// default, and half a second of nothing after clicking reads as a control
+    /// that did not work; a quarter of a second reads as the menu opening.
+    /// Someone who has set a FASTER double click gets their own shorter wait,
+    /// since waiting longer than their machine would ever call a double click
+    /// buys nothing.
+    public static let zoomReadoutDoubleClickCap: CGFloat = 0.25
+
+    public static func zoomReadoutDoubleClickWindow(systemInterval: Double) -> Double {
+        max(0, min(systemInterval, Double(zoomReadoutDoubleClickCap)))
     }
 
     /// The narrowest canvas on which the active tool's options still lay

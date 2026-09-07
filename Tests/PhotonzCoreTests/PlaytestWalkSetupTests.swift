@@ -129,7 +129,7 @@ struct PlaytestWalkSetupTests {
             let script = try PlaytestScript.decode(try Data(contentsOf: file))
             var opened: [String] = []
             for step in script.steps {
-                guard case .panelMenu(let menu, _, let choose) = step else { continue }
+                guard case .panelMenu(let menu, _, let choose, _) = step else { continue }
                 #expect(!opened.contains(menu), """
                     \(file.lastPathComponent) opens a menu called "\(menu)" after an \
                     earlier step already chose that value from one, so the second run \

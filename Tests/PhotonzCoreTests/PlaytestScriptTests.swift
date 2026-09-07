@@ -810,7 +810,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add", "shot": "add-menu" } ] }
         """)
-        guard case .panelMenu(let menu, let shot, let choose) = script.steps[0] else {
+        guard case .panelMenu(let menu, let shot, let choose, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(menu == "Add")
@@ -823,11 +823,34 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add", "choose": "Label" } ] }
         """)
-        guard case .panelMenu(_, let shot, let choose) = script.steps[0] else {
+        guard case .panelMenu(_, let shot, let choose, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(shot == nil)
         #expect(choose == "Label")
+    }
+
+    @Test func aPanelMenuStepCanOpenItselfWithARealClick() throws {
+        // The zoom percentage answers a single click and a double click
+        // differently, so proving a person's click still opens its menu means
+        // clicking it rather than pressing the button in code.
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "100%", "clicking": "Zoom level" } ] }
+        """)
+        guard case .panelMenu(_, _, _, let clicking) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(clicking == "Zoom level")
+    }
+
+    @Test func aPanelMenuStepOpensItselfInCodeByDefault() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Add" } ] }
+        """)
+        guard case .panelMenu(_, _, _, let clicking) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(clicking == nil)
     }
 
     @Test func aPanelMenuStepMustNameTheMenu() {

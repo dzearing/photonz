@@ -1,0 +1,15 @@
+{
+  "out": "/tmp/photonz-playtest/toolbar-row-narrow",
+  "setup": { "forget": ["grid", "tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 760, "height": 700 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "toolBar", "stage": "1-narrow" },
+    { "do": "snapshot", "name": "1-narrow" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "2-narrow-shape-tool" },
+    { "do": "snapshot", "name": "2-narrow-shape-tool" }
+  ]
+}
