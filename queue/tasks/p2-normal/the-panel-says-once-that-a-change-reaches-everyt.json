@@ -1,0 +1,28 @@
+{
+  "id": "the-panel-says-once-that-a-change-reaches-everyt",
+  "title": "The panel says once that a change reaches everything picked",
+  "goal": "When you pick more than one thing, the properties panel prints the same sentence under nearly every section: two layers, a change here changes every one of them, in one step. It appears under Arrange, under Text, under Position and Size, under Effects, and twice inside Appearance. It costs about 190 points of panel height to say one thing six times, and that is the last thing keeping the look controls from having real room at the bottom of the window.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1630,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T13:25:34.601Z",
+  "updated": "2026-09-07T13:25:34.602Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the-properties-panel-fits-on-the-screen-it-has (2026-09-07). That task shipped the dock height budget: list-shaped groups are bounded and scroll inside themselves, form-shaped ones are paid in full. Measured after it: one text 838-996 in a 996 dock (fits), two text 838-1030 (34 over), four picked 574-732, arrow 712-870, callout 835-993, fifteen layers 574-732. Only the two-text case is over, by 34pt, and the captions are worth about 190. Sources: MixedLook.swift, ArrangeInspector.swift:60, PartsInspector.swift:56, LayersPanel.swift:2849 and :2920, PlacementInspector.swift:486. Reproduce with Scripts/playtest.sh Scripts/playtest/dock-fits-the-window-walk.json and read dockSections in the log. A decision card is attached: this is a question about the words, not the layout.",
+  "acceptance": [
+    "With two pieces of text picked in a window as tall as the screen allows, the whole Effects section including the line under Corner Radius is on screen",
+    "A person picking several things is still told, somewhere they will see it, that what they change reaches all of them",
+    "No section prints the sentence twice",
+    "A playtest walk reads the dock section offsets back and shows Effects wholly in view"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T13:25:34.602Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T10:29:36.039Z",
-  "updated": "2026-09-07T12:58:20.248Z",
+  "updated": "2026-09-07T13:01:32.715Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-07 while making mixed-one-look-walk honest. Measured, not guessed: the walk asks for a 1180pt window and this display gives it 1028pt of content; the dock reports dockViewport 996 against sections running Layers 6-217, Text 217-393, Position & Size 393-528, Appearance 528-858, Effects 858-1016 with ONE layer picked, and a second layer adds an Arrange section that pushes the total to roughly 1310. Corner Radius is the last row of the last section, so it sits about 290pt below the fold. Reproduce with Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json and read panel-two-picked.json in the out folder: every Effects control comes back inWindow=false. Worth an adversarial look before building: collapsing sections by default, moving Corner Radius up next to the other shape controls, and letting the dock use two columns are all different products, and the mocks do not settle it.\n\nTriage 2026-09-07: promoted from p3-low to p1-high and merged with the-look-controls-come-back-above-the-fold (dropped as a duplicate; its acceptance is folded in above). This is the most-cited defect of the day. Evidence beyond the original measurement: audit 2026-09-07-mixed-one-look (panel runs about 1310pt against 1028pt of display, Corner Radius roughly 290pt below the fold, the walk has to scroll twice); audit 2026-09-07-layers-hold-their-place (\"Appearance, Effects and Library sit below the fold whether or not any group is open\"); audit 2026-09-07-font-menu-one-width (three sections had to be collapsed by hand just to photograph the Text section); and three walks that stop dead on a control below the fold (the-clip-contents-walk-reaches-the-switch-it-is, the-panel-controls-walk-reaches-the-revert-arrow, plus the-mixed-one-look-walk which was fixed by scrolling). The model to build to is written down already: docs/design/mocks/shared/UX-PATTERNS.md section 3, panel group -- \"The body has its own bounded max-height and its own scroller, so a 60-layer stack scrolls inside Layers and never pushes Effects or Library off screen. Exactly one group per dock may be .grow and take the leftover space.\" In the app only the Layers list does this (LayersPanel.swift:1493-1526); everything else lives in the one outer ScrollView at LayersPanel.swift:99. Do the walks named above as part of this, or leave them a note saying they now pass.",
@@ -38,6 +38,35 @@
     {
       "t": "2026-09-07T12:58:20.248Z",
       "note": "seq 1370 -> 10"
+    },
+    {
+      "t": "2026-09-07T13:01:32.715Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T13:07:21.421681Z",
+      "note": "Reproduced, not guessed. Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json, two text layers picked: dockViewport 996, sections Layers 6-234, Arrange 234-383, Text 383-593, Position & Size 593-741, Appearance 741-1147, Effects 1147-1339. Effects starts 151pt BELOW the fold, so Corner Radius (its third slider) is about 290pt below it. dockInView stops at Position & Size."
+    },
+    {
+      "t": "2026-09-07T13:07:21.421681Z",
+      "note": "Adversarial review before building. (1) Bounding EVERY group equally is wrong. Water-filling 996pt across six groups gives each about 138pt, which would put Corner Radius inside a scroller in Effects -- the same hunt, one level deeper. The distinction that matters is LIST vs FORM: Layers, Appearance/parts, Measurements and Library are lists whose length is not a design decision, so bounding them is honest; Arrange, Text, Position & Size and Effects are forms with a fixed set of controls, and shortening a form only hides controls. So only lists get a bounded body. (2) That alone is necessary but arithmetic says it is close to the line: the four form sections total 571pt of body, headers and dividers about 210pt, leaving roughly 215pt for the two lists together. The dock is over-subscribed, and every extra section (a callout, an annotation) makes it worse. (3) Decorative rather than useful: the same 'N layers, a change here changes every one of them, in one step' caption is printed in Arrange, Text, Position & Size, Effects AND TWICE inside Appearance -- roughly 190pt of the 1339 spent saying one sentence six times. Cutting that is the largest single win available and costs no function, but it is deliberate copy, so it is a decision rather than a unilateral trim. (4) Shortest version that delivers the value: bound the lists, budget the dock, measure, and only then decide what else gives."
+    },
+    {
+      "t": "2026-09-07T13:27:18.230280Z",
+      "note": "Built: DockHeightBudget in PhotonzCore (pure, 14 tests) shares the dock's height out. Forms are paid first at full height; the list shaped groups (Layers, Appearance/parts, Measurements, Library) share what is left, tallest first, down to a floor of 112pt, and scroll inside themselves. CollapsibleSection gained a bounded body; LayersListView takes the dock's ceiling on top of its own grab bar ceiling. Files: Sources/PhotonzCore/DockHeightBudget.swift, Sources/Photonz/LayersPanel.swift (CollapsibleSection.boundedBody, InspectorPanel.dockCeilings, DockBudgetScratch)."
+    },
+    {
+      "t": "2026-09-07T13:27:18.230280Z",
+      "note": "Review of the built thing, on the real app, twice. (1) First build clipped the Appearance section mid-sentence with no cue at all -- macOS hides its scrollers at rest, so it read as a rendering fault. .scrollIndicators(.visible) did nothing at rest; a scroll-aware edge fade fixed it, and it only draws on the edge that really has more past it. (2) The Layers grab bar became a control that cannot act when the dock had squeezed the list below what the reader had dragged it to. Fixed: the bar's range is now capped by what the dock can spare, so every point of it still moves the list, and when there is nothing to give it is not drawn at all. (3) Still clumsy, recorded in the audit rather than hidden: two pieces of text picked is 34pt over, so Corner Radius sits on the very bottom edge; Appearance is squeezed to about a third of what it wants; nothing grows into leftover space when the panel is half empty."
+    },
+    {
+      "t": "2026-09-07T13:27:18.230280Z",
+      "note": "Verified by measurement, not by looking. New instrument Scripts/playtest/dock-fits-the-window-walk.json reads the dock's own section offsets back at six stages. In a 996pt dock: one text Effects 838-996 (in view), two text 838-1030 (34 over), four picked 574-732, arrow 712-870, callout 835-993, fifteen layers 574-732. Corner Radius comes back inWindow=true in ALL SIX panel dumps, including two text, where every Effects control used to be inWindow=false. Scripts/test.sh green: 4375 tests, 364 suites."
+    },
+    {
+      "t": "2026-09-07T13:27:18.230280Z",
+      "note": "What is left is copy, not layout, so it is filed rather than guessed: the same 'N layers, a change here changes every one of them' sentence is printed six times across the panel, about 190pt, which is more than the 34 still missing. Filed as the-panel-says-once-that-a-change-reaches-everyt with a decision card and a brief. UX-PATTERNS section 3 amended with the list-versus-form rule the build taught. Notes left on the-panel-controls-walk-reaches-the-revert-arrow and the-clip-contents-walk-reaches-the-switch-it-is (both still pending) to re-run before changing anything."
     }
-  ]
+  ],
+  "started": "2026-09-07T13:01:32.714Z"
 }

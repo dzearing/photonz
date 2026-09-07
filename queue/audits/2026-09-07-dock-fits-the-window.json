@@ -1,0 +1,30 @@
+{
+  "feature": "The properties panel fits the window it has",
+  "epic": "ui-building",
+  "summary": "Corner Radius, and the rest of Effects with it, is now on screen when you pick something instead of nearly 300 points below the bottom of the panel. The lists in the panel give up room so the controls under them stay put: a document with fifteen layers scrolls inside the Layers list rather than pushing Effects off the bottom.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Open a window as tall as your screen allows.",
+  "try": [
+    { "do": "Type a piece of text on a blank canvas, then click it with the arrow tool." },
+    { "do": "Look at the bottom of the right hand panel: Corner Radius should be there without touching the scroll wheel." },
+    { "do": "Shift click a second piece of text so both are picked.", "shot": "2026-09-07-dock-fits-two-text.png" },
+    { "do": "Reach for Corner Radius again. It is still there, but it is now sitting right on the bottom edge." },
+    { "do": "Look at the Appearance section just above it: its last line fades out, which is how it says it scrolls inside itself." },
+    { "do": "Draw eight or ten rectangles, then click one of them.", "shot": "2026-09-07-dock-fits-many-layers.png" },
+    { "do": "Scroll inside the Layers list. Everything under it stays exactly where it was." },
+    { "do": "Collapse Position & Size by clicking its header, and watch the sections that were squeezed take the room back." }
+  ],
+  "evaluate": [
+    "With two things picked, Corner Radius sits on the very bottom edge of the panel. Is that near enough, or does it need real room under it?",
+    "The Appearance section is shortened to about a third of what it wants when two things are picked. Would you rather scroll inside it, or scroll the whole panel as before?",
+    "Does the faded edge read as there is more this way, or does it just look dim?",
+    "The Layers list is cut to about three rows when the panel is full. Is Layers the right one to squeeze, or should something else give first?",
+    "When the panel is that tight the grab bar under the Layers list disappears, because there is no room to drag into. Is that better than a bar that will not move?"
+  ],
+  "rough": [
+    "Two pieces of text picked is still 34 points too tall: Effects starts on screen and Corner Radius is reachable, but the sentence under it is cut off and the panel still scrolls a little. Every other case measured fits outright: one piece of text, four layers at once, an arrow, a zoom callout, and fifteen layers in the document.",
+    "What is left is copy, not layout. The same sentence, 'N layers, a change here changes every one of them, in one step', is printed under Arrange, Text, Position & Size and Effects, and twice inside Appearance: about 190 points of the panel spent saying one thing six times, which is more than the 34 that are missing. Cutting it is a decision about the words, so it is filed rather than done.",
+    "The design rules say every panel group gets a bounded height. Built literally that gives six peepholes and puts Corner Radius inside a scroller, which is the same hunt one level deeper. So only the LIST shaped groups are bounded (Layers, Appearance, Measurements, Library) and the form shaped ones are paid in full: shortening a form hides controls, it does not compress anything.",
+    "Nothing grows into leftover space yet. With one small thing picked the panel still ends with empty glass under it, where the rules allow one group to take that room.",
+    "Screen Recording was granted, so both pictures are real captures of the window rather than offscreen renders."
+  ]
+}

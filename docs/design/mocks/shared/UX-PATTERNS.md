@@ -179,6 +179,23 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   inside Layers and never pushes Effects or Library off screen. Exactly one group
   per dock may be `.grow` and take the leftover space. **New capability is a new
   group.**
+  **Lists give up room, forms do not** (added 2026-09-07, from building this in
+  the app: commit for `the-properties-panel-fits-on-the-screen-it-has`, audit
+  `2026-09-07-dock-fits-the-window`). The rule above says "every group", and
+  applied to every group it makes the dock worse, not better: six groups sharing
+  996 points get about 138 each, which puts Corner Radius inside a scroller in
+  Effects — the same hunt one level deeper. The distinction that decides it is
+  what the body IS. A **list** (Layers, the parts of what you picked,
+  Measurements, the Library shelf) is as long as the document happens to make
+  it, so nobody designed its height and shortening it costs a scroll you were
+  going to do anyway. A **form** (Text, Position & Size, Effects, Arrange) is a
+  set of controls somebody chose, and shortening it compresses nothing — it
+  hides controls. So forms are drawn whole and paid for first; the lists share
+  what is left, tallest first, each down to its own floor of about three rows.
+  If that is still not enough, the DOCK scrolls, because a dock that scrolls a
+  little beats six peepholes. A body that has been shortened must SAY so: its
+  cut edge fades out, since macOS hides its scrollers at rest and a control
+  clipped in half with no cue reads as a rendering fault.
   **Reveal** (added 2026-09-04 to describe shipped behavior: commit `4a6aac7`,
   audit `2026-09-03-library-reveal`): when the app brings a group into view for
   you it scrolls the DOCK, by the shortest move that puts the whole group on

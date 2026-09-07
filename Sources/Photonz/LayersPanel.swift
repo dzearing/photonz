@@ -32,6 +32,27 @@ extension Color {
     }
 }
 
+/// What the dock has measured of itself, which is everything `DockHeightBudget`
+/// needs to decide who gives up room.
+///
+/// A value, and held in `@State` on purpose, unlike the drag and reveal scratch
+/// next to it: those remember numbers nothing draws, while these numbers decide
+/// how tall the sections are, so a change to one has to reach the next pass.
+/// Nothing here depends on the heights the budget hands out — a body is
+/// measured INSIDE its scroller, and the layers list reports what it would be
+/// rather than what it got — so there is no loop between the two.
+struct DockBudgetScratch: Equatable {
+    /// How tall the dock's scrolling area is, nil until it has been laid out.
+    var viewportHeight: CGFloat?
+    var headers: [InspectorSectionID: CGFloat] = [:]
+    /// What each body would like to be. For a list section this is the
+    /// scrollable part alone.
+    var bodies: [InspectorSectionID: CGFloat] = [:]
+    /// The part of a list section's body that does NOT scroll with the list:
+    /// the layers list's count line and grab bar.
+    var listExtras: [InspectorSectionID: CGFloat] = [:]
+}
+
 // MARK: - Docked inspector panel
 
 /// The full-height, docked right-side inspector (10.5). Holds collapsible,
@@ -53,6 +74,29 @@ struct InspectorPanel: View {
     static let headerRowHeight: CGFloat = 32
     /// The dock's own padding above its first section.
     static let listTopPadding: CGFloat = 6
+    /// How deep the fade is at the edge of a body the dock has shortened: the
+    /// cue that there is more of it past the cut.
+    static let bodyEdgeFade: CGFloat = 14
+    /// The hairline under each section, which the dock pays for as surely as
+    /// it pays for the header.
+    static let sectionDividerHeight: CGFloat = 1
+    /// The sections whose body is a LIST, and so may be shortened and scroll
+    /// inside itself when the dock is over-subscribed.
+    ///
+    /// This is the whole of the list-versus-form judgment, in one place. A list
+    /// is as long as the document happens to make it — however many layers,
+    /// parts, measurements or shelf tiles there are — so nobody designed its
+    /// height and shortening it costs a scroll you were going to do anyway. A
+    /// FORM (Text, Position & Size, Effects, Arrange) is a set of controls
+    /// somebody chose: shortening it compresses nothing, it just hides controls
+    /// behind a second scroller, which is the same hunt one level deeper. So
+    /// forms are paid first, at full height, and the lists share what is left.
+    static let scrollingSections: Set<InspectorSectionID> =
+        [.layers, .color, .measurements, .library]
+    /// How short a list may be squeezed before the dock stops asking: about
+    /// three rows. Under that a list stops reading as a list, and a dock that
+    /// scrolls a little is better than six peepholes.
+    static let listFloor: CGFloat = 112
     static let sectionOrderVersionKey = "inspector.sectionOrder.version"
     static let collapsedKey = "inspector.collapsed"
     /// Effects joined the Color section instead of trailing every per-kind one.
@@ -86,6 +130,9 @@ struct InspectorPanel: View {
     /// Bumped to draw the pass that mounts the sections held back above. The
     /// value means nothing; changing it is the whole point.
     @State private var arrivalPass = 0
+    /// What each section costs the dock, and how tall the dock is. Together
+    /// these are the whole input to `DockHeightBudget`; see `dockBudget`.
+    @State private var budget = DockBudgetScratch()
 
     var body: some View {
         // The sections the selection asks for, and the ones the dock may draw
@@ -95,6 +142,9 @@ struct InspectorPanel: View {
         let wanted = orderedAvailableSections
         let sections = arrivals.showing(wanted)
         let _ = arrivalPass // the catch-up pass reads its own trigger
+        // How tall each list section may be drawn, so that the forms under it
+        // stay where they are instead of being carried off the bottom.
+        let ceilings = dockCeilings(sections)
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -109,9 +159,21 @@ struct InspectorPanel: View {
                                                        carriedBy: carriedBy, in: sections)
                                 },
                                 onReorderEnd: { endSectionDrag(in: sections) },
-                                accessory: sectionAccessory(id)
+                                accessory: sectionAccessory(id),
+                                // The layers list bounds itself — it has had
+                                // its own scroller and grab bar since long
+                                // before the dock had a budget — so the
+                                // ceiling reaches it through `LayersListView`
+                                // instead of through a second scroller round
+                                // the outside of the one it already has.
+                                bodyCeiling: id == .layers ? nil : ceilings[id],
+                                onBodyHeight: { height in
+                                    guard id != .layers else { return }
+                                    budget.bodies[id] = height
+                                },
+                                onHeaderHeight: { budget.headers[id] = $0 }
                             ) {
-                                sectionContent(id)
+                                sectionContent(id, ceiling: ceilings[id])
                             }
                             // The hairline belongs to the section above it, so
                             // a section lifted off the panel takes its line
@@ -171,6 +233,7 @@ struct InspectorPanel: View {
             .coordinateSpace(.named(inspectorDockSpace))
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                 reveal.viewportHeight = $0
+                budget.viewportHeight = $0
                 recordInspectorViewportHeight($0)
             }
             // Where the dock sits in the window. Only a scripted walk reads
@@ -232,6 +295,45 @@ struct InspectorPanel: View {
             end: { endSectionDrag(in: sections) },
             cancel: cancelSectionDrag,
             sections: sections)
+    }
+
+    // MARK: Sharing out the height the dock has
+
+    /// How tall each list section may be drawn, given what the forms in the
+    /// dock cost and how tall the dock is.
+    ///
+    /// A section is absent from the result when it may be drawn whole, which is
+    /// every case where the panel fits, so the common dock is exactly the dock
+    /// it always was — no extra scrollers, no frames pinned to a measurement
+    /// taken a pass ago.
+    private func dockCeilings(_ sections: [InspectorSectionID]) -> [InspectorSectionID: CGFloat] {
+        let groups = sections.map { id -> DockHeightBudget.Group in
+            let header = budget.headers[id] ?? InspectorPanel.headerRowHeight
+            let open = !isCollapsed(id)
+            let body = open ? (budget.bodies[id] ?? 0) : 0
+            let scrolls = open && InspectorPanel.scrollingSections.contains(id)
+            // A list pays for the chrome that does not scroll with it up
+            // front; a form pays for its whole body up front, because none of
+            // it may be taken away.
+            let paid = scrolls ? (budget.listExtras[id] ?? 0) : body
+            return DockHeightBudget.Group(key: id.rawValue,
+                                          fixed: header + InspectorPanel.sectionDividerHeight + paid,
+                                          flexible: scrolls ? body : 0,
+                                          floor: InspectorPanel.listFloor)
+        }
+        // The dock's own padding above the first section and below the last is
+        // room no section can have.
+        let room = budget.viewportHeight.map { $0 - 2 * InspectorPanel.listTopPadding }
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: room)
+        var ceilings: [InspectorSectionID: CGFloat] = [:]
+        for id in sections {
+            guard let height = heights[id.rawValue],
+                  // Only when it is actually being shortened. A section given
+                  // exactly its own height gains nothing from a scroller.
+                  height < (budget.bodies[id] ?? 0) - PanelAreaResize.tolerance else { continue }
+            ceilings[id] = height
+        }
+        return ceilings
     }
 
     // MARK: Bringing the Library into view
@@ -519,10 +621,17 @@ struct InspectorPanel: View {
     }
 
     @ViewBuilder
-    private func sectionContent(_ id: InspectorSectionID) -> some View {
+    private func sectionContent(_ id: InspectorSectionID, ceiling: CGFloat?) -> some View {
         switch id {
         case .layers:
-            LayersListView()
+            // The one section that bounds itself: it is handed the dock's
+            // ceiling and applies it to its rows, so its count line and grab
+            // bar stay put instead of scrolling away with them.
+            LayersListView(dockCeiling: ceiling,
+                           onMetrics: { natural, extras in
+                               budget.bodies[.layers] = natural
+                               budget.listExtras[.layers] = extras
+                           })
         case .measurements:
             MeasurementsListView()
         case .arrange:
@@ -1242,19 +1351,98 @@ private struct CollapsibleSection<Content: View>: View {
     /// Optional header furniture between the title and the drag grip — the
     /// Measurements section puts its count badge and panel menu here.
     var accessory: AnyView?
+    /// The height this body is allowed, past which it scrolls inside itself so
+    /// the sections under it stay where they are. Nil is the normal case: the
+    /// body is drawn whole, because the dock has room for all of it. See
+    /// `DockHeightBudget`.
+    var bodyCeiling: CGFloat?
+    /// Told how tall the body would like to be, whether or not it got it. This
+    /// is what the dock budgets from, and it is measured INSIDE the scroller,
+    /// so it is the content's own height rather than the height it was given —
+    /// the two being different is the whole point.
+    var onBodyHeight: ((CGFloat) -> Void)?
+    /// ...and how tall the header is, since a header whose words wrap is
+    /// taller than the row it is pinned to.
+    var onHeaderHeight: ((CGFloat) -> Void)?
     @ViewBuilder var content: () -> Content
     /// Whether this header's press has travelled far enough to have picked the
     /// section up. See `headerGesture`.
     @State private var isCarrying = false
+    /// Which way a shortened body has more to show. Starts as "more below",
+    /// which is what being shortened means, so the cue is right on the first
+    /// frame rather than one scroll later.
+    @State private var overflow = EdgeOverflow(above: false, below: true)
+
+    /// Which edges of a shortened body have more content past them.
+    private struct EdgeOverflow: Equatable {
+        let above: Bool
+        let below: Bool
+    }
+
+    /// Solid over the body, fading out at whichever edge has more past it.
+    private var edgeFade: some View {
+        VStack(spacing: 0) {
+            LinearGradient(colors: [.black.opacity(0), .black],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: overflow.above ? InspectorPanel.bodyEdgeFade : 0)
+            Rectangle()
+            LinearGradient(colors: [.black, .black.opacity(0)],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: overflow.below ? InspectorPanel.bodyEdgeFade : 0)
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                    onHeaderHeight?($0)
+                }
             if !isCollapsed {
-                content()
-                    .padding(.bottom, 6)
+                boundedBody
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
+        }
+    }
+
+    /// The body, inside its own scroller when the dock has had to shorten it.
+    ///
+    /// Whole and unwrapped the rest of the time, which is every case where the
+    /// panel fits: a section that would be drawn at exactly its own height
+    /// gains nothing from a scroller and loses a frame of lag every time its
+    /// content changes, because the height it is given is measured one pass
+    /// behind the content it is given for.
+    @ViewBuilder private var boundedBody: some View {
+        let measured = content()
+            .padding(.bottom, 6)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                onBodyHeight?($0)
+            }
+        if let bodyCeiling {
+            ScrollView(.vertical) { measured }
+                .frame(height: bodyCeiling)
+                .scrollBounceBehavior(.basedOnSize)
+                // Which way there is more to see, so the edge that says so is
+                // only drawn where it is true.
+                .onScrollGeometryChange(for: EdgeOverflow.self) { geometry in
+                    EdgeOverflow(
+                        above: geometry.contentOffset.y > 1,
+                        below: geometry.contentOffset.y + geometry.containerSize.height
+                            < geometry.contentSize.height - 1)
+                } action: { _, edges in
+                    overflow = edges
+                }
+                // A body the dock has shortened is cut off mid-control, and
+                // macOS hides its scrollers until you scroll, so the first
+                // build of this clipped a sentence in half and gave no hint
+                // why: it read as a rendering fault rather than as something
+                // that scrolls. The edge fades out instead, which is the
+                // ordinary way of saying there is more this way, and it is
+                // only ever on a body that really is shorter than its content.
+                .mask { edgeFade }
+                .animation(.easeOut(duration: 0.12), value: overflow)
+        } else {
+            measured
         }
     }
 
@@ -1493,6 +1681,18 @@ struct LayersListView: View {
     @AppStorage(LayersListView.heightKey) private var maxHeight = 200.0
     /// Measured height of the Canvas row, the one row that is always built.
     @State private var canvasRowHeight: CGFloat = 38
+    /// What the count line and the grab bar under the list come to.
+    @State private var listExtrasHeight: CGFloat = 0
+
+    /// A second ceiling, from the dock rather than from the grab bar: what the
+    /// panel can spare once every form section has been paid for. The stored
+    /// ceiling is what this list ASKED for; this is what the panel HAS, and the
+    /// list is drawn at the smaller of the two. See `DockHeightBudget`.
+    var dockCeiling: CGFloat?
+    /// Told what this list would be at full length, and what the count line and
+    /// the grab bar under it cost, so the dock can budget for both separately:
+    /// the list scrolls and they do not.
+    var onMetrics: ((_ listNatural: CGFloat, _ extras: CGFloat) -> Void)?
 
     /// How tall the layers area may get, remembered across launches.
     static let heightKey = "inspector.layersHeight"
@@ -1520,8 +1720,23 @@ struct LayersListView: View {
             rowHeight: rowHeight,
             canvasRowHeight: canvasRowHeight)
         // The height the list is actually given, which is also the height of
-        // the window of rows worth drawing pictures for.
-        let viewport = PanelAreaResize.height(contentHeight: reserved, ceiling: maxHeight)
+        // the window of rows worth drawing pictures for. Two ceilings, and the
+        // lower one wins: what the reader dragged the grab bar to, and what the
+        // dock has room for after the form sections are paid.
+        let ceiling = min(maxHeight, dockCeiling ?? .greatestFiniteMagnitude)
+        let viewport = PanelAreaResize.height(contentHeight: reserved, ceiling: ceiling)
+        // What the grab bar may reach. Never past what the dock can spare, so
+        // the bar is never a control that cannot act: every point of it still
+        // moves the list, and when the dock has nothing at all to give, the bar
+        // is not drawn rather than sitting there refusing to move. The room is
+        // still there to be had — collapsing a section you are not using is
+        // what frees it.
+        let grabRange = min(reserved, dockCeiling ?? .greatestFiniteMagnitude)
+        // ...and what the list would be if the dock were NOT pressing on it:
+        // its rows, capped by the ceiling the reader set with that bar. This is
+        // what the dock budgets from, so it reserves room for the list the
+        // reader asked for rather than for rows the grab bar already ruled out.
+        let unpressed = PanelAreaResize.height(contentHeight: reserved, ceiling: maxHeight)
         return VStack(spacing: 0) {
             ScrollView(.vertical) {
                 rows(displays, viewport: viewport)
@@ -1539,9 +1754,20 @@ struct LayersListView: View {
                 firstVisibleRow = row
             }
 
-            multiSelectionCount
-            resizeHandle(reserved: reserved)
+            // What the list costs BESIDES the rows. These do not scroll with
+            // the list — a grab bar that scrolled away would be a grab bar you
+            // could not reach — so the dock has to budget for them separately.
+            VStack(spacing: 0) {
+                multiSelectionCount
+                resizeHandle(reserved: grabRange)
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { extras in
+                listExtrasHeight = extras
+                onMetrics?(unpressed, extras)
+            }
         }
+        .onAppear { onMetrics?(unpressed, listExtrasHeight) }
+        .onChange(of: unpressed) { _, latest in onMetrics?(latest, listExtrasHeight) }
         // The Rename command asks for a row's field. Only rows this list shows
         // answer, so the Measurements list next door does not open a second
         // field on the same layer.

@@ -31,6 +31,10 @@
     {
       "t": "2026-09-07T12:58:26.941Z",
       "note": "seq 1400 -> 140"
+    },
+    {
+      "t": "2026-09-07T13:26:36.149418Z",
+      "note": "Panel height changed under this on 2026-09-07 by the-properties-panel-fits-on-the-screen-it-has: the dock now shares out its height, so list shaped sections (Layers, Appearance, Measurements, Library) are bounded and scroll inside themselves while form shaped ones are drawn whole. Measured after it, in a 996pt dock: one text picked Effects 838-996, four picked 574-732, an arrow 712-870, a callout 835-993, fifteen layers 574-732 -- all wholly in view; only two pieces of text picked is still over, by 34pt. Re-run this walk before changing anything: the control it stops on may now be above the fold on its own. Scripts/playtest/dock-fits-the-window-walk.json is the instrument that reads the section offsets back."
     }
   ]
 }

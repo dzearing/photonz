@@ -1,0 +1,52 @@
+{
+  "id": "the-panel-says-once-that-a-change-reaches-everyt-when-you-pick-several-things-at",
+  "taskId": "the-panel-says-once-that-a-change-reaches-everyt",
+  "question": "When you pick several things at once, how often should the panel tell you that a change reaches all of them?",
+  "context": "The properties panel prints the same sentence under Arrange, Text, Position and Size, Effects, and twice inside Appearance whenever more than one thing is picked. It is about 190 points of a 996 point panel. The dock height budget shipped on 2026-09-07 got every case above the fold except two pieces of text picked together, which is still 34 points over, and this copy is the largest thing left to give.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Say it once, at the top",
+      "summary": "One line under the panel header, right where it already says how many layers are selected: \"2 layers. What you change here reaches both.\" Every section below it goes back to just its controls.",
+      "pros": [
+        "Gives back about 190 points, which is more than the look controls are short by",
+        "Says the thing where you look first, before you touch anything",
+        "One sentence to read instead of six near-identical ones"
+      ],
+      "cons": [
+        "A section you scroll down to no longer repeats the promise where your hands are"
+      ],
+      "mitigation": "The count line is pinned above the sections rather than scrolling away, so the sentence is still on screen wherever you are in the panel."
+    },
+    {
+      "id": "b",
+      "label": "Say it only where it is surprising",
+      "summary": "Keep the sentence in the sections where reaching everything is genuinely unobvious, and drop it from the ones where it is not. Arrange already says what it lines up; Effects sliders and Position fields keep theirs.",
+      "pros": [
+        "Keeps the explanation next to the controls people hesitate over",
+        "Still recovers most of the room"
+      ],
+      "cons": [
+        "Somebody has to judge which sections are surprising, and the answer will drift as sections are added"
+      ],
+      "mitigation": "The rule gets written into the panel patterns doc so the next section added inherits the answer rather than guessing."
+    },
+    {
+      "id": "c",
+      "label": "Leave the words alone",
+      "summary": "Every section keeps saying it. The panel stays as it is now: with two pieces of text picked, Corner Radius sits on the very bottom edge and the line under it is cut off.",
+      "pros": [
+        "Nothing changes, and the promise is repeated wherever your eye lands"
+      ],
+      "cons": [
+        "The look controls never get real room at the bottom of the window",
+        "The panel keeps scrolling a little in the case people hit most"
+      ],
+      "mitigation": "None. This is the state that has been filed against four times in one day.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-07T13:25:49.420Z"
+}

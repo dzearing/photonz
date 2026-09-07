@@ -10997,3 +10997,42 @@ in-app time, two PNGs per snapshot encoded and written on the main thread
 while the walk waits. Left alone because the run does not need it.
 
 **Open question.** Nothing blocking.
+
+## 2026-09-07 — the properties panel fits the window it has
+
+Corner Radius, and the whole Effects section with it, is back above the fold.
+Measured before: with two pieces of text picked the dock ran to 1339 points
+against 996 of window, so Effects started 151 points below the bottom and Corner
+Radius sat about 290 below it.
+
+The fix is a height budget for the dock (`PhotonzCore/DockHeightBudget.swift`,
+14 tests). The rule it encodes is **lists give up room, forms do not**: a list
+(Layers, the parts of what you picked, Measurements, the Library shelf) is as
+long as the document happens to make it, so bounding it costs a scroll you were
+going to do anyway; a form (Text, Position & Size, Effects, Arrange) is a set of
+controls somebody chose, and shortening it only hides controls. Forms are paid
+first at full height, the lists share what is left tallest-first down to a floor
+of about three rows, and a shortened body fades out at its cut edge so it says
+it scrolls. Building the written rule literally — every group bounded — was
+tried on paper first and rejected: six groups sharing 996 points get 138 each,
+which puts Corner Radius inside a scroller. `UX-PATTERNS.md` §3 now carries that
+amendment.
+
+Measured after, in the same 996 point dock: one piece of text 838–996, four
+layers 574–732, an arrow 712–870, a zoom callout 835–993, fifteen layers
+574–732 — all wholly in view. Two pieces of text is still 34 points over, so
+Corner Radius is reachable but sitting on the bottom edge. New instrument:
+`Scripts/playtest/dock-fits-the-window-walk.json` reads the dock's section
+offsets back at all six stages, so this is a number rather than an opinion.
+
+Audit: `queue/audits/2026-09-07-dock-fits-the-window.json`, with real captures.
+
+**Next.** The last 34 points are copy, not layout: the same "N layers, a change
+here changes every one of them" sentence is printed six times across the panel,
+about 190 points' worth. That is a decision about the words, so it is filed as
+`the-panel-says-once-that-a-change-reaches-everyt` with a decision card and a
+brief rather than guessed at.
+
+**Open question for the user.** With the panel that tight, Appearance is squeezed
+to about a third of its natural height and Layers to about three rows. Is Layers
+the right thing to squeeze, or should something else give first?

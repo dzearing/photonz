@@ -1813,3 +1813,6 @@
 {"t":"2026-09-07T12:58:27.041Z","ev":"task_resequenced","id":"a-tool-setting-that-is-on-screen-twice-reads-as","from":80,"to":170}
 {"t":"2026-09-07T12:58:41.895Z","ev":"triage","summary":"merged 2 duplicates (one-outline-row..., the-look-controls-come-back-above-the-fold), moved 2 up (properties-panel p3->p1, walk-panel-picture p3->p2), re-tagged 1 epic (mock number rows -> design-system), reset 0 (nothing stuck), groomed 8 goals/acceptance/notes, added 4 from the design review; open tasks 21 -> 23, all seq renumbered to steps of 10"}
 {"t":"2026-09-07T13:01:04.336Z","ev":"digest","file":"2026-09-07.md"}
+{"t":"2026-09-07T13:01:32.716Z","ev":"task_started","id":"the-properties-panel-fits-on-the-screen-it-has","title":"The properties panel fits on the screen it has","priority":"p1-high"}
+{"t":"2026-09-07T13:25:34.602Z","ev":"task_created","id":"the-panel-says-once-that-a-change-reaches-everyt","priority":"p2-normal","title":"The panel says once that a change reaches everything picked"}
+{"t":"2026-09-07T13:25:49.420Z","ev":"decision_opened","id":"the-panel-says-once-that-a-change-reaches-everyt-when-you-pick-several-things-at","taskId":"the-panel-says-once-that-a-change-reaches-everyt","question":"When you pick several things at once, how often should the panel tell you that a change reaches all of them?"}
