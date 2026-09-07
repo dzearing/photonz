@@ -10686,3 +10686,32 @@ both ways in.
 
 Next: the dock squeeze task ("Opening a group in the layers list pushes the
 controls you were using off screen").
+
+## 2026-09-07 — The Layout caption for a resized copy: already fixed, now pinned
+
+The queued task said the Layout section still tells you everything in a copy
+stays where the original put it, which a copy given its own width does not. It
+does not say that any more. The sentence went on 2026-09-06 in 84a70e20, "The
+Layout section stops lecturing and starts fitting", which replaced a copy's
+whole paragraph with titled rows and cut the size out of them on purpose,
+because W and H in Position & Size two rows above hold the same numbers.
+
+Checked rather than assumed. Two probe walks with real window captures: a Stack
+copy (Nav Bar) widened to 1200 against an original at 320, and a Free copy
+(Button) widened to 400 against an original at 96. Both read as greyed rows —
+Arrangement, Direction, Gap, Padding, Horizontal, Vertical — over one foot line,
+"Edit Original changes this for every copy." Every row is true of the copy at
+its own size, and the Free copy's Horizontal Center is exactly what the widened
+copy is doing with its label.
+
+So the task's first acceptance item is met by removal, not by a rewrite, and
+writing the sentence it asks for would undo a measured fix and say the size a
+third time. What was genuinely still missing was its third item, a test next to
+the words. Three now sit in `LayoutReadoutTests`: a copy widened past its
+original reads its gap off its OWN box (the original says 12, the copy says
+Spread), a copy nobody resized reads exactly what its original reads, and
+widening a copy moves only the rows that are about its box. The first fails
+against any readout that answers for the original, which is the class of lie the
+task named.
+
+Next: back to the queue.

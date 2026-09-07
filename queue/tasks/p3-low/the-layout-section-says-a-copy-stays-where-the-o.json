@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T23:09:52.762Z",
-  "updated": "2026-09-06T12:16:42.288Z",
+  "updated": "2026-09-07T08:24:12.583Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "The caption is built for the Arrangement row in the copy branch of ArrangementInspector.swift / PlacementInspector.swift, reading Layer.workingLayout. Landed 2026-09-04 alongside a-copy-can-be-given-its-own-size, which made a copy resizable; the caption was not revisited then because rewriting it blind was worse than leaving a sentence that is only half wrong. See queue/audits/2026-09-04-copy-own-size.json, first rough line.",
+  "notes": "Resolved by verification, not by a rewrite. The offending paragraph went on 2026-09-06 in 84a70e20 when a copy's Layout became titled rows; reproduced on the probe for a Stack copy at 1200 and a Free copy at 400 and found nothing false left. What shipped here is the regression guard acceptance item 3 asked for: LayoutReadoutTests now pins that a resized copy's rows read off the COPY's box, not the original's. If the Layout section is ever asked to mention a copy's own size again, note that this was cut on purpose: Position & Size holds W and H two rows above, and the Component section's 'Its own size' row is the way back.",
   "acceptance": [
     "Picking a copy that has its own size shows a sentence that describes a copy at that size, not one that says its contents stay where the original put them",
     "Picking a copy that has NOT been resized still reads exactly as it does today",
@@ -34,6 +34,31 @@
     {
       "t": "2026-09-06T12:16:42.288Z",
       "note": "seq 40 -> 40"
+    },
+    {
+      "t": "2026-09-07T08:24:12.583Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T09:05:00.000Z",
+      "note": "Adversarial review of the premise BEFORE building: the sentence the task names does not exist any more. It was removed on 2026-09-06 by 84a70e20 'The Layout section stops lecturing and starts fitting', which replaced a copy's whole paragraph with titled rows (GroupLayout.followedReadout) and cut the size out of them on purpose, because W and H in Position & Size two rows above hold the same numbers."
+    },
+    {
+      "t": "2026-09-07T09:05:00.000Z",
+      "note": "Reproduced on the real app rather than taking the task at its word. Two probe walks, Screen Recording granted, real window captures: a Stack copy (Nav Bar) widened to 1200 against an original at 320, and a Free copy (Button) widened to 400 against an original at 96. The Layout section reads Arrangement / Direction / Gap / Padding / Horizontal / Vertical as greyed rows plus one foot line, 'Edit Original changes this for every copy.' Nothing in it claims the contents stay where the original put them, and every row shown is true of the copy at its own size. The Free copy's rows read Horizontal Center, Vertical Middle, which is exactly what the widened copy is doing."
+    },
+    {
+      "t": "2026-09-07T09:05:00.000Z",
+      "note": "Acceptance 1 is met by removal, not by a rewritten sentence, and building it literally would be a regression: re-adding a sentence that describes the copy's size would put back prose a measured task deliberately took out and would say the size a third time. Not filed as a decision, because the 2026-09-04 audit already asks the user the open half of this ('do you want the shelf tile, the layers row or the canvas to say that copy is not the size of its original?')."
+    },
+    {
+      "t": "2026-09-07T09:05:00.000Z",
+      "note": "Acceptance 3 was the one thing genuinely still missing, so that is what shipped. Three tests in Tests/PhotonzCoreTests/LayoutReadoutTests.swift, next to the words they describe: a copy widened past its original reads its gap off its OWN box (original says 12, copy says Spread); a copy nobody resized reads exactly what its original reads, which is acceptance 2 held at the model; and widening a copy moves only the rows that are about its box, so padding and direction stay the original's. The first would fail against any readout that answered for the original, which is the class of lie this task named."
+    },
+    {
+      "t": "2026-09-07T09:05:00.000Z",
+      "note": "No audit written: no feature shipped for the user to try. The user-visible change was audited on 2026-09-06 (queue/audits/2026-09-06-layout-fits.json). Scripts/test.sh green, 4286 tests."
     }
-  ]
+  ],
+  "started": "2026-09-07T08:24:12.582Z"
 }
