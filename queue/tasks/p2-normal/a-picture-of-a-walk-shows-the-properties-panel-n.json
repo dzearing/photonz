@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T10:59:23.661Z",
-  "updated": "2026-09-07T14:02:13.780Z",
+  "updated": "2026-09-07T14:27:02.784Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured on 2026-09-07 during the-mixed-one-look-walk task. Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json writes 1-mixed-dock.png and 2-mixed-dock-lower.png with identical md5s while the -sc.png pair differ. The offscreen path is PlaytestHarness.snapshot(_:name:) around line 2885: bitmapImageRepForCachingDisplay + cacheDisplay on the window contentView. The dock is NOT a child window (only HintTooltip.swift adds one), so this is cacheDisplay failing to reproduce the dock hosting view, most likely a layer-backed / material subtree it cannot draw. Likely fix: render through the layer (CALayer.render(in:)) or an ImageRenderer of the dock hosting view, composited into the same bitmap. Docs already updated with the limitation in docs/design/playtest-harness.md.\n\nTriage 2026-09-07: moved p3-low -> p2-normal. Unmanned-loop is a next epic, so its work is normally parked at p3; this one earns the move because it unblocks the focus. Seven of the last day's audits had to add the caveat 'Screen Recording was granted, so these are real captures', which is the same as saying the panel evidence is luck-dependent.",
@@ -38,7 +38,36 @@
     {
       "t": "2026-09-07T14:02:13.780Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T14:27:02.783Z",
+      "note": "PlaytestHarness.snapshot now draws every SwiftUI ScrollView's clip view on its own and composites it in place (outermost first), plus the title bar and the window background. Cause was AppKit's recursive draw not reaching SwiftUI ScrollView content, not a material or a child window. Verified on the real app: mixed-one-look-walk's four offscreen renders now all differ and match their -sc captures; redline-walk's canvas region is byte identical to before. Audit queue/audits/2026-09-07-panel-in-the-picture.json, docs updated, Scripts/test.sh green (4381 tests). Commit 9cec1a70."
+    },
+    {
+      "t": "2026-09-07T14:27:20.442303Z",
+      "note": "Adversarial review before building: the task's own guess (a material subtree, or CALayer.render) was wrong on both counts. Dumped the live view tree from the probe: the dock is PlatformContainer > HostingScrollView > NSClipView > PlatformGroupContainer with 128 sublayers. CALayer.render(in:) came back with the dock just as empty (and upside down). Probing each view on its own showed the clip view draws 3836 sampled opaque pixels when ASKED DIRECTLY while its own scroll view and the content view above it draw nothing: AppKit's recursive draw does not descend into a SwiftUI ScrollView's content. So the shortest fix is to ask each clip view directly and composite, not to re-render anything."
+    },
+    {
+      "t": "2026-09-07T14:27:20.442303Z",
+      "note": "Also found and fixed two things the task did not name, both the same shape: the title bar is a sibling of the content view, so the traffic lights and the Next panel toggle were missing from every drawn picture (panel-toggle-titlebar-walk photographs exactly that), and nothing paints the band behind the title bar, so it came out fully transparent, which reads as the white gap in the title."
+    },
+    {
+      "t": "2026-09-07T14:27:20.442303Z",
+      "note": "First attempt drew only the OUTERMOST scroll views, on the theory that a panel's own draw carries the lists inside it. It does not once the panel is scrolled: the Layers rows vanished from the scrolled snapshot. Now every clip view is drawn, outermost first, sourced from visibleRect so a list scrolled half out of its panel is drawn as the half that shows."
+    },
+    {
+      "t": "2026-09-07T14:27:20.442303Z",
+      "note": "Acceptance verified, not assumed. (1) mixed-one-look-walk's 1-mixed-dock.png shows Layers with thumbnails, Arrange, Text with Size Mixed, Position & Size with three Mixed fields, Appearance and Effects. (2) All four offscreen renders now have distinct md5s and their diff against each other has the same bounding box as the -sc pair's. (3) redline-walk run before and after the change: the canvas region (x 0-2000, y 70-1680) is byte identical on 9 of 13 renders and the 4 that differ are the same steps whose -sc captures also differ, so that is run to run variance, not this change."
+    },
+    {
+      "t": "2026-09-07T14:27:20.442303Z",
+      "note": "Left rough: one artifact survives, a clipped sliver of a section's helper line at a section boundary. Logged each drawn clip's rect and the artifact falls outside all of them, so it is SwiftUI's own direct draw and nothing in the harness can move it. Recorded in docs/design/playtest-harness.md and in the audit."
+    },
+    {
+      "t": "2026-09-07T14:27:20.442303Z",
+      "note": "No app behaviour changed, so nothing to port to Next: this is probe-only harness code, compiled out of release."
     }
   ],
-  "started": "2026-09-07T14:02:13.779Z"
+  "started": "2026-09-07T14:02:13.779Z",
+  "completed": "2026-09-07T14:27:02.784Z"
 }
