@@ -199,6 +199,19 @@
       "name": "toolbar-7-drawn"
     },
     {
+      "do": "tool",
+      "tool": "fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-bucket-in-hand",
+      "note": "the foreground and background pair only comes to the bar for the bucket, so the walk picks it up before carrying a colour between them"
+    },
+    {
       "do": "dragColor",
       "from": "Foreground fill",
       "onto": "Background fill",

@@ -1,0 +1,28 @@
+{
+  "id": "the-fill-keys-say-which-colours-they-will-use",
+  "title": "The fill keys say which colours they will use",
+  "goal": "Two keyboard shortcuts paint with the foreground and background colours whatever tool is in hand: option-delete fills what you have picked with the foreground colour, and delete on a locked background clears it to the background colour. Cropping outward past the edge of the picture paints the new space with the background colour too. Now that the swatches only appear for tools that paint, someone using Select or crop cannot see which two colours those actions are about to use, or change them, without picking up the paint bucket first. Give them a way to see and set that pair from where they already are.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1740,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T18:25:47.166Z",
+  "updated": "2026-09-07T18:25:47.167Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Fell out of the-colour-swatches-appear-only-for-tools-that-p on 2026-09-07. The paths are EditorState+Regions.fillSelectedLayer (option-delete, foreground), deleteRegion / clearBackgroundLayer (delete, background) and EditorState+Crop backgroundExtended. The pair lives on EditorState.foregroundFillHex / backgroundFillHex, persisted in defaults, and its only home on screen is now Tool.fill via Tool.colorControl == .foregroundBackground. Options worth weighing before building: leave it as is and rely on G plus the existing tooltips, which may well be the right answer; put the pair in a menu (an Edit > Fill row that names the colour); or show it inside the crop bar only while cropping. This may be a decision card rather than a build.",
+  "acceptance": [
+    "With Select or crop in hand there is a way to see the foreground and background colours the fill keys will use, without switching tools",
+    "Swapping the two, which X does today, works from wherever that way is",
+    "The tool bar under Select is no wider than it is now",
+    "Cropping outward shows which colour will fill the new space before the crop is committed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T18:25:47.167Z",
+      "note": "created (manual)"
+    }
+  ]
+}

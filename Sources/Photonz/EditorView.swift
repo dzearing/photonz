@@ -1173,42 +1173,43 @@ struct EditorView: View {
         editorState.setTool(group.next(after: editorState.lastTool(in: group)))
     }
 
-    /// The single color capsule, adaptive to the active tool (17.12): a drawing
-    /// tool (line/arrow/shape/highlight/text) shows ONE swatch — that tool's own
-    /// color, opening its style popover — because a stroke has a single color.
-    /// Select / fill / everything else shows the Photoshop-style FG/BG paint pair
-    /// (the bucket + ⌫/⌥⌫ colors), so there's exactly one color control on
-    /// screen and it means the right thing for the tool in hand.
-    private var colorBar: some View {
-        Group {
-            if activeToolUsesFillAndBorder {
-                shapeFillBorderPair
-            } else if usesToolColor {
-                styleButton
-            } else {
-                fillColorPair
+    /// The colour capsule, and only for a tool that puts colour on the picture.
+    ///
+    /// A drawing tool (line/arrow/highlight/text) shows ONE swatch — that
+    /// tool's own colour, opening its style popover — because a stroke has a
+    /// single colour. A box shows a fill over a border, the two tones it has.
+    /// The bucket shows the Photoshop-style foreground/background pair it
+    /// paints from.
+    ///
+    /// Everything else shows NOTHING, and takes no room doing it (the `if` is
+    /// the same "takes no room" rule the grid chip is built on). The capsule
+    /// used to fall through to the foreground/background pair for every other
+    /// tool, so Select — which puts no colour anywhere — parked two swatches
+    /// and a swap button in the scarcest strip in the app, setting a colour
+    /// nothing was about to use. The colours themselves are remembered, not
+    /// reset: they are the bucket's, they live in defaults, and picking up the
+    /// bucket (G) brings them straight back.
+    ///
+    /// Which tools paint is `Tool.colorControl`, in PhotonzCore where it is
+    /// tested and where a tool added later has to answer it.
+    @ViewBuilder private var colorBar: some View {
+        let control = editorState.activeTool.colorControl
+        if control != .hidden {
+            Group {
+                switch control {
+                case .fillAndBorder: shapeFillBorderPair
+                case .toolColor: styleButton
+                case .foregroundBackground: fillColorPair
+                case .hidden: EmptyView()
+                }
             }
+            .buttonStyle(.borderless)
+            .padding(.horizontal, 12)
+            .frame(height: EditorChromeLayout.toolBarGroupHeight)
+            .glassEffect(.regular, in: .capsule)
+            .contentShape(.capsule)
+            .toolBarGroupProbe("Color")
         }
-        .buttonStyle(.borderless)
-        .padding(.horizontal, 12)
-        .frame(height: EditorChromeLayout.toolBarGroupHeight)
-        .glassEffect(.regular, in: .capsule)
-        .contentShape(.capsule)
-        .toolBarGroupProbe("Color")
-    }
-
-    /// Rectangle/ellipse have TWO tones — an interior fill and a border — so the
-    /// capsule shows a fill/border pair for them (17.13).
-    private var activeToolUsesFillAndBorder: Bool {
-        editorState.activeTool == .rectangle || editorState.activeTool == .ellipse
-    }
-
-    /// Whether the active tool draws in a single color (so the capsule shows that
-    /// tool's swatch instead of the FG/BG paint pair). Excludes the fill/border
-    /// shapes, which get their own pair.
-    private var usesToolColor: Bool {
-        (editorState.activeTool.createsAnnotationByDrag || editorState.activeTool == .text)
-            && !activeToolUsesFillAndBorder
     }
 
     /// Fill (top-left) OVER border (bottom-right), Photoshop-style — the fill is

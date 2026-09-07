@@ -1,0 +1,30 @@
+{
+  "feature": "The colour swatches appear only for tools that paint",
+  "epic": "ui-building",
+  "summary": "The colour capsule on the tool bar now belongs to the tools that put colour on the picture. With Select, the marquee pair, the wand, crop, measure, the zoom callout or the frame in hand there are no swatches at all and the bar gives that room back, and the colours themselves are remembered for when a painting tool comes back.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Open any screenshot.",
+  "try": [
+    { "do": "Look at the bottom of the canvas with Select in hand. There are no colour swatches.", "shot": "2026-09-07-colour-where-it-paints-select.png" },
+    { "do": "Press R for the rectangle. A capsule of two swatches appears, a fill over a border.", "shot": "2026-09-07-colour-where-it-paints-rectangle.png" },
+    { "do": "Press V for Select. The capsule goes and the bar closes up around the gap." },
+    { "do": "Run through W, M, C and I (wand, marquee, crop, measure). None of them shows a swatch." },
+    { "do": "Press G for the paint bucket. The foreground and background pair is there, with the swap arrows.", "shot": "2026-09-07-colour-where-it-paints-bucket.png" },
+    { "do": "Set the foreground to something loud, then press V, W, C, then G again. The same colour is waiting." },
+    { "do": "Draw a box, pick it with Select, and change its Fill in the panel on the right. That is unchanged." }
+  ],
+  "evaluate": [
+    "With Select in hand, does the bar read as shorter and calmer, or does something now feel missing?",
+    "When you press R and the swatches appear, does the bar jumping wider read as helpful or as a flinch?",
+    "Is the paint bucket the right home for the foreground and background pair, or do you want that pair somewhere it never moves?",
+    "Do you press X to swap foreground and background often enough that losing it under Select matters?",
+    "The frame tool draws in a fixed grey and so gets no swatches. Should a frame take a colour from the bar instead?"
+  ],
+  "rough": [
+    "X swaps the foreground and background colours, and that key lives on the swap button, so it only works with the bucket in hand now. Before this it worked under Select, crop, measure, the marquee pair and the wand too. Photoshop keeps X global because its swatches never leave the tools palette; this bar has no such permanent home.",
+    "Two keyboard paths still use the foreground and background colours whatever tool is in hand, and with a non-painting tool you can no longer see which colours they will use: option-delete fills what you have picked with the foreground colour, and delete on a locked Background clears it to the background colour. Cropping outward past the edge of the picture also paints the new space with the background colour. Pressing G shows the pair, and the swatch tooltips already say which key uses which. Filed as a follow-up rather than solved here, because where that pair should live when nothing is painting is a question for you.",
+    "The room the swatches gave up was measured, not eyeballed. On a 1280pt window: with Select the bar runs 115 to 900 (Tools 514, Grid 52, Zoom 199); with a rectangle it runs 84 to 932, exactly 63pt wider, which is the 53pt capsule plus its 10pt gap, split evenly because the bar is centred. Every other group keeps its exact width. Going Select, rectangle, Select, ellipse, fill, Select puts the bar back at 115 to 900 to the pixel: nothing crept.",
+    "Narrow windows too. At 760pt the bar under Select is Tools 316 and Zoom 81; the rectangle's capsule slots in without costing a tool, the bucket's wider pair costs one, and coming back to Select restores Tools 316 at the same x. Before this change every tool paid that cost all the time.",
+    "Which tools paint is one property on the tool in PhotonzCore, answered by an exhaustive list, so a tool added later has to say. Tests cover it.",
+    "Screen Recording was granted, so the pictures here are real captures of the window rather than offscreen renders."
+  ]
+}

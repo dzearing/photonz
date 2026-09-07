@@ -3800,6 +3800,12 @@ private final class Run {
                 short(viewport.documentPoint(fromView: CGPoint(x: viewport.viewSize.width / 2,
                                                                y: viewport.viewSize.height / 2)))
             } ?? "none",
+            // What the bucket and the fill shortcuts will paint with. The
+            // swatches only appear for a tool that paints, so this is how a
+            // walk proves the pair survived a spell under Select rather than
+            // reading it off a picture that does not show it.
+            "foregroundFill": editor.foregroundFillHex,
+            "backgroundFill": editor.backgroundFillHex,
             "measureMode": editor.measureToolMode.rawValue,
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",

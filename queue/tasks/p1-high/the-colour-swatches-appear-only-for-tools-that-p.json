@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:23:56.174Z",
-  "updated": "2026-09-07T16:17:50.472Z",
+  "updated": "2026-09-07T18:13:19.954Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07: the colour swatches are not applicable when selecting things. Confirmed by reading: EditorView.colorBar (line 1163) always draws something. It picks the fill and border pair for a shape tool, the style button for other annotation tools and text, and otherwise falls through to fillColorPair (line 1389), the foreground and background pair, which is what shows under Select. The rule to write is which tools paint: shapes, arrow, line, highlight, text and the fill bucket, plus anything added later that creates or paints. Put that on Tool in PhotonzCore beside the existing helpers like createsAnnotationByDrag rather than as a list in the view, so a new tool cannot forget to answer. Note the foreground and background pair is also what the fill bucket and the delete-key fills use, so check what those need when no painting tool is in hand before deciding they can disappear entirely; if they must stay reachable, say where they went. Same measurement point as the grid group task: the tool bar reserves room from a measured content width, so a group that draws nothing has to measure nothing or the gap remains.",
@@ -38,6 +38,51 @@
     {
       "t": "2026-09-07T16:17:50.471Z",
       "note": "seq 9 -> 13"
+    },
+    {
+      "t": "2026-09-07T18:13:19.954Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "adversarial review before building: the mock question here is not a mock but a rule. Walked it as a first-time user. With Select in hand the pair sets a colour nothing is about to use, so removing it costs nothing you can see. What it DOES cost is invisible: option-delete fills with the foreground colour and delete on a locked background clears to the background colour under any tool, and cropping outward paints the new space with the background colour. So the pair is not purely decorative under Select, it is a readout for keys you cannot see. Decided to hide it anyway because the task names crop, measure, the marquee pair, the wand and the zoom callout explicitly and the user filed the task, and to file the keyboard gap as its own follow-up rather than guess a new home for the pair. Shortest version that delivers the value: one conditional, no new surface."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "wrote the rule on the tool, not in the view: Tool.colorControl (hidden / toolColor / fillAndBorder / foregroundBackground) plus Tool.paints in PhotonzCore, exhaustive over Tool so a tool added later has to answer. Tests first in ToolTests: onlyPaintingToolsCarryColour, theToolsThatShowNoColourAreNamedOneByOne, eachPaintingToolAsksForOneKindOfColourControl, everyDragToCreateToolPaints, theForegroundBackgroundPairHasOneHome."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "EditorView.colorBar is now @ViewBuilder with an if, the same takes-no-room rule the grid chip uses, and the three view-local predicates (activeToolUsesFillAndBorder, usesToolColor) are gone in favour of the core property. Frame draws its own fixed grey (CanvasAnnotationPreview.frameDraftContent), so it is hidden too."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "added foregroundFill / backgroundFill to the playtest describe state, so a walk can prove the pair survived a spell under a tool that shows no swatches instead of reading it off a picture that does not show it."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "measured on the probe, Screen Recording granted. 1280pt window: Select = Tools x115 w514, Grid x639 w52, Zoom x701 w199. Rectangle = Tools x84, Color x608 w53, Grid x671, Zoom x733: exactly 63pt wider (53 capsule + 10 gap), split evenly because the bar is centred, every other group its exact width. Select, rectangle, Select, ellipse, fill, Select returns to x115 w514 to the pixel. 760pt window: Select = Tools x44 w316, Zoom x370 w81; rectangle adds its capsule without costing a tool; the bucket's wider pair costs one; back to Select is x44 w316 again. No creep, no oscillation."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "colours remembered: dropped the box's red on the bucket's foreground swatch, then went Select, wand, crop and back. foregroundFill read #FF3B30 throughout and the swatch came back wearing it (walk stages 14 to 16)."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "a selected layer's colour is untouched: it is the panel's own Fill and Outline swatches, and the walk drove one of them (dragColor from Outline) while the bar carried no shape swatches."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "review of the built thing: X (swap foreground and background) lives on the swap button, so it now only works with the bucket in hand. It used to work under Select, crop, measure, the marquee pair and the wand. Recorded in the audit's rough and covered by the follow-up."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "fixed Scripts/playtest/toolbar-colour-walk.json, which carried a colour between the foreground and background swatches with the rectangle in hand; it now picks up the bucket first. Both it and colour-off-the-shelf-walk.json run ok. New walk: Scripts/playtest/colour-only-where-it-paints-walk.json."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "filed follow-up the-fill-keys-say-which-colours-they-will-use (p2). Full suite green: 4466 tests. Audit at queue/audits/2026-09-07-colour-where-it-paints.json with three real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-07T18:13:19.954Z"
 }

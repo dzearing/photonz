@@ -106,6 +106,34 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
 
+    /// What the tool bar's colour capsule carries for this tool.
+    ///
+    /// The bar used to show SOMETHING whatever was in hand: with Select, which
+    /// puts no colour anywhere, it still parked the foreground/background pair
+    /// and a swap button in the scarcest strip in the app, setting a colour
+    /// nothing was about to use. A control that cannot act on anything is
+    /// noise, so which capsule a tool gets is answered here, on the tool, where
+    /// a tool added later cannot forget to answer it.
+    public var colorControl: ToolColorControl {
+        switch self {
+        // A box has two tones, an interior and a border, so it gets both.
+        case .rectangle, .ellipse: .fillAndBorder
+        // A stroke, a highlight or a run of type has one colour.
+        case .arrow, .line, .highlight, .text: .toolColor
+        // The bucket paints from the foreground/background pair, and it is the
+        // only tool that does, so the pair lives with it.
+        case .fill: .foregroundBackground
+        // Everything else picks, cuts, measures or frames. None of them put a
+        // colour on the picture. The frame tool draws its own fixed grey.
+        case .select, .crop, .zoomCallout, .measure,
+             .rectSelect, .ellipseSelect, .wand, .frame: .hidden
+        }
+    }
+
+    /// Whether this tool puts colour on the picture, and so earns swatches on
+    /// the tool bar.
+    public var paints: Bool { colorControl != .hidden }
+
     /// The measure tool drags two reference points to create a dimension layer.
     public var createsMeasureByDrag: Bool { self == .measure }
 
@@ -114,6 +142,22 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     public var defaultAnnotation: AnnotationContent? {
         AnnotationStyles().content(for: self)
     }
+}
+
+/// The colour control the tool bar shows for the tool in hand.
+///
+/// One value per shape the capsule can take, including taking none: `hidden`
+/// means no glass, no swatches and no room reserved, so the bar gives the
+/// space back to the picture rather than leaving a gap.
+public enum ToolColorControl: String, CaseIterable, Hashable, Codable, Sendable {
+    /// No capsule at all. The tool paints nothing, so there is nothing to set.
+    case hidden
+    /// The tool's own single colour, which opens that tool's style popover.
+    case toolColor
+    /// An interior fill over a border: the two tones a box has.
+    case fillAndBorder
+    /// The foreground and background paint pair, and the swap between them.
+    case foregroundBackground
 }
 
 /// An in-progress drag-to-create annotation, tracked in document coordinates.

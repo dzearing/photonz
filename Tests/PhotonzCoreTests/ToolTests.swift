@@ -384,4 +384,53 @@ struct ToolBarLayoutTests {
         #expect(ToolBarLayout.families.entry(for: .arrow) == .tool(.arrow))
         #expect(ToolBarLayout.families.entry(for: .fill) == .tool(.fill))
     }
+
+    // MARK: - Which tools paint (the tool bar's colour capsule)
+
+    /// The colour capsule belongs to the tools that put colour on the picture.
+    /// Select, the marquee pair, the wand, crop, measure, the zoom callout and
+    /// the frame put none there, so they get no swatches at all.
+    @Test func onlyPaintingToolsCarryColour() {
+        let painting: Set<Tool> = [.arrow, .line, .rectangle, .ellipse,
+                                   .highlight, .text, .fill]
+        for tool in Tool.allCases {
+            #expect(tool.paints == painting.contains(tool))
+            #expect((tool.colorControl == .hidden) == !painting.contains(tool))
+        }
+    }
+
+    @Test func theToolsThatShowNoColourAreNamedOneByOne() {
+        for tool in [Tool.select, .crop, .measure, .zoomCallout,
+                     .rectSelect, .ellipseSelect, .wand, .frame] {
+            #expect(tool.colorControl == .hidden)
+            #expect(!tool.paints)
+        }
+    }
+
+    /// A box has two tones, a stroke has one, and the bucket works from the
+    /// foreground/background pair. Each tool answers with exactly one of them.
+    @Test func eachPaintingToolAsksForOneKindOfColourControl() {
+        #expect(Tool.rectangle.colorControl == .fillAndBorder)
+        #expect(Tool.ellipse.colorControl == .fillAndBorder)
+        #expect(Tool.arrow.colorControl == .toolColor)
+        #expect(Tool.line.colorControl == .toolColor)
+        #expect(Tool.highlight.colorControl == .toolColor)
+        #expect(Tool.text.colorControl == .toolColor)
+        #expect(Tool.fill.colorControl == .foregroundBackground)
+    }
+
+    /// Every tool that draws by dragging paints, so a new annotation tool
+    /// cannot be added and quietly lose its colour.
+    @Test func everyDragToCreateToolPaints() {
+        for tool in Tool.allCases where tool.createsAnnotationByDrag {
+            #expect(tool.paints)
+        }
+    }
+
+    /// The pair the bucket and the fill shortcuts work from has exactly one
+    /// home on the bar. If it ever grows a second the two can drift.
+    @Test func theForegroundBackgroundPairHasOneHome() {
+        let homes = Tool.allCases.filter { $0.colorControl == .foregroundBackground }
+        #expect(homes == [.fill])
+    }
 }

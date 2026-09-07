@@ -1,0 +1,105 @@
+{
+  "out": "/tmp/photonz-playtest/colour-only-where-it-paints",
+  "setup": { "forget": ["grid", "tools", "panel"] },
+  "steps": [
+    { "do": "appearance", "value": "dark" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "describe", "stage": "0-start", "note": "Select is in hand: the bar should carry Tools, Grid and Zoom, and no Color group at all" },
+    { "do": "toolBar", "stage": "1-select" },
+    { "do": "panel", "stage": "1-select", "note": "no control named Color is on screen with Select in hand" },
+    { "do": "snapshot", "name": "1-select" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-rectangle", "note": "a box paints: the fill over border pair is back" },
+    { "do": "toolBar", "stage": "2-rectangle" },
+    { "do": "panel", "stage": "2-rectangle" },
+    { "do": "snapshot", "name": "2-rectangle" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-select-again", "note": "back to Select: every group must be exactly where stage 1 had it" },
+    { "do": "toolBar", "stage": "3-select-again" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "toolBar", "stage": "4-arrow" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "toolBar", "stage": "5-text" },
+
+    { "do": "tool", "tool": "highlight" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "toolBar", "stage": "6-highlight" },
+
+    { "do": "tool", "tool": "fill" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-fill", "note": "the bucket keeps the foreground and background pair it paints from" },
+    { "do": "toolBar", "stage": "7-fill" },
+    { "do": "panel", "stage": "7-fill", "note": "the foreground and background swatches are reachable with the bucket in hand" },
+    { "do": "snapshot", "name": "7-fill" },
+
+    { "do": "tool", "tool": "wand" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "toolBar", "stage": "8-wand" },
+    { "do": "snapshot", "name": "8-wand" },
+
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "toolBar", "stage": "9-marquee" },
+
+    { "do": "tool", "tool": "crop" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "toolBar", "stage": "10-crop" },
+
+    { "do": "tool", "tool": "measure" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "toolBar", "stage": "11-measure" },
+
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "toolBar", "stage": "12-zoom-callout" },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "fill" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "13-select-after-a-round-trip", "note": "after switching back and forth the bar must be exactly as it started" },
+    { "do": "toolBar", "stage": "13-select-after-a-round-trip" },
+    { "do": "snapshot", "name": "13-select-after-a-round-trip" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [220, 200], "to": [520, 380], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "fill" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "dragColor", "from": "Outline", "onto": "Foreground fill", "expect": "takes" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "14-foreground-set", "note": "the bucket's foreground is now the box's red: foregroundFill must read #FF3B30" },
+    { "do": "snapshot", "name": "14-foreground-set" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "wand" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "crop" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "15-away-from-the-swatches", "note": "three tools with no swatches on the bar: the pair must still read #FF3B30 over #FFFFFF" },
+
+    { "do": "tool", "tool": "fill" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "16-foreground-remembered", "note": "back on the bucket: the same red is on the swatch, unchanged" },
+    { "do": "toolBar", "stage": "16-foreground-remembered" },
+    { "do": "snapshot", "name": "16-foreground-remembered" }
+  ]
+}

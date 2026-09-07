@@ -11381,3 +11381,46 @@ all, so View ▸ Grid Settings has nothing to open on.
 - Next: if a way to snap a selection is ever wanted it belongs on a deliberate
   switch or a held key, never as the default. Not filed, since nobody has asked
   for it.
+
+## 2026-09-07 — colour only where it paints
+
+- The tool bar's colour capsule used to draw something whatever tool was in
+  hand: a fill/border pair for the box tools, a single swatch for the other
+  drawing tools, and otherwise a fall-through to the foreground/background
+  paint pair. So Select, which puts no colour anywhere, parked two swatches
+  and a swap button in the scarcest strip in the app, setting a colour nothing
+  was about to use.
+- Which tools paint is now one property on the tool: `Tool.colorControl`
+  (`hidden` / `toolColor` / `fillAndBorder` / `foregroundBackground`) plus
+  `Tool.paints`, in `PhotonzCore`, exhaustive over `Tool` so a tool added later
+  has to answer. The box tools get a fill over a border; arrow, line, highlight
+  and text get their one colour; the bucket keeps the foreground/background
+  pair it paints from; Select, the marquee pair, the wand, crop, measure, the
+  zoom callout and the frame get nothing at all. The frame draws its own fixed
+  grey, which is why it is in the last list.
+- `EditorView.colorBar` is a `@ViewBuilder` behind an `if`, the same
+  takes-no-room rule the grid chip is built on, so the bar closes up rather
+  than leaving a gap. The two view-local predicates it used to branch on are
+  gone.
+- Room measured, not eyeballed, on a 1280pt window: Select is Tools x115 w514,
+  Grid x639 w52, Zoom x701 w199; a rectangle makes it 63pt wider (a 53pt
+  capsule and its 10pt gap) split evenly because the bar is centred, with every
+  other group its exact width. Select → rectangle → Select → ellipse → fill →
+  Select lands back on x115 w514 to the pixel. At 760pt the shape capsule slots
+  in without costing a tool and the bucket's wider pair costs one; back to
+  Select is x44 w316 again. Nothing creeps.
+- The colours are remembered because they never moved: they live on
+  `EditorState` and in defaults, and the walk drops a red on the bucket's
+  foreground swatch, goes Select → wand → crop, and finds it still there.
+- Tests first in `Tests/PhotonzCoreTests/ToolTests.swift`. New walk:
+  `Scripts/playtest/colour-only-where-it-paints-walk.json`. The playtest
+  `describe` state now carries `foregroundFill` / `backgroundFill`, so a walk
+  can prove the pair survived a tool that shows no swatches.
+  `Scripts/playtest/toolbar-colour-walk.json` carried a colour between those
+  two swatches with a rectangle in hand; it picks up the bucket first now.
+  Audit: `queue/audits/2026-09-07-colour-where-it-paints.json`.
+- Next: X (swap foreground and background) lives on the swap button, so it now
+  only works with the bucket in hand, and option-delete, delete-on-a-locked-
+  background and cropping outward still paint from that pair under tools that
+  no longer show it. Filed as `the-fill-keys-say-which-colours-they-will-use`
+  (p2), with leaving it alone listed as a real option.
