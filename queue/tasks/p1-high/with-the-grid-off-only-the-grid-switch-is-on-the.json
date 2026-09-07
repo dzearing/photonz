@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:19:30.227Z",
-  "updated": "2026-09-07T16:32:55.512Z",
+  "updated": "2026-09-07T16:33:29.157Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported again by the user on 2026-09-07 as a regression: with the grid off they still see space taken by the grid controls, and they asked that the grid icon open the settings rather than toggle the grid. Raised to p1. Today EditorView.gridChip (line 670) builds the whole group whenever the feature is on and a document is open; isVisible only lights the switch, and the size button, divider and gear are built unconditionally below it. Two things follow. The obvious one is to branch so those three are only built when the grid is on. The one that will be missed is the SPACE: EditorChromeLayout.showsGridChip decides whether the group fits at the current width, and the tool bar reserves room from a measured content width, so a group that draws less must also measure less or the gap stays exactly as the user describes. That is why the acceptance asks for measured numbers rather than a look. On the icon becoming a settings button: the popover already exists (CanvasGridSettingsPopover, opened today from the View menu's Grid Settings through isGridSettingsPresented), so this is a rewiring rather than a new surface, and the grid's on and off switch has to move into it. Keep the shortcut working and show it there.",
@@ -90,7 +90,7 @@
     }
   ],
   "started": "2026-09-07T16:22:44.383Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-07T16:22:13.648Z",
     "exit": 0,

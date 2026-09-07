@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/panel-mark",
+  "seed": "The red dashed refusal outline around the whole right panel used to turn up for drags that had nothing to do with files - a colour off a swatch, a layer row being carried - and once it was up it never cleared. This walk holds a file the app cannot use over a layer row (the mark is right there), lets it go (the mark goes), holds a picture (the accepting mark and the drop line), abandons a file drag in the air without a word (the mark has to take itself off), then carries the app's own things over the same row and expects the panel to say nothing at all.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 760, "canvasHeight": 520, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "dropImage", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [430, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 430], "to": [520, 570], "steps": 10 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 120], "to": [260, 220], "steps": 10 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "snapshot", "name": "1-nothing-in-the-air" },
+
+    { "do": "describe", "stage": "2-a-file-it-cannot-use", "note": "a real file the app cannot place, held over a layer row: this is the refusal mark, and it is the only drag it is there to answer" },
+    { "do": "dragFile", "file": "../../Package.swift", "at": [1148, 129], "space": "window", "hold": "2-file-refused" },
+    { "do": "snapshot", "name": "3-after-the-file-left" },
+
+    { "do": "describe", "stage": "4-a-picture", "note": "a picture over the same row: the accepting mark and the drop line that says where it lands" },
+    { "do": "dragFile", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [1148, 129], "space": "window", "hold": "4-picture-accepted" },
+
+    { "do": "describe", "stage": "5-abandoned", "note": "THE STUCK CASE: a drag armed and then abandoned without a word, which is what escape, a release outside the window and a row rebuilt under the pointer all look like from inside. The mark has to take itself off." },
+    { "do": "dragFile", "file": "../../Package.swift", "at": [1148, 129], "space": "window", "leave": true },
+    { "do": "snapshot", "name": "5-after-the-abandoned-drag" },
+
+    { "do": "describe", "stage": "6-a-colour", "note": "a colour off the Fill swatch carried up over a layer row: the panel must say NOTHING about it" },
+    { "do": "dragOver", "carry": "Fill", "at": [1148, 129], "space": "window", "hold": "6-colour-over-a-row" },
+
+    { "do": "describe", "stage": "7-a-row", "note": "a layer row being carried over another row: the panel must say NOTHING about it either" },
+    { "do": "dragOver", "carry": "Rectangle", "at": [1148, 169], "space": "window", "hold": "7-row-over-a-row" },
+
+    { "do": "describe", "stage": "8-a-file-after-a-stranded-row", "note": "and a file arriving after a row drag that never ended: the file still gets the file answer rather than being read as that row coming back" },
+    { "do": "dragFile", "file": "../../Package.swift", "at": [1148, 129], "space": "window", "hold": "8-file-after-a-stranded-row" },
+    { "do": "describe", "stage": "9-clean", "note": "nothing is in the air and nothing is marked" }
+  ]
+}

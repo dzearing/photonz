@@ -885,7 +885,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// is the only way a walk can record the no-entry pointer a text file or an
     /// archive gets. `file` is relative to the script, like `open`; `hold`
     /// names a picture taken while it is still in the air.
-    case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool)
+    /// `leave` walks away from the drag WITHOUT telling the views under it that
+    /// anything ended, which is what escape, a release outside the window and a
+    /// target rebuilt out from under the pointer all look like from the inside.
+    /// It is how a walk proves a mark the panel put up clears itself.
+    case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool)
+    /// One of the app's OWN things — a layer row, a shelf tile, a colour swatch
+    /// — picked up by name and held over a point, so a walk can see what the
+    /// panel says about a drag that has nothing to do with files. Nothing is
+    /// ever let go: the step is there for what is drawn while it is in the air,
+    /// and `leave` abandons it there the way `dragFile` does.
+    case dragOver(carry: String, at: PlaytestPoint, hold: String?, leave: Bool)
     /// Render the window's content offscreen to `<out>/<name>.png`.
     ///
     /// `window` names another of the app's windows to photograph instead of the
@@ -1058,7 +1068,7 @@ public enum PlaytestStep: Sendable, Equatable {
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
-        "dragFile", "dragHandle", "dragRow", "dragSection", "dragTile", "dropComponent",
+        "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "expect", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelMenu", "pinch", "press",
         "readClipboard", "render", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
@@ -1088,6 +1098,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragComponent: "dragComponent"
         case .dropImage: "dropImage"
         case .dragFile: "dragFile"
+        case .dragOver: "dragOver"
         case .snapshot: "snapshot"
         case .render: "render"
         case .panelMenu: "panelMenu"
@@ -1211,7 +1222,12 @@ public enum PlaytestStep: Sendable, Equatable {
         case "dragFile":
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),
-                             release: try f.optionalFlag("release") ?? false)
+                             release: try f.optionalFlag("release") ?? false,
+                             leave: try f.optionalFlag("leave") ?? false)
+        case "dragOver":
+            self = .dragOver(carry: try f.string("carry"), at: try f.point("at"),
+                             hold: try f.optionalString("hold"),
+                             leave: try f.optionalFlag("leave") ?? false)
         case "render":
             self = .render(name: try f.string("name"),
                            scale: CGFloat(try f.optionalNumber("scale") ?? 1))

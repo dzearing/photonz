@@ -29,6 +29,21 @@ enum FileDrop {
         info.hasItemsConforming(to: [.image, EditorState.photonzType])
     }
 
+    /// Whether this drag is a FILE ARRIVING AT ALL — the only kind of drag the
+    /// panel's accept and refuse marks are there to answer for.
+    ///
+    /// The panel's targets take more than files on purpose: a layer row is
+    /// registered for plain text as well, because that is how a row being
+    /// reordered travels. Everything else the app carries around travels the
+    /// same way — a colour off a swatch, a saved colour off the Library shelf,
+    /// selected words out of a field — and all of it used to reach the row's
+    /// file answer, which marked the WHOLE panel refused for a drag that had
+    /// nothing to do with files. So a drag only gets an answer here when it is
+    /// carrying one of the things this drop is about.
+    static func isAboutAFile(_ info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: types)
+    }
+
     /// Takes the file the drag is carrying. A picture joins the open document
     /// as a new layer; a Photonz document opens.
     ///

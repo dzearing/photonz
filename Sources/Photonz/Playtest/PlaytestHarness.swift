@@ -683,7 +683,7 @@ private final class Run {
                  "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
-        case .dragFile(let file, let at, let hold, let release):
+        case .dragFile(let file, let at, let hold, let release, let leave):
             // A file held over the canvas with the button still down, so the
             // step can write down the answer the pointer is showing. It is the
             // only way to record a refusal: letting go of a file the canvas
@@ -747,8 +747,13 @@ private final class Run {
                 await sleep(0.4)
                 landed = took ? ", let go and \(type(of: taker)) took it" : ", let go and nothing took it"
             }
-            for view in chain { view.draggingExited(info) }
-            await sleep(0.1)
+            // Walking away without a word, when the walk asked for it: no
+            // destination is told the drag ended, which is what escape and a
+            // release outside the window look like from in here. Whatever the
+            // panel is wearing has to take itself off after that.
+            if !leave { for view in chain { view.draggingExited(info) } }
+            await sleep(leave ? PanelDropMarking.idleGrace + 0.5 : 0.1)
+            let after = leave ? ", walked away without a word and then \(panelPromise())" : ""
             let answer = operation.contains(.copy)
                 ? "would place a copy (\(answered) took it)"
                 : "refused: the pointer shows the no-entry sign"
@@ -759,7 +764,7 @@ private final class Run {
             note(number, step.name,
                  "\(url.lastPathComponent) held over \(short(at.point)) \(at.space.rawValue): \(answer), \(shown)"
                     + ", \(promise)"
-                    + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)\(landed)",
+                    + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)\(landed)\(after)",
                  state: describe())
 
         case .snapshot(let name, let wanted):
@@ -794,6 +799,9 @@ private final class Run {
         case .rightClick(let on, let shot, let choose, let ticked, let unticked):
             try await openRowMenu(on, shot: shot, choose: choose, ticked: ticked,
                                   unticked: unticked, number: number)
+
+        case .dragOver(let carry, let at, let hold, let leave):
+            try await dragOver(carry, at: at, hold: hold, leave: leave, number: number)
 
         case .dragTile(let tile, let to, let hold):
             try await dragTile(tile, to: to, hold: hold, number: number)
@@ -2318,6 +2326,81 @@ private final class Run {
         note(number, "dragTile",
              "\"\(name)\" carrying \(types) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
              state: describe())
+    }
+
+    /// Picks up one of the app's OWN things — a layer row, a shelf tile, a
+    /// colour swatch — and holds it over a point, without ever letting go.
+    ///
+    /// It exists for the half of a drag nothing else can photograph: what the
+    /// right hand panel says about a drag that is not a file at all. Carrying a
+    /// colour up over the layers list used to mark the whole panel refused,
+    /// because the row under the pointer answers for plain text (that is how a
+    /// row being reordered travels) and answered for it as if it were a file.
+    ///
+    /// `leave` abandons the drag where it is without telling anything under it
+    /// that it ended, which is what escape and a release outside the window
+    /// look like from in here, and is how a walk proves a mark clears itself.
+    private func dragOver(_ carry: String, at: PlaytestPoint, hold: String?,
+                          leave: Bool, number: Int) async throws {
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let source = try pickUpSource(carry)
+        guard let payload = source.payload else {
+            throw Failure(description: "\"\(carry)\" cannot be picked up")
+        }
+        let board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "panel-thing")
+        // A colour reads its own payload off the drag pasteboard, which a walk
+        // cannot start, so it is stood in for the length of the step.
+        ColorDrag.playtestPasteboard = board
+        defer { ColorDrag.playtestPasteboard = nil }
+        let windowPoint = try self.windowPoint(at)
+        let chain = PlaytestPanelDrag.destinations(at: windowPoint, in: content)
+        guard !chain.isEmpty else {
+            throw Failure(description: "nothing at \(short(at.point)) \(at.space.rawValue) takes drops")
+        }
+        let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
+        var operation: NSDragOperation = []
+        var answered = "nothing under the pointer takes it"
+        for round in 0..<4 {
+            operation = []
+            for view in chain {
+                let reply = round == 0 ? view.draggingEntered(info) : view.draggingUpdated(info)
+                if reply != [] {
+                    operation = reply
+                    answered = "\(type(of: view))"
+                    break
+                }
+            }
+            await sleep(0.05)
+        }
+        let promise = panelPromise()
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        if !leave { for view in chain { view.draggingExited(info) } }
+        await sleep(leave ? PanelDropMarking.idleGrace + 0.5 : 0.2)
+        let after = leave
+            ? ", walked away without a word and then \(panelPromise())"
+            : ", let go of it and then \(panelPromise())"
+        let types = (board.types ?? []).map(\.rawValue).joined(separator: ", ")
+        note(number, "dragOver",
+             "\"\(carry)\" carrying \(types) held over \(short(at.point)) \(at.space.rawValue): "
+                + (operation == [] ? "nothing takes it" : "\(answered) would take it")
+                + ", \(promise)\(held)\(after)",
+             state: describe())
+    }
+
+    /// Anything in the panel a drag can start from, named the way a walk names
+    /// it: a layer row first, then a shelf tile, then a colour swatch.
+    private func pickUpSource(_ name: String) throws -> PanelTargetView {
+        if let row = try? panelTarget(name, kind: .row) { return row }
+        if let tile = try? panelTarget(name, kind: .tile) { return tile }
+        return try colorDragSource(name)
     }
 
     /// Picks a row up in the layers list and holds it over another row, then

@@ -1,0 +1,29 @@
+{
+  "id": "a-layer-row-let-go-where-it-cannot-land-is-still",
+  "title": "A layer row let go where it cannot land is still in the panels hand",
+  "goal": "Pick a layer row up in the layers list and let it go somewhere it cannot land, over the picture or outside the window or by pressing escape. The list still thinks you are holding that row. Nothing visible goes wrong until the next drag, when the panel can draw a reorder line for something that is not a row at all. Put the row down when the drag ends, however it ended.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1700,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T16:54:50.832Z",
+  "updated": "2026-09-07T16:54:50.833Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing the-red-dashed-outline-around-the-panel-always-c on 2026-09-07. draggingLayerID and dropTarget are @State on LayersListView (Sources/Photonz/LayersPanel.swift ~1663), set by the row LayerRowView.pickUp and cleared ONLY in LayerRowDropDelegate.performDrop. Any drag that ends without a drop strands them. That fix already stopped a stranded row from hijacking a FILE drag: LayerRowDropDelegate.carriesARow now branches on what is in the air rather than on the flag alone, so a file always gets the file answer. What is left is a text-carrying drag, a colour or a saved colour off the shelf, which is indistinguishable from a row drag on the pasteboard. Two ways out, pick one: (a) move the row-in-the-air state onto EditorState and let the same watch that settles PanelDropMarking put it down when nothing is in the air (PanelDropMarking.idleGrace, NSEvent.pressedMouseButtons), which is the pattern already in EditorState+LayersPanel.startPanelDropWatch; or (b) give a row drag its own carried type instead of a bare NSString, declared in UTExportedTypeDeclarations in Scripts/build-app.sh the way com.photonz.component is, and register the row target for that instead of .text - note ColorDrags warning that an undeclared identifier carries zero bytes, so a bare swift build with no Info.plist needs a fallback.",
+  "acceptance": [
+    "Pick a row up and press escape, and the list is holding nothing afterwards",
+    "Pick a row up and let go over the picture, and the list is holding nothing afterwards",
+    "Pick a row up and let go outside the window, and the list is holding nothing afterwards",
+    "A colour dragged over a layer row right after any of those draws no reorder line",
+    "A test covers a row picked up and then abandoned without any drop, written before the change"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T16:54:50.833Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -885,14 +885,14 @@ final class EditorState {
     /// record of the file that is leaving.
     @ObservationIgnored var isRestoringOpenGroups = false
 
-    var panelDropOffer: PanelDropOffer?
+    /// The mark the right hand panel wears while something is held over it —
+    /// who armed it, and the deadline that clears it when the drag ends without
+    /// telling anyone. See `PanelDropMarking`.
+    var panelDropMarking = PanelDropMarking()
 
-    /// Which target last spoke. A pointer crossing from one target to the next
-    /// enters the new one BEFORE it leaves the old, so a clear from a target
-    /// that no longer owns the offer is the stale half of a crossing and is
-    /// ignored — without this the panel's highlight blinks out every time the
-    /// pointer crosses a row boundary.
-    @ObservationIgnored var panelDropOwner: AnyHashable?
+    /// The tick that keeps `panelDropMarking` honest, running only while there
+    /// is a mark to take away. See `startPanelDropWatch`.
+    @ObservationIgnored var panelDropWatch: Task<Void, Never>?
 
     /// The group the pointer is currently INSIDE, or nil for the canvas.
     ///

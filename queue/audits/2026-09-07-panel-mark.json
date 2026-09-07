@@ -1,0 +1,28 @@
+{
+  "feature": "The panel's drop mark only answers for files, and always clears",
+  "epic": "ui-building",
+  "summary": "The red dashed outline around the right hand panel now only appears for a file arriving from outside the app, and it takes itself off within a second whatever ended the drag, including a drag that never tells anything it ended.",
+  "setup": "Photonz Dev, release Next or Current. Nothing to turn on. Open any picture so the layers list has a few rows.",
+  "try": [
+    { "do": "Drag any layer's colour swatch (Appearance, the Fill square) up over the layers list and hold it there.", "shot": "2026-09-07-panel-mark-6-colour-over-a-row.png" },
+    { "do": "Let go of it anywhere, then look at the panel edge: nothing should be marked." },
+    { "do": "Pick up a layer row and carry it over another row.", "shot": "2026-09-07-panel-mark-7-row-over-a-row.png" },
+    { "do": "Drag a file the app cannot open, a .txt or a .zip, from the Finder over the layers list and hold it.", "shot": "2026-09-07-panel-mark-2-file-refused.png" },
+    { "do": "Let go of it: the red dashes go with it.", "shot": "2026-09-07-panel-mark-3-after-the-file-left.png" },
+    { "do": "Drag a picture over the same spot: a solid accent edge and a drop line saying where it lands.", "shot": "2026-09-07-panel-mark-4-picture-accepted.png" },
+    { "do": "Drag that .txt over the panel again and press escape, or let go outside the window: the mark goes within a second.", "shot": "2026-09-07-panel-mark-5-after-the-abandoned-drag.png" }
+  ],
+  "evaluate": [
+    "Does dragging anything of the app's own over the panel now feel silent, with no red border flashing up at you?",
+    "When a file the app cannot use is over the panel, is one red dashed edge around the whole panel the right amount of warning, or is it too loud for a hover?",
+    "The mark clears about a second after a drag ends the hard way. Is that fast enough that it never reads as stuck?",
+    "A colour dragged over a layer row now shows the no-entry pointer and no panel mark at all. Is silence right there, or should a layer row say something about a colour dropped on it?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot above is a real capture of the window, not an offscreen render.",
+    "What was actually driven, with the probe: a colour swatch over a layer row, a layer row over another row, an unusable file over a layer row and then let go, a picture over the same row, and a file drag abandoned in the air without a word. Saved to Scripts/playtest/panel-mark-walk.json so it stays a regression check.",
+    "Two of the things named in the task were NOT driven, because this document had no shelf: a Library tile and a component tile. A saved colour on the shelf carries exactly the payload the Fill swatch does, so it is covered by the colour case. A component tile carries only the app's own component type, which none of the panel's drop targets is registered for, so it cannot reach this code at all.",
+    "The hard limit is a second of nothing happening while no mouse button is down. It cannot fire during a real drag, because a drag holds the button down the whole time, but it does mean the very last resort is a second rather than instant.",
+    "Found on the way and NOT fixed here: a layer row picked up and then let go somewhere it cannot land is still in the list's hand afterwards. It no longer confuses a file arriving, but a colour dragged over a row after that can still draw a reorder line. Filed as its own task."
+  ]
+}

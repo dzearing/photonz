@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:39:15.756Z",
-  "updated": "2026-09-07T15:39:15.798Z",
+  "updated": "2026-09-07T16:34:42.659Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user pushed back on 2026-09-07: they never dragged a file, they were dragging elements inside the app, so a file drop marking should not have been involved. They are right, and this is the actual cause rather than the stuck state alone. PanelFileDrop.offerFile (Sources/Photonz/LayersPanel.swift line 1153) arms .refuses for ANY drag whose payload is not a usable file, and FileDrop.carriesUsableFile (FileDrop.swift line 28) is true only for an image or a Photonz document. So dragging a layer row, a library tile or anything else the app moves around arms the refusal, because it is not a file. The layer row target accepts text on top of the file types (line 2154), which is how a row drag travels, but the panel level target does not, so the panel sees an unrecognised drag and says no. Fix both halves: the marking must only speak about drags it is actually there to answer, and it must still have a way out that does not depend on the drag reporting its own end, since an unpredicted path stranded it once already. Reported again by the user on 2026-09-07, after dragging-a-panel-section-lifts-the-whole-section shipped and removed the reorder gesture as a cause. So this is a second route to the same stuck state and the earlier fix did not cover it; their layers are named Copied Selection, so they were copying and pasting rather than reordering. What the marking is: PanelDropAffordance .refuses, driven by panelDropOffer, armed through offerPanelDrop and cleared only through endPanelDrop (Sources/Photonz/EditorState+LayersPanel.swift lines 168 and 175). Both drop delegates clear it only from dropExited and performDrop (LayersPanel.swift lines 1145, 1149, 1219, 1223). A drag that is armed and then ends without either of those firing leaves the offer set with nothing to clear it, which is exactly the reported behaviour. The clearing is also guarded on the owner matching, so an owner that changes mid drag would strand the offer too. Rather than only adding another call site, give the state a way out that does not depend on the drag reporting its own end, for example clearing it whenever no drag is in flight, so an unpredicted path cannot strand it again.",
@@ -31,6 +31,51 @@
     {
       "t": "2026-09-07T15:39:15.797Z",
       "note": "seq 190 -> 2"
+    },
+    {
+      "t": "2026-09-07T16:34:42.659Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T16:41:35.840656Z",
+      "note": "REPRODUCED (probe walk /tmp/photonz-repro/repro-walk.json, screenshot 1-textfile-held-sc.png): holding notes.txt over the layers panel draws the red dashed outline around the WHOLE right panel. That is exactly the marking the user described."
+    },
+    {
+      "t": "2026-09-07T16:41:35.840656Z",
+      "note": "Cause read off the code, two halves. (a) WHO SPEAKS: the layer row's drop target is registered for [.text] + file types (LayersPanel.swift 2154) so that a row being reordered can reach it. Any OTHER drag carrying text therefore reaches it too, and with no row picked up it falls into offerFile, which arms .refuses for anything that is not an image or a Photonz document. A colour dragged off a swatch and a saved colour dragged off the Library shelf both register public.utf8-plain-text, and both live in the same panel, so dragging one up over the layers list marks the whole panel refused. The panel-level and section-level targets are registered for file types only, so they are not the route; the row is. (b) HOW IT STICKS: the marking is cleared only from dropExited/performDrop, guarded on the owner still matching (EditorState+LayersPanel 168-178). A drag that ends without either firing - escape, released outside the window, a target that goes away underneath it - leaves it armed with nothing left to clear it."
+    },
+    {
+      "t": "2026-09-07T16:41:35.840656Z",
+      "note": "Adversarial review before building. The shortest version that delivers the value is two small rules, not a redesign: (1) the marking only ever speaks about a drag that carries a file, a picture or a Photonz document - everything the app moves around itself gets no comment at all, and the row target still refuses it to the pointer so nothing lands where it should not; (2) the marking carries its own deadline, so it clears when nothing is in the air whatever route the drag took out. Rejected: adding more endPanelDrop call sites, which is what the last fix did and is why this is the second report. Rejected: keeping a refusal for non-file drags but scoping it to the row - a whole-panel red border for picking up a colour is noise either way, and the pointer already says no."
+    },
+    {
+      "t": "2026-09-07T16:55:11.582843Z",
+      "note": "Built. Two rules, one new core type. (1) PanelDropMarking in PhotonzCore owns the mark: who armed it, the one-voice owner rule that keeps it from blinking at every row boundary, and a deadline. settle(dragInTheAir:at:) clears it once nothing is in the air and nobody has spoken for idleGrace (1s), which is the way out that does not need the drag to report its own end. EditorState holds it and runs a 250ms watch (startPanelDropWatch) only while there is a mark, reading NSEvent.pressedMouseButtons as in the air - a real drag holds the button down its whole life, so it can never fire under one, and a scripted walk carries a drag with no button at all, which is why there is a grace period rather than an instant clear. 12 tests in PanelDropMarkingTests, written first."
+    },
+    {
+      "t": "2026-09-07T16:55:11.582843Z",
+      "note": "(2) FileDrop.isAboutAFile: a drag only gets an answer from the panel when it carries a file, a picture or a Photonz document. All three offerFile paths (panel, section, layer row) now return .forbidden without arming for anything else, so the pointer still says no and the panel says nothing."
+    },
+    {
+      "t": "2026-09-07T16:55:11.582843Z",
+      "note": "Also fixed, found by the new walk: LayerRowDropDelegate branched on 'was a row picked up' rather than on what is in the air, so a row stranded by a drag that never ended made the NEXT file dragged in look like that row coming back - no accept mark, and a drop that would have reordered layers instead of adding the picture. It now branches on the payload (carriesARow), so a file is always answered as a file. The stranded row itself is filed separately as a-layer-row-let-go-where-it-cannot-land-is-still."
+    },
+    {
+      "t": "2026-09-07T16:55:11.582843Z",
+      "note": "New playtest instruments, both tested first in PlaytestScriptTests: a dragOver step that carries one of the app's OWN things (a row, a tile, a colour swatch) over any point and reports what the panel says, and a leave flag on dragFile and dragOver that abandons the drag without telling anything it ended. Documented in docs/design/playtest-harness.md."
+    },
+    {
+      "t": "2026-09-07T16:55:11.582843Z",
+      "note": "Verified on the probe with Scripts/playtest/panel-mark-walk.json, Screen Recording granted so the shots are real captures. Colour over a layer row: the panel says nothing (it used to say refuse). Row over a row: nothing. Package.swift over a layer row: says it will refuse, and clears when it leaves. A picture over the same row: says it will put it behind Rectangle, with the accepting edge and the drop line. Package.swift abandoned in the air without a word: armed while held, then the panel says nothing. A file after a stranded row drag: still gets the file answer."
+    },
+    {
+      "t": "2026-09-07T16:55:11.582843Z",
+      "note": "Not driven, and said so in the audit: a Library tile and a component tile. A saved colour on the shelf carries exactly the payload the Fill swatch does, so the colour case covers it. A component tile carries only com.photonz.component, which no panel drop target is registered for, so it never reaches this code. Escape, a release outside the window and the app losing focus are all strictly weaker than the abandoned case that was driven: each of them normally DOES report an exit, and the abandoned case reports nothing at all."
+    },
+    {
+      "t": "2026-09-07T16:55:11.582843Z",
+      "note": "Adversarial review of the built thing. It reads right in use: picking a colour up no longer flashes a red border at you, and the refusal is now only ever about a file. The one thing left rough is the last-resort second: a mark stranded by something nobody predicted hangs for up to a second rather than going instantly. That is the price of not trusting the drag to report itself, and a second is short enough that it never reads as stuck. Recorded in the audit for the user to disagree with."
     }
-  ]
+  ],
+  "started": "2026-09-07T16:34:42.658Z"
 }

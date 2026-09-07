@@ -153,37 +153,52 @@ extension EditorState {
     ///
     /// It lives here rather than in the panel because three different targets
     /// answer for the same surface — a section, a layer row, and the panel
-    /// itself — and they have to speak with one voice.
-    enum PanelDropOffer: Equatable {
-        /// The panel will take it, and the picture will land here. The landing
-        /// is nil only when there is no stack to land in, where the file opens
-        /// a window of its own instead.
-        case accepts(LayerDrop?)
-        /// The panel cannot use what is being held over it.
-        case refuses
-    }
+    /// itself — and they have to speak with one voice. The rules themselves are
+    /// `PanelDropMarking`, in the core, so the one thing that has gone wrong
+    /// twice — a mark nobody ever took away — is covered by tests.
+    typealias PanelDropOffer = PhotonzCore.PanelDropOffer
+
+    var panelDropOffer: PanelDropOffer? { panelDropMarking.offer }
 
     /// Says what the panel will do with what is in the air. Called on every
-    /// frame of a drag, so an unchanged answer writes nothing.
+    /// frame of a drag, so an unchanged answer only pushes the mark's deadline
+    /// out.
     func offerPanelDrop(_ offer: PanelDropOffer, from owner: AnyHashable) {
-        panelDropOwner = owner
-        guard panelDropOffer != offer else { return }
-        panelDropOffer = offer
+        panelDropMarking.say(offer, from: String(describing: owner), at: CACurrentMediaTime())
+        startPanelDropWatch()
     }
 
     /// The thing in the air has left this target, or landed on it.
     func endPanelDrop(from owner: AnyHashable) {
-        guard panelDropOwner == owner else { return }
-        panelDropOwner = nil
-        panelDropOffer = nil
+        panelDropMarking.end(from: String(describing: owner))
+    }
+
+    /// The mark's own way out, for every drag that ends without saying so:
+    /// cancelled with escape, let go outside the window, or over a row that was
+    /// rebuilt out from under it. It runs only while there is a mark to take
+    /// away, and stops the moment there is not.
+    ///
+    /// "Nothing in the air" is the mouse button being up: a drag holds it down
+    /// for its whole life, from any app, so this can never fire under a real
+    /// drag. A scripted walk carries a drag with no button down at all, which
+    /// is why the mark also gets a grace period rather than going the instant
+    /// the button reads up.
+    private func startPanelDropWatch() {
+        guard panelDropWatch == nil else { return }
+        panelDropWatch = Task { @MainActor [weak self] in
+            while let self, self.panelDropMarking.offer != nil {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { break }
+                self.panelDropMarking.settle(dragInTheAir: NSEvent.pressedMouseButtons != 0,
+                                             at: CACurrentMediaTime())
+            }
+            self?.panelDropWatch = nil
+        }
     }
 
     /// The landing the panel is currently promising, which is what the drop
     /// line in the layers list draws.
-    var panelDropLanding: LayerDrop? {
-        guard case .accepts(let drop) = panelDropOffer else { return nil }
-        return drop
-    }
+    var panelDropLanding: LayerDrop? { panelDropMarking.landing }
 
     /// Where a picture arriving from outside would land if it were let go over
     /// this row now.

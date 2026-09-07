@@ -248,7 +248,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [300, 200], "hold": "refused" } ] }
         """)
-        guard case .dragFile(let file, let at, let hold, _) = script.steps[0] else {
+        guard case .dragFile(let file, let at, let hold, _, _) = script.steps[0] else {
             Issue.record("dragFile"); return
         }
         #expect(file == "notes.txt")
@@ -266,12 +266,73 @@ struct PlaytestScriptTests {
             { "do": "dragFile", "file": "shot.png", "at": [1050, 620] }
         ] }
         """)
-        guard case .dragFile(_, _, _, let released) = script.steps[0],
-              case .dragFile(_, _, _, let held) = script.steps[1] else {
+        guard case .dragFile(_, _, _, let released, _) = script.steps[0],
+              case .dragFile(_, _, _, let held, _) = script.steps[1] else {
             Issue.record("dragFile"); return
         }
         #expect(released)
         #expect(!held)
+    }
+
+    /// An interrupted drag: the walk stops carrying the file and never tells
+    /// the views under it that anything ended, which is what escape, a release
+    /// outside the window, and a target rebuilt out from under the pointer all
+    /// look like from the inside. It is the only way to prove a mark the panel
+    /// put up clears itself rather than sticking for good.
+    @Test("A dragFile step can walk away without telling the destination the drag ended")
+    func dragFileStepCanBeAbandonedInTheAir() throws {
+        let script = try decode("""
+        { "steps": [
+            { "do": "dragFile", "file": "notes.txt", "at": [1150, 300], "space": "window", "leave": true },
+            { "do": "dragFile", "file": "notes.txt", "at": [1150, 300], "space": "window" }
+        ] }
+        """)
+        guard case .dragFile(_, _, _, _, let abandoned) = script.steps[0],
+              case .dragFile(_, _, _, _, let tidy) = script.steps[1] else {
+            Issue.record("dragFile"); return
+        }
+        #expect(abandoned)
+        #expect(!tidy)
+    }
+
+    // MARK: - Carrying one of the app's own things over the panel
+
+    @Test("A dragOver step carries something out of the panel over a point and holds it there")
+    func dragOverStepCarriesAPanelThing() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragOver", "carry": "Fill", "at": [1150, 300],
+                       "space": "window", "hold": "colour-over-a-row" } ] }
+        """)
+        guard case .dragOver(let carry, let at, let hold, let leave) = script.steps[0] else {
+            Issue.record("dragOver"); return
+        }
+        #expect(carry == "Fill")
+        #expect(at.point == CGPoint(x: 1150, y: 300))
+        #expect(at.space == .window)
+        #expect(hold == "colour-over-a-row")
+        #expect(!leave)
+        #expect(script.steps[0].name == "dragOver")
+        #expect(PlaytestStep.names.contains("dragOver"))
+    }
+
+    @Test("A dragOver step can be abandoned in the air too")
+    func dragOverStepCanBeAbandonedInTheAir() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragOver", "carry": "Background", "at": [1150, 300],
+                       "space": "window", "leave": true } ] }
+        """)
+        guard case .dragOver(_, _, _, let leave) = script.steps[0] else {
+            Issue.record("dragOver"); return
+        }
+        #expect(leave)
+    }
+
+    @Test func aDragOverStepNeedsSomethingToCarry() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dragOver", "at": [1150, 300], "space": "window" } ] }
+            """)
+        }
     }
 
     @Test("A point can be given in window coordinates, for the chrome outside the picture")
@@ -279,7 +340,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [1100, 200], "space": "window" } ] }
         """)
-        guard case .dragFile(_, let at, _, _) = script.steps[0] else {
+        guard case .dragFile(_, let at, _, _, _) = script.steps[0] else {
             Issue.record("dragFile"); return
         }
         #expect(at.point == CGPoint(x: 1100, y: 200))
@@ -291,7 +352,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragFile", "file": "notes.txt", "at": [10, 10] } ] }
         """)
-        guard case .dragFile(_, _, let hold, _) = script.steps[0] else {
+        guard case .dragFile(_, _, let hold, _, _) = script.steps[0] else {
             Issue.record("dragFile"); return
         }
         #expect(hold == nil)

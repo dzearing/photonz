@@ -1152,6 +1152,7 @@ private struct PanelFileDrop: DropDelegate {
 
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
+        guard FileDrop.isAboutAFile(info) else { return .forbidden }
         guard FileDrop.carriesUsableFile(info) else {
             editorState.offerPanelDrop(.refuses, from: owner)
             return .forbidden
@@ -1230,6 +1231,7 @@ private struct SectionFileDrop: DropDelegate {
     /// at the top of the layers list is drawing while this is showing.
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
+        guard FileDrop.isAboutAFile(info) else { return .forbidden }
         guard FileDrop.carriesUsableFile(info) else {
             editorState.offerPanelDrop(.refuses, from: item)
             return .forbidden
@@ -1285,8 +1287,22 @@ private struct LayerRowDropDelegate: DropDelegate {
                                  pointerY: info.location.y, rowHeight: rowHeight)
     }
 
+    /// Whether THIS drag is a row being carried up or down the list, rather
+    /// than a file arriving from outside it.
+    ///
+    /// It asks what is in the air and not just whether a row was picked up,
+    /// because a row can be picked up and then let go somewhere that never
+    /// reports it — over the canvas, outside the window, cancelled with escape
+    /// — and the list is still holding it afterwards. A picture dragged in next
+    /// would then be read as that row coming back: no accept mark, and a drop
+    /// that reordered layers instead of adding the picture. What you are
+    /// holding decides, and a file is always answered as a file.
+    private func carriesARow(_ info: DropInfo) -> Bool {
+        dragging != nil && !FileDrop.isAboutAFile(info)
+    }
+
     func dropEntered(info: DropInfo) {
-        guard dragging != nil else {
+        guard carriesARow(info) else {
             offerFile(info)
             return
         }
@@ -1298,14 +1314,14 @@ private struct LayerRowDropDelegate: DropDelegate {
         // outside. A row answers for one because nothing behind it can, and it
         // answers the way the rest of the window does: a picture is taken, and
         // anything else shows the no-entry sign.
-        guard dragging != nil else { return DropProposal(operation: offerFile(info)) }
+        guard carriesARow(info) else { return DropProposal(operation: offerFile(info)) }
         let proposed = proposal(info)
         if target != proposed { target = proposed }
         return DropProposal(operation: proposed == nil ? .forbidden : .move)
     }
 
     func dropExited(info: DropInfo) {
-        guard dragging != nil else {
+        guard carriesARow(info) else {
             editorState.endPanelDrop(from: row.id)
             return
         }
@@ -1313,7 +1329,7 @@ private struct LayerRowDropDelegate: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        guard dragging != nil else {
+        guard carriesARow(info) else {
             let landing = fileLanding(info)
             editorState.endPanelDrop(from: row.id)
             return FileDrop.accept(info, into: editorState, landingAt: landing)
@@ -1334,8 +1350,16 @@ private struct LayerRowDropDelegate: DropDelegate {
 
     /// Tells the panel what it is about to do with the file in the air, and
     /// answers the pointer the same thing.
+    ///
+    /// A row takes plain text as well as files, because that is how a row being
+    /// reordered travels — so this is also where every OTHER thing the app
+    /// carries around lands: a colour off a swatch, a saved colour off the
+    /// Library shelf, words dragged out of a field. None of them is a file, and
+    /// the panel says nothing at all about them. The pointer still shows the
+    /// no-entry sign, because a colour does not belong on a layer row either.
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
+        guard FileDrop.isAboutAFile(info) else { return .forbidden }
         guard FileDrop.carriesUsableFile(info) else {
             editorState.offerPanelDrop(.refuses, from: row.id)
             return .forbidden
