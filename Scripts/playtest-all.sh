@@ -33,6 +33,13 @@ fi
 
 PASSED=0
 FAILED=()
+# How long the run took, and how long each walk in it took, because "the full
+# run takes about four hours" was a guess nobody could check. Every walk prints
+# its own seconds and the run prints its total, so a walk that has started
+# dragging its feet is visible in the same output that says it passed.
+RUN_BEGAN=$SECONDS
+SLOWEST=""
+SLOWEST_S=0
 for walk in Scripts/playtest/*.json; do
   name="$(basename "$walk" .json)"
   if (( ${#PATTERNS[@]} )); then
@@ -41,17 +48,27 @@ for walk in Scripts/playtest/*.json; do
     (( match )) || continue
   fi
   printf '%-40s ' "$name"
+  WALK_BEGAN=$SECONDS
   if out="$(Scripts/playtest.sh "$walk" --no-build 2>&1)"; then
-    echo "ok"
+    verdict="ok"
     PASSED=$((PASSED + 1))
   else
     reason="$(printf '%s' "$out" | sed -n 's/.*"error" : "\(.*\)",*$/\1/p' | head -1)"
-    echo "FAILED  ${reason:-no done.json}"
+    verdict="FAILED  ${reason:-no done.json}"
     FAILED+=("$name")
   fi
+  TOOK=$((SECONDS - WALK_BEGAN))
+  printf '%4ds  %s\n' "$TOOK" "$verdict"
+  if (( TOOK > SLOWEST_S )); then SLOWEST_S=$TOOK; SLOWEST="$name"; fi
 done
 
+TOTAL=$((SECONDS - RUN_BEGAN))
+RAN=$((PASSED + ${#FAILED[@]}))
 echo
 echo "==> $PASSED passed, ${#FAILED[@]} failed"
 (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
+printf '==> %d walks in %dm %02ds' "$RAN" $((TOTAL / 60)) $((TOTAL % 60))
+(( RAN > 0 )) && printf ', %ds each on average' $((TOTAL / RAN))
+[[ -n "$SLOWEST" ]] && printf '; slowest %s at %ds' "$SLOWEST" "$SLOWEST_S"
+echo
 exit $(( ${#FAILED[@]} == 0 ? 0 : 1 ))

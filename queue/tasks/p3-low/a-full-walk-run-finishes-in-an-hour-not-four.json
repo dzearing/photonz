@@ -5,14 +5,14 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 140,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T08:49:16.486Z",
-  "updated": "2026-09-06T12:16:42.346Z",
+  "updated": "2026-09-07T12:49:58.000Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Measured 2026-09-06: 188 walks, roughly 75 seconds each. Most of it is per-walk overhead rather than the walk. Every walk quits and relaunches the whole app (Scripts/probe-app.sh), and each launch also compiles and runs Scripts/permcheck.swift for the Grants line and polls up to 3s for dist/probe-grants.json. Candidates, cheapest first: cache the permcheck answer for the run; skip the grants poll when a previous launch already answered; drop the per-walk quit-relaunch by teaching the probe to take a second --playtest script without restarting, which is the big one. Watch out: walks currently rely on a fresh process for their starting state, and the harness now restores remembered settings at the end of every run, so a shared process would need that restore to happen between scripts too.",
+  "notes": "Superseded the 2026-09-06 theory. Measured 2026-09-07 on 247 walks: a walk averages 14.6s wall, of which 0.6s is everything outside the app (quit, `open -a`, the pgrep and grants polls, permcheck at 0.18s cached). Sharing one process across walks would have bought about 2 minutes across the whole suite and would have put every walk's starting state at the mercy of the walk before it, so that plan is dead.\n\nWhere the time actually goes, from log.json step deltas over a 31-walk sample: `wait` 50.6%, `capture` 14.2% (0.37s per snapshot: an offscreen render plus a 2560x1680 screen capture, both PNG-encoded on the main thread), `action` 11.2%. The 247 scripts ask for 3282 `wait` steps totalling 31.1 minutes of pure sleeping.\n\nFix: `wait` watches instead of counting. `PlaytestSettle` (PhotonzCore, tested) holds the rule; `Run.settle(for:)` in PlaytestHarness.swift supplies the two signals, `MainThreadMeter.takeBusy()` for main thread work since the last look and `Run.animating(_:)` for layers mid-animation. Gotcha that cost an hour: the selection marquee's marching ants repeat for ever, so the first cut read the window as restless 100% of the time and saved nothing; animations with an infinite repeatCount or repeatDuration are now a steady state. `PHOTONZ_PLAYTEST_PACE=full` (passed through by `Scripts/probe-app.sh` with `open --env`) puts every wait back on the clock, which is how a walk that turns flaky says whether the pacing moved under it. done.json carries `secondsSaved`.\n\nNext lever if the run creeps back up: `capture`. Every `snapshot` writes two PNGs on the main thread and the walk waits for both; encoding and writing them off the main path and awaiting them at finish() would give back most of the 14%. Not done because the run does not need it.",
   "acceptance": [
     "Scripts/playtest-all.sh finishes in under an hour on this machine",
     "Every walk still passes",
@@ -30,6 +30,43 @@
     {
       "t": "2026-09-06T12:16:42.346Z",
       "note": "seq 140 -> 140"
+    },
+    {
+      "t": "2026-09-07T11:41:51.661Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T12:07:04.000Z",
+      "note": "Adversarial review of the plan in the task notes, before building. The notes said most of the cost was per-walk process overhead (quit, relaunch, permcheck, grants poll) and that the big win was teaching the probe to take a second script without restarting. Measured it instead: launch to quit is 0.6s of the 14.6s a walk takes, and permcheck is 0.18s cached. Sharing one process across walks would save about 2 minutes across the whole suite and would put every walk's starting state at the mercy of the walk before it. Dropped that plan."
+    },
+    {
+      "t": "2026-09-07T12:07:04.000Z",
+      "note": "Profiled 31 walks step by step (log.json deltas by step kind): wait steps are 50.6% of all in-app time, capture 14.2%, action 11.2%. Summing the seconds the 247 walk scripts literally ask for: 3282 wait steps totalling 31.1 minutes of sleeping. That is the cost, and it is dead time, not work."
+    },
+    {
+      "t": "2026-09-07T12:07:04.000Z",
+      "note": "Built it: a wait step now watches for the editor to go quiet instead of counting. PlaytestSettle in PhotonzCore holds the rule (floor 0.06s, quiet 0.09s, 0.03s slices, 2ms of main-thread work per slice still counts as quiet), tested on its own. The harness supplies the two signals: main run loop busy time since the last look (new MainThreadMeter.takeBusy) and whether any layer on the walk's window or a window hung off it is part way through an animation that will end."
+    },
+    {
+      "t": "2026-09-07T12:07:04.000Z",
+      "note": "First attempt saved nothing: the selection marquee's marching ants repeat for ever, so the window read as restless 100% of the time. Animations with an infinite repeatCount or repeatDuration are now a steady state, not unfinished work."
+    },
+    {
+      "t": "2026-09-07T12:07:04.000Z",
+      "note": "Same 31 walks before and after: 14.58s -> 10.00s per walk (-31%), 0 failures either way. Projected full run 60 min -> 41 min."
+    },
+    {
+      "t": "2026-09-07T12:49:58.000Z",
+      "note": "Full run, all 247 walks: 40m 21s, 9s each on average, slowest layers-row-count-perf-walk at 62s. Was about 60 minutes at 14.6s a walk. 244 passed, 3 failed."
+    },
+    {
+      "t": "2026-09-07T12:49:58.000Z",
+      "note": "None of the 3 failures is from this change: clip-contents-walk, panel-controls-walk and tool-tips fail identically under PHOTONZ_PLAYTEST_PACE=full, which is the old clock behaviour exactly. The first two already have pending tasks from the press visibility check that landed earlier today. Filed the third: the-tool-tips-walk-finds-the-panel-button-it-is (the walk rests on a button called Inspector; it is called Hide Panel now)."
+    },
+    {
+      "t": "2026-09-07T12:49:58.000Z",
+      "note": "No audit written: this change has no surface a person can look at or a picture worth taking. What it delivers is a number, and the number is in the run's own last line."
     }
-  ]
+  ],
+  "started": "2026-09-07T11:41:51.660Z"
 }

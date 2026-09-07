@@ -82,6 +82,16 @@ private final class Run {
     /// the run ends however it ends.
     private var setupRunner = PlaytestSetupRunner()
 
+    /// How a `wait` step spends its seconds: watching for the editor to go
+    /// quiet, or sleeping the whole number the way walks used to.
+    /// `PHOTONZ_PLAYTEST_PACE=full` puts every wait back on the clock, which is
+    /// how a walk that has turned flaky says whether the pacing is what moved
+    /// under it.
+    private let pace = PlaytestSettle.named(ProcessInfo.processInfo.environment["PHOTONZ_PLAYTEST_PACE"])
+    /// Seconds of sleeping the watched waits gave back over this walk, so the
+    /// saving is on the record rather than inferred from a stopwatch.
+    private var pacedAway: Double = 0
+
     init(scriptURL: URL, coordinator: AppCoordinator) {
         self.scriptURL = scriptURL
         self.coordinator = coordinator
@@ -163,6 +173,11 @@ private final class Run {
         var done: [String: Any] = [
             "status": status, "steps": steps, "script": scriptURL.path, "out": out.path,
             "seconds": (Date().timeIntervalSince(startedAt) * 100).rounded() / 100,
+            // Sleeping the walk asked for and did not need, because the editor
+            // had already finished. Worth having on the record: it is the
+            // difference between this walk and the same walk under
+            // PHOTONZ_PLAYTEST_PACE=full.
+            "secondsSaved": (pacedAway * 100).rounded() / 100,
         ]
         if let error { done["error"] = error }
         note(steps, "done", status == "ok" ? "walk complete" : (error ?? status))
@@ -208,8 +223,8 @@ private final class Run {
             try await open(url, size: size, number: number)
 
         case .wait(let seconds):
-            await sleep(seconds)
-            note(number, step.name, "\(seconds)s \(MainThreadMeter.shared.report)")
+            let said = await settle(for: seconds)
+            note(number, step.name, "\(said); \(MainThreadMeter.shared.report)")
 
         case .key(let key, let modifiers):
             let window = try requireWindow()
@@ -2690,6 +2705,97 @@ private final class Run {
         try? await Task.sleep(for: .seconds(seconds))
     }
 
+    /// What a walk's `wait` step really means: let the editor finish, and get
+    /// on with it once the editor has. Never spends more than `asked`, so
+    /// nothing waits longer than it used to. Returns the line for the log,
+    /// which says whether the editor went quiet and, when it did not, what was
+    /// still going on.
+    ///
+    /// The editor is finished when both of these hold for a beat: the main run
+    /// loop has had all but nothing to do, and nothing on the walk's window is
+    /// still animating. Either signal alone lies. An animation the render
+    /// server runs on its own leaves the main thread idle the whole way
+    /// through, and a window with nothing queued may still be mid-fade.
+    ///
+    /// Why this exists: across the 247 walks in `Scripts/playtest` the `wait`
+    /// steps add up to 31 minutes of sleeping, which was more than half of the
+    /// whole run (measured 2026-09-07). The rule itself is `PlaytestSettle` in
+    /// PhotonzCore, where it is tested without an app around it.
+    private func settle(for asked: Double) async -> String {
+        guard pace.watches else {
+            await sleep(asked)
+            return "\(asked)s on the clock"
+        }
+        let began = CACurrentMediaTime()
+        var quiet = 0.0
+        var slices = 0, busySlices = 0, restlessSlices = 0
+        var busiest = 0.0
+        var why = ""
+        _ = MainThreadMeter.shared.takeBusy()
+        while true {
+            let waited = CACurrentMediaTime() - began
+            if pace.isOver(waited: waited, asked: asked, quiet: quiet) { break }
+            let nap = pace.nap(waited: waited, asked: asked)
+            if nap <= 0 { break }
+            await sleep(nap)
+            let busy = MainThreadMeter.shared.takeBusy()
+            let restless = isRestless()
+            slices += 1
+            if busy > pace.busyBudget { busySlices += 1 }
+            if let restless { restlessSlices += 1; why = restless }
+            busiest = max(busiest, busy)
+            quiet = pace.quiet(after: quiet, slice: nap, busy: busy, restless: restless != nil)
+        }
+        let spent = CACurrentMediaTime() - began
+        pacedAway += max(0, asked - spent)
+        let stopwatch = String(format: "%.2f", spent)
+        // Say WHY when a wait ran its whole length: a wait that never goes
+        // quiet is either an editor that really is busy or a settle rule that
+        // cannot see it, and the two look identical from the outside.
+        if asked - spent > 0.01 {
+            return "\(asked)s asked, quiet after \(stopwatch)s"
+        }
+        return "\(asked)s, never went quiet ("
+            + "\(busySlices) of \(slices) slices busy, \(restlessSlices) restless\(why.isEmpty ? "" : " (\(why))"), "
+            + String(format: "busiest %.1fms", busiest * 1000) + ")"
+    }
+
+    /// Whether anything the walk can see is still moving: a view that has asked
+    /// to be redrawn and has not been yet, or a layer part way through an
+    /// animation. The walk's own window and anything hung off it, since a
+    /// popover or a tooltip is a window of its own.
+    private func isRestless() -> String? {
+        guard let window else { return nil }
+        for w in [window] + (window.childWindows ?? []) {
+            if w.viewsNeedDisplay { return "viewsNeedDisplay" }
+            if let layer = w.contentView?.layer, let key = Self.animating(layer) { return "animating \(key)" }
+        }
+        return nil
+    }
+
+    /// Any layer under this one part way through an animation that is going to
+    /// END. An animation that repeats for ever is a steady state, not
+    /// something to wait out: the selection marquee's marching ants crawl the
+    /// whole time a layer is picked, and taking them for unfinished work made
+    /// every wait in the suite run its full length (found 2026-09-07).
+    ///
+    /// Bounded, because a SwiftUI window's layer tree is deep and this question
+    /// gets asked every 30ms: past the budget the main thread meter carries it.
+    private static func animating(_ root: CALayer) -> String? {
+        var stack: [CALayer] = [root]
+        var seen = 0
+        while let layer = stack.popLast() {
+            seen += 1
+            if seen > 3000 { return nil }
+            for key in layer.animationKeys() ?? [] {
+                guard let animation = layer.animation(forKey: key), animation.endsOnItsOwn else { continue }
+                return "\(type(of: layer)) \(key)"
+            }
+            if let sublayers = layer.sublayers { stack.append(contentsOf: sublayers) }
+        }
+        return nil
+    }
+
     // MARK: - Targets
 
     /// A style slider dragged over the whole selection, the way a person drags
@@ -3485,6 +3591,16 @@ private final class Run {
         return CanvasCursor.name(of: current) ?? "other"
     }
 }
+
+/// Whether an animation is going to finish. One that repeats for ever, or for
+/// a duration with no end, is decoration a walk should not sit and wait out.
+private extension CAAnimation {
+    var endsOnItsOwn: Bool {
+        repeatCount.isFinite && repeatCount < .greatestFiniteMagnitude
+            && repeatDuration.isFinite && repeatDuration < .greatestFiniteMagnitude
+    }
+}
+
 /// How busy the main thread is after a step, from the main run loop's own
 /// observer: total time on the main thread since the last `click`, how many
 /// run-loop passes that took, and the longest single pass. A pass longer than
@@ -3503,6 +3619,9 @@ final class MainThreadMeter {
     private var longest: CFTimeInterval = 0
     private var activeSince: CFTimeInterval?
     private var excludedInPass: CFTimeInterval = 0
+    /// Main thread work since the last time anyone asked. A `wait` step reads
+    /// this every slice to tell a busy editor from a finished one.
+    private var sinceAsked: CFTimeInterval = 0
 
     func install() {
         guard observer == nil else { return }
@@ -3515,6 +3634,7 @@ final class MainThreadMeter {
                 if let since = activeSince {
                     let d = max(0, now - since - excludedInPass)
                     busy += d
+                    sinceAsked += d
                     passes += 1
                     longest = max(longest, d)
                     activeSince = nil
@@ -3531,12 +3651,22 @@ final class MainThreadMeter {
         busy = 0; passes = 0; longest = 0
         activeSince = CACurrentMediaTime()
         excludedInPass = 0
+        sinceAsked = 0
+    }
+
+    /// How much the app did on the main thread since this was last asked, and
+    /// the counter starts again. Only whole run loop passes count, so work the
+    /// harness is in the middle of doing right now is not in the answer.
+    func takeBusy() -> CFTimeInterval {
+        let answer = max(0, sinceAsked)
+        sinceAsked = 0
+        return answer
     }
 
     /// Time the harness itself spent on the main thread, which is not the
     /// app's cost: taken off the total and off the pass it happened in.
     func exclude(_ seconds: CFTimeInterval) {
-        if activeSince != nil { excludedInPass += seconds } else { busy -= seconds }
+        if activeSince != nil { excludedInPass += seconds } else { busy -= seconds; sinceAsked -= seconds }
     }
 
     var report: String {

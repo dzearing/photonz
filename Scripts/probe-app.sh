@@ -72,10 +72,16 @@ rm -f "$GRANTS"
 # only the probe bundle acts on it.
 ARGS=()
 [[ -n "$PLAYTEST" ]] && ARGS=(--args --playtest "$PLAYTEST")
+# `open` starts the app from launchd, not from this shell, so anything the
+# harness reads out of the environment has to be handed over on purpose.
+# PHOTONZ_PLAYTEST_PACE=full puts every `wait` step back on the clock, which is
+# how a walk that has turned flaky says whether the pacing moved under it.
+ENVS=()
+[[ -n "${PHOTONZ_PLAYTEST_PACE:-}" ]] && ENVS=(--env "PHOTONZ_PLAYTEST_PACE=$PHOTONZ_PLAYTEST_PACE")
 if [[ $# -gt 0 ]]; then
-  open -a "$PWD/$APP" "$@" ${ARGS[@]+"${ARGS[@]}"}
+  open -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} "$@" ${ARGS[@]+"${ARGS[@]}"}
 else
-  open -a "$PWD/$APP" ${ARGS[@]+"${ARGS[@]}"}
+  open -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} ${ARGS[@]+"${ARGS[@]}"}
 fi
 
 # The app is a menu-bar agent: no window and no Dock icon is the normal state,

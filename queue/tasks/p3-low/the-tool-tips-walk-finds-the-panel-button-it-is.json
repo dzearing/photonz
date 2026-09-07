@@ -1,0 +1,27 @@
+{
+  "id": "the-tool-tips-walk-finds-the-panel-button-it-is",
+  "title": "The tool tips walk finds the panel button it is written to rest on",
+  "goal": "One of the scripted walks photographs the tooltip on every control along the top of the editor. It stops partway through because the button that shows and hides the side panel used to be called Inspector and is now called Hide Panel, so the walk goes looking for a name nothing on screen answers to. The tooltips after that point are no longer being checked by anything.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1410,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T12:49:50.824Z",
+  "updated": "2026-09-07T12:49:50.824Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Fails at step 13 (hover, label Inspector) with: no control with a tooltip starting \"Inspector\"; on screen: Arrow, Crop: Free, Frame, Hide Panel, Highlight, Line, Measure: Distance ... Found by the full playtest-all run on 2026-09-07; it is not caused by the wait pacing change that landed the same day (it fails identically under PHOTONZ_PLAYTEST_PACE=full). Sibling of the two other pending walk repairs from the press visibility check: the clip contents walk and the panel controls walk.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/tool-tips.json --no-build passes",
+    "The walk rests on the panel button under whatever name it actually wears, and photographs its tooltip",
+    "The walk still reaches every control it reached before"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T12:49:50.824Z",
+      "note": "created (manual)"
+    }
+  ]
+}

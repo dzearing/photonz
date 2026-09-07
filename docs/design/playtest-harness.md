@@ -208,7 +208,7 @@ by a value an earlier step of the same walk chose.
 | --- | --- | --- |
 | `blank` | optional `canvasWidth` `canvasHeight`, optional `width` `height`, optional `card` | Opens a NEW EMPTY WINDOW and hands it a blank white canvas, the way the empty window's Blank canvas row does once a size is chosen. Defaults to the offered size (`BlankCanvas.defaultPreset`). `width`/`height` set the window frame, as in `open`. `card` names a snapshot taken of the empty window first, which is the only way to photograph the onboarding card — it stops existing the moment a document arrives. This is how a walk starts from nothing instead of from a screenshot. |
 | `open` | `file`, optional `width` `height` | Opens the file in an editor window (path relative to the script or absolute), waits until it can be driven, hides it, sizes it. Every later step targets this editor. |
-| `wait` | `seconds` | Sleeps. Prefer `waitFor`. |
+| `wait` | `seconds` | Gives the editor up to `seconds` to finish what the step before it started, and carries on the moment it has. Never returns sooner than one run loop turn, never later than `seconds`, so nothing waits longer than it used to. Prefer `waitFor` when there is a condition to name. See "What a wait waits for" below. |
 | `key` | `key`, optional `modifiers` | Presses and releases a key. `key` is one character or `return`, `escape`, `tab`, `space`, `delete`, `left`, `right`, `up`, `down`. Modifiers: `command`, `shift`, `option`, `control`. Plain keys go to the window like typing; chords are offered to the window, then the menu bar, and then, if neither claimed them as a shortcut, sent to the window as an ordinary press (which is what ⇧↑ in a number field is). The log says who took them: `window`, `menu` or `responder chain`. |
 | `appKey` | `key`, optional `modifiers` | Presses and releases a key by handing it to the APPLICATION instead of posting it into the window. `key` goes straight to the window, which is right for typing and for menu shortcuts but invisible to anything watching the app as a whole — and an application-wide event monitor is what takes the history overlay down on Esc and on a click outside it. Use this when the thing you are driving listens to the app rather than to a window; use `key` for everything else. |
 | `shortcut` | `key`, optional `modifiers` `menuItem` `checked` | Presses a chord and REQUIRES it to reach a menu item that actually runs. Fails, loudly and with the reason, when no menu item carries the chord, when the item is not the one `menuItem` names, when something else takes the press, or when the item has nothing behind it. `checked` is for a SETTING's item: one that is simply on or off keeps ONE name and says its state with a checkmark, so `checked` names the tick the item must be wearing BEFORE the press and the walk fails when the checkmark lies. Use it for app-level shortcuts (Capture, New Window, Open); a window-scoped one fails by design and tells you to use `action` instead. See "Which shortcuts a walk can press" below. |
@@ -422,6 +422,48 @@ it after the dock's scrolling area has cut it off, and the `inWindow` flag a
 `panel` step prints answers the same question. A walk that starts failing with
 "is not where a person could click it" is being told the truth for the first
 time: put a `scrollPanel` in front of the press.
+
+## What a wait waits for
+
+A `wait` step means "let the editor finish", and until 2026-09-07 it spent the
+whole number the walk wrote down whether the editor needed it or not. Across
+the 247 walks in `Scripts/playtest` those numbers add up to **31 minutes of
+sleeping**, half the entire run, so the run took an hour and nobody ran it
+before landing a change.
+
+A wait now watches instead of counting. It ends as soon as both of these have
+held for about a tenth of a second:
+
+- the main run loop has had all but nothing to do, and
+- nothing on the walk's window, or on a window hung off it, is part way through
+  an animation that is going to end.
+
+Both signals are needed. An animation the render server runs on its own leaves
+the main thread idle the whole way through, and a window with nothing queued
+may still be mid-crossfade. An animation that repeats FOR EVER is not waited
+out: the selection marquee's marching ants crawl the whole time a layer is
+picked, and taking them for unfinished work kept every wait in the suite
+running its full length.
+
+A wait never comes back before one turn of the run loop and never runs past the
+seconds the walk asked for, so **no walk waits longer than it used to** and a
+walk on a slow machine still gets everything it asked for. The rule itself is
+`PlaytestSettle` in PhotonzCore, tested there without an app around it.
+
+The log says which happened, and `done.json` carries `secondsSaved` for the
+walk:
+
+```
+[12 wait] 0.5s asked, quiet after 0.09s; mainBusy 40.1ms over 22 passes...
+[19 wait] 0.4s, never went quiet (12 of 13 slices busy, 7 restless, busiest 27.0ms)
+```
+
+If a walk turns flaky and you suspect the pacing, put every wait back on the
+clock and see whether it comes back:
+
+```bash
+PHOTONZ_PLAYTEST_PACE=full Scripts/playtest.sh <walk.json> --no-build
+```
 
 ## Reading the cost of a step
 
