@@ -1,0 +1,26 @@
+{
+  "id": "the-whole-component-walk-stops-on-a-wording-it-d",
+  "title": "The whole component walk stops on a wording it did not expect",
+  "goal": "The scripted walk that covers the whole component path from drawing to copies stops two thirds of the way through, because a control it checks now says more than the walk was told to expect. Nothing in the app looks wrong; the walk simply cannot finish, so the longest component test we have is not running to the end. Work out which side is right and put them back in step.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1840,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T20:45:01.723Z",
+  "updated": "2026-09-07T20:45:01.723Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on main at dcd83620 (with the version-row change stashed, so it predates it):\n\n  $ Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json\n  \"error\" : \"step 173 (expect): the control called \\\"Apply to Other Versions\\\" reads \\\"Shadow, there is something to carry\\\", not \\\"there is something to carry\\\"\",\n  \"status\" : \"failed\",\n  \"steps\" : 172\n\nThe control gained a leading section name in its detail (\"Shadow, ...\"). Either the expect string wants the section prefix or the detail should not carry it; the same expect appears more than once in that walk.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json finishes with status ok",
+    "Whichever side changed, the walk still checks that the carry-across control says whether there is something to carry"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T20:45:01.723Z",
+      "note": "created (manual)"
+    }
+  ]
+}

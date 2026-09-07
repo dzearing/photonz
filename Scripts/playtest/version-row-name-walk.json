@@ -1,0 +1,191 @@
+{
+  "out": "/tmp/photonz-playtest/version-row-name",
+  "seed": "A component called Save button grows a second version. Both drawings sit in the layers list carrying the same name, so each row has to show the name AND which version it is, at the dock's own width. The name used to be squeezed out between the mark and a version chip until the row read as one ellipsis, so this walk photographs those two rows, and one of them being renamed.",
+  "setup": {
+    "forget": [
+      "panel",
+      "groups"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        360,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Save button"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Disabled"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": 1200,
+      "row": "Layers section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "two-versions"
+    },
+    {
+      "do": "describe",
+      "stage": "two-versions",
+      "note": "two drawings of Save button, one Default and one Disabled, both in the layers list"
+    },
+    {
+      "do": "snapshot",
+      "name": "version-row-two-versions"
+    },
+    {
+      "do": "expect",
+      "row": "Save button",
+      "present": true
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "renaming",
+      "note": "the Disabled drawing renaming: the field sits where the name was and the version stays under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "version-row-renaming"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dragTile",
+      "tile": "Save button",
+      "to": [
+        360,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": 1200,
+      "row": "Layers section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "copy-on-a-version",
+      "note": "a copy placed and switched to the other version: the two originals still read name over version, and the copy's own row carries the mark alone, since only an original says which version it is"
+    },
+    {
+      "do": "snapshot",
+      "name": "version-row-copy"
+    }
+  ]
+}

@@ -2233,54 +2233,7 @@ private struct LayersRow: View, Equatable {
         HStack(spacing: 8) {
             if showsTwist { twistControl }
             thumbnailView
-            if draftName != nil {
-                TextField("Layer name", text: $renameText)
-                    .textFieldStyle(.plain)
-                    .font(.callout)
-                    .focused($renameFieldFocused)
-                    .onSubmit { commitRename(id) }
-                    // The field does not just close on Return, it hands the
-                    // keyboard to the picture. Closing alone leaves the
-                    // keyboard on the window, where a tool letter does nothing
-                    // at all — a quieter version of the same trap.
-                    .nameFieldKeys(commit: { commitRename(id) }, revert: cancelRename)
-                    .onChange(of: renameFieldFocused) { _, focused in
-                        if !focused { commitRename(id) }
-                    }
-            } else {
-                Text(display.name)
-                    .font(.callout)
-                    .lineLimit(1)
-                    .foregroundStyle(display.isVisible ? .primary : .tertiary)
-                    .onTapGesture(count: 2) { beginRename(id, display.name) }
-            }
-            // The mark that says this group is a component. It sits with the
-            // name rather than out at the edge, because it is part of what the
-            // row IS, not one more thing you can do to it. Filled is the
-            // original, outlined is a copy that follows it.
-            if componentsEnabled, display.isMainComponent || display.isComponentInstance {
-                ComponentMark(isInstance: display.isComponentInstance)
-            }
-            // Which version this drawing is, when its component holds more than
-            // one. Every version carries the component's name, so without this
-            // a button with a Disabled version is two rows both called Button
-            // and there is no telling which one you are about to edit.
-            if componentsEnabled, let version = display.versionName {
-                Text(version)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    // The chip keeps its own width and the NAME gives way
-                    // instead. Every version of a component carries the same
-                    // name, so on a narrow dock the version is the word that
-                    // tells the two rows apart: a chip squeezed to "D...d" is
-                    // the one thing here that must not happen.
-                    .fixedSize()
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(Capsule().fill(.quaternary))
-                    .help("This is the \(version) version of \(display.name)")
-            }
+            nameBlock
             // The mark that says the box this layer lives in has cut it off,
             // so a layer dragged too far is never lost with nothing anywhere
             // saying where it went.
@@ -2355,6 +2308,63 @@ private struct LayersRow: View, Equatable {
                                  in: editorState.panelRows.map(\.id))
         }
         .contextMenu { menu }
+    }
+
+    /// What the row SAYS it is: the name, with the component mark beside it,
+    /// and under it the version this drawing is when its component holds more
+    /// than one.
+    ///
+    /// The version sits UNDER the name because side by side the two do not
+    /// both fit. At the dock's own width a "Save button" with a "Disabled"
+    /// chip after it left the name about 30pt, and the row read as a single
+    /// ellipsis: two rows called nothing (2026-09-07). Stacked, the name has
+    /// the whole width and so does the version, and the row is no taller for
+    /// it, since both lines together are shorter than the thumbnail beside
+    /// them and the thumbnail is what sets the row's height.
+    private var nameBlock: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                if draftName != nil {
+                    TextField("Layer name", text: $renameText)
+                        .textFieldStyle(.plain)
+                        .font(.callout)
+                        .focused($renameFieldFocused)
+                        .onSubmit { commitRename(id) }
+                        // The field does not just close on Return, it hands the
+                        // keyboard to the picture. Closing alone leaves the
+                        // keyboard on the window, where a tool letter does nothing
+                        // at all — a quieter version of the same trap.
+                        .nameFieldKeys(commit: { commitRename(id) }, revert: cancelRename)
+                        .onChange(of: renameFieldFocused) { _, focused in
+                            if !focused { commitRename(id) }
+                        }
+                } else {
+                    Text(display.name)
+                        .font(.callout)
+                        .lineLimit(1)
+                        .foregroundStyle(display.isVisible ? .primary : .tertiary)
+                        .onTapGesture(count: 2) { beginRename(id, display.name) }
+                }
+                // The mark that says this group is a component. It sits with the
+                // name rather than out at the edge, because it is part of what the
+                // row IS, not one more thing you can do to it. Filled is the
+                // original, outlined is a copy that follows it.
+                if componentsEnabled, display.isMainComponent || display.isComponentInstance {
+                    ComponentMark(isInstance: display.isComponentInstance)
+                }
+            }
+            // Every version of a component carries the component's name, so
+            // without this line a button with a Disabled version is two rows
+            // both called Button and there is no telling which one you are
+            // about to edit.
+            if componentsEnabled, let version = display.versionName {
+                Text(version)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .help("This is the \(version) version of \(display.name)")
+            }
+        }
     }
 
     /// The twist-open control, in a fixed slot so every row's thumbnail lines

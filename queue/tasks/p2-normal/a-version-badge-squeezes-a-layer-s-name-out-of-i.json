@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1650,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T14:00:02.585Z",
-  "updated": "2026-09-07T14:00:02.585Z",
+  "updated": "2026-09-07T20:45:22.171365Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found in the 2026-09-07 whole-path sitting; see 2026-09-07-path-9-shelf-set.png in queue/audits, rows four and five, which read \"…  Disabled  2\" and \"S…  Default  2\". Row is LayersPanel.swift around the display name plus badges. Widening the dock is not the answer; the badge and count should give way before the name does, or the badge should move under the name.",
+  "notes": "Found in the 2026-09-07 whole-path sitting; see 2026-09-07-path-9-shelf-set.png in queue/audits, rows four and five, which read \"\u2026  Disabled  2\" and \"S\u2026  Default  2\". Row is LayersPanel.swift around the display name plus badges. Widening the dock is not the answer; the badge and count should give way before the name does, or the badge should move under the name.",
   "acceptance": [
     "A layer row carrying a version badge still shows enough of its name to recognise it",
     "No row ever collapses to just an ellipsis at the default dock width",
@@ -22,6 +22,39 @@
     {
       "t": "2026-09-07T14:00:02.585Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T20:30:42.634Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T20:45:22.171365Z",
+      "note": "reproduced first: Scripts/playtest/version-row-name-walk.json (new, kept) builds a Save button component, adds a Disabled version and photographs the two rows. Before the fix they read \"S\u2026  \u25c8 Disabled  2\" and \"Sa\u2026  \u25c8 Default  2\" at the dock's default 264pt. Measured: name and chip shared about 86pt of the row, the chip took 58 of it with .fixedSize(), the name got about 30."
+    },
+    {
+      "t": "2026-09-07T20:45:22.171365Z",
+      "note": "review before building: the mock's chip-beside-the-name cannot work here at any dock width the app allows. Fixed pieces eat about 178 of 264 (twist 12, thumbnail 40, mark, count, lock, eye, gaps), and \"Save button\" alone wants 74 while \"Disabled\" wants 58. Truncating both was rejected: every version of a component carries the SAME name, so half a name plus half a version tells two rows apart worse than either alone. Widening the dock was rejected by the task."
+    },
+    {
+      "t": "2026-09-07T20:45:22.171365Z",
+      "note": "built: the version now prints UNDER the name (LayersPanel.swift, new nameBlock). Both lines together are shorter than the 30pt thumbnail that sets the row's height, so the row is not one pixel taller and the list stays one shape. The capsule went with it: stacked, the version needs no separation from the name."
+    },
+    {
+      "t": "2026-09-07T20:45:22.171365Z",
+      "note": "verified on the probe with real screen captures: name in full on both rows, version under it, count, lock and eye untouched, rows still 40pt apart. Also verified renaming a row (field on the name line, version stays put, nothing jumps), a placed copy alongside, and the dock at its narrowest 220pt."
+    },
+    {
+      "t": "2026-09-07T20:45:22.171365Z",
+      "note": "review after building: a copy's row still says nothing about which version it shows (only originals do) \u2014 filed as a-copy-does-not-say-which-version-it-is-showing. The component diamond now rides the name's line rather than the row's middle. The bare grey version word could read as a state rather than a version name; put to the user in the audit."
+    },
+    {
+      "t": "2026-09-07T20:45:22.171365Z",
+      "note": "Scripts/test.sh green (4515 tests). panel-edge-column-walk and layers-lazy-rows-walk still ok. component-whole-path-walk fails at step 173 on main WITH THE CHANGE STASHED, so it predates this work; filed as the-whole-component-walk-stops-on-a-wording-it-d."
+    },
+    {
+      "t": "2026-09-07T20:45:22.171365Z",
+      "note": "audit: queue/audits/2026-09-07-version-row-name.json with two -sc.png captures."
     }
-  ]
+  ],
+  "started": "2026-09-07T20:30:42.634Z"
 }

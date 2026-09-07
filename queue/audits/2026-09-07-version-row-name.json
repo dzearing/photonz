@@ -1,0 +1,45 @@
+{
+  "feature": "A version row says its name",
+  "epic": "ui-components",
+  "summary": "A drawing that is one of a component's versions now shows its name in the layers list with the version underneath it. Before, the version badge and the count squeezed the name down to a single ellipsis, so the two rows were called nothing.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components are on by default.",
+  "try": [
+    {
+      "do": "Open a new blank canvas."
+    },
+    {
+      "do": "Drag the Button tile off the Library's Comps shelf onto the canvas."
+    },
+    {
+      "do": "Click it, then press Return and rename it Save button."
+    },
+    {
+      "do": "In the Component section, press Add next to Versions and name the new version Disabled.",
+      "shot": "2026-09-07-version-row-name.png"
+    },
+    {
+      "do": "Read the two Save button rows in the Layers list at the dock's normal width."
+    },
+    {
+      "do": "Double-click one of those names to rename it, and press Escape.",
+      "shot": "2026-09-07-version-row-rename.png"
+    },
+    {
+      "do": "Drag the dock's edge narrower and read the rows again."
+    }
+  ],
+  "evaluate": [
+    "Can you tell the two rows apart at a glance, without opening anything?",
+    "Does the version under the name read as which version this is, or does it read as a state the layer is stuck in?",
+    "Is the second line worth the density it costs in a long list, or would you rather the version showed only on the selected row?",
+    "Does the row still feel like one row, or like two things stacked?",
+    "When you rename one, does anything jump?"
+  ],
+  "rough": [
+    "The version is a plain grey word under the name now, not a pill. Side by side the pill and the name could not both fit at the dock's own width, and the pill was winning, so the pill's look was the thing that gave way.",
+    "Checked at the dock's narrowest, 220pt as well as the usual 264pt: the name still reads in full there.",
+    "A COPY's row still says nothing about which version it is showing. Only an original does. The canvas label says it and the Component section says it, so a copy switched to Disabled reads as an ordinary copy in the list. Filed separately.",
+    "The component diamond now rides on the name's line rather than the middle of the row, so on a two-line row it sits a little above centre.",
+    "The screenshots are real captures of the probe window taken by a scripted walk (Scripts/playtest/version-row-name-walk.json), not offscreen renders."
+  ]
+}
