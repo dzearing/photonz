@@ -1,0 +1,58 @@
+{
+  "id": "a-tool-setting-that-is-on-screen-twice-reads-as-with-the-panel-open-a-tool-s-set",
+  "taskId": "a-tool-setting-that-is-on-screen-twice-reads-as",
+  "question": "With the panel open, a tool's settings are on screen twice. Where should they live?",
+  "context": "Pick up Measure, the wand or the Zoom Callout with the right hand panel open and the same rows appear twice: once in a capsule floating over the bottom of your picture, once in a section at the top of the panel. The Zoom Callout's are a literal copy, the same two words in the same order. They are one value and moving either moves both.",
+  "options": [
+    {
+      "id": "a",
+      "label": "The panel holds them while it is open",
+      "summary": "While the right hand panel is open, the floating capsule over your picture goes away and the panel's tool section is the one place to change the setting. Picking up a tool opens its section and brings it into view. Hide the panel and the capsule comes straight back.",
+      "pros": [
+        "The picture stays clear: nothing floats over the bottom of it while the panel is already showing the same thing",
+        "The panel version is the fuller one. It has the wand's long slider and its explaining sentence, Measure's Mode, and Crop's Aspect, none of which are in the capsule",
+        "One rule covers Crop too, which today has a panel section and no capsule at all",
+        "Nothing new to learn: the panel is already where every other setting lives"
+      ],
+      "cons": [
+        "The setting moves house when you show or hide the panel",
+        "The panel is on the far right, a long way from the tool bar your hand just left"
+      ],
+      "mitigation": "Picking up a tool opens and scrolls to its section, so it is on screen the moment you need it, and the capsule returns the instant you hide the panel."
+    },
+    {
+      "id": "b",
+      "label": "The capsule holds them whenever it is up",
+      "summary": "The capsule just above the tool bar is always the place for the tool in your hand, panel open or not. The panel drops the tool's section while the capsule is showing it, and Measure's Mode joins the capsule so nothing goes missing. Crop, which has no capsule, keeps its panel section.",
+      "pros": [
+        "The settings for the tool in your hand are in exactly the same spot every time, right above the tool you just clicked",
+        "Short travel: pick a tool, change its setting, use it, all in the same corner of the screen",
+        "The panel is left to answer for the thing you have selected, not for the tool you are holding"
+      ],
+      "cons": [
+        "The capsule covers a band of your picture for as long as you hold a tool, even with the panel open and empty beside it",
+        "The wand loses its long slider and the sentence explaining what tolerance means",
+        "The capsule gets wider: Measure would carry Mode, Snap and Show on one row"
+      ],
+      "mitigation": "The explaining sentence becomes the control's tooltip, and the capsule keeps hugging its contents and wrapping, so it only ever takes the width it needs."
+    },
+    {
+      "id": "c",
+      "label": "Leave it in both places",
+      "summary": "Nothing changes. The setting stays in the capsule and in the panel at the same time, always in lockstep, and the repetition reads as reassurance rather than clutter.",
+      "declines": true,
+      "pros": [
+        "Zero risk, nothing moves, and whichever place you look first it is there",
+        "Both stay in sync, so you cannot set two different values by mistake"
+      ],
+      "cons": [
+        "The same control is on screen twice, which is what prompted this",
+        "The capsule keeps covering part of the picture even when the panel beside it is showing the identical rows"
+      ],
+      "mitigation": "They are one value, so a wrong guess is impossible: whichever you move, the other follows."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-07T09:14:35.018Z"
+}

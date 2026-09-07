@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T01:59:23.807Z",
-  "updated": "2026-09-06T12:16:42.312Z",
+  "updated": "2026-09-07T09:16:15.899Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-05-tool-settings.json rough 4. The panel sections are MeasureToolInspector, WandToolInspector, CalloutToolInspector and CropToolInspector in LayersPanel.swift, gated by InspectorSectionID .measureTool/.wandTool/.calloutTool/.cropTool. The capsule is Sources/Photonz/ToolSettingsCapsule.swift. Note that Crop keeps a panel section with no capsule (aspect is a mode), so any rule has to cover that case too. Do not just delete the panel sections: the panel is where the settings get their explaining sentence and the wand its long slider.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-06T12:16:42.312Z",
       "note": "seq 80 -> 80"
+    },
+    {
+      "t": "2026-09-07T09:09:30.691Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T09:14:12.492Z",
+      "note": "Adversarial review, before building. Walked it as a first-time user with a screenshot open and the panel showing. Picking up Measure changes two far-apart parts of the screen at once: a capsule appears over the bottom of the picture AND a Measure Tool section appears at the top of the panel. Nothing is broken and either one works, so the cost is not confusion about what to do. It is three smaller things: your eye has two places to check, the capsule sits on top of the thing you came here to look at, and a newcomer has to work out that the two are one value rather than two."
+    },
+    {
+      "t": "2026-09-07T09:14:12.492Z",
+      "note": "What each place has that the other does not, measured on real captures at 1280x840. Panel only: Measure's Mode row plus its key tip sentence, Crop's Aspect (Crop has NO capsule at all), the wand's full width slider and the sentence explaining tolerance. Capsule only: nothing. Every capsule setting is also in the panel. The Zoom Callout section is a literal duplicate, same two words in the same order with the same controls."
+    },
+    {
+      "t": "2026-09-07T09:14:12.492Z",
+      "note": "Shortest version that delivers the same value: one rule, no new UI. The capsule already exists for exactly one reason, that hiding the panel used to take the settings away, so the honest rule is that it appears when the panel cannot show them. The hole in that rule is that panel open does not guarantee the section is on screen: it can be collapsed or scrolled past. Worth fixing by having a tool pickup open and reveal its own section, not by having the capsule flicker in and out while you scroll."
+    },
+    {
+      "t": "2026-09-07T09:14:12.492Z",
+      "note": "Any rule has to cover Crop, which has a panel section and no capsule, and Measure, whose Mode is only in the panel. A rule that leaves half of Measure in the panel and half in the capsule would be worse than the duplication it fixes."
+    },
+    {
+      "t": "2026-09-07T09:14:12.492Z",
+      "note": "Real captures taken with the probe, Screen Recording granted: Scripts/playtest/tool-settings-twice-walk.json, five stages in /tmp/photonz-playtest/tool-settings-twice."
+    },
+    {
+      "t": "2026-09-07T09:16:15.898Z",
+      "note": "Decision filed with real captures: a-tool-setting-that-is-on-screen-twice-reads-as-with-the-panel-open-a-tool-s-set. Three options, recommended A (the panel holds them while it is open), C marked declines. Brief at queue/decisions/<same>.md with seven pictures in queue/audits/, all -sc.png captures from the probe with Screen Recording granted."
+    },
+    {
+      "t": "2026-09-07T09:16:15.899Z",
+      "note": "Build notes for whoever picks this up with an answer in hand. Option A: gate ToolSettingsCapsule on editorState.isInspectorShown being false in EditorView.swift line ~95 (the settings(for:) guard is the one place, so the bar's own inset stays right), and on tool change reveal the tool section using the ScrollViewReader proxy already in LayersPanel.swift line 98, only when the section is not already visible. Nothing in the panel changes. Option B: drop .measureTool/.wandTool/.calloutTool from availableSections while ToolSettingsCapsule.settings(for:) is non-empty, leave .cropTool alone, add a measureMode case to ToolSetting plus its capsule control, and move the wand's explaining sentence into the slider's help text. Either way, keep the panel-hidden capsule exactly as it is, and re-run Scripts/playtest/tool-settings-twice-walk.json to prove the result."
     }
-  ]
+  ],
+  "started": "2026-09-07T09:09:30.690Z"
 }

@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/tool-settings-twice",
+  "setup": { "forget": ["panel", "tools", "measure", "shapes"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.4 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "measure" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-measure-twice", "note": "panel open: Snap and Show are in the capsule over the picture AND in the panel's Measure Tool section" },
+    { "do": "snapshot", "name": "1-measure-twice" },
+    { "do": "tool", "tool": "wand" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-wand-twice", "note": "Tolerance in both places: a short slider in the capsule, a long one with a sentence in the panel" },
+    { "do": "snapshot", "name": "2-wand-twice" },
+    { "do": "tool", "tool": "zoomCallout" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-callout-twice", "note": "Shape and Magnification in both places, the panel section an exact copy of the capsule" },
+    { "do": "snapshot", "name": "3-callout-twice" },
+    { "do": "tool", "tool": "crop" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-crop-panel-only", "note": "Crop has no capsule at all: Aspect is only in the panel, so any rule has to cover this case" },
+    { "do": "snapshot", "name": "4-crop-panel-only" },
+    { "do": "action", "action": "hideInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "measure" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-panel-hidden", "note": "panel hidden: the capsule is the only place the settings are, which is why it exists" },
+    { "do": "snapshot", "name": "5-panel-hidden" }
+  ]
+}
