@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 11,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:35:45.719Z",
-  "updated": "2026-09-07T17:34:46.381103Z",
+  "updated": "2026-09-07T17:36:00.283Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07: even with grid snapping off the marquee snaps to something, and it should never snap. Confirmed by reading CanvasPointerDrags.swift: the marquee's first corner is magnetised at line 162, where the anchor is passed through EdgeSnapping.snap against the edge map unless Command is held, and the drag then updates through the same edge snapping at line 882 with a comment saying it is the same corner magnetising as a measure drag. So this is edge snapping against detected picture edges, which is why it happens regardless of the grid or the snapping switch: neither is consulted on this path. The user wants it gone entirely rather than made conditional. Before removing it, note why it was put there, to make selecting an element's exact bounds easy, and say in the audit what serves that now: the wand already selects a region by content, and a shape's own bounds are reachable by picking the layer, so the magnet may simply be unnecessary. If some way to snap a selection is still wanted it belongs behind a deliberate switch or a held key, never as the default, and that would be a follow-up rather than this task. DONE 2026-09-07: removed at both call sites; the policy now lives in MarqueeDrag.corner(at:) in PhotonzCore with the reason beside it.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-07T17:34:46.381103Z",
       "note": "audit: queue/audits/2026-09-07-marquee-no-magnet.json with two real window captures."
+    },
+    {
+      "t": "2026-09-07T17:36:00.282Z",
+      "note": "A marquee now lands exactly where it is drawn: the edge magnet is gone from both corners, the policy lives in MarqueeDrag.corner(at:) in PhotonzCore, and the region tools no longer start the edge sweep. Verified in the probe app at two zooms, with the grid on and with Command held (233,693 240x40 and 353,783 67x27, which used to come out 41x1), guides caught 0 throughout; caliper feet, layer move/resize and arrow tips still catch. Full suite green. Audit: queue/audits/2026-09-07-marquee-no-magnet.json"
     }
   ],
-  "started": "2026-09-07T17:21:23.912Z"
+  "started": "2026-09-07T17:21:23.912Z",
+  "completed": "2026-09-07T17:36:00.283Z"
 }
