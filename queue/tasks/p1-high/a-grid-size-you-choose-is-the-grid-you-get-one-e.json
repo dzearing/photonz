@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-07T03:06:34.043Z",
-  "updated": "2026-09-07T03:26:35.924356Z",
+  "updated": "2026-09-07T04:06:48.842504Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-06: set grid sizes do not work, at four points they see a bunch of lines that are not four points apart. Confirmed by reading: CanvasGridSettings.liveSpacing (CanvasGrid.swift line 188) and the drawing both call CanvasGridLevels.levels, which returns up to maximumLevels of three rungs chosen from the zoom whatever the person set, so an explicit spacing is only ever the FINEST rung and two coarser ones are drawn with it. The ladder exists for a good reason and the user has now named where it belongs: only under automatic, which already exists as CanvasGridCellStops.automatic and is read through cellIsAutomatic (line 207). So the change is to branch, not to delete: a chosen size draws one spacing, automatic keeps the ladder. That also collapses most of snapping-pulls-to-the-grid-you-can-see-not-one-y for the chosen case, since drawn and set become the same thing; read that task and say in the audit what remains of it under automatic. Transparency: maximumOpacity is 0.30 (line 284); pick a lower number by looking at a fine grid zoomed in, not by taste alone, and keep it readable on a dark and a light picture. The slider labels are the tool bar's cell popup from the-grid-tool-bar-is-two-buttons-and-adjust-mode; if that task has not landed yet, coordinate rather than building the popup twice.",
@@ -44,6 +44,30 @@
     {
       "t": "2026-09-07T03:26:35.924356Z",
       "note": "Reading taken on the bold line (acceptance 2): it stays. A bold every N lands ON lines the chosen grid already draws, so it adds emphasis, never a new line position. It fades in and out with the fine grid rather than outliving it, so there is never a moment where the only thing on screen is a density nobody chose."
+    },
+    {
+      "t": "2026-09-07T04:06:48.842504Z",
+      "note": "Built. CanvasGridSettings.levels(atZoom:) is the one branch: automatic runs CanvasGridLevels.levels as before, a chosen size runs the new CanvasGridLevels.chosenLevels, which returns exactly the chosen spacing plus its bold every N at the same strength. The drawing (CanvasGridChrome), the pull (snapSpacing) and the readouts (liveSpacing, spacingChipText, cellButtonHelp) all read that one call, so they cannot disagree. Tests first in Tests/PhotonzCoreTests/GridChosenSizeTests.swift, 15 cases, sweeping 400 zooms across the whole range for every stop on the slider."
+    },
+    {
+      "t": "2026-09-07T04:06:48.842504Z",
+      "note": "Strength: maximumOpacity 0.30 -> 0.16, picked by looking at a four point grid at 100% in the probe rather than by taste. Measured off the real capture: fine lines now sit 40 levels off a white picture (was 62) and the bold ones about twice that."
+    },
+    {
+      "t": "2026-09-07T04:06:48.842504Z",
+      "note": "One thing the task did not ask for but its fourth acceptance item forced: the grid ink was resolved against the WINDOW appearance, so it went near black in light and near white in dark. At the new lower strength that left the lines four levels off a white picture in the dark appearance, and invisible over a dark screenshot in the light one. It is now one mid tone, so it reads on a light picture and a dark one in either appearance. Measured both."
+    },
+    {
+      "t": "2026-09-07T04:06:48.842504Z",
+      "note": "The too-fine case (acceptance 7): a chosen size fades out as its lines close on four screen points and is gone by two, and nothing coarser replaces it. Seeing it at 50% in the probe, a lit switch and a set size over an empty canvas reads as a bug, so the size button now dims and its tooltip says the grid is too fine to draw here and to zoom in. CanvasGridSettings.cellIsTooFineToDraw(atZoom:), tested."
+    },
+    {
+      "t": "2026-09-07T04:06:48.842504Z",
+      "note": "Slider: the nine numbers beside the track are gone; the track keeps nine invisible pressable rows (so a press still lands on a size, and walks can still name one) and one readout under it where Auto used to sit, showing whatever is being chosen. Note for anyone touching it: .offset does NOT move a view's layout frame, so the first attempt registered all nine rows at the same point and every press picked the same size; they are laid out in a VStack now, with the rail over them and hit testing off."
+    },
+    {
+      "t": "2026-09-07T04:06:48.842504Z",
+      "note": "Verified in the probe with Scripts/playtest/grid-chosen-size-walk.json: at 4 pt the grid report says 2 rungs and pulls to 4 at 100%, 200% and 400%; at 50% it says nothing drawn; at 16 pt it pulls to 16; automatic still says 3 rungs and pulls to 32 at 100%. Full suite green, 4240 tests. Every other grid walk still passes; grid-origin-walk was already broken on a control removed by the tool bar task, filed as the-grid-origin-walk-drives-the-buttons-the-tool."
     }
   ],
   "started": "2026-09-07T03:21:31.487Z"

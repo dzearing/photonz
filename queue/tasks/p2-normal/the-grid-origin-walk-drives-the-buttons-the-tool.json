@@ -1,0 +1,27 @@
+{
+  "id": "the-grid-origin-walk-drives-the-buttons-the-tool",
+  "title": "The grid origin walk drives the buttons the tool bar actually has",
+  "goal": "One of the scripted walks that checks the grid still asks for a button called Set grid origin, which was taken off the tool bar when the grid controls were cut back to a switch, a size and a gear. The walk stops at that step, so nothing it was written to check is being checked any more: where the grid starts, and the guides pinned onto it.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 1580,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T04:06:30.774Z",
+  "updated": "2026-09-07T04:06:30.775Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Fails at step 15: no control called \"Set grid origin\". The mode is entered from the gear button (CanvasGridCopy.adjust, \"Adjust Grid\") and the origin is placed by dragging the two markers on the canvas, so the walk needs a drag rather than a press. Found while running every grid walk for a-grid-size-you-choose-is-the-grid-you-get-one-e; every other grid walk passes.",
+  "acceptance": [
+    "Scripts/playtest/grid-origin-walk.json runs to the end and reports ok",
+    "It reaches the same things it used to check: placing where the grid starts, and pinning, selecting and deleting a guide",
+    "Nothing else in Scripts/playtest asks for a control that no longer exists, checked by running them all"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T04:06:30.775Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -10362,3 +10362,26 @@ Layout section's Smallest and Largest rows, applied inside `Layer.resized(to:)`.
 Next: the other half of the rule, saying WHY when nothing moved. The line under
 the section still just shows its caption — filed as
 `a-number-that-springs-back-says-why-it-did`.
+
+## 2026-09-06 — A grid size you choose is the grid you get
+
+A size chosen on the tool bar now draws exactly that spacing, the same at every
+zoom, with its bold every N as emphasis on lines the same grid already draws.
+The level-of-detail ladder is still there and still runs, but only under
+automatic, which is the one setting whose whole job is following the zoom. One
+branch does it, `CanvasGridSettings.levels(atZoom:)`, and the drawing, the pull
+and every readout go through it, so they cannot disagree.
+
+Also: the lines are half as strong (`maximumOpacity` 0.30 → 0.16), and the ink
+stopped following the window appearance. It used to go near black in light and
+near white in dark, which at the lower strength made the grid nearly invisible
+over a white picture in dark mode and over a dark screenshot in light mode; it
+is one mid tone now and measures readable over both.
+
+A chosen size too fine to draw fades out rather than drawing mud, and nothing
+coarser is put in its place — so the size button dims and says why, instead of
+leaving a lit switch over an empty canvas.
+
+Next: the size slider lost its column of nine numbers for one readout under the
+track, which is worth the user's read. Follow-up filed for
+`grid-origin-walk.json`, stale since the tool bar rework.

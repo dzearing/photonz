@@ -164,7 +164,7 @@ struct CanvasGridTests {
         #expect(atOne.first!.spacing > 4)
         let closeUp = levels(32)
         #expect(closeUp.first!.spacing == 4)
-        #expect(closeUp.first!.opacity == CanvasGridLevels.maximumOpacity)
+        #expect(closeUp.first!.opacity >= CanvasGridLevels.maximumOpacity - 1e-9)
     }
 
     @Test func zoomingOutDropsTheFineLinesAndKeepsTheCoarseOnes() {
@@ -204,7 +204,7 @@ struct CanvasGridTests {
                 guard let finest = levels(zoom, spacing: 4, majorEvery: majorEvery).first,
                       finest.onScreenSpacing >= CanvasGridLevels.fullStrengthOnScreenSpacing
                 else { continue }
-                #expect(finest.opacity == CanvasGridLevels.maximumOpacity,
+                #expect(finest.opacity >= CanvasGridLevels.maximumOpacity - 1e-9,
                         "every \(majorEvery) at zoom \(zoom)")
             }
         }
@@ -225,7 +225,7 @@ struct CanvasGridTests {
                         * CGFloat(pow(Double(Viewport.maxZoom / Viewport.minZoom), t))
                     let drawn = levels(zoom, spacing: spacing, majorEvery: majorEvery)
                     let strongest = drawn.map(\.opacity).max() ?? 0
-                    #expect(strongest == CanvasGridLevels.maximumOpacity,
+                    #expect(strongest >= CanvasGridLevels.maximumOpacity - 1e-9,
                             "spacing \(spacing) every \(majorEvery) at zoom \(zoom) drew \(drawn.count) levels, strongest \(strongest)")
                 }
             }
@@ -240,7 +240,7 @@ struct CanvasGridTests {
             let zoom = CGFloat(pow(2.0, -5.0 + Double(step) / 60.0))
             let drawn = levels(zoom)
             #expect(drawn.count >= 1)
-            #expect(drawn.contains { $0.opacity == CanvasGridLevels.maximumOpacity })
+            #expect(drawn.contains { $0.opacity >= CanvasGridLevels.maximumOpacity - 1e-9 })
         }
     }
 

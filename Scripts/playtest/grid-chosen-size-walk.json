@@ -1,0 +1,237 @@
+{
+  "out": "/tmp/photonz-playtest/grid-chosen-size",
+  "setup": {
+    "forget": [
+      "grid",
+      "tools",
+      "panel",
+      "shapes"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "press",
+      "control": "Show grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-automatic-at-100",
+      "note": "Automatic, for contrast: the ladder is running, so the grid line reports more than one rung and the fine lines are not the four points the spacing says."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-1-automatic"
+    },
+    {
+      "do": "press",
+      "control": "Cell"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "4 pt"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-slider-on-four",
+      "note": "THE SLIDER: a track with nine stops and one number under it reading 4 pt. No column of loose numbers beside the track."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-2-slider"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-four-at-100",
+      "note": "THE TEST: four points chosen, 100% zoom. One rung drawn, at four points, and a drag pulls to 4."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-3-four-at-100"
+    },
+    {
+      "do": "pinch",
+      "to": 2,
+      "steps": 20
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-four-at-200",
+      "note": "Same grid at 200%: still four points, still one rung, just further apart."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-4-four-at-200"
+    },
+    {
+      "do": "pinch",
+      "to": 4,
+      "steps": 20
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-four-at-400",
+      "note": "And at 400%: four points. Nothing finer arrived, nothing coarser was invented."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-5-four-at-400"
+    },
+    {
+      "do": "pinch",
+      "to": 0.5,
+      "steps": 30
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-four-at-fifty",
+      "note": "THE MUD CASE: at 50% a four point grid is two screen points apart, so it has faded out rather than drawing a wash. Nothing coarser is put in its place."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-6-four-at-fifty"
+    },
+    {
+      "do": "pinch",
+      "to": 1,
+      "steps": 20
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Cell"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "16 pt"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "7-sixteen-at-100",
+      "note": "Sixteen points chosen: one grid at sixteen, bold every eighth line, and the button reads 16 pt."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-7-sixteen"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-sixteen-dark",
+      "note": "The same grid on a dark canvas: the lines have to stay readable at the lower strength."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-8-sixteen-dark"
+    },
+    {
+      "do": "press",
+      "control": "Cell"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "4 pt"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "9-four-dark",
+      "note": "And the finest chosen size on dark, which is where a wash would show worst."
+    },
+    {
+      "do": "snapshot",
+      "name": "chosen-9-four-dark"
+    }
+  ]
+}

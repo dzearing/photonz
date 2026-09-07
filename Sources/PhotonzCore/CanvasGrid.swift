@@ -150,44 +150,70 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
         try c.encode(minimumCell, forKey: .minimumCell)
     }
 
+    /// Every line the canvas draws at this zoom, finest first. THE one place
+    /// the two kinds of grid part company, and everything that needs to know
+    /// what is on screen — the drawing, the pull, the readouts — comes through
+    /// here so they can never disagree.
+    ///
+    /// **A size you chose** is a promise about the picture, so it draws one
+    /// spacing, the same everywhere, at every zoom, with its bold every N as
+    /// emphasis on lines that spacing is already drawing. Nothing coarser is
+    /// ever put in its place: if you asked for fours you are looking at fours
+    /// or at nothing.
+    ///
+    /// **Automatic** is a promise about the zoom instead — "work to the finest
+    /// lines I can still aim at" — so it runs the level-of-detail ladder, and
+    /// it is the only setting whose density changes on its own.
+    public func levels(atZoom zoom: CGFloat) -> [CanvasGridLevel] {
+        cellIsAutomatic
+            ? CanvasGridLevels.levels(spacing: drawnSpacing, majorEvery: majorEvery, zoom: zoom)
+            : CanvasGridLevels.chosenLevels(spacing: drawnSpacing,
+                                            majorEvery: majorEvery, zoom: zoom)
+    }
+
     /// How far apart the lines a drag pulls to are, in document points, or nil
     /// when a drag should pull to nothing.
     ///
-    /// It is the spacing being DRAWN at this zoom, which is not always the
-    /// spacing that was typed in. The level-of-detail ladder draws only the
-    /// rungs a person can read: at 100% a four point grid would be four screen
-    /// points apart and would read as a grey wash, so the canvas draws its
-    /// thirty two point lines instead. Pulling to the fours underneath them is
-    /// what makes snapping feel broken — every position is a snap position, so
-    /// nothing is ever caught, and an edge comes to rest between two lines
-    /// looking like it missed.
+    /// It is the spacing being DRAWN at this zoom. With a size chosen that is
+    /// simply the size: drawn and set are the same thing, so a drag lands on
+    /// the lines you picked, at every zoom, and the only thing that stops it is
+    /// the grid being too fine to draw at all — an invisible grid never catches
+    /// anything.
     ///
-    /// So the pull follows the picture. Zoom in until the fine lines arrive and
-    /// the pull gets finer with them; zoom out and it gets coarser. What you
-    /// land on is always something you can see yourself land on, and ⌘ is still
-    /// how you get away from it.
+    /// Under automatic the drawn spacing follows the zoom, and so does the
+    /// pull. Zoom in until the fine lines arrive and the pull gets finer with
+    /// them; zoom out and it gets coarser. Pulling to lines the canvas is NOT
+    /// drawing is what made snapping feel broken — every position is a snap
+    /// position, so nothing is ever caught, and an edge comes to rest between
+    /// two lines looking like it missed. What you land on is always something
+    /// you can see yourself land on, and ⌘ is still how you get away from it.
     public func snapSpacing(atZoom zoom: CGFloat) -> CGFloat? {
         guard isVisible, snapsToGrid, spacing.isFinite, spacing > 0,
               zoom.isFinite, zoom > 0 else { return nil }
-        return CanvasGridLevels.snapSpacing(among: CanvasGridLevels.levels(spacing: drawnSpacing,
-                                                                          majorEvery: majorEvery,
-                                                                          zoom: zoom))
+        let drawn = levels(atZoom: zoom)
+        // A chosen size aims at itself. The ladder's "far enough apart to aim
+        // at" rule exists because automatic picks the rung FOR you and must
+        // not pick one you cannot hit; a size somebody chose on purpose is not
+        // the canvas's to second-guess.
+        guard cellIsAutomatic else { return drawn.first?.spacing }
+        return CanvasGridLevels.snapSpacing(among: drawn)
     }
 
     /// What the lines on screen are WORTH right now, in document points.
     ///
-    /// A grid set to four points draws thirty two point lines at 100%, because
-    /// four screen points apart is a grey wash rather than a grid. So the
-    /// number that describes the picture is not always the number that was
-    /// typed, and this is the one that describes the picture: the finest rung
-    /// far enough apart on screen to aim at, which is the same rung a drag
-    /// lands on.
+    /// With a size chosen this is that size, always. Under automatic the number
+    /// that describes the picture is not the number that was typed: a four
+    /// point grid draws thirty two point lines at 100%, because four screen
+    /// points apart is a grey wash rather than a grid, so this is the finest
+    /// rung far enough apart on screen to aim at — the same rung a drag lands
+    /// on.
     ///
     /// It does NOT depend on the magnet. Turning snapping off changes what a
     /// drag does, not what the lines are worth, so the readout stays put.
     public func liveSpacing(atZoom zoom: CGFloat) -> CGFloat {
         let base = drawnSpacing
         guard zoom.isFinite, zoom > 0 else { return base }
+        guard cellIsAutomatic else { return base }
         let levels = CanvasGridLevels.levels(spacing: base, majorEvery: majorEvery, zoom: zoom)
         return CanvasGridLevels.snapSpacing(among: levels) ?? levels.first?.spacing ?? base
     }
@@ -220,13 +246,32 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
                         : "\(CanvasGridNumber.text(Self.clamped(minimumCell: minimumCell))) pt"
     }
 
-    /// The size button's tooltip: what the button is for, plus what the canvas
-    /// is drawing right now when the zoom has taken it off the cell.
+    /// The size button's tooltip: what the button is for, plus the one thing
+    /// that can still put a different number on the canvas.
+    ///
+    /// The zoom is no longer that thing. A size somebody chose is drawn at that
+    /// size at every zoom, so the tooltip says the same words all the way in
+    /// and all the way out. What CAN differ is a typed spacing coarser than the
+    /// chosen cell, since the cell is a floor and the coarser of the two wins.
     public func cellButtonHelp(atZoom zoom: CGFloat) -> String {
         let live = liveSpacing(atZoom: zoom)
         let base = cellIsAutomatic ? CanvasGridCopy.cellAutomaticHelp : CanvasGridCopy.cellHelp
+        if cellIsTooFineToDraw(atZoom: zoom) { return base + " " + CanvasGridCopy.cellTooFineHelp }
         guard !cellIsAutomatic, abs(live - minimumCell) > 1e-9 else { return base }
-        return base + " Showing \(CanvasGridNumber.text(live)) pt lines at this zoom."
+        return base + " The spacing is coarser, so it draws \(CanvasGridNumber.text(live)) pt lines."
+    }
+
+    /// Whether the size somebody chose is finer than this zoom can draw, so the
+    /// canvas is showing no grid at all.
+    ///
+    /// It exists so the app can SAY that. The switch still says the grid is on
+    /// and the button still says four points, and a canvas with nothing on it
+    /// under those two claims reads as a bug rather than as a fact about four
+    /// points at fifty percent. Automatic can never be in this state, because
+    /// choosing a rung it can draw is what automatic does.
+    public func cellIsTooFineToDraw(atZoom zoom: CGFloat) -> Bool {
+        guard isVisible, !cellIsAutomatic else { return false }
+        return levels(atZoom: zoom).isEmpty
     }
 
     /// The one line under the Spacing field that explains the second number,
@@ -280,8 +325,25 @@ public enum CanvasGridLevels {
     /// between it fades, so a rung arrives and leaves rather than appearing.
     public static let fullStrengthOnScreenSpacing: CGFloat = 32
     /// The strongest a single rung is ever drawn. The grid is a surface it
-    /// helps to be aware of, not a thing to look at.
-    public static let maximumOpacity: CGFloat = 0.30
+    /// helps to be aware of, not a thing to look at, and rungs STACK: two of
+    /// them on the same line composite to about a third, three to about four
+    /// tenths, which is where the bold lines get their weight. Lowered from
+    /// 0.30 on 2026-09-06 after looking at a four point grid zoomed in, where
+    /// the old number turned a fine grid into a wash sitting on top of the
+    /// work rather than a surface behind it.
+    public static let maximumOpacity: CGFloat = 0.16
+
+    /// How far apart a CHOSEN size's lines must be on screen to be drawn at
+    /// full strength. Four view points is two lines and two gaps on a retina
+    /// display: a grid you can count, which is the whole reason for choosing a
+    /// size rather than leaving it automatic.
+    public static let chosenFullStrengthOnScreenSpacing: CGFloat = 4
+    /// And where a chosen size stops being drawn at all. Under two view points
+    /// neighbouring lines land on the same device pixels, so what comes out is
+    /// a flat wash rather than a grid — the "solid mud" case. It fades to
+    /// nothing by here instead, and nothing coarser takes its place: the grid
+    /// is the size you asked for or it is not there.
+    public static let chosenVanishingOnScreenSpacing: CGFloat = 2
     /// Fainter than this is invisible and not worth a draw.
     public static let minimumDrawnOpacity: CGFloat = 0.004
     /// Three rungs is a fine level, its strong lines, and the strong lines'
@@ -306,6 +368,46 @@ public enum CanvasGridLevels {
     public static func snapSpacing(among levels: [CanvasGridLevel]) -> CGFloat? {
         levels.first { $0.onScreenSpacing >= minimumSnapOnScreenSpacing - 1e-9
             && $0.opacity >= minimumDrawnOpacity }?.spacing
+    }
+
+    /// The grid a person CHOSE a size for: one spacing, the same at every
+    /// zoom, with its bold every N as emphasis on lines that spacing already
+    /// draws. No ladder, because the ladder answers a question this person has
+    /// already answered.
+    ///
+    /// The only thing the zoom is allowed to change is how strongly it is
+    /// drawn, and only downwards: as the lines close on
+    /// `chosenVanishingOnScreenSpacing` they fade out together, emphasis and
+    /// all, so a grid too fine to draw goes quiet rather than turning to mud —
+    /// and it comes back at exactly the same spacing when you zoom in again.
+    /// Once the lines are `chosenFullStrengthOnScreenSpacing` apart it is fully
+    /// there and stays there however far in you go.
+    public static func chosenLevels(spacing: CGFloat,
+                                    majorEvery: Int,
+                                    zoom: CGFloat,
+                                    maximumOpacity: CGFloat = maximumOpacity) -> [CanvasGridLevel] {
+        guard spacing.isFinite, spacing > 0, zoom.isFinite, zoom > 0 else { return [] }
+        let onScreen = spacing * zoom
+        guard onScreen.isFinite, onScreen > 0 else { return [] }
+
+        let band = chosenFullStrengthOnScreenSpacing - chosenVanishingOnScreenSpacing
+        let ramp = min(max((onScreen - chosenVanishingOnScreenSpacing) / band, 0), 1)
+        // Eased at both ends, so a pinch through the fade has no corner in it.
+        let opacity = maximumOpacity * ramp * ramp * (3 - 2 * ramp)
+        guard opacity >= minimumDrawnOpacity else { return [] }
+
+        var drawn = [CanvasGridLevel(spacing: spacing, onScreenSpacing: onScreen,
+                                     opacity: opacity)]
+        // The emphasis is the same strength as the grid it sits on, so what an
+        // eye sees on a bold line is the two composited: one grid emphasised,
+        // never a second grid, and it leaves when the first one does.
+        let step = CGFloat(CanvasGridSettings.clamped(majorEvery: majorEvery))
+        let major = spacing * step
+        if major.isFinite, major > spacing {
+            drawn.append(CanvasGridLevel(spacing: major, onScreenSpacing: major * zoom,
+                                         opacity: opacity))
+        }
+        return drawn
     }
 
     public static func levels(spacing: CGFloat,
@@ -641,8 +743,8 @@ public enum CanvasGridCopy {
 
     public static let minimumCell = "Smallest cell"
     public static let minimumCellCaption =
-        "The finest cell the grid will ever draw, however far you zoom in. "
-        + "Set it to 8 and you are working in eights."
+        "The finest cell the grid will ever draw, however far you zoom in, and the size it draws at "
+        + "every zoom once you pick one. Set it to 8 and you are working in eights."
 
     /// The mode's own readout. Not a panel row any more: where the grid starts
     /// is set by taking the canvas over, so the number lives beside the two
@@ -663,21 +765,27 @@ public enum CanvasGridCopy {
     /// tool bar and in the mode.
     public static let cell = "Cell"
     public static let cellHelp =
-        "The cell you are working to. The grid never draws finer than this, so a drag lands on it."
+        "The size you are working to. The grid draws exactly this at every zoom, "
+        + "and a drag lands on it."
     /// The bottom of the size slider, and what the button reads while it is
     /// chosen. Short, because it is a button on the tool bar and the sizes
     /// above it are two characters each.
     public static let automaticCell = "Auto"
     public static let cellAutomaticHelp =
         "The cell follows the zoom: the grid works to the finest lines you can still aim at."
+    /// Said on the size button when the size chosen is finer than this zoom can
+    /// draw. It has to name the way out, or it is just an apology.
+    public static let cellTooFineHelp =
+        "Too fine to draw at this zoom, so the grid is not showing. Zoom in and it comes back."
 
     /// The switch on the tool bar, and what it does.
     public static let showGridHelp = "Draw the grid over the picture so you can build to it."
 
     /// The one line under the controls, in both places they are drawn.
     public static let footnote =
-        "Zoom out and the fine lines fade away, zoom in and they come back, so the grid stays readable. "
-        + "It is drawn on the canvas, never into the picture."
+        "Pick a size on the tool bar and the grid is that size at every zoom. "
+        + "Leave it automatic and it follows the zoom, thinning out as you go and coming back as you "
+        + "come closer. Either way it is drawn on the canvas, never into the picture."
 
     /// Said under the Spacing field when the canvas cannot draw the spacing
     /// that was asked for and is drawing a coarser rung instead. It names both

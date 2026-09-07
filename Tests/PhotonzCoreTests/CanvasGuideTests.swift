@@ -328,17 +328,25 @@ import Testing
         #expect(settings.cellButtonText == CanvasGridCopy.automaticCell)
     }
 
-    /// The tooltip is where the second number lives now: what the canvas is
-    /// actually drawing at this zoom, said only when it differs from the cell.
-    @Test func theSizeButtonExplainsItselfWhenTheZoomHasCoarsenedIt() {
+    /// A size somebody chose is never coarsened by the zoom any more, so the
+    /// tooltip has no second number to carry: it says what the button does and
+    /// stops. The one thing that can still make the drawing differ from the
+    /// button is a typed spacing coarser than the chosen cell, and THAT is
+    /// what the second sentence is for now.
+    @Test func theSizeButtonSaysTheSameThingAtEveryZoom() {
         let settings = CanvasGridSettings(isVisible: true, spacing: 4, minimumCell: 8)
-        let live = settings.liveSpacing(atZoom: 0.25)
-        #expect(live > 8)
-        let help = settings.cellButtonHelp(atZoom: 0.25)
-        #expect(help.contains(CanvasGridNumber.text(live)))
-        // At a zoom where the cell IS what is drawn, there is no second number
-        // to explain, so the tooltip just says what the button does.
-        #expect(!settings.cellButtonHelp(atZoom: 2).contains("at this zoom"))
+        for zoom: CGFloat in [0.5, 1, 2, 8, 32] {
+            #expect(settings.liveSpacing(atZoom: zoom) == 8)
+            #expect(settings.cellButtonHelp(atZoom: zoom) == CanvasGridCopy.cellHelp)
+        }
+        // Far enough out that eight points is finer than the canvas can draw,
+        // the tooltip gains one sentence: the grid is not showing, and why.
+        #expect(settings.cellButtonHelp(atZoom: 0.2)
+            == CanvasGridCopy.cellHelp + " " + CanvasGridCopy.cellTooFineHelp)
+        // A spacing coarser than the cell is the only thing left that can put
+        // a different number on the canvas, and it says so.
+        let coarse = CanvasGridSettings(isVisible: true, spacing: 16, minimumCell: 8)
+        #expect(coarse.cellButtonHelp(atZoom: 1).contains("16"))
     }
 
     // MARK: Where a stop sits on the vertical slider

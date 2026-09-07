@@ -28,11 +28,19 @@ struct CanvasGridSizeButton: View {
     /// button sheds its own background and reads as one of the row.
     var isPresented: Binding<Bool>
 
+    /// Whether the size on the button is finer than this zoom can draw, so the
+    /// canvas is showing no grid. The button says so rather than leaving a
+    /// switch that is on and a size that is set standing over an empty canvas.
+    private var isTooFine: Bool { settings.cellIsTooFineToDraw(atZoom: editorState.zoom) }
+
     var body: some View {
         Button { isPresented.wrappedValue.toggle() } label: {
             Text(settings.cellButtonText)
                 .font(.caption.weight(.medium).monospacedDigit())
-                .foregroundStyle(Color.primary)
+                // Dimmed rather than struck through or badged: the size is
+                // still set and still what you get the moment you come closer,
+                // so the button is quiet about it, not cancelled.
+                .foregroundStyle(isTooFine ? AnyShapeStyle(.tertiary) : AnyShapeStyle(Color.primary))
                 .lineLimit(1)
                 // One fixed width for every size it can read, so nothing in the
                 // bar shifts when the cell goes from "Auto" to "12 pt".
@@ -55,13 +63,20 @@ struct CanvasGridSizeButton: View {
 }
 
 /// The sizes, as a vertical slider: a track with a stop on it for every cell
-/// real UI is built in, automatic at the very bottom.
+/// real UI is built in, automatic at the very bottom, and ONE number under it
+/// saying which one you are on.
 ///
 /// It is vertical because the thing being chosen is a size and sizes read down
 /// a column, and because the button it hangs off is on a horizontal bar with
-/// no room to grow sideways. Every stop carries its own number beside the
-/// track, so choosing one is reading rather than aiming: press a number, or
-/// take hold of the knob and run down the column.
+/// no room to grow sideways.
+///
+/// **One readout, not nine labels.** It used to carry a number beside every
+/// stop. Nine numbers down the side of a track is a lot of ink for a control
+/// with one value, and reading them against the stops meant checking which
+/// number belonged to which dot, which is precisely the work a slider is
+/// supposed to save. So the column is gone and the number that was "Auto" at
+/// the foot now says whatever is being chosen: run the knob up the track and
+/// it counts up under your thumb.
 struct CanvasGridCellSlider: View {
     var cell: CGFloat
     var onChange: (CGFloat) -> Void
@@ -69,7 +84,7 @@ struct CanvasGridCellSlider: View {
     /// One stop per row. Tall enough to press without care, short enough that
     /// nine of them are a popover rather than a window.
     private static let rowHeight: CGFloat = 26
-    private static let trackWidth: CGFloat = 20
+    private static let trackWidth: CGFloat = 44
     private static let knobDiameter: CGFloat = 13
 
     private var stops: [CGFloat] { CanvasGridCellStops.all }
@@ -77,67 +92,75 @@ struct CanvasGridCellSlider: View {
 
     var body: some View {
         let height = Self.rowHeight * CGFloat(stops.count)
-        HStack(spacing: 6) {
+        VStack(spacing: 6) {
             track(height: height)
-            labels
+            readout
         }
-        .frame(height: height)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 10)
         .padding(.vertical, 12)
-        // Two ways to use it, because they are two different intentions. A
-        // press on a size is a decision already made; a drag runs the knob up
-        // and down the column with the grid redrawing under it, which is how
-        // you find the cell you want by looking rather than by knowing. The
-        // drag only starts once the pointer has actually moved, so a press
-        // stays a press.
+        // One gesture for both intentions, because they land in the same
+        // place: a press puts the knob on the nearest stop, and holding on and
+        // running down the column drags it there with the grid redrawing under
+        // it, which is how you find the size you want by looking rather than
+        // by knowing.
         .contentShape(.rect)
-        .simultaneousGesture(DragGesture(minimumDistance: 2)
+        .simultaneousGesture(DragGesture(minimumDistance: 0)
             .onChanged { pick(atY: $0.location.y - 12, height: height) })
     }
 
-    /// The rail, its stops, and the knob on the one that is chosen.
+    /// The rail, its stops, and the knob on the one that is chosen, over a
+    /// column of invisible rows — one per size, laid out rather than offset so
+    /// each really occupies its own strip — so a press anywhere across from a
+    /// size lands on that size. The rail itself takes no clicks, or the four
+    /// point strip down the middle would swallow half of them.
     private func track(height: CGFloat) -> some View {
         ZStack(alignment: .top) {
-            Capsule()
-                .fill(.quaternary)
-                .frame(width: 4, height: height - Self.rowHeight + 6)
-                .offset(y: Self.rowHeight / 2 - 3)
-            ForEach(stops.indices, id: \.self) { index in
-                Circle()
-                    .fill(.tertiary)
-                    .frame(width: 3, height: 3)
-                    .offset(y: centre(ofIndex: index) - 1.5)
+            VStack(spacing: 0) {
+                ForEach(stops.indices.reversed(), id: \.self) { index in
+                    Button { onChange(stops[index]) } label: {
+                        Color.clear
+                            .frame(width: Self.trackWidth, height: Self.rowHeight)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .playtestControl(label(at: index), detail: "Grid cell sizes")
+                }
             }
-            Circle()
-                .fill(Color.accentColor)
-                .overlay(Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 1))
-                .frame(width: Self.knobDiameter, height: Self.knobDiameter)
-                .offset(y: centre(ofIndex: selected) - Self.knobDiameter / 2)
-                .animation(.spring(duration: 0.2), value: selected)
+            ZStack(alignment: .top) {
+                Capsule()
+                    .fill(.quaternary)
+                    .frame(width: 4, height: height - Self.rowHeight + 6)
+                    .offset(y: Self.rowHeight / 2 - 3)
+                ForEach(stops.indices, id: \.self) { index in
+                    Circle()
+                        .fill(index == selected ? AnyShapeStyle(Color.clear)
+                                                : AnyShapeStyle(.tertiary))
+                        .frame(width: 3, height: 3)
+                        .offset(y: centre(ofIndex: index) - 1.5)
+                }
+                Circle()
+                    .fill(Color.accentColor)
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 1))
+                    .frame(width: Self.knobDiameter, height: Self.knobDiameter)
+                    .offset(y: centre(ofIndex: selected) - Self.knobDiameter / 2)
+                    .animation(.spring(duration: 0.2), value: selected)
+            }
+            .frame(width: Self.trackWidth, height: height)
+            .allowsHitTesting(false)
         }
         .frame(width: Self.trackWidth, height: height)
     }
 
-    /// The sizes themselves, coarsest at the top, automatic at the foot. Each
-    /// one is its own press: the chosen one is the only one in the accent, so
-    /// the column can be read at a glance without hunting for the knob.
-    private var labels: some View {
-        VStack(spacing: 0) {
-            ForEach(stops.indices.reversed(), id: \.self) { index in
-                Button { onChange(stops[index]) } label: {
-                    Text(label(at: index))
-                        .font(.system(size: 11,
-                                      weight: index == selected ? .semibold : .regular)
-                            .monospacedDigit())
-                        .foregroundStyle(index == selected ? AnyShapeStyle(Color.accentColor)
-                                                           : AnyShapeStyle(.secondary))
-                        .frame(width: 44, height: Self.rowHeight, alignment: .leading)
-                        .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .playtestControl(label(at: index), detail: "Grid cell sizes")
-            }
-        }
+    /// The one number, where the automatic label used to sit: the size being
+    /// chosen right now, changing under the knob as it is dragged.
+    private var readout: some View {
+        Text(label(at: selected))
+            .font(.system(size: 11, weight: .semibold).monospacedDigit())
+            .foregroundStyle(Color.accentColor)
+            .lineLimit(1)
+            // Fixed, so the popover does not breathe as the number changes.
+            .frame(width: Self.trackWidth, height: 14)
+            .animation(nil, value: selected)
     }
 
     private func label(at index: Int) -> String {

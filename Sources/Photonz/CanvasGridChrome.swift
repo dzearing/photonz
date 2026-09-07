@@ -20,16 +20,19 @@ import PhotonzCore
 ///   moved rather than duplicated, so the switch costs a re-order and nothing
 ///   else.
 ///
-/// - **A ladder, not a spacing.** `CanvasGridLevels` picks which rungs to draw
-///   at the current zoom and how strongly, so the lines are never closer
-///   together than a person can read and never disappear on the way out. Each
-///   rung's lines are a subset of the finer rung's, so the rungs stack: a line
-///   several rungs share comes out stronger, which is what makes every Nth line
-///   countable without a second rule that could fall out of step with the fade.
+/// - **What to draw is the settings' answer, not this view's.**
+///   `CanvasGridSettings.levels(atZoom:)` returns the lines and their strengths,
+///   and it answers differently for the two kinds of grid: a size somebody
+///   chose is drawn at that one spacing at every zoom, while automatic runs the
+///   level-of-detail ladder so the lines are never closer together than a
+///   person can read. Either way each entry's lines are a subset of the finer
+///   one's, so they stack: a line they share comes out stronger, which is what
+///   makes every Nth line countable without a second rule that could fall out
+///   of step with the fade.
 /// - **Only what is on screen.** The paths hold the lines inside the view and
-///   nothing else, so a huge document costs the same as a small one. With the
-///   ladder's floor of eight view points that bounds the whole thing at roughly
-///   the view's width over eight, whatever the spacing — and running the lines
+///   nothing else, so a huge document costs the same as a small one. Nothing is
+///   ever drawn closer together than two view points, so the count is bounded
+///   at roughly the view's width halved whatever the spacing — and running the lines
 ///   out over the surround as well adds no lines at all, only length to the
 ///   ones already being drawn.
 /// - **The accent, sunk into the surface.** The lines are the brand colour
@@ -58,12 +61,11 @@ extension CanvasNSView {
             return
         }
 
-        // `drawnSpacing`, not `spacing`: a smallest cell raises the base of the
-        // ladder, so the grid is never drawn finer than the cell asked for
-        // however far in you go. What a drag LANDS on is still the spacing.
-        let levels = CanvasGridLevels.levels(spacing: settings.drawnSpacing,
-                                             majorEvery: settings.majorEvery,
-                                             zoom: viewport.zoom)
+        // The settings decide, not the ladder: a size somebody chose draws that
+        // one spacing at every zoom, and only automatic runs the ladder. A drag
+        // reads the same call, so the pull can never be to lines that are not
+        // there.
+        let levels = settings.levels(atZoom: viewport.zoom)
         guard !levels.isEmpty else {
             hideCanvasGrid()
             return
@@ -186,23 +188,31 @@ extension CanvasNSView {
         }
     }
 
-    /// The accent, mixed halfway into a neutral so it belongs to the surface
-    /// instead of lying on top of it, resolved against the window's own
-    /// appearance so it reads in light and in dark. The strength is the rung's,
-    /// applied to the layer, so one colour serves all three.
+    /// The accent, mixed into a MID neutral so it belongs to the surface
+    /// instead of lying on top of it. The strength is the rung's, applied to
+    /// the layer, so one colour serves them all.
+    ///
+    /// The neutral is a fixed mid grey rather than the window's own label
+    /// colour, and that is the whole point. The grid is drawn over a PICTURE,
+    /// and a picture is as often a dark screenshot as a light one, whichever
+    /// appearance the app happens to be wearing. An ink resolved against the
+    /// window went nearly black in the light appearance and nearly white in
+    /// the dark one, so at the low strength the lines are drawn at, half the
+    /// combinations came out invisible: measured over a white picture in the
+    /// dark appearance, the fine lines were separated from the paper by four
+    /// levels out of two hundred and fifty five. A mid ink is never the
+    /// strongest of the four, and it is never absent, which is the trade a
+    /// surface you build on wants.
     private func canvasGridInk() -> CGColor {
-        var ink = CGColor(gray: 0.5, alpha: 1)
-        effectiveAppearance.performAsCurrentDrawingAppearance {
-            let neutral = NSColor.secondaryLabelColor.withAlphaComponent(1)
-            // Mostly neutral, with enough of the accent left in it to belong to
-            // the app. Any more accent and it reads as blueprint paper laid on
-            // the canvas rather than as the canvas's own surface.
-            let tinted = NSColor.controlAccentColor.blended(withFraction: 0.62, of: neutral)
-                ?? NSColor.controlAccentColor
-            if let converted = tinted.usingColorSpace(.sRGB) {
-                ink = converted.withAlphaComponent(1).cgColor
-            }
+        // Mostly neutral, with enough of the accent left in it to belong to
+        // the app. Any more accent and it reads as blueprint paper laid on
+        // the canvas rather than as the canvas's own surface.
+        let neutral = NSColor(white: 0.5, alpha: 1)
+        let tinted = NSColor.controlAccentColor.blended(withFraction: 0.62, of: neutral)
+            ?? NSColor.controlAccentColor
+        guard let converted = tinted.usingColorSpace(.sRGB) else {
+            return CGColor(gray: 0.5, alpha: 1)
         }
-        return ink
+        return converted.withAlphaComponent(1).cgColor
     }
 }

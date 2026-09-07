@@ -1,0 +1,32 @@
+{
+  "feature": "A grid size you choose is the grid you get",
+  "epic": "ui-building",
+  "summary": "Pick a size for the grid and the canvas draws that size, the same everywhere, at every zoom. Only the automatic setting still changes density as you zoom. The lines are about half as strong as they were, and they now read over a dark picture as well as a light one.",
+  "setup": "Photonz Dev, Experiments window, release Next, canvas grid flag on. The grid switch and the size button are on the tool bar, right of the colour wells.",
+  "try": [
+    { "do": "Open a new blank canvas and turn on the grid switch on the tool bar." },
+    { "do": "Press the size button beside it, which reads Auto, and press the 4 pt stop.", "shot": "2026-09-06-grid-chosen-size-4-slider.png" },
+    { "do": "Look at the canvas at 100%: count the cells across a bold line, there should be eight.", "shot": "2026-09-06-grid-chosen-size-1-four-at-100.png" },
+    { "do": "Zoom to 400% and check the cells are still four points, not one and not sixteen.", "shot": "2026-09-06-grid-chosen-size-2-four-at-400.png" },
+    { "do": "Drag a rectangle around and check it lands on those four point lines at both zooms." },
+    { "do": "Zoom out to 50%: the grid goes, and the size button dims to say so.", "shot": "2026-09-06-grid-chosen-size-3-four-at-fifty.png" },
+    { "do": "Set the size back to Auto and zoom in and out, to feel the difference between the two." },
+    { "do": "Switch the app to its dark appearance and look at the four point grid again.", "shot": "2026-09-06-grid-chosen-size-5-dark.png" }
+  ],
+  "evaluate": [
+    "At 100% with 4 pt chosen, can you count four point cells rather than seeing a wash?",
+    "Are the lines now faint enough to work over, or have they gone too far the other way?",
+    "When the grid disappears at 50%, does the dimmed size button tell you enough, or does it still read as a bug?",
+    "Is dropping the grid at 50% the right answer, or would you rather it held on faintly?",
+    "The size slider now has one number under the track instead of nine beside it: can you still pick the size you want without hunting?",
+    "Does Auto still feel like the setting you would leave it on?"
+  ],
+  "rough": [
+    "Screen Recording is granted for the probe, so every picture here is a real capture of the window, not an offscreen render.",
+    "Reading taken on the bold line, which the task left open: it stays. A bold every eighth line lands on lines the chosen grid already draws, so it adds weight, never a new line position, and it fades away with the fine grid rather than outliving it. So what is drawn is still one grid.",
+    "The too-fine case is handled by fading out, not by drawing mud and not by substituting a coarser grid. Under four screen points apart the lines thin, and by two screen points they are gone. A four point grid therefore has nothing to show below about 60% zoom. That is the one place this can read as broken, so the size button dims and its tooltip says the grid is too fine to draw here and to zoom in. A dimmed number is quiet; if it is too quiet, say so and it can get louder.",
+    "The grid ink no longer follows the window appearance. It used to go near black in the light appearance and near white in the dark one, which at the new lower strength left the lines four levels off the paper over a white picture in dark mode, and effectively invisible over a dark screenshot in light mode. It is now one mid tone: measured, the fine lines sit 40 levels off a white picture and 24 off the dark surround, in both appearances. The cost is that the dark appearance grid is a shade more muted than it was.",
+    "What is left of snapping-pulls-to-the-grid-you-can-see under automatic: everything. Automatic still runs the ladder, so the pull still follows the rung the canvas draws and still refuses rungs too close together to aim at. With a size chosen that whole question collapses, because drawn and set are the same number, and the pull is simply the size, at every zoom the grid is showing.",
+    "Scripts/playtest/grid-origin-walk.json fails on a control called Set grid origin that no longer exists. That is stale from the tool bar rework, not from this change; filed as a follow-up."
+  ]
+}
