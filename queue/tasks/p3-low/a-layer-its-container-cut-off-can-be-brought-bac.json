@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:14:41.878Z",
-  "updated": "2026-09-06T12:16:42.329Z",
+  "updated": "2026-09-07T09:57:24.042Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-06. Evidence: queue/audits/2026-09-06-out-of-view.json rough 3, There is no one-click way back, and rough 4, the mark lives in the Layers list only. Small follow-up to the marking work that landed the same day; the mark and its tip are RowOutOfView.swift plus OutOfView in the app layer.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-06T12:16:42.329Z",
       "note": "seq 110 -> 110"
+    },
+    {
+      "t": "2026-09-07T09:57:24.042Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T10:15:38.552205Z",
+      "note": "Adversarial review before building. The mark is a status glyph today, and the audit's own evaluate line asks whether it reads as a button; making it pressable risks it reading as a Clip contents toggle. Kept it a bare glyph at rest and gave it a capsule on hover, which is the only moment somebody needs telling. A shut group's mark reports layers it is HIDING, not itself: pressing it does what its tip already advises and opens the group, rather than bulk-moving layers nobody can see. Landing: shortest distance, over the edge it left by, so the axis that was fine keeps the number somebody put there. Centring would throw that away. Cut: no flash, no toast."
+    },
+    {
+      "t": "2026-09-07T10:15:38.552205Z",
+      "note": "Adversarial review on the real app found the mock's assumption is wrong for arranging containers. First build moved the layer with moveLayer(toParentOrigin:), driven through the probe on the starter Card (a column stack held to 120): Body came back in AND the stack reflowed, pushing Title out of view instead. Net zero, plus a silent reorder. So canBringLayerIntoView now defers to LayerGeometryEditing.canMove, the same question the inspector's X and Y ask, which also rules out locked layers. Inside a stack or grid the mark stays a plain glyph and the tip says the container is not big enough. Follow-up filed: a-container-too-small-for-what-is-inside-it-says."
+    },
+    {
+      "t": "2026-09-07T10:15:38.552205Z",
+      "note": "Shipped. PhotonzCore/BringIntoView.swift: OutOfView.landingBox/landing (overlap every clip in force, clamp shortest distance, oversize lands on the corner), PhotonzDocument.clipScopes(around:)/canPlace/bringIntoViewOrigin/canBringLayerIntoView/bringLayerIntoView. RowOutOfView gains canReturn, set by layerRows, so the panel never has to ask the document at body time. App: OutOfViewMark is a Button when there is something to press and a plain glyph otherwise; LayersRow.pressOutOfViewMark; row menu item Bring into View; Layer menu Bring into View on the selection (EditorState.canBringSelectionIntoView/bringSelectionIntoView, one undo step for a mixed selection). 21 new core tests, Scripts/test.sh green at 4348."
+    },
+    {
+      "t": "2026-09-07T10:15:38.552205Z",
+      "note": "Verified live on the probe (Screen Recording granted). Scripts/playtest/bring-into-view-walk.json: screen shrunk past a rectangle -> row marked 'cut off by Frame' -> one press lands it at y 230 flush inside -> every mark gone, layer selected -> one undo puts it back at y 320 with the mark. out-of-view-mark-walk.json re-run confirms the shut Card mark is still a pressable control and the stacked Body mark is now a non-pressable row target. That walk also had a latent failure (it assumed a panel scroll position the probe remembers between runs); added explicit scrollPanel steps."
+    },
+    {
+      "t": "2026-09-07T10:15:38.552205Z",
+      "note": "Audit: queue/audits/2026-09-07-bring-into-view.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-07T09:57:24.041Z"
 }

@@ -1,0 +1,30 @@
+{
+  "feature": "One press brings a layer back into view",
+  "epic": "ui-layout",
+  "summary": "The orange scissors on a row that has gone out of view is now the way back, not just the bad news. Press it and the layer slides in over the edge it left by, the shortest distance that puts it inside the box again, and one undo puts it back. On a shut group the same press opens the group so the row that really went is on screen.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-auto-layout on (it is on by default). No file needed: a blank canvas.",
+  "try": [
+    { "do": "Press F and drag out a screen on the canvas." },
+    { "do": "Press R and draw a rectangle near the bottom inside it." },
+    { "do": "Press V, click the screen, and drag its bottom edge up past the rectangle. The rectangle vanishes.", "shot": "2026-09-07-bring-into-view-2-gone.png" },
+    { "do": "Hover the orange scissors on the Rectangle row and read what it now offers." },
+    { "do": "Click the scissors.", "shot": "2026-09-07-bring-into-view-3-back.png" },
+    { "do": "Press Command Z once." },
+    { "do": "Right-click the Rectangle row and find Bring into View, then look for the same row in the Layer menu." }
+  ],
+  "evaluate": [
+    "Does the capsule that appears under the pointer make the scissors read as pressable, without making it look like a button when you are not touching it?",
+    "Landing flush against the edge it left by keeps your X and moves only the axis that failed. Is that where you wanted it, or would you rather it landed somewhere with air around it?",
+    "After one press, is the layer being selected helpful, or does losing what you had picked cost you more than it gives?",
+    "Three ways to the same move (the mark, the row's menu, the Layer menu) — is that one too many?",
+    "On a card whose contents are stacked the mark is not pressable and says the card is not big enough instead. Does that read as an explanation or as a dead control?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures here are real captures of the window, not offscreen renders.",
+    "A layer inside a group that arranges its own contents (a stack or a grid) is deliberately NOT offered the press. The mock behind this task assumed a layer you can move; in a stack the container decides where every layer sits, and the first build of this did move the layer, which reshuffled the stack and pushed a DIFFERENT layer out of view. Nothing gained. What is actually wrong there is that the container is too small for what it holds, so the mark says that instead.",
+    "That leaves the starter Card from the Library, which is a stack, with a mark that explains rather than acts. The one-press rescue only reaches free groups and screens, which is where a layer has a position somebody put it at.",
+    "A locked layer is not offered it either, on the grounds that a lock exists so nothing moves the layer. There is no wording for that case: the tip falls back to naming the container.",
+    "A layer too big for the container it lives in lands on the container's top left corner and hangs out of the other two sides. It is visible and grabbable, which was the point, but it is not tidy.",
+    "The mark is still only in the Layers list. If that section is collapsed or scrolled away, the canvas still says nothing about the layer that vanished."
+  ]
+}

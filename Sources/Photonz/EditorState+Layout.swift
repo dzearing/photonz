@@ -245,6 +245,52 @@ extension EditorState {
         selectLayers(Set(freed).union(kept))
     }
 
+    // MARK: - Out of view (Next flag `next-auto-layout`)
+
+    /// Whether this layer's row can offer a way back into view: something is
+    /// cutting it off completely, and there is somewhere inside that box for it
+    /// to land.
+    func canBringLayerIntoView(id: UUID) -> Bool {
+        guard Experiments.shared.autoLayoutEnabled else { return false }
+        return document?.canBringLayerIntoView(id: id) == true
+    }
+
+    /// The one press back from out of view: the layer slides over the edge it
+    /// left by until the container stops cutting it off, and stops there.
+    ///
+    /// It ends up selected, because a layer that has just reappeared somewhere
+    /// you did not choose is a layer you want handles on: the selection says
+    /// which of the things on the canvas is the one that came back, and the
+    /// very next drag is on it. One `perform`, so one undo puts it back exactly
+    /// where it was, which is the promise that makes pressing this safe to try.
+    func bringLayerIntoView(id: UUID) {
+        guard canBringLayerIntoView(id: id) else { return }
+        discardDragPreview()
+        perform { $0.bringLayerIntoView(id: id) }
+        selectLayer(id)
+        revealInLayersList(id)
+    }
+
+    /// Whether Layer ▸ Bring into View would do anything: at least one picked
+    /// layer has been cut off completely by the box it lives in.
+    var canBringSelectionIntoView: Bool {
+        guard Experiments.shared.autoLayoutEnabled, let document else { return false }
+        return actionableLayerIDs.contains { document.canBringLayerIntoView(id: $0) }
+    }
+
+    /// Layer ▸ Bring into View: every picked layer that has gone missing slides
+    /// back inside its container, in ONE undo step. The picked layers that were
+    /// never cut off do not move, so pressing this on a mixed selection rescues
+    /// what is lost and leaves the rest exactly where it was put.
+    func bringSelectionIntoView() {
+        guard canBringSelectionIntoView else { return }
+        let ids = actionableLayerIDs
+        discardDragPreview()
+        perform { document in
+            for id in ids { document.bringLayerIntoView(id: id) }
+        }
+    }
+
     // MARK: - Groups that arrange themselves (Next flag `next-auto-layout`)
 
     /// The group whose Arrangement the Layout section is editing: the one group

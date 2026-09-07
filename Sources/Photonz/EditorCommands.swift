@@ -362,6 +362,16 @@ struct EditorCommands: Commands {
                 // tick rather than a button so the row also answers "is this
                 // piece filling?", and its hover line says why it is grey when
                 // it is: a menu row has nowhere else to explain itself.
+                // A layer a container has swallowed comes back in one move,
+                // the same move the orange scissors on its row make. It is
+                // here as well because the Layer menu is where somebody who
+                // has not noticed a small mark in the list goes looking, and
+                // because a menu row can carry the words "Bring into View"
+                // where a glyph cannot. No key: this is a rescue you reach for
+                // once in a while, not a working command, and every free
+                // Photoshop-safe combination is worth more to one.
+                Button("Bring into View") { editor?.bringSelectionIntoView() }
+                    .disabled(!(editor?.canBringSelectionIntoView ?? false))
                 let fill = editor?.flowFillCommand ?? .none
                 Toggle(fill.title, isOn: Binding(get: { fill.isOn },
                                                  set: { _ in editor?.toggleFillsTheFlow() }))

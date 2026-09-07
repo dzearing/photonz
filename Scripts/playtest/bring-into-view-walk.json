@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/bring-into-view",
+  "seed": "A screen cuts off whatever leaves it. Pull a screen's bottom edge up past something drawn near it and that layer simply disappears: the canvas stops drawing it and the layers list is the only place that still says it exists. The row already wears orange scissors naming the screen. This walk checks the scissors are now the way BACK: one press slides the rectangle inside the screen again, and one undo puts it back exactly where it was.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [200, 100], "to": [600, 400], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [240, 320], "to": [400, 380], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [120, 560] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-drawn", "note": "a screen with one rectangle on it, both plainly visible, no row marked." },
+    { "do": "panel", "stage": "1-drawn" },
+    { "do": "snapshot", "name": "bring-into-view-1-drawn" },
+
+    { "do": "click", "at": [500, 130] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [400, 400], "to": [400, 290], "steps": 12 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [120, 560] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-gone", "note": "THE TEST: the screen's bottom edge was pulled up past the rectangle, so the screen now cuts it off and it has vanished from the canvas. Its row in the Layers list carries the orange scissors naming the screen." },
+    { "do": "panel", "stage": "2-gone" },
+    { "do": "snapshot", "name": "bring-into-view-2-gone" },
+
+    { "do": "press", "control": "Out of view", "in": "Rectangle" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-back", "note": "THE TEST: one press on the scissors slid the rectangle back inside the screen. It is on the canvas again, sitting against the edge it left by, it is selected so you can see which one came back, and no row wears the mark." },
+    { "do": "panel", "stage": "3-back" },
+    { "do": "snapshot", "name": "bring-into-view-3-back" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-undone", "note": "THE TEST: one undo puts it back exactly where the drag left it, out of view, mark and all." },
+    { "do": "panel", "stage": "4-undone" },
+    { "do": "snapshot", "name": "bring-into-view-4-undone" }
+  ]
+}

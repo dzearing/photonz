@@ -488,7 +488,13 @@ extension PhotonzDocument {
                     let hidden = openable && !open && cutter == nil
                         ? OutOfView.hiddenCount(in: layer.children, under: inner) : 0
                     if cutter != nil || hidden > 0 {
-                        outOfView = RowOutOfView(container: cutter, hiddenInside: hidden)
+                        // Asked only on a row that IS cut off, because working
+                        // out whether a layer's position is its own means
+                        // measuring text and reading the container's layout,
+                        // and nearly every row in the list is not marked.
+                        outOfView = RowOutOfView(
+                            container: cutter, hiddenInside: hidden,
+                            canReturn: cutter != nil && canBringLayerIntoView(id: layer.id))
                     }
                 }
                 rows.append(LayerRowDisplay(

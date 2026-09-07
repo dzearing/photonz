@@ -1745,31 +1745,93 @@ struct LayersListView: View {
 /// with undo as the only way back.
 ///
 /// Scissors because that is the same word the switch uses ("Clip contents"),
-/// and warm because this is a state to notice rather than a control to press.
-/// The tip names the box, so the answer is one hover away rather than a hunt.
+/// and warm because a state to notice should not shout like an error.
+///
+/// It is also the way back. The mark used to name the box and then leave you
+/// with three moves to choose between — drag the layer, turn off Clip contents,
+/// or type a new number into the inspector — which is a lot of work to undo one
+/// drag that went too far. Now the mark does whatever its own sentence tells
+/// you to do: on a layer that has been cut off, one press slides it back over
+/// the edge it left by; on a shut group speaking for what it is hiding, one
+/// press opens the group so the marked rows are on screen.
+///
+/// At rest it stays a bare glyph, because most of the time it is telling you
+/// something rather than asking to be pressed. The capsule under it arrives on
+/// hover, which is the moment, and the only moment, somebody needs telling
+/// that this one can be pressed.
 private struct OutOfViewMark: View {
     let outOfView: RowOutOfView
     /// This row's layer, for the sentence about what it is hiding.
     let name: String
+    /// Where a walk finds this control: the list, the row, and what it says.
+    let place: (String) -> String
+    /// What one press does, which is whatever the tip has just promised.
+    let press: () -> Void
+
+    @State private var hovering = false
 
     var body: some View {
+        Group {
+            if isPressable {
+                Button(action: press) { glyph }
+                    .buttonStyle(.plain)
+                    .onHover { hovering = $0 }
+                    .playtestControl("Out of view", detail: place(state))
+            } else {
+                // Nothing one press could put right, so nothing that looks
+                // pressable. The tip still says what happened and what would
+                // fix it; a button that did the wrong thing quietly would be
+                // worse than no button at all.
+                glyph.playtestTarget("Out of view", kind: .row, detail: place(state))
+            }
+        }
+        .help(explanation)
+    }
+
+    /// Whether pressing this would do anything: a layer that can come back, or
+    /// a shut group with rows to show.
+    private var isPressable: Bool {
+        outOfView.container == nil ? outOfView.hiddenInside > 0 : outOfView.canReturn
+    }
+
+    private var glyph: some View {
         Image(systemName: "scissors")
             .font(.system(size: 10, weight: .semibold))
             .foregroundStyle(.orange)
-            .help(explanation)
+            .padding(.horizontal, 3)
+            .padding(.vertical, 1)
+            .background {
+                if hovering { Capsule().fill(Color.orange.opacity(0.18)) }
+            }
+            .contentShape(Capsule())
+    }
+
+    /// The word a walk matches on, so a step can say which of the two things
+    /// this mark can mean it is pressing.
+    private var state: String {
+        outOfView.container.map { "cut off by \($0)" } ?? "hiding \(outOfView.hiddenInside)"
     }
 
     private var explanation: String {
         var lines: [String] = []
         if let container = outOfView.container {
-            lines.append("Out of view: this sits outside \(container), which is set to cut off "
-                         + "what does not fit. Move it back, or turn off Clip contents on \(container).")
+            lines.append(outOfView.canReturn
+                ? "Out of view: this sits outside \(container), which is set to cut off what "
+                  + "does not fit. Click to bring it back in, or turn off Clip contents on "
+                  + "\(container) to show everything."
+                // A layer whose container decides where it sits cannot be
+                // moved back: what is wrong is that the container is not big
+                // enough for everything in it, and the two things that do fix
+                // that are its size and its Clip contents switch.
+                : "Out of view: \(container) is not big enough for everything in it and is set "
+                  + "to cut off what does not fit. Make \(container) bigger in the Layout "
+                  + "section, or turn off Clip contents on it.")
         }
         if outOfView.hiddenInside > 0 {
             lines.append(outOfView.hiddenInside == 1
-                         ? "1 layer inside \(name) is out of view. Open \(name) to find it."
+                         ? "1 layer inside \(name) is out of view. Click to open \(name) and find it."
                          : "\(outOfView.hiddenInside) layers inside \(name) are out of view. "
-                           + "Open \(name) to find them.")
+                           + "Click to open \(name) and find them.")
         }
         return lines.joined(separator: " ")
     }
@@ -1919,7 +1981,8 @@ private struct LayersRow: View, Equatable {
             // so a layer dragged too far is never lost with nothing anywhere
             // saying where it went.
             if let outOfView = display.outOfView {
-                OutOfViewMark(outOfView: outOfView, name: display.name)
+                OutOfViewMark(outOfView: outOfView, name: display.name,
+                              place: place, press: { pressOutOfViewMark(outOfView) })
             }
             Spacer(minLength: 4)
             // A shut group says how much it is hiding, so the row is not a
@@ -2025,6 +2088,19 @@ private struct LayersRow: View, Equatable {
         "Layers, \(display.name), \(state)"
     }
 
+    /// The mark keeps its own promise. A layer the box around it swallowed
+    /// comes back; a shut group that is speaking for something it is hiding
+    /// opens, so the row wearing the real mark is on screen to be pressed in
+    /// turn. Two presses at the very worst, from a mark somebody noticed
+    /// without going looking.
+    private func pressOutOfViewMark(_ outOfView: RowOutOfView) {
+        if outOfView.container != nil {
+            editorState.bringLayerIntoView(id: id)
+        } else {
+            withAnimation(.spring(duration: 0.2)) { editorState.toggleGroupExpanded(id: id) }
+        }
+    }
+
     private var thumbnailView: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 4)
@@ -2082,6 +2158,13 @@ private struct LayersRow: View, Equatable {
             .keyboardShortcut("[", modifiers: .command)
         Button("Send to Back") { editorState.sendLayerToBack(id: id) }
             .keyboardShortcut("[", modifiers: [.command, .shift])
+        // Only on a row that IS out of view, which is the only row where it
+        // would do anything. Same move as the mark on the row, named, for
+        // anybody who goes to the menu before they go to a small orange glyph.
+        if display.outOfView?.canReturn == true {
+            Divider()
+            Button("Bring into View") { editorState.bringLayerIntoView(id: id) }
+        }
         Divider()
         Button("Rename") { beginRename(id, display.name) }
         if offersMakeComponent {

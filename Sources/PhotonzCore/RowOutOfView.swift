@@ -25,10 +25,20 @@ public struct RowOutOfView: Hashable, Sendable {
     /// inside it: everything in it went the same way at the same moment, and a
     /// card reading "17 layers out of view" for one card nobody moved is noise.
     public let hiddenInside: Int
+    /// Whether one press can slide this layer back inside the container.
+    ///
+    /// False where the layer has no position of its own to change: inside a
+    /// stack or a grid the container works one out on every pass, and on a
+    /// locked layer nothing is meant to move at all. What is wrong in a stack
+    /// is that the container is not big enough for what it holds, so the mark
+    /// says that instead of offering a move that would only shuffle the
+    /// running order and push a different layer out.
+    public let canReturn: Bool
 
-    public init(container: String?, hiddenInside: Int) {
+    public init(container: String?, hiddenInside: Int, canReturn: Bool = false) {
         self.container = container
         self.hiddenInside = hiddenInside
+        self.canReturn = canReturn
     }
 }
 
