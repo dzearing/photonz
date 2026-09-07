@@ -1,0 +1,36 @@
+{
+  "id": "a-marquee-keeps-the-layer-you-picked-and-delete",
+  "title": "A marquee keeps the layer you picked, and delete clears that layer only",
+  "goal": "Pick a layer, then draw a marquee, and the layer stops being picked. So the obvious next move, pressing delete to clear those pixels out of that layer, has no layer to act on. Drawing a region should say where, not change what: the layer you picked stays picked, and delete clears the pixels inside the region on that layer alone, leaving every other layer untouched.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T21:48:43.401Z",
+  "updated": "2026-09-07T21:48:43.438Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07. Confirmed by reading Sources/Photonz/EditorState.swift: setSelection at line 1382 takes captureLayers, which defaults to true, and when true it replaces the layer selection with whatever the region swept, setting selectedLayerID to the single captured layer or to nil when the sweep caught several or none (lines 1388 to 1392). So drawing a marquee over empty space or across several layers clears the pick. The intent is written in the comment above it, that a swept band picks what it encloses, which is right for the pointer tool's sweep and wrong for the region tools, where the marquee is meant to say WHERE not WHAT. Note the machinery for the wanted behaviour already exists: selectionTargetsPixels is set when captureLayers is false (line 1385), and the comment at line 1509 states the intended rule outright, that the layer selection survives into the selection family and is the target of region operations including fill and the delete key. So the fix is which path a region tool takes, not new state. Check every caller of setSelection for which of the two meanings it wants, and check what delete does today for a pixel region since it may act on the composite the way copy did.",
+  "acceptance": [
+    "Picking a layer and then drawing a marquee leaves that layer picked, shown in the layers list and in the panel exactly as before the marquee",
+    "With a layer picked and a marquee drawn, delete clears the pixels inside the region on that layer and changes nothing on any other layer",
+    "With nothing picked and a marquee drawn, the audit says what delete does and why that is the sensible answer",
+    "Clearing this way is one undo step and puts the pixels back exactly",
+    "Sweeping a marquee with the pointer tool to pick up layers still works as it does now, since that is a different gesture with a different tool",
+    "Fill, copy and move over a region all act on the same layer that delete does, so the whole family agrees on what a region means",
+    "A test in PhotonzCore covers a region cleared on one layer of several, written before the change",
+    "Audit written under queue/audits/ with a two layer document, a region, and a delete, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T21:48:43.402Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T21:48:43.438Z",
+      "note": "seq 210 -> 4"
+    }
+  ]
+}
