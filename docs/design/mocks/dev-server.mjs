@@ -102,6 +102,13 @@ async function handleApi(req, res, url) {
         return res.end(buf);
       } catch { return send(404, { error: 'no shot' }); }
     }
+    // One request draws the whole Ready to try list: header fields only, no
+    // bodies. Fetched once per page, not on the four-second state poll.
+    if (req.method === 'GET' && url === '/api/audit-index') {
+      const t0 = Date.now();
+      const rows = lib.auditIndex();
+      return send(200, { count: rows.length, ms: Date.now() - t0, audits: rows });
+    }
     if (req.method === 'GET' && url.startsWith('/api/audit/')) {
       const name = decodeURIComponent(url.slice('/api/audit/'.length));
       const body = lib.readAudit(name);

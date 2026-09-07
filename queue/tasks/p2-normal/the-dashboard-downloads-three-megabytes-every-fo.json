@@ -1,0 +1,27 @@
+{
+  "id": "the-dashboard-downloads-three-megabytes-every-fo",
+  "title": "The dashboard downloads three megabytes every four seconds",
+  "goal": "The design dashboard re-downloads everything it knows about every task, including every task's full history, four times a minute. That is three megabytes a poll for a page that mostly needs a handful of numbers, and it will only get worse as the queue grows. Make the poll small so the dashboard stays instant on a slow machine and does not heat the fan.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 1790,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T19:36:17.248Z",
+  "updated": "2026-09-07T19:36:17.249Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured on 2026-09-07 while rebuilding Ready to try: /api/state is 3,043,595 bytes, of which tasks is 2,556,307 and completed24h is 379,339. aggregateState() in queue/bin/queue-lib.mjs returns every task with its whole log array. The Ready to try tab already shows the shape of the fix: a slim list payload plus a detail endpoint fetched on demand (/api/audit-index and /api/audit/<name>). Same move here: strip log/notes/acceptance out of the state tasks array, keep them behind a /api/task/<id> the detail dialog fetches when it opens. The Tasks tab search matches against notes today, so either keep a short notes excerpt in the list or move that search server-side.",
+  "acceptance": [
+    "The four-second poll carries well under 300KB with the current queue",
+    "Every tab still shows what it shows today, with no visible delay when you open one",
+    "Opening a task still shows its full history"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T19:36:17.249Z",
+      "note": "created (manual)"
+    }
+  ]
+}

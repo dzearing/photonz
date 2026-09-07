@@ -1,0 +1,26 @@
+{
+  "id": "the-decision-drill-fails-about-half-the-time-on",
+  "title": "The decision drill fails about half the time on an unchanged tree",
+  "goal": "One of the checks that guards how the queue answers a question passes or fails depending on timing, so the safety net cries wolf and a real break in it would be easy to wave away.",
+  "epic": "loop-robustness",
+  "priority": "p2-normal",
+  "seq": 1800,
+  "status": "pending",
+  "release": "next",
+  "area": "tooling",
+  "created": "2026-09-07T19:36:17.285Z",
+  "updated": "2026-09-07T19:36:17.286Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-09-07 on a tree with no changes to decisions: the check \"with two answers in, the history quotes the one that came last\" failed on 4 of 6 runs. Almost certainly two resolveDecision calls landing in the same millisecond, so the ISO timestamps tie and the ordering that decides which answer is last is undefined. Fix the drill or the tie-break in queue-lib, not by sleeping.",
+  "acceptance": [
+    "Running queue/bin/decision-drill.mjs ten times in a row passes ten times",
+    "The check still fails when the behaviour it guards is actually broken"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T19:36:17.286Z",
+      "note": "created (manual)"
+    }
+  ]
+}

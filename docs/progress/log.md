@@ -11521,3 +11521,25 @@ list could not be photographed and was verified by code identity instead. Filed
 as `a-scripted-walk-can-place-a-measurement` (p2). Open question in the audit:
 the window's own panel toggle sits 22pt in from the window edge against this
 column's 22.5 from the panel's, close but not exact.
+
+## 2026-09-07 — Ready to try became a list of features
+
+Rebuilt the dashboard's Ready to try tab. It used to be a `<select>` carrying
+every report's file name, three hundred entries you had to operate before the
+page showed you anything. It now opens on the newest reports as cards, grouped
+by the pillar epic they serve, each carrying the feature name, the sentence
+saying what you can now do, the day it landed and its step count. A card opens
+in place, one at a time, and closing it puts the header back under the same
+pixel it was under. Search and an area picker reach the whole corpus.
+
+The list comes from a new `/api/audit-index`: header fields only, built in
+`queue-lib.mjs` and cached until the audits directory changes. 333 reports parse
+in 9ms cold, 152KB over the wire in 2 to 5ms, fetched once per page. The
+four-second state poll still carries names only, and report bodies still load
+one at a time when a card opens. Guarded by `queue/bin/audit-index-drill.mjs`.
+
+Filed rather than fixed: `/api/state` is three megabytes every four seconds,
+2.5MB of it task logs nothing on screen shows; and `decision-drill.mjs` is
+timing-flaky on an unchanged tree.
+
+Next: the queue's own order decides.

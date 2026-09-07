@@ -741,6 +741,47 @@ export function readAudit(name) {
   return readJSON(join(AUDITS, name));
 }
 
+// The Ready to try surface draws a CARD per report, so it needs the feature
+// name, the one-line summary and the step count for every report before you
+// open any of them. Three hundred fetches is not an option and neither is
+// putting a megabyte of report bodies on a four-second poll, so the index is
+// built HERE: just the header fields, once, cached until the audits directory
+// changes. Three hundred reports parse in single-digit milliseconds cold and a
+// cache hit costs one readdir plus a stat per file.
+//
+// The day a report landed comes from its FILE NAME (YYYY-MM-DD-slug.json),
+// which is also the sort key, so ordering never depends on reading anything.
+let auditIndexCache = null; // { key, rows }
+export function auditIndex() {
+  let names;
+  try { names = readdirSync(AUDITS).filter((f) => f.endsWith('.json')); } catch { return []; }
+  names.sort().reverse();
+  let stamp = 0;
+  for (const n of names) { try { stamp += statSync(join(AUDITS, n)).mtimeMs; } catch { /* raced with a write */ } }
+  const key = names.length + ':' + stamp;
+  if (auditIndexCache && auditIndexCache.key === key) return auditIndexCache.rows;
+  const rows = [];
+  for (const name of names) {
+    const a = readJSON(join(AUDITS, name));
+    if (!a) continue; // a half-written report must not take the whole page down
+    const m = name.match(/^(\d{4}-\d{2}-\d{2})-(.*)\.json$/);
+    rows.push({
+      name,
+      date: m ? m[1] : '',
+      // a report always has a feature; the slug is the fallback so a card is
+      // never blank, and the date prefix is dropped because the card dates it
+      feature: a.feature || (m ? m[2] : name.replace(/\.json$/, '')).replace(/-/g, ' '),
+      epic: a.epic || '',
+      summary: a.summary || '',
+      steps: (a.try || []).length,
+      questions: (a.evaluate || []).length,
+      rough: (a.rough || []).length,
+    });
+  }
+  auditIndexCache = { key, rows };
+  return rows;
+}
+
 // Feedback is the point of the Audit tab: a reaction becomes a task, with the
 // thing being reacted to quoted so a runner does not have to guess.
 export function addFeedback({ audit, anchor = '', quote = '', text, epic = '' }) {

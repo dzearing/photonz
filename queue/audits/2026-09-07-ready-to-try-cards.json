@@ -1,0 +1,31 @@
+{
+  "feature": "Ready to try is a list of features, not a picker with three hundred file names in it",
+  "epic": "unmanned-loop",
+  "summary": "Ready to try now opens straight onto the newest finished features as cards, grouped by the part of the app they belong to, each one saying what you can now do, when it landed and how many steps trying it takes. Opening a card reveals its report in place, one at a time, and everything older is one search or one area away.",
+  "setup": "The design dashboard at http://127.0.0.1:8791, Ready to try in the left rail. Nothing to switch on.",
+  "try": [
+    { "do": "Open Ready to try. Read the first three cards without touching anything.", "shot": "2026-09-07-ready-to-try-1-arrival.png" },
+    { "do": "Click the fourth card. Its steps, questions and rough edges open under it while the cards above stay put.", "shot": "2026-09-07-ready-to-try-2-open.png" },
+    { "do": "Click that card's title again. You land back on the same row you left, not somewhere else in the list." },
+    { "do": "Press Tab until a card title has a ring, press Return to open it, then press Escape to close it." },
+    { "do": "Type undo into the search box. The list now reaches back days instead of hours.", "shot": "2026-09-07-ready-to-try-3-search.png" },
+    { "do": "Clear the search and pick Make Photonz the best UX redlining tool from the picker beside it." },
+    { "do": "Press Back to the newest, then Show all 333 at the foot of the list." },
+    { "do": "Open any card, rest on one of its steps, press the speech bubble and file a line. Check the Tasks tab for it, and drop it." }
+  ],
+  "evaluate": [
+    "Reading only the first screen, can you tell what shipped today and pick the one you want to try?",
+    "Is two lines of summary on a closed card the right amount, or do you want one line and more of them on screen?",
+    "The group headings are the objective titles word for word. Does Make Photonz the best tool for building UI read as a section name, or does it want a short one?",
+    "Twenty-four cards is about a day of work. If you check this weekly, is that the wrong recent set?",
+    "When you closed a tall card, did you end up where you expected?"
+  ],
+  "rough": [
+    "The pictures here are the dashboard page in a browser, taken with the browser's own screenshot, not a playtest capture. Ready to try is a web page, not an app window, so there is no app walk to photograph it.",
+    "There is still no link to one report. The Digest tab gives every day its own URL and this does not, so you cannot send someone a card.",
+    "The recent set is a fixed twenty-four rather than a span of days, so on a heavy day it is a few hours and on a quiet one it is a week. It was picked to fill about two screens.",
+    "Changing the search or the area closes an open card, even when that card is still in the results. Reopening is one click, but it is a small surprise.",
+    "While a card is open the page stops taking live updates, so a report that lands in that minute appears when you close the card. This is what the task dialog already does, and it is what stops the page rebuilding under you while you read.",
+    "Found on the way and filed rather than fixed: the dashboard re-downloads three megabytes every four seconds, nearly all of it task histories nothing on screen is showing."
+  ]
+}

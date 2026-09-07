@@ -27,6 +27,7 @@ a task says otherwise.
 | `bin/manager-prompt.md` | The manager pass contract: assess, file executable tasks, stage epics, never block on the user. |
 | `bin/failure-drill.sh` | Runs the real loop in a throwaway queue against two fake runners, one that always exits non-zero and one whose login has expired and is later restored, and asserts what the dashboard would show. Run it after touching failure handling. |
 | `bin/churn-drill.mjs` | Replays a claim/reset storm against a throwaway queue and asserts the task log, the task file, and `history.jsonl` all stay bounded. Run it after touching logs, history, or the guard. |
+| `bin/audit-index-drill.mjs` | Asserts the Ready to try index: the day comes from the file name, newest first, an unreadable report is skipped rather than taking the page down, a report with nothing in it still draws a card, and the cache notices a report arriving. Run it after touching audits in `queue-lib.mjs`. |
 | `bin/decision-drill.mjs` | Answers decision cards in a throwaway queue and asserts that a declined answer retires its task, an approving one requeues it, and an answer that lands while the runner is still working is applied rather than overwritten by a late `blocked`. Run it after touching decisions. |
 
 ## Task lifecycle

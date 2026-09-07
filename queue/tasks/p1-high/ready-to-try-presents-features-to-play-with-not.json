@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 17,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T16:30:48.842Z",
-  "updated": "2026-09-07T16:30:48.881Z",
+  "updated": "2026-09-07T19:37:38.536880Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-07: the select with three hundred items is not a design, and they want progressive disclosure on a surface that reads as a polished professional dashboard. Today auditPicker (docs/design/mocks/pages/dashboard.html line 1198) builds a single select of every file name and renderAudits draws one report below it. There are 325 reports and they already carry what a card needs: feature, epic, summary, setup, try, evaluate and rough. The epic is the grouping, and recent ones spread across ui-building, ui-components, ui-layout, measure-redline and unmanned-loop, so grouping by it is meaningful rather than decorative. Two things to get right that a naive rebuild will miss. First the data: the state payload deliberately carries only audit NAMES and each report is fetched when opened, so a card list needs the summary line without fetching all of them; either widen what the state carries for the recent set only, or fetch lazily as cards come into view, and say which in the audit. Second, the reports are dated by file name, so ordering and the landed date should come from that rather than from reading each file. Keep the reaction machinery untouched, since that is what turns a comment into a task.",
@@ -34,6 +34,31 @@
     {
       "t": "2026-09-07T16:30:48.880Z",
       "note": "seq 190 -> 17"
+    },
+    {
+      "t": "2026-09-07T19:21:12.980Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T19:37:38.536880Z",
+      "note": "Adversarial pass before building. The mock said nothing here, the task did, and two of its instructions were wrong on contact. (1) The goal asks the card to say 'how long trying it takes'; there is no honest time in a report, so the card says the step count, which the acceptance list already asked for and which is real. (2) Grouping by the audit's own epic would have made eleven groups, two of them named things like 'Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow', which is a whole sentence, not a section. Rolled each epic up to its top-level ancestor in objectives.json instead, giving four groups that are genuinely 'the part of the app': building UI, redlining, the loop, the design system. Cut as decorative: a time estimate, per-area colour pips, a thumbnail on a closed card."
+    },
+    {
+      "t": "2026-09-07T19:37:38.536880Z",
+      "note": "Data. Widened neither the state poll nor the client: a new /api/audit-index returns header fields only (name, date, feature, epic, summary, steps, questions, rough) for every report, built server-side and cached until the audits directory changes. Measured: 333 reports parse in 9ms cold, 1ms warm, 152KB over the wire in 2 to 5ms, fetched ONCE per page and again only when the report count moves. Bodies still load one at a time from /api/audit/<name> when a card opens. The day and the sort order come from the file name, so nothing is read to draw the list."
+    },
+    {
+      "t": "2026-09-07T19:37:38.536880Z",
+      "note": "Adversarial pass on the built thing, on the real dashboard in a browser. Fixed what it found: the card header repeated the page title (renamed to 'Everything the loop has finished'); the summary at --faint was about 2.9:1 on the light panel (moved to --dim); the setup line collided with the first section heading (the body is a flex column with a real gap now); the comment control was invisible to a keyboard because it only appeared on hover (:focus-visible now shows it); narrowing the search left an invisible card 'open', holding the live poll (the filter closes it); Escape did nothing (it now backs out of the composer, then the card)."
+    },
+    {
+      "t": "2026-09-07T19:37:38.536880Z",
+      "note": "Verified, not assumed. Arrival draws 24 cards in 3 groups with no control operated. Header scroll anchoring measured: opening and closing a card leaves its header at the same pixel (48.89 before, during and after) and restores scrollTop exactly. Keyboard: Tab reaches select, search and every card; Return opens; Escape closes; aria-expanded flips. Show all 333 draws in 54ms and fetches zero images because closed cards have no body. Reaction path filed a real task from a real line with the right audit, anchor, quote and epic, then dropped it. Checked in dark and light and at 820px. Scripts/test.sh green (4494 tests). check-reserved.mjs clean. New audit-index-drill.mjs passes. decision-drill.mjs is flaky on an unchanged tree too (4 of 6 failures with the change stashed), filed separately."
+    },
+    {
+      "t": "2026-09-07T19:37:38.536880Z",
+      "note": "Found on the way, filed not fixed: /api/state is 3,043,595 bytes every 4 seconds, 2.5MB of it task logs (the-dashboard-downloads-three-megabytes-every-fo); decision-drill.mjs is timing-flaky (the-decision-drill-fails-about-half-the-time-on)."
     }
-  ]
+  ],
+  "started": "2026-09-07T19:21:12.980Z"
 }

@@ -280,6 +280,7 @@
     #dashboard .db-decide{transition:none}
     #dashboard .db-enter{animation:none}
     #dashboard .db-brief{transition:none}
+    #dashboard .db-acchev{transition:none}
   }
 
   /* ---- audits: short, scannable, and every line answers back ---- */
@@ -293,7 +294,8 @@
   #dashboard .db-aline:last-child,#dashboard .db-aline.lead{border-bottom:0}
   #dashboard .db-aline.lead{padding-top:var(--s2)}
   #dashboard .db-acomment{opacity:0;transition:opacity var(--dur-1) var(--ease-standard)}
-  #dashboard .db-aline:hover .db-acomment,#dashboard .db-aline.commenting .db-acomment{opacity:1}
+  #dashboard .db-aline:hover .db-acomment,#dashboard .db-aline.commenting .db-acomment,
+  #dashboard .db-acomment:focus-visible{opacity:1}
   /* a line stacks: the sentence, then anything illustrating it. This was a
      wrapping flex row with baseline alignment, and a tall screenshot in a
      baseline-aligned row hangs ABOVE its own text, which is how the shot ended
@@ -313,6 +315,57 @@
   #dashboard .db-acta{display:flex;gap:var(--s2);justify-content:flex-end}
   #dashboard .db-afiled{grid-column:1/-1;display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--good);margin-top:2px}
   #dashboard .db-afiled .ic{width:12px;height:12px}
+
+  /* Ready to try is a LIST of features you can play with, not one report with a
+     three-hundred-entry picker in front of it. A card carries the feature name,
+     the sentence saying what you can now do, the day it landed and how many
+     steps trying it takes; opening one reveals that report in place. The pieces
+     below are the page's own vocabulary reused: db-card for a group, mlabel for
+     a section, db-aline for a commentable line. */
+  #dashboard .db-astack{display:grid;gap:var(--gap)}
+  #dashboard .db-alead{margin:0;font-size:12px;line-height:1.6;color:var(--dim);max-width:70em}
+  #dashboard .db-acard{border-bottom:1px solid var(--line-soft)}
+  #dashboard .db-acard:last-child{border-bottom:0}
+  /* The whole header is ONE button, so the disclosure works from the keyboard
+     and reads correctly to a screen reader without a line of extra script. That
+     is also why nothing interactive is nested inside it: the comment controls
+     live in the body, which is a sibling. */
+  #dashboard .db-acbtn{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:var(--gap-sm);
+    align-items:start;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;
+    padding:var(--s3) var(--pad);color:inherit;font:inherit}
+  #dashboard .db-acbtn:hover{background:var(--state-hover)}
+  #dashboard .db-acbtn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:var(--r3)}
+  #dashboard .db-acchev{width:14px;height:14px;color:var(--faint);margin-top:2px;
+    transition:transform var(--dur-1) var(--ease-standard)}
+  #dashboard .db-acard.on .db-acchev{transform:rotate(90deg);color:var(--accent)}
+  #dashboard .db-actext{display:flex;flex-direction:column;gap:3px;min-width:0}
+  #dashboard .db-acname{font-size:12.5px;font-weight:620;letter-spacing:-.005em;color:var(--ink);line-height:1.4}
+  #dashboard .db-acard.on .db-acname{color:var(--accent)}
+  /* The summary is the whole reason a card beats a file name, so it gets a
+     measure and two lines rather than an ellipsis at forty characters. It is
+     hidden while the card is open because the body repeats it as the line you
+     can react to, and printing the same sentence twice is just noise. */
+  /* --dim, not --faint: this is two lines of body prose, and --faint on the
+     light panel is about 2.9:1, which is unreadable at 11.5px */
+  #dashboard .db-acsum{font-size:11.5px;line-height:1.5;color:var(--dim);max-width:74em;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #dashboard .db-acard.on .db-acsum{display:none}
+  #dashboard .db-acmeta{display:flex;align-items:baseline;gap:var(--gap-sm);flex:none;margin-top:1px;
+    font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+  #dashboard .db-acday{color:var(--dim)}
+  #dashboard .db-acsteps{white-space:nowrap}
+  /* the body hangs under the text column, not under the chevron */
+  #dashboard .db-acbody{padding:0 var(--pad) var(--pad) calc(var(--pad) + 16px + var(--gap-sm));
+    display:flex;flex-direction:column;gap:var(--gap)}
+  #dashboard .db-acbody[hidden]{display:none}
+  #dashboard .db-acbody>.db-asetup{margin:0}
+  #dashboard .db-asec>.mlabel{display:flex;align-items:center;gap:var(--s2)}
+  #dashboard .db-asec>.mlabel .ic{width:11px;height:11px}
+  #dashboard .db-abar{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap}
+  #dashboard .db-abar .input.search{width:220px}
+  #dashboard .db-abar .select{max-width:280px}
+  #dashboard .db-afoot{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;
+    padding:var(--s3) var(--pad);font-size:11px;color:var(--faint)}
 
   /* ---- digest tab ---- */
   /* The day list used to be a rail down the left. Picking a date is a one-shot
@@ -380,9 +433,12 @@
       var typing = document.activeElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.activeElement.isContentEditable);
       var editingObjectives = tab === 'objectives' && (obDirty || obDragId);
       var briefOpen = !!document.querySelector('.db-brief.on');
+      // an open feature card is a thing you are reading and reacting to; a
+      // re-render would rebuild it under you and lose your place in it
+      var auditOpen = tab === 'audits' && !!auditSel;
       // a re-render would rebuild the open dialog under the pointer and reset
       // its scroll, so live updates wait until it closes
-      if (j !== lastJSON && !typing && !editingObjectives && !decAnim && !briefOpen && !detailId) {
+      if (j !== lastJSON && !typing && !editingObjectives && !decAnim && !briefOpen && !detailId && !auditOpen) {
         lastJSON = j;
         // on the tasks tab the page is already right; only the rows changed, so
         // update them in place and let the choreography show what moved
@@ -424,7 +480,7 @@
     if (titleEl) titleEl.textContent = TAB_TITLE[tab] || 'Summary';
     if (!S) return;
     var slot = document.getElementById('db-headslot');
-    if (slot) slot.innerHTML = tab === 'digest' ? digestPicker() : tab === 'audits' ? auditPicker() : '';
+    if (slot) slot.innerHTML = tab === 'digest' ? digestPicker() : '';
     if (tab === 'summary') body.innerHTML = renderSummary();
     if (tab === 'objectives') { body.innerHTML = renderObjectives(); wireObjectives(); }
     if (tab === 'tasks') body.innerHTML = renderTasks();
@@ -1185,24 +1241,78 @@
     return { clientX: r.left + ux * k, clientY: r.top + uy * k };
   }
 
-  // ---- audits: try a feature, react to any line of it ----
-  // The report is structured rather than prose, so it stays short AND every
-  // line is a thing the user can disagree with. A reaction files a task with
-  // the line quoted, which is the whole handoff back to the loop.
+  // ---- Ready to try: the features you can play with, newest first ----
+  // A report is structured rather than prose, so it stays short AND every line
+  // is a thing the user can disagree with. A reaction files a task with the
+  // line quoted, which is the whole handoff back to the loop. That machinery is
+  // untouched here; what changed is how you FIND a report.
+  //
+  // This used to be a <select> carrying every report's file name: three hundred
+  // entries you had to operate before the page showed you anything at all. Now
+  // the page opens on the newest reports as cards, grouped by the part of the
+  // app they belong to. A card says what the feature is, what you can now do,
+  // when it landed and how many steps trying it takes; opening one reveals that
+  // report in place, one at a time. Everything older is a search or an area
+  // away, never the first thing you meet.
+  //
+  // The list is drawn from /api/audit-index: ONE request carrying only those
+  // header fields for every report (150KB, built server-side in single-digit
+  // milliseconds and cached until a report is added). Bodies still load one at a
+  // time when a card opens, and the four-second state poll still carries names
+  // only, so none of this rides on the poll.
   var auditSel = null, auditCache = {}, commentOn = null, filed = {};
+  var aIndex = null, aIndexFor = -1, aIndexPending = false;
+  var aQuery = '', aArea = 'all', aShowAll = false;
+  var A_RECENT = 24;                     // how many cards you meet on arrival
+
   function auditTitle(name) {
     var m = name.replace('.json', '').match(/^(\d{4}-\d{2}-\d{2})-(.*)$/);
     if (!m) return name.replace('.json', '');
     return m[2].replace(/-/g, ' ') + ' · ' + dayLabel(m[1]);
   }
-  function auditPicker() {
-    var list = (S && S.audits) || [];
-    if (list.length < 2) return '';
-    if (!auditSel || list.indexOf(auditSel) < 0) auditSel = list[0];
-    return '<select class="select sm" id="db-asel" title="Pick a feature report">' + list.map(function (n) {
-      return '<option value="' + esc(n) + '"' + (n === auditSel ? ' selected' : '') + '>' + esc(auditTitle(n)) + '</option>';
-    }).join('') + '</select>';
+  // The day a report landed is in its file name, so nothing has to be read to
+  // sort the list or to date a card. Near days get words because that is how a
+  // person thinks about "what shipped since I last looked".
+  function landed(d) {
+    if (!d) return '';
+    var n = new Date(), t = Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
+    var p = d.split('-');
+    var days = Math.round((t - Date.UTC(+p[0], +p[1] - 1, +p[2])) / 86400000);
+    if (days <= 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return days + ' days ago';
+    return dayLabel(d);
   }
+  // An audit names the epic it serves, which is often a sub-epic. The part of
+  // the app it belongs to is that epic's top-level ancestor, which is exactly
+  // what the Objectives tab shows as a pillar, so the grouping is read from the
+  // objectives tree rather than from a list kept in step by hand.
+  function areaMap() {
+    var m = {};
+    ((S.objectives && S.objectives.epics) || []).forEach(function (top) {
+      var a = { id: top.id, title: top.title };
+      m[top.id] = a;
+      (function walk(list) { (list || []).forEach(function (c) { m[c.id] = a; walk(c.children); }); })(top.children);
+    });
+    return m;
+  }
+  function areaOf(map, epic) { return map[epic] || { id: 'other', title: 'Elsewhere in the app' }; }
+
+  function loadAuditIndex() {
+    if (aIndexPending) return;
+    aIndexPending = true;
+    fetch('/api/audit-index', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+      aIndexPending = false;
+      aIndex = d.audits || [];
+      aIndexFor = aIndex.length;
+      if (tab === 'audits') render();
+    }).catch(function () {
+      aIndexPending = false; aIndex = [];
+      if (tab === 'audits') render();
+    });
+  }
+  function auditBodyId(name) { return 'db-ab-' + name.replace(/[^a-z0-9]+/gi, '-'); }
+
   // one commentable line: the content, plus a quiet control that opens a composer
   function auditLine(cls, anchor, quote, inner) {
     var open = commentOn === anchor;
@@ -1222,57 +1332,206 @@
     h += '</div>';
     return h;
   }
-  function renderAudits() {
-    var list = (S.audits) || [];
-    if (!list.length) {
-      return '<div class="db-card"><div class="db-card-b"><div class="db-empty">' +
-        'Nothing to try yet. When the loop finishes a feature it leaves a short report here: what it is, ' +
-        'a handful of steps to try it, and what to judge. You can comment on any line and it becomes a task.' +
-        '</div></div></div>';
-    }
-    if (!auditSel || list.indexOf(auditSel) < 0) auditSel = list[0];
-    var a = auditCache[auditSel];
-    if (!a) { setTimeout(function () { loadAudit(auditSel); }, 0); return '<div class="db-card"><div class="db-card-b"><div class="db-empty">Loading…</div></div></div>'; }
 
-    var h = '<div class="db-card db-audit"><div class="db-card-b">';
-    h += '<div class="db-afeature">' + esc(a.feature || auditTitle(auditSel)) + '</div>';
-    if (a.summary) h += auditLine('lead', 'summary', a.summary, '<p class="db-asum">' + esc(a.summary) + '</p>');
+  // the report itself, inside the card that was opened
+  function auditDetail(name) {
+    var a = auditCache[name];
+    if (!a) return '<div class="db-empty">Loading the report…</div>';
+    var h = '';
+    // The card header hides its summary while open, so this is the only place
+    // the sentence appears; it is a commentable line because "that is not what
+    // it does" is the most useful reaction there is.
+    if (a.summary) h += '<div class="db-asec">' + auditLine('lead', 'summary', a.summary, '<p class="db-asum">' + esc(a.summary) + '</p>') + '</div>';
     if (a.setup) h += '<p class="db-asetup"><b>Setup</b> ' + esc(a.setup) + '</p>';
-    h += '</div></div>';
-
     if ((a.try || []).length) {
-      h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-h"><i class="ic ic-play"></i><h3>Try it</h3><span class="k">' + a.try.length + ' steps</span></div><div class="db-card-b">';
+      h += '<div class="db-asec"><div class="mlabel"><i class="ic ic-play"></i>Try it · ' + a.try.length + ' steps</div>';
       a.try.forEach(function (st, i) {
         var inner = '<div class="db-arow"><span class="db-anum">' + (i + 1) + '</span><span class="db-ado">' + esc(st.do || '') + '</span></div>';
         if (st.shot) inner += '<img src="/api/audit-shot/' + encodeURIComponent(st.shot) + '" alt="" loading="lazy">';
         h += auditLine('step', 'try-' + i, st.do || '', inner);
       });
-      h += '</div></div>';
+      h += '</div>';
     }
     if ((a.evaluate || []).length) {
-      h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-h"><i class="ic ic-help"></i><h3>What to judge</h3></div><div class="db-card-b">';
+      h += '<div class="db-asec"><div class="mlabel"><i class="ic ic-help"></i>What to judge</div>';
       a.evaluate.forEach(function (q, i) { h += auditLine('q', 'eval-' + i, q, '<span class="db-aq">' + esc(q) + '</span>'); });
-      h += '</div></div>';
+      h += '</div>';
     }
     if ((a.rough || []).length) {
-      h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-h"><i class="ic ic-warning" style="color:var(--warn)"></i><h3>Known rough edges</h3></div><div class="db-card-b">';
+      h += '<div class="db-asec"><div class="mlabel"><i class="ic ic-warning" style="color:var(--warn)"></i>Known rough edges</div>';
       a.rough.forEach(function (r, i) { h += auditLine('rough', 'rough-' + i, r, '<span class="db-aq">' + esc(r) + '</span>'); });
-      h += '</div></div>';
+      h += '</div>';
     }
     // a catch-all, because not every reaction is about a specific line
-    h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-b">' +
+    h += '<div class="db-asec">' +
       auditLine('other', 'general', a.feature || '', '<span class="db-aq db-aother">Something else about this feature</span>') +
-      '</div></div>';
+      '</div>';
     return h;
+  }
+
+  function auditCard(r) {
+    var open = auditSel === r.name;
+    var id = auditBodyId(r.name);
+    var h = '<div class="db-acard' + (open ? ' on' : '') + '" data-key="ac-' + esc(r.name) + '">';
+    h += '<button class="db-acbtn" data-act="audit-open" data-name="' + esc(r.name) + '" ' +
+      'aria-expanded="' + (open ? 'true' : 'false') + '" aria-controls="' + id + '">';
+    h += '<i class="ic ic-chevron-right db-acchev"></i>';
+    h += '<span class="db-actext"><span class="db-acname">' + esc(r.feature) + '</span>';
+    if (r.summary) h += '<span class="db-acsum">' + esc(r.summary) + '</span>';
+    h += '</span>';
+    h += '<span class="db-acmeta"><span class="db-acday">' + esc(landed(r.date)) + '</span>' +
+      '<span class="db-acsteps">' + r.steps + ' step' + (r.steps === 1 ? '' : 's') + '</span></span>';
+    h += '</button>';
+    h += '<div class="db-acbody" id="' + id + '" role="region" aria-label="' + esc(r.feature) + ', how to try it"' +
+      (open ? '' : ' hidden') + '>' + (open ? auditDetail(r.name) : '') + '</div>';
+    h += '</div>';
+    return h;
+  }
+
+  // What the current search and area add up to. Searching or picking an area
+  // looks at every report ever written; with neither, you get the newest set.
+  function auditRows() {
+    var list = aIndex || [];
+    var map = areaMap();
+    if (aArea !== 'all') list = list.filter(function (r) { return areaOf(map, r.epic).id === aArea; });
+    var q = aQuery.trim().toLowerCase();
+    if (q) list = list.filter(function (r) {
+      return (r.feature + ' ' + r.summary + ' ' + r.name + ' ' + r.epic).toLowerCase().indexOf(q) >= 0;
+    });
+    var narrowed = aArea !== 'all' || !!q;
+    return { list: list, narrowed: narrowed, shown: (narrowed || aShowAll) ? list : list.slice(0, A_RECENT) };
+  }
+
+  // the groups plus the footer line; replaced in place so typing in the search
+  // box never loses focus and the toolbar never flickers
+  function renderAuditList() {
+    var map = areaMap();
+    var r = auditRows();
+    if (!r.shown.length) {
+      return '<div class="db-card"><div class="db-card-b"><div class="db-empty">' +
+        'No report matches that. Try a different word, or set the area back to every part of the app.' +
+        '</div></div></div>';
+    }
+    var groups = [], byId = {};
+    r.shown.forEach(function (row) {
+      var a = areaOf(map, row.epic);
+      if (!byId[a.id]) { byId[a.id] = { area: a, rows: [] }; groups.push(byId[a.id]); }
+      byId[a.id].rows.push(row);
+    });
+    var h = '';
+    groups.forEach(function (g) {
+      h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-layers"></i><h3>' + esc(g.area.title) + '</h3>' +
+        '<span class="k">' + g.rows.length + (g.rows.length === 1 ? ' report' : ' reports') + '</span></div>' +
+        '<div class="db-card-b tight" style="padding-left:0;padding-right:0">';
+      g.rows.forEach(function (row) { h += auditCard(row); });
+      h += '</div></div>';
+    });
+    h += '<div class="db-card"><div class="db-afoot">';
+    if (r.narrowed) {
+      h += '<span>' + r.list.length + (r.list.length === 1 ? ' report matches' : ' reports match') + ', out of ' + (aIndex || []).length + '.</span>' +
+        '<button class="btn sm ghost" data-act="audit-clear">Back to the newest</button>';
+    } else if (r.shown.length < r.list.length) {
+      h += '<span>The ' + r.shown.length + ' newest of ' + r.list.length + '. Search or pick an area to reach the rest.</span>' +
+        '<button class="btn sm ghost" data-act="audit-showall">Show all ' + r.list.length + '</button>';
+    } else {
+      h += '<span>All ' + r.list.length + ' reports, newest first.</span>' +
+        (aShowAll ? '<button class="btn sm ghost" data-act="audit-clear">Back to the newest</button>' : '');
+    }
+    h += '</div></div>';
+    return h;
+  }
+
+  function renderAudits() {
+    var names = (S.audits) || [];
+    if (!names.length) {
+      return '<div class="db-card"><div class="db-card-b"><div class="db-empty">' +
+        'Nothing to try yet. When the loop finishes a feature it leaves a short report here: what it is, ' +
+        'a handful of steps to try it, and what to judge. You can comment on any line and it becomes a task.' +
+        '</div></div></div>';
+    }
+    // the index is fetched once, and again only when the report count moves
+    if (aIndex === null || aIndexFor !== names.length) {
+      setTimeout(loadAuditIndex, 0);
+      if (aIndex === null) return '<div class="db-card"><div class="db-card-b"><div class="db-empty">Loading the reports…</div></div></div>';
+    }
+    var map = areaMap();
+    var counts = {}, order = [];
+    (aIndex || []).forEach(function (row) {
+      var a = areaOf(map, row.epic);
+      if (!counts[a.id]) { counts[a.id] = { area: a, n: 0 }; order.push(counts[a.id]); }
+      counts[a.id].n++;
+    });
+    if (aArea !== 'all' && !counts[aArea]) aArea = 'all';
+
+    var h = '<div class="db-astack">';
+    h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-play"></i><h3>Everything the loop has finished</h3>' +
+      '<span class="db-count">' + (aIndex || []).length + '</span><span style="flex:1"></span>' +
+      '<div class="db-abar">' +
+      '<select class="select sm" id="db-aarea" aria-label="Show one part of the app">' +
+      '<option value="all"' + (aArea === 'all' ? ' selected' : '') + '>Every part of the app</option>' +
+      order.map(function (c) {
+        return '<option value="' + esc(c.area.id) + '"' + (aArea === c.area.id ? ' selected' : '') + '>' + esc(c.area.title) + ' · ' + c.n + '</option>';
+      }).join('') +
+      '</select>' +
+      '<label class="input sm search"><i class="ic ic-search"></i>' +
+      '<input id="db-aquery" placeholder="Search every report" aria-label="Search reports" value="' + esc(aQuery) + '"></label>' +
+      '</div></div>';
+    h += '<div class="db-card-b"><p class="db-alead">Open one for the steps to try it, what it wants you to judge, ' +
+      'and what is still rough. Comment on any line and it becomes a task.</p></div></div>';
+    h += '<div id="db-alist" class="db-astack">' + renderAuditList() + '</div>';
+    h += '</div>';
+    return h;
+  }
+
+  function refreshAuditList() {
+    var el = document.getElementById('db-alist');
+    if (!el) { render(); return; }
+    el.innerHTML = renderAuditList();
+  }
+  // Only the open card's body changed (a composer opened, a reaction was
+  // filed), so nothing else is touched: the list keeps its scroll and the page
+  // keeps its focus.
+  function refreshAuditBody() {
+    var el = auditSel && document.getElementById(auditBodyId(auditSel));
+    if (!el) { render(); return; }
+    el.innerHTML = auditDetail(auditSel);
   }
   function loadAudit(name) {
     fetch('/api/audit/' + encodeURIComponent(name)).then(function (r) { return r.json(); }).then(function (d) {
       auditCache[name] = d.body || d;
-      if (auditSel === name) render();
+      if (auditSel === name) refreshAuditBody();
     }).catch(function () {
-      var el = document.getElementById('db-body');
-      if (el) el.innerHTML = '<div class="db-card"><div class="db-card-b"><div class="db-empty">That report could not be loaded.</div></div></div>';
+      auditCache[name] = { feature: auditTitle(name), summary: 'That report could not be loaded.' };
+      if (auditSel === name) refreshAuditBody();
     });
+  }
+  // Whatever scrolls this list: inside the shell it is the iframe document, but
+  // a card must land in the same place either way.
+  function scrollerOf(el) {
+    for (var n = el.parentNode; n && n.nodeType === 1; n = n.parentNode) {
+      var ov = getComputedStyle(n).overflowY;
+      if ((ov === 'auto' || ov === 'scroll') && n.scrollHeight > n.clientHeight) return n;
+    }
+    return document.scrollingElement || document.documentElement;
+  }
+  // Open or close one card, and put its header back under the same pixel it was
+  // under. Without this, closing a card taller than the window drops you
+  // somewhere else in the list, which is exactly the "where was I" the cards
+  // were meant to fix.
+  function toggleAudit(name) {
+    var btn = document.querySelector('.db-acbtn[data-name="' + name + '"]');
+    var before = btn ? btn.getBoundingClientRect().top : null;
+    auditSel = auditSel === name ? null : name;
+    commentOn = null;
+    if (auditSel && !auditCache[auditSel]) loadAudit(auditSel);
+    refreshAuditList();
+    var again = document.querySelector('.db-acbtn[data-name="' + name + '"]');
+    if (!again) return;
+    again.focus({ preventScroll: true });
+    if (before !== null) {
+      var sc = scrollerOf(again);
+      sc.scrollTop += again.getBoundingClientRect().top - before;
+    }
   }
 
   // ---- digest ----
@@ -1441,14 +1700,21 @@
       return;
     }
     if (b.dataset.act === 'detail') { detailId = b.dataset.id; render(); return; }
+    if (b.dataset.act === 'audit-open') { toggleAudit(b.dataset.name); return; }
+    if (b.dataset.act === 'audit-showall') { aShowAll = true; refreshAuditList(); return; }
+    if (b.dataset.act === 'audit-clear') {
+      aShowAll = false; aQuery = ''; aArea = 'all'; auditSel = null; commentOn = null;
+      render();
+      return;
+    }
     if (b.dataset.act === 'audit-comment') {
       commentOn = commentOn === b.dataset.anchor ? null : b.dataset.anchor;
-      render();
+      refreshAuditBody();
       var ta = document.getElementById('db-ctext');
       if (ta) ta.focus();
       return;
     }
-    if (b.dataset.act === 'audit-cancel') { commentOn = null; render(); return; }
+    if (b.dataset.act === 'audit-cancel') { commentOn = null; refreshAuditBody(); return; }
     if (b.dataset.act === 'audit-send') {
       var ta2 = document.getElementById('db-ctext');
       var text = ta2 ? ta2.value.trim() : '';
@@ -1457,13 +1723,22 @@
       var key = auditSel + '|' + b.dataset.anchor;
       b.textContent = 'Filing…'; b.disabled = true;
       post('/api/feedback', { audit: auditSel, anchor: b.dataset.anchor, quote: b.dataset.quote, text: text, epic: a.epic || '' })
-        .then(function () { filed[key] = true; commentOn = null; render(); });
+        .then(function () { filed[key] = true; commentOn = null; refreshAuditBody(); });
       return;
     }
   });
+  // Escape backs out of Ready to try one layer at a time: the composer you
+  // opened, then the card. The dialog component owns Escape whenever a dialog
+  // is up, so this only ever runs on the bare page.
+  document.getElementById('dashboard').addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || tab !== 'audits') return;
+    if (document.querySelector('.dlg-scrim.on')) return;
+    if (commentOn) { commentOn = null; refreshAuditBody(); e.preventDefault(); return; }
+    if (auditSel) { toggleAudit(auditSel); e.preventDefault(); }
+  });
   document.getElementById('dashboard').addEventListener('change', function (e) {
     if (e.target.id === 'db-dsel') { selectDigest(e.target.value); return; }
-    if (e.target.id === 'db-asel') { auditSel = e.target.value; commentOn = null; render(); return; }
+    if (e.target.id === 'db-aarea') { aArea = e.target.value; aShowAll = false; auditSel = null; commentOn = null; refreshAuditList(); return; }
     var s = e.target.closest('select[data-act="prio"]');
     if (s) { post('/api/task/update', { id: s.dataset.id, priority: s.value }); return; }
     var q2 = e.target.closest('input[data-act="seq"]');
@@ -1476,6 +1751,7 @@
   // the search box filters the table body in place, so typing never loses focus
   document.getElementById('dashboard').addEventListener('input', function (e) {
     if (e.target.id === 'db-tquery') { tQuery = e.target.value; refreshRows(); }
+    if (e.target.id === 'db-aquery') { aQuery = e.target.value; aShowAll = false; auditSel = null; commentOn = null; refreshAuditList(); }
   });
 
   function selectDigest(name) {

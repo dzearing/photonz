@@ -1,0 +1,29 @@
+{
+  "id": "feedback-verifying-the-reaction-path-after-the-r",
+  "title": "Feedback: Verifying the reaction path after the Ready to try rebuild",
+  "goal": "Verifying the reaction path after the Ready to try rebuild. Safe to drop.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 190,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T19:32:29.315Z",
+  "updated": "2026-09-07T19:32:45.105Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the audit 2026-09-07-toolbar-row.json (try-1).\n\nWhat they were reacting to:\n\"Zoom in a few times with the slider or a pinch.\"\n\nTheir words:\n\"Verifying the reaction path after the Ready to try rebuild. Safe to drop.\"",
+  "acceptance": [
+    "The thing the user described is changed, or a decision is opened explaining why not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T19:32:29.315Z",
+      "note": "created (audit feedback)"
+    },
+    {
+      "t": "2026-09-07T19:32:45.105Z",
+      "note": "test reaction filed while verifying the rebuilt Ready to try surface; not real feedback"
+    }
+  ]
+}
