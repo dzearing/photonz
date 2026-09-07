@@ -1,0 +1,27 @@
+{
+  "id": "saving-a-colour-as-a-style-never-asks-for-a-name",
+  "title": "Saving a colour as a style never asks for a name",
+  "goal": "Pick a shape, save its colour so it can be reused by name, and nothing happens: no name box appears and no saved colour lands on the shelf. Saving a colour is one of the ways a person builds up a set of colours to work with, so that whole path is dead right now.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 180,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T06:03:14.279Z",
+  "updated": "2026-09-07T06:03:14.280Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by running every walk on 2026-09-07 (221 passed, 15 failed). Eleven of the fifteen share this root cause: the playtest action saveColorStyle calls EditorState.beginNamingColorStyle(slot:) and no field ever appears, so the later focus 'Style name' or type step fails. Failing walks: border-color-walk, colour-onto-a-swatch-walk, link-break-walk, multi-style-walk, name-field-handback, saved-colour-cannot-come-walk, saved-colour-not-for-that-part-walk, selection-color-walk, shape-settings-walk, styled-row-walk, styles-walk, tool-holds-saved-colour-walk. Evidence: /tmp/photonz-playtest/styles-walk/styles-naming-sc.png is a real capture taken right after the save, panel unchanged and the Library still on Media. 'Style name' still exists in the sources (DesignedColorPicker, ColorStylePanel, LibraryColorDrop), so this is behaviour, not a renamed control. Check whether colorStyleSlots / colorStyleSelection(slot:).savablePaint still finds a slot for a plain filled rectangle after the recent Appearance-list work. Reproduce: Scripts/playtest.sh Scripts/playtest/styles-walk.json",
+  "acceptance": [
+    "Saving the selected layer's colour puts a name box on screen with the keyboard already in it",
+    "Typing a name and pressing Return puts that colour on the Styles shelf under that name",
+    "The eleven walks listed in the notes run to the end and report ok"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T06:03:14.280Z",
+      "note": "created (manual)"
+    }
+  ]
+}

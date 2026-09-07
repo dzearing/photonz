@@ -1,0 +1,27 @@
+{
+  "id": "three-walks-stop-before-the-thing-they-were-writ",
+  "title": "Three walks stop before the thing they were written to check",
+  "goal": "Three of the scripted walks that the loop uses to prove the app still works stop partway: the two that open the capture history and the one that checks a mark parked outside a clipped box. Nobody is being told whether those parts of the app still behave, because the walks never reach them.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 1590,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T06:03:23.356Z",
+  "updated": "2026-09-07T06:03:23.357Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the full sweep on 2026-09-07 (221 passed, 15 failed; the other twelve are the colour style naming regression, filed separately). history-menu-title-walk: step 9, 'Capture > Show History is not ticked and it should be ticked before command+shift+h'. history-tooltips-walk: step 5, no window called 'Capture History' is open. out-of-view-mark-walk: step 27, the control 'Clip contents' is not in the window, so it needs a scrollPanel step first (that one is almost certainly the walk, not the app). Run one with Scripts/playtest.sh <walk>; run the lot with Scripts/playtest-all.sh.",
+  "acceptance": [
+    "history-menu-title-walk, history-tooltips-walk and out-of-view-mark-walk each run to the end and report ok",
+    "Each one still checks what it was written for, or says in its notes what was dropped and why",
+    "If a walk stops because the app is wrong rather than the walk, the app is fixed instead"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T06:03:23.357Z",
+      "note": "created (manual)"
+    }
+  ]
+}

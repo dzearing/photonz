@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-07T04:06:30.774Z",
-  "updated": "2026-09-07T05:03:41.504608Z",
+  "updated": "2026-09-07T06:04:15.442014Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fails at step 15: no control called \"Set grid origin\". The mode is entered from the gear button (CanvasGridCopy.adjust, \"Adjust Grid\") and the origin is placed by dragging the two markers on the canvas, so the walk needs a drag rather than a press. Found while running every grid walk for a-grid-size-you-choose-is-the-grid-you-get-one-e; every other grid walk passes.",
@@ -46,6 +46,22 @@
     {
       "t": "2026-09-07T05:03:41.504608Z",
       "note": "Every number above is read back off the describe steps in log.json (gridStart and guides), not assumed: the run matches all of them."
+    },
+    {
+      "t": "2026-09-07T06:04:15.442014Z",
+      "note": "Ran every walk (Scripts/playtest-all.sh --no-build, 236 walks, about 100 minutes): 221 passed, 15 failed, and grid-origin-walk passed there too, which is its second clean run."
+    },
+    {
+      "t": "2026-09-07T06:04:15.442014Z",
+      "note": "None of the 15 is a walk asking for a control that no longer exists, so the third acceptance item holds. Twelve of them are one app regression: saving a colour as a style never puts a name box up (Style name still exists in the sources, the field just never appears). Filed as saving-a-colour-as-a-style-never-asks-for-a-name (p1) with a real capture as evidence. The other three are history-menu-title-walk, history-tooltips-walk and out-of-view-mark-walk, filed as three-walks-stop-before-the-thing-they-were-writ (p2)."
+    },
+    {
+      "t": "2026-09-07T06:04:15.442014Z",
+      "note": "Scripts/test.sh green: 4253 tests. No source changed, only the walk."
+    },
+    {
+      "t": "2026-09-07T06:04:15.442014Z",
+      "note": "No audit written: this is the loop's own test harness, not a feature a person can try."
     }
   ],
   "started": "2026-09-07T04:56:55.134Z"

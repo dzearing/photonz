@@ -10502,3 +10502,44 @@ Next: build whichever model comes back. The build order is the shadow list in
 the document model, then the renderer walking it, then the plus, the remove and
 the drag in the panel. Drag is the first thing to cut if it runs long, since
 between two drop shadows the order only shows where they overlap.
+
+## 2026-09-07 — the grid origin walk drives the buttons the tool bar actually has
+
+`Scripts/playtest/grid-origin-walk.json` had been dead since the grid tool bar
+was cut back to a switch, a size and a gear: it pressed a button called "Set
+grid origin" and stopped there, at step 15 of 46. Reproduced first, then read
+the old walk adversarially. Three of its steps were aimed at things the app no
+longer has (that button, a "Smallest cell" field in the Canvas section, a
+readout in the mode bar counting the nudges), and one was worse than dead — its
+click-to-place-the-zero-point step would have passed while proving nothing,
+because a click inside the mode now PINS A GUIDE. The zero point is dragged by
+its markers.
+
+Rewritten against the real bar, at a 16 pt cell so every line is in a known
+place: grid on at 0,0 → Adjust Grid → pin x416 → pin y288 → click x416 to take
+hold of it again → ⌫ deletes it → drag the markers to 500,560 → drag onto the
+rectangle's bottom right corner and catch 620,420 with the yellow guides →
+arrows nudge to 622,431 (⇧ steps ten) → Done keeps it → re-enter, drag away,
+Escape puts 622,431 back. Every one of those numbers is read back off the
+`describe` steps in `log.json` (`gridStart`, `guides`), not assumed. The
+smallest-cell-at-zoom stage was dropped: `grid-chosen-size-walk` owns that check
+now, and this walk is about where the grid starts.
+
+Then ran the lot, which is the third acceptance item: `Scripts/playtest-all.sh
+--no-build`, 236 walks, about 100 minutes — **221 passed, 15 failed**, with
+grid-origin-walk passing there too (its second clean run). None of the 15 asks
+for a control that no longer exists. Twelve are one app regression: saving a
+colour as a style never puts a name box up, so `focus "Style name"` finds
+nothing. "Style name" is still in the sources, the field simply never appears;
+`/tmp/photonz-playtest/styles-walk/styles-naming-sc.png` is a real capture of
+the moment after the save. Filed p1 as
+`saving-a-colour-as-a-style-never-asks-for-a-name`. The other three
+(history-menu-title, history-tooltips, out-of-view-mark) are filed p2 as
+`three-walks-stop-before-the-thing-they-were-writ`.
+
+Suite green at 4253. No `Sources/` code changed this session; the only edit is
+the walk. No audit: this is the loop's own harness, not something a person can
+try.
+
+Next: the colour style naming regression is the one to take, since twelve walks
+are blind until it is fixed.
