@@ -23,7 +23,7 @@ APP="dist/Photonz Dev.app"
 BUNDLE_ID="com.dzearing.photonz.dev"
 BIN="$APP/Contents/MacOS/Photonz Dev"
 
-say() { echo "[refresh-dev-app] $*" }
+say() { echo "[refresh-dev-app] $*"; }
 
 quit_app() {
   local pid waited=0
@@ -55,8 +55,8 @@ fi
 #    permitted, while another SwiftPM held .build). One retry after a breath
 #    clears that, and a bundle left half built is worse than no attempt, so a
 #    second failure rebuilds once more from nothing before giving up.
-(( RUNNING )) && { say "compiled; swapping the bundle"; quit_app }
-bundle() { PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh }
+(( RUNNING )) && { say "compiled; swapping the bundle"; quit_app; }
+bundle() { PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh; }
 if ! bundle; then
   say "bundling failed, retrying once"
   sleep 4

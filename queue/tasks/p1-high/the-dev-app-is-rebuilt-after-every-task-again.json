@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 200,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T20:08:57.346Z",
-  "updated": "2026-09-07T20:08:57.347Z",
+  "updated": "2026-09-07T20:12:54.267Z",
   "deps": [],
   "blockedBy": [],
   "notes": "queue/bin/refresh-dev-app.sh line 59 is `bundle() { PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh }` — bash needs a semicolon or newline before the closing brace, so the whole script dies with \"syntax error: unexpected end of file\" and nothing runs. Landed in 09ae00e3. Hit on 2026-09-07 by the Appearance/Effects run, which therefore left the dev app stale. `bash -n queue/bin/refresh-dev-app.sh` reproduces it in a second; add that check to whatever guards the queue scripts so a broken one-liner cannot ship again.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-07T20:08:57.347Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T20:09:30.420Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T20:12:42.812866Z",
+      "note": "Reproduced before believing it, and it does not reproduce. The refresh step is not broken. queue/bin/refresh-dev-app.sh is #!/bin/zsh and go-loop.sh runs it directly, so zsh parses it; zsh -n is clean. bash -n reports the error the task quotes, but bash never runs this file, so that error was never real. Evidence it ran: queue/loop.log holds 256 successful refreshes, and the run this task blames (Appearance/Effects, commits 9a165d31 and a4083a3b) refreshed at 13:09:19 today and printed \"dist/Photonz Dev.app rebuilt and relaunched\". The dev binary on disk is stamped 13:09 and the app is running from it, so the user is on the current build, not a stale one. The only refresh failure ever logged was the 2026-09-03 SwiftPM/dist race, which the retry added the same day already covers."
+    },
+    {
+      "t": "2026-09-07T20:12:42.812866Z",
+      "note": "Second filing of this same non-bug: the-app-you-playtest-with-is-rebuilt-after-every was dropped for the same reason on 2026-09-06. Rather than re-explain it a third time, removed the trap: the zsh-only brace one-liners in refresh-dev-app.sh (lines 26, 58, 59) and go-loop.sh (line 276) now carry the semicolon bash wants, so every script under queue/bin and Scripts parses under both its own shell and bash. Behaviour is byte-identical in zsh. Verified: each script checked with the shell in its own shebang AND with bash, all clean; Scripts/test.sh green (4507 tests). Noted the rule in queue/README.md."
+    },
+    {
+      "t": "2026-09-07T20:12:42.812866Z",
+      "note": "Also serves a later epic: unmanned-loop is staged next, not now, and loop-robustness under it is later. Under the focus rule this should not have been an open p1 at all. Filed the recurrence against the existing task about reproducing a bug before filing it."
+    },
+    {
+      "t": "2026-09-07T20:12:54.266Z",
+      "note": "Not a bug: the refresh step works. The script is zsh and the loop runs it as zsh; the quoted error only appears if you check it with bash, which never runs it. The blamed run refreshed the dev app at 13:09 today and the user is on that build. Removed the zsh-only brace syntax that made bash -n lie about these scripts, so this false report cannot be filed a third time."
     }
-  ]
+  ],
+  "started": "2026-09-07T20:09:30.420Z"
 }

@@ -20,6 +20,7 @@ a task says otherwise.
 | `loop.log` | Runner output from each iteration. Rotated to `loop.log.1` past 32MB. Untracked. |
 | `bin/go-loop.sh` | The loop: daily digest+triage, a manager pass whenever the queue runs low, then one task at a time via a fresh headless agent per task. Every runner is Opus 5 at high effort (`PHOTONZ_RUNNER_MODEL`, `PHOTONZ_RUNNER_EFFORT`), by the user's choice on 2026-09-01. Records every runner exit, backs off on failure, parks tasks that keep failing. |
 | `bin/refresh-dev-app.sh` | Rebuilds `dist/Photonz Dev.app` and puts it back as it was found (running or closed). The loop runs it after any task that lands code under `Sources/`, so the app the user is reviewing is never behind the loop. `PHOTONZ_AUTO_REFRESH=0` turns that off; the script still runs by hand. |
+| shell scripts here | Written for zsh (`#!/bin/zsh`) but kept parseable by bash as well, so `bash -n` on one of them tells the truth. Two runners in a row read a `bash -n` error on zsh-only brace syntax as a live outage and filed it p1 (2026-09-06, 2026-09-07); the syntax is gone rather than the confusion being re-explained. |
 | `bin/queue.mjs` | CLI for every queue mutation (see its header). Never hand-edit status or history when a command exists. |
 | `bin/queue-lib.mjs` | Shared implementation; the mock dev server imports it for the `/api` endpoints. |
 | `bin/runner-prompt.md` | The contract each task runner follows (status protocol, decision protocol, next-release rule). |

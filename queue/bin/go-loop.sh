@@ -273,7 +273,7 @@ TASK FILE: $TASK_FILE"
   # Blunt safety net for anything the line above did not cover.
   Q guard >> "$LOG" 2>&1
   # Runners push their own commits; this catches anything they left behind.
-  [[ $SANDBOX == 0 ]] && { git push -q origin main >> "$LOG" 2>&1 || true }
+  [[ $SANDBOX == 0 ]] && { git push -q origin main >> "$LOG" 2>&1 || true; }
 
   if [[ "$OUTCOME" == "ok" ]]; then
     [[ -n "$REV_BEFORE" ]] && refresh_dev_app "$REV_BEFORE"
