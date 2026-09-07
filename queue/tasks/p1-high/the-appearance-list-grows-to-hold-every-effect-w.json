@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 30,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T04:17:33.932Z",
-  "updated": "2026-09-07T15:49:28.546Z",
+  "updated": "2026-09-07T16:30:57.585Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rewritten on 2026-09-07 after the user saw the shipped Appearance list beside the older Effects section and could not tell what belonged where. Their split, which supersedes the earlier proposal in this task: Appearance is what a shape intrinsically has, Effects is an addable list. Note that the duplication they report is partly an illusion worth fixing on its own: in their screenshot the Blur, Size, Distance, Direction and Opacity under Appearance are the SHADOW's settings, shown inline beneath the Shadow row by the change that landed the same day, while Effects carries the layer's own opacity, blur and corner radius. Because the inline settings carry no sign of which part owns them, a shadow's blur reads as a second top level blur. So the panel needs a visible owner for a part's settings whatever else is decided, which is why that is its own acceptance item. Two ideas from the earlier draft still hold and should be kept: inner versus outer is a property of an effect rather than a separate effect, which the user has now confirmed by asking for an offset on a border; and once the list is addable, order becomes visible and must be draggable. Read Sources/PhotonzCore/LayerParts.swift and Sources/Photonz/PartsInspector.swift, and coordinate with switching-a-part-on-shows-its-settings-straight, which changes how a row reveals its settings, so the two do not fight.",
@@ -136,6 +136,10 @@
     {
       "t": "2026-09-07T15:49:28.545Z",
       "note": "The list you add to shipped (two shadows, an inner shadow, add/remove/reorder, b90ea5c7). The rewritten brief needs a UX answer first: what belongs in Appearance and what belongs in Effects. Card open with three panels drawn for the same rectangle."
+    },
+    {
+      "t": "2026-09-07T16:30:57.585Z",
+      "note": "decision \"What belongs in Appearance, and what belongs in Effects?\" resolved: Appearance is what it IS, Effects is what you ADD"
     }
   ],
   "started": "2026-09-07T15:03:16.237Z"
