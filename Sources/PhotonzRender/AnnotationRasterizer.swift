@@ -19,8 +19,15 @@ public enum AnnotationRasterizer {
     public static func rasterize(_ annotation: AnnotationContent, size: CGSize,
                                  scale: CGFloat = 1) -> CGImage? {
         guard scale > 0, scale.isFinite else { return nil }
-        let width = Int((size.width * scale).rounded())
-        let height = Int((size.height * scale).rounded())
+        // An outline that sits on or past the shape's edge needs somewhere to
+        // be drawn, and the shape's own box is exactly the wrong size for it.
+        // So the bitmap grows by that reach on EVERY side and the drawing
+        // starts that far in: a symmetric pad, which is what lets the composite
+        // go on centring the picture on the frame
+        // (`DocumentRenderer.ciImage`, and `BorderPosition.swift`).
+        let pad = annotation.strokeOutset
+        let width = Int(((size.width + 2 * pad) * scale).rounded())
+        let height = Int(((size.height + 2 * pad) * scale).rounded())
         guard width >= 1, height >= 1 else { return nil }
 
         guard let context = CGContext(data: nil, width: width, height: height,
@@ -34,6 +41,9 @@ public enum AnnotationRasterizer {
         // scale so it can go on stating everything in document points.
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
+        // ...and everything below goes on stating itself in the shape's own
+        // box, unaware that the paper under it got bigger.
+        if pad != 0 { context.translateBy(x: pad, y: pad) }
 
         // The ink's flat stand-in: what a caption pill is toned from, and what
         // a paint that is not a gradient draws with.
@@ -118,28 +128,40 @@ public enum AnnotationRasterizer {
             }
 
         case .rectangle:
-            // Inset by half the stroke so the outline stays inside start..end.
-            let inset = box.insetBy(dx: annotation.strokeWidth / 2, dy: annotation.strokeWidth / 2)
+            // The line the stroke rides: inset by half its width for an inside
+            // outline (so the outline's outer edge lands on start..end, which
+            // is what every shape drawn before there was a choice does), on the
+            // box itself for a centred one, and half a width OUTSIDE it for an
+            // outside one.
+            let stroke = box.insetBy(dx: annotation.strokeWidth / 2 - pad,
+                                     dy: annotation.strokeWidth / 2 - pad)
+            let inside = fillBox(annotation, box: box, pad: pad)
             let path: CGPath
-            if annotation.cornerRadius > 0, !inset.isEmpty {
+            let fillPath: CGPath
+            if annotation.cornerRadius > 0, !stroke.isEmpty {
                 // Round the stroke itself (clamped to a capsule at most), so the
                 // border follows the corners rather than being clipped off.
-                let radius = min(annotation.cornerRadius, min(inset.width, inset.height) / 2)
-                path = CGPath(roundedRect: inset, cornerWidth: radius,
+                let radius = min(annotation.cornerRadius, min(stroke.width, stroke.height) / 2)
+                path = CGPath(roundedRect: stroke, cornerWidth: radius,
                               cornerHeight: radius, transform: nil)
+                fillPath = roundedFill(inside, sameShapeAs: stroke, radius: radius)
             } else {
-                path = CGPath(rect: inset, transform: nil)
+                path = CGPath(rect: stroke, transform: nil)
+                fillPath = CGPath(rect: inside, transform: nil)
             }
             if let fill = annotation.fill {
-                GradientPainter.fill(path: path, with: fill, in: context)
+                GradientPainter.fill(path: fillPath, with: fill, in: context)
             }
             if annotation.strokeWidth > 0 { strokeInk(path) }   // 0 = no border (fill only)
 
         case .ellipse:
-            let inset = box.insetBy(dx: annotation.strokeWidth / 2, dy: annotation.strokeWidth / 2)
-            let path = CGPath(ellipseIn: inset, transform: nil)
+            let stroke = box.insetBy(dx: annotation.strokeWidth / 2 - pad,
+                                     dy: annotation.strokeWidth / 2 - pad)
+            let path = CGPath(ellipseIn: stroke, transform: nil)
             if let fill = annotation.fill {
-                GradientPainter.fill(path: path, with: fill, in: context)
+                GradientPainter.fill(path: CGPath(ellipseIn: fillBox(annotation, box: box, pad: pad),
+                                                  transform: nil),
+                                     with: fill, in: context)
             }
             if annotation.strokeWidth > 0 { strokeInk(path) }   // 0 = no border
 
@@ -149,6 +171,33 @@ public enum AnnotationRasterizer {
         }
 
         return context.makeImage()
+    }
+
+    /// How far the inside of the shape is painted.
+    ///
+    /// For an INSIDE outline this is the stroke's own path, exactly as it has
+    /// always been: the fill stops half a width short and the stroke covers the
+    /// rest, so a translucent line never shows a seam. For a centred or an
+    /// outside one the fill is the whole box, because the line no longer eats
+    /// into it and a shape that kept the old inset would show a hairline of
+    /// canvas between its fill and its line.
+    private static func fillBox(_ annotation: AnnotationContent, box: CGRect,
+                                pad: CGFloat) -> CGRect {
+        let inset = max(0, annotation.strokeWidth / 2 - pad)
+        return box.insetBy(dx: inset, dy: inset)
+    }
+
+    /// The fill's rounded path, curved so it sits concentric with the stroke
+    /// rather than parallel to it: a corner half a width in from another corner
+    /// is half a width tighter.
+    private static func roundedFill(_ rect: CGRect, sameShapeAs stroke: CGRect,
+                                    radius: CGFloat) -> CGPath {
+        guard !rect.isEmpty else { return CGPath(rect: rect, transform: nil) }
+        let difference = (rect.width - stroke.width) / 2
+        let fillRadius = max(0, min(radius + difference, min(rect.width, rect.height) / 2))
+        guard fillRadius > 0 else { return CGPath(rect: rect, transform: nil) }
+        return CGPath(roundedRect: rect, cornerWidth: fillRadius,
+                      cornerHeight: fillRadius, transform: nil)
     }
 
     /// JUST the caption pill, on its own transparent bitmap, for chrome that

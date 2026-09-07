@@ -143,6 +143,16 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         shapes[shape.rawValue, default: .standard(for: shape)].strokeWidth = width
     }
 
+    /// Where the next shape of this kind draws its outline.
+    public func strokePosition(forShape shape: AnnotationShape) -> BorderPosition {
+        defaults(forShape: shape).strokePosition
+    }
+
+    public mutating func setStrokePosition(_ position: BorderPosition,
+                                           forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].strokePosition = position
+    }
+
     public mutating func setArrowheadScale(_ scale: CGFloat, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].arrowheadScale = scale
     }
@@ -308,6 +318,9 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         // The ending the tool is armed with, and the corner its label wears.
         content.arrowheadStyle = d.arrowheadStyle
         content.captionRoundness = d.captionRoundness
+        // Where the last box of this kind put its line is where the next one
+        // puts it, exactly as with its width and its corner.
+        content.strokePosition = d.strokePosition
         return content
     }
 
@@ -354,6 +367,11 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         set { paint.hex = newValue; paint.kind = .solid }
     }
     public var strokeWidth: CGFloat
+    /// Where the next box or ellipse puts its outline: inside its edge, on it,
+    /// or outside it. Remembered the way the width is, so taking a line outside
+    /// once does not have to be done again on the next shape
+    /// (`BorderPosition.swift`).
+    public var strokePosition: BorderPosition = .inside
     public var arrowheadScale: CGFloat
     /// What the next arrow ends in.
     public var arrowheadStyle: ArrowheadStyle = .standard

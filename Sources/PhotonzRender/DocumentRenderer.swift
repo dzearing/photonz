@@ -603,7 +603,14 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// layout) and resamples with CoreGraphics. Never upscales.
     public func thumbnail(for id: UUID, in document: PhotonzDocument, store: ImageStore,
                           maxDimension: CGFloat) -> CGImage? {
-        guard let sprite = renderSprite(for: id, in: document, store: store, padding: 0) else { return nil }
+        // Room for a line that sits ON or PAST the layer's edge, and no more:
+        // a tile drawn exactly the size of the box showed an outline-only shape
+        // as an empty square the moment its line moved outside
+        // (`BorderPosition.swift`). A shadow's reach is deliberately still left
+        // out, since a tile of mostly shadow is a smaller picture of the layer.
+        let outset = document.layer(id: id)?.outlineOutset ?? 0
+        guard let sprite = renderSprite(for: id, in: document, store: store,
+                                        padding: outset) else { return nil }
         let scale = min(1, maxDimension / CGFloat(max(sprite.width, sprite.height)))
         guard scale < 1 else { return sprite }
         let width = max(1, Int((CGFloat(sprite.width) * scale).rounded()))
@@ -646,6 +653,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         // by a magnified render, which is the one case worth paying a better
         // resampler for (see the scale-into-frame step below).
         var enlargesPhoto = false
+        // How far this layer's own CONTENT is drawn past its frame, in the same
+        // unit the frame is stated in. Only a shape with a centred or an
+        // outside stroke has any: its rasterizer hands back a bitmap bigger
+        // than the box, and every step below has to be told, or the picture is
+        // squashed back into the frame and the outside line lands inside again
+        // (`BorderPosition.swift`).
+        let contentOutset = layer.contentOutset * contentScale
         switch layer.content {
         case .image(let ref):
             guard let cg = store.image(for: ref) else { return nil }
@@ -724,11 +738,16 @@ public final class DocumentRenderer: @unchecked Sendable {
             image = image.transformed(by: CGAffineTransform(translationX: -flipped.origin.x, y: -flipped.origin.y))
         }
 
-        // Scale content into the layer's frame.
+        // Scale content into the layer's frame — grown, where the content is
+        // drawn past it, by exactly the room the rasterizer took, so the shape
+        // inside the padding still lands on the frame at its true size.
+        let target = contentOutset > 0
+            ? frame.insetBy(dx: -contentOutset, dy: -contentOutset)
+            : frame
         let contentSize = image.extent.size
         if contentSize.width > 0, contentSize.height > 0 {
-            let sx = frame.width / contentSize.width
-            let sy = frame.height / contentSize.height
+            let sx = target.width / contentSize.width
+            let sy = target.height / contentSize.height
             // A photo has no more detail to give, so on a magnified render it
             // is enlarged with the best resampling there is rather than the
             // plain one an affine transform uses. That is what an export at 2x
@@ -771,8 +790,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         // both happen before the geometric transform so they rotate with it.
         // Text is exempt from the border: its border outlines the glyphs (done
         // in the rasterizer), not the box.
-        let box = image.extent
-        image = rounded(image, box: box, radius: cornerRadius)
+        // The layer's OWN box inside the picture: the whole extent normally,
+        // and the middle of it where an outside stroke padded the bitmap. The
+        // corner and the ring follow the box a person sees, never the padding.
+        let box = contentOutset > 0
+            ? image.extent.insetBy(dx: contentOutset, dy: contentOutset)
+            : image.extent
+        image = rounded(image, box: box, radius: cornerRadius, keepingOutside: contentOutset > 0)
         let isTextLayer: Bool = { if case .text = layer.content { return true } else { return false } }()
         if !isTextLayer {
             image = bordered(image, box: box, radius: cornerRadius, style: layer.style)
@@ -823,31 +847,63 @@ public final class DocumentRenderer: @unchecked Sendable {
 
     /// Clips to a rounded rect, which is also what makes a group with rounded
     /// corners clip what it holds.
-    private func rounded(_ image: CIImage, box: CGRect, radius: CGFloat) -> CIImage {
+    ///
+    /// `keepingOutside` is for a shape whose own stroke is drawn PAST its box:
+    /// rounding the box would cut that stroke off, so the mask is white
+    /// everywhere outside the box as well and only the inside is rounded. It
+    /// costs two filters, so it is asked for only where an outside stroke made
+    /// the picture bigger than the box in the first place; everywhere else the
+    /// rounded corner is what clips, which is what makes a rounded group clip
+    /// what it holds.
+    private func rounded(_ image: CIImage, box: CGRect, radius: CGFloat,
+                         keepingOutside: Bool = false) -> CIImage {
         guard radius > 0 else { return image }
         let mask = roundedRectImage(rect: box, radius: radius, color: .white)
-        return mask.applyingFilter("CIMultiplyCompositing",
+        guard keepingOutside, !image.extent.isInfinite,
+              !image.extent.insetBy(dx: 0.5, dy: 0.5).contains(box.insetBy(dx: -0.5, dy: -0.5))
+        else {
+            return mask.applyingFilter("CIMultiplyCompositing",
+                                       parameters: [kCIInputBackgroundImageKey: image])
+                .cropped(to: mask.extent)
+        }
+        let beyond = CIImage(color: .white).cropped(to: image.extent)
+            .applyingFilter("CISourceOutCompositing", parameters: [
+                kCIInputBackgroundImageKey: CIImage(color: .white).cropped(to: box)
+            ])
+        let full = mask.composited(over: beyond)
+        return full.applyingFilter("CIMultiplyCompositing",
                                    parameters: [kCIInputBackgroundImageKey: image])
-            .cropped(to: mask.extent)
+            .cropped(to: image.extent)
     }
 
-    /// An inner stroke hugging the (possibly rounded) outline of `box`.
+    /// A stroke hugging the (possibly rounded) outline of `box`, sitting where
+    /// the style says: wholly inside the box, straddling its edge, or wholly
+    /// outside it (`BorderPosition.swift`).
+    ///
+    /// The ring is one rounded rect with a smaller one cut out of it, and the
+    /// position is nothing more than how far out the pair is pushed: inside
+    /// keeps the outer edge on the box, centred puts it half a width past, and
+    /// outside puts the ring's INNER edge on the box. An outside ring therefore
+    /// makes the picture bigger, which is why the result is cropped to what the
+    /// two of them cover rather than back to the layer's own box.
     private func bordered(_ image: CIImage, box: CGRect, radius: CGFloat,
                           style: LayerStyle) -> CIImage {
         guard style.borderWidth > 0 else { return image }
         let width = style.borderWidth
-        let outer = roundedRectImage(rect: box, radius: radius,
+        let outset = style.borderPosition.outset(width: width)
+        let outerRect = outset > 0 ? box.insetBy(dx: -outset, dy: -outset) : box
+        let outer = roundedRectImage(rect: outerRect, radius: radius + outset,
                                      color: ciColor(hex: style.borderColorHex))
-        let innerRect = box.insetBy(dx: width, dy: width)
+        let innerRect = outerRect.insetBy(dx: width, dy: width)
         var ring = outer
         if !innerRect.isNull, !innerRect.isEmpty {
             let inner = roundedRectImage(rect: innerRect,
-                                         radius: max(0, radius - width),
+                                         radius: max(0, radius + outset - width),
                                          color: .white)
             ring = outer.applyingFilter("CISourceOutCompositing",
                                         parameters: [kCIInputBackgroundImageKey: inner])
         }
-        return ring.composited(over: image).cropped(to: image.extent)
+        return ring.composited(over: image).cropped(to: image.extent.union(outerRect))
     }
 
     /// Every shadow the layer throws, in the order the Appearance list holds

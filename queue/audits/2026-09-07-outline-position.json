@@ -1,0 +1,30 @@
+{
+  "feature": "A border can sit outside the edge",
+  "epic": "ui-building",
+  "summary": "The Outline part now carries a Position: Inside, Center or Outside. Outside keeps the shape at the size you gave it and grows the line past the edge, which is how a button specified at 120 by 32 with a 2pt line stays 120 by 32.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing new to switch on: the row rides the Appearance panel that next-shape-parts already shows. Every existing document opens on Inside and draws exactly what it drew before.",
+  "try": [
+    { "do": "Press R and drag out a rectangle." },
+    { "do": "In Appearance, untick Fill so only the line is left." },
+    { "do": "Pull the Outline's Width up to about 20 pt.", "shot": "2026-09-07-outline-position-1-inside-sc.png" },
+    { "do": "Open the Position popup under it.", "shot": "2026-09-07-outline-position-2-menu-sc.png" },
+    { "do": "Pick Outside, and watch the line jump past the blue selection ring while W and H hold at what you drew.", "shot": "2026-09-07-outline-position-3-outside-sc.png" },
+    { "do": "Pick Center and see it straddle the ring instead." },
+    { "do": "Drag a screenshot onto the canvas, tick its Outline on, and give that ring a Position too." },
+    { "do": "Draw a second rectangle and check it comes out where you left the last one." }
+  ],
+  "evaluate": [
+    "When the line goes outside, the W and H readout still says the size you drew rather than the size now on screen. Is that the number you want there, or do you want to know how big the drawn thing is?",
+    "Is Position in the right place, under Width inside the Outline part, or were you looking for it somewhere else?",
+    "Are Inside, Center and Outside the words you expected, or do you think of them differently?",
+    "Should the next shape you draw remember the position you last picked, the way it remembers the width? It does now.",
+    "An outside ring on a picture that fills the whole canvas is cut off by the canvas edge. Is that right, or should the canvas make room?"
+  ],
+  "rough": [
+    "The screenshots here are real screen captures: the probe had the Screen Recording grant this run.",
+    "A line and an arrow are not offered a Position at all, and neither is text. A line IS its stroke so there is no edge to sit one side of, and a letter's outline follows the letters rather than the box. That is a departure from treating Position as something every Outline row has.",
+    "The layers panel tile was drawn exactly the size of the layer's box, so an outline-only shape went blank the moment its line moved outside. Found by looking at the running app, not by a test. The tile now makes room for the line, but it still makes none for a shadow, which is older and was left alone.",
+    "Setting Position moves BOTH rings on a layer that somehow carries two: a shape's own stroke and a leftover border ring from the old Effects slider. They can never end up one in and one out, which seemed better than a layer with two lines going opposite ways.",
+    "Undo is correct but could not be driven from the walk by pressing Command Z: macOS leaves a background app's menu bar frozen, so the walk had to call undo directly. That is the harness, not the feature."
+  ]
+}

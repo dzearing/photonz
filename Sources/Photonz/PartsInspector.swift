@@ -164,7 +164,10 @@ private struct PartRowView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             if showsSettings {
-                OwnedSettings(owner: row.title) { PartWidthRow(row: row) }
+                OwnedSettings(owner: row.title) {
+                    PartWidthRow(row: row)
+                    PartPositionRow(row: row)
+                }
             }
         }
         // Every row holds a control called Switch and one called Color, so the
@@ -326,6 +329,64 @@ private struct PartWidthRow: View {
                         format: { "\(Int($0.rounded())) pt" },
                         preview: { editorState.previewOutlineWidth(ids: $0, $1) },
                         commit: { editorState.commitOutlineWidth(ids: $0, $1) })
+        }
+    }
+}
+
+
+/// The outline's other setting: WHERE it sits on the layer's edge.
+///
+/// A line is one line drawn in a different place rather than three different
+/// effects, so it is one popup under the Width and not three rows
+/// (`docs/design/shape-parts.md`, "How the list grows"). It is drawn exactly
+/// like the shadow's Kind, because it is exactly the same idea: one thing, a
+/// choice of where it goes.
+///
+/// It is simply absent where the choice would mean nothing. A line and an arrow
+/// ARE their stroke, and a letter's outline follows the letters, so those show
+/// a Width and stop there rather than a popup that does nothing.
+private struct PartPositionRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerPartRow
+
+    var body: some View {
+        let ids = editorState.outlinePositionIDs(ids: row.widthIDs)
+        if !ids.isEmpty {
+            let reading = editorState.outlinePositionReading(ids: ids)
+            HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
+                Text("Position")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+                Picker("Position", selection: Binding(
+                    get: { reading.isMixed ? nil : reading.value },
+                    set: { new in
+                        guard let new else { return }
+                        editorState.setOutlinePosition(ids: ids, to: new)
+                    })) {
+                        if reading.isMixed {
+                            Text(LayerStyleSelection.mixedText).tag(BorderPosition?.none)
+                        }
+                        ForEach(BorderPosition.allCases, id: \.self) { position in
+                            Text(position.title).tag(BorderPosition?.some(position))
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .controlSize(.small)
+                    // A fixed width for the same reason the shadow's Kind has
+                    // one: a menu picker asked for its ideal width inside the
+                    // dock's column pushes the whole pane wider than the window.
+                    .frame(width: 92, alignment: .leading)
+                    .help("Whether the outline sits inside the layer edge, on it, or outside it")
+                    .playtestControl("Position",
+                                     detail: reading.isMixed ? "mixed"
+                                         : (reading.value?.title ?? ""))
+                Spacer(minLength: 0)
+            }
+            // Its own name in a walk, so `panelMenu "Position"` reaches it
+            // rather than a second menu called after the part it sits in.
+            .playtestField("Position")
         }
     }
 }

@@ -42,7 +42,9 @@ public enum RenderDiff {
             bounds = bounds.union(callout.sourceRect.standardized)
         }
         // +2 absorbs pixel alignment and antialiased edges.
-        let padding = layer.style.previewPadding + layer.style.borderWidth + 2
+        // `reachPadding` already carries a ring that sits on or past the
+        // edge; the extra width is slack, not the ring itself.
+        let padding = layer.reachPadding + layer.style.borderWidth + 2
         return bounds.insetBy(dx: -padding, dy: -padding)
     }
 

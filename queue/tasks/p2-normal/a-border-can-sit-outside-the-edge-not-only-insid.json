@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:46:34.063Z",
-  "updated": "2026-09-07T21:36:26.596Z",
+  "updated": "2026-09-07T21:55:53.832Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-appearance-list-grows-to-hold-every-effect-w on 2026-09-07 after reading the render path. Facts established there: AnnotationRasterizer insets the box by strokeWidth/2 and strokes, so a shape stroke lands wholly INSIDE the frame; DocumentRenderer.bordered insets the box by the full width and cuts the middle out, then crops to image.extent, so a ring is inside too. Outside therefore needs (a) AnnotationRasterizer to rasterize into a padded bitmap, which the composite already centres so a symmetric pad lands correctly, (b) bordered() to stop cropping to image.extent for centred/outside, (c) LayerStyle.previewPadding and Layer.renderBounds to include the outset so groups and frames do not clip it. Storage: LayerStyle.borderPosition for the ring and a matching setting on AnnotationContent for a shape stroke, both defaulting to inside so no document repaints. docs/design/shape-parts.md, section How the list grows, already writes the model down.",
@@ -36,6 +36,18 @@
     {
       "t": "2026-09-07T21:36:26.596Z",
       "note": "Plan: BorderPosition in PhotonzCore (inside/center/outside, default inside; LayerStyle.borderPosition written only when it is not inside so existing files stay byte identical). AnnotationContent.strokePosition for a shape stroke. The rasterizer pads its bitmap by the outset and offsets the stroke path. DocumentRenderer scales to the padded target, leaves the ring uncropped, and renderBounds/previewPadding grow so groups, frames, drag sprites and dirty rects all reach far enough."
+    },
+    {
+      "t": "2026-09-07T21:55:53.832Z",
+      "note": "Built. Core: BorderPosition (inside/center/outside) with one outset number; LayerStyle.borderPosition and AnnotationContent.strokePosition, both defaulting to inside and both round-tripping; Layer.outlinePosition/outlineOutset/contentOutset/reachPadding; PhotonzDocument.setOutlinePosition + outlinePositionReading, splitting a shape stroke from a border ring the way setRingWidth already does. Renderer: the rasterizer pads its bitmap and offsets the stroke path, DocumentRenderer scales to the padded target and takes the layer box from the middle of it, bordered() pushes its ring out and crops to the union, rounded() can keep what is outside the box. Panel: a Position popup under the Outline part's Width, drawn like the shadow Kind popup, absent on lines, arrows and text. Tool remembers it per shape."
+    },
+    {
+      "t": "2026-09-07T21:55:53.832Z",
+      "note": "Adversarial review of the built thing, on the running probe. Found a real one nobody would have caught from a test: the layers panel tile is rendered at padding 0, so an outline-only rectangle went BLANK the moment its line moved outside. Reproduced with a failing test first (thumbnailKeepsAnOutsideLine), then gave the tile exactly the outline's outset and no more; a shadow's reach is still deliberately left out. Also confirmed live that the selection ring and the handles stay on the shape while the line sits outside them, which is acceptance item 4."
+    },
+    {
+      "t": "2026-09-07T21:55:53.832Z",
+      "note": "Verified. Scripts/test.sh green: 4572 tests, 382 suites. New suites: BorderPositionTests (15), OutlinePositionMemoryTests (2), BorderPositionRenderTests (12, covering rectangle, ellipse, picture, group, a clipping frame and a magnified render). Scripts/playtest/outline-position-walk.json drives the whole thing on the probe end to end and the panel reads Inside then Center then Outside; one undo puts it back to Center. Screen Recording was granted, so the audit carries real screen captures. Perf: RenderPerfTests all inside budget; the composite path for a layer with no border is untouched (bordered() still returns early at width 0, rounded() takes its old branch unless a stroke actually moved outside, and previewPadding gains one comparison)."
     }
   ],
   "started": "2026-09-07T21:31:08.321Z"

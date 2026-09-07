@@ -189,7 +189,7 @@ extension EditorState {
                     }
                 }
             }
-            let pad = layer.style.previewPadding
+            let pad = layer.reachPadding
             union = union.union(bounds.insetBy(dx: -pad, dy: -pad))
         }
         let region = Geometry.clampCrop(union, toCanvas: document.canvasSize)
@@ -240,7 +240,7 @@ extension EditorState {
                 }
             }
         }
-        let pad = layer.style.previewPadding
+        let pad = layer.reachPadding
         let region = Geometry.clampCrop(bounds.insetBy(dx: -pad, dy: -pad), toCanvas: document.canvasSize)
         guard region.width >= 1, region.height >= 1 else { return }
 

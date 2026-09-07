@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/outline-position",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [340, 300], "to": [560, 460] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Switch", "in": "Fill" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Slider", "in": "Width", "across": 0.5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-inside",
+      "note": "an outline-only box, thick enough to see. The blue selection ring marks the layer's own edge, so where the line sits relative to it is the whole story" },
+    { "do": "panel", "stage": "1-inside" },
+    { "do": "snapshot", "name": "1-inside" },
+    { "do": "render", "name": "1-canvas-inside" },
+
+    { "do": "panelMenu", "menu": "Position", "shot": "2-position-menu" },
+    { "do": "panelMenu", "menu": "Position", "choose": "Center" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-center", "note": "the line now straddles the selection ring" },
+    { "do": "snapshot", "name": "2-center" },
+    { "do": "render", "name": "2-canvas-center" },
+
+    { "do": "panelMenu", "menu": "Position", "choose": "Outside" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-outside",
+      "note": "the line is wholly outside the selection ring, and the box kept its size" },
+    { "do": "panel", "stage": "3-outside" },
+    { "do": "snapshot", "name": "3-outside" },
+    { "do": "render", "name": "3-canvas-outside" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-undo", "note": "one undo puts the line back where it was" },
+    { "do": "panel", "stage": "4-undo" },
+    { "do": "snapshot", "name": "4-undo" },
+    { "do": "render", "name": "4-canvas-undo" }
+  ]
+}

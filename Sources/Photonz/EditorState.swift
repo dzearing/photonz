@@ -1821,7 +1821,7 @@ final class EditorState {
         // pieces INSIDE it still reach past the box they make, so the sprite is
         // padded by the furthest any of them reaches or they would be clipped
         // the moment the drag started.
-        var padding = layer.style.previewPadding
+        var padding = layer.reachPadding
         if layer.isGroup {
             let box = layer.localBounds
             let reach = layer.renderBounds

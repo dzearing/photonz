@@ -100,6 +100,11 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         get { paint.hex }
         set { paint.hex = newValue; paint.kind = .solid }
     }
+    /// Where the outline sits relative to the shape's own box: wholly inside
+    /// it, straddling the edge, or wholly outside it. Inside is what every
+    /// shape drawn before there was a choice wears, and it is what an older
+    /// document opens as (`BorderPosition.swift`).
+    public var strokePosition: BorderPosition = .inside
     /// For arrows/lines: start and end in layer-local coordinates.
     public var start: CGPoint
     public var end: CGPoint
@@ -176,7 +181,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// hex string there. Only a gradient writes an object, so a document with
     /// none in it is byte for byte what it always was.
     private enum CodingKeys: String, CodingKey {
-        case shape, strokeWidth
+        case shape, strokeWidth, strokePosition
         case paint = "colorHex"
         case start, end, arrowheadScale, arrowheadStyle, cornerRadius
         case fill = "fillColorHex"
@@ -193,6 +198,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         paint = try c.decode(Paint.self, forKey: .paint)
         start = try c.decode(CGPoint.self, forKey: .start)
         end = try c.decode(CGPoint.self, forKey: .end)
+        // The stroke had nowhere but inside to be until 2026-09-07, so every
+        // shape written before then is wearing `inside` and draws unchanged.
+        strokePosition = try c.decodeIfPresent(BorderPosition.self, forKey: .strokePosition)
+            ?? .inside
         // `arrowheadScale` postdates AnnotationContent; old payloads omit it.
         arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale) ?? 1
         // `arrowheadStyle` postdates the head being one shape; every arrow
@@ -752,6 +761,10 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     public var cornerRadius: CGFloat
     public var borderWidth: CGFloat
     public var borderColorHex: String
+    /// Where that ring sits relative to the layer edge. Inside is where every
+    /// ring drawn before there was a choice sat, and it is what an older
+    /// document opens as (`BorderPosition.swift`).
+    public var borderPosition: BorderPosition = .inside
     /// Everything somebody ADDED to this layer, in the order it paints: the
     /// Effects list, top of the list nearest the eye.
     ///
@@ -876,6 +889,7 @@ public struct LayerStyle: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case opacity, blurRadius, cornerRadius, borderWidth, borderColorHex
+        case borderPosition
         case shadow, shadows, effects, blendMode
     }
 
@@ -885,6 +899,8 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
         borderWidth = try c.decodeIfPresent(CGFloat.self, forKey: .borderWidth) ?? 0
         borderColorHex = try c.decodeIfPresent(String.self, forKey: .borderColorHex) ?? "#000000"
+        // A ring had nowhere but inside to be until 2026-09-07.
+        borderPosition = try c.decodeIfPresent(BorderPosition.self, forKey: .borderPosition) ?? .inside
         blendMode = try c.decodeIfPresent(BlendMode.self, forKey: .blendMode) ?? .normal
         if let list = try c.decodeIfPresent([LayerEffect].self, forKey: .effects) {
             effects = list
@@ -913,6 +929,9 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         try c.encode(cornerRadius, forKey: .cornerRadius)
         try c.encode(borderWidth, forKey: .borderWidth)
         try c.encode(borderColorHex, forKey: .borderColorHex)
+        // Written only when it is not where rings have always been, so a
+        // document that has never moved one is byte for byte what it was.
+        if borderPosition != .inside { try c.encode(borderPosition, forKey: .borderPosition) }
         try c.encode(blendMode, forKey: .blendMode)
         // The first shadow and the blur are written where they have always been
         // written, so a file saved today still opens in a build from yesterday
@@ -958,6 +977,9 @@ extension LayerStyle {
             $0.radius * 3 + max(abs($0.offset.width), abs($0.offset.height)) + max($0.spread, 0)
         }
         padding += reach.max() ?? 0
+        // A ring that sits on or past the edge draws outside the box, so the
+        // room it needs is part of how far this style reaches.
+        padding += borderPosition.outset(width: borderWidth)
         return padding.rounded(.up)
     }
 
@@ -1325,17 +1347,18 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// clipped: its own reach unioned with the reach of everything it holds.
     public var renderBounds: CGRect {
         let box = localBounds
-        guard let group else { return box.insetBy(dx: -style.previewPadding, dy: -style.previewPadding) }
+        let pad = reachPadding
+        guard let group else { return box.insetBy(dx: -pad, dy: -pad) }
         // Nothing inside a clipping container can draw past its edge, so its
-        // reach is its box plus whatever its own shadow adds.
-        if clipsToBounds {
-            return box.insetBy(dx: -style.previewPadding, dy: -style.previewPadding)
-        }
+        // reach is its box plus whatever its own shadow and its own ring add.
+        // The ring is the container's, not its contents', so it is drawn after
+        // the clip and is never cut off by it.
+        if clipsToBounds { return box.insetBy(dx: -pad, dy: -pad) }
         var reach = box
         for child in group.children {
             reach = reach.union(child.renderBounds.offsetBy(dx: frame.origin.x, dy: frame.origin.y))
         }
-        return reach.insetBy(dx: -style.previewPadding, dy: -style.previewPadding)
+        return reach.insetBy(dx: -pad, dy: -pad)
     }
 
     /// Whether "Rasterize Layer" applies: the layer is a vector shape/annotation

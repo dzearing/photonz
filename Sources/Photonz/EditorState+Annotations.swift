@@ -648,6 +648,44 @@ extension EditorState {
         rememberStyleDefault(of: ids.filter { doc.layer(id: $0)?.drawsItsOwnOutline == false })
     }
 
+    /// Which of the picked layers the Outline row's Position can honestly
+    /// reach: the ones with an edge for a line to sit one side of. A line and
+    /// an arrow ARE their stroke and a letter's outline follows the letters, so
+    /// neither is offered one and the row simply is not there over them.
+    func outlinePositionIDs(ids: [UUID]) -> [UUID] {
+        guard let doc = document else { return [] }
+        return ids.filter { doc.layer(id: $0)?.hasOutlinePosition == true }
+    }
+
+    /// What that popup reads: the answer they all wear, or that they differ.
+    func outlinePositionReading(ids: [UUID]) -> StyleReading<BorderPosition> {
+        document?.outlinePositionReading(layerIDs: ids) ?? StyleReading(value: nil, isMixed: false)
+    }
+
+    /// Picking one: ONE undo step over every picked layer, whichever ring each
+    /// of them draws, plus where the next shape of that kind starts.
+    ///
+    /// There is no preview half to this the way there is for a width: a popup
+    /// is picked rather than pulled, so the first thing that happens is also
+    /// the last.
+    func setOutlinePosition(ids: [UUID], to position: BorderPosition) {
+        guard let doc = document else { return }
+        let targets = outlinePositionIDs(ids: ids).filter { doc.layer(id: $0)?.isLocked == false }
+        guard !targets.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { $0.setOutlinePosition(layerIDs: targets, to: position) }
+        for shape in Set(targets.compactMap { doc.layer(id: $0)?.annotation?.shape })
+        where shape.hasOutlinePosition {
+            annotationStyles.setStrokePosition(position, forShape: shape)
+        }
+        saveAnnotationStyles()
+        // A ring round a picture, a frame or a group is styling laid over the
+        // layer, so it rides along with the rest of that layer's remembered
+        // look the way its width already does.
+        rememberStyleDefault(of: targets.filter { doc.layer(id: $0)?.drawsItsOwnOutline == false })
+    }
+
     /// The picked layers a shape slider may touch: shapes, unlocked.
     private func annotationRestyleTargets(_ ids: [UUID], in doc: PhotonzDocument) -> [UUID] {
         ids.filter { doc.layer(id: $0).map { $0.annotation != nil && !$0.isLocked } == true }

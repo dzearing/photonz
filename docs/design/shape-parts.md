@@ -223,9 +223,11 @@ Two things did not go where the original report asked, and both are deliberate:
 
 Status: **built in Next** (2026-09-07), from the user's answer *one list you add
 to*. Shadows are countable, an inner shadow is a Kind rather than an effect of
-its own, and the plus that adds one rides the Appearance header. What is NOT
-built is the Outline's Position, for the reason in "What existing documents must
-keep drawing" below. Three parts fit in a fixed list. The ones people ask for next do not: an inner and an outer border, an
+its own, and the plus that adds one rides the Appearance header. The
+Outline's Position was filed rather than built that day and **landed on
+2026-09-07**; see "Where the outline sits" below, which supersedes the reason
+given in "What existing documents must keep drawing". Three parts fit in a fixed
+list. The ones people ask for next do not: an inner and an outer border, an
 inner and an outer shadow, a glow, a bevel. Adding six more fixed rows is how a
 panel turns into a wall. This section writes down how the list scales instead,
 so that the next effect costs one entry and no new idea.
@@ -269,7 +271,7 @@ document format changes to accept it.
 | Kind | Count | Colour | Settings |
 | --- | --- | --- | --- |
 | Fill | one | the fill colour | none (a gradient is a kind of colour, not a setting) |
-| Outline | one for now | the outline colour | Width · *(Position: not built, see below)* |
+| Outline | one for now | the outline colour | Width · Position (Inside · Center · Outside) |
 | Shadow | **many** | the shadow colour | **Kind** (Drop · Inner) · Blur · Size · Distance · Direction · Opacity |
 | *Glow (next)* | many | the glow colour | Kind (Outer · Inner) · Blur · Size · Opacity |
 | *Bevel (next)* | one | two colours, light and dark | Depth · Softness · Direction · Opacity |
@@ -337,16 +339,68 @@ what this document said on 2026-09-07 before the code was read closely:
 So Inside is not one default among three: it is the only position anything in
 the app has ever drawn, and it is what every existing document is wearing.
 
-Outside is the one people ask for, and it is what makes Position expensive
-rather than a popup. A shape is rasterized into a bitmap exactly the size of its
-frame, and the ring round everything else is cropped to the layer's own extent,
-so an outline that sits past the edge has nowhere to be drawn: the rasterizer
-would need padding, the layer's reach (`renderBounds`, `previewPadding`) would
-need to grow with it, and selection and hit testing follow from those. That is a
-piece of work of its own and it would have swamped the list this task is about,
-so Position is written down here and filed rather than half-built. Nothing about
-the list has to change to accept it: it is one more setting under the Outline
-row.
+Outside is the one people ask for, and it is what made Position a piece of work
+of its own rather than a popup: a shape is rasterized into a bitmap exactly the
+size of its frame, and the ring round everything else was cropped to the layer's
+own extent, so an outline past the edge had nowhere to be drawn. It was filed
+rather than half-built on 2026-09-07 and built the same day. See the next
+section.
+
+## Where the outline sits
+
+Status: **built in Next** (2026-09-07). One popup, **Position**, on the line
+under the Outline part's Width: **Inside · Center · Outside**.
+
+It is offered wherever the choice means something — a rectangle, an ellipse, a
+picture, a frame, a group, a callout — and is simply absent where it does not. A
+line and an arrow ARE their stroke, so there is no edge for it to sit one side
+of, and a letter's outline follows the letters rather than the box; those show a
+Width and stop there.
+
+### What each one draws
+
+| | Where the line goes | What happens to the layer |
+| --- | --- | --- |
+| **Inside** | wholly within the edge | the line eats into the shape; the box keeps its size |
+| **Center** | straddling the edge | half in, half out |
+| **Outside** | wholly past the edge | the shape keeps its size and the line grows it |
+
+**Inside is where every line the app has ever drawn sits**, so it is what every
+existing document opens on and nothing already saved moves a pixel. A style that
+has never moved its ring does not even write the key.
+
+Picking one is remembered per kind of shape, the way the Width and the corner
+already are: take a box's line outside once and the next box comes out that way,
+and the ellipse and the arrow are left alone.
+
+### The one number the whole thing turns on
+
+`BorderPosition.outset(width:)` — 0 inside, half a width centred, a whole width
+outside. Everything else follows from it:
+
+- **A shape's own stroke.** `AnnotationRasterizer` grows its bitmap by the
+  outset on every side and shifts its drawing in by the same, so the shape goes
+  on stating itself in its own box. The pad is symmetric, which is what lets
+  `DocumentRenderer` keep centring the picture on the frame — but the scale
+  step had to be told too, or the padded bitmap is squashed straight back into
+  the frame and the outside line lands inside again.
+- **The ring round everything else.** `bordered` pushes its pair of rounded
+  rects out by the outset and crops to what they cover rather than back to the
+  layer's box, so an outside ring makes the picture bigger. A container's ring
+  is laid on AFTER its clip, so a screen that hides what sticks out of it still
+  wears its own ring outside itself.
+- **How far a layer reaches.** `LayerStyle.previewPadding` carries the ring's
+  outset and `Layer.reachPadding` adds the shape's own; `renderBounds`, drag
+  sprites, merge-down, rasterize and the dirty rect all read one of those two,
+  so nothing inside a group or a frame cuts an outside line off.
+
+### What it deliberately does NOT touch
+
+**The layer's frame.** Selection, hit testing, snapping, the handles and the
+size readout all read the frame, and the frame is the shape rather than the line
+round it, so clicking goes on following what you can see yourself dragging.
+That is also the point of Outside for UI work: a button specified at 120×32 with
+a 2pt outside line is still 120×32.
 
 ### More than one layer picked
 
