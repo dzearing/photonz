@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1540,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T00:03:19.750Z",
-  "updated": "2026-09-07T00:46:00.964Z",
+  "updated": "2026-09-07T01:09:21.920Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-06 while fixing where words sit down a box. Dragging the bottom edge of a text box MOVES the layer; dragging a corner re-wraps it and the height follows the words; H in Position & Size is not editable for text. Layer.resized honours a taller box only when fillingHeight is true, which GroupFlow passes for a child whose vertical placement is Stretch, so room today comes only from a container. See Scripts/playtest/words-down-the-box-walk.json, stage 3-middle-does-nothing, and TextBlockMetrics.topInset which is the rule that would then apply. RESOLVED 2026-09-06 by giving a person the room rather than taking the choice away. See docs/design/ui-building.md, \"A text box can be given room by hand\", queue/audits/2026-09-06-text-box-room.json, and Scripts/playtest/text-box-room-walk.json.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-09-07T01:09:01.618969Z",
       "note": "Review after building: on a ONE LINE label the app offers corner handles only (Handles drops edge midpoints under 40 screen points), so the bottom edge is not there to drag until the box has room. Typing H always works and the explanation line says to do that. Changing the handle rule would change handles for every layer, so it was left alone and raised in the audit for the user to judge."
+    },
+    {
+      "t": "2026-09-07T01:09:21.920Z",
+      "note": "A text box can now be made taller than its words: type a height into H (text takes one now, floored at the words) or drag the box's top or bottom edge. With that room Middle and Bottom move the words in it; with none, the Text section says why instead of leaving a dead control. Room survives re-wording, re-wrapping and width drags, and dragging back past the words hands it back. Gated on next-placement, Current untouched. Verified on the probe app with Scripts/playtest/text-box-room-walk.json (real screen captures) and 4184 tests green. Audit: queue/audits/2026-09-06-text-box-room.json"
     }
   ],
-  "started": "2026-09-07T00:46:00.963Z"
+  "started": "2026-09-07T00:46:00.963Z",
+  "completed": "2026-09-07T01:09:21.920Z"
 }

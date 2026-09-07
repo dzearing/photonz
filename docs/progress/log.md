@@ -10191,3 +10191,27 @@ never be taller than its words; and one gap in the starter Card comes out a
 point short of the gap the column was given.
 
 Next: the queue.
+
+## 2026-09-06 — A text box can be given room down the box
+
+The Text section's Down row (Top, Middle, Bottom) was a control that could not
+bite on a plain text box: a text box takes its height from its words, so there
+was never spare room to move them in, and the only way to make some was a
+container stretching the box.
+
+Changed: a height a person hands a text box is room, and the box keeps it. H in
+Position & Size takes a number for text and stops at the words; the top and
+bottom edge handles give the box room instead of re-wrapping; the sides and
+corners are unchanged. Room is recorded on the layer (`heightChosenByHand`) so
+it survives re-wording, a re-wrap and a width drag, and is handed back the
+moment the box is dragged or typed below the words. While a box has no room and
+Down is set to Middle or Bottom, the section says so in a line under the rows.
+All of it rides with `next-placement`, so Current is untouched.
+
+Verified on the probe app with `Scripts/playtest/text-box-room-walk.json` (real
+screen captures, Screen Recording granted); 4184 tests green.
+
+Next / open: on a one line label the app offers corner handles only, so the
+bottom edge is not there to drag until the box has room once. Whether short
+boxes should keep their vertical handles is a change to how handles work for
+every layer and was left for the user to judge (raised in the audit).
