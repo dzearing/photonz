@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:03:26.842Z",
-  "updated": "2026-09-07T08:31:54.806Z",
+  "updated": "2026-09-07T08:41:32.477Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-05. Evidence: queue/audits/2026-09-04-surface-in-a-stack.json rough 2, \"Nothing announces the idea. You only learn that stretching both ways makes a piece the background by doing it and then reading the list, or by landing on the piece. There is no hint on the Stretch menu itself.\" That task named the surface everywhere it already exists (the list at the foot of Layout, and the piece's own row) and deliberately left the menu alone. The wording to match is \"Surface behind the rest\". Panel code is PlacementInspector.swift; the Free group wording is \"Stretch both ways\" and stays.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-07T09:35:00.000Z",
       "note": "Verified in the probe app, Screen Recording granted, with a new walk Scripts/playtest/stretch-menu-names-the-surface-walk.json. In a column stack the Horizontal menu reads: Follow group (Left) | Left | Center | Right | Stretch (Surface behind the rest); the Vertical menu on the same piece still reads plain Stretch, which is right because stretching down again changes nothing. The same piece in a Free group reads Follow group (Scale) | Scale | Left | Center | Right | Stretch, word for word what it always did. Real screen captures of both are in the audit. 4293 tests pass."
+    },
+    {
+      "t": "2026-09-07T08:41:32.477Z",
+      "note": "In a stack or a grid, the Stretch that would make a piece the surface now reads 'Stretch (Surface behind the rest)' on the menu itself, in the same words the list at the foot of Layout uses; a group that arranges nothing offers every choice in exactly the words it always did, and nothing about behaviour changes. Core in LayerPlacement.swift (ResolvedPlacement.surfaceTitle, becomesSurface, choiceTitle) with 7 new tests, app in PlacementInspector.swift. 4293 tests pass; verified in the probe with real window captures via Scripts/playtest/stretch-menu-names-the-surface-walk.json. Audit: queue/audits/2026-09-07-stretch-menu-names-the-surface.json. Follow-up filed: one-way-to-make-a-piece-the-surface-behind-the-r"
     }
   ],
-  "started": "2026-09-07T08:31:54.806Z"
+  "started": "2026-09-07T08:31:54.806Z",
+  "completed": "2026-09-07T08:41:32.477Z"
 }

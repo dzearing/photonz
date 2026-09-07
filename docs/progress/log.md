@@ -10715,3 +10715,33 @@ against any readout that answers for the original, which is the class of lie the
 task named.
 
 Next: back to the queue.
+
+## 2026-09-07 — The Stretch menu says what stretching both ways will do
+
+Inside a stack or a grid, a piece stretched both ways steps out of the
+arrangement and becomes the surface the others sit on. The app named that
+everywhere it had already happened and nowhere before it did: the menu offered
+the same bare "Stretch" as every other choice, so the idea was found by picking
+it and reading the list at the foot of Layout afterwards.
+
+The choice now reads `Stretch (Surface behind the rest)`, matching the Follow
+row right above it, which already says the choice first and what it gives you
+second. It says it only where picking it really would make a surface — the
+other direction has to already resolve to stretch, whether from the piece's own
+rule or the group's default — and only in a group that arranges its contents.
+A Free group's menus are word for word what they were.
+
+`ResolvedPlacement` gained `surfaceTitle` (one string, now also behind
+`PlacementOverride.summary`), `becomesSurface(horizontal:)/(vertical:)` and
+`choiceTitle(...:arranged:)`; `PlacementInspector`'s two child-row menus title
+their choices through it. The group's own Contents rows and multi-selection are
+deliberately silent: a default that stretched everything both ways would make
+every piece a surface, and one pick across four layers would make a surface of
+one and a row of the next.
+
+Next: the hint only speaks on the SECOND of the two picks, so the first step
+towards a surface is still unannounced. Filed as
+`one-way-to-make-a-piece-the-surface-behind-the-r`.
+
+Audit: `queue/audits/2026-09-07-stretch-menu-names-the-surface.json`.
+Walk: `Scripts/playtest/stretch-menu-names-the-surface-walk.json`.
