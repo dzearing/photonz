@@ -3250,11 +3250,100 @@ private final class Run {
             throw Failure(description: "could not make a bitmap for \(name)")
         }
         view.cacheDisplay(in: view.bounds, to: rep)
+        drawScrollingPanels(in: view, into: rep)
+        drawTitleBar(over: view, into: rep)
         drawTooltip(over: view, into: rep)
+        fillBackground(of: view, into: rep)
         guard let png = rep.representation(using: .png, properties: [:]) else {
             throw Failure(description: "could not encode \(name).png")
         }
         try png.write(to: out.appendingPathComponent("\(name).png"))
+    }
+
+    /// Paints every scrolling panel back into the picture.
+    ///
+    /// SwiftUI puts a `ScrollView`'s content in a layer-backed subtree that
+    /// AppKit's recursive draw does not reach, so `cacheDisplay` on the window's
+    /// content view comes back with the whole properties dock missing — not
+    /// white, but empty, which is why two snapshots either side of a panel
+    /// scroll used to be byte-identical. Asked directly, the same views draw
+    /// perfectly well, so each scrolling panel is drawn on its own and
+    /// composited where it sits. The clip view is what gets asked: the scroll
+    /// view itself draws nothing, and the clip view is also what bounds the
+    /// picture to the rows actually on screen.
+    private func drawScrollingPanels(in view: NSView, into rep: NSBitmapImageRep) {
+        guard let context = NSGraphicsContext(bitmapImageRep: rep) else { return }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        for clip in scrollingContentViews(in: view) {
+            // `visibleRect` is already what the ancestors have not clipped away,
+            // so a list scrolled half out of the panel around it is drawn as the
+            // half that shows rather than overflowing its own panel.
+            let source = clip.visibleRect
+            guard source.width > 1, source.height > 1,
+                  let clipRep = clip.bitmapImageRepForCachingDisplay(in: source)
+            else { continue }
+            clip.cacheDisplay(in: source, to: clipRep)
+            let image = NSImage(size: source.size)
+            image.addRepresentation(clipRep)
+            var rect = view.convert(source, from: clip)
+            // The bitmap is bottom-up; a flipped view's rect is not.
+            if view.isFlipped { rect.origin.y = view.bounds.height - rect.maxY }
+            image.draw(in: rect)
+        }
+    }
+
+    /// The clip view of every scroll view under `view`, outermost first, so a
+    /// list nested inside a panel is painted over the panel it sits in.
+    private func scrollingContentViews(in view: NSView) -> [NSView] {
+        var found: [NSView] = []
+        if let scroll = view as? NSScrollView, !scroll.contentView.isHidden {
+            found.append(scroll.contentView)
+        }
+        for sub in view.subviews where !sub.isHidden && sub.alphaValue > 0 {
+            found += scrollingContentViews(in: sub)
+        }
+        return found
+    }
+
+    /// The title bar, which is a sibling of the content view rather than part
+    /// of it: the traffic lights and the panel toggle live there, so without
+    /// this the top of every offscreen picture is an empty band.
+    private func drawTitleBar(over view: NSView, into rep: NSBitmapImageRep) {
+        guard let window = view.window, window.styleMask.contains(.titled),
+              let bar = window.standardWindowButton(.closeButton)?.superview,
+              !bar.isHidden, bar.bounds.width > 1, bar.bounds.height > 1,
+              let barRep = bar.bitmapImageRepForCachingDisplay(in: bar.bounds),
+              let context = NSGraphicsContext(bitmapImageRep: rep) else { return }
+        bar.cacheDisplay(in: bar.bounds, to: barRep)
+        let image = NSImage(size: bar.bounds.size)
+        image.addRepresentation(barRep)
+        var rect = view.convert(bar.bounds, from: bar)
+        // The bitmap is bottom-up; a flipped view's rect is not.
+        if view.isFlipped { rect.origin.y = view.bounds.height - rect.maxY }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        image.draw(in: rect)
+        NSGraphicsContext.restoreGraphicsState()
+    }
+
+    /// The window's own background, under everything drawn so far.
+    ///
+    /// A content view runs the full height of the window, so the band behind
+    /// the title bar belongs to it, and nothing in the view tree paints there:
+    /// left alone it comes out fully transparent, which reads as a white gap in
+    /// any viewer. The same is true of the sliver a glass surface would have
+    /// tinted. Painting the window's colour underneath is what a person sees.
+    private func fillBackground(of view: NSView, into rep: NSBitmapImageRep) {
+        guard let color = view.window?.backgroundColor,
+              let context = NSGraphicsContext(bitmapImageRep: rep) else { return }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        color.setFill()
+        // Under, not over: everything already drawn stays exactly as it is.
+        view.bounds.fill(using: .destinationOver)
+        NSGraphicsContext.restoreGraphicsState()
     }
 
     /// A tooltip is its own little window floating over the editor's, so an

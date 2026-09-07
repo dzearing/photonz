@@ -565,15 +565,23 @@ selection latency (numbers from 2026-09-03 in its commit).
   path finds no shadow either the line says INCONCLUSIVE rather than guessing,
   which is what a locked screen produces.
 - **Glass and vibrancy do not render offscreen**: a snapshot shows the
-  window's content, not the system's translucency. Toasts and the capture
-  overlay are not covered; the walk starts at the editor.
-- **The properties dock does not render offscreen at all.** `<name>.png` draws
-  the canvas and the tool bar and leaves the dock's whole column white, so two
-  snapshots taken either side of a `scrollPanel` come back byte for byte
-  identical (measured on mixed-one-look-walk, 2026-09-07). Nothing about the
-  dock can be judged from an offscreen render: use `<name>-sc.png`, and if the
-  Screen Recording grant is missing, say in the audit that there is no picture
-  of the dock rather than showing a blank one.
+  window's content, not the system's translucency. A toast comes out as its
+  words with no pill behind them, and the tinted band a material would lay over
+  the window is missing. The capture overlay is not covered either; the walk
+  starts at the editor.
+- **The properties dock renders offscreen** (fixed 2026-09-07). It did not
+  until then: `<name>.png` drew the canvas and the tool bar and left the dock's
+  whole column empty, so two snapshots either side of a `scrollPanel` came back
+  byte for byte identical. AppKit's recursive draw does not reach the content of
+  a SwiftUI `ScrollView`, which is the dock and every list inside it, so
+  `snapshot` now draws each scroll view's clip view on its own and composites it
+  where it sits, plus the title bar (a sibling of the content view, so the
+  traffic lights and the panel toggle were missing too) and the window's own
+  background underneath. Anything judged by colour still reads `<name>-sc.png`;
+  see the next point. One artifact survives: at a section boundary the panel can
+  show a clipped sliver of the helper line belonging to the section below, which
+  the screen never shows. That is SwiftUI's own direct draw, not the compositing
+  — it lands outside every scrolling region the harness paints.
 - **The offscreen render gets some colors wrong.** It resolves each layer's
   colors on its own, and a plain tool button has come out pure black on the
   dark bar while its neighbour came out pure white. Never judge brightness,

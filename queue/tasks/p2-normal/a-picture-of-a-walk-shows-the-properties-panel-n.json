@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T10:59:23.661Z",
-  "updated": "2026-09-07T12:58:20.358Z",
+  "updated": "2026-09-07T14:02:13.780Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured on 2026-09-07 during the-mixed-one-look-walk task. Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json writes 1-mixed-dock.png and 2-mixed-dock-lower.png with identical md5s while the -sc.png pair differ. The offscreen path is PlaytestHarness.snapshot(_:name:) around line 2885: bitmapImageRepForCachingDisplay + cacheDisplay on the window contentView. The dock is NOT a child window (only HintTooltip.swift adds one), so this is cacheDisplay failing to reproduce the dock hosting view, most likely a layer-backed / material subtree it cannot draw. Likely fix: render through the layer (CALayer.render(in:)) or an ImageRenderer of the dock hosting view, composited into the same bitmap. Docs already updated with the limitation in docs/design/playtest-harness.md.\n\nTriage 2026-09-07: moved p3-low -> p2-normal. Unmanned-loop is a next epic, so its work is normally parked at p3; this one earns the move because it unblocks the focus. Seven of the last day's audits had to add the caveat 'Screen Recording was granted, so these are real captures', which is the same as saying the panel evidence is luck-dependent.",
@@ -34,6 +34,11 @@
     {
       "t": "2026-09-07T12:58:20.357Z",
       "note": "seq 1380 -> 10"
+    },
+    {
+      "t": "2026-09-07T14:02:13.780Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-07T14:02:13.779Z"
 }

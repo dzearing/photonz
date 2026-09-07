@@ -1,0 +1,26 @@
+{
+  "feature": "The properties panel is in the picture",
+  "epic": "unmanned-loop",
+  "summary": "Every picture a scripted walk draws for itself now shows the properties panel, the lists inside it and the window's title bar. Until today that picture stopped at the canvas and left the whole right hand column empty, so a walk report could only show the panel on a machine that had granted screen recording.",
+  "setup": "Nothing to install. This is what the walk pictures in every future audit look like. The three files here came out of Scripts/playtest/mixed-one-look-walk.json.",
+  "try": [
+    { "do": "Open the drawn picture and read the right hand column: every control, every value, the layer rows and their thumbnails.", "shot": "2026-09-07-panel-in-the-picture-render.png" },
+    { "do": "Open the photograph of the same moment and put the two side by side.", "shot": "2026-09-07-panel-in-the-picture-capture-sc.png" },
+    { "do": "Look for anything in the photograph the drawing gets wrong or leaves out." },
+    { "do": "Open the third picture, taken later in the same walk after four controls were set.", "shot": "2026-09-07-panel-in-the-picture-scrolled.png" },
+    { "do": "Check the Appearance section in that one: a stray half line of grey text sits just above the Effects heading, which the real window never shows." },
+    { "do": "Look at the top right of any of them for the panel toggle button, which was missing from drawn pictures until now." }
+  ],
+  "evaluate": [
+    "Reading only the drawing, could you tell whether a control says Mixed, and which one?",
+    "Is the drawing close enough to the photograph that a walk report without a screen recording grant is still worth reading?",
+    "Does the stray half line above Effects make you distrust the rest of the picture, or is it obviously an artifact?",
+    "Is there anything in the photograph you still miss in the drawing badly enough to want it fixed?"
+  ],
+  "rough": [
+    "Screen Recording was granted on this machine, so the photograph here is a real capture. The other two files are deliberately the drawn version, because the drawing is the thing under review.",
+    "Translucency is still not drawn. A toast comes out as its words with no pill behind them, and the tint a glass surface lays over what is under it is missing. Colour judgments still belong to the photograph.",
+    "The stray half line above a section heading is SwiftUI drawing its own content that way. It falls outside every scrolling region the harness paints, so nothing in this change can move it; recorded in docs/design/playtest-harness.md rather than chased.",
+    "The picture is drawn in one more pass per scrolling list than before. The mixed-one-look walk ran 15.1s before and 15.3s after, so the cost does not show."
+  ]
+}
