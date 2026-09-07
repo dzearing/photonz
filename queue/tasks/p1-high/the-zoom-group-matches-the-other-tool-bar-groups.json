@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 12,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:22:35.108Z",
-  "updated": "2026-09-07T18:11:22.475955Z",
+  "updated": "2026-09-07T18:12:09.199Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07. The heights are hand written per group and they differ: the zoom bar uses vertical padding of 10 with horizontal 14 (EditorView.swift lines 1459 and following, around line 1496), the tool bar uses vertical 10 with horizontal 18 (line 737), and several other groups use vertical 8 (lines 437, 494, 564). So the row cannot line up, and the fix is to put the value in EditorChromeLayout beside the other chrome numbers and have every group read it, rather than correcting the zoom bar alone. Note the content inside a group can also set the height: the zoom bar holds a Slider and a Menu whose intrinsic heights may exceed the padding, so check the measured height rather than assuming the padding decides it. For the double click: the zoom readout is the label of a Menu (line 1475 onwards), and a Menu swallows clicks, so a double click gesture on the label alone will not arrive; the runner needs to handle that deliberately, for example a separate hit area or a gesture that recognises before the menu, and must keep the single click opening the menu.",
@@ -44,7 +44,7 @@
     },
     {
       "t": "2026-09-07T18:11:22.475955Z",
-      "note": "reviewed before building: the mock is not involved, this is the user's own report. The one thing the ask hides is a real collision \u2014 a menu opens on the press and owns every event until it closes, so the second click of a double click lands inside the menu. Either the menu waits a moment or the double click cannot exist. Chose the wait, capped at a quarter of a second (EditorChromeLayout.zoomReadoutDoubleClickWindow), and said so in the audit for the user to react to."
+      "note": "reviewed before building: the mock is not involved, this is the user's own report. The one thing the ask hides is a real collision — a menu opens on the press and owns every event until it closes, so the second click of a double click lands inside the menu. Either the menu waits a moment or the double click cannot exist. Chose the wait, capped at a quarter of a second (EditorChromeLayout.zoomReadoutDoubleClickWindow), and said so in the audit for the user to react to."
     },
     {
       "t": "2026-09-07T18:11:22.475955Z",
@@ -73,7 +73,12 @@
     {
       "t": "2026-09-07T18:11:22.475955Z",
       "note": "walks: Scripts/playtest/toolbar-row-lines-up-walk.json, toolbar-row-narrow-walk.json, zoom-readout-double-click-walk.json. Audit: queue/audits/2026-09-07-toolbar-row.json."
+    },
+    {
+      "t": "2026-09-07T18:12:09.198Z",
+      "note": "Every group along the bottom of the canvas is 48pt on one centre line, from EditorChromeLayout.toolBarGroupHeight; double clicking the zoom percentage goes to actual size while a single click still opens the stop menu. Measured in the running app with a new toolBar playtest step (before: 48/45/35pt; after: 48pt everywhere, wide and narrow, in eight tool states) and verified in three walks. Audit: queue/audits/2026-09-07-toolbar-row.json. Committed as afe0fb8f."
     }
   ],
-  "started": "2026-09-07T17:36:32.248Z"
+  "started": "2026-09-07T17:36:32.248Z",
+  "completed": "2026-09-07T18:12:09.199Z"
 }
