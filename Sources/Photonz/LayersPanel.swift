@@ -2687,7 +2687,8 @@ struct ShadowInspector: View {
     /// Same for the colour, which sits on the row in the parts list.
     var showsColor = true
     /// Whether this is a section of its own, with a section's padding. Inside
-    /// the parts list it is already indented under the row it belongs to.
+    /// the parts list the list supplies the margins, so the shadow's rows sit
+    /// in the same column as every part above them.
     var inset = true
 
     var body: some View {
@@ -2700,47 +2701,57 @@ struct ShadowInspector: View {
         let ids = shadows.layerIDs
         VStack(alignment: .leading, spacing: 8) {
             let isMixed = selection.shadowIsMixed
-            HStack(spacing: 6) {
-                if showsSwitch {
-                    // The caption is the switch's own, and it is out here
-                    // rather than inside the Toggle so that the one step
-                    // quieter below lands on the switch alone: a caption
-                    // dimmed with it would fade into the notes around it.
-                    Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
-                    Toggle("", isOn: Binding(
-                        // A switch has on and off and nothing else, so while
-                        // the picked layers disagree it shows neither: the
-                        // first press resolves to ON for all of them, the way
-                        // a mixed checkbox has always behaved here, and it
-                        // never returns to Mixed, because Mixed is a report
-                        // about the selection rather than a state anyone sets.
-                        get: { isMixed ? false : selection.hasShadowEverywhere },
-                        set: { editorState.setSelectionShadowEnabled(isMixed ? true : $0) }))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .accessibilityLabel("Enable Shadow")
-                    // Off is a true answer — none of them have one — so a
-                    // disagreeing selection may not wear it at full strength.
-                    .opacity(isMixed ? MixedLook.controlOpacity : 1)
-                    .help(shadowSwitchHelp(selection, isMixed: isMixed))
-                    .playtestControl("Enable Shadow",
-                                     detail: isMixed ? "Shadow, mixed"
-                                         : (selection.hasShadowEverywhere ? "Shadow, on" : "Shadow, off"))
-                    // The word goes beside the switch, since there is no room
-                    // for it inside one, and after it rather than between it
-                    // and its caption so that nothing moves on a selection
-                    // that agrees.
-                    if isMixed { MixedWord() }
+            // The way back for a copy that has picked its own shadow, when
+            // there is one. Worked out up here because with the switch up on
+            // the parts row this line has nothing else on it, and an empty
+            // line still takes its spacing: it pushed Blur further from the
+            // Shadow row than Width sits from Outline.
+            let revert: UUID? = soleLayerID(selection.layerIDs).flatMap {
+                editorState.isInstanceStyleOwn(instance: $0, field: .shadow) ? $0 : nil
+            }
+            if showsSwitch || revert != nil {
+                HStack(spacing: 6) {
+                    if showsSwitch {
+                        // The caption is the switch's own, and it is out here
+                        // rather than inside the Toggle so that the one step
+                        // quieter below lands on the switch alone: a caption
+                        // dimmed with it would fade into the notes around it.
+                        Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
+                        Toggle("", isOn: Binding(
+                            // A switch has on and off and nothing else, so while
+                            // the picked layers disagree it shows neither: the
+                            // first press resolves to ON for all of them, the way
+                            // a mixed checkbox has always behaved here, and it
+                            // never returns to Mixed, because Mixed is a report
+                            // about the selection rather than a state anyone sets.
+                            get: { isMixed ? false : selection.hasShadowEverywhere },
+                            set: { editorState.setSelectionShadowEnabled(isMixed ? true : $0) }))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .controlSize(.mini)
+                        .accessibilityLabel("Enable Shadow")
+                        // Off is a true answer — none of them have one — so a
+                        // disagreeing selection may not wear it at full strength.
+                        .opacity(isMixed ? MixedLook.controlOpacity : 1)
+                        .help(shadowSwitchHelp(selection, isMixed: isMixed))
+                        .playtestControl("Enable Shadow",
+                                         detail: isMixed ? "Shadow, mixed"
+                                             : (selection.hasShadowEverywhere ? "Shadow, on" : "Shadow, off"))
+                        // The word goes beside the switch, since there is no room
+                        // for it inside one, and after it rather than between it
+                        // and its caption so that nothing moves on a selection
+                        // that agrees.
+                        if isMixed { MixedWord() }
+                    }
+                    // A shadow is ONE part of the look: its softness, size,
+                    // distance, direction, opacity and colour are six controls for
+                    // the one thing a person means by "the shadow", so there is one
+                    // way back rather than six identical arrows.
+                    if let revert {
+                        InstanceStyleRevert(layerID: revert, field: .shadow)
+                    }
+                    Spacer(minLength: 0)
                 }
-                // A shadow is ONE part of the look: its softness, size,
-                // distance, direction, opacity and colour are six controls for
-                // the one thing a person means by "the shadow", so there is one
-                // way back rather than six identical arrows.
-                if let only = soleLayerID(selection.layerIDs) {
-                    InstanceStyleRevert(layerID: only, field: .shadow)
-                }
-                Spacer(minLength: 0)
             }
             // Said BEFORE the rows, not after them, because a switch reading
             // off above six rows full of numbers is a contradiction until you

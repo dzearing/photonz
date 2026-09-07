@@ -34,6 +34,26 @@
     {
       "t": "2026-09-07T04:08:25.090Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T04:23:21.087682Z",
+      "note": "Adversarial review before building. The ask is unambiguous and I agree with it, so nothing to send back: the chevron was a second step in front of a decision the tick had already made. The one thing worth arguing was what tells a part row apart from a settings row once the indent is gone, since a slider's label wears the same size and colour as a part's name. Answer: the tick column. Only a part row has a checkbox and a colour well at fixed x, and no settings row does, so the list still reads as parts with things under them. Backed up by proximity rather than a step to the right: 16 pt between parts, 6 pt from a row to its own settings. Kept it to that; did NOT restyle the settings labels, which would have been inventing a second typography rule for the same list."
+    },
+    {
+      "t": "2026-09-07T04:23:21.087682Z",
+      "note": "Built. Sources/Photonz/PartsInspector.swift: chevron view, its playtest control, the title tap gesture, the openPart @AppStorage and its key are all gone; settings render whenever the part is on and has settings; the leading padding is off both the settings and the reach note. Outer VStack spacing 10 -> 16 so the gap between parts beats the gap inside one. PlaytestSetupRunner no longer forgets inspector.openPart (the key no longer exists). Scripts/playtest/one-outline-two-kinds-walk.json dropped its 'press Settings in Outline' step, since there is nothing to press."
+    },
+    {
+      "t": "2026-09-07T04:23:21.087682Z",
+      "note": "Second adversarial pass, on the probe. Found the shadow's settings started FURTHER from the Shadow row (14 pt) than Width sits from Outline (6 pt): ShadowInspector still drew the line its own switch used to sit on, empty, and an empty line still takes its spacing both sides. Fixed in LayersPanel.swift by skipping that line when it holds nothing, which is when the switch is borrowed by the parts row and the layer has no shadow override to revert. After the fix both gaps measure the same in the panel dump (Outline 470 -> Width 432, Shadow 399 -> Blur 361)."
+    },
+    {
+      "t": "2026-09-07T04:23:21.087682Z",
+      "note": "Verified against every acceptance item with real window captures, Screen Recording granted. New walk Scripts/playtest/parts-settings-inline-walk.json: as-drawn shows Outline's Width with no press and no Settings control anywhere in the dump; three-on shows Width AND all five shadow sliders at once; all-off shows three switches and nothing else, no colour wells or sliders left behind; back-as-drawn is byte-for-byte the same control list and the same y for every row as as-drawn, so switching on and off repeatedly leaves the panel as it started. Column alignment: Appearance's Width and shadow sliders sit at x=1148, the same x as the Effects sliders, which is the full section width, so there is no indent left. A second run at 1160x640 with everything on kept full row heights and pushed Direction and Opacity below the fold, so the dock scrolls rather than squeezes. Suite green at 4240; one-outline-two-kinds walk still ok at 48 steps."
+    },
+    {
+      "t": "2026-09-07T04:23:21.087682Z",
+      "note": "Decided the reach note question the task left open: the note follows the settings out to the margin. Checked it on a mixed two-box selection, where it reads in line with the Position & Size note, the Appearance caption and the Effects note, so the whole dock has one left edge for anything a row says about itself. Doc updated: docs/design/shape-parts.md 'The panel'. Audit: queue/audits/2026-09-06-parts-settings-inline.json with three real captures."
     }
   ],
   "started": "2026-09-07T04:08:25.090Z"

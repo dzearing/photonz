@@ -1,0 +1,29 @@
+{
+  "feature": "A part you switch on shows its settings straight away",
+  "epic": "ui-building",
+  "summary": "In the Appearance list, ticking a part now puts its settings on the lines right under its row, at the same left edge as everything else. There is no arrow to press, no one-part-at-a-time rule, and no indent: switch Outline and Shadow both on and both sets of settings are simply there.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Draw a rectangle with the R tool and click it with the select tool.",
+  "try": [
+    { "do": "Draw a rectangle, then press V to go back to the select tool.", "shot": "2026-09-06-parts-settings-inline-1-as-drawn.png" },
+    { "do": "Read the Appearance section: Outline's Width is already under it, with no arrow anywhere in the list." },
+    { "do": "Tick Shadow.", "shot": "2026-09-06-parts-settings-inline-2-three-on.png" },
+    { "do": "Check that Outline's Width and the shadow's five rows are both readable at once, without opening either." },
+    { "do": "Untick Fill, then Outline, then Shadow.", "shot": "2026-09-06-parts-settings-inline-3-all-off.png" },
+    { "do": "Tick all three again, then untick Shadow, and check the section reads exactly as it did in step 1." },
+    { "do": "Make the window short (about 640 pt tall) with every part on, and scroll the dock." }
+  ],
+  "evaluate": [
+    "With no indent, is it still obvious that Width belongs to Outline and Blur belongs to Shadow, or do the settings read as parts of their own?",
+    "The only thing separating a part row from a settings row is the tick column and the gap. Is that enough, or should the gap between parts be wider than it is?",
+    "With every part on, the section is about twice as tall as before and the dock scrolls. Does that feel like the right trade for never pressing an arrow?",
+    "The sentence under a row that says how many layers it reaches now sits at the margin with the settings rather than indented. Does that read better or worse?",
+    "Shadow's softness slider is called Blur, and Effects has a Blur too. Now that both can be on screen at once, do the two Blurs collide?"
+  ],
+  "rough": [
+    "Screen Recording was granted for this run, so all three shots are real window captures from Scripts/playtest/parts-settings-inline-walk.json, not offscreen renders.",
+    "The panel is taller now. With Fill, Outline and Shadow all on, the Appearance section grows from a fixed height to about 300 pt, and in a 640 pt window the last two shadow sliders fall below the fold and have to be scrolled to. The fold was what stopped that; it is gone because the user asked for it to go, and the dock scrolls rather than squeezing.",
+    "The reach note under a row (\"1 of the 2 selected layers has a shadow\") moved out to the margin with the settings, so everything a row says below itself shares one left edge. That was a judgment call, not something the task decided.",
+    "A shadow's settings used to start further from its row than Width sits from Outline, because the shadow section still drew the empty line its own switch used to sit on. That line is now skipped when there is nothing on it, so the two gaps match.",
+    "A part that only SOME of the picked layers have still shows no settings at all. That is unchanged and already filed as its own task (the-settings-of-a-part-only-some-of-them-have-ca)."
+  ]
+}

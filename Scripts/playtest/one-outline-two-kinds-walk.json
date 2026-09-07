@@ -113,18 +113,9 @@
       "name": "outline-3-switched-on-doc"
     },
     {
-      "do": "press",
-      "control": "Settings",
-      "in": "Outline"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.7
-    },
-    {
       "do": "describe",
-      "stage": "4-width-open",
-      "note": "ONE Width under the one row, reading whichever line each of them actually has."
+      "stage": "4-width-visible",
+      "note": "ONE Width on the line under the Outline row, with no arrow to press, reading whichever line each of them actually has."
     },
     {
       "do": "panel",

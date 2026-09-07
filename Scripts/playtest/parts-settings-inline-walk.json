@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/parts-settings-inline",
+  "seed": "Ticking a part used to put its settings behind a chevron, and only one part could be open at a time. This walk draws a box, reads the Appearance list with one part on, switches every part on, switches every part off, and puts them back, checking the settings are simply there under each switched on part and gone the moment it is switched off.",
+  "setup": { "forget": ["panel", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 760, "canvasHeight": 520, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [260, 180], "to": [520, 360], "steps": 10 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.9 },
+    {
+      "do": "describe",
+      "stage": "1-as-drawn",
+      "note": "the box as drawn. Whatever is switched on shows its settings on the line below it, at the same left edge as the row, with no chevron anywhere in the list."
+    },
+    { "do": "panel", "stage": "as-drawn" },
+    { "do": "snapshot", "name": "parts-1-as-drawn" },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "2-three-on",
+      "note": "shadow switched on. Every switched on part now shows its own settings at once: Outline's Width and the shadow's five rows are both readable without opening either."
+    },
+    { "do": "panel", "stage": "three-on" },
+    { "do": "snapshot", "name": "parts-2-three-on" },
+    { "do": "press", "control": "Switch", "in": "Fill" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Switch", "in": "Outline" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "3-all-off",
+      "note": "everything off. Three rows and nothing else: no width, no shadow rows, no colour wells left behind by a part nobody can see."
+    },
+    { "do": "panel", "stage": "all-off" },
+    { "do": "snapshot", "name": "parts-3-all-off" },
+    { "do": "press", "control": "Switch", "in": "Fill" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Switch", "in": "Outline" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "4-back-as-drawn",
+      "note": "switched off and on again. The list has to read exactly as it did at stage 1: same rows, same settings, nothing left open and nothing lost."
+    },
+    { "do": "panel", "stage": "back-as-drawn" },
+    { "do": "snapshot", "name": "parts-4-back-as-drawn" }
+  ]
+}

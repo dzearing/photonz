@@ -4,7 +4,7 @@ import SwiftUI
 /// The parts a layer is made of, as one list (`next-shape-parts`).
 ///
 /// Every part works the same way: a tick that switches it on or off, the colour
-/// it paints, and its own settings folding open underneath. Learn to take the
+/// it paints, and its own settings on the lines underneath. Learn to take the
 /// outline off a box and you already know how to take its fill off, and how to
 /// add whatever part arrives next.
 ///
@@ -14,32 +14,27 @@ import SwiftUI
 /// switch in a section of its own — so there was no way to draw a box with no
 /// ring round it, which is what the user hit on 2026-09-06.
 ///
-/// The layout is the one the user picked on the decision card: one list, with
-/// the settings folding open under the row you click and folding away when you
-/// click another. It keeps the panel the same height whatever is switched on,
-/// which is what stops a shadow's five sliders pushing the sections below it
-/// off the bottom of the dock.
+/// The layout is one list, and a part that is switched on shows its settings
+/// on the lines directly below it, in the same column as every other row.
+/// Ticking a part is already the person saying they want it, so there is
+/// nothing left to press: no chevron, no remembering which row is open, no
+/// indent. Parts are told apart by the gap between them rather than by a step
+/// to the right, so a switched on part and its settings read as one block
+/// (asked for by the user on 2026-09-06, replacing the fold that shipped the
+/// day before).
 ///
 /// The model itself — what a part is, which parts a layer has — is
 /// `PhotonzCore/LayerParts.swift` and `docs/design/shape-parts.md`.
 struct PartsInspector: View {
     @Environment(EditorState.self) private var editorState
 
-    /// Which part is unfolded. Remembered across selections and across
-    /// launches: someone who works in shadows all afternoon should not have to
-    /// open the shadow again on every box they click.
-    @AppStorage(PartsInspector.openPartKey) private var openPart = ""
-    static let openPartKey = "inspector.openPart"
-
     var body: some View {
         let rows = editorState.layerPartRows
-        VStack(alignment: .leading, spacing: 10) {
+        // Wider than the gap inside a part (6), so the eye groups a part with
+        // the settings under it without either being pushed off the margin.
+        VStack(alignment: .leading, spacing: 16) {
             ForEach(rows) { row in
-                PartRowView(row: row, isOpen: openPart == row.id) {
-                    // Clicking the open part closes it, so the panel can be put
-                    // back the way it was without hunting for another row.
-                    openPart = openPart == row.id ? "" : row.id
-                }
+                PartRowView(row: row)
             }
             if let caption {
                 Text(caption)
@@ -63,27 +58,24 @@ struct PartsInspector: View {
     }
 }
 
-/// One part: its name, its switch, its colour, and the chevron that opens its
-/// settings.
+/// One part: its name, its switch, its colour, and its settings underneath.
 ///
 /// A part that is switched off shows its name and its switch and NOTHING else.
 /// That is the whole point of the switch: off has to look off, so the colour
 /// and the settings of an outline nobody can see are not sitting there
-/// pretending to do something.
+/// pretending to do something. Switch it on and its settings are simply there.
 private struct PartRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerPartRow
-    let isOpen: Bool
-    let toggleOpen: () -> Void
 
     /// Whether this part is showing anything at all. A colour that is a
     /// property rather than a part — a line's ink, a letter's ink — has no
     /// switch and is therefore always on.
     private var isOn: Bool { row.hasSwitch ? row.isOn : true }
 
-    /// Whether there is anything to unfold: only while the part is on, since
-    /// the settings of an absent part are settings for nothing.
-    private var opens: Bool { isOn && row.hasSettings }
+    /// Whether this part has settings to show: only while it is on, since the
+    /// settings of an absent part are settings for nothing.
+    private var showsSettings: Bool { isOn && row.hasSettings }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -95,11 +87,6 @@ private struct PartRowView: View {
                     .minimumScaleFactor(0.85)
                     .frame(width: ColorPartLayout.labelWidth,
                            height: ColorPartLayout.rowHeight, alignment: .leading)
-                    // The name is part of the chevron's target: a 16pt arrow at
-                    // the far end of the row is a small thing to hit for the
-                    // most common move in the section.
-                    .contentShape(Rectangle())
-                    .onTapGesture { if opens { toggleOpen() } }
                 // Always this wide, blank or not, so every colour in the list
                 // starts at the same left edge whether its part has a switch.
                 Group {
@@ -120,20 +107,17 @@ private struct PartRowView: View {
                                minHeight: ColorPartLayout.rowHeight, alignment: .leading)
                 }
                 Spacer(minLength: 0)
-                if opens { chevron }
             }
+            // Out at the margin with the settings: everything a row has to say
+            // below itself shares one left edge, so nothing under a part is a
+            // step further in than anything else under it.
             if let note = row.reachNote {
                 Text(note)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.leading, ColorPartLayout.labelWidth + ColorPartLayout.spacing)
             }
-            if opens, isOpen {
-                settings
-                    .padding(.leading, ColorPartLayout.labelWidth + ColorPartLayout.spacing)
-                    .transition(.opacity)
-            }
+            if showsSettings { settings }
         }
         // Every row holds a control called Switch and one called Color, so the
         // row's own word is what tells the outline's from the fill's:
@@ -209,21 +193,6 @@ private struct PartRowView: View {
     }
 
     // MARK: The settings
-
-    @ViewBuilder private var chevron: some View {
-        Button(action: toggleOpen) {
-            Image(systemName: "chevron.right")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .rotationEffect(.degrees(isOpen ? 90 : 0))
-                .frame(width: 16, height: ColorPartLayout.rowHeight)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(isOpen ? "Hide the \(row.title.lowercased()) settings"
-                     : "Show the \(row.title.lowercased()) settings")
-        .playtestControl("Settings", detail: isOpen ? "open" : "closed")
-    }
 
     @ViewBuilder private var settings: some View {
         switch row.part {

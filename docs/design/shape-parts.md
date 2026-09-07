@@ -7,7 +7,8 @@ half-applied is worse than the mess it replaced.
 
 Status: **built in Next**, behind `next-shape-parts` (on by default there).
 The layout was the user's call and they took it on 2026-09-06: *one list,
-settings unfold*. Current is untouched.
+settings unfold*. Later the same day they asked for the fold to go: a part that
+is switched on shows its settings straight away. Current is untouched.
 
 ## Why
 
@@ -136,11 +137,21 @@ has to hold still when the selection changes.
 ## The panel
 
 One section, headed **Appearance**, in the slot the Color section used to hold.
-Inside it one row per part: the part's name, a tick, the colour it paints, and a
-chevron where the part has settings of its own. Click the chevron (or the name)
-and that part's settings unfold underneath; open another and the first folds
-away, so the section stays short whatever is switched on. The part you left open
-stays open as you pick other layers, and across launches.
+Inside it one row per part: the part's name, a tick, and the colour it paints.
+A part that is switched ON also shows its own settings on the lines directly
+below its row, at the same left edge as the row, and every switched on part
+shows them at once. Ticking a part is already the person saying they want it, so
+there is nothing more to press: no chevron, no remembering which part is open,
+no indent.
+
+It shipped on 2026-09-06 with the settings folded behind a chevron and one part
+open at a time, which kept the section a fixed height; the user asked for the
+fold to go the same day. The section is therefore as tall as what is switched on
+(a shadow adds five rows), and the dock scrolls. Parts are told apart from their
+settings by the tick column, which only a part row has, and by the gap: a part
+sits 16 pt from the one above it and its settings sit 6 pt under its own row.
+Anything a row says below itself, including the sentence about how many of the
+picked layers it reaches, shares that one left edge.
 
 A rectangle's whole panel goes from four sections to three:
 
@@ -177,6 +188,6 @@ Two things did not go where the original report asked, and both are deliberate:
 - `PhotonzCore/LayerParts.swift` — the model: what a part is, which parts a
   selection has, and switching the outline on and off. Tested in
   `Tests/PhotonzCoreTests/LayerPartsTests.swift`.
-- `Photonz/PartsInspector.swift` — the list, the rows and the unfolding.
+- `Photonz/PartsInspector.swift` — the list, the rows and their settings.
 - The old `SelectionColorInspector` and `ShadowInspector` are still what Current
   draws, unchanged.
