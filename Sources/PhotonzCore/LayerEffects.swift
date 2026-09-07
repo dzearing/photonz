@@ -22,12 +22,17 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     case blur
     /// What the layer throws behind it, or has cast into it.
     case shadow
+    /// A ring round the layer, sitting inside its edge, on it, or outside it.
+    /// A shape already HAS one line — its Outline, in Appearance — so every
+    /// border in this list is an EXTRA one, which is why there can be several.
+    case border
 
     /// What the row is called on screen.
     public var title: String {
         switch self {
         case .blur: return "Blur"
         case .shadow: return "Shadow"
+        case .border: return "Border"
         }
     }
 
@@ -39,7 +44,9 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     public var isCountable: Bool {
         switch self {
         case .blur: return false
-        case .shadow: return true
+        // A card wants a dark hairline tight to its edge AND a pale halo
+        // outside it, so a border is countable too.
+        case .shadow, .border: return true
         }
     }
 
@@ -53,7 +60,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     public var isPinned: Bool {
         switch self {
         case .blur: return true
-        case .shadow: return false
+        case .shadow, .border: return false
         }
     }
 
@@ -61,7 +68,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     public var paintsAColor: Bool {
         switch self {
         case .blur: return false
-        case .shadow: return true
+        case .shadow, .border: return true
         }
     }
 }
@@ -87,6 +94,48 @@ public struct BlurEffect: Hashable, Codable, Sendable {
     }
 }
 
+/// A ring round the layer, added rather than simply there.
+///
+/// The Outline in Appearance is the ONE line a shape has, drawn on its own
+/// boundary. A border is an EXTRA one, which is why you can add several: an
+/// inner hairline and an outer halo are two entries, told apart by nothing more
+/// than where each sits (`BorderPosition`).
+public struct BorderEffect: Hashable, Codable, Sendable {
+    /// How thick the line is, in document points.
+    public var width: CGFloat
+    public var colorHex: String
+    /// Which side of the layer's edge it sits on. This is the whole of what
+    /// makes an inner border and an outer border two different things.
+    public var position: BorderPosition
+    /// Whether it paints at all. Off keeps every number on it, exactly as a
+    /// shadow's tick does.
+    public var isOn: Bool
+
+    /// What a border looks like the moment it is added: thick enough to see at
+    /// a glance without swamping a small shape.
+    public static let startingWidth: CGFloat = 2
+    /// How far the Width slider goes, matching the outline's own range so one
+    /// ring cannot reach somewhere the other cannot.
+    public static let widthRange: ClosedRange<CGFloat> = 0...40
+
+    public init(width: CGFloat = BorderEffect.startingWidth,
+                colorHex: String = "#000000",
+                position: BorderPosition = .outside,
+                isOn: Bool = true) {
+        self.width = width
+        self.colorHex = colorHex
+        self.position = position
+        self.isOn = isOn
+    }
+
+    /// Whether this entry puts anything on the canvas.
+    public var paints: Bool { isOn && width > 0 }
+
+    /// How far it reaches PAST the layer's edge. Zero for an inside ring, which
+    /// is why an inner border never makes a layer take up more room.
+    public var outset: CGFloat { position.outset(width: width) }
+}
+
 /// One entry in the Effects list.
 ///
 /// This is the extension point the panel is built on: **a new effect is a new
@@ -96,11 +145,13 @@ public struct BlurEffect: Hashable, Codable, Sendable {
 public enum LayerEffect: Hashable, Codable, Sendable {
     case blur(BlurEffect)
     case shadow(ShadowStyle)
+    case border(BorderEffect)
 
     public var kind: EffectKind {
         switch self {
         case .blur: return .blur
         case .shadow: return .shadow
+        case .border: return .border
         }
     }
 
@@ -111,12 +162,14 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             switch self {
             case .blur(let blur): return blur.isOn
             case .shadow(let shadow): return shadow.isOn
+            case .border(let border): return border.isOn
             }
         }
         set {
             switch self {
             case .blur(var blur): blur.isOn = newValue; self = .blur(blur)
             case .shadow(var shadow): shadow.isOn = newValue; self = .shadow(shadow)
+            case .border(var border): border.isOn = newValue; self = .border(border)
             }
         }
     }
@@ -133,10 +186,16 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         set { if let newValue, case .blur = self { self = .blur(newValue) } }
     }
 
+    /// The border this entry holds, or nil when it is not a border.
+    public var border: BorderEffect? {
+        get { if case .border(let border) = self { return border } else { return nil } }
+        set { if let newValue, case .border = self { self = .border(newValue) } }
+    }
+
     // Written by hand rather than synthesized, so the saved file reads
     // `{"kind":"shadow","shadow":{…}}` instead of Swift's `{"shadow":{"_0":…}}`.
     // A file is a thing people open, and a new kind should be legible in it.
-    private enum CodingKeys: String, CodingKey { case kind, blur, shadow }
+    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -144,6 +203,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         switch kind {
         case .blur: self = .blur(try c.decode(BlurEffect.self, forKey: .blur))
         case .shadow: self = .shadow(try c.decode(ShadowStyle.self, forKey: .shadow))
+        case .border: self = .border(try c.decode(BorderEffect.self, forKey: .border))
         }
     }
 
@@ -153,6 +213,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         switch self {
         case .blur(let blur): try c.encode(blur, forKey: .blur)
         case .shadow(let shadow): try c.encode(shadow, forKey: .shadow)
+        case .border(let border): try c.encode(border, forKey: .border)
         }
     }
 }
@@ -161,40 +222,50 @@ extension EffectKind: Codable {}
 
 /// What the plus on the Effects header offers.
 ///
-/// Inner and outer are a SETTING on one effect rather than two effects, so both
-/// shadow entries below build the same kind of row. The menu still names them
-/// in full, because somebody hunting for an inner shadow is scanning for those
-/// two words and a popup they have not opened yet is not something you can
-/// scan.
+/// One entry per KIND, and never one entry per setting. Inner and outer are a
+/// setting on one effect rather than two effects, so the menu says Shadow once
+/// and the row it becomes carries the Kind that turns it into an inner one; the
+/// same is true of a border, whose Position is what makes an inner one and an
+/// outer one two of them. Splitting a kind across two menu items was the thing
+/// the user reported on 2026-09-07: it made the list read as if inner and outer
+/// were unrelated ideas, and it still left no way to add a border at all.
 public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiable {
-    case dropShadow
-    case innerShadow
+    case shadow
+    case border
     case blur
 
     public var id: String { rawValue }
 
-    /// What the plus menu calls it.
-    public var title: String {
-        switch self {
-        case .dropShadow: return ShadowKind.drop.addTitle
-        case .innerShadow: return ShadowKind.inner.addTitle
-        case .blur: return EffectKind.blur.title
-        }
-    }
+    /// What the plus menu calls it: the same word the row will wear, so what
+    /// you asked for and what arrives are named the same thing.
+    public var title: String { kind.title }
 
     /// The row it becomes once added.
     public var kind: EffectKind {
         switch self {
-        case .dropShadow, .innerShadow: return .shadow
+        case .shadow: return .shadow
+        case .border: return .border
         case .blur: return .blur
+        }
+    }
+
+    /// One line saying what this does, for the menu item's own help.
+    public var summary: String {
+        switch self {
+        case .shadow: return "Thrown behind the layer, or cast into it"
+        case .border: return "An extra ring, inside the layer's edge or outside it"
+        case .blur: return "Softens the whole layer"
         }
     }
 
     /// The entry it adds, born with settings that already look like something.
     public var newEffect: LayerEffect {
         switch self {
-        case .dropShadow: return .shadow(ShadowStyle(kind: .drop))
-        case .innerShadow: return .shadow(ShadowStyle(kind: .inner))
+        case .shadow: return .shadow(ShadowStyle(kind: .drop))
+        // Outside, because the one line a shape already HAS is drawn inside its
+        // edge: a border landing in the same place would look like nothing
+        // happened.
+        case .border: return .border(BorderEffect())
         case .blur: return .blur(BlurEffect())
         }
     }
@@ -240,6 +311,32 @@ extension LayerStyle {
 
     /// How many entries at the top of the list hold a fixed place.
     public var pinnedCount: Int { effects.prefix { $0.kind.isPinned }.count }
+
+    /// Every ring somebody added, in the order the list holds them: the first
+    /// is nearest the eye, so it paints over the ones below it.
+    public var borderEffects: [BorderEffect] { effects.compactMap(\.border) }
+
+    /// The rings that actually paint: switched on, and not zero wide.
+    public var paintedBorders: [BorderEffect] { borderEffects.filter(\.paints) }
+
+    /// How far the furthest added ring reaches past the layer's edge.
+    ///
+    /// The furthest one decides rather than the sum of them: two rings round
+    /// the same box overlap, they do not stack end to end.
+    public var borderEffectOutset: CGFloat { paintedBorders.map(\.outset).max() ?? 0 }
+
+    /// The border at a place in the LIST — not a place among the borders —
+    /// because that is the number a row in the panel already knows.
+    public func borderEffect(at index: Int) -> BorderEffect? { effect(at: index)?.border }
+
+    /// Changes one border in place, and does nothing at all when the entry
+    /// there is not a border.
+    public mutating func updateBorderEffect(at index: Int,
+                                            _ mutate: (inout BorderEffect) -> Void) {
+        guard var border = borderEffect(at: index) else { return }
+        mutate(&border)
+        effects[index] = .border(border)
+    }
 }
 
 /// One row of the Effects list, and exactly which of the picked layers it
@@ -432,6 +529,37 @@ extension PhotonzDocument {
                 let moved = target.style.effects.remove(at: from)
                 target.style.effects.insert(moved, at: to)
             }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// Changes one entry in the list on every picked layer that has one there.
+    /// Returns how many took the change.
+    @discardableResult
+    public mutating func updateEffect(layerIDs: [UUID], at index: Int,
+                                      _ mutate: (inout LayerEffect) -> Void) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  layer.style.effect(at: index) != nil else { continue }
+            updateLayer(id: id) { $0.style.updateEffect(at: index, mutate) }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// One border's settings, on every picked layer whose list holds a border
+    /// at that place. A layer with a shadow there is left alone rather than
+    /// having its shadow quietly turned into a ring.
+    @discardableResult
+    public mutating func updateBorderEffect(layerIDs: [UUID], at index: Int,
+                                            _ mutate: (inout BorderEffect) -> Void) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  layer.style.borderEffect(at: index) != nil else { continue }
+            updateLayer(id: id) { $0.style.updateBorderEffect(at: index, mutate) }
             changed += 1
         }
         return changed

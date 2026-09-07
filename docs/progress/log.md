@@ -2,6 +2,61 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-07 — A border is something you add, and a shadow is one entry (go loop)
+
+Queue task `border-is-an-effect-you-can-add-and-shadow-is-on` (epic
+`ui-building`), reported by the user in two parts: there was no way to add a
+border at all, and the plus offered a Shadow and an Inner Shadow as if they were
+unrelated effects.
+
+**Reproduced before touching anything.** `AddableEffect` held exactly
+`dropShadow`, `innerShadow` and `blur`. The only edge in the app was the Outline
+part in Appearance: one line on the layer's own boundary, one per layer, no
+second copy. So a card with a pale halo outside it and a dark hairline inside it
+could not be expressed, and the two shadow entries were one effect named twice,
+since `ShadowStyle.kind` has always held Drop or Inner.
+
+**Border is a new case in `LayerEffect` and nothing else changed.** That was the
+promise the panel was built on and this is the first time it was tested: a
+`BorderEffect` with a width, a colour, a Position and a tick, countable and
+draggable, and the plus, the cross, the grip, the reach sentence over a
+selection and the saved file all took it without being touched. The plus says
+**Shadow, Border, Blur** now, one item per kind.
+
+**Outline and Border are different things, and the panel says which by where it
+puts them.** Appearance holds the ONE line a layer has; Effects holds the extra
+ones you added, however many. That is the user's own rule from earlier the same
+day, so nothing new had to be invented to answer it. Cut from the design doc's
+table on the way: it wanted a border to carry an "Offset (Inside/Outside)",
+which is the question the Outline row's Position popup already asks in the same
+three words. One word, one idea. Two outside borders of different widths already
+stack into a real two-colour double ring, so nothing needed a distance to be
+worth adding twice.
+
+**Found by using it, not by a test.** An 11pt outside ring round a square box
+came back with rounded outer corners: `ringed` grew the corner radius by the
+outset, which is right for a corner that IS round and wrong for one that is not.
+A ring round a square button stays square now, a ring round a rounded one is
+still concentric, and that fixed the Appearance outline's Outside position on
+pictures, frames and groups too, which had shipped that morning carrying the
+same bug.
+
+**The harness learned to tell two of the same row apart.** A control now names
+every row it sits inside, widest first, so a walk can say `Border 2, Width`; two
+borders each hold a row called Width and neither could be pressed before. The
+guard that forbids naming a menu by a value it wears now skips the plus, which
+is a list of actions and wears nothing.
+
+Perf: the composite path for a layer with no border is unchanged; 12MP/10-layer
+render median 37.9ms, group and interactive-edit checks all inside budget.
+Tests: `Scripts/test.sh` green, 4592 tests in 384 suites.
+
+Audit: `queue/audits/2026-09-07-border-effect.json`, with real window captures.
+Open questions asked there: whether people still find an inner shadow now the
+menu says Shadow once, whether Outline and Border read as two different things
+cold, and whether an inner shadow should be cast into the fill rather than into
+the layer wearing its rings.
+
 ## 2026-09-07 — The bottom row lines up, and the zoom answers a double click (go loop)
 
 Queue task `the-zoom-group-matches-the-other-tool-bar-groups` (epic

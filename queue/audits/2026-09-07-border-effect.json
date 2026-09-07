@@ -1,0 +1,32 @@
+{
+  "feature": "Border is an effect you can add",
+  "epic": "ui-building",
+  "summary": "You can now add a border to any layer, as many as you like, each with its own colour, width and side of the edge, so an inner one and an outer one are two entries in the list. The plus also offers one Shadow instead of two: the row it adds carries the switch that makes it inner.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Draw a rectangle and look at the Effects section under Appearance.",
+  "try": [
+    { "do": "Draw a rectangle, then switch its Outline off in Appearance so the only lines on it are the ones you add." },
+    { "do": "Press the plus on the Effects header. The menu says Shadow, Border, Blur.", "shot": "2026-09-07-border-effect-1-add-menu-sc.png" },
+    { "do": "Pick Border. Pull its Width up and watch the ring grow outwards, leaving the box the size you drew it.", "shot": "2026-09-07-border-effect-2-outer-sc.png" },
+    { "do": "Click the Border row's colour swatch and paint it something pale." },
+    { "do": "Press the plus again, pick Border, and set the second one's Position to Inside.", "shot": "2026-09-07-border-effect-3-inner-and-outer-sc.png" },
+    { "do": "Press the plus once more and pick Shadow, then set its Kind to Inner and watch the same row change in place.", "shot": "2026-09-07-border-effect-4-shadow-inner-sc.png" },
+    { "do": "Drag one border's grip above the other and see which one paints over which." },
+    { "do": "Press the cross on a border, then undo, and check it comes back at the width and position you left it." }
+  ],
+  "evaluate": [
+    "The plus now says Shadow rather than Shadow and Inner Shadow. When you go looking for an inner shadow, do you find it?",
+    "Appearance has an Outline and Effects has a Border. Reading the panel cold, is it obvious which one you want?",
+    "A new border arrives 2pt wide, black, and OUTSIDE the edge. Is outside the right place for it to land, given the outline you already have sits inside?",
+    "The border's popup is called Position and says Inside, Center, Outside, the same words the Outline row uses. Does that read as the same question asked twice, or as one idea you already know?",
+    "There is no number for pushing a ring further off the edge, so a focus ring floating 4pt clear of a button cannot be made yet. Do you want one?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real capture of the window, not an offscreen render.",
+    "The mock's table said a border carries an 'Offset (Inside/Outside)'. That is the same question the Outline row's Position popup already asks, in the same three words, so it is called Position and there is no second number. Two outside borders of different widths already stack into a real two-colour double ring, which is what makes adding one twice worth doing.",
+    "Where a border sits relative to a SHADOW in the list changes nothing: borders are part of the layer's edge, and the shadows are cast from the result. Order is real among borders, and among shadows, which is the rule the shadows already followed. The grip does not say this, so a drag across kinds looks like it should do something.",
+    "An inner shadow is cast into the silhouette of the layer WEARING its borders, so on a card with a wide outer ring the pressed-in look hugs the ring rather than the fill. Photoshop casts it into the fill instead. Worth a decision if it reads wrong.",
+    "Found and fixed while using it, not by a test: an outside ring round a square box came out with rounded outer corners, because pushing a rounded rectangle out by 11pt grows its radius by 11pt and a radius of zero is still a radius. A ring round a square button now stays square, and a ring round a rounded one still follows the corner it was given. That fixed the Appearance outline's outside position too.",
+    "Reordering by grip still cannot be scripted, so the drag in step 7 is the one thing here no walk proved: a synthesized press cannot start a SwiftUI drag. The model behind it is covered by tests, and the row's own right-click menu calls exactly what the grip calls.",
+    "Two borders each have a row called Width, and so does the Outline above them. On screen each sits behind its owner's rule, so they read as whose they are; a scripted walk now names them 'Border 2, Width'."
+  ]
+}

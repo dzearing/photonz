@@ -1,0 +1,27 @@
+{
+  "id": "find-out-why-thirteen-scripted-walks-are-failing",
+  "title": "Find out why thirteen scripted walks are failing on main",
+  "goal": "The scripted walks are the app's own rehearsal: each one drives the real editor through a flow a person would follow, and a red one means either that flow is broken or the walk has gone stale. Thirteen of the two hundred and seventy are red right now, and nobody knows which of the two it is. Work out which, fix the flows that are genuinely broken, and update the walks that are only out of date.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 1880,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T23:11:46.913Z",
+  "updated": "2026-09-07T23:11:46.914Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-07 with the working tree stashed, so this is clean main and not the border work: built the probe from a clean checkout and ran each walk with Scripts/playtest.sh <walk> --no-build. Thirteen failed identically before and after the border change, which is how they were told apart from the one real regression (appearance-list-walk, fixed in that commit).\n\nclip-contents / out-of-view-mark / size-limits: step press: the control \"Limits\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on.\ncontents-for-several: same, for \"Stack\".\ndock-picked-first: step 47 waitFor: sectionInView(\"Text\") did not happen within 4.0s.\ncolour-off-the-shelf / colour-onto-the-library: step dragColor: \"Library\" stayed dark for the colour off \"Fill\", and the walk expected it to take.\ncolour-onto-an-off-part: step 23 dragColor: no colour swatch for \"Shadow\" is in the panel; the ones that are: Fill.\nparts-off-is-remembered / parts-settings-inline / switch-says-mixed: step press: no control called \"Switch\" in \"Shadow\" is in the panel; the ones that are: none.\ncomponent-whole-path: step 167 expect: the control called \"Apply to Other Versions\" reads \"Shadow, there is something to carry\", not \"there is something to carry\".\ntool-tips: step 13 hover: no control with a tooltip starting \"Inspector\".\n\nThe three Shadow ones and colour-onto-an-off-part look like the same cause: the Shadow row left Appearance for the Effects list on 2026-09-07 and those walks still look for it in Appearance. The four dock-reach ones look like one cause too: the dock scrolls further than it did, so a row a walk presses is under its edge. Neither is confirmed.",
+  "acceptance": [
+    "Each of the thirteen named walks is either passing again or has a task of its own saying what is broken in the app",
+    "Scripts/playtest-all.sh reports zero failures, or every remaining failure is listed with the task that owns it",
+    "Any walk that was only out of date is updated in place rather than deleted"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T23:11:46.914Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -121,11 +121,24 @@ enum PlaytestPanelPress {
     /// falls inside, so a picker takes its own row's word and not the one
     /// below it.
     @MainActor static func field(at box: CGRect, among fields: [PanelTargetView]) -> String? {
+        Self.fields(at: box, among: fields).last
+    }
+
+    /// EVERY labelled row this sits inside, widest first, so a control says who
+    /// owns it as well as what it is: `["Border 2", "Width"]`.
+    ///
+    /// The smallest one alone is not enough the moment a row can arrive twice.
+    /// Two borders in the Effects list both hold a row called Width, and named
+    /// by that word alone neither could be pressed: the walk is told two things
+    /// answer to it and stops. With the owner in front, `in: "Border 2"` picks
+    /// one out, exactly as `in: "Width"` picks Layout's Fixed out from
+    /// Height's.
+    @MainActor static func fields(at box: CGRect, among fields: [PanelTargetView]) -> [String] {
         fields
             .map { ($0, $0.convert($0.bounds, to: nil)) }
             .filter { $0.1.contains(box) }
-            .min { $0.1.width * $0.1.height < $1.1.width * $1.1.height }?
-            .0.name
+            .sorted { $0.1.width * $0.1.height > $1.1.width * $1.1.height }
+            .map(\.0.name)
     }
 
     /// Every tooltip anchor in the window: the invisible tracking views the

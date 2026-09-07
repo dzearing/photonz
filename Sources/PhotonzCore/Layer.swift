@@ -978,8 +978,10 @@ extension LayerStyle {
         }
         padding += reach.max() ?? 0
         // A ring that sits on or past the edge draws outside the box, so the
-        // room it needs is part of how far this style reaches.
-        padding += borderPosition.outset(width: borderWidth)
+        // room it needs is part of how far this style reaches. The layer's own
+        // Outline and the borders somebody ADDED are rings round the same box,
+        // so the furthest of them decides; they do not stack end to end.
+        padding += max(borderPosition.outset(width: borderWidth), borderEffectOutset)
         return padding.rounded(.up)
     }
 
@@ -990,7 +992,7 @@ extension LayerStyle {
     /// so a resize of a layer with any of it must re-render the frame instead.
     var hasNoFixedSizeDecoration: Bool {
         borderWidth == 0 && cornerRadius == 0 && blurRadius == 0
-            && paintedShadows.isEmpty
+            && paintedShadows.isEmpty && paintedBorders.isEmpty
     }
 
     /// True when this style draws nothing of its own: no fade, no blur, no
@@ -999,7 +1001,7 @@ extension LayerStyle {
     /// straight onto the canvas and grouping changes no pixels.
     public var isPlain: Bool {
         opacity >= 1 && blurRadius <= 0 && cornerRadius <= 0 && borderWidth <= 0
-            && paintedShadows.isEmpty && blendMode == .normal
+            && paintedShadows.isEmpty && paintedBorders.isEmpty && blendMode == .normal
     }
 }
 

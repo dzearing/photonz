@@ -1703,11 +1703,13 @@ private final class Run {
         let pressable: Set<PanelTargetKind> = [.control, .tile]
         let marked = everything.filter { pressable.contains($0.kind) }.map { target -> PlaytestPressTarget in
             let frame = target.convert(target.bounds, to: nil)
-            // The row leads and whatever the control is saying right now
-            // follows, the way a picker segment reads "Width, already on
-            // Fixed", so a checkbox reads "Fill, on" and not "on, Fill". A
-            // control that names its own row keeps the one copy.
-            var pieces = [PlaytestPanelPress.field(at: frame, among: fields)].compactMap { $0 }
+            // The rows lead, widest first, and whatever the control is saying
+            // right now follows, the way a picker segment reads "Width, already
+            // on Fixed", so a checkbox reads "Fill, on" and not "on, Fill". A
+            // control that names its own row keeps the one copy. Naming every
+            // enclosing row rather than the innermost is what lets a walk say
+            // which of two Borders' Width it means.
+            var pieces = PlaytestPanelPress.fields(at: frame, among: fields)
             if !target.detail.isEmpty, !pieces.contains(target.detail) {
                 pieces.append(target.detail)
             }

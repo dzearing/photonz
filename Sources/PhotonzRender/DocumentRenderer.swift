@@ -525,6 +525,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         image = blurred(image, radius: layer.style.blurRadius)
         image = rounded(image, box: box, radius: layer.style.cornerRadius)
         image = bordered(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
+        image = borderEffects(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
         image = shadowed(image, shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return faded(image, opacity: layer.style.opacity)
     }
@@ -801,6 +802,10 @@ public final class DocumentRenderer: @unchecked Sendable {
         if !isTextLayer {
             image = bordered(image, box: box, radius: cornerRadius, style: layer.style)
         }
+        // A border you ADDED is a ring round the layer's box, whatever the layer
+        // is — including text, whose Appearance outline follows the letters
+        // instead. Asking for a box round a label has to be answerable.
+        image = borderEffects(image, box: box, radius: cornerRadius, style: layer.style)
 
         // Geometric transform around the layer's center. LayerTransform angles are
         // defined in top-left model space; CI is y-up, so mirror the angular
@@ -878,7 +883,39 @@ public final class DocumentRenderer: @unchecked Sendable {
 
     /// A stroke hugging the (possibly rounded) outline of `box`, sitting where
     /// the style says: wholly inside the box, straddling its edge, or wholly
-    /// outside it (`BorderPosition.swift`).
+    /// outside it (`BorderPosition.swift`). The drawing itself is `ringed`
+    /// below, which every added border uses too.
+    private func bordered(_ image: CIImage, box: CGRect, radius: CGFloat,
+                          style: LayerStyle) -> CIImage {
+        guard style.borderWidth > 0 else { return image }
+        return ringed(image, box: box, radius: radius, width: style.borderWidth,
+                      outset: style.borderPosition.outset(width: style.borderWidth),
+                      colorHex: style.borderColorHex)
+    }
+
+    /// Every ring somebody ADDED, laid over the layer's own edge.
+    ///
+    /// The Outline in Appearance is the one line a shape HAS; these are the
+    /// extra ones, so there can be several and each carries its own width,
+    /// colour and side of the edge (`LayerEffects.swift`, `BorderEffect`).
+    ///
+    /// Painted from the FOOT of the list upwards, so the entry nearest the top
+    /// ends up nearest the eye — the same rule the shadows follow, and the
+    /// whole meaning of the grip on the row.
+    private func borderEffects(_ image: CIImage, box: CGRect, radius: CGFloat,
+                               style: LayerStyle) -> CIImage {
+        let painted = style.paintedBorders
+        guard !painted.isEmpty else { return image }
+        var result = image
+        for border in painted.reversed() {
+            result = ringed(result, box: box, radius: radius, width: border.width,
+                            outset: border.outset, colorHex: border.colorHex)
+        }
+        return result
+    }
+
+    /// One ring hugging the (possibly rounded) outline of `box`, `outset` past
+    /// its edge and `width` thick inwards from there.
     ///
     /// The ring is one rounded rect with a smaller one cut out of it, and the
     /// position is nothing more than how far out the pair is pushed: inside
@@ -886,19 +923,22 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// outside puts the ring's INNER edge on the box. An outside ring therefore
     /// makes the picture bigger, which is why the result is cropped to what the
     /// two of them cover rather than back to the layer's own box.
-    private func bordered(_ image: CIImage, box: CGRect, radius: CGFloat,
-                          style: LayerStyle) -> CIImage {
-        guard style.borderWidth > 0 else { return image }
-        let width = style.borderWidth
-        let outset = style.borderPosition.outset(width: width)
+    private func ringed(_ image: CIImage, box: CGRect, radius: CGFloat,
+                        width: CGFloat, outset: CGFloat, colorHex: String) -> CIImage {
         let outerRect = outset > 0 ? box.insetBy(dx: -outset, dy: -outset) : box
-        let outer = roundedRectImage(rect: outerRect, radius: radius + outset,
-                                     color: ciColor(hex: style.borderColorHex))
+        // A square box keeps square corners however far the ring is pushed out.
+        // Growing a rounded rect by d grows its radius by d, which is the right
+        // answer for a corner that IS round and the wrong one for a corner that
+        // is not: it turned an 11pt ring round a sharp button into a lozenge
+        // (found on the probe, 2026-09-07).
+        let outerRadius = radius > 0 ? radius + outset : 0
+        let outer = roundedRectImage(rect: outerRect, radius: outerRadius,
+                                     color: ciColor(hex: colorHex))
         let innerRect = outerRect.insetBy(dx: width, dy: width)
         var ring = outer
         if !innerRect.isNull, !innerRect.isEmpty {
             let inner = roundedRectImage(rect: innerRect,
-                                         radius: max(0, radius + outset - width),
+                                         radius: max(0, outerRadius - width),
                                          color: .white)
             ring = outer.applyingFilter("CISourceOutCompositing",
                                         parameters: [kCIInputBackgroundImageKey: inner])

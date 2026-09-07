@@ -141,10 +141,12 @@ are laid over whatever the layer is made of.
 - Nothing that sets the width of a line is called **Thickness** any more. Inside
   the Outline part the row is **Width**, and its meaning comes from the part it
   sits in.
-- **Border** disappears as a word. A picture's ring and a rectangle's ring are
-  both the **Outline** part. They still differ underneath (a shape strokes its
-  own path, a picture gets a ring drawn round its box) but nothing a person does
-  differs, so nothing on screen should.
+- **Border** stops being the name of the line a layer HAS. A picture's ring and
+  a rectangle's ring are both the **Outline** part. They still differ underneath
+  (a shape strokes its own path, a picture gets a ring drawn round its box) but
+  nothing a person does differs, so nothing on screen should. The word came back
+  on 2026-09-07 for the EXTRA rings you add in Effects, which is a different
+  thing: see "Outline in Appearance, Border in Effects".
 - A section named after the content kind (**Annotation**) is already gone; a
   section named after nothing in particular (**Effects**) keeps its name, since
   what is left in it really is laid over the top.
@@ -506,10 +508,9 @@ the picked layers it reaches, the sentence Fill already uses.
 **The outline stays in Appearance**, for both kinds of ring. A shape's stroke
 and a picture's ring are one Outline part with one Width (see above), and both
 are what the layer IS rather than something added. The *offset* border the user
-asked about — an inner one and an outer one as two rows — is an Effects entry
-and is NOT built: nothing in the app can draw outside a layer's own edge yet.
-That is `a-border-can-sit-outside-the-edge-not-only-insid` in the queue, and it
-is the piece that unlocks it.
+asked about — an inner one and an outer one as two rows — is an Effects entry,
+and it was built on 2026-09-07 once the renderer could draw outside a layer's
+edge at all. See "Outline in Appearance, Border in Effects" below.
 
 ### A part's settings are visibly owned
 
@@ -552,20 +553,54 @@ construction rather than by inspection.
 | Kind | Count | Colour | Its own settings |
 | --- | --- | --- | --- |
 | Shadow | **many** | the shadow colour | Kind (Drop · Inner) · Blur · Size · Distance · Direction · Opacity |
+| Border | **many** | the border colour | Position (Inside · Center · Outside) · Width |
 | Blur | one, pinned | none | Amount |
 | *Glow (next)* | many | the glow colour | Kind (Outer · Inner) · Blur · Size · Opacity |
-| *Border (next)* | many | the border colour | Offset (Inside · Outside) · Width |
 
 **Adding a new kind is a new case in `LayerEffect` plus the settings it
 carries.** Nothing about the plus, the tick, the cross, the grip, the reach
-sentence over a multiple selection or the saved file changes to accept it. The
-next two are named above:
+sentence over a multiple selection or the saved file changes to accept it.
+Border was the first one added that way, on 2026-09-07, and it needed nothing
+else. **Glow** is next: a shadow with no offset and a colour that lights rather
+than darkens, one new case and one row of settings.
 
-- **Glow** is a shadow with no offset and a colour that lights rather than
-  darkens: one new case, one row of settings, countable, draggable. Nothing else.
-- **Border with an offset** is a `many` kind whose Offset popup says Inside or
-  Outside, so an inner and an outer one are two rows. It waits on the renderer
-  being able to paint past a layer's edge at all.
+### The plus offers one item per KIND
+
+Settled on 2026-09-07 from the user's report. The menu used to say Shadow, Inner
+Shadow, Blur: two entries for one effect, which read as if inner and outer were
+unrelated ideas rather than one switch. It says **Shadow, Border, Blur** now, and
+what makes a shadow inner is the Kind on the row it becomes, exactly as what
+makes a border inner is that border's Position. Nothing about an existing
+document changes: the Kind has always been a field on the shadow, so a file
+saved with an inner shadow opens with an inner shadow and its popup already set.
+
+### Outline in Appearance, Border in Effects
+
+They are two different things and the panel says which is which by where it puts
+them, using the rule the user chose:
+
+- **Outline** is the ONE line the layer HAS. A shape strokes its own path, a
+  picture or a frame takes a ring round its box, and every layer has exactly one
+  whether or not it is switched on. It is in Appearance, with the layer's
+  opacity and its fill.
+- **A Border is an EXTRA ring you ADDED.** There can be none, one, or several,
+  each with its own colour, width and side of the edge, and each can be taken
+  out again. They are in Effects, where the plus put them.
+
+So the question "how thick is this shape's edge" has one answer and one control,
+and "put a second ring round this" has somewhere to go. A border sits over the
+outline, and the shadows are cast from the layer wearing both.
+
+**Position, not a distance.** A border carries the same Inside · Center ·
+Outside popup the Outline row carries, and no number for how far off the edge to
+float. Two outside borders of different widths already stack into a real
+two-colour double ring, so nothing needs a distance to be worth adding twice.
+
+**Order is real within a kind.** Borders paint over the layer's own edge in list
+order, top of the list nearest the eye, and the shadows are then cast from the
+result. Which side of a shadow a border sits on in the list changes nothing,
+which is the rule the shadows already follow: an inner shadow is applied before
+a drop shadow wherever the list holds it.
 
 **Blur is pinned to the top and carries no grip.** The order of the list is the
 order things paint, and a blur is laid over the whole layer while shadows are
@@ -604,13 +639,16 @@ is on screen, while this build keeps the number the row was left at.
   `cornersOnly` selection Appearance uses.
 - `Photonz/PartsInspector.swift` — Appearance: opacity, the part rows, corner
   radius, and `OwnedSettings`, the rule that says whose settings these are.
+- `PhotonzCore/LayerEffects.swift` — `BorderEffect` and the border's own list
+  edits, tested in `Tests/PhotonzCoreTests/BorderEffectTests.swift`; the pixels
+  in `Tests/PhotonzRenderTests/BorderEffectRenderTests.swift`.
+- `PhotonzRender/DocumentRenderer.swift` — `ringed` draws one ring and both the
+  Outline and every added Border go through it.
 - `Photonz/EffectsListInspector.swift` — Effects: the rows, the plus, the tick,
-  the cross, the grip, and the empty line.
+  the cross, the grip, the empty line, and the Border's Position and Width.
 
 ### What is rough, as built
 
-- **A border with an offset is not here.** It is the one thing in the user's
-  brief that the renderer cannot do yet; filed separately.
 - **The grip's drag is still not scriptable.** A synthesized press cannot start a
   SwiftUI drag, so a walk reorders through the row's own menu (Move Up, Move
   Down, Remove), which calls exactly what the grip calls.

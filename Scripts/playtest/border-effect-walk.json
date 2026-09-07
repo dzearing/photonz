@@ -1,0 +1,254 @@
+{
+  "out": "/tmp/photonz-playtest/border-effect",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        560,
+        460
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Outline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-plain",
+      "note": "a plain filled box, no line of any kind on it, and an empty Effects list"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-plain"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "shot": "2-add-menu"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Border",
+      "across": 0.3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Shades 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-outer",
+      "note": "one border, outside the edge: the box kept its size and grew a band round it"
+    },
+    {
+      "do": "panel",
+      "stage": "3-outer"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-outer"
+    },
+    {
+      "do": "render",
+      "name": "3-canvas-outer"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Border 2",
+      "choose": "Inside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Border 2",
+      "across": 0.12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-inner-and-outer",
+      "note": "two borders on one shape, one outside the edge and one inside it"
+    },
+    {
+      "do": "panel",
+      "stage": "4-inner-and-outer"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-inner-and-outer"
+    },
+    {
+      "do": "render",
+      "name": "4-canvas-inner-and-outer"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-shadow-drop",
+      "note": "one Shadow entry, thrown behind the layer"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-shadow-drop"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Shadow",
+      "choose": "Inner"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-shadow-inner",
+      "note": "the same entry, switched to Inner in place: still one row, every number kept"
+    },
+    {
+      "do": "panel",
+      "stage": "6-shadow-inner"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-shadow-inner"
+    },
+    {
+      "do": "render",
+      "name": "6-canvas-shadow-inner"
+    },
+    {
+      "do": "press",
+      "control": "Remove",
+      "in": "Border 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-removed",
+      "note": "the cross takes the inner border out; the outer one and the shadow hold still"
+    },
+    {
+      "do": "panel",
+      "stage": "7-removed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-undo",
+      "note": "one undo brings it back, at the width and position it was"
+    },
+    {
+      "do": "panel",
+      "stage": "8-undo"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-undo"
+    }
+  ]
+}

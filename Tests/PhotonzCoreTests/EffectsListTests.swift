@@ -62,7 +62,7 @@ struct EffectsListTests {
     func noWordAppearsTwice() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
         doc.addEffect(.blur, layerIDs: [layer.id])
         let appearance = Set(doc.layerPartRows(layerIDs: [layer.id]).map(\.title))
         let effects = Set(doc.layerEffectRows(layerIDs: [layer.id]).map(\.title))
@@ -86,16 +86,16 @@ struct EffectsListTests {
 
     @Test("The plus offers each effect by the words a person is looking for")
     func theMenu() {
-        #expect(AddableEffect.allCases.map(\.title) == ["Shadow", "Inner Shadow", "Blur"])
+        #expect(AddableEffect.allCases.map(\.title) == ["Shadow", "Border", "Blur"])
     }
 
     @Test("Adding a shadow adds one row, and adding a second adds a second row")
     func addTwoShadows() {
         let layer = box()
         var doc = document([layer])
-        #expect(doc.addEffect(.dropShadow, layerIDs: [layer.id]) == 1)
+        #expect(doc.addEffect(.shadow, layerIDs: [layer.id]) == 1)
         #expect(doc.layerEffectRows(layerIDs: [layer.id]).count == 1)
-        #expect(doc.addEffect(.dropShadow, layerIDs: [layer.id]) == 1)
+        #expect(doc.addEffect(.shadow, layerIDs: [layer.id]) == 1)
 
         let rows = doc.layerEffectRows(layerIDs: [layer.id])
         #expect(rows.count == 2)
@@ -110,7 +110,8 @@ struct EffectsListTests {
     func oneOfAKindKeepsItsPlainName() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.innerShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
+        doc.setShadowKind(layerIDs: [layer.id], at: 0, to: .inner)
         #expect(doc.layerEffectRows(layerIDs: [layer.id]).map(\.title) == ["Shadow"])
     }
 
@@ -127,8 +128,8 @@ struct EffectsListTests {
     func shadowsAreIndependent() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
         doc.updateLayerStyles(layerIDs: [layer.id]) { style in
             style.updateShadow(at: 0) { $0.radius = 2; $0.colorHex = "#FF0000" }
             style.updateShadow(at: 1) { $0.radius = 40; $0.colorHex = "#0000FF" }
@@ -142,8 +143,9 @@ struct EffectsListTests {
     func removeIsIndependent() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
-        doc.addEffect(.innerShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
+        doc.setShadowKind(layerIDs: [layer.id], at: 1, to: .inner)
         doc.updateLayerStyles(layerIDs: [layer.id]) { $0.updateShadow(at: 0) { $0.radius = 7 } }
 
         #expect(doc.removeEffect(layerIDs: [layer.id], at: 1) == 1)
@@ -160,7 +162,7 @@ struct EffectsListTests {
         let layer = box()
         var doc = document([layer])
         doc.addEffect(.blur, layerIDs: [layer.id])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
         #expect(doc.layerEffectRows(layerIDs: [layer.id]).allSatisfy { $0.canRemove })
         // ...and nothing in Appearance can, because nothing in it was added.
         #expect(doc.layerPartRows(layerIDs: [layer.id]).count > 0)
@@ -168,11 +170,16 @@ struct EffectsListTests {
 
     // MARK: Inner and outer are a SETTING, not a different effect
 
-    @Test("Inner Shadow adds one Shadow row with its Kind already set")
+    @Test("The plus adds ONE Shadow, and the Kind on it is what makes it inner")
     func innerIsAKindNotAnEffect() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.innerShadow, layerIDs: [layer.id])
+        // There is no second menu item for an inner shadow any more: it was one
+        // effect named twice, and the row it adds has always carried the Kind
+        // (the user's report, 2026-09-07).
+        #expect(AddableEffect.allCases.filter { $0.kind == .shadow }.count == 1)
+        doc.addEffect(.shadow, layerIDs: [layer.id])
+        doc.setShadowKind(layerIDs: [layer.id], at: 0, to: .inner)
         let rows = doc.layerEffectRows(layerIDs: [layer.id])
         #expect(rows.count == 1)
         #expect(rows[0].title == "Shadow")
@@ -183,7 +190,7 @@ struct EffectsListTests {
     func kindIsASetting() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
         #expect(doc.setShadowKind(layerIDs: [layer.id], at: 0, to: .inner) == 1)
         #expect(doc.layer(id: layer.id)!.style.shadows[0].kind == .inner)
         // Everything else about it survives the switch: it is one shadow drawn
@@ -199,7 +206,7 @@ struct EffectsListTests {
     func offKeepsTheEntry() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
         doc.updateLayerStyles(layerIDs: [layer.id]) { $0.updateShadow(at: 0) { $0.radius = 30 } }
 
         #expect(doc.setEffectEnabled(layerIDs: [layer.id], at: 0, on: false) == 1)
@@ -238,8 +245,8 @@ struct EffectsListTests {
     func reorder() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
         doc.updateLayerStyles(layerIDs: [layer.id]) { style in
             style.updateShadow(at: 0) { $0.colorHex = "#FF0000" }
             style.updateShadow(at: 1) { $0.colorHex = "#0000FF" }
@@ -255,7 +262,7 @@ struct EffectsListTests {
     func blurIsPinned() {
         let layer = box()
         var doc = document([layer])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
         doc.addEffect(.blur, layerIDs: [layer.id])
         // Whichever order they were added in, the blur is the top row.
         let rows = doc.layerEffectRows(layerIDs: [layer.id])
@@ -272,8 +279,8 @@ struct EffectsListTests {
         let layer = box()
         var doc = document([layer])
         doc.addEffect(.blur, layerIDs: [layer.id])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
-        doc.addEffect(.dropShadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
+        doc.addEffect(.shadow, layerIDs: [layer.id])
         let rows = doc.layerEffectRows(layerIDs: [layer.id])
         #expect(rows.map(\.index) == [0, 1, 2])
         #expect(rows.map(\.shadowIndex) == [nil, 0, 1])
@@ -285,7 +292,7 @@ struct EffectsListTests {
     func addingReachesEveryone() {
         let one = box(), two = box()
         var doc = document([one, two])
-        #expect(doc.addEffect(.dropShadow, layerIDs: [one.id, two.id]) == 2)
+        #expect(doc.addEffect(.shadow, layerIDs: [one.id, two.id]) == 2)
         #expect(doc.layer(id: one.id)!.style.shadows.count == 1)
         #expect(doc.layer(id: two.id)!.style.shadows.count == 1)
         #expect(doc.layerEffectRows(layerIDs: [one.id, two.id]).count == 1)
@@ -295,8 +302,8 @@ struct EffectsListTests {
     func rowsLineUpByPosition() {
         let one = box(), two = box()
         var doc = document([one, two])
-        doc.addEffect(.dropShadow, layerIDs: [one.id, two.id])
-        doc.addEffect(.dropShadow, layerIDs: [one.id])
+        doc.addEffect(.shadow, layerIDs: [one.id, two.id])
+        doc.addEffect(.shadow, layerIDs: [one.id])
 
         let rows = doc.layerEffectRows(layerIDs: [one.id, two.id])
         #expect(rows.count == 2)
@@ -311,7 +318,7 @@ struct EffectsListTests {
         var locked = box()
         locked.isLocked = true
         var doc = document([locked])
-        #expect(doc.addEffect(.dropShadow, layerIDs: [locked.id]) == 0)
+        #expect(doc.addEffect(.shadow, layerIDs: [locked.id]) == 0)
         #expect(doc.layer(id: locked.id)!.style.shadows.isEmpty)
     }
 

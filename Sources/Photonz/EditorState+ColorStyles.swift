@@ -441,9 +441,21 @@ extension EditorState {
     /// wearing that colour, in one step one undo puts back. The same move the
     /// Outline row takes, for the same reason.
     func dropColorOnOffEffect(_ row: LayerEffectRow, landing: ColorDrop.Landing) {
-        guard let shadowIndex = row.shadowIndex, let document else { return }
+        guard let document else { return }
         let ids = row.switchIDs.filter { document.layer(id: $0)?.isLocked == false }
         guard !ids.isEmpty else { return }
+        if row.kind == .border {
+            discardDragPreview()
+            perform { doc in
+                _ = doc.updateBorderEffect(layerIDs: ids, at: row.index) { border in
+                    border.colorHex = landing.paint.hex
+                    border.isOn = true
+                }
+            }
+            rememberStyleDefault(of: ids)
+            return
+        }
+        guard let shadowIndex = row.shadowIndex else { return }
         discardDragPreview()
         perform { doc in
             _ = doc.turnOnPart(.shadow, layerIDs: ids, paint: landing.paint, index: shadowIndex)
@@ -465,6 +477,17 @@ extension EditorState {
         stylePreview = nil
         discardDragPreview()
         perform { _ = $0.setShadowKind(layerIDs: ids, at: index, to: kind) }
+        rememberStyleDefault(of: ids)
+    }
+
+    /// The Position popup on one border entry: which side of the layer's edge
+    /// that ring sits on. The same question the Outline row asks in Appearance,
+    /// and the thing that makes an inner border and an outer border two entries.
+    func setBorderEffectPosition(at index: Int, ids: [UUID], to position: BorderPosition) {
+        guard !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.updateBorderEffect(layerIDs: ids, at: index) { $0.position = position } }
         rememberStyleDefault(of: ids)
     }
 

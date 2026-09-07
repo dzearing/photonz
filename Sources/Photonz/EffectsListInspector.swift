@@ -6,8 +6,7 @@ import SwiftUI
 /// The other half of the split the user chose on 2026-09-07. Appearance above
 /// holds what a shape simply has; this holds what somebody put on it. It starts
 /// EMPTY on a new shape and gains a row only when you press the plus on its
-/// header: a shadow, a shadow cast into the layer, a blur, and later a glow or
-/// a filter.
+/// header: a shadow, a border, a blur, and later a glow or a filter.
 ///
 /// Three things follow from it being a list rather than a set of fixed rows:
 ///
@@ -48,7 +47,7 @@ struct EffectsListInspector: View {
     /// broken, and the plus on the header is small enough to be missed the first
     /// time.
     private var empty: some View {
-        Text("Nothing added yet. Use the plus above for a shadow or a blur.")
+        Text("Nothing added yet. Use the plus above for a shadow, a border or a blur.")
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
@@ -214,7 +213,14 @@ private struct EffectRowView: View {
     // MARK: The colour
 
     @ViewBuilder private var colorControl: some View {
-        if let shadowIndex = row.shadowIndex {
+        if row.kind == .border {
+            // A border's colour is not one of the layer's own slots either, so
+            // it gets the well without the saved-styles menu, in the column
+            // every colour in Appearance sits in.
+            BorderEffectColorWell(index: row.index)
+                .frame(minWidth: ColorPartLayout.readoutWidth,
+                       minHeight: ColorPartLayout.rowHeight, alignment: .leading)
+        } else if let shadowIndex = row.shadowIndex {
             // A shadow's colour is not one of the layer's slots, so it has no
             // saved-styles menu; the well alone sits where every colour in
             // Appearance sits.
@@ -237,8 +243,82 @@ private struct EffectRowView: View {
             // Everything else about the shadow except the tick and the colour,
             // which are up on the row.
             ShadowInspector(showsSwitch: false, showsColor: false, inset: false, index: index)
+        case .border:
+            // Where the ring sits, then how thick it is: which side of the edge
+            // you are on changes what a width even means, so it is asked first.
+            BorderPositionRow(row: row)
+            BorderWidthRow(row: row)
         case .blur:
             BlurEffectRow(row: row)
+        }
+    }
+}
+
+/// Which side of the layer's edge one added ring sits on.
+///
+/// The same three words the Outline row in Appearance uses, because it is the
+/// same question: a line is inside the edge, straddling it, or outside it. An
+/// inner border and an outer border are two entries in the list that differ by
+/// nothing but this.
+private struct BorderPositionRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    var body: some View {
+        let borders = editorState.layerStyleSelection.borders(at: row.index)
+        let ids = borders.layerIDs
+        let reading = borders.reading { $0.borderEffect(at: row.index)?.position ?? .outside }
+        HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
+            Text("Position")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+            Picker("Position", selection: Binding(
+                get: { reading.isMixed ? nil : reading.value },
+                set: { new in
+                    guard let new else { return }
+                    editorState.setBorderEffectPosition(at: row.index, ids: ids, to: new)
+                })) {
+                    if reading.isMixed {
+                        Text(LayerStyleSelection.mixedText).tag(BorderPosition?.none)
+                    }
+                    ForEach(BorderPosition.allCases, id: \.self) { position in
+                        Text(position.title).tag(BorderPosition?.some(position))
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .controlSize(.small)
+                // A width rather than `fixedSize`, for the reason the Kind
+                // popup carries one: an ideal-width menu inside the dock's
+                // column pushed the whole pane wider than the window.
+                .frame(width: 92, alignment: .leading)
+                .disabled(ids.isEmpty)
+                .help("Inside keeps the ring within the layer. Outside grows it past the edge.")
+                .playtestControl("Position", detail: reading.isMixed ? "mixed"
+                                    : (reading.value ?? .outside).title)
+            Spacer(minLength: 0)
+        }
+        // No field name of its own: it belongs to the border row above it, so
+        // a walk names it `{"control": "Position", "in": "Border 2"}` and two
+        // borders never answer to the same words.
+    }
+}
+
+/// How thick one added ring is.
+private struct BorderWidthRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    var body: some View {
+        let borders = editorState.layerStyleSelection.borders(at: row.index)
+        let index = row.index
+        let range = Double(BorderEffect.widthRange.lowerBound)...Double(BorderEffect.widthRange.upperBound)
+        LayerStyleSlider(layerIDs: borders.layerIDs, label: "Width",
+                         reading: borders.number { $0.borderEffect(at: index)?.width ?? 0 },
+                         range: range,
+                         format: points) { style, v in
+            style.updateBorderEffect(at: index) { $0.width = CGFloat(v) }
         }
     }
 }
@@ -316,10 +396,12 @@ private struct ShadowKindRow: View {
 /// that already look like something, so the next thing you do is tune it rather
 /// than build it.
 ///
-/// The menu names the effects in FULL — Shadow, Inner Shadow, Blur — because
-/// somebody hunting for an inner shadow is scanning for those two words. The
-/// two shadow entries add the same kind of row; the second one arrives with its
-/// Kind already set.
+/// The menu is ONE ITEM PER KIND — Shadow, Border, Blur. It used to split the
+/// shadow in two, a Shadow and an Inner Shadow, which read as if they were
+/// unrelated ideas when they are one effect with a Kind on it; the row you get
+/// carries that Kind, and switching it turns the shadow inner in place. A
+/// border works the same way: its Position is what makes an inner one and an
+/// outer one two entries in the list.
 ///
 /// It rides the HEADER rather than the foot of the list: the dock caps a
 /// section's height and scrolls the rest inside it, and one shadow is already
@@ -332,6 +414,7 @@ struct AddEffectButton: View {
             ForEach(AddableEffect.allCases) { kind in
                 Button(kind.title) { editorState.addEffect(kind) }
                     .disabled(!editorState.canAddEffect(kind))
+                    .help(kind.summary)
             }
         } label: {
             Image(systemName: "plus")
@@ -344,7 +427,7 @@ struct AddEffectButton: View {
         // The plus says nothing out loud, so this is both what a screen reader
         // announces and the name a scripted walk opens it by.
         .accessibilityLabel("Add Effect")
-        .help("Add an effect: a shadow, a shadow cast into the layer, or a blur")
+        .help("Add an effect: a shadow, a border or a blur")
         .playtestControl("Add Effect", detail: "the plus on the Effects header")
     }
 }

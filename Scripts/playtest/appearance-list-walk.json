@@ -103,7 +103,16 @@
     {
       "do": "panelMenu",
       "menu": "Add Effect",
-      "choose": "Inner Shadow"
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Shadow 2",
+      "choose": "Inner"
     },
     {
       "do": "wait",

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:46:23.217Z",
-  "updated": "2026-09-07T21:46:23.254Z",
+  "updated": "2026-09-07T23:12:09.779129Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 in two parts. First, they cannot add a border: AddableEffect in Sources/PhotonzCore/LayerEffects.swift offers exactly dropShadow, innerShadow and blur, and there is no border among them. The only edge is LayerPart.outline in Appearance, which is one edge on the layer's own boundary with no offset and no second copy, so what they want cannot be expressed at all. Second, the two shadow entries: the underlying model already has one shadow kind with a ShadowKind of drop or inner, and only the add menu splits it into two names, so making it one entry with a switch is a menu change plus a control on the row, not a model change. That also matches the rule already agreed in this area, that inner versus outer is a property of an effect rather than a separate effect, which is exactly what the border offset gives. The awkward part to decide rather than dodge is the relationship between the Appearance outline and an added border, since they will otherwise be two ways to draw the same line; the acceptance asks for an answer in user words or for one to absorb the other.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-07T21:46:23.253Z",
       "note": "seq 210 -> 3"
+    },
+    {
+      "t": "2026-09-07T21:57:01.383Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T22:02:01.565160Z",
+      "note": "Adversarial review before building. (1) The renderer CAN now paint past a layer's edge: a-border-can-sit-outside-the-edge landed today (155f5910, BorderPosition), which is the thing the design doc named as the blocker for this. (2) Outline vs Border: keep both, and say the difference in the words the user already chose on 2026-09-07. Appearance is what a shape IS, so its Outline is the one edge it has; Effects is what you ADD, so a Border is an extra ring, and you can have several. Folding one into the other would mean either reopening that split or leaving a picture with no way to have a plain ring. (3) CUT from the mock/doc: the doc's table says Border carries an 'Offset (Inside/Outside)'. That is the same question the Outline row's Position popup already asks, in the same three words, so the border gets a Position popup and NOT a second numeric offset slider. Two outside borders of different widths already stack into a real two-colour double ring, so a number is not needed to make more than one border mean something. (4) Cross-kind order: a border painted relative to a shadow is fixed (borders are part of the edge, the shadow is cast from the result), exactly as an inner shadow is always applied before a drop shadow whatever the list says. Order is real WITHIN a kind, which is what the grip has always meant. Will be said plainly in the audit."
+    },
+    {
+      "t": "2026-09-07T22:21:50.029950Z",
+      "note": "Built, TDD. PhotonzCore: BorderEffect (width, colour, position, tick) as a new LayerEffect case, countable and draggable like a shadow; borderEffects/paintedBorders/borderEffectOutset views over the list; updateBorderEffect and updateEffect on the document; previewPadding, isPlain and hasNoFixedSizeDecoration all account for an added ring. AddableEffect is now shadow/border/blur, one item per KIND. PhotonzRender: bordered() split into ringed(), which the Appearance outline and every added border both go through, and borderEffects() paints them foot of the list first so the top one is nearest the eye; borders paint on both the leaf and the group path, and on text too (whose Appearance outline follows the letters instead). App: Border rows carry a Position popup and a Width slider, a colour well of their own, and take a colour dropped on them while switched off. Tests written first: BorderEffectTests (17 assertions over the menu, two borders on one shape, order, off-is-not-remove, reach, the file, and an old inner shadow opening inner) and BorderEffectRenderTests (pixels either side of the edge for outside, inside, both at once, list order, off, and a shadow cast from the shape wearing its ring). Scripts/test.sh green, 4592 tests in 384 suites."
+    },
+    {
+      "t": "2026-09-07T22:21:50.029950Z",
+      "note": "Found on the running probe, not in a test: an 11pt OUTSIDE ring round a square box came back with rounded outer corners. ringed() grew the corner radius by the outset, which is right for a corner that is round and wrong for one that is not (offsetting a sharp rect outward by d is a disc offset, and design tools miter instead). Fixed, with a test either way: square stays square, rounded stays concentric. That fixed the Appearance outline's Outside position on pictures, frames and groups too, which shipped this morning with the same bug."
+    },
+    {
+      "t": "2026-09-07T22:21:50.029950Z",
+      "note": "Harness: a control's name now carries EVERY row it sits inside, widest first ('Border 2, Width'), not just the innermost. Two borders both hold a row called Width and neither could be pressed before this; PlaytestPanelPress.fields(at:among:). And the walk-hygiene guard that forbids naming a menu by a value now skips the plus on the Effects header, which is a list of actions and wears no value: picking Shadow from it and then opening the Shadow row's own menu is the normal flow, not the mistake the rule is about."
+    },
+    {
+      "t": "2026-09-07T23:12:09.779129Z",
+      "note": "Full walk sweep: Scripts/playtest-all.sh, 270 walks, 256 passed and 14 failed. Held the 14 against a baseline rather than assuming: stashed the whole working tree, rebuilt the probe from clean main, ran each of the 14 again. THIRTEEN fail identically on main and are not mine, including the one that looked most like my harness change (component-whole-path expecting 'Apply to Other Versions' to read without its owner: it already read 'Shadow, there is something to carry' before I touched anything). Filed as find-out-why-thirteen-scripted-walks-are-failing at p2 with every command and message. ONE was mine: appearance-list-walk picked 'Inner Shadow' off the plus, which no longer exists. Updated to pick Shadow and then set the row's Kind to Inner, which is the flow a person now follows, and it passes. Scripts/test.sh green after, 4592 tests, and the border walk still passes."
     }
-  ]
+  ],
+  "started": "2026-09-07T21:57:01.382Z"
 }

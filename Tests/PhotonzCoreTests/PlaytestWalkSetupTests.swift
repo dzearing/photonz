@@ -120,6 +120,13 @@ struct PlaytestWalkSetupTests {
         }
     }
 
+    /// Menus that are a list of ACTIONS rather than a value: the plus on the
+    /// Effects header is a button that always says "+", so what you pick from
+    /// it is a thing to do and never a word some menu is now wearing. Picking
+    /// Shadow from it and then opening the Shadow row's own menu is the normal
+    /// flow, not the mistake the rule below is about.
+    private static let actionMenus: Set<String> = ["Add Effect"]
+
     /// A menu in the dock wears its own value, so a walk that names one by the
     /// words on it is naming something that changes the moment the walk uses
     /// it. The row it sits on holds still; that is its name.
@@ -130,6 +137,7 @@ struct PlaytestWalkSetupTests {
             var opened: [String] = []
             for step in script.steps {
                 guard case .panelMenu(let menu, _, let choose, _) = step else { continue }
+                guard !Self.actionMenus.contains(menu) else { continue }
                 #expect(!opened.contains(menu), """
                     \(file.lastPathComponent) opens a menu called "\(menu)" after an \
                     earlier step already chose that value from one, so the second run \

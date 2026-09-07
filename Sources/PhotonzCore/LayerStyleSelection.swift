@@ -128,6 +128,15 @@ public struct LayerStyleSelection: Hashable, Sendable {
                             selectionCount: selectionCount)
     }
 
+    /// The picked layers with a BORDER in a given place in their list, which is
+    /// what one Border row's settings speak for. A place holding a shadow on
+    /// one of them simply leaves that layer out, so a Width drag can never turn
+    /// somebody's shadow into a ring.
+    public func borders(at index: Int) -> LayerStyleSelection {
+        LayerStyleSelection(members: members.filter { $0.style.borderEffect(at: index) != nil },
+                            selectionCount: selectionCount)
+    }
+
     /// True while some of the picked layers throw a shadow and the rest do not.
     ///
     /// Off is a true answer — none of them have one — so a selection where
