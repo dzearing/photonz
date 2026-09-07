@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T02:24:34.951Z",
-  "updated": "2026-09-07T09:17:11.498Z",
+  "updated": "2026-09-07T09:31:01.773Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left rough by a-sweep-inside-a-group-picks-the-layers-in-that (2026-09-05). The sweep is now scoped to the group you are inside, but the only cue on screen is the faint dotted context box round the group (CanvasGroups.swift groupContextLayer), which is deliberately quiet and easy to miss. The band itself is marqueeLayer in CanvasView.swift and is identical either way. Cheapest honest option is probably to tint or inset the band while marqueeContext is non-nil. Worth confirming with the user that the cue is wanted at all before building: the dotted box may already be enough.\n\nDONE 2026-09-07. The cue is the group context box itself: CanvasGroups.refreshGroupContextOutline now reads marqueeContext while `marquee != nil`, and applyGroupContextStyle(lit:) gives it a solid systemBlue 0.7 hairline while sweeping vs the resting dotted 0.28. CanvasView's setup calls applyGroupContextStyle(lit: false) instead of setting stroke and dash by hand. Level is kept across an empty sweep in EditorState.setSelection (`if region != nil`) and EditorState+Layout.addSweptLayersToSelection (moved above the early return). Frames still refuse the box in both states; see the queue task about sweeping inside a screen for why and what to lift when it lands.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-07T09:30:42.377763Z",
       "note": "Verified: Scripts/playtest/band-level-walk.json (new, 54 steps, ok) holds the band mid-sweep at both levels and after an empty sweep inside the group. The top-level capture has ZERO blue pixels in the band region, so the canvas band is byte-for-byte the same idea it was; the resting box is unchanged. Side by side picture and both real -sc captures in queue/audits/2026-09-07-band-level.json. Scripts/test.sh green (4314 tests)."
+    },
+    {
+      "t": "2026-09-07T09:31:01.772Z",
+      "note": "A band swept inside a group now lights a solid blue line round that group while the button is down; out on the canvas it is unchanged. The real cause was a defect: the context box came down at the press that starts a band. A sweep also now keeps its level when it catches nothing. Shipped in CanvasGroups/CanvasView/EditorState (next-layer-groups only), verified by Scripts/playtest/band-level-walk.json with real screen captures and Scripts/test.sh green (4314). Audit: queue/audits/2026-09-07-band-level.json"
     }
   ],
-  "started": "2026-09-07T09:17:11.497Z"
+  "started": "2026-09-07T09:17:11.497Z",
+  "completed": "2026-09-07T09:31:01.773Z"
 }

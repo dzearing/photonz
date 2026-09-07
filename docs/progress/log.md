@@ -10851,3 +10851,34 @@ No app code changed; suite green at 4314.
 
 **Next:** the task is blocked on that answer. When it lands, one run builds the
 chosen option and re-runs the same walk to prove it.
+
+## 2026-09-07 — The band says which level it is picking at
+
+Ran the queued task `the-rubber-band-shows-which-level-it-is-picking`
+(epic `ui-building`).
+
+The task assumed the faint dotted group context box was already the cue
+and merely too quiet. A playtest said otherwise: the box is not on screen
+during a sweep at all. The press that starts a band clears the selection,
+clearing the selection puts `EditorState` back at the top level, and the
+box draws from that — so nothing whatever distinguished a band swept
+inside a group from one swept on the canvas.
+
+Shipped: `refreshGroupContextOutline` reads `marqueeContext` while a band
+is up, and `applyGroupContextStyle(lit:)` gives it a solid systemBlue
+hairline for the length of the drag against its resting dotted whisper.
+Solid rather than a brighter dash, because everything the band itself
+draws is dashed and a bright dashed box read as one more thing caught.
+A sweep now also leaves you at the level it swept whether or not it
+caught anything, so the lit wall cannot lie about where it puts you.
+
+Declined the task's own suggestion of tinting the band: marching ants
+mean "a region" in every tool that draws them.
+
+Found on the way and filed as p2: a band cannot be swept inside a screen
+at all, because the screen's surface swallows the press and the drag
+moves the screen. That is why frames still draw no wall.
+
+Next: the queue's next task. Open question for the user, in the audit —
+whether a solid hairline is heavy enough to catch the eye mid-drag, and
+whether an empty band should keep you inside the group.
