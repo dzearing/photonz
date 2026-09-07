@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T23:09:52.762Z",
-  "updated": "2026-09-07T08:24:12.583Z",
+  "updated": "2026-09-07T08:31:27.916Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Resolved by verification, not by a rewrite. The offending paragraph went on 2026-09-06 in 84a70e20 when a copy's Layout became titled rows; reproduced on the probe for a Stack copy at 1200 and a Free copy at 400 and found nothing false left. What shipped here is the regression guard acceptance item 3 asked for: LayoutReadoutTests now pins that a resized copy's rows read off the COPY's box, not the original's. If the Layout section is ever asked to mention a copy's own size again, note that this was cut on purpose: Position & Size holds W and H two rows above, and the Component section's 'Its own size' row is the way back.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-07T09:05:00.000Z",
       "note": "No audit written: no feature shipped for the user to try. The user-visible change was audited on 2026-09-06 (queue/audits/2026-09-06-layout-fits.json). Scripts/test.sh green, 4286 tests."
+    },
+    {
+      "t": "2026-09-07T08:31:27.915Z",
+      "note": "The sentence the task named is already gone: it went on 2026-09-06 when a copy's Layout became titled rows. Verified on the probe with real captures for a Stack copy at 1200 and a Free copy at 400, both against smaller originals, and nothing in the section claims the contents stay where the original put them. Shipped the one item still missing, a test next to the words: three in LayoutReadoutTests pinning that a resized copy's rows read off the COPY's box (original says Gap 12, the widened copy says Spread). Scripts/test.sh green, 4286 tests."
     }
   ],
-  "started": "2026-09-07T08:24:12.582Z"
+  "started": "2026-09-07T08:24:12.582Z",
+  "completed": "2026-09-07T08:31:27.916Z"
 }
