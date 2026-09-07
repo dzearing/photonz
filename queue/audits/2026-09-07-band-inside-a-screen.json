@@ -1,0 +1,29 @@
+{
+  "feature": "A band swept inside a screen picks what is on that screen",
+  "epic": "ui-building",
+  "summary": "Dragging across a screen's empty background now draws a selection band that picks up the things on that screen, instead of picking the screen up and moving it. Screens still move: by a drag once they are picked, and by their name at any time.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default.",
+  "try": [
+    { "do": "Press F, then drag out a screen on an empty canvas." },
+    { "do": "Press R and draw two rectangles inside it, well apart." },
+    { "do": "Press V, then click bare canvas outside the screen so nothing is picked." },
+    { "do": "Drag from an empty corner of the screen across both rectangles. A band appears, the screen's edge lights up, and both rectangles come out picked.", "shot": "2026-09-07-band-inside-a-screen-1.png" },
+    { "do": "Click that same empty corner: the screen itself is picked, exactly as before." },
+    { "do": "Drag from the middle of the now-picked screen: it moves." },
+    { "do": "Press Escape, then rest the pointer on the screen's name and drag it: the screen moves without being picked first.", "shot": "2026-09-07-band-inside-a-screen-2.png" }
+  ],
+  "evaluate": [
+    "When you drag on a screen's background, is a band what you expected, or did you mean to move the screen?",
+    "Does the lit screen edge read as the wall of the room you are picking in, or as one more thing the band has caught?",
+    "Is the name above a screen an obvious enough handle that you would reach for it to move the screen?",
+    "Having clicked a screen and picked it, does the next drag moving it feel right, or does it get in your way when you wanted to keep banding?",
+    "Should a band be allowed to catch things that only partly fit, or is fully-inside still the right rule on a screen?"
+  ],
+  "rough": [
+    "Same gesture, two meanings, decided by whether the screen is picked: dragging a screen's background sweeps when it is not picked and moves it when it is. That is Figma's rule and it is what stops a selected screen feeling stuck, but there is a real accident in it. Click a screen to look at its settings, then try to band its buttons, and you move the screen instead. One undo puts it back. Escape first is the way round it.",
+    "Nothing on screen tells the two apart before you press. The pointer stays an arrow either way. A cue on hover over a picked screen's surface would say it, and I left that out rather than invent a cursor for it in this task.",
+    "Option-dragging a screen's background used to duplicate the screen and now sweeps instead. Option-dragging its name duplicates it, so the gesture moved rather than went away, but nobody is told that.",
+    "The mock said nothing about how a screen moves once its surface is busy. I took Figma's answer (name label as the handle) and added the already-picked case on top, because a screen whose name has scrolled off the top of the window would otherwise have no drag at all.",
+    "Verified live: the probe held the Screen Recording grant, so both pictures here are real screen captures of the window, taken mid-gesture by the playtest Scripts/playtest/band-inside-a-screen-walk.json."
+  ]
+}

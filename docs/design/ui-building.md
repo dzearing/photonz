@@ -457,10 +457,13 @@ Nesting needs a way in and a way out, and both keys are already busy.
   sign of itself: the handles move to one piece and nothing else on the canvas
   changes. The box is the selection blue at a quarter strength, one point wide
   and finely dotted, so it reads as the room you are standing in rather than
-  competing with the selection outline inside it. A **screen never draws it**
-  (2026-09-03): the box means "you stepped in here", and you never step into a
-  screen, so it would be on almost all the time and say nothing. A screen shows
-  where it is already, with its surface and the name above it.
+  competing with the selection outline inside it. A **screen never draws it at
+  rest** (2026-09-03): the box means "you stepped in here", and you never step
+  into a screen, so it would be on almost all the time and say nothing. A screen
+  shows where it is already, with its surface and the name above it. It DOES
+  draw it while a band is being swept on it (2026-09-07), because that is the
+  one moment it says something nothing else says: this band is picking from what
+  is on this screen, not from the screens themselves.
 - **A click picks the outermost thing you are not already inside**, and the
   group you are inside is remembered only while you are in it: nothing about it
   is stored in the document. Clicking anything outside that group drops you back
@@ -476,6 +479,20 @@ Nesting needs a way in and a way out, and both keys are already busy.
   screen's own empty surface still picks the screen. The cost, taken knowingly:
   a screen covered edge to edge by a layer has no empty surface left to click,
   so it is picked from its name above it or from its row in the Layers list.
+- **A DRAG on a screen's empty surface sweeps what is on that screen**
+  (2026-09-07). The room between the things on a screen belongs to picking
+  them, which is what a screen is for; before this the drag picked the screen
+  up and moved it, so there was no way to rubber-band several buttons on a
+  screen at all. Three rules keep the screen itself reachable, and they are
+  Figma's: a click on that same surface still picks the screen, a screen that
+  is ALREADY picked moves from its middle rather than sweeping (so a selected
+  screen never feels stuck), and dragging the name above a screen moves it
+  whether it is picked or not. That last one is new too: a name used to be
+  clickable and not draggable, and it is now the one move handle that is
+  always there, above the screen at every zoom and tinting under the pointer.
+  The cost, taken knowingly: to sweep inside a screen you have just clicked,
+  press Escape first, and ⌥-dragging a screen's surface no longer duplicates
+  it — ⌥-drag its name instead.
 - **Where you are follows what you are holding** (2026-09-03). Dragging a layer
   off a screen takes you out of that screen with it, so Escape never jumps back
   to a screen the layer has already left.

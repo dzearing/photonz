@@ -71,8 +71,12 @@ extension CanvasNSView {
                 onExtendSelection(named)
                 refreshOverlays()
             } else {
-                selectedLayerFrame = document?.canvasLayer(id: named).map { $0.withoutSlack($0.frame) }
-                onSelectLayerInGroup(named, document?.parentID(of: named))
+                // A name is the box's handle, so it is a handle you can DRAG
+                // as well as click. It matters most for a screen: a screen's
+                // empty surface sweeps a band over what is on it, so the name
+                // is the one grab that moves the screen itself without picking
+                // it first, and it is above every screen at every zoom.
+                beginNameLabelDrag(named, at: p, event: event)
                 refreshOverlays()
             }
             return
@@ -408,6 +412,22 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
+        // A drag across a screen's own empty surface sweeps a band over what
+        // is ON that screen. The room between the things on a screen belongs
+        // to picking them — that is what a screen is for — and treating it as
+        // the screen's own picture meant a band inside a screen could not be
+        // drawn at all: the drag picked the screen up and moved it instead.
+        // A screen you have ALREADY picked still moves from its middle, so a
+        // selected screen never feels stuck (`ScreenSurfacePress`), and every
+        // screen moves by its name whether it is picked or not.
+        if tool == .select, groupSelectionEnabled, event.clickCount == 1,
+           case .sweep(let screen)? = document?.screenSurfacePress(
+               at: p, zoom: viewport.zoom, picked: pickedLayerIDs,
+               captionPillSize: Self.captionPillSizing) {
+            beginScreenSurfaceSweep(screen, at: p, event: event)
+            refreshOverlays()
+            return
+        }
         if let pick = groupAwarePick(at: p, zoom: viewport.zoom),
            let hit = document?.canvasLayer(id: pick.id) {
             // ⇧-click adds what you clicked to the selection, or drops it when
@@ -490,6 +510,7 @@ extension CanvasNSView {
                 && event.modifierFlags.contains(.shift))
             marqueePress = press
             marqueeContext = Experiments.shared.layerGroupsEnabled ? groupContext : nil
+            marqueeClickTarget = nil // bare canvas: a click that never travels picks nothing
             if press.clearsSelectionOnPress {
                 onClickedNothing()
                 if selectedLayerFrame != nil || isCanvasSelected {
@@ -500,6 +521,77 @@ extension CanvasNSView {
             marquee = MarqueeDrag(anchor: p)
         }
         refreshOverlays()
+    }
+
+    /// Takes hold of a box by its NAME — the strip of chrome drawn above every
+    /// screen and every component.
+    ///
+    /// Clicking a name has always picked its box; this makes dragging one move
+    /// the box, which is what a handle drawn beside something ought to do. It
+    /// is the always-there way to move a screen now that a drag on a screen's
+    /// empty surface sweeps what is on it instead, and it needs no selection
+    /// first: the name lights up under the pointer, and it sits above the
+    /// screen at the same size at every zoom.
+    ///
+    /// The whole selection travels when the name belongs to something already
+    /// in it, exactly as a press on the picture does. A press that never
+    /// travels commits nothing, so a plain click on a name is still a click.
+    private func beginNameLabelDrag(_ id: UUID, at p: CGPoint, event: NSEvent) {
+        guard let layer = document?.canvasLayer(id: id), !layer.isLocked else {
+            selectedLayerFrame = document?.canvasLayer(id: id).map { $0.withoutSlack($0.frame) }
+            onSelectLayerInGroup(id, document?.parentID(of: id))
+            return
+        }
+        if multiSelectedLayerIDs.contains(id),
+           let plan = document?.multiLayerDrag(moving: multiSelectedLayerIDs),
+           plan.members.count > 1, plan.members.contains(where: { $0.id == id }) {
+            multiMove = MultiMoveDrag(
+                plan: plan,
+                pick: (id, document?.parentID(of: id)),
+                grabOffset: CGPoint(x: p.x - plan.bounds.origin.x,
+                                    y: p.y - plan.bounds.origin.y),
+                peers: Experiments.shared.alignLayersEnabled
+                    ? (document?.snapPeers(excluding: multiSelectedLayerIDs) ?? []) : [],
+                columns: columnBands(excluding: multiSelectedLayerIDs),
+                snapped: Snapping.Result(origin: plan.bounds.origin),
+                copying: copyDragModifier(event))
+            return
+        }
+        let seen = layer.withoutSlack(layer.frame)
+        selectedLayerFrame = seen
+        onSelectLayerInGroup(id, document?.parentID(of: id))
+        moveDrag = MoveDrag(layerID: id,
+                            grabOffset: CGPoint(x: p.x - seen.origin.x,
+                                                y: p.y - seen.origin.y),
+                            size: seen.size,
+                            startOrigin: seen.origin,
+                            peers: Experiments.shared.alignLayersEnabled
+                                ? (document?.snapPeers(excluding: id) ?? []) : [],
+                            columns: columnBands(excluding: [id]),
+                            snapped: Snapping.Result(origin: seen.origin),
+                            copying: copyDragModifier(event))
+    }
+
+    /// Starts a band latched to `screen`, so the sweep picks from what is on
+    /// that screen and never reaches past it. Everything else is the press on
+    /// bare canvas: ⇧ spares what was already picked and adds the catch to it,
+    /// a plain press lets go first. The one difference is what a press that
+    /// never travels means — out on the canvas it picks nothing, and here it
+    /// picks the screen, which is what a click on a screen's surface has
+    /// always done.
+    private func beginScreenSurfaceSweep(_ screen: UUID, at p: CGPoint, event: NSEvent) {
+        let press = BareCanvasPress(shift: event.modifierFlags.contains(.shift))
+        marqueePress = press
+        marqueeContext = screen
+        marqueeClickTarget = screen
+        if press.clearsSelectionOnPress {
+            onClickedNothing()
+            if selectedLayerFrame != nil || isCanvasSelected {
+                selectedLayerFrame = nil
+                onSelectLayer(nil)
+            }
+        }
+        marquee = MarqueeDrag(anchor: p)
     }
 
     override func mouseDragged(with event: NSEvent) {
@@ -1074,8 +1166,27 @@ extension CanvasNSView {
             marquee = nil
             let press = marqueePress
             let level = marqueeContext
+            let clickTarget = marqueeClickTarget
             marqueePress = .replaces
             marqueeContext = nil
+            marqueeClickTarget = nil
+            // The band was started on a screen's surface and never travelled,
+            // so it was a click on that screen, and it still means everything
+            // a click on a screen's surface has always meant: plain picks the
+            // screen, ⇧ adds it to what is picked or drops it again. Only the
+            // DRAG changed meaning.
+            if drag.isClick(atZoom: viewport.zoom), let clickTarget,
+               document?.canvasLayer(id: clickTarget) != nil {
+                if press.sweepAddsToSelection {
+                    onExtendSelection(clickTarget)
+                } else {
+                    selectedLayerFrame = document?.canvasLayer(id: clickTarget)
+                        .map { $0.withoutSlack($0.frame) }
+                    onSelectLayerInGroup(clickTarget, document?.parentID(of: clickTarget))
+                }
+                refreshOverlays()
+                return
+            }
             guard press.commitsOnRelease(isClick: drag.isClick(atZoom: viewport.zoom)) else {
                 // A ⇧-click that landed on nothing: the band comes down and
                 // the selection stays exactly as it was.

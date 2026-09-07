@@ -112,16 +112,15 @@ extension CanvasNSView {
     func refreshGroupContextOutline() {
         let sweeping = marquee != nil
         let context = sweeping ? marqueeContext : groupContext
-        // A screen still never draws it, lit or resting. Not for want of a
-        // reason to — a band swept inside a screen would pick that screen's
-        // contents where the same band outside picks whole screens — but a
-        // band inside a screen cannot be swept in the first place: the screen
-        // paints a surface over its whole area, so a press on its empty space
-        // takes hold of the screen and moves it. Lighting a wall for a band
-        // that cannot exist is chrome for nobody. See the queue task about
-        // sweeping inside a screen.
+        // A screen draws it only while a band is being swept on it. At rest
+        // the box would be on almost all the time and say nothing, since
+        // clicking a button on a screen puts you inside that screen straight
+        // away; and a screen already shows where it is, with its surface and
+        // its name above it. Mid-sweep it says the one thing nothing else on
+        // screen says: this band is picking from what is on THIS screen, not
+        // from the screens themselves. Same wall, same blue, as a group's.
         guard let viewport, let document, let context,
-              document.layer(id: context)?.isFrame != true,
+              sweeping || document.layer(id: context)?.isFrame != true,
               let bounds = document.canvasBounds(of: context), bounds.width > 0, bounds.height > 0
         else {
             groupContextLayer.isHidden = true

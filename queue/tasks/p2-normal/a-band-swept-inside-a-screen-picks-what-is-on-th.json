@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1620,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T09:28:07.904Z",
-  "updated": "2026-09-07T09:28:07.905Z",
+  "updated": "2026-09-07T09:31:42.026Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the-rubber-band-shows-which-level-it-is-picking (2026-09-07). Reproduced in a playtest: inside a frame (insideGroup = Frame), a drag from empty frame surface reports snap guides catching, i.e. it went down the move-drag path, and the frame ends up translated. CanvasPointerDrags.mouseDown hit-testing treats the frame surface as a hittable layer even when it is the context you are standing inside. Figma is the reference: dragging a frame background marquees its children; the frame moves by its name label. Because of this, CanvasGroups.refreshGroupContextOutline deliberately keeps refusing to draw the group context box for frames even mid-sweep - once a band inside a screen is possible, lift that guard for the lit (sweeping) case so the screen edge lights the same way a group box does.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-07T09:28:07.905Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T09:31:42.026Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T09:35:07.141939Z",
+      "note": "Adversarial review before building. The core already sweeps inside a frame (layerIDs(fullyInside:inside:) treats a frame as an openable group, and SweepInsideAGroupTests covers it), so the whole bug is in the press: hitTestPath returns the frame for a press on its empty room, selectionTarget hands that back, and mouseDown starts a move. Danger in the obvious fix: if a screen's surface ALWAYS sweeps, a screen you just selected cannot be dragged from its middle, which reads as the app ignoring the pointer, and a huge screen whose name is scrolled off has no drag-move at all. So the rule is Figma's: a screen that is not picked sweeps, a screen that IS picked moves, and a press that never travels still picks the screen the way it always did. The name label becomes a real move handle too (today it only selects), so there is one always-visible way to move a screen without selecting it first. Cut from scope: no new cursor cue for the two meanings, no change to what a click on a screen's surface selects."
+    },
+    {
+      "t": "2026-09-07T09:50:15.435024Z",
+      "note": "Built. Core: PhotonzDocument.screenSurfacePress(at:zoom:picked:) in LayerGrouping.swift returns .sweep(screen:) or .move(screen:) for a press that lands on a frame's own empty room (nil everywhere else, including inside a copy of a component), 13 tests in BandInsideAScreenTests. App: CanvasPointerDrags.mouseDown asks it just before groupAwarePick and starts a band latched to that screen (beginScreenSurfaceSweep), the new marqueeClickTarget on CanvasNSView carries what a band that never travels picks so a click on the surface still picks the screen (plain) or adds it (shift), and beginNameLabelDrag makes the name a real move handle (multiMove when the box is already in a multi-selection, moveDrag otherwise). CanvasGroups.refreshGroupContextOutline now draws the group context box for a frame in the LIT case only, as this task's note asked."
+    },
+    {
+      "t": "2026-09-07T09:50:15.435024Z",
+      "note": "Adversarial review of the built thing, on the real app. Fixed while reviewing: a shift-click on a screen's surface had stopped adding the screen to the selection (a spared press that never travels commits nothing), so mouseUp now applies the click target ahead of that guard. Left rough and written into the audit: the same gesture means two things depending on whether the screen is picked, and nothing on screen says which before you press; option-dragging a screen's surface no longer duplicates it (its name does)."
+    },
+    {
+      "t": "2026-09-07T09:50:15.435024Z",
+      "note": "Verified in the app, not assumed. Scripts/playtest/band-inside-a-screen-walk.json, 49 steps, ok, with the Screen Recording grant so the pictures are real captures. Stage 2-swept: Frame still at (440,100) and selection ['Rectangle','Rectangle 2'] with insideGroup Frame, so the band picked only what is on the screen. 3-click-picks-the-screen: ['Frame']. 3b: shift-click gives ['Frame','Rectangle']. 4: a picked screen drags to (490,150). 7: dragging the name drags it to (490,150) with nothing picked first. Scripts/test.sh green (4327 tests). Ten neighbouring walks re-run green: band-level, frames, frame-selection, frame-name-rename, screen-click, screen-adoption, align-in-frame, paste-onto-frame, out-of-view-screen, columns-follow-the-screen; band-level's stage 7 now actually delivers what its note always claimed."
     }
-  ]
+  ],
+  "started": "2026-09-07T09:31:42.026Z"
 }

@@ -297,3 +297,48 @@ extension PhotonzDocument {
         updateLayer(id: id) { $0.frame = $0.frame.offsetBy(dx: delta.x, dy: delta.y) }
     }
 }
+
+// MARK: - A press on a screen's own surface
+
+/// What a press with the Select tool means when it lands on a screen's own
+/// empty surface — the room between the things sitting on it.
+///
+/// A screen is the surface you build on, so its empty room belongs to picking
+/// what is on it: a drag there sweeps a band over the screen's contents, the
+/// same way a drag on bare canvas sweeps the document. The screen itself is
+/// still moved by a drag, once it is picked, and by its name at any time.
+public enum ScreenSurfacePress: Equatable, Sendable {
+    /// Sweep a band that picks from what is ON this screen, and nothing above
+    /// it or beside it.
+    case sweep(screen: UUID)
+    /// Take hold of the screen and move it: it is already picked, so the drag
+    /// is aimed at the screen rather than at what is on it.
+    case move(screen: UUID)
+}
+
+extension PhotonzDocument {
+
+    /// What a press at `point` means when it lands on a screen's empty
+    /// surface, or nil for every press that does not — on something sitting on
+    /// a screen, on a plain group, or out on the canvas — which is every press
+    /// the canvas already had an answer for.
+    ///
+    /// `picked` is what is selected right now. A screen that is in there moves,
+    /// because a press on something already picked has always meant "carry
+    /// this", and because a screen with handles on it that would not budge
+    /// from its middle reads as the canvas ignoring the pointer. A screen that
+    /// is not picked sweeps, which is the whole point: rubber-banding three
+    /// buttons on a screen used to pick the screen up and drag it instead.
+    ///
+    /// A copy of a component is one object, so its surface is neither: what is
+    /// inside it belongs to its original and cannot be picked at all.
+    public func screenSurfacePress(at point: CGPoint, zoom: CGFloat = 1,
+                                   picked: Set<UUID>,
+                                   captionPillSize: CaptionPillSizing? = nil)
+    -> ScreenSurfacePress? {
+        guard let hit = hitTestPath(point, zoom: zoom, captionPillSize: captionPillSize),
+              let screen = layer(atPath: hit), screen.isFrame, !screen.isComponentInstance
+        else { return nil }
+        return picked.contains(screen.id) ? .move(screen: screen.id) : .sweep(screen: screen.id)
+    }
+}

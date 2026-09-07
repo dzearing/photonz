@@ -717,6 +717,12 @@ final class CanvasNSView: NSView {
     /// you back at the top level, so by the time the band is released the
     /// level it was swept at is already gone.
     var marqueeContext: UUID?
+    /// The box a band that never travels picks instead of picking nothing,
+    /// latched at gesture start. It is the screen a sweep started on: a drag
+    /// across a screen's empty surface sweeps what is on it, but a CLICK on
+    /// that same surface has always picked the screen, and still does. Nil for
+    /// every band started out on bare canvas, where a click means nothing.
+    var marqueeClickTarget: UUID?
     /// In-progress region-select drag (rect/ellipse tools). The combine mode
     /// is latched from the modifiers at gesture start (⇧ add, ⌥ subtract,
     /// ⇧⌥ intersect); the ants preview the live boolean combination.

@@ -246,6 +246,7 @@ extension CanvasNSView {
             }
             if marquee != nil || selection != nil {
                 marquee = nil
+                marqueeClickTarget = nil // the band was abandoned, so it picks nothing
                 commitSelection(nil, capture: true)
                 return
             }
