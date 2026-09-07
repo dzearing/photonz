@@ -1,0 +1,27 @@
+{
+  "id": "the-grid-settings-open-on-a-narrow-window-too",
+  "title": "The grid settings open on a narrow window too",
+  "goal": "On a narrow window the grid has no controls in the floating tool bar at all, and choosing Grid Settings on the View menu then does nothing: the settings have nothing to open on. Anyone working in a small window has no way to reach the grid at all beyond switching it on and off.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1690,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T16:09:05.539Z",
+  "updated": "2026-09-07T16:09:05.540Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "EditorState.isGridSettingsPresented is a flag read by a .popover attached to EditorView.gridChip. Below EditorChromeLayout.gridChipMinCanvasWidth (620pt canvas) that chip is not built at all, so the flag goes true and nothing presents, and the flag stays true: widening past the threshold can then present it unbidden. Options: anchor the popover to the window (a sheet or a popover on the canvas), or open it as a small window. Found while doing with-the-grid-off-only-the-grid-switch-is-on-the on 2026-09-07.",
+  "acceptance": [
+    "With a window narrow enough that the tool bar has no grid icon, View then Grid Settings opens the settings somewhere sensible",
+    "The settings show the same controls they show on a wide window",
+    "Widening the window afterwards does not make a popover appear by itself"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T16:09:05.540Z",
+      "note": "created (manual)"
+    }
+  ]
+}
