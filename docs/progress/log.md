@@ -10215,3 +10215,38 @@ Next / open: on a one line label the app offers corner handles only, so the
 bottom edge is not there to drag until the box has room once. Whether short
 boxes should keep their vertical handles is a change to how handles work for
 every layer and was left for the user to judge (raised in the audit).
+
+## 2026-09-06 — Every gap in a stack is the gap the stack was given
+
+A stack worked out where everything goes from the sizes its pieces had going
+in, and some pieces are not that size once they get there: a label stretched
+across a column re-wraps and comes out taller, and a stack inside a stack lays
+itself out again in the width it has just been handed. Whatever sat under such
+a piece was placed for the box it used to be, so the gap after it came out
+short by exactly what the piece gained. Yesterday's fix covered labels; this
+covers anything that changes shape on its way in.
+
+`GroupFlow.arranged` now settles before it places: it works the boxes out,
+hands each piece the box it worked out, and asks the flow again wherever a
+piece came back a size nobody expected. The size the piece already was and the
+size the flow ASKED for are both no surprise, so a stack of plain boxes is byte
+for byte the layout it always had. Three rounds at most, so a piece that can
+never take the size it is given costs a fixed amount and the last answer
+stands.
+
+Verified on the probe with the new `Scripts/playtest/gaps-stay-even-walk.json`,
+run against the old code and the new: mid-drag, where a group is laid out once,
+the square under a nested stack sat 28 points too high, one whole wrapped line,
+and now sits the typed gap below it. Both captures are in
+`queue/audits/2026-09-06-even-gaps.json`. 4189 tests green.
+
+Perf: reflowing a document whose stacks hold pieces that re-fit went 5.5ms to
+4.0ms, since settling inside one pass saves the pass that used to follow; a
+document where nothing re-fits pays about 11% more inside its one pass. The
+composite path is untouched.
+
+Next / open: the starter Card, which the task was filed about, measures 8 above
+and 8 below its title in both text measurement paths and did before this change
+too — the document reflow was converging after the fact. The one point the
+report saw was never reproduced in a settled document, so if it shows up again
+it will be worth catching mid-edit rather than after.
