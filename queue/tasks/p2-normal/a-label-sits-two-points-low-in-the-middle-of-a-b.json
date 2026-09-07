@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1510,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T23:05:45.223Z",
-  "updated": "2026-09-06T23:36:37.822Z",
+  "updated": "2026-09-07T00:04:59.855Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 while landing the one-line bar title. A measured text box carries 4 points of slack (TextMeasurement.slack, 2 a side). GroupFlow.moved sets the frame origin to the VISIBLE (content) origin and lets the slack hang past the far edges, which is right along the flow but puts a cross-axis centred box half the slack low. Nav Bar title lands at frame y=15 in a 48 tall bar, content 17..35, middle 26 against the bar middle 24. Look at GroupFlow.moved and GroupFlow.stacked cross-axis span.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-07T00:03:46.769127Z",
       "note": "Adversarial review, after building, in Photonz Probe with Screen Recording granted: Scripts/playtest/words-down-the-box-walk.json. The starters read right in the real capture. The other half does not have a click path: a text box on the canvas is always exactly as tall as its words (the bottom edge moves it, a corner re-wraps it, H is not editable), so Top/Middle/Bottom in the Text section cannot move anything there and only bite when a container stretches the box. Filed as a-text-box-cannot-be-given-room-to-spare-down-th. Also filed one-gap-in-a-card-comes-out-a-point-short, seen while measuring."
+    },
+    {
+      "t": "2026-09-07T00:04:59.854Z",
+      "note": "Words now go down the box a person SEES, not the stored frame. TextBlockMetrics.topInset shares out the visible height and measures the words at their own height, so middle-aligned text no longer sits ~2pt low and bottom-aligned text no longer hangs through the floor; StarterComponents pen.label centres the ink, so the Badge count and Button word stopped sitting 1.5pt high. The report's own case, a Nav Bar title, was already centred to within half a point and GroupFlow was right: reproduced first, said so in the log. Tests first (TextDownTheBoxTests reads ink off real rasters, CentredLabelTests, a vertical twin of the starter check), each failing before the change; full suite 4147 green. Verified in Photonz Probe with Screen Recording granted, Scripts/playtest/words-down-the-box-walk.json; audit queue/audits/2026-09-06-words-down-the-box.json. Two findings filed: the Down row cannot move anything on a plain text box, and one Card gap is a point short."
     }
   ],
-  "started": "2026-09-06T23:36:37.821Z"
+  "started": "2026-09-06T23:36:37.821Z",
+  "completed": "2026-09-07T00:04:59.855Z"
 }
