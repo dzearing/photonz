@@ -559,16 +559,18 @@ struct EditorCommands: Commands {
             // what the plain Button did and it cannot be talked into a press
             // that does nothing. `set` runs only when a person picks the item,
             // so there is no other writer to disagree with.
-            Toggle(MenuToggleNames.layersPanel, isOn: Binding(
+            Toggle(MenuToggleNames.panel, isOn: Binding(
                 get: { editor?.isLayersPanelVisible ?? false },
                 set: { _ in
                     if let editor { editor.setInspectorVisible(!editor.isLayersPanelVisible) }
                 }))
             .keyboardShortcut("l", modifiers: [.command, .option])
             .disabled(!hasDocument)
-            // The Library shelf, right under Show Layers because they are the
-            // same kind of thing. No key: Photoshop binds none for its
-            // Libraries panel, and Option Command L is already Show Layers.
+            // The Library shelf, right under Show Panel because they are the
+            // same kind of thing, and in the order they nest: the panel is the
+            // column, the Library is one shelf inside it. No key: Photoshop
+            // binds none for its Libraries panel, and Option Command L already
+            // shows the panel.
             // A flagged command is absent, not greyed, so the row is simply
             // not there when the flag is off.
             if Experiments.shared.libraryEnabled {

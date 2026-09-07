@@ -414,7 +414,7 @@ with the third of them.
 **Where the rows sit.** Group and Ungroup go in the Layer menu directly above
 the divider that starts Bring to Front, so the structure commands are together.
 Make Component, Insert Component, Detach Instance and Select Main Component form
-their own group under that. Show Library sits directly under Show Layers in
+their own group under that. Show Library sits directly under Show Panel in
 View, because they are the same kind of thing.
 
 **Why these keys.**
@@ -432,7 +432,7 @@ View, because they are the same kind of thing.
   Photoshop's Create Clipping Mask. Photonz may well want clipping masks later,
   so that key stays unspent.
 - **The Library toggle gets no key.** Photoshop's Libraries panel has no default
-  key either, and ⌥⌘L is already Show Layers.
+  key either, and ⌥⌘L already shows the panel.
 
 **Keys this work spends, so nothing else takes them:** ⌘G, ⇧⌘G, ⌥⌘K, ⌥⌘B, F.
 

@@ -9,7 +9,7 @@ import Testing
     @Test func everyToggleKeepsTheNameItAlreadyHad() {
         #expect(MenuToggleNames.grid == "Show Grid")
         #expect(MenuToggleNames.snapToGrid == "Snap to Grid")
-        #expect(MenuToggleNames.layersPanel == "Show Layers")
+        #expect(MenuToggleNames.panel == "Show Panel")
         #expect(MenuToggleNames.library == "Show Library")
         #expect(MenuToggleNames.history == "Show History")
     }

@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/panel-name",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "what-this-proves", "note": "The right hand panel answers to ONE word. Resting on the button in the title bar says Panel in both states, the View menu's row is Show Panel, and Option Command L still carries that row. The walk asks for the control by the word a person would read, so a rename that leaves any one of the three behind fails it." },
+
+    { "do": "hover", "label": "Panel" },
+    { "do": "describe", "stage": "1-resting-panel-open", "note": "panel open: the tooltip reads Hide Panel, with its key" },
+    { "do": "snapshot", "name": "1-tooltip-panel-open" },
+
+    { "do": "action", "action": "hideInspector" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "hover", "at": [640, 400], "space": "view" },
+    { "do": "hover", "label": "Panel" },
+    { "do": "describe", "stage": "2-resting-panel-closed", "note": "same button, same place, panel away: the tooltip reads Show Panel" },
+    { "do": "snapshot", "name": "2-tooltip-panel-closed" },
+
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "hover", "at": [640, 400], "space": "view" },
+
+    { "do": "describe", "stage": "why-the-history-stays-open", "note": "The View menu's rows read the FOCUSED window, and macOS will not give a background app the front spot. The history overlay does take key when it opens, which is enough for the row below to read the real document rather than its own default." },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
+    { "do": "wait", "seconds": 1 },
+    { "do": "menus", "stage": "3-view-menu", "menu": "View" },
+    { "do": "menuShot", "menu": "View", "name": "3-view-menu-panel-shown",
+      "ticked": ["Show Panel"], "unticked": [] },
+
+    { "do": "action", "action": "hideInspector" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "menuShot", "menu": "View", "name": "4-view-menu-panel-hidden",
+      "ticked": [], "unticked": ["Show Panel"] },
+
+    { "do": "action", "action": "showInspector" },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": true }
+  ]
+}

@@ -146,13 +146,20 @@ struct TitlebarPanelToggle: View {
                                            squareHitTarget: true))
         .frame(width: Self.diameter, height: Self.barHeight)
         .padding(.trailing, Self.trailingInset)
+        // One word for this panel everywhere it is named, from `PanelCopy`:
+        // this tooltip, the View menu's row and the name a walk asks for all
+        // come out of the same place, so they cannot drift apart again the way
+        // Panel, Show Layers and Inspector did.
+        //
         // Below, always: the button is at the very top of the window, and a
         // tooltip drawn above it would land off the top of the screen.
-        .toolTip(shown ? "Hide Panel" : "Show Panel", key: "⌥⌘L", below: true)
+        .toolTip(shown ? PanelCopy.hideTooltip : PanelCopy.showTooltip,
+                 key: "⌥⌘L", below: true)
         // Named for a scripted walk. One name in both states, because it is
         // one button in one place now: a walk asks for "Panel" and presses
         // whatever it currently means.
-        .playtestControl("Panel", detail: shown ? "the title bar's panel toggle, panel open"
-                                                : "the title bar's panel toggle, panel closed")
+        .playtestControl(PanelCopy.controlName,
+                         detail: shown ? "the title bar's panel toggle, panel open"
+                                       : "the title bar's panel toggle, panel closed")
     }
 }

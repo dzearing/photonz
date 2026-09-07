@@ -212,7 +212,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: measureRolesFlag,
                     title: "Measurement roles",
-                    description: "Each measurement is a Size or a Spacing callout with its own remembered colors. Adds a Role control to the measure inspector, a legend on the canvas while the tool is active, and a Show filter in the Measure Tool section of the inspector.",
+                    description: "Each measurement is a Size or a Spacing callout with its own remembered colors. Adds a Role control to the Measurement section of the panel, a legend on the canvas while the tool is active, and a Show filter in the Measure Tool section of the panel.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -221,7 +221,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: measurePanelFlag,
                     title: "Measurements panel",
-                    description: "Lists every measurement in the layers panel with its own eye, name, and value, adds a count to the toolbar, and puts From, To and Distance behind a Details fold in the inspector, beside Copy Measurement. The panel menu can show, hide, or clear them all, or copy them as a text spec list.",
+                    description: "Lists every measurement in the panel with its own eye, name, and value, adds a count to the toolbar, and puts From, To and Distance behind a Details fold in the panel, beside Copy Measurement. The panel menu can show, hide, or clear them all, or copy them as a text spec list.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -230,7 +230,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: measureCenterSnapFlag,
                     title: "Snap to centers",
-                    description: "Adds a Snap option to the Measure Tool section of the inspector. With Edges and centers, measure points also magnetize to element and gap centers, the midpoint between neighboring edges. Hold Command to drag free.",
+                    description: "Adds a Snap option to the Measure Tool section of the panel. With Edges and centers, measure points also magnetize to element and gap centers, the midpoint between neighboring edges. Hold Command to drag free.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -278,7 +278,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: geometryFieldsFlag,
                     title: "Type a layer's position and size",
-                    description: "The inspector gains a Position and Size section: X, Y, W and H for everything you have picked, as numbers you can type. One button can be made exactly 296 by 118, and a whole row of them can be made one width, or lined up on one left edge, in a single move and a single undo. Where the picked layers differ, a field says Mixed rather than a number. Up and down arrow steps a field by 1, Shift and an arrow by 10. A number the app worked out for you, like how tall a paragraph came out or anything on a locked layer, is shown as plain text with no box around it, and clicking it says why it takes nothing. Off means position and size are drag only.",
+                    description: "The panel gains a Position and Size section: X, Y, W and H for everything you have picked, as numbers you can type. One button can be made exactly 296 by 118, and a whole row of them can be made one width, or lined up on one left edge, in a single move and a single undo. Where the picked layers differ, a field says Mixed rather than a number. Up and down arrow steps a field by 1, Shift and an arrow by 10. A number the app worked out for you, like how tall a paragraph came out or anything on a locked layer, is shown as plain text with no box around it, and clicking it says why it takes nothing. Off means position and size are drag only.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -287,7 +287,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: alignLayersFlag,
                     title: "Line layers up with each other",
-                    description: "Two jobs at once. Select two or more layers and an Arrange row appears at the top of the inspector, mirrored in the Layer menu: line their left edges, centres, right edges, tops, middles or bottoms up in one press, and with three or more, space them out evenly across or down so every gap matches. And while you drag a layer, it now sticks to the edges and centres of the other layers as well as the picture\u{2019}s, with a short line showing what it just lined up with; holding Command drags free. Off means dragging pulls to the edges and middle of the picture only, and there is no Arrange row.",
+                    description: "Two jobs at once. Select two or more layers and an Arrange row appears at the top of the panel, mirrored in the Layer menu: line their left edges, centres, right edges, tops, middles or bottoms up in one press, and with three or more, space them out evenly across or down so every gap matches. And while you drag a layer, it now sticks to the edges and centres of the other layers as well as the picture\u{2019}s, with a short line showing what it just lined up with; holding Command drags free. Off means dragging pulls to the edges and middle of the picture only, and there is no Arrange row.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -296,7 +296,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: toolOptionsFlag,
                     title: "Tool options off the tool bar",
-                    description: "Picking up the Crop tool or the Magic Wand stops widening the floating tool bar. Crop keeps its aspect locks inside its own tool button and shows Cancel and Crop on the canvas while a crop is live; the wand's tolerance moves to a Magic Wand section in the inspector. Off means both tools lay their options out along the bar, which grows it and pushes tools into the overflow menu on a narrow window.",
+                    description: "Picking up the Crop tool or the Magic Wand stops widening the floating tool bar. Crop keeps its aspect locks inside its own tool button and shows Cancel and Crop on the canvas while a crop is live; the wand's tolerance moves to a Magic Wand section in the panel. Off means both tools lay their options out along the bar, which grows it and pushes tools into the overflow menu on a narrow window.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -377,7 +377,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: stylesFlag,
                     title: "Save a color as a style and reuse it",
-                    description: "Save a fill, an outline or a text color under a name, and any layer can wear it. The Fill and Color rows in the inspector grow a small styles button: save what is there as a style, or pick one you already have. Saved styles sit on the Library\u{2019}s Styles shelf, where you rename one, change its color, or take it off the shelf. Changing a style repaints every layer wearing it in one step, which one undo puts back. Needs Keep reusable pieces in a Library. Off means colors are one-offs again and the Styles shelf is empty; styles already in a document keep painting either way.",
+                    description: "Save a fill, an outline or a text color under a name, and any layer can wear it. The Fill and Color rows in the panel grow a small styles button: save what is there as a style, or pick one you already have. Saved styles sit on the Library\u{2019}s Styles shelf, where you rename one, change its color, or take it off the shelf. Changing a style repaints every layer wearing it in one step, which one undo puts back. Needs Keep reusable pieces in a Library. Off means colors are one-offs again and the Styles shelf is empty; styles already in a document keep painting either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -413,7 +413,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: placementFlag,
                     title: "Say where the pieces sit when something is resized",
-                    description: "The inspector gains a Layout section. A group says how its contents line up \u{2014} left, centre, right or stretch across, top, middle, bottom or stretch down \u{2014} and any one piece inside can say something different for itself, so a button dragged wider keeps its label in the middle while the fill behind it grows. A row that has not been set says which setting it is following from the group it sits in. Text gains an Align control in the Text section for where its words sit inside their own box, and telling text to stretch moves its words to the middle of the box it now fills, so the choice does something you can see. The five Library components arrive already set up this way whether this is on or off. Off means the section is gone and a resize multiplies everything proportionally, which is what a layer with nothing set does anyway.",
+                    description: "The panel gains a Layout section. A group says how its contents line up \u{2014} left, centre, right or stretch across, top, middle, bottom or stretch down \u{2014} and any one piece inside can say something different for itself, so a button dragged wider keeps its label in the middle while the fill behind it grows. A row that has not been set says which setting it is following from the group it sits in. Text gains an Align control in the Text section for where its words sit inside their own box, and telling text to stretch moves its words to the middle of the box it now fills, so the choice does something you can see. The five Library components arrive already set up this way whether this is on or off. Off means the section is gone and a resize multiplies everything proportionally, which is what a layer with nothing set does anyway.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -431,7 +431,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: calloutShapeFlag,
                     title: "Choose a zoom callout\u{2019}s shape before you draw it",
-                    description: "Picking up the Zoom Callout tool puts a Zoom Callout Tool section in the inspector with one choice in it: Rectangle or Circle. The box you drag out previews in the shape you chose and the callout lands in it, and the tool keeps that choice for the next one and after a relaunch. Off means every callout is drawn as a rectangle and the only way to a circle is to draw one first and change it in the callout\u{2019}s own section.",
+                    description: "Picking up the Zoom Callout tool puts a Zoom Callout Tool section in the panel with one choice in it: Rectangle or Circle. The box you drag out previews in the shape you chose and the callout lands in it, and the tool keeps that choice for the next one and after a relaunch. Off means every callout is drawn as a rectangle and the only way to a circle is to draw one first and change it in the callout\u{2019}s own section.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

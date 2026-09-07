@@ -353,7 +353,8 @@ private final class Run {
             case .label(let text):
                 // The exact label first, then one that starts with the text,
                 // then one that mentions it: "Rectangle" is the shape, not
-                // Rectangle Select; "Inspector" is the toggle in either state.
+                // Rectangle Select; "Panel" is the title bar toggle in either
+                // state, since its tooltip flips between Show and Hide.
                 guard let found = anchors.first(where: { $0.label == text })
                         ?? anchors.first(where: { $0.label.hasPrefix(text) })
                         ?? anchors.first(where: { $0.label.range(of: text, options: .caseInsensitive) != nil }) else {

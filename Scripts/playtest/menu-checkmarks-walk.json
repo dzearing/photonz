@@ -18,17 +18,17 @@
     { "do": "action", "action": "showGrid" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "menuShot", "menu": "View", "name": "view-menu-grid-on",
-      "ticked": ["Show Grid", "Show Layers"], "unticked": [] },
+      "ticked": ["Show Grid", "Show Panel"], "unticked": [] },
 
     { "do": "action", "action": "hideGrid" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "menuShot", "menu": "View", "name": "view-menu-grid-off",
-      "ticked": ["Show Layers"], "unticked": ["Show Grid"] },
+      "ticked": ["Show Panel"], "unticked": ["Show Grid"] },
 
     { "do": "action", "action": "hideInspector" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "menuShot", "menu": "View", "name": "view-menu-layers-hidden",
-      "ticked": [], "unticked": ["Show Grid", "Show Layers"] },
+    { "do": "menuShot", "menu": "View", "name": "view-menu-panel-hidden",
+      "ticked": [], "unticked": ["Show Grid", "Show Panel"] },
 
     { "do": "action", "action": "showInspector" },
     { "do": "action", "action": "showGrid" },

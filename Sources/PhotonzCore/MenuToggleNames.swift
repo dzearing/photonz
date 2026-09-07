@@ -8,8 +8,10 @@
 /// for by the user on 2026-09-05 for every one of them, not just the grid.
 ///
 /// The names kept are the ones that were already there, so nothing has to be
-/// re-learned or re-found, and the two grid switches now read word for word the
-/// same here as on the grid settings popover (`CanvasGridCopy.grid`,
+/// re-learned or re-found, with one deliberate exception: the panel row, which
+/// named a single section of a column that holds several and now reads the one
+/// word the rest of the app uses for it (`PanelCopy`). The two grid switches
+/// read word for word the same here as on the grid settings popover (`CanvasGridCopy.grid`,
 /// `CanvasGridCopy.snap`). A row in a list is different: a bare "Show" on a
 /// layer row says nothing, so those say what the row IS.
 ///
@@ -22,7 +24,11 @@ public enum MenuToggleNames {
 
     public static let grid = "Show Grid"
     public static let snapToGrid = "Snap to Grid"
-    public static let layersPanel = "Show Layers"
+    /// The right hand panel. One word for it everywhere, from `PanelCopy`:
+    /// this row and the tooltip on the title bar button cannot drift apart.
+    /// It said "Show Layers" until 2026-09-07, which named one section of a
+    /// column that holds several.
+    public static let panel = PanelCopy.menuItem
     public static let library = "Show Library"
 
     // MARK: Layer menu
@@ -46,7 +52,7 @@ public enum MenuToggleNames {
     /// Every on/off item in the app, so a test can hold them all to the same
     /// standard and a new one added without a name here shows up as a gap.
     public static let all: [String] = [
-        grid, snapToGrid, layersPanel, library, showColumns, history,
+        grid, snapToGrid, panel, library, showColumns, history,
         layerVisible, layerLocked,
     ]
 }

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T12:57:50.237Z",
-  "updated": "2026-09-07T12:58:20.391Z",
+  "updated": "2026-09-07T14:38:35.761802Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-07 digest design review. Evidence: audit queue/audits/2026-09-07-panel-toggle-titlebar.json, rough 3, which names all three words and says the menu was deliberately left alone because renaming it would touch the shipping release. That is the call to settle here rather than leave hanging. It has already cost something: Scripts/playtest/tool-tips.json fails at step 13 looking for Inspector (task the-tool-tips-walk-finds-the-panel-button-it-is). Files: Sources/Photonz/TitlebarPanelToggle.swift for the button, the View menu for Show Layers. Note the shortcut is Option Command L.",
@@ -29,6 +29,31 @@
     {
       "t": "2026-09-07T12:58:20.391Z",
       "note": "seq 1630 -> 20"
+    },
+    {
+      "t": "2026-09-07T14:27:57.553Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T14:38:35.761802Z",
+      "note": "Adversarial review before building. Three candidate words: Panel (the tooltip, and what every commit, task and audit calls it), Inspector (the Mac word, retired this morning), Layers (the View menu's Photoshop hangover). Layers is wrong on the facts: the column holds Layers, Library, Appearance, Measurement and whatever the tool in hand brings, so naming the whole thing after one section hides the rest. Inspector is wrong for the same reason in reverse: a Layers list and a Library shelf inspect nothing. Panel is what the thing is and what the app already says, so it wins and nothing has to be re-learned."
+    },
+    {
+      "t": "2026-09-07T14:38:35.761802Z",
+      "note": "Shipping release: changed with it, on purpose. The button and the View menu are shared code, so current already said Hide Panel on the button and Show Layers in the menu, which is exactly the confusion this task was filed about. Leaving current alone would have left it in the release people use. Written up in the audit."
+    },
+    {
+      "t": "2026-09-07T14:38:35.761802Z",
+      "note": "Shipped: PanelCopy in PhotonzCore is the one source (noun, menuItem, showTooltip, hideTooltip, controlName). MenuToggleNames.layersPanel -> .panel reads PanelCopy.menuItem; TitlebarPanelToggle reads the tooltips and the walk name from it. Feature descriptions in the Experiments window (FeatureCatalog, 9 strings) stopped calling it the inspector. menu-checkmarks-walk and docs/design/ui-building.md updated."
+    },
+    {
+      "t": "2026-09-07T14:38:35.761802Z",
+      "note": "Verified: Scripts/test.sh green, 4381 tests. New Scripts/playtest/panel-name-walk.json rests on the button in both states and reads back \"Hide Panel (⌥⌘L)\" and \"Show Panel (⌥⌘L)\", dumps the View menu (Show Panel ⌥⌘L, unchanged key) and photographs it ticked and unticked. menu-checkmarks-walk passes with the new name. Screen Recording granted, so the audit carries real captures."
+    },
+    {
+      "t": "2026-09-07T14:38:35.761802Z",
+      "note": "Left for its own task: Scripts/playtest/tool-tips.json line 21 still hovers \"Inspector\". That is the-tool-tips-walk-finds-the-panel-button-it-is, and it is now a one-word change to \"Panel\"."
     }
-  ]
+  ],
+  "started": "2026-09-07T14:27:57.553Z"
 }

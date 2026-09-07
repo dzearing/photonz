@@ -1,0 +1,28 @@
+{
+  "feature": "One name for the right hand panel",
+  "epic": "ui-building",
+  "summary": "The panel is called Panel everywhere now. Resting on the button in the title bar says Show Panel or Hide Panel, the View menu row that used to say Show Layers says Show Panel, and the feature descriptions in the Experiments window stopped calling it the inspector. The shortcut is still Option Command L.",
+  "setup": "Photonz Dev, any picture open. Nothing to turn on. Both releases got the new name, since the button and the menu are the same in each.",
+  "try": [
+    { "do": "Open a screenshot. Rest the pointer on the button at the top right of the title bar.", "shot": "2026-09-07-panel-one-name-1.png" },
+    { "do": "Click it, then rest on it again with the panel away.", "shot": "2026-09-07-panel-one-name-2.png" },
+    { "do": "Open the View menu and read the row on Option Command L.", "shot": "2026-09-07-panel-one-name-3.png" },
+    { "do": "Pick that row, and watch the panel go." },
+    { "do": "Press Option Command L twice to bring it back and take it away again." },
+    { "do": "Open the Experiments window, pick a feature like Position and size, and read its description." }
+  ],
+  "evaluate": [
+    "Reading Show Panel in the View menu, do you know which thing on screen it means before you pick it?",
+    "Panel against Inspector: Inspector is the Mac word, but half this column is a Layers list and a Library shelf, which inspect nothing. Is Panel the honest name?",
+    "The menu keeps one name with a checkmark while the button's tooltip flips between Show and Hide. Does that read as one thing said two ways, or as two names again?",
+    "The Library gets its own row, Show Library, right under Show Panel, and the Library is a shelf INSIDE the panel. Does that nesting read, or does it look like two panels?",
+    "If a second panel ever arrives, say a timeline along the bottom, does Show Panel still work, or would it need a qualifier then?"
+  ],
+  "rough": [
+    "The shipping release got the rename too, deliberately. The button and the View menu are the same code in both releases, so the current release already said Hide Panel on the button while its menu said Show Layers: leaving it alone would have left the exact confusion this task was filed about in the release people actually use. Nothing else about the shipping release changed, and the shortcut is untouched.",
+    "Every place that names the panel now reads it from one constant, so the three names cannot come back one file at a time. The View menu row, both tooltips and the name a scripted walk asks for are all built from the word Panel.",
+    "One walk still asks for the panel button by its retired name: Scripts/playtest/tool-tips.json line 21 says Inspector, so the tooltip walk still stops there. That is its own queued task (the-tool-tips-walk-finds-the-panel-button-it-is), and it is now a one-word change: the settled name is Panel.",
+    "The word Inspector survives all over the code, in type names like PlacementInspector and in state like isInspectorShown. None of it is on screen, and renaming it would be a large diff with no user-visible effect, so it was left.",
+    "Screen Recording was granted, so all three pictures are real screen captures from Scripts/playtest/panel-name-walk.json, not offscreen renders."
+  ]
+}
