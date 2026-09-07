@@ -10250,3 +10250,34 @@ and 8 below its title in both text measurement paths and did before this change
 too — the document reflow was converging after the fact. The one point the
 report saw was never reproduced in a settled document, so if it shows up again
 it will be worth catching mid-edit rather than after.
+
+## 2026-09-06 — A highlight is offered one line round it, once
+
+Picking a highlight put two rows called Outline one above the other. Reproduced
+before anything was touched: `layerPartRows` for a lone highlight returned
+`[Outline/stroke, Outline/border, Shadow]`, both switches wrote the same
+`style.borderWidth`, and the two colour wells pointed at different colours, so
+picking either really was a guess.
+
+The highlight rasterizer fills its box with `annotation.colorHex`, so the
+`.stroke` slot on a highlight is the WASH it lays down, not a line round
+anything, and it never paints the stroke width it carries. That makes it a
+property with no switch, the way a line's ink or a letter's ink is. The stroke
+row is now the Outline part only for layers whose outline actually IS that slot
+(`outlineSlot == .stroke && outlineIsSwitchable`), so a highlight falls out of
+it, keeps its wash on the no-switch Color row, and keeps one real Outline: the
+ring, switch and width and all.
+
+Tests first, watched fail, then pass: five cases in `LayerPartsTests`. Full
+suite green, 4194. Verified on the probe with the new
+`Scripts/playtest/highlight-one-outline-walk.json` — the panel dump lists Color,
+one Outline switch and one Shadow switch, the rectangle's rows are untouched,
+and the switch puts a ring on the highlight and takes it off with the wash
+intact. Real captures (Screen Recording granted) in
+`queue/audits/2026-09-06-highlight-one-outline.json`.
+
+Next / open: a rectangle picked WITH a picture, or with a highlight, still
+shows two rows called Outline, because `LayerPartRow` carries one slot and
+those are two different colours underneath. Merging them means a row whose
+colour is per-layer. Filed as
+`two-layers-picked-together-are-offered-outline-t`.

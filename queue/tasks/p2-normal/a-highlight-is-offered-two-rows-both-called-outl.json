@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1560,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T00:43:49.357Z",
-  "updated": "2026-09-07T01:39:59.748Z",
+  "updated": "2026-09-07T01:46:13.277Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Confirmed 2026-09-06 with a scratch test: doc.layerPartRows for a lone highlight returns [Outline/stroke, Outline/border, Shadow]. In LayerParts.layerPartRows a highlight lands in BOTH the inked set (colorSlots contains .stroke) and the ringed set (!drawsItsOwnOutline), and Layer.outlineIsSwitchable is true for it, so the stroke row keeps a switch it should not have. A highlight never paints its stroke width, so the stroke row is arguably the one to drop, but its colour is the highlight colour people actually set, so check ColorSlot.stroke vs .border on a highlight before deleting either.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-07T02:24:00.000Z",
       "note": "Left undone on purpose: a rectangle picked WITH a picture (or with a highlight) still shows two rows called Outline, since LayerPartRow carries one slot and those are two different colours underneath. Pre-existing, bigger than this report, filed as two-layers-picked-together-are-offered-outline-t. Audit: queue/audits/2026-09-06-highlight-one-outline.json."
+    },
+    {
+      "t": "2026-09-07T01:46:13.276Z",
+      "note": "A highlight now shows Color for its wash and ONE Outline for the ring. In LayerParts.layerPartRows the stroke row is the Outline part only for layers whose outline is that slot, so a highlight (which fills its box with its stroke colour and never paints a stroke width) falls out and takes the no-switch Color row. Five new core tests, full suite green at 4194. Verified on the probe with Scripts/playtest/highlight-one-outline-walk.json: real captures show Color/Outline/Shadow once each, the switch puts the ring on and off with the wash intact, rectangle rows unchanged. Audit queue/audits/2026-09-06-highlight-one-outline.json. Mixed selections still double up the name; filed as two-layers-picked-together-are-offered-outline-t."
     }
   ],
-  "started": "2026-09-07T01:39:59.747Z"
+  "started": "2026-09-07T01:39:59.747Z",
+  "completed": "2026-09-07T01:46:13.277Z"
 }
