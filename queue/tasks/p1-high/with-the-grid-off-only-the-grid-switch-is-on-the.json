@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:19:30.227Z",
-  "updated": "2026-09-07T16:09:30.000Z",
+  "updated": "2026-09-07T16:22:44.383Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported again by the user on 2026-09-07 as a regression: with the grid off they still see space taken by the grid controls, and they asked that the grid icon open the settings rather than toggle the grid. Raised to p1. Today EditorView.gridChip (line 670) builds the whole group whenever the feature is on and a document is open; isVisible only lights the switch, and the size button, divider and gear are built unconditionally below it. Two things follow. The obvious one is to branch so those three are only built when the grid is on. The one that will be missed is the SPACE: EditorChromeLayout.showsGridChip decides whether the group fits at the current width, and the tool bar reserves room from a measured content width, so a group that draws less must also measure less or the gap stays exactly as the user describes. That is why the acceptance asks for measured numbers rather than a look. On the icon becoming a settings button: the popover already exists (CanvasGridSettingsPopover, opened today from the View menu's Grid Settings through isGridSettingsPresented), so this is a rewiring rather than a new surface, and the grid's on and off switch has to move into it. Keep the shortcut working and show it there.",
@@ -50,11 +50,11 @@
     },
     {
       "t": "2026-09-07T16:09:30.000Z",
-      "note": "Adversarial review before building. (1) The icon becoming a door costs a press: turning the grid on used to be one click and is now two, or one key. Built as asked, since the task states it plainly and the alternative leaves the grid's numbers homeless again; \u2318' is now written beside the switch so the one-press way is discoverable, and the cost is in the audit for judgment. (2) The bar is centre-aligned, so a narrower grid group re-centres everything: checked that the settings popover follows its anchor rather than being orphaned, and it does. (3) Two things could be left pointing at a control that had just left the bar: the sizes popover hung off the cell button, and adjust mode. Both now close when the grid goes off. (4) Shortest version: no new surface at all, the settings popover already existed and already carried the switch."
+      "note": "Adversarial review before building. (1) The icon becoming a door costs a press: turning the grid on used to be one click and is now two, or one key. Built as asked, since the task states it plainly and the alternative leaves the grid's numbers homeless again; ⌘' is now written beside the switch so the one-press way is discoverable, and the cost is in the audit for judgment. (2) The bar is centre-aligned, so a narrower grid group re-centres everything: checked that the settings popover follows its anchor rather than being orphaned, and it does. (3) Two things could be left pointing at a control that had just left the bar: the sizes popover hung off the cell button, and adjust mode. Both now close when the grid goes off. (4) Shortest version: no new surface at all, the settings popover already existed and already carried the switch."
     },
     {
       "t": "2026-09-07T16:09:30.000Z",
-      "note": "Built: EditorChromeLayout.gridChipParts(canvasWidth:isGridVisible:) is the rule, in PhotonzCore and tested (6 new tests). EditorView.gridChip builds from it, so the cell button, divider and gear only exist with the grid on, and the icon calls showGridSettings() instead of toggleCanvasGrid(). showGridSettings no longer switches the grid on first (the switch is the first row of what it opens). Every switch of the grid now goes through EditorState.setCanvasGridVisible, which closes the sizes and ends adjust mode on the way off. beginGridAdjustment refuses with the grid hidden and View > Adjust Grid is dimmed there, like Snap to Grid above it. CanvasGridControls shows \u2318' beside the switch."
+      "note": "Built: EditorChromeLayout.gridChipParts(canvasWidth:isGridVisible:) is the rule, in PhotonzCore and tested (6 new tests). EditorView.gridChip builds from it, so the cell button, divider and gear only exist with the grid on, and the icon calls showGridSettings() instead of toggleCanvasGrid(). showGridSettings no longer switches the grid on first (the switch is the first row of what it opens). Every switch of the grid now goes through EditorState.setCanvasGridVisible, which closes the sizes and ends adjust mode on the way off. beginGridAdjustment refuses with the grid hidden and View > Adjust Grid is dimmed there, like Snap to Grid above it. CanvasGridControls shows ⌘' beside the switch."
     },
     {
       "t": "2026-09-07T16:09:30.000Z",
@@ -63,7 +63,33 @@
     {
       "t": "2026-09-07T16:09:30.000Z",
       "note": "Audit: queue/audits/2026-09-07-grid-chip.json with three real screen captures. Follow-up filed: the-grid-settings-open-on-a-narrow-window-too (below 620pt of canvas there is no chip, so View > Grid Settings has nothing to open on; pre-existing, but the icon being the main door makes it matter)."
+    },
+    {
+      "t": "2026-09-07T16:22:13.648Z",
+      "note": "runner failed (exit 0, attempt 1): The full walk sweep is still running (it re-runs all 253 walks). While it finishes, here's where things stand: **Reproduced first, as required.** A walk on a 1240×900 window read the floating tool bar at **983pt with the grid off and 983pt with it on** — identical — and the control inventory put `Show Grid`, `Cell` and `Adjust Grid` at exactly the same three positions in both states. The report wa"
+    },
+    {
+      "t": "2026-09-07T16:22:44.383Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T16:40:00.000Z",
+      "note": "Resumed after the previous run died mid-sweep. Re-verified the built work independently rather than trusting its numbers. Scripts/test.sh: 4420 tests in 367 suites, all pass. Re-ran grid-off-takes-no-room-walk on a fresh probe build (Screen Recording granted, so these are real captures): bar 870pt with the grid off, 983pt with it on, 113pt returned; off/on/off/on/off lands on exactly 870 every time; the control inventory reads only \"Grid Settings\" at x688 with the grid off, and Grid Settings/Cell/Adjust Grid with it on. Pressing the icon leaves the grid off (bar stays 870) and raises the settings, so the icon is a door not a switch. The sizes are open at stage 5 and gone at stage 6 after the grid goes off. Adjust mode reads 382pt and hands back 870 when the grid goes off from inside it; asking for the mode with the grid off leaves the bar at 870, so it refuses."
+    },
+    {
+      "t": "2026-09-07T16:40:00.000Z",
+      "note": "One thing tightened this run. setCanvasGridVisible's comment claimed EVERY switch of the grid runs through it, but setGridMinimumCell, setCanvasGridSpacing and setCanvasGridMajorEvery still wrote canvasGrid.isVisible = true directly. Behaviourally identical (they only ever switch it ON, and the cleanup only matters going off), but it left three ways for a future off-path to skip the cleanup. All three now call setCanvasGridVisible(true), so the comment is true. Also restored the trailing newline grid-bar-two-buttons-walk.json had lost."
+    },
+    {
+      "t": "2026-09-07T16:40:00.000Z",
+      "note": "Regression sweep over every grid-touching walk: canvas-grid, grid-bar-two-buttons, grid-guides, grid-chosen-size, grid-origin, grid-settings, guides-catch-marks, menu-checkmarks, grid-live-spacing, grid-nudge, grid-off-takes-no-room. All clean."
     }
   ],
-  "started": "2026-09-07T15:50:26.243Z"
+  "started": "2026-09-07T16:22:44.383Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-07T16:22:13.648Z",
+    "exit": 0,
+    "message": "The full walk sweep is still running (it re-runs all 253 walks). While it finishes, here's where things stand: **Reproduced first, as required.** A walk on a 1240×900 window read the floating tool bar at **983pt with the grid off and 983pt with it on** — identical — and the control inventory put `Show Grid`, `Cell` and `Adjust Grid` at exactly the same three positions in both states. The report wa"
+  }
 }

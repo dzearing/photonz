@@ -1,0 +1,39 @@
+{
+  "id": "ready-to-try-presents-features-to-play-with-not",
+  "title": "Ready to try presents features to play with, not a list of three hundred file names",
+  "goal": "Ready to try hands you a menu of three hundred entries and asks you to pick one. That is a file list, not a place to discover what is new. Rebuild it as a proper surface: what landed most recently comes first, grouped by the part of the app it belongs to, each one a card carrying its name, the one line saying what you can now do, and how long trying it takes. A card opens in place to reveal the steps, the questions it wants answered and what is still rough, so the page starts quiet and goes deep only where you ask. Nothing is hidden behind a control you have to operate before you can see anything at all.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 17,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T16:30:48.842Z",
+  "updated": "2026-09-07T16:30:48.881Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-07: the select with three hundred items is not a design, and they want progressive disclosure on a surface that reads as a polished professional dashboard. Today auditPicker (docs/design/mocks/pages/dashboard.html line 1198) builds a single select of every file name and renderAudits draws one report below it. There are 325 reports and they already carry what a card needs: feature, epic, summary, setup, try, evaluate and rough. The epic is the grouping, and recent ones spread across ui-building, ui-components, ui-layout, measure-redline and unmanned-loop, so grouping by it is meaningful rather than decorative. Two things to get right that a naive rebuild will miss. First the data: the state payload deliberately carries only audit NAMES and each report is fetched when opened, so a card list needs the summary line without fetching all of them; either widen what the state carries for the recent set only, or fetch lazily as cards come into view, and say which in the audit. Second, the reports are dated by file name, so ordering and the landed date should come from that rather than from reading each file. Keep the reaction machinery untouched, since that is what turns a comment into a task.",
+  "acceptance": [
+    "Arriving at Ready to try shows something immediately: the newest reports as cards, with no menu to operate first",
+    "Each card shows the feature name, the single sentence saying what you can now do, when it landed, and how many steps trying it takes",
+    "Cards are grouped by the part of the app they belong to, newest first, with the count in each group visible",
+    "Opening a card reveals its steps, its questions and what is still rough, in place, without leaving the page or losing your position",
+    "Only one card needs to be open at a time, and closing returns you to exactly where you were in the list",
+    "Anything older than the recent set is reachable, by searching by name and by filtering to a part of the app, but never as the first thing you meet",
+    "The whole page is usable from the keyboard, and every card and control has a name a screen reader can read",
+    "Reacting to a line still works exactly as it does now, and a reaction still becomes a task",
+    "It stays fast with three hundred reports and more: the page does not fetch every report to draw the list, and the audit gives a measured load time",
+    "The design follows the dashboard's own language rather than inventing controls, and the audit says which existing pieces were reused",
+    "Audit written under queue/audits/ with the page on arrival, a card open, and a search, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T16:30:48.843Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T16:30:48.880Z",
+      "note": "seq 190 -> 17"
+    }
+  ]
+}
