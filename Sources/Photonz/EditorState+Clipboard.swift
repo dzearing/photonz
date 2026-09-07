@@ -215,21 +215,48 @@ extension EditorState {
     /// ⌘V: a copied Photonz layer pastes offset with a fresh identity; any
     /// system image (screenshot, copied web image) pastes as a new layer —
     /// or opens as a document when none is open.
+    ///
+    /// Whatever arrived, it is the thing you are now working on: it is picked,
+    /// and the pointer comes into your hand to move it, because dragging what
+    /// you just pasted is the next thing anyone does. Undo hands your tool
+    /// back (`handOverPointer`).
     func paste() {
         // Pasting lands a NEW layer — the marquee belonged to the moment
         // before it; keeping stale ants over fresh content misleads
         // (Photoshop also deselects on a plain paste).
         setSelection(nil)
+        let tool = activeTool
+        // The paste's own edit clears this on the way through, so the run it
+        // belongs to is carried across by hand.
+        let carried = pasteToolReturn
         let pasteboard = NSPasteboard.general
+        var landed: UUID?
         if let data = pasteboard.data(forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)),
            let transfer = try? JSONDecoder().decode(LayerTransfer.self, from: data) {
-            pasteLayer(transfer)
-            return
-        }
-        if let image = NSImage(pasteboard: pasteboard)?
+            landed = pasteLayer(transfer)
+        } else if let image = NSImage(pasteboard: pasteboard)?
             .cgImage(forProposedRect: nil, context: nil, hints: nil) {
-            pasteImage(image)
+            landed = pasteImage(image)
         }
+        guard let landed else { return }
+        handOverPointer(pasted: landed, held: tool, carrying: carried)
+    }
+
+    /// The pasted layer is picked and the pointer is in hand, so the next drag
+    /// moves what you just pasted instead of drawing over it.
+    ///
+    /// A paste that failed, or that opened a new document instead of landing a
+    /// layer, never gets here: switching the tool for nothing is exactly the
+    /// kind of small theft that makes a tool bar feel untrustworthy.
+    private func handOverPointer(pasted id: UUID, held tool: Tool,
+                                 carrying carried: PasteToolReturn?) {
+        guard Experiments.shared.pasteHandsYouThePointerEnabled else { return }
+        setTool(.select)
+        // Picking a tool drops the picked layer for tools that do not keep one,
+        // and clears the tool memory. Select keeps it, but saying so here means
+        // the paste is picked no matter which tool it came out of.
+        selectedLayerID = id
+        pasteToolReturn = PasteToolReturn.after(pasting: id, holding: tool, carrying: carried)
     }
 
     /// Where the next paste goes, given where the first one belongs.
@@ -256,19 +283,23 @@ extension EditorState {
         pasteLadder?.rungs.append((id, frame))
     }
 
-    private func pasteLayer(_ transfer: LayerTransfer) {
+    /// The layer this paste landed, or nil when nothing landed: a payload that
+    /// would not decode, or a paste into an empty window, which opens the
+    /// picture as a document of its own instead.
+    @discardableResult
+    private func pasteLayer(_ transfer: LayerTransfer) -> UUID? {
         var layer = transfer.layer.duplicated()
         if case .image = transfer.layer.content {
-            guard let data = transfer.imageData, let cg = ImageCodec.decode(data) else { return }
+            guard let data = transfer.imageData, let cg = ImageCodec.decode(data) else { return nil }
             // The payload's ImageRef belonged to the source window's store.
             layer.content = .image(store.register(cg))
         }
         if document == nil, case .image(let ref) = layer.content,
            let cg = store.image(for: ref) {
             openCapture(cg)
-            return
+            return nil
         }
-        guard let document else { return }
+        guard let document else { return nil }
         // Each paste of one clipboard steps past the last, so pasting twice
         // leaves two copies you can see and tell apart rather than one hidden
         // exactly under the other.
@@ -287,6 +318,7 @@ extension EditorState {
         perform { [layer] in $0.addLayerDrawnOnFrame(layer) }
         selectedLayerID = layer.id
         recordPaste(layer.id, at: layer.frame)
+        return layer.id
     }
 
     /// `point` is where a drag let go, in canvas coordinates; nil for ⌘V,
@@ -297,11 +329,15 @@ extension EditorState {
     /// file behind it (`PlacedImageNaming`). A name already in use here takes
     /// the next free number, so placing the same file twice reads as two rows
     /// rather than one word repeated.
+    ///
+    /// Returns the layer it landed, or nil when the picture opened as a
+    /// document of its own instead of joining one.
+    @discardableResult
     func pasteImage(_ image: CGImage, at point: CGPoint? = nil,
-                            fileName: String? = nil, landingAt landing: LayerDrop? = nil) {
+                            fileName: String? = nil, landingAt landing: LayerDrop? = nil) -> UUID? {
         guard let document else {
             openCapture(image)
-            return
+            return nil
         }
         let ref = store.register(image)
         // A drop on the panel points at a place in the STACK, not a place on
@@ -309,7 +345,7 @@ extension EditorState {
         // there. Everything else lands the way it always has.
         var frame = landing.map { document.placementForIncomingImage(size: ref.pixelSize, landingAt: $0) }
             ?? document.placementForIncomingImage(size: ref.pixelSize, at: point)
-        guard !frame.isEmpty else { return }
+        guard !frame.isEmpty else { return nil }
         // ⌘V has no pointer, so the same picture keeps arriving in the middle
         // of the canvas: each one after the first steps past the last so you
         // can see the one you just made. A drop lands where you let go, which
@@ -331,5 +367,6 @@ extension EditorState {
         if case .inside(let groupID) = landing { expandedGroupIDs.insert(groupID) }
         selectedLayerID = layer.id
         if point == nil, landing == nil { recordPaste(layer.id, at: frame) }
+        return layer.id
     }
 }

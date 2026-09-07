@@ -1007,6 +1007,12 @@ final class EditorState {
     /// copying anything else, here or in another app, starts the ladder over.
     var pasteLadder: (clipboard: Int, rungs: [(layer: UUID, frame: CGRect)])?
 
+    /// The tool the last run of pastes took out of your hand, waiting to be
+    /// given back if you undo that run (`PasteToolReturn`). Cleared by any
+    /// other edit and by picking a tool yourself, so a tool never arrives back
+    /// unasked.
+    var pasteToolReturn: PasteToolReturn?
+
     // MARK: - Layered sidecar (rich format next to the flattened capture)
 
     /// The layered `.photonz` sidecar for a flattened media file: same folder,
@@ -1482,6 +1488,11 @@ final class EditorState {
         }
         activeTool = tool
         remember(tool)
+        // Picking a tool, by any route, is the paste letting go of the one it
+        // borrowed: whatever undo would have handed back is no longer owed
+        // (`PasteToolReturn`). The paste and undo paths re-arm it themselves,
+        // after they have called through here.
+        pasteToolReturn = nil
         if tool == .measure { showMeasureModeHint() }
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
         // layer handles) would read as interactive when it isn't. The
@@ -1877,6 +1888,11 @@ final class EditorState {
         // Anything recorded supersedes a colour drag's live frames, including
         // the release that ends one.
         paintPreview = nil
+        // A tool owed back by a paste is owed back for exactly one step. Any
+        // other edit landing on top means undo will step over that edit first,
+        // and a tool reappearing several presses later is its own surprise.
+        // The paste path re-arms this itself, right after its own edit lands.
+        pasteToolReturn = nil
         let report = history?.perform(mutate) ?? EditReport()
         rerender()
         if announcing { announceComponentSync(report.componentSync) }
@@ -1933,8 +1949,18 @@ final class EditorState {
         stylePreview = nil
         paintPreview = nil
         dropStaleBreakNotice()
+        let returning = pasteToolReturn
+        let pastedWasThere = returning.map { document?.layer(id: $0.layer) != nil } ?? false
         history?.undo()
         rerender()
+        // Taking a paste back hands your tool back with it: the paste borrowed
+        // the pointer, and the copy it borrowed it for is gone again.
+        if var returning, pastedWasThere, document?.layer(id: returning.layer) == nil,
+           let tool = returning.toolAfterUndo(pastedLayerGone: true, holding: activeTool) {
+            setTool(tool)
+            returning.markReturned()
+            pasteToolReturn = returning // setTool cleared it; redo still needs it
+        }
     }
 
     func redo() {
@@ -1942,8 +1968,18 @@ final class EditorState {
         stylePreview = nil
         paintPreview = nil
         dropStaleBreakNotice()
+        let returning = pasteToolReturn
+        let pastedWasGone = returning.map { document?.layer(id: $0.layer) == nil } ?? false
         history?.redo()
         rerender()
+        // ...and putting the paste back takes the pointer up again, so undo
+        // and redo of one paste read the same both ways round.
+        if var returning, pastedWasGone, document?.layer(id: returning.layer) != nil,
+           let tool = returning.toolAfterRedo(pastedLayerBack: true, holding: activeTool) {
+            setTool(tool)
+            returning.isReturned = false
+            pasteToolReturn = returning
+        }
     }
 
     /// A "stopped following" notice is about the edit that just happened, so

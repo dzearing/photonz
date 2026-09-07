@@ -1,0 +1,30 @@
+{
+  "feature": "Pasting hands you the pointer",
+  "epic": "ui-building",
+  "summary": "A paste now leaves you holding the pointer with the pasted thing picked, so the next drag moves what you just pasted instead of drawing a new shape on top of it. Press Command Z and the tool you were using comes back with the undo.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: Experiments has a switch called \"Pasting hands you the pointer\", already on.",
+  "try": [
+    { "do": "Open any picture, press R and drag a box on it." },
+    { "do": "Press Command C to copy the box, then press R again so a drawing tool is deliberately in hand." },
+    { "do": "Press Command V. The copy lands stepped down and right, picked, and the tool bar should be showing the pointer.", "shot": "2026-09-07-paste-pointer-1-pasted.png" },
+    { "do": "Drag the copy somewhere else. It should MOVE, not draw a second box over itself.", "shot": "2026-09-07-paste-pointer-2-dragged.png" },
+    { "do": "Press M, drag a marquee over part of the picture, press Command C, then Command V. The marquee clears, the piece lands picked, and the pointer is in hand again." },
+    { "do": "Press R, press Command V, then press Command Z straight away. The rectangle tool should be back in your hand with the paste.", "shot": "2026-09-07-paste-pointer-3-undone.png" },
+    { "do": "Press Command Shift Z. The copy comes back and so does the pointer." },
+    { "do": "Copy a picture in another app, come back, press I for the ruler, then Command V. The picture lands and the pointer arrives for it too." }
+  ],
+  "evaluate": [
+    "Is the pointer what you wanted in hand after a paste, or would you rather keep the tool you were using and switch yourself?",
+    "The tool bar changes shape as the tool swaps: the colour swatches for a drawing tool disappear when the pointer arrives. Does that jump read as the app helping, or as the bar twitching?",
+    "Undo handing your tool back: did it feel right, or did you expect Command Z to touch only the picture?",
+    "It hands the tool back only when undo is the very next thing you do. Move the copy first and the tool stays as it is. Is that the right line?",
+    "Pasting several times in a row steps each copy past the last, each one picked in turn. Undoing them one by one only returns your tool on the last one. Does that read the way you would expect?"
+  ],
+  "rough": [
+    "Dropping a file from Finder onto the canvas still leaves whatever tool you had, so the same trap is one gesture away. Filed as a follow-up rather than widened into this change, because a drop already lands where you chose to put it.",
+    "The crop tool is left out on purpose: it is a mode with a half-drawn rectangle, the paste threw that rectangle away, and coming back into a half-finished crop on Command Z would be a worse surprise than the one this fixes.",
+    "The marquee you had up before a paste does not come back on undo. It never did: a selection lives outside undo history in this app, the same as it does for a nudge.",
+    "After the undo no layer is picked and the inspector empties out, which is what undo already did before this change.",
+    "Verified in the loop's probe app with a scripted walk that reads the tool and every layer's box back in numbers (Scripts/playtest/paste-hands-you-the-pointer-walk.json): rectangle in hand, paste, pointer arrives, and the drag that follows moves the copy from 316,266 to 650,520 with the layer count unchanged; a second paste steps to 332,282; undo returns the rectangle tool; redo takes the pointer back; the copied region and a plain picture with no Photonz payload behind it both do the same. Fourteen new tests cover the rules on their own. The screenshots here are real window captures, not offscreen renders."
+  ]
+}

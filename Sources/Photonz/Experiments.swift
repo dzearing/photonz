@@ -402,6 +402,13 @@ extension Experiments {
     /// every layer flattened together (`CopyRoute`).
     var copyPicksYourLayerEnabled: Bool { isEnabled(FeatureCatalog.copyPicksYourLayerFlag) }
 
+    /// `next-paste-hands-you-the-pointer`: whether a paste leaves the pointer
+    /// in hand with the pasted layer picked, and whether undoing that paste
+    /// gives the tool you were using back (`PasteToolReturn`).
+    var pasteHandsYouThePointerEnabled: Bool {
+        isEnabled(FeatureCatalog.pasteHandsYouThePointerFlag)
+    }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

@@ -103,6 +103,8 @@ public enum FeatureCatalog {
 
     public static let copyPicksYourLayerFlag = "next-copy-picks-your-layer"
 
+    public static let pasteHandsYouThePointerFlag = "next-paste-hands-you-the-pointer"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -479,6 +481,15 @@ public enum FeatureCatalog {
                     name: copyPicksYourLayerFlag,
                     title: "Copy takes the layer you picked",
                     description: "Copy takes the layer you picked, and a marquee crops it. Pick a layer, drag a marquee over part of it and press Command C: what lands on the clipboard is that layer’s pixels inside the marquee and nothing from the layers around it, trimmed to what is actually drawn there, so pasting it back gives you the piece rather than a big transparent box. A marquee that misses the layer copies nothing and beeps instead of handing back an invisible rectangle. Everything flattened together is still one keystroke away as Edit ▸ Copy Merged on Command Shift C, of the marquee when there is one and of the whole picture when there is not, which is where Photoshop keeps it. Command X follows copy: with a marquee up it takes that layer’s pixels out of the marquee instead of deleting the whole layer. With no layer picked, both keys copy everything inside the marquee, since there is nothing to prefer. Off means a marquee beats the layer you picked, Command C hands back every layer flattened together, and Command Shift C is File ▸ Copy Image.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: pasteHandsYouThePointerFlag,
+                    title: "Pasting hands you the pointer",
+                    description: "A paste leaves you holding the pointer with the pasted thing picked, so the obvious next move, dragging it where you want it, works straight away. Before this you kept whatever tool you had, and a drag on the thing you just pasted drew a new shape over it instead of moving it. The marquee you had up is cleared, since the paste is now the thing you are working on. Undo hands your tool back: press Command Z on a paste and the rectangle, arrow or brush you were using is in your hand again, and redo takes the pointer back up. Pasting several times in a row still steps each copy past the last, each one picked in turn, and undoing the run puts back the tool you started with. Off means paste leaves the tool alone, the way it always did.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

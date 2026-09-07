@@ -1,0 +1,28 @@
+{
+  "id": "dropping-a-picture-on-the-canvas-hands-you-the-p",
+  "title": "Dropping a picture on the canvas hands you the pointer too",
+  "goal": "Drag a picture out of Finder onto the canvas and you are left holding whatever tool you had, so the obvious next move, nudging the picture into place, draws a shape over it instead. A drop should leave you with the pointer in hand and the dropped picture picked, the way a paste now does.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1770,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T18:49:49.979Z",
+  "updated": "2026-09-07T18:49:49.980Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the paste task (pasting-hands-you-the-pointer-with-the-new-layer, 2026-09-07). The paste path already does this in EditorState+Clipboard.swift via handOverPointer(pasted:held:carrying:), gated on the next-paste-hands-you-the-pointer flag; pasteImage already returns the layer id it landed. The drop callers pass a point or a landing, which is the branch handOverPointer is deliberately not reached from today. Decide whether it needs its own flag or shares the paste one.",
+  "acceptance": [
+    "After dropping a file on the canvas the pointer is the tool in hand and the dropped picture is picked",
+    "Dragging the picture straight after the drop moves it rather than drawing over it",
+    "Undo puts back both the document and the tool you were using",
+    "A drop onto a row in the layers panel behaves the same way"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T18:49:49.980Z",
+      "note": "created (manual)"
+    }
+  ]
+}

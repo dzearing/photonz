@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:37:34.044Z",
-  "updated": "2026-09-07T16:17:50.621Z",
+  "updated": "2026-09-07T18:38:43.118Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07. Confirmed by reading Sources/Photonz/EditorState+Clipboard.swift: nothing in the paste path calls setTool, so the tool in hand survives the paste. The rule already exists elsewhere and can be copied rather than invented: beginGridAdjustment (EditorState.swift line 309) does exactly this, switching to select when it needs the pointer, and the crop paths do the same at EditorState+Crop.swift lines 57 and 63. Check what the paste already does about picking the layer, since recordPaste (line 165) tracks the ladder of pasted frames for stacking but the picking may be happening elsewhere or not at all. The undo point is worth care: the tool is not part of the document, so restoring it on undo needs deciding rather than assuming, and the audit should say what was chosen.",
@@ -37,6 +37,27 @@
     {
       "t": "2026-09-07T16:17:50.620Z",
       "note": "seq 13 -> 15"
+    },
+    {
+      "t": "2026-09-07T18:38:43.118Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T18:50:00.000Z",
+      "note": "Adversarial review before building. The mock-free part of this is the undo half: the tool is not in the document, so undo cannot restore it by itself, and a tool arriving back several presses after the paste it belonged to would be its own surprise. Bounded it: the tool comes back only when undo is the very next thing you do, only when the pointer is still what is in hand, and never for crop, which is a mode with a half-drawn rectangle the paste already threw away. Also cut the wider version: drops keep whatever tool you had, since a drop already lands where you chose to put it. Filed as a follow-up instead."
+    },
+    {
+      "t": "2026-09-07T18:52:00.000Z",
+      "note": "Built. New pure type PasteToolReturn in PhotonzCore (Clipboard.swift) holds the tool a run of pastes displaced and answers when to give it back; 14 tests in Tests/PhotonzCoreTests/PasteToolReturnTests.swift written first. App side: paste() captures the tool on the way in, pasteLayer/pasteImage now return the layer they landed, and handOverPointer() switches to select, picks the paste and arms the memory. setTool and perform both clear the memory, so a tool picked by hand or any other edit ends it; undo() and redo() read it. Gated on the new next-only flag next-paste-hands-you-the-pointer, on by default in next, so Current is untouched. Nothing in Releases/ is forked, so no porting needed."
+    },
+    {
+      "t": "2026-09-07T18:55:00.000Z",
+      "note": "Verified on the running probe app with Scripts/playtest/paste-hands-you-the-pointer-walk.json. Rectangle in hand, paste, tool reads select and the copy is picked; the drag that follows moves it 316,266 -> 650,520 with the layer count unchanged, so it moved rather than drew. Second paste steps to 332,282, still picked. Undo returns the rectangle tool, redo takes the pointer back. A copied region does the same and clears the marquee (region 320,270 240x150 -> none). A plain picture with no Photonz payload, the way one from another app arrives, does the same and its undo hands the measure tool back. Full suite: 4489 tests pass. Audit: queue/audits/2026-09-07-paste-hands-you-the-pointer.json with three real window captures."
+    },
+    {
+      "t": "2026-09-07T18:56:00.000Z",
+      "note": "Rough, recorded in the audit: the tool bar changes shape as the colour swatches leave with the drawing tool; the marquee does not come back on undo (selection has never been in undo history); dropping a file still leaves your tool alone, filed as dropping-a-picture-on-the-canvas-hands-you-the-p."
     }
-  ]
+  ],
+  "started": "2026-09-07T18:38:43.118Z"
 }

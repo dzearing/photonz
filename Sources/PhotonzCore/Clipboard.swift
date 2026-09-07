@@ -149,3 +149,80 @@ extension PhotonzDocument {
         PastePlacement.frame(forImageOf: size, in: incomingPlacementBox(drop))
     }
 }
+
+/// The tool a paste took out of your hand, and when to give it back.
+///
+/// A paste hands you the pointer, because the obvious next move after pasting
+/// something is dragging it into place, and leaving a drawing tool in hand
+/// means that drag draws a new shape instead. That is a good trade while the
+/// pasted thing is standing, and a bad one the moment you take it back: press
+/// Command Z and being left holding a tool you never picked is its own
+/// surprise.
+///
+/// So the tool you were holding is remembered against the layer the paste made,
+/// and it comes back when, and only when, that layer goes away again. Three
+/// rules keep it from ever arriving unasked:
+///
+/// - A run of pastes remembers what the FIRST of them displaced, so undoing
+///   the whole run puts back what you started with and undoing one copy out of
+///   several leaves the pointer in hand for the ones still there.
+/// - A tool picked by hand wins. If the pointer is no longer what is in hand,
+///   the paste no longer owns the tool and nothing is taken away.
+/// - The caller drops the memory as soon as any other edit lands, so a tool
+///   can never come back several steps later, long after the paste it belonged
+///   to stopped being what you were thinking about.
+public struct PasteToolReturn: Equatable, Sendable {
+    /// The layer the run of pastes started with. The memory lives and dies
+    /// with it: it is the one whose disappearance means the whole run is gone.
+    public var layer: UUID
+    /// The tool that was in hand when that run started.
+    public var previous: Tool
+    /// Whether an undo has already handed that tool back, so a redo of the
+    /// same paste knows to take the pointer up again.
+    public var isReturned: Bool
+
+    public init(layer: UUID, previous: Tool, isReturned: Bool = false) {
+        self.layer = layer
+        self.previous = previous
+        self.isReturned = isReturned
+    }
+
+    /// What to remember after a paste lands, given the tool that was in hand
+    /// on the way in and whatever an earlier paste in the same run left behind.
+    ///
+    /// Nil means there is nothing to give back: the pointer was already in
+    /// hand and no earlier paste took anything away.
+    public static func after(pasting layer: UUID, holding tool: Tool,
+                             carrying carried: PasteToolReturn?) -> PasteToolReturn? {
+        // Still the same run, so the first paste's tool is the one owed back.
+        if let carried, !carried.isReturned { return carried }
+        // Nothing to give back when the pointer is already in hand. Crop is
+        // left out too: it is a mode with a pending rectangle, the paste threw
+        // that rectangle away, and dropping somebody back into a half-finished
+        // crop on Command Z would be a bigger surprise than the one this is
+        // here to prevent.
+        guard tool != .select, tool != .crop else { return nil }
+        return PasteToolReturn(layer: layer, previous: tool)
+    }
+
+    /// The tool to put back once an undo has run, or nil to leave what is in
+    /// hand alone. `pastedLayerGone` says whether that undo is the one that
+    /// took the remembered layer out of the document.
+    public func toolAfterUndo(pastedLayerGone: Bool, holding tool: Tool) -> Tool? {
+        guard !isReturned, pastedLayerGone, tool == .select else { return nil }
+        return previous
+    }
+
+    /// The tool to take up again once a redo has put the remembered layer
+    /// back: the pointer, exactly as the paste first handed it over.
+    public func toolAfterRedo(pastedLayerBack: Bool, holding tool: Tool) -> Tool? {
+        guard isReturned, pastedLayerBack, tool != .select else { return nil }
+        return .select
+    }
+
+    /// Records that the tool has been handed back, so it is not handed back
+    /// twice.
+    public mutating func markReturned() {
+        isReturned = true
+    }
+}
