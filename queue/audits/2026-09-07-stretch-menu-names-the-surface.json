@@ -1,0 +1,28 @@
+{
+  "feature": "The Stretch menu says what stretching both ways will do",
+  "epic": "ui-layout",
+  "summary": "Inside a stack or a grid, the Stretch that is about to turn a piece into the surface the others sit on now says so on the menu, in the same words the list at the foot of Layout uses. Before, you found the idea by picking Stretch and reading what the panel said afterwards.",
+  "setup": "Photonz Next, Experiments window, release Next. Groups that arrange their own contents (next-auto-layout) is on by default.",
+  "try": [
+    { "do": "On a blank canvas, draw one large rectangle and two small ones inside it." },
+    { "do": "Pick the large one and set Layout, Vertical to Stretch." },
+    { "do": "Select all three and choose Layer, Stack Selection (Control Command G)." },
+    { "do": "Pick the large rectangle in the Layers list." },
+    { "do": "Open its Layout, Horizontal menu and read the last row.", "shot": "2026-09-07-stretch-menu-in-a-stack-sc.png" },
+    { "do": "Open the Vertical menu right below it and read its last row." },
+    { "do": "Pick the group, set Arrangement back to Free, pick the rectangle again, and open Horizontal.", "shot": "2026-09-07-stretch-menu-free-group-sc.png" }
+  ],
+  "evaluate": [
+    "Reading \"Stretch (Surface behind the rest)\" before you pick it, do you know what you are about to get?",
+    "Does the bracket read as a promise about the pick, the way \"Follow group (Left)\" one row above does, or as a second choice?",
+    "The Vertical menu on the same piece still says plain Stretch, because stretching down again changes nothing. Is that reassuring or confusing?",
+    "The extra words make that one menu much wider than the others. Is that a fair price for saying it?",
+    "In a Free group nothing is added at all. Would you rather the phrase appeared everywhere, so the word Stretch always reads the same?"
+  ],
+  "rough": [
+    "It only speaks on the SECOND of the two picks. A piece with nothing stretched yet sees a plain Stretch on both menus, so the very first step towards a surface is still unannounced. Wording alone cannot fix that, since the task ruled out changing what the menus do; filed as \"One way to make a piece the surface behind the rest\".",
+    "The group's own Contents rows were left alone. A group whose default stretched everything both ways would make every piece inside it a surface, which is not a thing worth promising on that menu.",
+    "Nothing is said while several layers are picked: the same pick would make a surface of one and an ordinary row of the next, so the menu shows the plain word rather than a sentence that is true of some of the selection.",
+    "Screen Recording was granted, so both pictures here are the real window with the real menu open over it, taken by Scripts/playtest/stretch-menu-names-the-surface-walk.json."
+  ]
+}

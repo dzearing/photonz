@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T14:03:26.842Z",
-  "updated": "2026-09-06T12:16:42.294Z",
+  "updated": "2026-09-07T08:31:54.806Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-05. Evidence: queue/audits/2026-09-04-surface-in-a-stack.json rough 2, \"Nothing announces the idea. You only learn that stretching both ways makes a piece the background by doing it and then reading the list, or by landing on the piece. There is no hint on the Stretch menu itself.\" That task named the surface everywhere it already exists (the list at the foot of Layout, and the piece's own row) and deliberately left the menu alone. The wording to match is \"Surface behind the rest\". Panel code is PlacementInspector.swift; the Free group wording is \"Stretch both ways\" and stays.",
@@ -39,6 +39,23 @@
     {
       "t": "2026-09-06T12:16:42.294Z",
       "note": "seq 50 -> 50"
+    },
+    {
+      "t": "2026-09-07T08:31:54.806Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T09:05:00.000Z",
+      "note": "Adversarial review before building. Walked the flow as somebody who has never made a surface: in a column stack only the Horizontal row is a live menu, so the ONLY route to a surface through the panel is a piece that already spans the group the other way, and in a grid both rows are live from the start. Either way the surface is reached by two picks, and only the second one can honestly promise anything. Shortest version that delivers the value: reword the Stretch choice, and only where picking it really would make a surface. Rejected: rewording every Stretch (it would lie on the first pick), a menu section header (a header the user has to read before the item it belongs to), and adding a new command (the task rules out changing behaviour). The first pick staying silent is the honest limit, and is filed as a follow-up rather than guessed at."
+    },
+    {
+      "t": "2026-09-07T09:20:00.000Z",
+      "note": "Core, TDD: ResolvedPlacement gains surfaceTitle (the one string, now also used by PlacementOverride.summary), becomesSurface(horizontal:)/(vertical:) and choiceTitle(horizontal:arranged:)/(vertical:arranged:). Seven new tests in LayerPlacementTests cover the stack, the group's own default supplying half the rule, the piece that is already the surface, an ordinary full-width row, and a group that arranges nothing keeping every choice's one word. App: PlacementInspector's two child-row menus title their choices through it, gated on the container actually arranging (which is already gated on next-auto-layout). Contents rows and multi-selection deliberately untouched."
+    },
+    {
+      "t": "2026-09-07T09:35:00.000Z",
+      "note": "Verified in the probe app, Screen Recording granted, with a new walk Scripts/playtest/stretch-menu-names-the-surface-walk.json. In a column stack the Horizontal menu reads: Follow group (Left) | Left | Center | Right | Stretch (Surface behind the rest); the Vertical menu on the same piece still reads plain Stretch, which is right because stretching down again changes nothing. The same piece in a Free group reads Follow group (Scale) | Scale | Left | Center | Right | Stretch, word for word what it always did. Real screen captures of both are in the audit. 4293 tests pass."
     }
-  ]
+  ],
+  "started": "2026-09-07T08:31:54.806Z"
 }

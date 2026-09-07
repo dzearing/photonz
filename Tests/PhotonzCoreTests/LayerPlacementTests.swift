@@ -616,6 +616,94 @@ struct LayerPlacementTests {
         #expect(flow.inertRule(in: row) == "Bottom")
     }
 
+    // MARK: - The Stretch menu says what it is about to do
+
+    @Test("The Stretch that would make a piece the surface says so on the menu")
+    func theStretchChoiceNamesTheSurface() {
+        // In a column stack, a piece already stretched down spans the group.
+        // Stretching it across as well is what turns it into the surface the
+        // other pieces sit on, and until now the menu offered that as the same
+        // bare "Stretch" as every other choice: you found the idea by picking
+        // it and then reading the list at the foot of the panel.
+        let spanning = LayerPlacement.resolving(child: LayerPlacement(vertical: .stretch),
+                                                container: nil)
+        #expect(spanning.choiceTitle(horizontal: .stretch, arranged: true)
+                    == "Stretch (Surface behind the rest)")
+        #expect(spanning.choiceTitle(horizontal: .left, arranged: true) == "Left")
+        #expect(spanning.choiceTitle(horizontal: .center, arranged: true) == "Center")
+    }
+
+    @Test("The same words down, for a piece already stretched across")
+    func theStretchChoiceNamesTheSurfaceDown() {
+        let spanning = LayerPlacement.resolving(child: LayerPlacement(horizontal: .stretch),
+                                                container: nil)
+        #expect(spanning.choiceTitle(vertical: .stretch, arranged: true)
+                    == "Stretch (Surface behind the rest)")
+        #expect(spanning.choiceTitle(vertical: .bottom, arranged: true) == "Bottom")
+    }
+
+    @Test("A piece that would still be one of the arranged pieces says plain Stretch")
+    func anOrdinaryStretchIsUnadorned() {
+        // Stretched across a column stack is a row that fills the width, not a
+        // surface, so the menu promises nothing about surfaces.
+        let ordinary = LayerPlacement.resolving(child: LayerPlacement(vertical: .top),
+                                                container: nil)
+        #expect(ordinary.choiceTitle(horizontal: .stretch, arranged: true) == "Stretch")
+        #expect(ordinary.becomesSurface(horizontal: .stretch) == false)
+    }
+
+    @Test("A group that arranges nothing offers the choices in exactly the words it always did")
+    func aFreeGroupsMenuIsUnchanged() {
+        // There is no arrangement here for a piece to step out of, so nothing
+        // becomes a surface and every choice keeps its one word.
+        let spanning = LayerPlacement.resolving(child: LayerPlacement(vertical: .stretch),
+                                                container: nil)
+        #expect(spanning.choiceTitle(horizontal: .stretch, arranged: false) == "Stretch")
+        #expect(spanning.choiceTitle(vertical: .stretch, arranged: false) == "Stretch")
+        for choice in HorizontalPlacement.allCases {
+            #expect(spanning.choiceTitle(horizontal: choice, arranged: false) == choice.title)
+        }
+        for choice in VerticalPlacement.allCases {
+            #expect(spanning.choiceTitle(vertical: choice, arranged: false) == choice.title)
+        }
+    }
+
+    @Test("The piece that is already the surface is offered the Stretch that keeps it one")
+    func theSurfaceKeepsItsOwnChoice() {
+        let surface = LayerPlacement.resolving(child: LayerPlacement.fill, container: nil)
+        #expect(surface.choiceTitle(horizontal: .stretch, arranged: true)
+                    == "Stretch (Surface behind the rest)")
+        #expect(surface.choiceTitle(vertical: .stretch, arranged: true)
+                    == "Stretch (Surface behind the rest)")
+    }
+
+    @Test("The menu and the list at the foot of Layout call the surface one name")
+    func oneIdeaHasOneName() {
+        // The list says "Surface behind the rest" about a piece that already
+        // is one; the menu says it about the pick that makes one. Two places,
+        // one string, so neither can be reworded on its own.
+        let column = GroupLayout(kind: .stack, direction: .column)
+        let group = arrangedPlate(column, background: LayerPlacement.fill)
+        let listed = group.contentsWithTheirOwnPlacement(arrangement: column).first
+        #expect(listed?.summary == ResolvedPlacement.surfaceTitle)
+        let spanning = LayerPlacement.resolving(child: LayerPlacement(vertical: .stretch),
+                                                container: nil)
+        #expect(spanning.choiceTitle(horizontal: .stretch, arranged: true)
+                    .contains(ResolvedPlacement.surfaceTitle))
+    }
+
+    @Test("The group's own default counts towards the surface the menu is promising")
+    func theGroupsDefaultCountsOnTheMenu() {
+        // Half the group's rule and half the piece's: the group stretches
+        // everything across, so picking Stretch down here is the second half
+        // and the menu has to say so even though the piece says nothing
+        // across for itself.
+        let resolved = LayerPlacement.resolving(child: nil,
+                                                container: LayerPlacement(horizontal: .stretch))
+        #expect(resolved.choiceTitle(vertical: .stretch, arranged: true)
+                    == "Stretch (Surface behind the rest)")
+    }
+
     // MARK: - Clearing the rule that stopped mattering
 
     @Test("The owned axis says what rule is still sitting on it, so it can be cleared")

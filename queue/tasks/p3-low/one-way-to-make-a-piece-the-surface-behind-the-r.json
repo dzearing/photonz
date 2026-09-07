@@ -1,0 +1,30 @@
+{
+  "id": "one-way-to-make-a-piece-the-surface-behind-the-r",
+  "title": "One way to make a piece the surface behind the rest",
+  "goal": "Inside a stack or a grid, one piece can be the surface the others sit on, painted to the group's own edges. Today you get there by stretching it one way and then the other, and only the second of those two picks tells you what it is about to do. There should be one way in that says what it gives you before you take it.",
+  "epic": "ui-layout",
+  "priority": "p3-low",
+  "seq": 1340,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T08:41:01.561Z",
+  "updated": "2026-09-07T08:41:01.561Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left rough by the-stretch-menu-says-what-stretching-both-ways (2026-09-07). That task could only reword the existing menus, which meant the hint appears on the SECOND pick only: ResolvedPlacement.choiceTitle(horizontal:arranged:) says Surface behind the rest when the other axis already resolves to stretch. A piece with neither axis stretched sees plain Stretch on both menus. Candidate shapes: a single row or menu item in Layout, or a Layer menu command beside Stack Selection. Core naming is ResolvedPlacement.surfaceTitle and becomesSurface(horizontal:)/(vertical:) in Sources/PhotonzCore/LayerPlacement.swift; the panel is Sources/Photonz/PlacementInspector.swift. Behind next-auto-layout.",
+  "acceptance": [
+    "A person who has never made a surface can find the way to make one without picking anything to see what happens",
+    "Making a piece the surface takes one step, and one undo puts it back",
+    "The wording matches the name the app already uses for a surface everywhere else",
+    "Turning a surface back into an ordinary piece is as easy as making one",
+    "A screenshot of the new way in goes in the audit",
+    "Audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T08:41:01.561Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -155,6 +155,50 @@ extension ResolvedPlacement {
     /// own edges — which is exactly what a button's fill is.
     public var isSurface: Bool { horizontal == .stretch && vertical == .stretch }
 
+    /// What the surface is CALLED, everywhere the app has to name it: the list
+    /// of pieces at the foot of Layout, the caption on the piece's own rows,
+    /// and the menu choice that is about to make one. One idea, one name, in
+    /// one place so it cannot drift apart.
+    public static let surfaceTitle = "Surface behind the rest"
+
+    /// Whether picking `choice` across would leave this piece stretched both
+    /// ways, and so the surface behind everything the group arranges.
+    public func becomesSurface(horizontal choice: HorizontalPlacement) -> Bool {
+        choice == .stretch && vertical == .stretch
+    }
+
+    /// The same question down.
+    public func becomesSurface(vertical choice: VerticalPlacement) -> Bool {
+        choice == .stretch && horizontal == .stretch
+    }
+
+    /// How a placement menu offers `choice` to THIS piece: the word for the
+    /// choice on its own, or the word plus what it is about to turn this piece
+    /// into.
+    ///
+    /// Only the surface earns the extra words, and only in a group that
+    /// arranges its contents. It is the one choice on either menu that does
+    /// something other than place the piece — it takes it out of the
+    /// arrangement altogether — and until this, the only way to find that out
+    /// was to pick it and read the list at the foot of the panel afterwards.
+    /// `arranged` is false for a group that arranges nothing, where there is
+    /// no arrangement to step out of and Stretch means exactly what it says.
+    public func choiceTitle(horizontal choice: HorizontalPlacement, arranged: Bool) -> String {
+        Self.choiceTitle(choice.title, makesSurface: arranged && becomesSurface(horizontal: choice))
+    }
+
+    /// The same title down.
+    public func choiceTitle(vertical choice: VerticalPlacement, arranged: Bool) -> String {
+        Self.choiceTitle(choice.title, makesSurface: arranged && becomesSurface(vertical: choice))
+    }
+
+    /// The words themselves, so the two axes cannot punctuate it differently.
+    /// Brackets, matching the Follow row right above, which already says the
+    /// choice first and what it gives you second.
+    static func choiceTitle(_ title: String, makesSurface: Bool) -> String {
+        makesSurface ? "\(title) (\(surfaceTitle))" : title
+    }
+
     /// Whether this piece steps out of `arrangement` and is painted to the
     /// container's own edges instead of taking a place among the things it
     /// arranges.
@@ -481,7 +525,7 @@ public struct PlacementOverride: Identifiable, Hashable, Sendable {
         // being arranged, and summarising it by direction hid that: a surface
         // in a column stack read "Stretch across", word for word what a row
         // that fills the width reads. So it says what it is instead.
-        if isSurface { return "Surface behind the rest" }
+        if isSurface { return ResolvedPlacement.surfaceTitle }
         if horizontal == .stretch, vertical == .stretch { return "Stretch both ways" }
         // Filling carries no direction word: it is about the way the stack
         // runs, so naming an axis for it would be naming the wrong thing the

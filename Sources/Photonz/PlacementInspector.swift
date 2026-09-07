@@ -125,7 +125,7 @@ struct PlacementInspector: View {
                         }
                         Divider()
                         ForEach(container.horizontalPlacementChoices, id: \.self) { choice in
-                            Button(choice.title) {
+                            Button(choiceTitle(choice, resolved, arranges: arranges)) {
                                 editorState.setPlacement(ids: ids, horizontal: choice)
                             }
                         }
@@ -150,7 +150,7 @@ struct PlacementInspector: View {
                         }
                         Divider()
                         ForEach(container.verticalPlacementChoices, id: \.self) { choice in
-                            Button(choice.title) {
+                            Button(choiceTitle(choice, resolved, arranges: arranges)) {
                                 editorState.setPlacement(ids: ids, vertical: choice)
                             }
                         }
@@ -215,6 +215,25 @@ struct PlacementInspector: View {
     private func contentsInertRule(_ flow: PlacementEditing) -> String? {
         guard contents.count == 1, let one = contents.groups.first else { return nil }
         return flow.inertRule(in: one.rule)
+    }
+
+    /// How a choice reads on ONE layer's placement menu. The Stretch that
+    /// would take this piece out of the arrangement and make it the surface
+    /// behind the rest says so before you pick it, in the same words the list
+    /// at the foot of the section uses about a piece that already is one.
+    ///
+    /// Nothing is promised while SEVERAL layers are picked: `resolved` is nil
+    /// there, and the same pick would make a surface of one of them and an
+    /// ordinary row of the next, so the menu says the plain word instead of a
+    /// sentence that is true of some of the selection.
+    private func choiceTitle(_ choice: HorizontalPlacement, _ resolved: ResolvedPlacement?,
+                             arranges: Bool) -> String {
+        resolved?.choiceTitle(horizontal: choice, arranged: arranges) ?? choice.title
+    }
+
+    private func choiceTitle(_ choice: VerticalPlacement, _ resolved: ResolvedPlacement?,
+                             arranges: Bool) -> String {
+        resolved?.choiceTitle(vertical: choice, arranged: arranges) ?? choice.title
     }
 
     /// The word beside a listed piece, which for the surface is a plainer

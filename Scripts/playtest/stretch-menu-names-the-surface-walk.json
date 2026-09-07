@@ -1,0 +1,196 @@
+{
+  "out": "/tmp/photonz-playtest/stretch-menu-names-the-surface",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        60
+      ],
+      "to": [
+        340,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        90
+      ],
+      "to": [
+        300,
+        120
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        150
+      ],
+      "to": [
+        300,
+        190
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        210
+      ]
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionDown"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        210
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        105
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        170
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstOwnRule"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panel",
+      "stage": "1-in-a-stack"
+    },
+    {
+      "do": "describe",
+      "stage": "1-in-a-stack",
+      "note": "a piece in a column stack already spanning it: its Horizontal menu must offer Stretch (Surface behind the rest)"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "shot": "stretch-menu-1-in-a-stack"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Vertical",
+      "shot": "stretch-menu-2-the-other-way"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "2b-group-picked"
+    },
+    {
+      "do": "press",
+      "control": "Free",
+      "in": "Arrangement"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panel",
+      "stage": "3-free-group"
+    },
+    {
+      "do": "describe",
+      "stage": "3-free-group",
+      "note": "the same piece in a group that arranges nothing: every choice keeps its one word, because there is no arrangement to step out of"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "shot": "stretch-menu-3-free-group"
+    }
+  ]
+}
