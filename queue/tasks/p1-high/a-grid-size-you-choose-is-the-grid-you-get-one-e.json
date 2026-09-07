@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T03:06:34.043Z",
-  "updated": "2026-09-07T04:06:48.842504Z",
+  "updated": "2026-09-07T04:07:18.281Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-06: set grid sizes do not work, at four points they see a bunch of lines that are not four points apart. Confirmed by reading: CanvasGridSettings.liveSpacing (CanvasGrid.swift line 188) and the drawing both call CanvasGridLevels.levels, which returns up to maximumLevels of three rungs chosen from the zoom whatever the person set, so an explicit spacing is only ever the FINEST rung and two coarser ones are drawn with it. The ladder exists for a good reason and the user has now named where it belongs: only under automatic, which already exists as CanvasGridCellStops.automatic and is read through cellIsAutomatic (line 207). So the change is to branch, not to delete: a chosen size draws one spacing, automatic keeps the ladder. That also collapses most of snapping-pulls-to-the-grid-you-can-see-not-one-y for the chosen case, since drawn and set become the same thing; read that task and say in the audit what remains of it under automatic. Transparency: maximumOpacity is 0.30 (line 284); pick a lower number by looking at a fine grid zoomed in, not by taste alone, and keep it readable on a dark and a light picture. The slider labels are the tool bar's cell popup from the-grid-tool-bar-is-two-buttons-and-adjust-mode; if that task has not landed yet, coordinate rather than building the popup twice.",
@@ -68,7 +68,12 @@
     {
       "t": "2026-09-07T04:06:48.842504Z",
       "note": "Verified in the probe with Scripts/playtest/grid-chosen-size-walk.json: at 4 pt the grid report says 2 rungs and pulls to 4 at 100%, 200% and 400%; at 50% it says nothing drawn; at 16 pt it pulls to 16; automatic still says 3 rungs and pulls to 32 at 100%. Full suite green, 4240 tests. Every other grid walk still passes; grid-origin-walk was already broken on a control removed by the tool bar task, filed as the-grid-origin-walk-drives-the-buttons-the-tool."
+    },
+    {
+      "t": "2026-09-07T04:07:18.280Z",
+      "note": "A chosen grid size now draws exactly that spacing at every zoom; only automatic runs the level-of-detail ladder. CanvasGridSettings.levels(atZoom:) is the one branch, and the drawing, the pull and the readouts all read it. Lines lightened 0.30 -> 0.16 and the ink made one mid tone so they read over a light and a dark picture (measured off real captures). A size too fine to draw fades out and the size button dims and says why. The size slider swapped nine loose numbers for one readout under the track. Tests written first, 15 new cases sweeping the whole zoom range; full suite green at 4240. Verified in the probe with Scripts/playtest/grid-chosen-size-walk.json. Audit: queue/audits/2026-09-06-grid-chosen-size.json. Committed 9d443183."
     }
   ],
-  "started": "2026-09-07T03:21:31.487Z"
+  "started": "2026-09-07T03:21:31.487Z",
+  "completed": "2026-09-07T04:07:18.281Z"
 }
