@@ -116,10 +116,13 @@ struct GeometryInspector: View {
                 selectionKey: selection.members.map(\.id),
                 reading: selection.reading(field),
                 help: help(field, selection),
-                commit: { value in
+                // The layers first, then the layers READ AGAIN. Never the
+                // other way round: what the field shows is whatever they are
+                // in once the change has been made.
+                set: { value in
                     editorState.setLayerGeometry(field: field, to: value)
+                    return editorState.geometrySelection.reading(field)
                 },
-                landing: { value in selection.landing(value, in: field) },
                 stepAll: { direction, coarse in
                     editorState.stepLayerGeometry(field: field, direction: direction, coarse: coarse)
                 })
@@ -161,12 +164,18 @@ private struct GeometryNumberField: View {
     let selectionKey: [UUID]
     let reading: LayerGeometryReading
     let help: String
-    let commit: (CGFloat) -> Void
-    /// What the field will read once a number lands. A layer can refuse part
-    /// of what was typed — a text box will not go below its floor — and the
-    /// box has to show what the layer took, not what was asked for, or the
-    /// next arrow key steps from a number nothing has.
-    let landing: (CGFloat) -> LayerGeometryReading
+    /// Lands the number on every selected layer and hands back what they are
+    /// in AFTERWARDS.
+    ///
+    /// A layer can refuse part of what was typed — a text box will not go
+    /// below its words, a flow will not leave its smallest width — and the box
+    /// has to show what they took, not what was asked for, or the next arrow
+    /// key steps from a number nothing has. Worked out after the change rather
+    /// than before it, because the panel does not know every rule a layer will
+    /// apply to itself: a group's smallest width is one it had never heard of,
+    /// and typing 50 into a stack held at 160 left a 50 in the box with a 160
+    /// on the canvas.
+    let set: (CGFloat) -> LayerGeometryReading
     /// An arrow key with no number in the box: every layer steps from its own
     /// value, which is the only thing a step can mean when they differ.
     let stepAll: (Int, Bool) -> Void
@@ -260,11 +269,10 @@ private struct GeometryNumberField: View {
             return
         }
         // The layers may clamp what was asked for (a width of 0 is not a
-        // layer, and a text box stops at its own floor); showing what they
-        // actually became beats showing what was typed.
-        let landed = landing(parsed)
-        commit(parsed)
-        text = display(landed)
+        // layer, a text box stops at its own words, a flow stops at its
+        // smallest width); showing what they actually became beats showing
+        // what was typed.
+        text = display(set(parsed))
     }
 
     /// An arrow key. A number in the box steps that number and lands it on
@@ -276,11 +284,9 @@ private struct GeometryNumberField: View {
             return
         }
         let next = LayerGeometry.stepped(base, direction: direction, coarse: coarse)
-        let landed = landing(next)
-        commit(next)
         // Down arrow at a text box's floor holds at the floor rather than
         // counting on down a box that is not moving.
-        text = display(landed)
+        text = display(set(next))
     }
 
     /// What the box shows: the number the layers agree on, or the word that

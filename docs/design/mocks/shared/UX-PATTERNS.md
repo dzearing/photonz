@@ -452,10 +452,13 @@ Everything below is a consequence of that table.
 - **No toast, no flash, no error.** The number changing under your hand from 200
   to 204 IS the message. Refusing a width is ordinary, not an incident.
 
-*(`GeometryField.land()` in `GeometryInspector.swift` computes `landing(parsed)`
-BEFORE `commit(parsed)`, which is how it misses a per-layer clamp on a
-multi-layer selection. Fixing it is
-`a-width-the-layers-refused-stops-claiming-the-nu`.)*
+*(Done for the Position & Size fields on 2026-09-06: `GeometryNumberField` in
+`GeometryInspector.swift` sets the layers and then reads `geometrySelection`
+again, and `LayerGeometrySelection` no longer offers a landing worked out in
+advance at all. It could not have been right: a group held to a smallest width
+by its own flow refused a typed 50 and kept 160, and the box went on showing a
+50 that nothing on the canvas had. What it still does NOT do is say WHY when
+nothing moved; the line under the section stays on its caption.)*
 
 #### What a switch does, since a Mac switch has no third position
 

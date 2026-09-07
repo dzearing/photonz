@@ -10336,3 +10336,29 @@ Verified in the probe with real screen captures:
 Next: `the-settings-of-a-part-only-some-of-them-have-ca` — a Mixed row still
 cannot be unfolded, so the shadows that DO exist cannot be tuned without first
 giving every picked layer one.
+
+## 2026-09-06 — A typed width shows what the layers took
+
+Position & Size now sets the layers and then reads them again, so the number in
+W is the number they are actually in. It used to work the answer out first, from
+the floors `LayerGeometryEditing` knows about, which is only the text one — so a
+group held to a smallest width by its own flow refused a typed 50, kept 160, and
+left a 50 in the box that nothing on the canvas had.
+
+The repro in the task was a misreading and the walk says so: two labels typed to
+200 store 204 because 204 is the box and 200 is the words, and the fields speak
+the words on purpose. The real one is `GroupLayout.minWidth`/`maxWidth`, the
+Layout section's Smallest and Largest rows, applied inside `Layer.resized(to:)`.
+
+- `GeometryNumberField`'s `landing` closure is gone; `commit` became `set`, which
+  commits and hands back `geometrySelection.reading(field)` read AFTER the change.
+- `LayerGeometrySelection.landing()` is deleted outright, with a comment in its
+  place, so nobody computes a landing in advance again.
+- Two pieces pushed down to `PhotonzCore` so the panel and the tests share one
+  commit path: `Layer.shownBox` and `Layer.geometrySet(to:canvas:byHand:…)`.
+- `GeometryReadBackTests` pins the read-back; `width-reads-back-walk.json` is the
+  walk, run before and after (W read 50 over a 160 button, then 160).
+
+Next: the other half of the rule, saying WHY when nothing moved. The line under
+the section still just shows its caption — filed as
+`a-number-that-springs-back-says-why-it-did`.

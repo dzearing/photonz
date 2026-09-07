@@ -1580,7 +1580,7 @@ final class EditorState {
         // A group's stored frame is an anchor, not a box: the number to show
         // is the box it occupies, in the same parent space.
         guard let layer = document?.layer(id: id) else { return nil }
-        return layer.isGroup ? layer.localBounds : layer.frame
+        return layer.shownBox
     }
 
     /// The layers the Position & Size fields speak for: the whole
@@ -1664,9 +1664,8 @@ final class EditorState {
             let canvas = document.canvasSize
             for move in ordered {
                 document.updateLayer(id: move.id) {
-                    $0 = AnnotationBuilder.planningCaption(
-                        $0.resized(to: move.frame, chosenByHand: byHand), canvas: canvas,
-                        captionPillSize: $0.measuredCaptionPillSize)
+                    $0 = $0.geometrySet(to: move.frame, canvas: canvas, byHand: byHand,
+                                        captionPillSize: $0.measuredCaptionPillSize)
                 }
             }
         }

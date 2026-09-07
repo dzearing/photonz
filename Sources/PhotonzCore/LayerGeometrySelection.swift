@@ -279,24 +279,12 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         }
     }
 
-    /// What the field will read once `value` lands: the number the layers
-    /// actually take, which is not always the number that was typed. A text
-    /// box will not go below its floor, so typing 12 into W leaves 80 on
-    /// screen, and the field has to say 80 rather than sit there showing a
-    /// width nothing has. Mixed when one number lands differently on two
-    /// layers, for exactly the same reason the field reads Mixed at rest.
-    public func landing(_ value: CGFloat, in field: LayerGeometryField) -> LayerGeometryReading {
-        let taking = members(taking: field)
-        guard let first = taking.first else { return .empty }
-        func landed(_ member: Member) -> CGFloat {
-            let frame = LayerGeometry.applying(value, to: field, of: member.frame,
-                                               notBelow: member.editing.minimum(for: field))
-            return LayerGeometry.displayValue(field, of: frame)
-        }
-        let number = landed(first)
-        for member in taking.dropFirst() where landed(member) != number { return .mixed }
-        return .agreed(number)
-    }
+    // There is deliberately no "what will this land on" here. The field shows
+    // what the layers ARE once a number has landed, read from the document
+    // afterwards (`GeometryReadBackTests`), because a landing worked out in
+    // advance only knows the floors this type knows about: a group held to a
+    // smallest width by its own flow refused a typed 50 and kept 160, and the
+    // box went on showing a 50 that nothing on the canvas had.
 
     /// Every layer's new frame after one arrow-key press. Each layer steps
     /// from its OWN number, so a selection that is spread out stays spread out

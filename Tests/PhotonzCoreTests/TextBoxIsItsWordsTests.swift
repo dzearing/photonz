@@ -108,10 +108,15 @@ struct TextBoxIsItsWordsTests {
     func theFloorIsCountedOnTheWords() {
         let layer = label()
         let sel = LayerGeometrySelection([member(layer)])
-        #expect(sel.landing(12, in: .width) == .agreed(TextMeasurement.minimumContentWidth))
         let moves = sel.applying(12, to: .width)
         #expect(moves[layer.id]?.width
                 == TextMeasurement.minimumContentWidth + TextMeasurement.slack)
+        // And read again afterwards, the way the field reads itself: the words'
+        // floor is the number on screen, with the room underneath it.
+        var narrowed = layer
+        narrowed.frame = moves[layer.id] ?? layer.frame
+        #expect(LayerGeometrySelection([member(narrowed)]).reading(.width)
+                == .agreed(TextMeasurement.minimumContentWidth))
     }
 
     @Test("The stored floor is the words' floor plus the slack, so a box dragged as narrow as it goes reads the same number")

@@ -1,0 +1,27 @@
+{
+  "feature": "A typed width shows what the layers took",
+  "epic": "ui-components",
+  "summary": "Type a size the picked layers will not take and the W box now shows the size they actually kept, so the next arrow key steps from a real number. Before this, a button held to a smallest width of 160 sat on the canvas at 160 while W read 50.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. You need a component or group with a Smallest or Largest width set in the Layout section, which is where a layer gets a rule the fields cannot see in advance.",
+  "try": [
+    { "do": "Open a blank canvas and drag a Button off the Library shelf onto it." },
+    { "do": "Click the button, open the chevron beside Width in the Layout section, and type 160 into Smallest." },
+    { "do": "Click into W in Position & Size, type 50, press Return.", "shot": "2026-09-06-width-reads-back-1.png" },
+    { "do": "Read W. It says 160, the width the button kept, not the 50 you asked for." },
+    { "do": "Press the down arrow without leaving the box. It stays 160 rather than counting down from 50." },
+    { "do": "Type 240 and press Return.", "shot": "2026-09-06-width-reads-back-2.png" },
+    { "do": "Read W. A width the button accepts still reads back exactly as typed." }
+  ],
+  "evaluate": [
+    "When 50 turns into 160 under your hand, does that read as the button refusing, or as the box ignoring you?",
+    "The Layout section a few rows below says Smallest 160, so the reason is on screen this time. Is that enough, or should the line under Position & Size say it too?",
+    "Is the change instant enough that you never see the 50 you typed sitting in the box?",
+    "Do the same three steps feel right on a text label, whose W stops at the width of its own words?"
+  ],
+  "rough": [
+    "Nothing says WHY the number came back. The pattern doc asks for the reason in the line under the section when a set moves nothing at all, and that half is not built: filed as a-number-that-springs-back-says-why-it-did.",
+    "The bug the task described (two labels going to 204 while W read 200) is not a bug. 204 is the stored box, 200 is the words, and the field speaks the words on purpose. The real refusal is a group held by its own flow, which is what this walk and the fix are about.",
+    "The screenshots are real screen captures, not offscreen renders: the probe held the Screen Recording grant for this run.",
+    "Only Position & Size was fixed. Every other typed number in the dock still shows what it computed rather than what the document took, and nobody has swept them."
+  ]
+}

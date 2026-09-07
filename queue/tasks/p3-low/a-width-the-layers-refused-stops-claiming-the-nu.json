@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T21:25:38.283Z",
-  "updated": "2026-09-07T02:50:10.338Z",
+  "updated": "2026-09-07T03:20:11.242Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Sources/Photonz/GeometryInspector.swift, GeometryField.land(): it already calls landing(parsed) and shows display(landed), so the miss is that landing() is computed before commit and does not see the per-layer clamp for a multi-layer selection. Reproduced in Scripts/playtest/mixed-one-look-walk.json (step focus W, type 200): the tree reports both text layers at 204 while the field reads 200. Found while doing mixed-reads-the-same-way-in-every-control.\n\nDecided 2026-09-05 in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a control shows after a set the picked things refused\": read back from the document AFTER the commit, never a landing worked out before it. All landed the same shows that number, landed differently shows Mixed, nothing moved snaps back with the reason in the line under the section, and no toast either way.",
+  "notes": "Sources/Photonz/GeometryInspector.swift, GeometryField.land(): it already calls landing(parsed) and shows display(landed), so the miss is that landing() is computed before commit and does not see the per-layer clamp for a multi-layer selection. Reproduced in Scripts/playtest/mixed-one-look-walk.json (step focus W, type 200): the tree reports both text layers at 204 while the field reads 200. Found while doing mixed-reads-the-same-way-in-every-control.\n\nDecided 2026-09-05 in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a control shows after a set the picked things refused\": read back from the document AFTER the commit, never a landing worked out before it. All landed the same shows that number, landed differently shows Mixed, nothing moved snaps back with the reason in the line under the section, and no toast either way.\n\n--- 2026-09-06, doing it ---\nThe repro in the notes above is a misreading, and the walk proves it: type 200 into W over two labels and the tree says 204 because 204 is the STORED box and 200 is the words. The fields speak the words on purpose (Layer.withoutSlack), so 200 was the right answer all along. Below the text floor it was already right too: type 20 and the field reads 80 while the boxes store 84.\n\nThe real refusal the pre-computed landing could never see is a group held by its OWN FLOW: GroupLayout.minWidth/maxWidth, set from the Layout section's Smallest and Largest rows, applied inside Layer.resized(to:) long after LayerGeometryEditing.minimum(for:) has had its say (that only knows the text floor). Measured before the fix in the probe: a Button with Smallest 160, type 50, canvas 160, W reads 50. After: W reads 160.\n\nLanded: GeometryNumberField's `landing` closure is gone and `commit` became `set`, which sets the layers and returns editorState.geometrySelection.reading(field) read back AFTER the commit. LayerGeometrySelection.landing() is deleted outright, with a comment in its place saying why, so nobody reintroduces it. Two pieces pushed down to PhotonzCore so the panel and the tests share one path: Layer.shownBox (a group shows the box it occupies, everything else its frame) and Layer.geometrySet(to:canvas:byHand:captionPillSize:) (the whole commit transform). Tests/PhotonzCoreTests/GeometryReadBackTests.swift pins the read-back. Scripts/playtest/width-reads-back-walk.json is the walk.\n\nNOT done, on purpose: the pattern doc's other half, saying WHY when nothing moved. The line under the section still shows its caption. Filed as a-number-that-springs-back-says-why-it-did.",
   "acceptance": [
     "Typing a width the layers refuse leaves the field showing what they took, not what was asked for",
     "An arrow key pressed straight after steps from that same number",
@@ -39,7 +39,40 @@
     {
       "t": "2026-09-07T02:50:10.338Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-06T20:30:00.000Z",
+      "note": "read the mocks' rule and the code; landing() is computed before commit and only knows LayerGeometryEditing's floors"
+    },
+    {
+      "t": "2026-09-06T20:30:00.000Z",
+      "note": "reproduced in the probe: the notes' 200 -> 204 case is the text slack, not a bug. The fields were right."
+    },
+    {
+      "t": "2026-09-06T20:30:00.000Z",
+      "note": "found the real one in core: a group with GroupLayout.minWidth 160 takes a typed 50 and keeps 160, while landing(50) said 50"
+    },
+    {
+      "t": "2026-09-06T20:30:00.000Z",
+      "note": "TDD: GeometryReadBackTests pins what a read-back after the commit has to say; pushed Layer.shownBox and Layer.geometrySet down to PhotonzCore so the test and the panel share the commit path"
+    },
+    {
+      "t": "2026-09-06T20:30:00.000Z",
+      "note": "GeometryNumberField now sets then re-reads; LayerGeometrySelection.landing() deleted"
+    },
+    {
+      "t": "2026-09-06T20:30:00.000Z",
+      "note": "before/after in the probe on the same walk: W read 50 over a 160 button before, 160 after. Arrow key holds at 160. A width the button accepts (240) still reads back as typed."
+    },
+    {
+      "t": "2026-09-06T20:30:00.000Z",
+      "note": "Scripts/test.sh green, 4222 tests. Audit written with two real screen captures. Follow-up filed for the reason line."
+    },
+    {
+      "t": "2026-09-07T03:20:11.242Z",
+      "note": "The W and H fields now set the layers and then read them again, so the box shows what the layers took. The refusal that mattered was a group held to a smallest width by its own flow: a Button with Smallest 160 took a typed 50 and kept 160 while W went on reading 50; it now reads 160, and the arrow key pressed straight after holds at 160. A width the layers accept still reads back exactly as typed. LayerGeometrySelection.landing() is deleted so no one computes a landing in advance again. Verified before and after on Scripts/playtest/width-reads-back-walk.json in the probe with real screen captures; Scripts/test.sh green (4222). Audit: queue/audits/2026-09-06-geometry-read-back.json."
     }
   ],
-  "started": "2026-09-07T02:50:10.337Z"
+  "started": "2026-09-07T02:50:10.337Z",
+  "completed": "2026-09-07T03:20:11.242Z"
 }

@@ -231,32 +231,6 @@ struct LayerGeometrySelectionTests {
         #expect(sel.stepping(.width, direction: -1, coarse: false).isEmpty)
     }
 
-    // MARK: What the field shows afterwards
-
-    @Test("The field reads back what the layers took, not what was typed")
-    func landingIsWhatTheLayersTook() {
-        let (_, words) = textMember(CGRect(x: 0, y: 0, width: 200, height: 30))
-        let sel = LayerGeometrySelection([words])
-        #expect(sel.landing(12, in: .width) == .agreed(TextMeasurement.minimumContentWidth))
-        #expect(sel.landing(296, in: .width) == .agreed(296))
-    }
-
-    @Test("One number that lands differently on two layers reads as Mixed")
-    func landingOnDifferentFloorsIsMixed() {
-        let box = CGRect(x: 0, y: 0, width: 200, height: 40)
-        let words = CGRect(x: 0, y: 60, width: 200, height: 30)
-        let sel = LayerGeometrySelection([member(rectangle(box), box), member(text(words), words)])
-        #expect(sel.landing(12, in: .width) == .mixed)
-        #expect(sel.landing(300, in: .width) == .agreed(300))
-    }
-
-    @Test("A field no layer takes has nothing to read back")
-    func landingOnAFixedFieldIsEmpty() {
-        let box = CGRect(x: 0, y: 0, width: 100, height: 40)
-        let sel = LayerGeometrySelection([member(arrow(box), box)])
-        #expect(sel.landing(60, in: .width) == .empty)
-    }
-
     // MARK: Numbers you can read but not type
 
     @Test("A text box shows how tall it turned out, and takes a taller number to give it room")

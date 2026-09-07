@@ -1,0 +1,29 @@
+{
+  "id": "a-number-that-springs-back-says-why-it-did",
+  "title": "A number that springs back says why it did",
+  "goal": "Type a width a layer will not take and the box comes back to the width it kept, with nothing to say why. Anyone watching sees a box that ignored them rather than a layer that refused. The line under Position & Size should carry the reason for a few seconds, the way it already does when you click a number you cannot type.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1330,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T03:18:26.387Z",
+  "updated": "2026-09-07T03:18:26.388Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Decided in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a control shows after a set the picked things refused\": nothing moved at all -> the control returns to the value it had AND the line under the section carries the reason, in the wording law two halves, with no toast. The read-back half landed on 2026-09-06 (GeometryNumberField now sets then re-reads geometrySelection); this is the half that was left.\n\nGeometryInspector.swift already has the mechanism: `explaining: LayerGeometryField?` puts a sentence in the caption line for 6 seconds, but it only answers for READ-ONLY fields via LayerGeometrySelection.explanation(for:). A refusal on a typeable field needs its own state and its own sentence. The reason itself is not in LayerGeometrySelection today: LayerGeometryEditing.minimumWidth only knows the text floor, while a group refused by its own flow (GroupLayout.minWidth/maxWidth, the Layout section Smallest and Largest rows) is refused inside Layer.resized(to:). Either plumb the group layout limits into LayerGeometryEditing so note(for:) warns before you type as well, or work the sentence out from the before/after pair the commit already has.\n\nScripts/playtest/width-reads-back-walk.json is the walk that sets a Smallest width of 160 on a Button and types 50.",
+  "acceptance": [
+    "Typing a width the picked layers refuse puts a plain sentence in the line under Position & Size",
+    "The sentence names the rule that refused it, not the field",
+    "The line goes back to its usual caption on its own, and at once if a different layer is picked",
+    "Nothing at all is said when the layers take the number as typed",
+    "Verified in the probe with a real screen capture"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T03:18:26.388Z",
+      "note": "created (manual)"
+    }
+  ]
+}

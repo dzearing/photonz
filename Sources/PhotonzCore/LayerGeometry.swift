@@ -410,3 +410,32 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         }
     }
 }
+
+// MARK: - The two halves of a typed geometry number
+
+public extension Layer {
+
+    /// The box the Position & Size fields SHOW for this layer, in the space
+    /// its numbers are read in.
+    ///
+    /// A group's stored frame is an anchor rather than a box, so what it shows
+    /// is the box it actually occupies. Everything else shows the frame it has.
+    /// (The slack a measured text box carries comes off on top of this, with
+    /// `withoutSlack`, because that is a question about the words rather than
+    /// about which rectangle to read.)
+    var shownBox: CGRect { isGroup ? localBounds : frame }
+
+    /// This layer with a typed geometry number landed on it.
+    ///
+    /// ONE call, so the panel and a test cannot disagree about what a commit
+    /// does — which matters because what a commit does is now the only source
+    /// of what the field shows afterwards. `resized(to:)` is where a layer gets
+    /// to refuse: a flow with a smallest width keeps its width, a text box
+    /// keeps its words, and neither of those is a floor the panel knows about
+    /// in advance.
+    func geometrySet(to frame: CGRect, canvas: CGSize?, byHand: Bool,
+                     captionPillSize: CGSize? = nil) -> Layer {
+        AnnotationBuilder.planningCaption(resized(to: frame, chosenByHand: byHand),
+                                          canvas: canvas, captionPillSize: captionPillSize)
+    }
+}
