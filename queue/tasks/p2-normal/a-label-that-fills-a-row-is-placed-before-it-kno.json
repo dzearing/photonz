@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1520,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T23:05:45.258Z",
-  "updated": "2026-09-07T00:05:45.464Z",
+  "updated": "2026-09-07T00:34:02.571Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 while landing the one-line bar title. Two parts. (1) GroupFlow.wrapRooms bails when two labels look outgrown, and a very long label starves every sibling so they all look outgrown: filter the bail to labels the container has not already decided a width for, or answer the single filler outright since its room is not ambiguous. (2) GroupFlow.arranged places from contentBounds, then moved -> Layer.resized re-wraps the text at the new fill width, so the height grows AFTER the placement was decided. The one-line bar title dodges both because its height never changes.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-07T00:33:58.473477Z",
       "note": "Tests: six new ones in GroupTextWrapTests, four of which fail on the old code. Full suite 4154 green."
+    },
+    {
+      "t": "2026-09-07T00:34:02.570Z",
+      "note": "GroupFlow.arranged settles widths, re-measures wrapped labels at them, then places; Layer.resized marks a container-decided width. Six tests in GroupTextWrapTests (four fail on old code), full suite 4154 green, verified in the probe app with Scripts/playtest/label-fills-a-row-walk.json. Audit: queue/audits/2026-09-06-label-fills-a-row.json"
     }
   ],
-  "started": "2026-09-07T00:05:45.464Z"
+  "started": "2026-09-07T00:05:45.464Z",
+  "completed": "2026-09-07T00:34:02.571Z"
 }
