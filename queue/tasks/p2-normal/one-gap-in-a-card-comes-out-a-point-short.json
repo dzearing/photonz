@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1550,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T00:03:27.533Z",
-  "updated": "2026-09-07T01:37:53.864737Z",
+  "updated": "2026-09-07T01:38:15.487Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fixed in GroupFlow.arranged: the flow now settles before it places. It works out every box, hands each piece the box it worked out, and asks again wherever a piece came back a size nobody expected; the size it already was and the size the flow ASKED for are both no surprise, so a stack of plain boxes is byte for byte what it was. Bounded at three rounds (GroupFlow.settlingRounds) so a piece that can never take its box costs a fixed amount. targets() now also hands back the size each piece had going in, which is the number the loop compares against and saves a contentBounds per piece per round.\n\nWhat I could NOT reproduce: the Card's one point gap. Settled, the Card measures exactly 8 above and 8 below its title with both the model's own text measurement and the app's CoreText one, and it did so before this change and before ebf48480 as well - the document reflow runs the whole layout up to three times, so it converged. The mechanism the report named is real all the same, and it shows where only ONE pass runs: a live drag. Same walk, same moment, the square under a nested stack sat 28pt (one wrapped line) too high before this fix.\n\nPerf: reflowing a document whose stacks hold pieces that re-fit 5.5ms -> 4.0ms (one pass instead of two); a document where nothing re-fits 1.84ms -> 2.04ms. Composite path untouched.\n\nWalk: Scripts/playtest/gaps-stay-even-walk.json. Tests: Tests/PhotonzCoreTests/GroupGapTests.swift (the nested-stack one fails on the old code). Doc: docs/design/ui-building.md, \"Every gap is the gap you typed\".",
@@ -42,7 +42,12 @@
     {
       "t": "2026-09-07T01:37:53.864737Z",
       "note": "could not reproduce the Card's one point gap: settled, it measures 8 above and 8 below its title in both measurement paths, and did before this change too. Said so in the audit."
+    },
+    {
+      "t": "2026-09-07T01:38:15.487Z",
+      "note": "GroupFlow.arranged now settles every piece before placing anything, so a piece that re-fits on its way into a stack (a label that re-wraps, a nested stack that re-flows) no longer leaves the gap after it short. 5 new tests in GroupGapTests, docs/design/ui-building.md updated, verified on the probe with gaps-stay-even-walk.json before and after (mid-drag the box under a nested stack moved from 28pt too high to the typed gap). Audit: queue/audits/2026-09-06-even-gaps.json. Full suite green. Note: the Card's own gaps measured 8 and 8 before this change too; the audit says so."
     }
   ],
-  "started": "2026-09-07T01:10:07.637Z"
+  "started": "2026-09-07T01:10:07.637Z",
+  "completed": "2026-09-07T01:38:15.487Z"
 }
