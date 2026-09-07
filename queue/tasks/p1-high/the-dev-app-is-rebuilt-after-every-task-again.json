@@ -1,0 +1,27 @@
+{
+  "id": "the-dev-app-is-rebuilt-after-every-task-again",
+  "title": "The dev app is rebuilt after every task again",
+  "goal": "After each task lands, the app the user playtests with is supposed to be rebuilt so they are never looking at a stale build. That has stopped happening: the step fails before it starts, so the user keeps whatever build they last opened, however many tasks have shipped since.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 200,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T20:08:57.346Z",
+  "updated": "2026-09-07T20:08:57.347Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "queue/bin/refresh-dev-app.sh line 59 is `bundle() { PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh }` — bash needs a semicolon or newline before the closing brace, so the whole script dies with \"syntax error: unexpected end of file\" and nothing runs. Landed in 09ae00e3. Hit on 2026-09-07 by the Appearance/Effects run, which therefore left the dev app stale. `bash -n queue/bin/refresh-dev-app.sh` reproduces it in a second; add that check to whatever guards the queue scripts so a broken one-liner cannot ship again.",
+  "acceptance": [
+    "Running the refresh step by hand succeeds and reports which bundle it rebuilt",
+    "A task run that changes code under Sources leaves the dev app rebuilt, and running if it was running before",
+    "The app the user has open is never left quit by a refresh that failed halfway"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T20:08:57.347Z",
+      "note": "created (manual)"
+    }
+  ]
+}
