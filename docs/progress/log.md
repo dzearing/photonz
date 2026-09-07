@@ -10745,3 +10745,48 @@ towards a surface is still unannounced. Filed as
 
 Audit: `queue/audits/2026-09-07-stretch-menu-names-the-surface.json`.
 Walk: `Scripts/playtest/stretch-menu-names-the-surface-walk.json`.
+
+## 2026-09-07 — A number you cannot type looks the same in a mock as it does in the app
+
+The app settled this on 2026-09-05: a number it worked out for you is plain
+text in the field's slot, no box, because the bezel is the panel's promise that
+the keyboard lands there. The mock library never got the memo. It had
+`.input.disabled` and `.stepper.disabled` and nothing else, and the Fields page
+listed "disabled" as one of six number states right next to mixed and bound, so
+the rejected look was the one a person sketching a panel would copy.
+
+Added `.reading` to `shared/components/input.css`. It is `.stepper`'s geometry
+with the bezel turned transparent rather than removed, so alignment is
+guaranteed by construction: same height, same width, same right-hand column,
+same letter position. An empty `.v` gets an en dash from the CSS so no page can
+spell it with a hyphen. Secondary ink, never in the tab order, and it styles a
+`<button>` so a page can answer a click the way the app does.
+
+`.readout` was already taken by the tooltip's drag readout, hence `.reading`.
+`.val` in app-patterns.css was the near miss worth naming: it is bare ink with
+no letter, no slot and no column, so four of them do not line up with four
+fields. The CSS and UX-PATTERNS both say so now, to stop a third one appearing.
+
+Docs: comp-fields block 03, "The number you cannot type", with a specimen where
+clicking a plain number really writes the reason into the line under the panel;
+a Read-only number tile in the comp-index inventory beside Number field;
+UX-PATTERNS section 4 now names the class and shows the markup. Block 02's
+"disabled" swatch is relabelled "unavailable", for a control that will take the
+keyboard again once you clear what is in the way.
+
+Nothing needed converting. A sweep found no mock page drawing a computed number
+as a dimmed box, which is the honest answer to that acceptance item. It did
+surface something larger: most mock inspectors still draw X/Y/W/H as the legacy
+`.field` grey key-and-value box, which is neither a field nor a readout. Filed
+as `size-and-position-rows-in-the-mock-panels-are-pi` rather than swept, because
+R and Rot in the same row are typable and a blanket conversion would say the
+wrong thing.
+
+Verified in the browser in both themes; all five design-system checks and
+`Scripts/test.sh` green. Audit at
+`queue/audits/2026-09-07-reading-readonly-number.json`.
+
+Next: the queue. Open question for the user, in the audit's `rough`: in the
+light theme the field's well is quiet enough that a boxed number and a plain one
+sit closer together than they do in dark, and whether the "unavailable" number
+state has any real use in this app at all.

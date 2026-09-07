@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:19:57.489Z",
-  "updated": "2026-09-07T08:50:43.401763Z",
+  "updated": "2026-09-07T08:51:16.735Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-number-you-cannot-type-into-stops-looking-like (done 2026-09-05). App side: GeometryReadout in Sources/Photonz/GeometryInspector.swift, text from LayerGeometrySelection.readoutText / .blankText (en dash U+2013). Rules now written up in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a number you cannot type looks like\". Mock side: docs/design/mocks/shared/components/input.css has only .input.disabled (opacity .42 on the box), which is the rejected look; needs a real read-only variant rather than a dimmed input.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-07T08:50:43.401763Z",
       "note": "Rough, carried into the audit: in the light theme the field's well is so quiet that the boxed number and the plain one sit closer together than they do in dark. That is the existing well, not this component, but it is the first thing to look at."
+    },
+    {
+      "t": "2026-09-07T08:51:16.734Z",
+      "note": "Added .reading to shared/components/input.css: a number you cannot type, drawn as plain text in the field's slot with no box, .stepper's exact geometry so it lines up, and an en dash supplied by the CSS when there is no number. Documented as block 03 on comp-fields with a live click-answers specimen, as a tile in the comp-index inventory, and in UX-PATTERNS section 4. Block 02's disabled swatch relabelled unavailable and pointed at it. No page needed converting; the legacy .field number boxes are filed separately. Verified in the browser in both themes (24px tall, 95px wide, right edges 7px in, U+2013, tabIndex -1, click answers), all five DS checks and Scripts/test.sh green. Audit: queue/audits/2026-09-07-reading-readonly-number.json. Commit 1dfb5fde, pushed."
     }
   ],
-  "started": "2026-09-07T08:42:05.602Z"
+  "started": "2026-09-07T08:42:05.602Z",
+  "completed": "2026-09-07T08:51:16.735Z"
 }
