@@ -1,0 +1,28 @@
+{
+  "feature": "Adding a version says where the second drawing went",
+  "epic": "ui-components",
+  "summary": "Adding a version to a component now puts its new drawing in free space instead of dropping it on whatever was there, brings it on screen next to the drawing it came from, and says on the canvas what just appeared.",
+  "setup": "Photonz Dev, Experiments window, release Next, Components on (needs Library on). Nothing new to switch on.",
+  "try": [
+    { "do": "Open a blank document and drag the Button component out of the Library onto the canvas." },
+    { "do": "Click the button, then press Add in the Component section's Versions row. Type Disabled and press Return.", "shot": "2026-09-07-version-lands-in-room-1.png" },
+    { "do": "Click Default in that Versions list to go back to the first drawing, then press Add again. Name it Loading." },
+    { "do": "Do it twice more, always from Default, so four drawings end up in a row.", "shot": "2026-09-07-version-lands-in-room-2.png" },
+    { "do": "Zoom in to 200% on the first drawing, then add one more version from it and watch the canvas travel." },
+    { "do": "Press Command Z once to take back the name, and once more to take back the drawing.", "shot": "2026-09-07-version-lands-in-room-3.png" }
+  ],
+  "evaluate": [
+    "When the canvas travels to the new drawing, do you know where you have been taken, or does it feel like the document jumped?",
+    "Is bringing the drawing you copied FROM along with the new one the right call, or would you rather the new one filled the screen?",
+    "Does the pill at the bottom tell you anything you did not already get from the canvas moving and the drawing being selected?",
+    "Four versions in a row is a row that keeps growing to the right. Is that where you want them, or should they stack down instead?",
+    "Undoing a version you just named takes two presses, one for the name and one for the drawing. Is that right, or should the name come off with it?"
+  ],
+  "rough": [
+    "Screen Recording was granted for the loop's probe app, so every picture here is a real window capture, not an offscreen render.",
+    "The name pill fires the moment the drawing lands, so it says the placeholder name (Version 4) even when you type a real name a second later while the pill is still up.",
+    "Zoomed out, the little purple name labels above each drawing overlap each other, so a row of four versions reads as a pile of words. That is the labels, not the placement, and it is filed separately.",
+    "The new drawing marches right and wraps to a fresh row only when it runs out of canvas. Nothing balances the row or aligns the wrap yet.",
+    "A layer covering the whole canvas (the locked Background, a screenshot) is treated as scenery rather than something to avoid. Without that, nothing on a normal document ever finds room, which is exactly how the first build of this stacked three drawings in one spot."
+  ]
+}

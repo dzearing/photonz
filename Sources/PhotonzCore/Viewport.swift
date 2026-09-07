@@ -76,6 +76,70 @@ public struct Viewport: Equatable, Sendable {
         return next.clamped()
     }
 
+    /// Moves the camera the least it can so `rect` (in document points) is
+    /// fully on screen, with `padding` view points of air around it.
+    ///
+    /// Nothing happens when the rect is already on screen: a canvas that jumps
+    /// when it did not need to is more disorienting than one that never moves.
+    /// The zoom is left alone unless the rect is too big to see at this scale,
+    /// and then the camera only ever pulls BACK, never pushes in, so revealing
+    /// something small never magnifies it out of the blue.
+    public func revealing(_ rect: CGRect, padding: CGFloat = 24) -> Viewport {
+        guard !rect.isNull, !rect.isInfinite, rect.width > 0, rect.height > 0, zoom > 0
+        else { return self }
+        let room = CGSize(width: max(1, viewSize.width - padding * 2),
+                          height: max(1, viewSize.height - padding * 2))
+        let fitting = min(zoom, room.width / rect.width, room.height / rect.height)
+        let next = min(max(fitting, Self.minZoom), Self.maxZoom)
+
+        var moved = self
+        if next < zoom {
+            // Pull back around the rect's own middle, so what we came to see is
+            // what stays put while the scale changes.
+            moved = zoomed(to: next, anchorInView: viewPoint(fromDocument: CGPoint(x: rect.midX, y: rect.midY)))
+        }
+        let box = CGRect(origin: moved.viewPoint(fromDocument: rect.origin),
+                         size: CGSize(width: rect.width * moved.zoom, height: rect.height * moved.zoom))
+        let wanted = CGRect(origin: .zero, size: viewSize).insetBy(dx: padding, dy: padding)
+        var delta = CGPoint.zero
+        // Per axis, the shortest push that puts the box back inside. A box
+        // wider than the room is pushed only until its near edge lines up, so
+        // the camera lands on the start of it rather than the middle of it.
+        if box.width <= wanted.width {
+            if box.minX < wanted.minX { delta.x = wanted.minX - box.minX }
+            else if box.maxX > wanted.maxX { delta.x = wanted.maxX - box.maxX }
+        } else if box.minX > wanted.minX || box.maxX < wanted.maxX {
+            delta.x = wanted.minX - box.minX
+        }
+        if box.height <= wanted.height {
+            if box.minY < wanted.minY { delta.y = wanted.minY - box.minY }
+            else if box.maxY > wanted.maxY { delta.y = wanted.maxY - box.maxY }
+        } else if box.minY > wanted.minY || box.maxY < wanted.maxY {
+            delta.y = wanted.minY - box.minY
+        }
+        return delta == .zero ? moved : moved.panned(by: delta)
+    }
+
+    /// Reveals `rect` and brings `companion` along when the two fit on screen
+    /// together at the zoom we are already at.
+    ///
+    /// What a command calls when it puts something new down NEXT TO something
+    /// old: seeing only the new thing answers "what appeared" but not "where
+    /// did it come from", and those are one question. When the pair is too far
+    /// apart to hold at this zoom the new thing wins, because pulling the
+    /// camera back to a bird's eye view of both is a bigger surprise than
+    /// losing sight of the old one.
+    public func revealing(_ rect: CGRect, alongside companion: CGRect,
+                          padding: CGFloat = 24) -> Viewport {
+        guard !companion.isNull, !companion.isInfinite,
+              companion.width > 0, companion.height > 0 else { return revealing(rect, padding: padding) }
+        let pair = rect.union(companion)
+        let room = CGSize(width: viewSize.width - padding * 2, height: viewSize.height - padding * 2)
+        guard pair.width * zoom <= room.width, pair.height * zoom <= room.height
+        else { return revealing(rect, padding: padding) }
+        return revealing(pair, padding: padding)
+    }
+
     /// Adopts a new view size, keeping the document point at the view center fixed.
     public func resized(viewSize newSize: CGSize) -> Viewport {
         let centerDoc = documentPoint(fromView: CGPoint(x: viewSize.width / 2, y: viewSize.height / 2))

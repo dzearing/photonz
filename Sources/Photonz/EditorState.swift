@@ -1868,6 +1868,19 @@ final class EditorState {
     var displayZoom: CGFloat { zoom * documentPixelScale }
     func setDisplayZoom(_ display: CGFloat) { setZoom(display / documentPixelScale) }
 
+    /// Moves the canvas camera the least it can so `box` (in canvas points) is
+    /// on screen, and does nothing at all when it already is
+    /// (`Viewport.revealing`). What a command calls when it puts something new
+    /// somewhere the person is not looking. `companion` is whatever the new
+    /// thing came from, brought along when the two fit on screen together.
+    func bringIntoView(_ box: CGRect, alongside companion: CGRect? = nil) {
+        guard let viewport else { return }
+        let revealed = companion.map { viewport.revealing(box, alongside: $0) }
+            ?? viewport.revealing(box)
+        guard revealed != viewport else { return }
+        self.viewport = revealed
+    }
+
     private func zoomTowardCenter(_ newZoom: CGFloat) {
         guard let viewport else { return }
         let center = CGPoint(x: viewport.viewSize.width / 2, y: viewport.viewSize.height / 2)

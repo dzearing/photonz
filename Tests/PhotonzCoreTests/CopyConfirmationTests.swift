@@ -71,10 +71,38 @@ struct CopyConfirmationTests {
     @Test func noLineCarriesAnEmDash() {
         for subject in [CopyConfirmation.Subject.specList(measurements: 0),
                         .specList(measurements: 4), .measurements(count: 1), .measurements(count: 5),
-                        .componentChoiceMade(options: 3, knob: "Shape")] {
+                        .componentChoiceMade(options: 3, knob: "Shape"),
+                        .componentVersionAdded(version: "Disabled", component: "Button"),
+                        .componentVersionAdded(version: "Version 2", component: nil)] {
             let notice = CopyConfirmation(subject: subject, shownAt: t0)
             #expect(!notice.detail.contains("—"))
             #expect(!notice.detail.isEmpty)
         }
     }
+
+    /// Adding a version puts a whole second drawing on the canvas. The pill is
+    /// what says so, because the command itself looks like nothing happened
+    /// unless you already know to go looking for the new drawing.
+    @Test func addingAVersionSaysWhatAppeared() {
+        let named = CopyConfirmation(subject: .componentVersionAdded(version: "Disabled",
+                                                                     component: "Button"),
+                                     shownAt: t0)
+        #expect(named.title == "Version added")
+        #expect(named.detail == "Disabled is now its own drawing of Button on the canvas")
+        // A component nobody has named still gets a readable line.
+        let unnamed = CopyConfirmation(subject: .componentVersionAdded(version: "Version 2",
+                                                                       component: nil),
+                                       shownAt: t0)
+        #expect(unnamed.detail == "Version 2 is now its own drawing on the canvas")
+    }
+
+    /// It is one of the ones you might want to undo, so it stays up long
+    /// enough to read a sentence and decide.
+    @Test func theVersionAddedNoticeStaysUpLongEnoughToActOn() {
+        let notice = CopyConfirmation(subject: .componentVersionAdded(version: "Disabled",
+                                                                      component: "Button"),
+                                      shownAt: t0)
+        #expect(notice.lifetime == CopyConfirmation.breakLifetime)
+    }
+
 }

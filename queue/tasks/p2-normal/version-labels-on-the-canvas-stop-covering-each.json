@@ -1,0 +1,27 @@
+{
+  "id": "version-labels-on-the-canvas-stop-covering-each",
+  "title": "Version labels on the canvas stop covering each other",
+  "goal": "Every original drawing on the canvas wears a small purple label saying its component and which version it is. Sitting several versions of one component side by side, those labels are wider than the drawings and print straight over each other, so a row of four buttons reads as a pile of words instead of four named drawings.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1850,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T21:03:39.748Z",
+  "updated": "2026-09-07T21:03:39.749Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-07 with Scripts/playtest.sh Scripts/playtest/version-lands-in-room-walk.json, stage all-four: /tmp/photonz-playtest/version-lands-in-room/version-room-4-all-sc.png shows Button . Default, Button . Disabled, Button . Loading and Button . Pressed stacked into each other above four 78pt-wide drawings. The labels are drawn per layer above its box with no collision handling.",
+  "acceptance": [
+    "Four versions of one component side by side each show a readable label, at 50% zoom and at 100%",
+    "A label that has no room shortens or steps aside rather than printing over its neighbour",
+    "Nothing changes for a single original with room around it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T21:03:39.749Z",
+      "note": "created (manual)"
+    }
+  ]
+}

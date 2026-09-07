@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1660,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T14:00:02.619Z",
-  "updated": "2026-09-07T14:00:02.619Z",
+  "updated": "2026-09-07T21:03:54.880873Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-07 whole-path sitting. On the first pass the copies dropped afterwards landed straight on the new Disabled drawing. addComponentVersion in EditorState places the copied drawing beside the original; it needs a placement that avoids occupied space, and the canvas needs to say the drawing arrived (the toast idiom used elsewhere).",
@@ -22,6 +22,43 @@
     {
       "t": "2026-09-07T14:00:02.619Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T20:46:17.426Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T21:03:54.880873Z",
+      "note": "Adversarial pass before building: the notes asked for a toast, but the loud part is the placement, not the announcement. Shortest thing that delivers the value: land the drawing in real free space, take the camera to it, and say one line. Cut nothing else in."
+    },
+    {
+      "t": "2026-09-07T21:03:54.880873Z",
+      "note": "Reproduced first, at the model level: three versions added from the same original all landed at exactly (164, 10), and a version dropped straight onto a layer already sitting beside the source."
+    },
+    {
+      "t": "2026-09-07T21:03:54.880873Z",
+      "note": "PhotonzDocument.roomForDrawing (ComponentVersions.swift) walks right from the source stepping past whatever it hits, wraps to a fresh row under the blockage when the row runs out of canvas, and never leaves the canvas, because the camera cannot travel past the canvas."
+    },
+    {
+      "t": "2026-09-07T21:03:54.880873Z",
+      "note": "Viewport.revealing (pure, Viewport.swift) moves the least it can, does nothing when the rect is already on screen, and only ever zooms OUT. revealing(_:alongside:) brings the drawing the version was copied from along whenever the pair fits at the current zoom."
+    },
+    {
+      "t": "2026-09-07T21:03:54.880873Z",
+      "note": "CopyConfirmation.Subject.componentVersionAdded is the canvas pill, 3s (the act-on-it lifetime) since undo is the likely next move."
+    },
+    {
+      "t": "2026-09-07T21:03:54.880873Z",
+      "note": "SECOND adversarial pass, on the real app, caught two things the unit tests could not. (1) Every real document has a Background layer covering the whole canvas, so every candidate spot was 'taken', the search always fell back, and three versions stacked in one spot exactly as before. Fixed by treating a layer that covers the whole canvas as scenery. (2) Revealing the new drawing alone pushed the drawing it came from off screen, which answers 'what appeared' but not 'where from'. Fixed by taking the pair when the pair fits."
+    },
+    {
+      "t": "2026-09-07T21:03:54.880873Z",
+      "note": "Verified in Photonz Probe (Screen Recording granted, real window captures) via Scripts/playtest/version-lands-in-room-walk.json: four versions added from the same original land in a clean row with none overlapping; the camera travels to the new one and keeps the source in frame; one undo takes back the name and the next takes back the drawing and its version together."
+    },
+    {
+      "t": "2026-09-07T21:03:54.880873Z",
+      "note": "Follow-up filed, reproduced: version-labels-on-the-canvas-stop-covering-each (the purple on-canvas labels print over each other in a row of versions)."
     }
-  ]
+  ],
+  "started": "2026-09-07T20:46:17.426Z"
 }

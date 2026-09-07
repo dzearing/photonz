@@ -152,12 +152,72 @@ extension PhotonzDocument {
         copy.content = .group(group)
         copy.name = settled.name
         copy.isLocked = false
-        let origin = parentOrigin(of: settled.id) ?? .zero
-        let width = max(settled.frame.width, settled.localBounds.maxX)
-        copy.frame.origin = CGPoint(x: settled.frame.origin.x + origin.x + width + Self.componentVersionGap,
-                                    y: settled.frame.origin.y + origin.y)
+        let parent = parentOrigin(of: settled.id) ?? .zero
+        let sourceBox = settled.localBounds.offsetBy(dx: parent.x, dy: parent.y)
+        let landing = roomForDrawing(size: sourceBox.size, beside: sourceBox)
+        // The copy goes in at the top level, so its own box IS its canvas box:
+        // sitting it where the source sits and then shifting by the difference
+        // lands it exactly on the spot that was found.
+        copy.frame.origin = CGPoint(x: settled.frame.origin.x + parent.x + (landing.x - sourceBox.minX),
+                                    y: settled.frame.origin.y + parent.y + (landing.y - sourceBox.minY))
         addLayer(copy)
         return versionID
+    }
+
+    /// Where a new drawing of `size` can sit on the canvas without covering
+    /// anything that is already there.
+    ///
+    /// It reads the way a row of drawings reads: along from `source`, stepping
+    /// clear of whatever it runs into, and when the row runs out of canvas,
+    /// down to a fresh row under everything in the way, starting back at
+    /// `source`'s left edge. Two rules keep it somewhere a person can actually
+    /// get to: it never overlaps a top-level layer, and it never leaves the
+    /// canvas, because the canvas camera cannot travel past the canvas and a
+    /// drawing dropped over the edge is one nobody can look at.
+    ///
+    /// Only TOP-LEVEL layers count as taken, because that is where the new
+    /// drawing goes: adding a version to a button that lives on a screen steps
+    /// clear of the whole screen rather than trying to squeeze in beside the
+    /// button inside it. A layer covering the WHOLE canvas is scenery rather
+    /// than an occupant and is stepped over: nearly every document has one (a
+    /// screenshot, the locked Background of a blank one), there is nowhere on
+    /// the canvas that is not on top of it, and counting it would mean nothing
+    /// ever finds room and every version lands on the last one.
+    ///
+    /// A canvas with no room left anywhere falls back to the old behaviour, one
+    /// gap along from `source`: an overlap is a worse answer than nothing at
+    /// all, but losing the drawing entirely is worse than both.
+    func roomForDrawing(size: CGSize, beside source: CGRect,
+                        gap: CGFloat = PhotonzDocument.componentVersionGap) -> CGPoint {
+        let fallback = CGPoint(x: source.maxX + gap, y: source.minY)
+        let canvas = CGRect(origin: .zero, size: canvasSize)
+        let taken = layers.compactMap { canvasBounds(of: $0.id) }
+            .filter { !$0.isEmpty && !$0.contains(canvas) }
+        guard size.width <= canvas.width, size.height <= canvas.height else { return fallback }
+
+        // The row the source is on first, then a row under each thing that
+        // could be blocking it, nearest first.
+        var rows = [source.minY]
+        rows += taken.map { ($0.maxY + gap).rounded() }.filter { $0 > source.minY }
+        rows = Array(Set(rows)).sorted()
+
+        for row in rows {
+            guard row + size.height <= canvas.maxY else { continue }
+            // A fresh row starts back at the left, under the source; the
+            // source's own row starts clear of the source itself.
+            var x = (row == source.minY ? source.maxX + gap : source.minX).rounded()
+            // Each step lands strictly further right than the last, so this
+            // cannot run longer than there are things to step over.
+            for _ in 0...taken.count {
+                guard x + size.width <= canvas.maxX else { break }
+                let spot = CGRect(x: x, y: row, width: size.width, height: size.height)
+                guard let blocker = taken.first(where: { $0.intersects(spot) }) else {
+                    return spot.origin
+                }
+                x = (blocker.maxX + gap).rounded()
+            }
+        }
+        return fallback
     }
 
     /// Gives every version of a component an id and a name, and every copy of

@@ -49,6 +49,12 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// word on screen the double click simply does nothing, which reads as
         /// the app being broken.
         case componentPieceRefused(ComponentPieceRefusal)
+        /// A component was given another version (`ComponentVersions`).
+        /// Adding one puts a WHOLE SECOND DRAWING on the canvas, which is the
+        /// part the command does not look like it did: without a word on
+        /// screen a person sees the menu close and nothing else, and the new
+        /// drawing is just something that turned up next to their work.
+        case componentVersionAdded(version: String, component: String?)
         /// A copy was showing a version of its component that has just been
         /// deleted, so it was put back on one the component still has
         /// (`ComponentVersions`). Nothing else on screen says so: the copy
@@ -100,7 +106,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         // under the time it takes to read a sentence naming two things and
         // decide what to do about it.
         case .linksBroken, .componentPieceRefused, .toolColorStyle,
-             .componentVersionGone, .componentVersionsMatched: return Self.breakLifetime
+             .componentVersionGone, .componentVersionsMatched,
+             .componentVersionAdded: return Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -126,6 +133,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentCycle: return "Not placed"
         case .componentDetached: return "Detached"
         case .componentChoiceMade: return "Choice added"
+        case .componentVersionAdded: return "Version added"
         case .componentVersionGone: return "Version deleted"
         case .componentVersionsMatched: return "Applied"
         case .componentPieceRefused(let refusal): return refusal.title
@@ -159,6 +167,11 @@ public struct CopyConfirmation: Hashable, Sendable {
                        : "\(count) copies no longer follow \(component)"
         case .componentChoiceMade(let options, let knob):
             return "1 of \(options) shapes shows. Copies pick it with \(knob)"
+        case .componentVersionAdded(let version, let component):
+            guard let component, !component.isEmpty else {
+                return "\(version) is now its own drawing on the canvas"
+            }
+            return "\(version) is now its own drawing of \(component) on the canvas"
         case .componentVersionGone(let count, let version):
             let copies = count == 1 ? "1 copy" : "\(count) copies"
             guard let version, !version.isEmpty else { return "\(copies) moved to another version" }

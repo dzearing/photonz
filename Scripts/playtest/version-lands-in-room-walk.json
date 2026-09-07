@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/version-lands-in-room",
+  "seed": "Adding a version to a component puts a whole second drawing on the canvas. This walk adds three of them to the same button, zoomed in far enough that the row runs off the side of the window, and photographs where each one lands and what the canvas says about it. Each add is made from the SAME Default drawing, which is the case that used to drop every version on the one before it.",
+  "setup": { "forget": ["panel", "groups"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 2000, "canvasHeight": 1400, "width": 1320, "height": 920 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "dragTile", "tile": "Button", "to": [300, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "click", "at": [300, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "pinch", "to": 1.6, "steps": 20 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "one-button", "note": "one Button on the canvas, zoomed in so the canvas is wider than the window" },
+    { "do": "snapshot", "name": "version-room-0-start" },
+
+    { "do": "action", "action": "addComponentVersion" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "type", "text": "Disabled" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "second-version", "note": "the Disabled drawing has arrived beside the first, both are on screen, and the canvas says what turned up" },
+    { "do": "snapshot", "name": "version-room-1-second" },
+
+    { "do": "press", "control": "Default" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "addComponentVersion" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "type", "text": "Loading" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "third-version", "note": "a third version added from the SAME Default drawing: it used to land exactly on Disabled" },
+    { "do": "snapshot", "name": "version-room-2-third" },
+
+    { "do": "press", "control": "Default" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "addComponentVersion" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "type", "text": "Pressed" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "fourth-version", "note": "a fourth version, far enough along the row that the camera has to travel to reach it" },
+    { "do": "snapshot", "name": "version-room-3-fourth" },
+
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "all-four", "note": "the whole canvas: four drawings of the button in a row, none on top of another" },
+    { "do": "snapshot", "name": "version-room-4-all" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "one-undo", "note": "one undo takes back the NAME that was typed, which is its own step" },
+    { "do": "snapshot", "name": "version-room-5-undo" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "undo-the-add", "note": "the next undo takes back the add itself: three drawings left, the fourth gone along with its version" },
+    { "do": "snapshot", "name": "version-room-6-undo-add" },
+    { "do": "expect", "row": "Button", "present": true }
+  ]
+}

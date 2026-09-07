@@ -384,10 +384,25 @@ extension EditorState {
         discardDragPreview()
         var added: UUID?
         perform { added = $0.addComponentVersion(componentID: componentID, from: version) }
-        guard let added, let main = document?.mainComponent(componentID: componentID, version: added)
+        guard let added, let document,
+              let main = document.mainComponent(componentID: componentID, version: added)
         else { return nil }
-        selectLayer(main.id, inGroup: document?.parentID(of: main.id))
+        selectLayer(main.id, inGroup: document.parentID(of: main.id))
         componentVersionAwaitingName = added
+        // A second drawing has just appeared somewhere on the canvas, and until
+        // the camera goes to it the command reads as having done nothing. The
+        // drawing it was copied FROM comes along whenever the two fit together,
+        // because "where did that come from" is half of what a person is asking.
+        // Nothing moves when both are already on screen, so adding a version to
+        // something you are looking at leaves the canvas exactly as it was.
+        if let box = document.canvasBounds(of: main.id) {
+            let source = document.mainComponent(componentID: componentID, version: version)
+                .flatMap { document.canvasBounds(of: $0.id) }
+            bringIntoView(box, alongside: source)
+        }
+        raiseCanvasNotice(.componentVersionAdded(
+            version: document.componentVersion(of: componentID, id: added)?.name ?? "The new version",
+            component: document.mainComponent(componentID: componentID)?.name))
         return added
     }
 
