@@ -10385,3 +10385,37 @@ leaving a lit switch over an empty canvas.
 Next: the size slider lost its column of nine numbers for one readout under the
 track, which is worth the user's read. Follow-up filed for
 `grid-origin-walk.json`, stale since the tool bar rework.
+
+## 2026-09-06 — a part you switch on shows its settings straight away
+
+The Appearance list shipped yesterday with its settings folded behind a
+chevron, one part open at a time, indented under the row. The user asked the
+same day for all three to go, and they have: a switched on part shows its
+settings on the lines directly under its row, at the same left edge as every
+other row, and every switched on part shows them at once.
+
+With no indent, two things now separate a part from its settings: the tick
+column, which only a part row has, and the gap (16 pt between parts, 6 pt from
+a row to its own settings). The sentence a row says about how many of the
+picked layers it reaches followed the settings out to the margin, so anything a
+row says below itself shares one left edge with the notes in every other
+section. While measuring those gaps the shadow's settings turned out to start
+further from their row than Outline's Width did, because `ShadowInspector` was
+still drawing the line its own switch used to sit on, empty; an empty line
+still takes its spacing, so it is skipped now when it holds nothing.
+
+`PartsInspector.openPart` and its `@AppStorage` key are gone, so
+`PlaytestSetupRunner` no longer forgets it and
+`one-outline-two-kinds-walk.json` no longer presses a chevron that does not
+exist. New walk: `Scripts/playtest/parts-settings-inline-walk.json`.
+
+Verified on the probe with real window captures at one part on, three parts on,
+all off, and switched off and back on (identical control list and identical row
+positions to the start), plus a 640 pt window where the taller section scrolls
+rather than squeezes. Suite green at 4240. Audit:
+`queue/audits/2026-09-06-parts-settings-inline.json`.
+
+Next: the queue. Two things this left on the table, both already filed — a part
+that only some of the picked layers have still shows no settings at all, and
+Shadow's softness slider and the Effects section both say "Blur", which now
+collide on screen more often than they used to.
