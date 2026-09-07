@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:16:37.314Z",
-  "updated": "2026-09-07T20:16:12.345775Z",
+  "updated": "2026-09-07T20:16:28.205Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-06. Evidence: the-app-you-playtest-with-is-rebuilt-after-every, created 12:10 UTC, dropped in the same triage pass. Its notes said queue/bin/refresh-dev-app.sh was a bash syntax error; the file is #!/bin/zsh and zsh -n is clean, queue/loop.log holds 180 successful refreshes with the last at 05:10:36 the same morning, and go-loop.sh:125 already prints a line when a refresh fails, which the task also said was missing. queue/bin/runner-prompt.md has no rule about reproducing a bug before filing it (grep for reproduce finds nothing).",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-07T20:16:12.345775Z",
       "note": "No audit written: this changes the instructions the loop works from, not the app, so there is nothing for the user to try. Left undone and worth a later look: nothing enforces this mechanically, so a runner determined to skip it still can."
+    },
+    {
+      "t": "2026-09-07T20:16:28.204Z",
+      "note": "runner-prompt.md now requires a bug to be reproduced before it is filed (command plus output in notes, run a script with the interpreter on its shebang, and file at p2-normal as an open question when it cannot be reproduced). digest-prompt.md triage spot-checks the evidence on every new p0/p1 bug and demotes any with none; manager-prompt.md carries the one line version. Verified: all four acceptance items map to text now in the files, go-loop.sh cats all three at runtime (103, 213, 263), and Scripts/test.sh is green at 4507 tests. Committed b57464fd, pushed to main."
     }
   ],
-  "started": "2026-09-07T20:13:26.143Z"
+  "started": "2026-09-07T20:13:26.143Z",
+  "completed": "2026-09-07T20:16:28.205Z"
 }
