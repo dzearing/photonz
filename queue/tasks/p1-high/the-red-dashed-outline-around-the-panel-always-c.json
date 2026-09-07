@@ -1,0 +1,34 @@
+{
+  "id": "the-red-dashed-outline-around-the-panel-always-c",
+  "title": "The red dashed outline around the panel always clears itself",
+  "goal": "A red dashed border appears around the whole right panel and stays there for good. It is the sign that a file being dragged over the panel would be refused, but it survives long after any drag has ended, so the panel looks broken and there is no way to dismiss it. It must always clear itself, whatever ended the drag and whatever the drag was.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T15:39:15.756Z",
+  "updated": "2026-09-07T15:39:15.798Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported again by the user on 2026-09-07, after dragging-a-panel-section-lifts-the-whole-section shipped and removed the reorder gesture as a cause. So this is a second route to the same stuck state and the earlier fix did not cover it; their layers are named Copied Selection, so they were copying and pasting rather than reordering. What the marking is: PanelDropAffordance .refuses, driven by panelDropOffer, armed through offerPanelDrop and cleared only through endPanelDrop (Sources/Photonz/EditorState+LayersPanel.swift lines 168 and 175). Both drop delegates clear it only from dropExited and performDrop (LayersPanel.swift lines 1145, 1149, 1219, 1223). A drag that is armed and then ends without either of those firing leaves the offer set with nothing to clear it, which is exactly the reported behaviour. The clearing is also guarded on the owner matching, so an owner that changes mid drag would strand the offer too. Rather than only adding another call site, give the state a way out that does not depend on the drag reporting its own end, for example clearing it whenever no drag is in flight, so an unpredicted path cannot strand it again.",
+  "acceptance": [
+    "Reproduce it first and record in the log the exact sequence that leaves the marking on screen; the user reached it while copying and pasting, so try a drag that begins outside the app, one that is cancelled with escape, one released outside the window, and one interrupted by the app losing focus",
+    "No marking is ever left on the panel once nothing is being dragged, however the drag ended, including a drag that never reaches a drop target and a drag whose source disappears",
+    "The marking has a hard limit as well as its normal path out, so a case nobody predicted still clears rather than sticking forever",
+    "Dropping a real file onto the panel still shows the accepting and refusing marks and still works",
+    "A test covers the marking being armed and then cleared without any drop happening, written before the change",
+    "Audit written under queue/audits/ with the panel during a refused drag and immediately after it ends, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T15:39:15.757Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T15:39:15.797Z",
+      "note": "seq 190 -> 2"
+    }
+  ]
+}
