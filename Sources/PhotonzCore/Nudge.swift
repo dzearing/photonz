@@ -133,3 +133,28 @@ public enum Nudge {
         return landed.isFinite ? landed : nil
     }
 }
+
+/// What an arrow key moves when a pixel selection and picked layers could both
+/// claim it.
+public enum NudgeTarget: Equatable, Sendable {
+    /// The selection outline travels; the pixels and layers under it stay put.
+    case region
+    /// The picked layer, or the whole picked group, travels.
+    case layers
+}
+
+extension Nudge {
+    /// Which of the two the arrow keys steer right now.
+    ///
+    /// The tool in your hand decides, so the answer is the one you were just
+    /// working with: holding a selection tool means the arrows move the
+    /// marquee, and holding anything else means they move what is picked.
+    /// A live region with nothing movable picked takes the keys anyway, since
+    /// the alternative is a key press that does nothing at all.
+    public static func target(pixelRegion: Bool, regionToolActive: Bool,
+                              layerWouldMove: Bool) -> NudgeTarget? {
+        guard pixelRegion else { return layerWouldMove ? .layers : nil }
+        if regionToolActive { return .region }
+        return layerWouldMove ? .layers : .region
+    }
+}

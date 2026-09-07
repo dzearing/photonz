@@ -168,3 +168,91 @@ struct GridNudgeTests {
                 == CGVector(dx: 0, dy: -10))
     }
 }
+
+/// What an arrow key steers when a pixel region and picked layers are both
+/// live: the tool in your hand decides, and a region with nothing movable
+/// picked takes the keys rather than letting them do nothing.
+@Suite("Nudge target")
+struct NudgeTargetTests {
+
+    @Test func aSelectionToolSteersTheRegionEvenWithALayerPicked() {
+        #expect(Nudge.target(pixelRegion: true, regionToolActive: true, layerWouldMove: true) == .region)
+        #expect(Nudge.target(pixelRegion: true, regionToolActive: true, layerWouldMove: false) == .region)
+    }
+
+    @Test func anyOtherToolSteersThePickedLayer() {
+        #expect(Nudge.target(pixelRegion: true, regionToolActive: false, layerWouldMove: true) == .layers)
+        #expect(Nudge.target(pixelRegion: false, regionToolActive: false, layerWouldMove: true) == .layers)
+    }
+
+    @Test func aRegionTakesTheKeysWhenNoLayerWouldMove() {
+        #expect(Nudge.target(pixelRegion: true, regionToolActive: false, layerWouldMove: false) == .region)
+    }
+
+    @Test func nothingToMoveMeansNoTarget() {
+        #expect(Nudge.target(pixelRegion: false, regionToolActive: true, layerWouldMove: false) == nil)
+        #expect(Nudge.target(pixelRegion: false, regionToolActive: false, layerWouldMove: false) == nil)
+    }
+}
+
+/// Nudging the selection region itself: the outline travels, by the same one
+/// and ten points a layer nudge uses, and the shape is unchanged.
+@Suite("Nudge a selection region")
+struct SelectionRegionNudgeTests {
+
+    private func region(_ rect: CGRect) -> SelectionRegion {
+        guard let region = SelectionRegion.rect(rect) else {
+            fatalError("test fixture: \(rect) encloses no area")
+        }
+        return region
+    }
+
+    @Test func onePressMovesTheRegionOnePoint() {
+        let start = region(CGRect(x: 100, y: 80, width: 40, height: 20))
+        guard let delta = Nudge.delta(keyCode: 124, large: false),
+              let moved = start.translated(by: delta) else {
+            Issue.record("no nudge")
+            return
+        }
+        #expect(moved.bounds == CGRect(x: 101, y: 80, width: 40, height: 20))
+    }
+
+    @Test func shiftMovesItTenPoints() {
+        let start = region(CGRect(x: 100, y: 80, width: 40, height: 20))
+        guard let delta = Nudge.delta(keyCode: 125, large: true),
+              let moved = start.translated(by: delta) else {
+            Issue.record("no nudge")
+            return
+        }
+        #expect(moved.bounds == CGRect(x: 100, y: 90, width: 40, height: 20))
+    }
+
+    @Test func theRegionKeepsItsSizeAndShapeWhereverItGoes() {
+        var moved = region(CGRect(x: 4, y: 4, width: 30, height: 12))
+        for _ in 0..<10 {
+            guard let delta = Nudge.delta(keyCode: 123, large: false),
+                  let next = moved.translated(by: delta) else {
+                Issue.record("no nudge")
+                return
+            }
+            moved = next
+        }
+        // Walked off the left edge of a 200x200 picture and kept its shape:
+        // nothing clamps a nudged region, exactly as nothing clamps a
+        // Command-drag of the same outline.
+        #expect(moved.bounds == CGRect(x: -6, y: 4, width: 30, height: 12))
+        #expect(moved.contains(CGPoint(x: 0, y: 10)))
+        #expect(!moved.contains(CGPoint(x: 25, y: 10)))
+    }
+
+    @Test func anEllipseRegionNudgesTheSameWay() {
+        guard let start = SelectionRegion.ellipse(in: CGRect(x: 0, y: 0, width: 20, height: 20)),
+              let delta = Nudge.delta(keyCode: 126, large: true),
+              let moved = start.translated(by: delta) else {
+            Issue.record("no nudge")
+            return
+        }
+        #expect(moved.bounds == CGRect(x: 0, y: -10, width: 20, height: 20))
+        #expect(moved.contains(CGPoint(x: 10, y: 0)))
+    }
+}

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 14,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:36:40.268Z",
-  "updated": "2026-09-07T16:17:50.545Z",
+  "updated": "2026-09-07T18:30:06.753444Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07. Confirmed by reading Sources/Photonz/CanvasKeys.swift: the arrow keys have two branches, one for several picked layers at line 118 and one for a single picked layer at line 129, and there is no branch for a pixel selection at all, so with a marquee and no layer picked the keys fall through and nothing happens. The pieces to reuse are already there: Nudge.delta in PhotonzCore gives the step, including the coarse step and grid alignment, and the selection itself is the region the clipboard and fill paths already act on. Order matters when adding the branch, since a marquee can be live at the same time as a picked layer; decide which wins and say so, and note the existing comment explaining why the multi layer branch comes first. Related and worth reading first: a-marquee-selection-follows-the-pointer-and-neve, which removes snapping from marquee drags, so a nudged selection should not gain snapping either unless the grid nudge step is deliberately wanted here.",
@@ -39,6 +39,15 @@
     {
       "t": "2026-09-07T16:17:50.544Z",
       "note": "seq 12 -> 14"
+    },
+    {
+      "t": "2026-09-07T18:27:30.157Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T18:30:06.753444Z",
+      "note": "Adversarial review before building. (1) The app already has TWO ways to move a region with the pointer: a plain drag inside it moves the PIXELS (a deliberate 2026-07-05 deviation from Photoshop) and a Command-drag moves only the outline. The keyboard must be the outline one, both because the task says so and because Photoshop's arrows with a marquee tool move the outline. Worth flagging to the user that the same gesture family now means two things. (2) The arrow tool's rubber band also leaves a live `selection`, but it is a layer band (selectionTargetsPixels == false) and its catch is the multi-selection, so arrows there must keep nudging LAYERS. Gate on selectionTargetsPixels. (3) Precedence when a pixel region and a picked layer are both live: the tool in your hand decides. A selection tool means the marquee, anything else means the layer, and a region with nothing movable picked takes the keys rather than letting them do nothing. (4) No grid magnet on the nudge, matching the marquee drag which takes no magnet at all. (5) No clamping at the picture edge, matching the Command-drag outline move, which does not clamp either. (6) Shortest version: one pure precedence helper plus one branch in CanvasKeys; nothing else earns its place."
     }
-  ]
+  ],
+  "started": "2026-09-07T18:27:30.156Z"
 }

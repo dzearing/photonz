@@ -1,0 +1,32 @@
+{
+  "feature": "Arrow keys move a marquee selection",
+  "epic": "measure-redline",
+  "summary": "Draw a selection and the arrow keys now walk it a point at a time, ten points with shift, so a region can be lined up on something exactly instead of being redrawn until it looks right. Only the outline travels: the picture and the layers under it never move.",
+  "setup": "Photonz Dev, release Next. Open any screenshot. Nothing to turn on.",
+  "try": [
+    { "do": "Press M for the rectangle selection tool and drag a selection over something you want to line up.", "shot": "2026-09-07-nudge-marquee-drawn.png" },
+    { "do": "Press the right arrow three times. The marquee should step one point per press." },
+    { "do": "Hold shift and press down. It should jump ten points.", "shot": "2026-09-07-nudge-marquee-nudged.png" },
+    { "do": "Hold an arrow down. The marquee should keep walking for as long as you hold it." },
+    { "do": "Walk the marquee off the left edge of the picture, then walk it back on. It is allowed to leave, and it comes back whole." },
+    { "do": "Now press V for the arrow tool, click a layer, and press the right arrow. The LAYER moves and the marquee stays where you left it.", "shot": "2026-09-07-nudge-marquee-layer-wins.png" },
+    { "do": "Press M again and press an arrow. The marquee moves again and the layer stays put." },
+    { "do": "Press W for the wand, click inside a solid element, and nudge that selection too." }
+  ],
+  "evaluate": [
+    "Is one point per press and ten with shift the right pair, or do you want a bigger coarse step for a selection?",
+    "Letting the tool in your hand decide what the arrows move: does that feel obvious in use, or did you press an arrow expecting the other thing to move?",
+    "The marquee is free to walk off the edge of the picture and back. Is that right, or would you rather it stopped at the edge?",
+    "Nudging the marquee cannot be undone, the same as drawing it. Did you reach for Command Z at any point?",
+    "Dragging inside a selection moves the pixels, but the arrows move only the outline. Does that split bother you?"
+  ],
+  "rough": [
+    "Off the edge: nothing clamps it. A nudged marquee can walk clean off the picture and back on, keeping its size, which is what Command dragging the same outline already did. Stopping it at the edge would make a selection wider than the picture impossible to place.",
+    "Undo: nudging the marquee is not an undo step, and neither is drawing it, moving it by hand, or clearing it. Selection lives outside history in this app, so Command Z after a nudge undoes whatever document edit came before it. Making selection undoable is a real piece of work and a separate task, filed as a follow-up.",
+    "Which one the arrows move is decided by the tool in your hand: a selection tool means the marquee even when a layer is also picked, anything else means the layer. A live marquee with nothing movable picked takes the keys rather than letting them do nothing. This is Photoshop's rule and it is the only rule in the app that does not need a new piece of state to explain.",
+    "The arrow tool's own rubber band is untouched. That band is a way of picking layers rather than a region, so the arrows keep moving the layers it caught.",
+    "No magnet on the nudge: a press is exactly one point even with the grid showing and snapping on, matching the marquee drag, which takes no magnet either.",
+    "The Position and Size panel keeps showing the picked layer's numbers while the arrows are moving the marquee, so the readout is describing something the keys are not touching. Filed as a follow-up.",
+    "Verified in the loop's probe app with a scripted walk that reads the selection's box and every layer's box back in numbers (Scripts/playtest/nudge-the-marquee-walk.json): 400,300 to 401 to 402 to 403 one press at a time, 310 on shift and down, and the rectangle layer sitting still at 120,100 through all of it. Twenty presses in a row all landed and the main thread stayed quiet, which is the closest a script can get to a held key. The existing layer nudge walk still passes unchanged. The screenshots here are real window captures, not offscreen renders."
+  ]
+}

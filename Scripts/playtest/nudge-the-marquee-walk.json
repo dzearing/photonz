@@ -1,0 +1,275 @@
+{
+  "out": "/tmp/photonz-playtest/nudge-the-marquee",
+  "setup": {
+    "forget": [
+      "grid",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        280,
+        160
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        300
+      ],
+      "to": [
+        600,
+        400
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "1-drawn",
+      "note": "a marquee drawn with the rectangle layer still picked: region must read 400,300 200x100 and the tree must show the rectangle at 120,100"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-drawn"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "2-three-presses",
+      "note": "three presses of the right arrow: region must read 403,300 200x100, the rectangle must not have moved, and canUndo must be unchanged"
+    },
+    {
+      "do": "key",
+      "key": "down",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "3-shift-down",
+      "note": "shift and down: ten points at once, region must read 403,310 200x100, rectangle still at 120,100"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-nudged"
+    },
+    {
+      "do": "key",
+      "key": "left",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "key",
+      "key": "up"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "4-back",
+      "note": "back the other way: region must read 393,309 200x100, so the keys are reversible"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "5-layer-wins",
+      "note": "the same keys with the arrow tool in hand: the RECTANGLE must move to 122,100 and the region must stay at 393,309"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-layer-wins"
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "key",
+      "key": "left"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "6-marquee-again",
+      "note": "back on the marquee tool: region must read 392,309 and the rectangle must stay at 122,100"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "7-held",
+      "note": "twenty presses in a row, standing in for a held key: every one must land, so the region must read 392,329 200x100 and the main thread must stay quiet"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-held"
+    },
+    {
+      "do": "render",
+      "name": "6-final-render"
+    }
+  ]
+}

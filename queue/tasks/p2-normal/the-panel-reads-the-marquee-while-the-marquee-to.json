@@ -1,0 +1,28 @@
+{
+  "id": "the-panel-reads-the-marquee-while-the-marquee-to",
+  "title": "The panel reads the marquee while the marquee tool has the arrows",
+  "goal": "With a selection tool in hand the arrow keys move the marquee, but the Position and Size panel keeps showing the picked layer numbers, so the readout describes something the keys are not touching. It should read the selection box instead, and the numbers should be typeable to place a selection exactly.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1750,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T18:37:47.800Z",
+  "updated": "2026-09-07T18:37:47.800Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found writing the audit for arrow-keys-move-a-marquee-selection on 2026-09-07. The nudge branch lives in Sources/Photonz/CanvasKeys.swift and the precedence rule is Nudge.target in PhotonzCore/Nudge.swift; the panel would read the same rule to decide whose numbers to show. EditorState.selection is the region; it is editor state and not in History, so a typed number is not an undo step either.",
+  "acceptance": [
+    "With a selection tool active and a live selection, the Position and Size panel shows the selection box, not a picked layer",
+    "Typing a number into X, Y, W or H moves or resizes the selection to it",
+    "Switching back to the arrow tool puts the picked layer numbers back",
+    "With no selection the panel reads exactly as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T18:37:47.800Z",
+      "note": "created (manual)"
+    }
+  ]
+}

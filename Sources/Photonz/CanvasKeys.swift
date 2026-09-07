@@ -107,6 +107,31 @@ extension CanvasNSView {
         // ⌘ frees a nudge from the grid the same way it frees a drag.
         let coarseNudge = event.modifierFlags.contains(.shift)
         let nudgeGrid = event.modifierFlags.contains(.command) ? nil : canvasNudgeGrid
+        // Arrow keys move the SELECTION OUTLINE: the marquee walks a point at
+        // a time (ten with ⇧) so a region can be lined up exactly without
+        // being redrawn by hand, and the pixels and layers underneath it never
+        // move. Which one the keys steer is `Nudge.target`: the tool in your
+        // hand, so a selection tool means the marquee even with a layer picked,
+        // and any other tool leaves the two branches below untouched.
+        //
+        // Only a PIXEL region answers — the arrow tool's rubber band is a layer
+        // band whose catch is the multi-selection, and those keys must keep
+        // moving the layers it caught.
+        //
+        // No magnet and no clamp: the marquee drag takes no magnet at all, and
+        // ⌘-dragging this same outline is free to leave the picture, so the
+        // keys are too. A region pushed off the edge walks back the way it went.
+        if Nudge.isArrow(keyCode: event.keyCode),
+           moveDrag == nil, resizeDrag == nil, transformDrag == nil,
+           regionDrag == nil, regionOutlineDrag == nil, regionContentDrag == nil,
+           selectionTargetsPixels, let region = selection,
+           Nudge.target(pixelRegion: true, regionToolActive: tool.isRegionSelectionTool,
+                        layerWouldMove: nudgeWouldMoveALayer) == .region,
+           let delta = Nudge.delta(keyCode: event.keyCode, large: coarseNudge),
+           let moved = region.translated(by: delta) {
+            commitSelection(moved, capture: false)
+            return
+        }
         // Arrow keys nudge a whole multi-selection: every picked layer travels
         // the same distance, in ONE undo step, exactly as dragging the
         // selection on the canvas does. Same plan, so a locked layer stays put

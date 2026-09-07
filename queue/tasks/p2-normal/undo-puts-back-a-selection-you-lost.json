@@ -1,0 +1,28 @@
+{
+  "id": "undo-puts-back-a-selection-you-lost",
+  "title": "Undo puts back a selection you lost",
+  "goal": "Drawing, moving or clearing a selection cannot be undone: press Command Z after dropping a marquee you spent time placing and it undoes an edit to the picture instead, and the selection is gone for good. Undo should put a selection back the way it puts everything else back.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1760,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T18:37:47.835Z",
+  "updated": "2026-09-07T18:37:47.835Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building arrow-keys-move-a-marquee-selection on 2026-09-07. EditorState.selection (a SelectionRegion?) is editor state and never reaches History.perform, which is why nothing about a selection is undoable today. Photoshop does record selection changes in history. Doing this means deciding whether a selection step sits in the same stack as document edits (Photoshop) or a separate one, which is a UX question worth a decision card before any code.",
+  "acceptance": [
+    "Drawing a selection, nudging it, moving it by hand and clearing it are each undoable",
+    "Undo after a selection change puts the previous selection back and does not touch the picture",
+    "Redo puts the selection change back",
+    "Undo of a picture edit still works exactly as it does now, with selection changes interleaved"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T18:37:47.835Z",
+      "note": "created (manual)"
+    }
+  ]
+}

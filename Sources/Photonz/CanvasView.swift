@@ -1282,6 +1282,16 @@ final class CanvasNSView: NSView {
         return NudgeGrid(spacing: spacing, origin: canvasSnapOrigin, axes: canvasSnapAxes)
     }
 
+    /// Whether an arrow key has a layer to move: the same question the two
+    /// nudge branches in `keyDown` ask, so the selection outline only claims
+    /// the keys when they would otherwise do nothing. A locked layer counts as
+    /// nothing, since a nudge cannot move it.
+    var nudgeWouldMoveALayer: Bool {
+        if pickedLayerIDs.count > 1 { return document?.multiLayerDrag(moving: pickedLayerIDs) != nil }
+        guard let id = selectedLayerID, let layer = document?.canvasLayer(id: id) else { return false }
+        return !layer.isLocked
+    }
+
     /// The columns a drag can catch, gathered at grab time.
     ///
     /// Only a screen showing its columns offers any, so a screenshot, a plain
