@@ -11582,3 +11582,33 @@ Next: that walk failure, then whatever the queue has at the top of ui-components
 - Next: whatever the queue hands out. Open question for the user in the audit:
   does a bare grey version word under the name read as the version, or as a
   state the layer is stuck in?
+
+## 2026-09-07 — Adding a version says where the second drawing went
+
+Adding a version to a component put its new drawing a fixed distance right of
+the one it was copied from, so a third version added from the same original
+landed exactly on the second, and any version landed on whatever was already
+sitting there. Nothing on screen said a second drawing had appeared at all.
+
+Reproduced first at the model level (three versions all at `(164, 10)`), then:
+
+- `PhotonzDocument.roomForDrawing` walks right from the source stepping clear of
+  what it hits, wraps to a fresh row when the row runs out of canvas, and stays
+  inside the canvas, since the camera cannot travel past it. A layer covering
+  the whole canvas is scenery rather than an occupant.
+- `Viewport.revealing` (pure) moves the least it can, does nothing when the
+  target is already on screen, and only ever zooms out.
+  `revealing(_:alongside:)` brings the source drawing along when the pair fits.
+- `CopyConfirmation.Subject.componentVersionAdded` is the canvas pill.
+
+The second adversarial pass, on the real app, is what caught both of the things
+the unit tests missed: every document has a full-canvas Background layer, which
+made the free-spot search always fail and stack exactly as before; and revealing
+the new drawing alone pushed the drawing it came from off screen.
+
+Verified in Photonz Probe (Screen Recording granted, real captures) with
+`Scripts/playtest/version-lands-in-room-walk.json`. 4536 tests green. Pushed as
+`e6e0b542`. Audit: `queue/audits/2026-09-07-version-lands-in-room.json`.
+
+Next: the reproduced follow-up `version-labels-on-the-canvas-stop-covering-each`
+— the purple on-canvas name labels print over each other in a row of versions.

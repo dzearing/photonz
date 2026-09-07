@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1660,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T14:00:02.619Z",
-  "updated": "2026-09-07T21:03:54.880873Z",
+  "updated": "2026-09-07T21:04:14.218Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-07 whole-path sitting. On the first pass the copies dropped afterwards landed straight on the new Disabled drawing. addComponentVersion in EditorState places the copied drawing beside the original; it needs a placement that avoids occupied space, and the canvas needs to say the drawing arrived (the toast idiom used elsewhere).",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-07T21:03:54.880873Z",
       "note": "Follow-up filed, reproduced: version-labels-on-the-canvas-stop-covering-each (the purple on-canvas labels print over each other in a row of versions)."
+    },
+    {
+      "t": "2026-09-07T21:04:14.218Z",
+      "note": "A new version now lands in free space (PhotonzDocument.roomForDrawing), the canvas travels to it and keeps the drawing it came from in frame (Viewport.revealing), and a pill says what appeared. Verified in Photonz Probe with Scripts/playtest/version-lands-in-room-walk.json (real window captures): four versions from the same original land in a clean row with none overlapping, and one undo takes back the drawing with its version. 4536 tests green. Audit: queue/audits/2026-09-07-version-lands-in-room.json. Pushed as e6e0b542."
     }
   ],
-  "started": "2026-09-07T20:46:17.426Z"
+  "started": "2026-09-07T20:46:17.426Z",
+  "completed": "2026-09-07T21:04:14.218Z"
 }
