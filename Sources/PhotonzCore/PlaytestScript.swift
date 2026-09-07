@@ -342,6 +342,10 @@ public enum PlaytestAppearance: String, CaseIterable, Hashable, Codable, Sendabl
 public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case copySpecList, copyImage, hideAllMeasurements, showAllMeasurements
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
+    /// Take the window in and out of full screen. Full screen is where a Mac
+    /// takes the title bar away, so anything that lives in the title bar has
+    /// to be checked here rather than assumed.
+    case toggleFullScreen
     /// Undo and redo are menu chords too, so a walk that checks an undo step
     /// asks for it here.
     case undo, redo

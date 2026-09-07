@@ -46,10 +46,6 @@ struct EditorView: View {
     @AppStorage("inspector.width") private var panelWidth = 264.0
     /// Anchors the active-tool accent circle so it slides between buttons.
     @Namespace private var toolbarNamespace
-    /// True when the inspector was hidden BY the width auto-collapse (not by the
-    /// user). Lets us restore the user's shown/hidden preference when the window
-    /// grows back above the threshold, instead of clobbering it permanently.
-    @State private var inspectorAutoHidden = false
     /// False until the document has first appeared, so the inspector pane doesn't
     /// slide in on open (it should just be there, or not). Armed one runloop
     /// after the first document load; user toggles / auto-collapse animate after.
@@ -70,9 +66,7 @@ struct EditorView: View {
     var body: some View {
         @Bindable var editorState = editorState
         GeometryReader { geo in
-            let inspectorShown = editorState.document != nil
-                && editorState.isLayersPanelVisible
-                && !inspectorAutoHidden
+            let inspectorShown = editorState.isInspectorShown
             // Width the canvas (and thus the floating toolbar) actually gets.
             let canvasWidth = geo.size.width - (inspectorShown ? panelWidth + 1 : 0)
             HStack(spacing: 0) {
@@ -136,25 +130,6 @@ struct EditorView: View {
                         .animation(.spring(duration: 0.22),
                                    value: editorState.activeTool)
                     }
-                    // The way back to a closed panel, top-trailing. ONLY while
-                    // the panel is closed: open, the same button lives in the
-                    // panel's own top-right corner, because a button floating
-                    // beside the panel reads as an unrelated blob in the middle
-                    // of the picture (reported 2026-09-05). Closed there is no
-                    // panel to put it in and this corner is the way back,
-                    // including after the shell auto-collapsed the panel on a
-                    // narrow window.
-                    .overlay(alignment: .topTrailing) {
-                        if editorState.document != nil, !inspectorShown {
-                            inspectorToggle(isShown: false)
-                                // The one corner inset, shared with the measure
-                                // legend, which parks under this button when it
-                                // takes the top-right corner
-                                // (EditorChromeLayout.inspectorToggleFrame).
-                                .padding(EditorChromeLayout.cornerInset)
-                                .transition(.opacity)
-                        }
-                    }
                     .clipped()  // keep a transient over-wide toolbar off the panel
                     // What the capsule takes, so every other bottom overlay
                     // (the Measure hint, the crop pill, the legend) clears one
@@ -185,6 +160,19 @@ struct EditorView: View {
                     }
                     .frame(maxHeight: .infinity)
                     .transition(.move(edge: .trailing))
+                }
+            }
+            // The panel's toggle, in the window's own title bar rather than in
+            // the panel or on the canvas, so the way back never moves and
+            // never goes away with the thing it collapses. Only with a
+            // document open: an empty window has no panel, and a title bar
+            // control that does nothing is worse than no control.
+            //
+            // The title bar is outside this view's tree, so the state it reads
+            // is handed over rather than inherited.
+            .background {
+                if editorState.document != nil {
+                    TitlebarPanelToggleInstaller(editorState: editorState)
                 }
             }
             // Animate show/hide only AFTER the first appearance: on open the pane
@@ -918,48 +906,21 @@ struct EditorView: View {
         .toolTip("Resize Image", key: "⌥⌘I")
     }
 
-    /// The canvas's sidebar toggle (top-trailing): the way back to a closed
-    /// inspector, including when the panel has auto-collapsed on a narrow
-    /// window — tapping it forces the inspector open. While the panel is open
-    /// its own corner carries the button instead (`InspectorPanel`).
-    private func inspectorToggle(isShown: Bool) -> some View {
-        Button {
-            if isShown {
-                editorState.setInspectorVisible(false)
-                inspectorAutoHidden = false
-            } else {
-                editorState.setInspectorVisible(true)
-                inspectorAutoHidden = false // user override beats auto-collapse
-            }
-        } label: {
-            Image(systemName: isShown ? "sidebar.trailing" : "sidebar.leading")
-                .font(.system(size: 14, weight: .medium))
-        }
-        // Same language as the tool bar: the hover fill is the capsule itself
-        // lighting up, since the button is exactly the glass it sits on.
-        .buttonStyle(.tool(diameter: EditorChromeLayout.inspectorToggleSize))
-        .glassEffect(.regular, in: .capsule)
-        .toolTip(isShown ? "Hide Inspector" : "Show Inspector", key: "⌥⌘L")
-        // Named for a scripted walk. A `click` step goes to the canvas view
-        // and falls straight through an overlay button, so a walk that wants
-        // the way back into a closed dock has to press this by name.
-        .playtestControl(isShown ? "Hide Inspector" : "Show Inspector",
-                         detail: "the canvas corner's way back to the dock")
-    }
-
     /// Auto-collapse the inspector below the width threshold, and restore the
-    /// user's preference when the window grows back above it.
+    /// user's preference when the window grows back above it. The flag lives on
+    /// `EditorState` because the button that overrides it is in the window's
+    /// title bar, outside this view's tree.
     private func updateInspectorAutoCollapse(width: CGFloat) {
         if EditorChromeLayout.shouldAutoCollapseInspector(windowWidth: width) {
             // Too narrow: hide, remembering that WE hid it (not the user).
             if editorState.isLayersPanelVisible {
                 editorState.isLayersPanelVisible = false
-                inspectorAutoHidden = true
+                editorState.isInspectorAutoHidden = true
             }
-        } else if inspectorAutoHidden {
+        } else if editorState.isInspectorAutoHidden {
             // Roomy again: restore what the user had before we auto-hid it.
             editorState.isLayersPanelVisible = true
-            inspectorAutoHidden = false
+            editorState.isInspectorAutoHidden = false
         }
     }
 

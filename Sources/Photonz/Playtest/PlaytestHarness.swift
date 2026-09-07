@@ -328,7 +328,9 @@ private final class Run {
             // exactly as the tool bar's are.
             let window = try wanted.map { try requireWindow(titled: $0) } ?? (try requireWindow())
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+            // The title bar's own controls answer a hover too.
             let anchors = Self.findAll(HintAnchorView.self, in: content)
+                + Self.findAllInTitlebar(HintAnchorView.self, of: window)
             let anchor: HintAnchorView?
             let location: CGPoint
             let place: String
@@ -896,6 +898,25 @@ private final class Run {
             case .forgetThumbnails: editor.forgetLayerThumbnails()
             case .hideInspector: editor.setInspectorVisible(false)
             case .showInspector: editor.setInspectorVisible(true)
+            case .toggleFullScreen:
+                // A walk opens its window straight, without going through the
+                // agent's own "a window is up now" hand-off, so the probe is
+                // still a menu-bar accessory — and an accessory app is not
+                // allowed full screen at all (its windows come back
+                // `fullScreenNone`). Becoming regular first is exactly what
+                // `AppCoordinator.openWindow` does for a person, so this is
+                // the app as they have it, not a special case for the walk.
+                NSApp.setActivationPolicy(.regular)
+                // The window was BUILT while the app was still an accessory,
+                // and AppKit stamps such a window `fullScreenNone` for life.
+                // Putting it back to what a regular app's window is born with
+                // is restoring the window a person has, not granting the walk
+                // something the app cannot do.
+                if let window = editor.hostWindow {
+                    window.collectionBehavior.remove(.fullScreenNone)
+                    window.collectionBehavior.insert(.fullScreenPrimary)
+                    window.toggleFullScreen(nil)
+                }
             case .zoomIn: editor.zoomIn()
             case .zoomOut: editor.zoomOut()
             case .zoomToFit: editor.zoomToFit()
@@ -1262,7 +1283,9 @@ private final class Run {
     /// right now, read fresh.
     private func panelTargets() throws -> [PanelTargetView] {
         try panelWindows().flatMap { window in
-            window.contentView.map { Self.findAll(PanelTargetView.self, in: $0) } ?? []
+            // The title bar counts too: the panel's own toggle lives there.
+            (window.contentView.map { Self.findAll(PanelTargetView.self, in: $0) } ?? [])
+                + Self.findAllInTitlebar(PanelTargetView.self, of: window)
         }
         .filter { $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
     }
@@ -1604,7 +1627,9 @@ private final class Run {
     /// over the Fill row must not take that row's name.
     private func pressTargets(in window: NSWindow) -> [PlaytestPressTarget] {
         guard let content = window.contentView else { return [] }
-        let everything = Self.findAll(PanelTargetView.self, in: content)
+        // The title bar's own controls press like any other.
+        let everything = (Self.findAll(PanelTargetView.self, in: content)
+                          + Self.findAllInTitlebar(PanelTargetView.self, of: window))
             .filter { $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
         let fields = everything.filter { $0.kind == .field }
         // A marker cannot tell whether the control in front of it is dimmed —
@@ -2428,6 +2453,22 @@ private final class Run {
             }
             return line
         }.joined(separator: "\n")
+    }
+
+    /// Everything of this kind standing in a window's TITLE BAR. Its views
+    /// hang off the window frame, not off `contentView`, so a search that
+    /// started at the content view would photograph the panel toggle and never
+    /// touch it.
+    ///
+    /// The titled check is not politeness: asking a borderless window for its
+    /// titlebar accessories raises, and an exception thrown out of a walk's own
+    /// step is swallowed by the run loop, which strands the walk with no error
+    /// and no `done.json`. The tooltip a `hover` leaves up is exactly such a
+    /// window, so `hover` followed by `press` hung until this guard went in.
+    private static func findAllInTitlebar<T: NSView>(_ type: T.Type,
+                                                     of window: NSWindow) -> [T] {
+        guard window.styleMask.contains(.titled) else { return [] }
+        return window.titlebarAccessoryViewControllers.flatMap { findAll(type, in: $0.view) }
     }
 
     private static func findAll<T: NSView>(_ type: T.Type, in view: NSView) -> [T] {

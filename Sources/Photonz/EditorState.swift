@@ -66,6 +66,13 @@ final class EditorState {
     /// persisted *preference* that survives relaunch (and feeds window sizing)
     /// is `inspectorPreferredVisible`, written only on an explicit toggle.
     var isLayersPanelVisible = EditorState.inspectorPreferredVisibleDefault
+    /// True when the SHELL closed the dock because the window got too narrow,
+    /// not the person. It lives here rather than in the view because the
+    /// button that reopens the dock is in the window's title bar now, outside
+    /// the editor's own view tree, and it has to be able to override this.
+    /// Widening the window past the threshold puts the dock back only while
+    /// this is true.
+    var isInspectorAutoHidden = false
     /// Whether the right dock carries the Library shelf (Next,
     /// `next-library`). Its own switch, separate from the dock's: the dock is
     /// where someone who only redlines lives, so the Library is there only
@@ -167,6 +174,17 @@ final class EditorState {
     func setInspectorVisible(_ visible: Bool) {
         isLayersPanelVisible = visible
         inspectorPreferredVisible = visible
+        // A person's choice beats the shell's: asking for the dock on a narrow
+        // window keeps it, and closing a dock the shell had already taken away
+        // means it stays away when the window grows back.
+        isInspectorAutoHidden = false
+    }
+
+    /// Whether the docked panel is actually on screen. The one answer the
+    /// shell, the title bar's toggle and the canvas chrome all read, so they
+    /// can never disagree about which state the button is showing.
+    var isInspectorShown: Bool {
+        document != nil && isLayersPanelVisible && !isInspectorAutoHidden
     }
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through

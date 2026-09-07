@@ -121,30 +121,16 @@ public enum EditorChromeLayout {
 
     // MARK: Corner chrome
 
-    /// How far anything parked in a canvas corner floats off its two edges:
-    /// the inspector toggle and the measure legend both use it, so when the
-    /// legend stacks under the toggle their trailing edges line up.
+    /// How far anything parked in a canvas corner floats off its two edges.
+    /// One number, shared, so two things that ever stack in a corner line up.
     public static let cornerInset: CGFloat = 12
-    /// The inspector toggle's glass capsule, a square around its 14 pt glyph.
-    public static let inspectorToggleSize: CGFloat = 30
 
-    /// Where the inspector toggle sits ON THE CANVAS: `cornerInset` into the
-    /// top-right corner of a canvas of `canvasSize`, so the legend's top-right
-    /// slot can make room for it. Top-left origin.
-    ///
-    /// Nil while the inspector is open, because the button is then in the
-    /// panel's own top-right corner instead — it belongs to the panel it
-    /// collapses, and floating it beside the panel read as an unrelated blob
-    /// in the middle of the picture (reported 2026-09-05). With the panel
-    /// open the canvas corner is simply free, and whatever wants it (the
-    /// measure legend) takes all of it rather than parking a gap below a
-    /// button that is no longer there.
-    public static func inspectorToggleFrame(canvasSize: CGSize,
-                                            isInspectorShown: Bool) -> CGRect? {
-        guard !isInspectorShown else { return nil }
-        return CGRect(x: canvasSize.width - cornerInset - inspectorToggleSize, y: cornerInset,
-                      width: inspectorToggleSize, height: inspectorToggleSize)
-    }
+    // Nothing parks in a canvas corner any more. The panel toggle used to,
+    // floating in the top-right corner whenever the panel was closed, with the
+    // measure legend hanging one stack gap below it; on 2026-09-06 it moved
+    // into the window's own title bar, where a Mac keeps a panel toggle. The
+    // legend now takes its corner outright, so it asks `PanelPlacement` for a
+    // slot with no corner chrome to clear.
 
     // MARK: Tool bar fit
 

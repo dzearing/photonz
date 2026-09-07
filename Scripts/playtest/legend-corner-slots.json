@@ -1,5 +1,5 @@
 {
-  "out": "/tmp/photonz-playtest/legend-under-toggle",
+  "out": "/tmp/photonz-playtest/legend-corner-slots",
   "steps": [
     {
       "do": "open",
@@ -158,7 +158,7 @@
     {
       "do": "describe",
       "stage": "2-top-left-taken",
-      "note": "a caliper across the top-left slot, inspector hidden, wide canvas"
+      "note": "a caliper across the top-left slot, panel hidden, wide canvas: the key takes the whole top-right corner"
     },
     {
       "do": "snapshot",
@@ -175,7 +175,7 @@
     {
       "do": "describe",
       "stage": "3-inspector-shown",
-      "note": "same document with the inspector back"
+      "note": "same document with the panel back; the corner is unchanged, nothing parks in it"
     },
     {
       "do": "snapshot",

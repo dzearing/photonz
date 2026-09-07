@@ -1,0 +1,29 @@
+{
+  "feature": "The panel toggle lives in the window title bar",
+  "epic": "ui-building",
+  "summary": "The button that shows and hides the right hand panel now sits at the trailing end of the window's title bar, level with the traffic lights, and stays in that one spot whether the panel is open or closed. It used to move: inside the panel's header while the panel was up, and a floating capsule on the picture once it was down.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this replaces the old buttons rather than adding to them.",
+  "try": [
+    { "do": "Open a screenshot with the right hand panel showing. Look at the top right corner of the window.", "shot": "2026-09-07-panel-toggle-titlebar-1.png" },
+    { "do": "Rest the pointer on it. It says Hide Panel and gives you the shortcut.", "shot": "2026-09-07-panel-toggle-titlebar-2.png" },
+    { "do": "Click it. The panel goes and the button stays exactly where it was, just quieter.", "shot": "2026-09-07-panel-toggle-titlebar-3.png" },
+    { "do": "Click it again to bring the panel back, then press Option Command L twice. The button follows the shortcut both ways." },
+    { "do": "Drag the window narrower than about 680 points. The panel closes itself and the same button is still up there to open it again.", "shot": "2026-09-07-panel-toggle-titlebar-4.png" },
+    { "do": "Press I for Measure and measure something near the top left with the panel open. The key panel takes the whole top right corner of the picture now.", "shot": "2026-09-07-panel-toggle-titlebar-5.png" },
+    { "do": "Press Control Command F for full screen and note that the title bar, and the button with it, goes away until you push the pointer to the top of the screen." }
+  ],
+  "evaluate": [
+    "Is the top right corner of the title bar where your hand goes for this, without thinking about it?",
+    "Open against closed, the glyph goes from full strength to grey. Is that enough to tell at a glance whether the panel is up, or should it wear something stronger?",
+    "The tooltip says Panel, the View menu says Show Layers, and they are the same command on the same shortcut. Should the menu say Panel too?",
+    "In full screen the button hides with the title bar, so the way back is the keyboard or the menu. Is that right, or should something appear on the picture there?",
+    "The top of the panel and the top right of the picture are both empty now. Does the window feel calmer, or does it feel like something is missing?"
+  ],
+  "rough": [
+    "Full screen takes the title bar away and the button with it, the way a Mac does for any window without a toolbar. With the panel closed in full screen the only ways back are Option Command L and the View menu. Nothing was added to the picture to cover it, because a floating button on the picture is exactly what this task removed.",
+    "The button does not go quiet when the window loses focus, the way the traffic lights do. Nothing else in the app does either, so it was left alone rather than made a one-off.",
+    "Three names for one thing: the tooltip says Panel, the View menu says Show Layers, and the old tooltip said Inspector. This picked the word the request used and left the menu alone, since renaming the menu changes the shipping release too.",
+    "The old collapse button in the panel header, and the glass capsule that floated in the picture's corner while the panel was closed, are both gone. So is the gap the measure key used to leave under that capsule.",
+    "A walk could not press anything in the title bar before this: asking a borderless window (the tooltip a hover leaves up is one) for its title bar controls raises, and the exception was swallowed, which stranded the walk with no error at all. Fixed in the harness, and there is a new toggleFullScreen step so full screen can be checked rather than assumed."
+  ]
+}

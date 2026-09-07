@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 14,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T05:25:13.487Z",
-  "updated": "2026-09-07T05:25:13.524Z",
+  "updated": "2026-09-07T06:49:49.967Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-06, and the honest answer to why not yet is that nothing has put anything in the title bar before. The editor window is declared hiddenTitleBar (Sources/Photonz/PhotonzApp.swift line 43), which hides the title and the bar but keeps the title bar AREA where the traffic lights live, so a toolbar item can still be placed there; this is the same arrangement Finder uses. Two routes: attach a SwiftUI toolbar with a trailing item to the editor scene, or add an NSToolbar to the window and place the control in it. Prefer whichever keeps the current look, which is no visible bar and no title text, since adding a toolbar can bring a background and a divider that would change the window. Check both what the traffic lights do at a narrow width and whether the item survives full screen. Supersedes the-panel-collapse-button-sits-in-the-panel-s-ow, which moved the button from the canvas into the panel header; that was the previous step and this replaces it, so fold in anything it left behind, in particular the corner rect other chrome avoids and the measure legend that used to park under the old position.",
@@ -29,6 +29,31 @@
     {
       "t": "2026-09-07T05:25:13.524Z",
       "note": "seq 1590 -> 14"
+    },
+    {
+      "t": "2026-09-07T06:49:49.967Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T07:05:00.000Z",
+      "note": "Reviewed the idea before building. Walked it as a first-time user: the top right of a title bar is where Finder, Mail and Xcode keep this, so the hand goes there; nothing else in the window competes for that corner. Two routes weighed: a SwiftUI toolbar brings its own glass background and a separator on macOS 26, which is a bar drawn across the top of a window that deliberately has none, so it was rejected. A titlebar ACCESSORY drops one view into the title bar area with no toolbar and no chrome, which keeps the window exactly as it looks today. Shortest version that delivers the value: one button, one home, and BOTH old homes deleted (the panel header's and the canvas capsule's) rather than keeping a fallback, since two ways back is the thing being fixed."
+    },
+    {
+      "t": "2026-09-07T07:06:00.000Z",
+      "note": "Shipped. New Sources/Photonz/TitlebarPanelToggle.swift hangs an NSTitlebarAccessoryViewController (layoutAttribute .trailing) on the editor window carrying one SwiftUI button; installed from EditorView's background, only with a document open, so an empty window never shows a dead control. EditorState gained isInspectorAutoHidden and isInspectorShown: the flag used to be @State in EditorView and the title bar is outside that tree, so setInspectorVisible now clears it and one reading answers for everyone. Removed: the dock's collapseButton and its headerTrailingReserve/isDockScrolled machinery (LayersPanel), the canvas corner overlay and inspectorToggle (EditorView), EditorChromeLayout.inspectorToggleFrame/inspectorToggleSize, and the measure legend's corner-chrome clearing, which is now just the plain inset. 4267 tests green."
+    },
+    {
+      "t": "2026-09-07T07:07:00.000Z",
+      "note": "Two harness bugs found and fixed on the way, both blocking any title bar control from ever being tested. A walk only searched window.contentView, so a titlebar accessory was invisible to press and hover; and asking a BORDERLESS window for its titlebarAccessoryViewControllers raises, which the run loop swallows, stranding the walk with no error and no done.json (the tooltip a hover leaves up is such a window, so hover-then-press hung for 180s). One guarded helper, findAllInTitlebar, now serves all three searches. Added a toggleFullScreen action so full screen is checked rather than assumed; it also puts the window back to a regular app's collection behavior, because a walk's window is built while the probe is still a menu-bar accessory and AppKit stamps those fullScreenNone for life."
+    },
+    {
+      "t": "2026-09-07T07:08:00.000Z",
+      "note": "Verified on the probe with Screen Recording granted. panel-toggle-titlebar-walk (open, tooltip, close, reopen, shortcut both ways, measure key in the freed corner) and panel-toggle-narrow-walk (620pt window auto-collapses, real presses on the title bar button both ways) both pass; legend-corner-slots, layers-lazy-rows and dock-component-first still pass. Measured off the real capture: the traffic lights span y 18..45px and the glyph y 20..44px, so both centre on the same row; the lights' circle sits 9pt off the left edge and the button's 10pt off the right. Full screen: the title bar hides and the button with it, the shortcut still works, and coming back restores it. Contrast checked in both appearances; the canvas keeps a title bar safe area, so the button never sits over document pixels."
+    },
+    {
+      "t": "2026-09-07T07:09:00.000Z",
+      "note": "Shared code, not Next-only: the editor shell, the dock and the chrome layout are all shared files that Next has not forked, so Next gets this by construction and Current gets the same move. This is a relocation of existing chrome, not a new feature, so no flag."
     }
-  ]
+  ],
+  "started": "2026-09-07T06:49:49.966Z"
 }

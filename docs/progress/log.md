@@ -10584,3 +10584,62 @@ re-run and green. Audit: `queue/audits/2026-09-07-caliper-layer-edges.json`.
 
 Next: the audit asks whether the 2 pixel margin is the right feel, and whether
 the picture layer's own edges counting as exact targets is wanted.
+
+## 2026-09-07 — The panel toggle moves into the window title bar
+
+The button that shows and hides the right hand panel used to move with the thing
+it controls: it sat in the panel's own header while the panel was up, and became
+a glass capsule floating in the picture's top right corner once the panel was
+down. So the way back was never in the same place twice, and with the panel open
+the button went away along with it. Asked for on 2026-09-06: put it in the title
+bar, where Finder, Mail and Xcode keep it.
+
+It is a **titlebar accessory**, not a toolbar. The editor window is
+`hiddenTitleBar`, which keeps the title bar area (the traffic lights live there)
+without drawing a bar; a `NSTitlebarAccessoryViewController` with
+`layoutAttribute .trailing` drops one view into that area and nothing else
+changes. A SwiftUI `.toolbar` was the other route and was rejected: on macOS 26
+it brings its own glass background and a separator, which is a bar drawn across
+the top of a window that deliberately has none.
+
+New `Sources/Photonz/TitlebarPanelToggle.swift`. The title bar's view is built
+ONCE and reads `EditorState` directly rather than being handed a fresh root view
+on every pass of the editor's body — pushing a new root view re-measures the
+accessory, which lays the window out, which runs the editor's body again.
+`isInspectorAutoHidden` moved from `@State` in `EditorView` onto `EditorState`,
+because the button that overrides it is now outside that view tree, and
+`setInspectorVisible` clears it; `EditorState.isInspectorShown` is the one
+reading the shell, the title bar and the canvas chrome all agree on.
+
+Both old homes are gone, not kept as a fallback: the dock's `collapseButton`
+with its `headerTrailingReserve` and `isDockScrolled` machinery, the canvas
+corner overlay, `EditorChromeLayout.inspectorToggleFrame`/`inspectorToggleSize`,
+and the measure legend's corner-chrome clearing (its top inset is now the plain
+one). The canvas corners carry nothing at all.
+
+**Two harness bugs, both of which had made any title bar control untestable.**
+A walk searched only `window.contentView`, so a titlebar accessory was invisible
+to `press` and `hover`; and asking a BORDERLESS window for its
+`titlebarAccessoryViewControllers` raises, an exception the run loop swallows,
+which strands a walk with no error and no `done.json`. The tooltip a `hover`
+leaves up is exactly such a window, so hover-then-press hung for the full 180s
+with an idle main thread. One guarded helper, `findAllInTitlebar`, serves all
+three searches now. A new `toggleFullScreen` action lets a walk check full
+screen instead of assuming; it also restores the window's collection behavior,
+since a walk's window is built while the probe is still a menu-bar accessory and
+AppKit stamps those `fullScreenNone` for life.
+
+Verified on the probe with Screen Recording. Measured off the capture: the
+traffic lights span y 18..45px and the glyph y 20..44px, so both centre on the
+same row, and the circles sit 9pt and 10pt off their respective edges. Full
+screen hides the title bar and the button with it, the way a Mac does for a
+window with no toolbar; the shortcut still works there. Suite green at 4267.
+New walks `panel-toggle-titlebar-walk.json` and `panel-toggle-narrow-walk.json`
+replace the two `panel-collapse-*` ones; `legend-under-toggle.json` is now
+`legend-corner-slots.json`, since nothing tucks under anything any more. Audit:
+`queue/audits/2026-09-07-panel-toggle-titlebar.json`.
+
+Next: the audit asks whether the open/closed difference (full strength against
+grey) reads at a glance, whether the View menu should say Panel rather than Show
+Layers now the tooltip does, and whether full screen needs a way back on the
+picture at all.
