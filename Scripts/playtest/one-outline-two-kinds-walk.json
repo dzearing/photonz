@@ -1,0 +1,238 @@
+{
+  "out": "/tmp/photonz-playtest/one-outline-two-kinds",
+  "seed": "Picking a rectangle and a screenshot together used to list Outline twice, one for the line the shape draws itself and one for the ring the picture wears. This walk picks both, reads the Appearance list, and pushes the one switch, the one colour and the one Width to see all of them land on both layers.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 760,
+      "canvasHeight": 520,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dropImage",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "at": [
+        430,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        430
+      ],
+      "to": [
+        520,
+        570
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-box-alone",
+      "note": "the regression check first: a lone rectangle must still offer Fill, Outline and Shadow, its Outline carrying the switch and the width."
+    },
+    {
+      "do": "panel",
+      "stage": "box-alone"
+    },
+    {
+      "do": "snapshot",
+      "name": "outline-1-box-alone"
+    },
+    {
+      "do": "selectRow",
+      "row": "settings-pane-2x",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-both-picked",
+      "note": "THE TEST: the rectangle and the screenshot picked together. Exactly ONE row called Outline."
+    },
+    {
+      "do": "panel",
+      "stage": "both-picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "outline-2-both-picked"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Outline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-switch-on",
+      "note": "one press of the one switch: the shape's stroke and the picture's ring both come on, in one step."
+    },
+    {
+      "do": "panel",
+      "stage": "after-switch"
+    },
+    {
+      "do": "snapshot",
+      "name": "outline-3-switched-on"
+    },
+    {
+      "do": "render",
+      "name": "outline-3-switched-on-doc"
+    },
+    {
+      "do": "press",
+      "control": "Settings",
+      "in": "Outline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "4-width-open",
+      "note": "ONE Width under the one row, reading whichever line each of them actually has."
+    },
+    {
+      "do": "panel",
+      "stage": "width-open"
+    },
+    {
+      "do": "snapshot",
+      "name": "outline-4-width-open"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Width",
+      "across": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-width-pulled",
+      "note": "one pull: the shape's stroke and the picture's ring must both land on the same number."
+    },
+    {
+      "do": "panel",
+      "stage": "width-pulled"
+    },
+    {
+      "do": "snapshot",
+      "name": "outline-5-width-pulled"
+    },
+    {
+      "do": "render",
+      "name": "outline-5-width-pulled-doc"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Outline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-picker",
+      "note": "one well for both kinds of line: the picker it opens is the app's own."
+    },
+    {
+      "do": "snapshot",
+      "name": "outline-6-picker"
+    },
+    {
+      "do": "press",
+      "control": "Shades 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "7-painted",
+      "note": "THE OTHER TEST: one colour picked once must paint the shape its stroke and the picture its ring."
+    },
+    {
+      "do": "panel",
+      "stage": "painted"
+    },
+    {
+      "do": "snapshot",
+      "name": "outline-7-painted"
+    },
+    {
+      "do": "render",
+      "name": "outline-7-painted-doc"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Outline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-switched-off",
+      "note": "and one press takes the line off both of them again, colours kept."
+    },
+    {
+      "do": "render",
+      "name": "outline-8-switched-off-doc"
+    },
+    {
+      "do": "snapshot",
+      "name": "outline-8-switched-off"
+    }
+  ]
+}

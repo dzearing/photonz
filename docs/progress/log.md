@@ -10281,3 +10281,35 @@ shows two rows called Outline, because `LayerPartRow` carries one slot and
 those are two different colours underneath. Merging them means a row whose
 colour is per-layer. Filed as
 `two-layers-picked-together-are-offered-outline-t`.
+
+## 2026-09-07 — One Outline row for both kinds of line
+
+Picking a rectangle and a screenshot together listed **Outline** twice, one for
+the line the shape draws itself and one for the ring the picture wears. They are
+the same idea to a person, so they are one row now.
+
+- `LayerPartRow` carries `colors: [PartColor]` — each colour the row paints and
+  exactly which picked layers take it — instead of one slot. That is what lets
+  one row hold a shape's stroke and a picture's ring without either colour
+  landing on a layer it has no business on (a highlight has a stroke colour too,
+  and it is the wash the highlight is made of).
+- `PhotonzDocument.outlineWidthReading` / `setRingWidth`: one Width that reads
+  and writes whichever ring each picked layer actually has.
+- App: `ColorTarget` wraps a row's colours; `ColorStyleRow`,
+  `SelectionColorWell` and `ColorStyleControl` take one, and
+  `EditorState+ColorTargets` fans every colour call out over the row's slots as
+  ONE undo step.
+- Two smaller things fixed on the way: the Outline row's identity no longer
+  changes with the kind of layer picked, so the settings drawer stops folding
+  itself away when you click from a box to a picture; and Outline now always
+  sits above Text, so adding a caption to the selection no longer reorders the
+  panel.
+
+Verified on the real app with the probe: `Scripts/playtest/one-outline-two-kinds-walk.json`
+(real window captures, Screen Recording granted). 4202 core tests green.
+Audit: `queue/audits/2026-09-07-one-outline-two-kinds.json`.
+
+**Next / open questions for the user:** switching the line on gives the picture
+a black ring while the shape keeps its own colour, so the row reads Mixed right
+afterwards; and a row where only one of the two layers has a line reads off,
+hiding the colour of the one that does. Both are in the audit's `evaluate`.

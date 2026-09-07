@@ -1,0 +1,29 @@
+{
+  "feature": "One Outline row for both kinds of line",
+  "epic": "measure-redline",
+  "summary": "Pick a rectangle and a screenshot together and the Appearance list now offers ONE row called Outline instead of two. Its switch, its colour and its Width all reach both, so the shape gets its stroke and the picture gets its ring in one step one undo puts back.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: this is the Appearance list you already have.",
+  "try": [
+    { "do": "Drop a screenshot onto a blank canvas." },
+    { "do": "Press R and drag a rectangle over part of it." },
+    { "do": "Shift-click the screenshot's row in the Layers list so both are picked.", "shot": "2026-09-07-one-outline-both-picked.png" },
+    { "do": "Read the Appearance list: Fill, Outline, Shadow. One Outline, not two." },
+    { "do": "Tick the Outline switch. Both the shape and the picture get a line." },
+    { "do": "Click the chevron at the end of the Outline row and drag its Width. Both lines move together." },
+    { "do": "Click the colour beside Outline and pick a shade.", "shot": "2026-09-07-one-outline-painted.png" },
+    { "do": "Press Command-Z once. Both go back together." }
+  ],
+  "evaluate": [
+    "With both picked, is one row called Outline what you expected, or did you want to see which layer each line belongs to?",
+    "Switching the line on gives the picture a black ring while the shape keeps its own colour, so the row reads Mixed straight afterwards. Should switching it on hand them one colour instead?",
+    "When only one of the two has a line, the row reads off and hides its colour until you tick it. Is that right, or should it show what the one that has a line is wearing?",
+    "The one Width now goes as thick as a shape's outline can, which is thicker than a picture's ring used to allow. Does the extra range help or does it feel wrong on a screenshot?",
+    "Outline now always sits above Text, so picking a caption beside a box no longer reorders the panel. Does the list read in the order you would guess?"
+  ],
+  "rough": [
+    "The picture's ring comes on black rather than picking up the shape's colour, so a freshly switched-on Outline row reads Mixed. Left alone: giving one layer another layer's colour behind the person's back is a bigger surprise than a Mixed readout you can fix with one click.",
+    "A merged row where only one of the two layers has a line reads off, which hides the colour of the one that does have it. That is the rule two rectangles already follow, so it stays rather than inventing a third state, but it is the thing most likely to feel wrong.",
+    "Changed away from what the panel did before: a highlight picked beside a box now keeps its own Colour row for its wash instead of sharing the box's Outline row. The old behaviour let a click aimed at a rectangle's outline repaint the highlight's wash.",
+    "Both screenshots here are real window captures from a scripted walk (Scripts/playtest/one-outline-two-kinds-walk.json), not offscreen renders."
+  ]
+}

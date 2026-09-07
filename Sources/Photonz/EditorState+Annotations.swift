@@ -604,6 +604,50 @@ extension EditorState {
         saveAnnotationStyles()
     }
 
+    /// What the Outline row's Width reads when it is speaking for two kinds of
+    /// line at once: the ring each picked layer actually has, and whether they
+    /// agree.
+    func outlineWidthReading(ids: [UUID]) -> StyleReading<CGFloat> {
+        document?.outlineWidthReading(layerIDs: ids) ?? StyleReading(value: nil, isMixed: false)
+    }
+
+    /// One frame of a pull on that Width, recording nothing: a shape's stroke
+    /// and a picture's ring both move, so the number under the knob means the
+    /// same thing on every layer it reaches.
+    func previewRingWidth(ids: [UUID], _ width: CGFloat) {
+        guard var doc = document else { return }
+        let shapes = annotationRestyleTargets(ids, in: doc)
+        if !shapes.isEmpty {
+            rememberAnnotationDefaults(shapes, in: doc, strokeWidth: width,
+                                       arrowheadScale: nil, cornerRadius: nil)
+        }
+        // This row writes the layer's LOOK as well as its shape, so anything a
+        // previous style drag left in the preview would be read back over it.
+        stylePreview = nil
+        discardDragPreview()
+        doc.setRingWidth(layerIDs: ids, to: width)
+        submit(doc)
+    }
+
+    /// Letting go of it: ONE undo step over every picked layer, whichever ring
+    /// each of them draws.
+    func commitRingWidth(ids: [UUID], _ width: CGFloat) {
+        guard let doc = document else { return }
+        let shapes = annotationRestyleTargets(ids, in: doc)
+        stylePreview = nil
+        discardDragPreview()
+        perform { $0.setRingWidth(layerIDs: ids, to: width) }
+        if !shapes.isEmpty {
+            rememberAnnotationDefaults(shapes, in: doc, strokeWidth: width,
+                                       arrowheadScale: nil, cornerRadius: nil)
+            saveAnnotationStyles()
+        }
+        // A ring is styling laid over a layer rather than part of the shape, so
+        // it rides along with the rest of a layer's remembered look, exactly
+        // the way pulling it on its own row already does.
+        rememberStyleDefault(of: ids.filter { doc.layer(id: $0)?.drawsItsOwnOutline == false })
+    }
+
     /// The picked layers a shape slider may touch: shapes, unlocked.
     private func annotationRestyleTargets(_ ids: [UUID], in doc: PhotonzDocument) -> [UUID] {
         ids.filter { doc.layer(id: $0).map { $0.annotation != nil && !$0.isLocked } == true }

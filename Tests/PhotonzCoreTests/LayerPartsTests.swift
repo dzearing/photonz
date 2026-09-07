@@ -193,17 +193,117 @@ struct LayerPartsTests {
         #expect(doc.layer(id: wash.id)!.style.borderWidth == 0)
     }
 
-    @Test func aHighlightPickedWithABoxLeavesTheBoxesOutlineAlone() throws {
-        // The box still owns the stroke row, switch, width and all; the
-        // highlight is simply not in it.
+    @Test func aHighlightPickedWithABoxKeepsItsWashOutOfTheOutline() throws {
+        // One row called Outline over both of them: the box's stroke and the
+        // highlight's ring are the same line to a person. What must NOT
+        // happen is the highlight's wash being painted from it, so the row
+        // carries the box under stroke and the highlight under border and
+        // paints neither one with the other's colour.
         let box = shape(.rectangle, fillHex: "#00FF00")
         let wash = shape(.highlight)
         let doc = document([box, wash])
         let rows = doc.layerPartRows(layerIDs: [box.id, wash.id])
-        let stroke = try #require(rows.first { $0.slot == .stroke })
-        #expect(stroke.title == "Outline")
-        #expect(stroke.switchIDs == [box.id])
-        #expect(stroke.widthIDs == [box.id])
+        #expect(rows.filter { $0.title == "Outline" }.count == 1)
+        let outline = try #require(rows.first { $0.part == .outline })
+        #expect(outline.colors == [PartColor(slot: .stroke, layerIDs: [box.id]),
+                                   PartColor(slot: .border, layerIDs: [wash.id])])
+        #expect(outline.switchIDs == [box.id, wash.id])
+        // And the wash keeps its own row, the one it has on its own.
+        let ink = try #require(rows.first { $0.part == nil && $0.slot == .stroke })
+        #expect(ink.title == "Color")
+        #expect(ink.colors == [PartColor(slot: .stroke, layerIDs: [wash.id])])
+    }
+
+    // MARK: - Two kinds of line picked together, which was two rows called Outline
+
+    @Test func aBoxAndAPictureAreOfferedOneOutlineNotTwo() throws {
+        // Reported 2026-09-07: picking a rectangle and a screenshot listed
+        // Outline twice, one for the line the shape draws itself and one for
+        // the ring the picture wears. They are the same idea to a person.
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let shot = picture(style: border(2))
+        let doc = document([box, shot])
+        let rows = doc.layerPartRows(layerIDs: [box.id, shot.id])
+        #expect(rows.filter { $0.title == "Outline" }.count == 1)
+        let outline = try #require(rows.first { $0.part == .outline })
+        #expect(outline.switchIDs == [box.id, shot.id])
+        #expect(outline.onCount == 2)
+        #expect(outline.isOn)
+        #expect(outline.widthIDs == [box.id, shot.id])
+        #expect(outline.reachNote == nil)
+    }
+
+    @Test func thatOneRowKnowsWhichColorEachOfThemWears() throws {
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let shot = picture(style: border(2))
+        let doc = document([box, shot])
+        let outline = try #require(doc.layerPartRows(layerIDs: [box.id, shot.id])
+            .first { $0.part == .outline })
+        #expect(outline.colors == [PartColor(slot: .stroke, layerIDs: [box.id]),
+                                   PartColor(slot: .border, layerIDs: [shot.id])])
+        #expect(outline.mixesLineKinds)
+    }
+
+    @Test func oneSwitchTakesTheLineOffBothKindsAtOnce() {
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let shot = picture(style: border(2))
+        var doc = document([box, shot])
+        let outline = doc.layerPartRows(layerIDs: [box.id, shot.id]).first { $0.part == .outline }!
+        #expect(doc.setOutlineEnabled(layerIDs: outline.switchIDs, on: false) == 2)
+        #expect(!doc.layer(id: box.id)!.hasOutline)
+        #expect(!doc.layer(id: shot.id)!.hasOutline)
+    }
+
+    @Test func oneWidthReachesBothKindsOfLine() {
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let shot = picture(style: border(2))
+        var doc = document([box, shot])
+        #expect(doc.outlineWidthReading(layerIDs: [box.id, shot.id]).isMixed)
+        #expect(doc.setRingWidth(layerIDs: [box.id, shot.id], to: 6) == 2)
+        #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == 6)
+        #expect(doc.layer(id: shot.id)?.style.borderWidth == 6)
+        let reading = doc.outlineWidthReading(layerIDs: [box.id, shot.id])
+        #expect(!reading.isMixed)
+        #expect(reading.value == 6)
+    }
+
+    @Test func aLockedLayerKeepsItsLineWhateverTheWidthRowDoes() {
+        let box = shape(.rectangle, fillHex: "#00FF00", locked: true)
+        var doc = document([box])
+        #expect(doc.setRingWidth(layerIDs: [box.id], to: 9) == 0)
+    }
+
+    @Test func aTextBlockPickedWithABoxAlsoGetsOneOutline() throws {
+        // The same duplicate, one layer kind over: a caption wears a ring the
+        // way a picture does.
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let caption = Layer(name: "Caption",
+                            content: .text(TextContent(string: "Hi")),
+                            frame: CGRect(x: 0, y: 0, width: 80, height: 20),
+                            style: border(1))
+        let doc = document([box, caption])
+        let rows = doc.layerPartRows(layerIDs: [box.id, caption.id])
+        #expect(rows.filter { $0.title == "Outline" }.count == 1)
+        // Fill, Outline, Text, Shadow: the order the parts list documents.
+        #expect(rows.map(\.title) == ["Fill", "Outline", "Text", "Shadow"])
+    }
+
+    @Test func aLoneTextBlockGetsItsInkAndTheRingItCanWear() {
+        let caption = Layer(name: "Caption",
+                            content: .text(TextContent(string: "Hi")),
+                            frame: CGRect(x: 0, y: 0, width: 80, height: 20))
+        let doc = document([caption])
+        // Outline sits where the parts list says it sits, above Text, so it
+        // never moves when a shape joins the selection. It used to sit below,
+        // which meant picking a box beside a caption reordered the panel.
+        #expect(doc.layerPartRows(layerIDs: [caption.id]).map(\.title)
+                == ["Outline", "Text", "Shadow"])
+    }
+
+    @Test func aLoneArrowIsStillJustAColorAndAShadow() {
+        let arrow = shape(.arrow)
+        let doc = document([arrow])
+        #expect(doc.layerPartRows(layerIDs: [arrow.id]).map(\.title) == ["Color", "Shadow"])
     }
 
     @Test func anEllipseStillGetsFillOutlineAndShadow() {

@@ -108,3 +108,49 @@ extension PhotonzDocument {
         return changed
     }
 }
+
+extension PhotonzDocument {
+
+    /// What the Outline row's Width reads over a set of picked layers,
+    /// whichever ring each one draws: the number they all wear, or that they
+    /// differ.
+    ///
+    /// One reading for both kinds because one row asks the question. A
+    /// rectangle picked with a screenshot used to get two Width sliders under
+    /// two rows called Outline, and the only way to tell which one moved which
+    /// layer was to drag it and watch.
+    public func outlineWidthReading(layerIDs: [UUID]) -> StyleReading<CGFloat> {
+        let widths = layerIDs.compactMap { layer(id: $0) }
+            .filter { !$0.isLocked }
+            .map(\.outlineWidth)
+        guard let first = widths.first else { return StyleReading(value: nil, isMixed: false) }
+        return StyleReading(value: first, isMixed: widths.dropFirst().contains { $0 != first })
+    }
+
+    /// One pull on the Outline row's Width, every picked layer, whichever ring
+    /// each one draws. Returns how many changed, so a caller can tell a no-op
+    /// from an edit.
+    ///
+    /// `setOutlineWidth` stays the shape-only path: it is what a component's
+    /// number knob and the shape sliders call, and those must not start
+    /// putting rings round pictures. This is the row that promises to reach
+    /// everything picked, so it is the one that does.
+    @discardableResult
+    public mutating func setRingWidth(layerIDs: [UUID], to width: CGFloat) -> Int {
+        let width = max(0, width)
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  layer.outlineWidth != width else { continue }
+            updateLayer(id: id) { target in
+                if target.drawsItsOwnOutline {
+                    target.setOutlineWidth(width)
+                } else {
+                    target.style.borderWidth = width
+                }
+            }
+            changed += 1
+        }
+        return changed
+    }
+}

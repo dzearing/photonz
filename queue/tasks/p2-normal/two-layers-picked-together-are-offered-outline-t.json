@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1570,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T01:45:45.704Z",
-  "updated": "2026-09-07T01:45:45.705Z",
+  "updated": "2026-09-07T01:46:54.736Z",
   "deps": [],
   "blockedBy": [],
   "notes": "LayerPartRow carries ONE slot, which is why the inked (.stroke) and ringed (.border) rows cannot merge today: PartsInspector reads row.slot straight into ColorStyleRow. Merging means a row whose colour is per-layer (Layer.outlineSlot already says which each one uses), so ColorStyleRow / colorStyleSelection(slot:) would need to take a per-layer slot map rather than one slot. Split out of the highlight task on 2026-09-06.",
@@ -24,6 +24,23 @@
     {
       "t": "2026-09-07T01:45:45.705Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T01:46:54.736Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T01:52:51.189999Z",
+      "note": "Adversarial pass before building. (1) The duplicate is not only rect+picture: rect+text, rect+frame, rect+group all pair a stroke row with a ring row, and rect+highlight already paints a highlight's WASH from a row called Outline, because the colour reaches the whole selection by slot rather than per layer. So the fix is not 'merge two rows', it is 'the Outline row carries which colour each picked layer actually wears'. (2) The mock/plan's per-layer slot map is right but a map is not enough: the row also needs the layers each colour reaches, or the merged row repaints a highlight's wash. Carrying [(slot, layerIDs)] does both. (3) Shortest version: the row already switches both kinds correctly (setOutlineEnabled writes whichever ring a layer draws), so only the COLOUR and the WIDTH need widening. (4) Cut: no new UI, no second slider, no per-kind disclosure. One row, one well, one Width. (5) Found on the way: the row's id is 'outline.stroke' on a box and 'outline.border' on a picture, so the settings drawer closed itself every time you moved between them. Merging fixes that for free. (6) Honest limit to record: a merged row where one layer has a ring and the other does not reads OFF, so its colour well is hidden until the switch is on. That is the same rule two boxes already follow and I am keeping it rather than inventing a third state."
+    },
+    {
+      "t": "2026-09-07T02:07:38.036042Z",
+      "note": "Built and verified. Core: LayerPartRow now carries `colors: [PartColor]` (slot + the picked layers that take it) instead of one slot, and layerPartRows emits ONE Outline row over both kinds of line, above Text so it never moves. New PhotonzDocument.outlineWidthReading / setRingWidth read and write whichever ring each layer draws. App: ColorTarget wraps the row's colours; ColorStyleRow, SelectionColorWell and ColorStyleControl take one; EditorState+ColorTargets fans every colour call out over the row's slots as ONE undo step. PartWidthRow uses a single slider on a mixed row. Second adversarial pass on the real app (probe + Scripts/playtest/one-outline-two-kinds-walk.json, Screen Recording granted, real -sc.png captures): one Outline row, one switch reaching both, one Width reaching both at 25pt, one colour picked once painting the box its stroke and the picture its ring. Rough edges recorded in the audit: the ring comes on black so the row reads Mixed right after switching on, and a row where only one layer has a line reads off and hides the other's colour. 4202 core tests green."
+    },
+    {
+      "t": "2026-09-07T02:07:38.036177Z",
+      "note": "Acceptance, each checked rather than assumed. (1) One row called Outline for a rectangle and a picture: core test aBoxAndAPictureAreOfferedOneOutlineNotTwo, and the panel dump from the walk lists exactly one. (2) The switch reaches both: oneSwitchTakesTheLineOffBothKindsAtOnce, and the walk's render shows both lines appear and go on one press. (3) A colour picked there paints the shape its stroke and the picture its ring: outline-7-painted-doc.png shows both pink after one pick. (4) Single rectangle, picture, highlight, arrow, ellipse and text each keep their rows: existing tests plus two new ones (aLoneTextBlockGetsItsInkAndTheRingItCanWear, aLoneArrowIsStillJustAColorAndAShadow), and the highlight walk re-run green. One deliberate change inside (4): Outline now sits ABOVE Text for a text layer, because a row that moves when you add to the selection is what the parts list exists to avoid. (5) Mixed selections covered by five new core tests."
     }
-  ]
+  ],
+  "started": "2026-09-07T01:46:54.736Z"
 }

@@ -163,11 +163,14 @@ private struct PartRowView: View {
     // MARK: The colour
 
     @ViewBuilder private var colorControl: some View {
-        if let slot = row.slot {
-            ColorStyleRow(slot: slot, part: row.title)
+        if let target = ColorTarget(row.colors) {
+            // ONE well, however many kinds of line the row speaks for. Over a
+            // rectangle and a screenshot it paints the shape its stroke and the
+            // picture its ring, in one step one undo puts back.
+            ColorStyleRow(target: target, part: row.title)
             // The way back for a copy of a component that has picked its own
             // ring colour. It sits with the colour it undoes, which is here.
-            if slot == .border, let only = soleLayerID(row.switchIDs) {
+            if target.lead == .border, let only = soleLayerID(row.switchIDs) {
                 InstanceStyleRevert(layerID: only, field: .borderColor)
             }
         } else {
@@ -221,7 +224,17 @@ private struct PartWidthRow: View {
     let row: LayerPartRow
 
     var body: some View {
-        if row.slot == .border {
+        if row.mixesLineKinds {
+            // A shape and a picture picked together. Two rings underneath, one
+            // number: the slider reads whichever line each layer actually has
+            // and writes back the same way, so 6 pt means 6 pt on both.
+            ShapeSlider(layerIDs: row.widthIDs, label: "Width",
+                        reading: editorState.outlineWidthReading(ids: row.widthIDs),
+                        range: AnnotationStyles.strokeWidthRange,
+                        format: { "\(Int($0.rounded())) pt" },
+                        preview: { editorState.previewRingWidth(ids: $0, $1) },
+                        commit: { editorState.commitRingWidth(ids: $0, $1) })
+        } else if row.slot == .border {
             let borders = editorState.layerStyleSelection.borders
             LayerStyleSlider(layerIDs: row.widthIDs, label: "Width",
                              reading: borders.number { $0.borderWidth },

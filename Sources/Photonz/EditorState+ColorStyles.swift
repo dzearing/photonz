@@ -89,10 +89,15 @@ extension EditorState {
     /// belongs to is the one for that slot, whatever is picked, because only
     /// one field is open at a time and the selection is what it is about.
     func beginNamingColorStyle(slot: ColorSlot) {
+        beginNamingColorStyle(ColorTarget(slot))
+    }
+
+    /// The same, for a row that paints more than one kind of colour.
+    func beginNamingColorStyle(_ target: ColorTarget) {
         guard colorStylesEnabled else { return }
         // One field at a time, wherever it was opened from.
         colorStyleShelfNaming = nil
-        colorStyleNaming = ColorStyleNamingRequest(slot: slot)
+        colorStyleNaming = ColorStyleNamingRequest(target: target)
     }
 
     /// Escape, or the name landing: the field closes.
@@ -247,7 +252,7 @@ extension EditorState {
     /// is one, else the one selected layer — the same set every other
     /// whole-selection command acts on. In draw order, so the row reads the
     /// same way twice running and one undo step lands the same way every time.
-    private var colorStyleTargetIDs: [UUID] {
+    var colorStyleTargetIDs: [UUID] {
         let picked = actionableLayerIDs
         guard !picked.isEmpty, let document else { return [] }
         return document.allLayers.map(\.id).filter { picked.contains($0) }
@@ -614,7 +619,7 @@ extension EditorState {
     /// would snapshot the shadow and the corner radius of whatever happened to
     /// be picked as the new defaults, off the back of a button that only named
     /// a colour.
-    private func armToolsFromSelection(slot: ColorSlot, targets: [UUID],
+    func armToolsFromSelection(slot: ColorSlot, targets: [UUID],
                                        rememberingBorder: Bool = true) {
         guard let document else { return }
         let arming = document.toolArming(layerIDs: targets, slot: slot)

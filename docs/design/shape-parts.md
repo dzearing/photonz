@@ -159,11 +159,18 @@ Two things did not go where the original report asked, and both are deliberate:
   own section would leave every layer that is not a shape with nowhere to round
   its corners, or bring back the second Corner Radius slider that
   `CornerRadiusRow` exists to have ended.
-- **A shape and a picture picked together show two Outline rows**, one for each
-  kind of ring, each saying which of the picked layers it reaches. They are one
-  part, but the colour underneath is stored in two different slots and a single
-  row cannot yet paint both. Followed up separately; it does not come up in a
-  single selection, which is where the panel is used.
+- **A shape and a picture picked together show ONE Outline row** (settled
+  2026-09-07). They used to show two, one for each kind of ring, because the
+  colour underneath is stored in two different slots. A row now carries the
+  colours it paints AND which of the picked layers takes each one
+  (`PartColor`), so one switch, one well and one Width reach both: the shape
+  gets its stroke, the picture gets its ring, in one step one undo puts back.
+  A highlight keeps its own Colour row for its wash, because that stroke colour
+  is the wash the highlight is made of rather than a line round anything.
+- **The Outline row sits above Text, always.** It used to sit below whenever it
+  was the ring kind, so picking a box beside a caption reordered the panel. One
+  fixed place, so adding to the selection widens what a row answers for and
+  never moves it.
 
 ### Where the code is
 

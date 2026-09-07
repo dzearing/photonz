@@ -7,7 +7,10 @@ import SwiftUI
 /// the whole address: the row speaks for whatever is picked, so there is only
 /// ever one Fill row on screen.
 struct ColorStyleNamingRequest: Hashable {
-    let slot: ColorSlot
+    let target: ColorTarget
+
+    init(target: ColorTarget) { self.target = target }
+    init(slot: ColorSlot) { self.target = ColorTarget(slot) }
 }
 
 // MARK: - The styles button that sits beside a color (Next, `next-styles`)
@@ -51,17 +54,28 @@ struct ColorStyleNamingRequest: Hashable {
 /// is the same idea without a second place to look.
 struct ColorStyleControl: View {
     @Environment(EditorState.self) private var editorState
-    let slot: ColorSlot
+    /// The colours this row paints. Usually one; two on the Outline row over a
+    /// shape and a picture, which the menu treats as the one part it is.
+    let target: ColorTarget
     /// What the row beside this paints, in the row's own words: "Outline",
     /// "Fill", "Background", "Text". The menu says it out loud, so a shorter
     /// list reads as scoped rather than as colors having gone missing.
     let part: String
 
-    private var selection: ColorStyleSelection { editorState.colorStyleSelection(slot: slot) }
+    init(target: ColorTarget, part: String) {
+        self.target = target
+        self.part = part
+    }
+
+    init(slot: ColorSlot, part: String) {
+        self.init(target: ColorTarget(slot), part: part)
+    }
+
+    private var selection: ColorStyleSelection { editorState.colorStyleSelection(target) }
     /// Only the saved colors meant for this part. A color kept for hairlines
     /// is not something to fill a box with, and offering it was how the menu
     /// stopped meaning anything.
-    private var styles: [ColorStyle] { editorState.colorStyles(for: slot) }
+    private var styles: [ColorStyle] { editorState.colorStyles(for: target) }
 
     var body: some View {
         if Experiments.shared.colorStylesEnabled, !selection.isEmpty {
@@ -78,16 +92,16 @@ struct ColorStyleControl: View {
                         Button("Edit \(style.name) in the Library") {
                             editorState.selectLibraryItem(style.id.uuidString)
                         }
-                        Button(unlinkTitle(selection)) { editorState.unlinkColorStyle(slot: slot) }
+                        Button(unlinkTitle(selection)) { editorState.unlinkColorStyle(target) }
                     }
                 } else if selection.wearsAnyStyle {
                     // Several styles under one row: there is no name to print,
                     // but letting go of all of them is still one honest move.
                     Section("Using more than one style") {
-                        Button(unlinkTitle(selection)) { editorState.unlinkColorStyle(slot: slot) }
+                        Button(unlinkTitle(selection)) { editorState.unlinkColorStyle(target) }
                     }
                 } else if selection.savableColorHex != nil {
-                    Button(saveTitle(selection)) { editorState.beginNamingColorStyle(slot: slot) }
+                    Button(saveTitle(selection)) { editorState.beginNamingColorStyle(target) }
                 }
                 if !styles.isEmpty {
                     Section(selection.count > 1
@@ -95,7 +109,7 @@ struct ColorStyleControl: View {
                             : offerTitle) {
                         ForEach(styles) { option in
                             Button {
-                                editorState.useColorStyle(slot: slot, styleID: option.id)
+                                editorState.useColorStyle(target, styleID: option.id)
                             } label: {
                                 Label {
                                     Text(option.name)
@@ -332,7 +346,10 @@ struct ColorPartRow: View {
 /// well, so the way out of Mixed is the thing you were already looking at.
 struct ColorStyleRow<Well: View>: View {
     @Environment(EditorState.self) private var editorState
-    let slot: ColorSlot
+    /// The colours this row paints. One on nearly every row; two on the Outline
+    /// row over a shape and a picture, which is one line to a person and
+    /// therefore one row here.
+    let target: ColorTarget
     /// What the row paints, passed through to the menu so it can say which
     /// saved colors it is offering and why there are not more of them.
     let part: String
@@ -346,7 +363,7 @@ struct ColorStyleRow<Well: View>: View {
     @FocusState private var nameFocused: Bool
 
     init(slot: ColorSlot, part: String, @ViewBuilder well: () -> Well) {
-        self.slot = slot
+        self.target = ColorTarget(slot)
         self.part = part
         self.well = well()
         self.paintsSelection = false
@@ -354,15 +371,21 @@ struct ColorStyleRow<Well: View>: View {
 
     /// The row over a selection: one well for all of them, and the menu.
     init(slot: ColorSlot, part: String) where Well == SelectionColorWell {
-        self.slot = slot
+        self.init(target: ColorTarget(slot), part: part)
+    }
+
+    /// The same, for a row the parts list built, which already knows which of
+    /// the picked layers wears which colour.
+    init(target: ColorTarget, part: String) where Well == SelectionColorWell {
+        self.target = target
         self.part = part
-        self.well = SelectionColorWell(slot: slot, part: part)
+        self.well = SelectionColorWell(target: target, part: part)
         self.paintsSelection = true
     }
 
-    private var selection: ColorStyleSelection { editorState.colorStyleSelection(slot: slot) }
+    private var selection: ColorStyleSelection { editorState.colorStyleSelection(target) }
     private var isNaming: Bool {
-        editorState.colorStyleNaming == ColorStyleNamingRequest(slot: slot)
+        editorState.colorStyleNaming == ColorStyleNamingRequest(target: target)
     }
 
     var body: some View {
@@ -373,7 +396,7 @@ struct ColorStyleRow<Well: View>: View {
             HStack(alignment: .center, spacing: 6) {
                 readout(selection)
                     .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading)
-                ColorStyleControl(slot: slot, part: part)
+                ColorStyleControl(target: target, part: part)
             }
             .frame(minHeight: ColorPartLayout.rowHeight)
             if isNaming { namingField }
@@ -384,7 +407,7 @@ struct ColorStyleRow<Well: View>: View {
         // is typing and Return is enough.
         .onChange(of: isNaming, initial: true) { _, naming in
             guard naming else { return }
-            draft = editorState.suggestedColorStyleName(slot: slot)
+            draft = editorState.suggestedColorStyleName(target)
             nameFocused = true
             DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
         }
@@ -460,7 +483,7 @@ struct ColorStyleRow<Well: View>: View {
     }
 
     private func save() {
-        editorState.saveColorStyle(slot: slot, name: draft)
+        editorState.saveColorStyle(target, name: draft)
     }
 }
 
@@ -478,18 +501,30 @@ struct ColorStyleRow<Well: View>: View {
 /// on every drag tick. Twenty undo steps for one blue is not one move.
 struct SelectionColorWell: View {
     @Environment(EditorState.self) private var editorState
-    let slot: ColorSlot
+    /// The colours this one well paints. Two on the Outline row over a shape
+    /// and a picture: one click paints the shape its stroke and the picture its
+    /// ring, in one step one undo puts back.
+    let target: ColorTarget
     /// What the row beside this paints, in the row's own words, so the hover
     /// tip can say it: "Fill", "Outline", "Text".
     let part: String
 
     @State private var isHovering = false
 
-    private var selection: ColorStyleSelection { editorState.colorStyleSelection(slot: slot) }
+    init(target: ColorTarget, part: String) {
+        self.target = target
+        self.part = part
+    }
+
+    init(slot: ColorSlot, part: String) {
+        self.init(target: ColorTarget(slot), part: part)
+    }
+
+    private var selection: ColorStyleSelection { editorState.colorStyleSelection(target) }
 
     /// The key this well answers to, so only one picker is ever open and a
     /// walk can open this one without a pointer.
-    private var wellKey: String { "selection.\(slot.rawValue)" }
+    private var wellKey: String { "selection.\(target.lead.rawValue)" }
 
     var body: some View {
         let selection = self.selection
@@ -508,7 +543,7 @@ struct SelectionColorWell: View {
             .playtestControl("Color", detail: part, payload: {
                 // The very item the swatch's own drag hands over, so a walk
                 // can never carry a colour the pointer could not.
-                guard let paint = editorState.selectionPaint(slot: slot) else {
+                guard let paint = editorState.selectionPaint(target) else {
                     return NSItemProvider()
                 }
                 return ColorDrag.itemProvider(paint: paint, source: wellKey,
@@ -526,13 +561,13 @@ struct SelectionColorWell: View {
                              // Nil while the row says Mixed: there is no one
                              // colour to pick up, and a swatch handed nothing
                              // is refused everywhere rather than guessing.
-                             paint: { editorState.selectionPaint(slot: slot) },
+                             paint: { editorState.selectionPaint(target) },
                              style: { boundStyle.map {
                                  ColorDrop.SavedColor(id: $0.id, name: $0.name)
                              } },
-                             welcomes: { editorState.styleWelcome(slot: slot, styleID: $0.id) },
+                             welcomes: { editorState.styleWelcome(target, styleID: $0.id) },
                              reaches: { selection.count },
-                             acceptsGradient: slot.acceptsGradient,
+                             acceptsGradient: target.acceptsGradient,
                              onDrop: { landing in
                 // A colour that arrived under a NAME goes down the very path
                 // the row's own menu takes when that name is picked: the row
@@ -540,9 +575,9 @@ struct SelectionColorWell: View {
                 // behind it is edited. Anything else would make the drag a
                 // quieter, lossier way to do a move the menu does properly.
                 if let brings = landing.brings {
-                    editorState.useColorStyle(slot: slot, styleID: brings.id)
+                    editorState.useColorStyle(target, styleID: brings.id)
                 } else {
-                    editorState.commitSelectionPaint(slot: slot, paint: landing.paint)
+                    editorState.commitSelectionPaint(target, paint: landing.paint)
                 }
             })
             .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) {
@@ -555,17 +590,17 @@ struct SelectionColorWell: View {
                     ColorPickerContent(editorState: editorState,
                                        paint: openingPaint(selection),
                                        name: part,
-                                       slot: slot,
+                                       slot: target.lead,
                                        supportsOpacity: true,
-                                       supportsGradient: slot.acceptsGradient,
+                                       supportsGradient: target.acceptsGradient,
                                        onClose: { editorState.openColorWell = nil },
                                        // Live while the pointer is down, so the
                                        // shapes follow the drag; ONE step, and one
                                        // recents entry, when it is let go of.
                                        onPreview: { paint in
-                        editorState.previewSelectionPaint(slot: slot, paint: paint)
+                        editorState.previewSelectionPaint(target, paint: paint)
                     }) { paint in
-                        editorState.commitSelectionPaint(slot: slot, paint: paint)
+                        editorState.commitSelectionPaint(target, paint: paint)
                     }
                 }
             }
@@ -598,7 +633,7 @@ struct SelectionColorWell: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                     Spacer(minLength: 8)
-                    Button("Unlink") { editorState.unlinkColorStyle(slot: slot) }
+                    Button("Unlink") { editorState.unlinkColorStyle(target) }
                         .buttonStyle(.link)
                         .font(.callout)
                         .help("Keeps this color exactly as it is and stops following "
@@ -661,7 +696,7 @@ struct SelectionColorWell: View {
         // shows the paint in flight while a color drag is happening, so it
         // keeps up with the canvas instead of sitting on the old color for a
         // whole pull and jumping.
-        PaintFill(paint: editorState.previewedPaint(slot: slot) ?? paint)
+        PaintFill(paint: editorState.previewedPaint(target) ?? paint)
             .clipShape(RoundedRectangle(cornerRadius: 4))
             // Under a color that can be see-through, so a translucent fill
             // reads as translucent rather than as a paler one.
@@ -684,7 +719,7 @@ struct SelectionColorWell: View {
     /// wears one beside the style's name, and the same mark twice in one row
     /// says nothing the first one did not.
     private func styledSwatch(_ style: ColorStyle) -> some View {
-        PaintFill(paint: editorState.previewedPaint(slot: slot) ?? style.paint(for: slot))
+        PaintFill(paint: editorState.previewedPaint(target) ?? style.paint(for: target.lead))
             .clipShape(RoundedRectangle(cornerRadius: 2))
             .background(CheckerBoard(square: 3).clipShape(RoundedRectangle(cornerRadius: 2)))
             .frame(width: 12, height: 12)
@@ -711,7 +746,7 @@ struct SelectionColorWell: View {
     /// one, so opening a gradient shows you the gradient instead of quietly
     /// flattening it the moment you click.
     private func openingPaint(_ selection: ColorStyleSelection) -> Paint {
-        editorState.selectionPaint(slot: slot) ?? Paint(hex: openingHex(selection))
+        editorState.selectionPaint(target) ?? Paint(hex: openingHex(selection))
     }
 
     private func help(_ selection: ColorStyleSelection) -> String {

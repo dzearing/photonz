@@ -77,6 +77,31 @@ extension Layer {
     }
 }
 
+/// One of the colours a part row paints, and exactly which of the picked layers
+/// takes it.
+///
+/// Nearly every row has one: the Fill row paints every picked layer's inside.
+/// The Outline row has TWO the moment a shape and a picture are picked
+/// together, because a shape strokes its own path and a picture wears a ring
+/// its styling draws. That difference is nothing a person does differently, so
+/// it stays one row — and this is what lets one row hold both without either
+/// colour reaching a layer it has no business on.
+///
+/// The layers are named rather than worked out from the slot, and that is the
+/// point: a highlight has a stroke colour too, but it is the WASH the highlight
+/// is made of, not a line round anything. Painting the Outline row by slot
+/// alone repainted it.
+public struct PartColor: Hashable, Sendable {
+    public let slot: ColorSlot
+    /// The picked layers this colour reaches, in draw order.
+    public let layerIDs: [UUID]
+
+    public init(slot: ColorSlot, layerIDs: [UUID]) {
+        self.slot = slot
+        self.layerIDs = layerIDs
+    }
+}
+
 /// One row of the parts list, and exactly which of the picked layers it speaks
 /// for.
 ///
@@ -88,9 +113,9 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
     /// property rather than a part — a line's ink, a letter's ink — which has
     /// no switch because it can never be absent.
     public let part: LayerPart?
-    /// The colour this row paints. Nil for the shadow, whose colour is not one
-    /// of the layer's slots.
-    public let slot: ColorSlot?
+    /// The colours this row paints, and which picked layers take each one.
+    /// Empty for the shadow, whose colour is not one of the layer's slots.
+    public let colors: [PartColor]
     /// What the row is called on screen.
     public let title: String
     /// The picked layers this row's switch reaches. Empty means no switch.
@@ -104,11 +129,11 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
     /// leaving out.
     public let selectionCount: Int
 
-    public init(part: LayerPart?, slot: ColorSlot?, title: String,
+    public init(part: LayerPart?, colors: [PartColor], title: String,
                 switchIDs: [UUID], onCount: Int, widthIDs: [UUID],
                 selectionCount: Int) {
         self.part = part
-        self.slot = slot
+        self.colors = colors
         self.title = title
         self.switchIDs = switchIDs
         self.onCount = onCount
@@ -116,9 +141,26 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
         self.selectionCount = selectionCount
     }
 
-    /// Stable enough to key a list on: two rows in one selection never share a
-    /// part and a slot.
-    public var id: String { "\(part?.rawValue ?? "color").\(slot?.rawValue ?? "none")" }
+    /// The colour this row leads with: the one its name field, its saved
+    /// colours menu and its picker speak for. Nil for the shadow.
+    public var slot: ColorSlot? { colors.first?.slot }
+
+    /// True when this ONE row paints two kinds of line at once, because a
+    /// shape and a picture are picked together. The width row reads it, since
+    /// a shape's stroke and a picture's ring are set two different ways
+    /// underneath even though nothing a person does differs.
+    public var mixesLineKinds: Bool { colors.count > 1 }
+
+    /// Stable enough to key a list on, and stable ACROSS selections: the
+    /// Outline row is called `outline` whether it is speaking for a shape's
+    /// stroke, a picture's ring or both. It used to be `outline.stroke` on a
+    /// box and `outline.border` on a picture, so the settings drawer someone
+    /// had just opened folded itself away the moment they clicked the other
+    /// kind of layer.
+    public var id: String {
+        if let part { return part.rawValue }
+        return "color.\(slot?.rawValue ?? "none")"
+    }
 
     /// Whether this row shows a switch at all.
     public var hasSwitch: Bool { !switchIDs.isEmpty }
@@ -163,68 +205,82 @@ extension PhotonzDocument {
         let fillable = picked.filter { $0.colorSlots.contains(.fill) }
         if !fillable.isEmpty {
             rows.append(LayerPartRow(
-                part: .fill, slot: .fill, title: LayerPart.fill.title,
+                part: .fill, colors: [PartColor(slot: .fill, layerIDs: fillable.map(\.id))],
+                title: LayerPart.fill.title,
                 switchIDs: fillable.map(\.id),
                 onCount: fillable.filter { $0.colorHex(for: .fill) != nil }.count,
                 widthIDs: [], selectionCount: count))
         }
 
-        // The shape's own line. Named Outline where switching it off leaves
-        // something behind, and Color where the line IS the shape: calling an
-        // arrow's colour its outline is a small lie, and the row under it would
-        // then be an outline you cannot remove.
+        // Who has a line round them at all, and which of the two ways it is
+        // drawn. A shape strokes its own path; everything else — a picture, a
+        // frame, a label, a group, a highlight — wears a ring its styling
+        // draws. One part, two ways of painting it.
         let inked = picked.filter { $0.colorSlots.contains(.stroke) }
-        if !inked.isEmpty {
-            // This row is the Outline part only for layers whose outline IS
-            // this slot. A highlight's stroke colour is the wash it paints, not
-            // a line round anything — it never draws the stroke width it
-            // carries — so calling it Outline handed a highlight two rows of
-            // that name, one above the other, whose switches both wrote the
-            // same ring while their colour wells pointed at different colours
-            // (reported 2026-09-06). Its wash is a colour with no switch, the
-            // way a line's ink is.
-            let switchable = inked.filter { $0.outlineSlot == .stroke && $0.outlineIsSwitchable }
-            // The width has ONE home, and it is the drawer this row opens — so
-            // a row with no switch, which is a colour and nothing else, does
-            // not keep one. An arrow's thickness sits in the arrow's own
-            // settings instead, beside its ending and its head size, where it
-            // is in reach the moment the arrow is picked. It used to be two
-            // clicks down inside a row called Color, which said nothing about
-            // how thick a line is (reported 2026-09-06).
+        let stroked = inked.filter(\.drawsItsOwnOutline)
+        let ringed = picked.filter { !$0.drawsItsOwnOutline }
+        // A row called Outline needs at least one line somebody can take off.
+        // Two arrows and nothing else have no such line: an arrow IS its line,
+        // and a row offering to remove it would be a delete wearing a switch.
+        let outlined = stroked.contains(where: \.outlineIsSwitchable) || !ringed.isEmpty
+
+        // A colour that is a property rather than a part: a highlight's wash,
+        // and a lone arrow's or line's ink. No switch, because the layer IS
+        // it, and no width, because a line's thickness lives in the shape's
+        // own settings beside its ending and its head size.
+        //
+        // A highlight keeps this row even next to a box, because its stroke
+        // colour is the wash it paints and not a line round anything. It never
+        // draws the stroke width it carries.
+        let plainInk = outlined ? inked.filter { !$0.drawsItsOwnOutline } : inked
+        if !plainInk.isEmpty {
             rows.append(LayerPartRow(
-                part: switchable.isEmpty ? nil : .outline,
-                slot: .stroke,
-                title: switchable.isEmpty ? "Color" : LayerPart.outline.title,
-                switchIDs: switchable.map(\.id),
-                onCount: switchable.filter(\.hasOutline).count,
-                widthIDs: switchable.isEmpty ? [] : inked.filter(\.drawsItsOwnOutline).map(\.id),
-                selectionCount: count))
+                part: nil, colors: [PartColor(slot: .stroke, layerIDs: plainInk.map(\.id))],
+                title: ColorSlot.stroke.title,
+                switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
+        }
+
+        // ONE Outline row, however many kinds of line are picked.
+        //
+        // It used to be two whenever a shape and anything else were picked
+        // together: the stroke row and the ring row, one above the other, both
+        // called Outline, each with a switch that reached half the selection
+        // (reported 2026-09-07). They are the same idea to a person, so this
+        // is one row that knows which colour each picked layer actually wears.
+        if outlined {
+            var colors: [PartColor] = []
+            if !stroked.isEmpty {
+                colors.append(PartColor(slot: .stroke, layerIDs: stroked.map(\.id)))
+            }
+            if !ringed.isEmpty {
+                colors.append(PartColor(slot: .border, layerIDs: ringed.map(\.id)))
+            }
+            // Everything but a line and an arrow, in draw order, so the switch
+            // reads the same way twice running.
+            let switched = picked.filter { !$0.drawsItsOwnOutline || $0.outlineIsSwitchable }
+            rows.append(LayerPartRow(
+                part: .outline, colors: colors, title: LayerPart.outline.title,
+                switchIDs: switched.map(\.id),
+                onCount: switched.filter(\.hasOutline).count,
+                // The width reaches every picked layer, arrows included: they
+                // cannot lose their line but they can be made thicker, and one
+                // Width over a box, an arrow and a screenshot is what the one
+                // row promises.
+                widthIDs: picked.map(\.id), selectionCount: count))
         }
 
         // A letter's ink. Always there, so no switch.
         let lettered = picked.filter { $0.colorSlots.contains(.text) }
         if !lettered.isEmpty {
             rows.append(LayerPartRow(
-                part: nil, slot: .text, title: ColorSlot.text.selectionTitle,
+                part: nil, colors: [PartColor(slot: .text, layerIDs: lettered.map(\.id))],
+                title: ColorSlot.text.selectionTitle,
                 switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
-        }
-
-        // The ring round everything that does not stroke its own path: a
-        // picture, a frame, a label, a group, a highlight. It used to be called
-        // Border and to live under Effects with its colour two sections away.
-        // It is the same part as a shape's outline and wears the same name.
-        let ringed = picked.filter { !$0.drawsItsOwnOutline }
-        if !ringed.isEmpty {
-            rows.append(LayerPartRow(
-                part: .outline, slot: .border, title: LayerPart.outline.title,
-                switchIDs: ringed.map(\.id),
-                onCount: ringed.filter(\.hasOutline).count,
-                widthIDs: ringed.map(\.id), selectionCount: count))
         }
 
         // What the layer throws behind it. Every layer can have one.
         rows.append(LayerPartRow(
-            part: .shadow, slot: nil, title: LayerPart.shadow.title,
+            part: .shadow, colors: [], title: LayerPart.shadow.title,
             switchIDs: picked.map(\.id),
             onCount: picked.filter { $0.style.shadow != nil }.count,
             widthIDs: [], selectionCount: count))
