@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1680,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:46:34.063Z",
-  "updated": "2026-09-07T21:55:53.832Z",
+  "updated": "2026-09-07T21:56:16.773Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-appearance-list-grows-to-hold-every-effect-w on 2026-09-07 after reading the render path. Facts established there: AnnotationRasterizer insets the box by strokeWidth/2 and strokes, so a shape stroke lands wholly INSIDE the frame; DocumentRenderer.bordered insets the box by the full width and cuts the middle out, then crops to image.extent, so a ring is inside too. Outside therefore needs (a) AnnotationRasterizer to rasterize into a padded bitmap, which the composite already centres so a symmetric pad lands correctly, (b) bordered() to stop cropping to image.extent for centred/outside, (c) LayerStyle.previewPadding and Layer.renderBounds to include the outset so groups and frames do not clip it. Storage: LayerStyle.borderPosition for the ring and a matching setting on AnnotationContent for a shape stroke, both defaulting to inside so no document repaints. docs/design/shape-parts.md, section How the list grows, already writes the model down.",
@@ -48,7 +48,12 @@
     {
       "t": "2026-09-07T21:55:53.832Z",
       "note": "Verified. Scripts/test.sh green: 4572 tests, 382 suites. New suites: BorderPositionTests (15), OutlinePositionMemoryTests (2), BorderPositionRenderTests (12, covering rectangle, ellipse, picture, group, a clipping frame and a magnified render). Scripts/playtest/outline-position-walk.json drives the whole thing on the probe end to end and the panel reads Inside then Center then Outside; one undo puts it back to Center. Screen Recording was granted, so the audit carries real screen captures. Perf: RenderPerfTests all inside budget; the composite path for a layer with no border is untouched (bordered() still returns early at width 0, rounded() takes its old branch unless a stroke actually moved outside, and previewPadding gains one comparison)."
+    },
+    {
+      "t": "2026-09-07T21:56:16.772Z",
+      "note": "The Outline part carries a Position (Inside, Center, Outside) in Next. Core: BorderPosition + LayerStyle.borderPosition + AnnotationContent.strokePosition, all defaulting to inside so nothing already saved moves. Renderer: padded shape rasterization with the scale step told about the pad, an uncropped ring in bordered(), and reachPadding so groups, frames, drag sprites and dirty rects make room. Panel: a popup under the Outline width, absent on lines, arrows and text. Verified by Scripts/test.sh (4572 tests green, incl. 29 new across rectangle, ellipse, picture, group, clipping frame and a magnified render) and by driving it on the probe with Scripts/playtest/outline-position-walk.json. Audit at queue/audits/2026-09-07-outline-position.json with real screen captures. Commit 155f5910."
     }
   ],
-  "started": "2026-09-07T21:31:08.321Z"
+  "started": "2026-09-07T21:31:08.321Z",
+  "completed": "2026-09-07T21:56:16.773Z"
 }

@@ -11640,3 +11640,39 @@ Next / open questions:
 - `component-whole-path-walk.json` still stops at step 167 on what the Apply to
   Other Versions button reads. Reproduced with this change stashed out, so it is
   older drift; filed as `the-whole-component-walk-stops-on-what-the-apply`.
+
+## 2026-09-07 — A border can sit outside the edge
+
+Shipped Outline **Position** (Inside · Center · Outside) in Next, the one thing
+`docs/design/shape-parts.md` filed rather than built when the Appearance list
+landed earlier the same day.
+
+What changed: `BorderPosition` in PhotonzCore with one `outset(width:)` number
+that everything else follows from; `LayerStyle.borderPosition` and
+`AnnotationContent.strokePosition`, both defaulting to inside so nothing already
+saved moves a pixel; a padded shape rasterization; `bordered()` pushing its ring
+out and cropping to the union rather than back to the layer box; and
+`Layer.reachPadding` so `renderBounds`, drag sprites, merge-down, rasterize and
+the dirty rect all reach far enough. The panel gets one popup under the Outline
+part's Width.
+
+The plan for this task had one thing wrong and it was the expensive one: it said
+a padded bitmap would land correctly because the composite already centres it.
+It does centre it — but it SCALES it into the frame first, so a padded bitmap
+would have been squashed back down and the outside line would have landed inside
+again. The scale step had to be told about the pad too.
+
+Found on the running probe rather than in a test: the layers panel tile renders
+at padding 0, so an outline-only rectangle went blank the moment its line moved
+outside. Fixed with a failing test first; the tile now makes room for the
+outline and only that.
+
+Audit: `queue/audits/2026-09-07-outline-position.json`, with real screen
+captures. Walk: `Scripts/playtest/outline-position-walk.json`.
+
+Open questions for the user, all in the audit: whether W/H should keep reading
+the size you drew when the line sits outside, whether Position is in the right
+place, and whether an outside ring on a canvas-filling picture should be cut off
+by the canvas edge.
+
+Next: the queue picks the next task.
