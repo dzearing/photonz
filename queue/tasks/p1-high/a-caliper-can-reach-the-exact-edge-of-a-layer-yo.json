@@ -1,0 +1,35 @@
+{
+  "id": "a-caliper-can-reach-the-exact-edge-of-a-layer-yo",
+  "title": "A caliper can reach the exact edge of a layer you drew",
+  "goal": "Measuring a rectangle you drew yourself gives the wrong number. The caliper cannot land on the true top or bottom: it stops about two points short at each end, so a box drawn at one hundred and twenty eight device pixels reads sixty two logical points instead of sixty four. The app knows exactly where that rectangle's edges are, because it drew them, and a caliper should be able to snap to those exact edges rather than to a guess taken from the picture.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T05:33:01.493Z",
+  "updated": "2026-09-07T05:33:01.529Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-06 with numbers: a 128 device pixel box measured 62 logical points instead of 64, two short, symmetric, so one point missing at each end. Cause found by reading, and it explains the symmetry: a caliper snaps ONLY to edges detected in the rendered picture. CanvasMeasure.swift lines 205 and 224 call EdgeSnapping.snap with the edge map and nothing else, and EdgeSnapping has no notion of a layer at all, no peers, no layer bounds, so the exact geometry of a shape the app itself drew is never a candidate. EdgeMap approximates edges from image gradients, and an antialiased boundary puts the strongest gradient a pixel inside the true edge, which is exactly a point short at each end at two times scale. Note that layer geometry IS already available to other drags: the move and resize paths take peers and pass them to Snapping.snapFrameOrigin, so the fix is to give the measure path the same candidates rather than to invent them. Decide and record which boundary a caliper should catch on a stroked shape, the path or the outside of the stroke, since a redliner measuring a button usually means its visible outer edge. This overlaps a-snap-that-is-showing-is-a-snap-you-get-with-no, which governs how a caught snap holds, and a-dragged-measurement-chip-snaps-into-line-with, which adds other measurements as candidates; all three want one candidate list rather than three.",
+  "acceptance": [
+    "Reproduce it first and record the numbers in the log: draw a box of a known size, measure it, and note what the caliper reports and how far each foot lands from the true edge",
+    "A caliper foot can land exactly on the edge of any layer in the document, and measuring a box of a known size reports that size exactly, at every zoom",
+    "The same holds for a box that has been given an outline, and the audit says which boundary is measured, the shape or the outer edge of its stroke, and why that is the right answer",
+    "Snapping to edges found in a screenshot still works as it does now, so measuring a captured picture is unchanged",
+    "Where a layer edge and a detected edge are both in reach, the layer edge wins, since it is known rather than inferred",
+    "A test in PhotonzCore covers a known size measured exactly, written before the change",
+    "Audit written under queue/audits/ with a measured box of a known size and its readout, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T05:33:01.493Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T05:33:01.529Z",
+      "note": "seq 180 -> 6"
+    }
+  ]
+}
