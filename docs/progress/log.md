@@ -11089,3 +11089,27 @@ says so. Audit: `queue/audits/2026-09-07-component-whole-path.json`, eight real
 screen captures.
 
 **Next.** The four filed tasks, in the order the sitting hit them.
+
+## 2026-09-07 — One name for the right hand panel
+
+The panel toggle answered to three names at once: its tooltip said Panel, the
+View menu said Show Layers, and the tooltip walk was still asking for
+Inspector. Settled on **Panel** — it is what the column actually is (Layers,
+Library, Appearance, Measurement and whatever the tool in hand brings), and it
+is what the app already said everywhere else.
+
+`PanelCopy` (PhotonzCore) is now the only place the panel is named:
+`MenuToggleNames.panel`, both title bar tooltips and the name a scripted walk
+asks for are built from it, so the names cannot drift apart one file at a time
+again. The Experiments window's feature descriptions stopped calling it the
+inspector. The shipping release got the rename too, on purpose: the button and
+the menu are shared code, so current already carried the same contradiction.
+⌥⌘L is unchanged.
+
+Verified with `Scripts/test.sh` (4381 green), a new
+`Scripts/playtest/panel-name-walk.json` that rests on the button in both states
+and reads the name and key back, and `menu-checkmarks-walk`. Audit with real
+captures: `queue/audits/2026-09-07-panel-one-name.json`.
+
+Next: `Scripts/playtest/tool-tips.json` still hovers "Inspector" at line 21 —
+its own queued task, now a one-word change.

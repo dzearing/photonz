@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T12:57:50.237Z",
-  "updated": "2026-09-07T14:38:35.761802Z",
+  "updated": "2026-09-07T14:38:54.452Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-07 digest design review. Evidence: audit queue/audits/2026-09-07-panel-toggle-titlebar.json, rough 3, which names all three words and says the menu was deliberately left alone because renaming it would touch the shipping release. That is the call to settle here rather than leave hanging. It has already cost something: Scripts/playtest/tool-tips.json fails at step 13 looking for Inspector (task the-tool-tips-walk-finds-the-panel-button-it-is). Files: Sources/Photonz/TitlebarPanelToggle.swift for the button, the View menu for Show Layers. Note the shortcut is Option Command L.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-07T14:38:35.761802Z",
       "note": "Left for its own task: Scripts/playtest/tool-tips.json line 21 still hovers \"Inspector\". That is the-tool-tips-walk-finds-the-panel-button-it-is, and it is now a one-word change to \"Panel\"."
+    },
+    {
+      "t": "2026-09-07T14:38:54.452Z",
+      "note": "Panel is the one name. PanelCopy in PhotonzCore is the single source: the View menu row is Show Panel (was Show Layers), both tooltips are Show/Hide Panel, and the name a walk asks for all come from it. The Experiments window's feature copy stopped saying inspector. Option Command L unchanged; the shipping release got the rename too since the button and menu are shared, and the audit says why. Verified by Scripts/test.sh (4381 green), a new panel-name walk that reads the name back off the button and the menu, and menu-checkmarks. Audit: queue/audits/2026-09-07-panel-one-name.json with real captures. Commit d3740119."
     }
   ],
-  "started": "2026-09-07T14:27:57.553Z"
+  "started": "2026-09-07T14:27:57.553Z",
+  "completed": "2026-09-07T14:38:54.452Z"
 }
