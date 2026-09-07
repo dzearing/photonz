@@ -368,46 +368,95 @@ extension EditorState {
     }
 
     // MARK: - The Appearance list, which is a list you add to
+    // MARK: - The Effects list (`next-shape-parts`)
 
-    /// The plus at the foot of Appearance: gives every picked layer one more
-    /// effect, at the foot of its own list, in one undo step.
-    ///
-    /// It reaches every picked layer so that the lists stay the same length as
-    /// each other, which is what lets one row go on speaking for all of them.
-    func addAppearance(_ kind: AppearanceKind) {
+    /// The rows the Effects list shows, one per entry, speaking for everything
+    /// picked. Empty on a shape nobody has added anything to, which is the
+    /// point of the split: Appearance is what a shape IS, this is what you ADD.
+    var layerEffectRows: [LayerEffectRow] {
+        guard let document else { return [] }
+        return document.layerEffectRows(layerIDs: colorStyleTargetIDs)
+    }
+
+    /// Whether the plus can still offer this. A layer has one softness, so once
+    /// there is a blur in the list the menu says so by going quiet rather than
+    /// letting a second one in and then ignoring it.
+    func canAddEffect(_ kind: AddableEffect) -> Bool {
+        guard let document else { return false }
+        let ids = layerStyleSelection.layerIDs
+        guard !ids.isEmpty else { return false }
+        if kind.kind.isCountable { return true }
+        return ids.contains { id in
+            document.layer(id: id)?.style.effects.contains { $0.kind == kind.kind } == false
+        }
+    }
+
+    /// The plus: one press, one new row on every picked layer, one undo.
+    func addEffect(_ kind: AddableEffect) {
         let ids = layerStyleSelection.layerIDs
         guard !ids.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { _ = $0.addAppearance(kind, layerIDs: ids) }
+        perform { _ = $0.addEffect(kind, layerIDs: ids) }
         rememberStyleDefault(of: ids)
     }
 
     /// The cross on a row: takes that entry out of the list. Different from the
     /// tick beside it, which keeps everything about the effect and stops it
     /// drawing.
-    func removeAppearance(part: LayerPart, index: Int, ids: [UUID]) {
-        guard part == .shadow, !ids.isEmpty else { return }
+    func removeEffect(row: LayerEffectRow) {
+        guard !row.switchIDs.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { _ = $0.removeShadow(layerIDs: ids, at: index) }
+        perform { _ = $0.removeEffect(layerIDs: row.switchIDs, at: row.index) }
+    }
+
+    /// Whether a row could land in that place: inside the list, and not above a
+    /// row that holds a fixed place.
+    func canMoveEffect(row: LayerEffectRow, to target: Int) -> Bool {
+        guard let document, let first = row.switchIDs.first,
+              let layer = document.layer(id: first) else { return false }
+        let floor = layer.style.pinnedCount
+        return target >= floor && target < layer.style.effects.count && target != row.index
     }
 
     /// A row dragged into a different place, which is a change to what paints
     /// over what: the top of the list is nearest the eye.
-    func moveAppearance(part: LayerPart, from: Int, to: Int, ids: [UUID]) {
-        guard part == .shadow, from != to, !ids.isEmpty else { return }
+    func moveEffect(row: LayerEffectRow, to target: Int) {
+        guard canMoveEffect(row: row, to: target) else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { _ = $0.moveShadow(layerIDs: ids, from: from, to: to) }
+        perform { _ = $0.moveEffect(layerIDs: row.switchIDs, from: row.index, to: target) }
     }
 
     /// The tick on one entry in the list.
-    func setShadowEnabled(index: Int, ids: [UUID], on: Bool) {
-        guard !ids.isEmpty else { return }
+    func setEffectEnabled(row: LayerEffectRow, on: Bool) {
+        guard !row.switchIDs.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { _ = $0.setShadowEnabled(layerIDs: ids, at: index, on: on) }
+        perform { _ = $0.setEffectEnabled(layerIDs: row.switchIDs, at: row.index, on: on) }
+    }
+
+    /// Letting a colour go on an effect whose tick is OFF: it comes back on
+    /// wearing that colour, in one step one undo puts back. The same move the
+    /// Outline row takes, for the same reason.
+    func dropColorOnOffEffect(_ row: LayerEffectRow, landing: ColorDrop.Landing) {
+        guard let shadowIndex = row.shadowIndex, let document else { return }
+        let ids = row.switchIDs.filter { document.layer(id: $0)?.isLocked == false }
+        guard !ids.isEmpty else { return }
+        discardDragPreview()
+        perform { doc in
+            _ = doc.turnOnPart(.shadow, layerIDs: ids, paint: landing.paint, index: shadowIndex)
+        }
+        rememberStyleDefault(of: ids)
+    }
+
+    /// The Corner Radius the Appearance panel shows: only the picked layers that
+    /// HAVE corners. An ellipse has none, so it brings no row rather than a
+    /// slider that does nothing to what you have picked.
+    var corneredRadiusSelection: CornerRadiusSelection {
+        guard let document else { return CornerRadiusSelection(members: [], selectionCount: 0) }
+        return document.cornerRadiusSelection(layerIDs: colorStyleTargetIDs, cornersOnly: true)
     }
 
     /// The Kind popup on one entry: behind the layer, or cast into it.

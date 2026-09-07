@@ -95,7 +95,7 @@ struct OffPartColorDrop: ViewModifier {
 /// The row as a drop target, shaped exactly like the swatch's own delegate:
 /// the answer is read BEFORE the pointer is let go, because the ring is a
 /// promise about what letting go would do.
-private struct OffPartDropDelegate: DropDelegate {
+struct OffPartDropDelegate: DropDelegate {
     let answer: () -> ColorDrop.Answer?
     @Binding var incoming: ColorDrop.Answer?
     let apply: (ColorDrop.Landing) -> Void
@@ -124,5 +124,63 @@ private struct OffPartDropDelegate: DropDelegate {
         guard let landing else { return false }
         apply(landing)
         return true
+    }
+}
+
+/// The same landing spot, for a switched-off row in the Effects list.
+///
+/// A shadow that is off shows its name and its tick and nothing else, exactly
+/// as a switched-off outline does, so a colour carried over to it needs the row
+/// itself to catch it. Letting go switches the shadow back on wearing that
+/// colour, in one step one undo puts back.
+struct OffEffectColorDrop: ViewModifier {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+    let active: Bool
+    @Binding var incoming: ColorDrop.Answer?
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if active, row.kind.paintsAColor, Experiments.shared.colorDragEnabled {
+            content
+                .contentShape(Rectangle())
+                .overlay { ring }
+                .onDrop(of: ColorDrag.acceptedTypes,
+                        delegate: OffPartDropDelegate(answer: answer, incoming: $incoming,
+                                                      apply: apply))
+                .accessibilityValue(incoming?.note ?? "")
+        } else {
+            content
+        }
+    }
+
+    /// What this row would do with whatever is in the air right now. An effect
+    /// wears no saved colour names of its own — its colour is not one of the
+    /// layer's slots — exactly as its swatch already answers once it is on.
+    private func answer() -> ColorDrop.Answer? {
+        guard let payload = ColorDrag.payloadInFlight() else { return nil }
+        return ColorDrop.answer(
+            dropping: payload.paint, bringing: payload.style,
+            on: ColorDrop.Target(
+                part: row.title,
+                wearing: Paint(hex: "#000000"),
+                reaches: row.switchIDs.count,
+                isAbsent: true,
+                acceptsGradient: false,
+                welcome: .neverWearsNames))
+    }
+
+    private func apply(_ landing: ColorDrop.Landing) {
+        editorState.dropColorOnOffEffect(row, landing: landing)
+    }
+
+    @ViewBuilder private var ring: some View {
+        if incoming?.lightsUp == true {
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(Color.accentColor, lineWidth: 2)
+                .padding(.vertical, -3)
+                .padding(.horizontal, -5)
+                .allowsHitTesting(false)
+                .transition(.opacity)
+        }
     }
 }

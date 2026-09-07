@@ -749,23 +749,73 @@ public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
 /// Non-destructive per-layer styling, applied at render time.
 public struct LayerStyle: Hashable, Codable, Sendable {
     public var opacity: Double
-    public var blurRadius: CGFloat
     public var cornerRadius: CGFloat
     public var borderWidth: CGFloat
     public var borderColorHex: String
+    /// Everything somebody ADDED to this layer, in the order it paints: the
+    /// Effects list, top of the list nearest the eye.
+    ///
+    /// Blur and shadow used to be two unrelated fields, one of them a plain
+    /// number that was always there. They are entries in one list now, because
+    /// Effects is a list you add to and a glow, a bevel or a filter has to be
+    /// able to join it without anything else changing
+    /// (`docs/design/shape-parts.md`, "Appearance and Effects").
+    ///
+    /// `blurRadius` and `shadows` below read and write this list, so every
+    /// caller written before it — and the renderer above all — goes on working
+    /// unchanged.
+    public var effects: [LayerEffect]
+    public var blendMode: BlendMode
+
+    /// The layer's softness, as a plain number: what the renderer asks for and
+    /// what every slider written before Effects became a list sets.
+    ///
+    /// Zero when there is no blur in the list, and zero when the blur that IS
+    /// in the list is switched off, because off has to look off. Setting it
+    /// tunes the entry that is there and adds one when there is not, so
+    /// `style.blurRadius = 8` still means what it always meant.
+    public var blurRadius: CGFloat {
+        get {
+            guard let blur = effects.compactMap(\.blur).first else { return 0 }
+            return blur.isOn ? blur.radius : 0
+        }
+        set {
+            if let index = effects.firstIndex(where: { $0.kind == .blur }) {
+                effects[index].blur?.radius = newValue
+                if newValue > 0 { effects[index].blur?.isOn = true }
+            } else if newValue > 0 {
+                effects.insert(.blur(BlurEffect(radius: newValue)),
+                               at: insertionIndex(for: .blur))
+            }
+        }
+    }
+
     /// Every shadow this layer throws, nearest the eye FIRST.
     ///
     /// It used to be one, and one is not enough: a card wants a tight dark
     /// contact shadow and a wide soft lift at the same time, and a field wants
-    /// a shadow cast INTO it rather than behind it. So the Appearance list is
-    /// a list you add to, and this is what it adds to
-    /// (`docs/design/shape-parts.md`, "How the list grows").
+    /// a shadow cast INTO it rather than behind it.
     ///
-    /// The order is the panel's order, and the panel paints the bottom of the
-    /// list first, so index 0 is the one nearest the eye and the last entry is
-    /// the one furthest back.
-    public var shadows: [ShadowStyle]
-    public var blendMode: BlendMode
+    /// A view over `effects`, keeping the shadows in the order the list holds
+    /// them. Writing puts each shadow back where the list already had one and
+    /// appends anything left over, so `shadows.append`, `remove(at:)` and
+    /// `shadows[0] = …` all mean what they read as.
+    public var shadows: [ShadowStyle] {
+        get { effects.compactMap(\.shadow) }
+        set {
+            var rest = newValue[...]
+            var rebuilt: [LayerEffect] = []
+            rebuilt.reserveCapacity(max(effects.count, newValue.count))
+            for effect in effects {
+                guard effect.kind == .shadow else { rebuilt.append(effect); continue }
+                guard let next = rest.first else { continue }
+                rest = rest.dropFirst()
+                rebuilt.append(.shadow(next))
+            }
+            rebuilt.append(contentsOf: rest.map { LayerEffect.shadow($0) })
+            effects = rebuilt
+        }
+    }
 
     /// The first shadow, for everything written before a layer could have two.
     ///
@@ -783,49 +833,76 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CGFloat = 0,
                 borderWidth: CGFloat = 0, borderColorHex: String = "#000000", shadow: ShadowStyle? = nil,
                 blendMode: BlendMode = .normal) {
-        self.opacity = opacity
-        self.blurRadius = blurRadius
-        self.cornerRadius = cornerRadius
-        self.borderWidth = borderWidth
-        self.borderColorHex = borderColorHex
-        self.shadows = shadow.map { [$0] } ?? []
-        self.blendMode = blendMode
+        self.init(opacity: opacity, blurRadius: blurRadius, cornerRadius: cornerRadius,
+                  borderWidth: borderWidth, borderColorHex: borderColorHex,
+                  shadows: shadow.map { [$0] } ?? [], blendMode: blendMode)
     }
 
     public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CGFloat = 0,
                 borderWidth: CGFloat = 0, borderColorHex: String = "#000000",
                 shadows: [ShadowStyle], blendMode: BlendMode = .normal) {
         self.opacity = opacity
-        self.blurRadius = blurRadius
         self.cornerRadius = cornerRadius
         self.borderWidth = borderWidth
         self.borderColorHex = borderColorHex
-        self.shadows = shadows
+        self.effects = LayerStyle.effects(blurRadius: blurRadius, shadows: shadows)
         self.blendMode = blendMode
+    }
+
+    public init(opacity: Double = 1, cornerRadius: CGFloat = 0,
+                borderWidth: CGFloat = 0, borderColorHex: String = "#000000",
+                effects: [LayerEffect], blendMode: BlendMode = .normal) {
+        self.opacity = opacity
+        self.cornerRadius = cornerRadius
+        self.borderWidth = borderWidth
+        self.borderColorHex = borderColorHex
+        self.effects = effects
+        self.blendMode = blendMode
+    }
+
+    /// The Effects list a layer written before the list existed opens with.
+    ///
+    /// Blur first, then the shadows in the order they were already in: the
+    /// blur is laid over the layer and the shadows are thrown behind it, which
+    /// is exactly what the renderer has always done, so a document opened
+    /// today paints what it painted yesterday and the shadows keep the numbers
+    /// they have always been addressed by.
+    static func effects(blurRadius: CGFloat, shadows: [ShadowStyle]) -> [LayerEffect] {
+        var built: [LayerEffect] = []
+        if blurRadius > 0 { built.append(.blur(BlurEffect(radius: blurRadius))) }
+        built.append(contentsOf: shadows.map { LayerEffect.shadow($0) })
+        return built
     }
 
     private enum CodingKeys: String, CodingKey {
         case opacity, blurRadius, cornerRadius, borderWidth, borderColorHex
-        case shadow, shadows, blendMode
+        case shadow, shadows, effects, blendMode
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         opacity = try c.decodeIfPresent(Double.self, forKey: .opacity) ?? 1
-        blurRadius = try c.decodeIfPresent(CGFloat.self, forKey: .blurRadius) ?? 0
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
         borderWidth = try c.decodeIfPresent(CGFloat.self, forKey: .borderWidth) ?? 0
         borderColorHex = try c.decodeIfPresent(String.self, forKey: .borderColorHex) ?? "#000000"
         blendMode = try c.decodeIfPresent(BlendMode.self, forKey: .blendMode) ?? .normal
-        // Every document written before a layer could hold two shadows has the
-        // single `shadow` and no `shadows`, so it opens as a list of one and
-        // paints exactly as it always did.
-        if let list = try c.decodeIfPresent([ShadowStyle].self, forKey: .shadows) {
-            shadows = list
-        } else if let one = try c.decodeIfPresent(ShadowStyle.self, forKey: .shadow) {
-            shadows = [one]
+        if let list = try c.decodeIfPresent([LayerEffect].self, forKey: .effects) {
+            effects = list
         } else {
-            shadows = []
+            // Every document written before Effects was a list carries a plain
+            // blur number and either `shadows` or the single `shadow` that
+            // came before it. It opens as the list those add up to and paints
+            // exactly as it always did.
+            let blur = try c.decodeIfPresent(CGFloat.self, forKey: .blurRadius) ?? 0
+            let shadows: [ShadowStyle]
+            if let list = try c.decodeIfPresent([ShadowStyle].self, forKey: .shadows) {
+                shadows = list
+            } else if let one = try c.decodeIfPresent(ShadowStyle.self, forKey: .shadow) {
+                shadows = [one]
+            } else {
+                shadows = []
+            }
+            effects = LayerStyle.effects(blurRadius: blur, shadows: shadows)
         }
     }
 
@@ -837,12 +914,15 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         try c.encode(borderWidth, forKey: .borderWidth)
         try c.encode(borderColorHex, forKey: .borderColorHex)
         try c.encode(blendMode, forKey: .blendMode)
-        // The first shadow is written where it has always been written, so a
-        // file saved today still opens in a build from yesterday with its
-        // shadow on. The rest go in the list beside it, which older builds
-        // ignore, so what they lose is the extra shadows and never the layer.
+        // The first shadow and the blur are written where they have always been
+        // written, so a file saved today still opens in a build from yesterday
+        // with its shadow and its blur on. The list goes in beside them, which
+        // older builds ignore, so what they lose is the extra entries and never
+        // the layer.
+        let shadows = self.shadows
         try c.encodeIfPresent(shadows.first, forKey: .shadow)
         if shadows.count > 1 { try c.encode(shadows, forKey: .shadows) }
+        if !effects.isEmpty { try c.encode(effects, forKey: .effects) }
     }
 }
 

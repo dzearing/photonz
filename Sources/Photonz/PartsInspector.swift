@@ -1,40 +1,55 @@
 import PhotonzCore
 import SwiftUI
 
-/// The parts a layer is made of, as one list (`next-shape-parts`).
+/// **Appearance**: what a shape simply IS (`next-shape-parts`).
 ///
-/// Every part works the same way: a tick that switches it on or off, the colour
-/// it paints, and its own settings on the lines underneath. Learn to take the
-/// outline off a box and you already know how to take its fill off, and how to
-/// add whatever part arrives next.
+/// The split the panel turns on, chosen by the user on 2026-09-07 from three
+/// drawn panels:
 ///
-/// It replaces four ways of asking the same question. A rectangle used to carry
-/// a Fill checkbox in Color, an Outline colour beside it with NO switch at all,
-/// a Thickness slider in a section named after the shape, and a shadow behind a
-/// switch in a section of its own — so there was no way to draw a box with no
-/// ring round it, which is what the user hit on 2026-09-06.
+/// > Appearance holds the things every shape simply has, in the same order
+/// > every time: its opacity, its fill, its outline, and a corner radius only
+/// > where there are corners. Effects, under it, is a list you ADD to.
 ///
-/// The layout is one list, and a part that is switched on shows its settings
-/// on the lines directly below it, in the same column as every other row.
-/// Ticking a part is already the person saying they want it, so there is
-/// nothing left to press: no chevron, no remembering which row is open, no
-/// indent. Parts are told apart by the gap between them rather than by a step
-/// to the right, so a switched on part and its settings read as one block
-/// (asked for by the user on 2026-09-06, replacing the fold that shipped the
-/// day before).
+/// One sentence tells you which panel a thing is in. Before it, both panels
+/// carried an opacity and a blur — the layer's own in one and a shadow's in the
+/// other — so a shadow's blur read as a second top level blur and there was no
+/// way to tell which was which (reported by the user, 2026-09-07).
 ///
-/// The model itself — what a part is, which parts a layer has — is
-/// `PhotonzCore/LayerParts.swift` and `docs/design/shape-parts.md`.
+/// Nothing here is added and nothing here is removed. Every row is simply
+/// there, always in this order, so hunting for something you set earlier is
+/// always the same four rows. Anything else you set, you added, and added
+/// things are in Effects.
+///
+/// The model itself is `PhotonzCore/LayerParts.swift` and
+/// `docs/design/shape-parts.md`.
 struct PartsInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
         let rows = editorState.layerPartRows
+        let corners = editorState.corneredRadiusSelection
         // Wider than the gap inside a part (6), so the eye groups a part with
         // the settings under it without either being pushed off the margin.
         VStack(alignment: .leading, spacing: 16) {
+            // Opacity leads, always. It is the one thing EVERY layer has,
+            // whatever it is made of, so it is the row that never moves.
+            opacity
             ForEach(rows) { row in
-                PartRowView(row: row, countOfKind: rows.filter { $0.part == row.part }.count)
+                PartRowView(row: row)
+            }
+            // ...and a corner radius only where there are corners. An ellipse
+            // has none, so it shows no row rather than a slider that does
+            // nothing to what you have picked.
+            if !corners.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    CornerRadiusRow(selection: corners)
+                    if let note = corners.note {
+                        Text(note)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
             if let caption {
                 Text(caption)
@@ -45,6 +60,19 @@ struct PartsInspector: View {
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
+    }
+
+    /// How solid the whole layer is, whatever it is made of. It used to sit in
+    /// Effects beside the blur, which is why a shadow's own Opacity in the list
+    /// above read as a second copy of it.
+    private var opacity: some View {
+        let selection = editorState.layerStyleSelection
+        return LayerStyleSlider(layerIDs: selection.layerIDs, label: "Opacity",
+                                reading: selection.reading { $0.opacity }, range: 0...1,
+                                format: { "\(Int(($0 * 100).rounded()))%" },
+                                field: .opacity) { style, v in
+            style.opacity = v
+        }
     }
 
     /// Said only when the list is speaking for more than one layer. Over a
@@ -75,10 +103,6 @@ struct PartsInspector: View {
 private struct PartRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerPartRow
-    /// How many rows of this same part the list is showing, so a second shadow
-    /// can be told from the first by name rather than by counting down the
-    /// panel.
-    var countOfKind = 1
 
     /// What is being held over this row right now, while it is switched off.
     /// Nil the rest of the time, and whenever what is in the air is not a
@@ -94,25 +118,10 @@ private struct PartRowView: View {
     /// settings of an absent part are settings for nothing.
     private var showsSettings: Bool { isOn && row.hasSettings }
 
-    /// What this row is called when it has to be told from its own twin: the
-    /// second shadow is "Shadow 2", not another row saying Shadow.
-    private var name: String {
-        guard let index = row.index, countOfKind > 1 else { return row.title }
-        return "\(row.title) \(index + 1)"
-    }
-
-    /// How far the row has been dragged, while it is being dragged. The list
-    /// order IS the paint order, so this is not decoration: it is how you say
-    /// which shadow goes over which.
-    @State private var carry: CGFloat = 0
-    /// The height of one shadow block, measured off this row. Every entry of a
-    /// kind carries the same controls, so one measurement places them all.
-    @State private var blockHeight: CGFloat = 0
-
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
-                Text(name)
+                Text(row.title)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -131,7 +140,7 @@ private struct PartRowView: View {
                 } else if let paint = incoming?.landing?.paint {
                     // A colour is over the row: this is where it would land,
                     // wearing it, so letting go is never a guess.
-                    landingSwatch(paint)
+                    LandingSwatch(paint: paint)
                 } else if row.isMixed {
                     // The word where the row shows its value, which is where
                     // this row's colour says Mixed too. A part that only some
@@ -143,125 +152,25 @@ private struct PartRowView: View {
                                minHeight: ColorPartLayout.rowHeight, alignment: .leading)
                 }
                 Spacer(minLength: 0)
-                // The two things only an entry you ADDED has: a grip to put it
-                // somewhere else in the order, and a cross to take it out.
-                // They sit together at the end of the row so that the name,
-                // the tick and the colour stay in the columns every other part
-                // uses.
-                if row.canReorder { grip }
-                if row.canRemove { removeButton }
             }
             // The whole row takes the drop while the part is off, because
             // there is no swatch to aim at and a person carrying a colour
             // aims at the row's NAME. Nothing is drawn here at rest.
             .modifier(OffPartColorDrop(row: row, active: !isOn, incoming: $incoming))
-            // Out at the margin with the settings: everything a row has to say
-            // below itself shares one left edge, so nothing under a part is a
-            // step further in than anything else under it.
             if let note = row.reachNote {
                 Text(note)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            if showsSettings { settings }
+            if showsSettings {
+                OwnedSettings(owner: row.title) { PartWidthRow(row: row) }
+            }
         }
         // Every row holds a control called Switch and one called Color, so the
         // row's own word is what tells the outline's from the fill's:
         // `press "Switch" in "Outline"`.
-        .playtestField(name)
-        // The same three moves the grip and the cross make, for a hand that is
-        // not going to drag a 20pt strip: a pointer that right clicks, and a
-        // screen reader. It is also the only way a scripted walk can reorder,
-        // since a synthesized press cannot start a SwiftUI drag.
-        .contextMenu { if row.canReorder { rowMenu } }
-        .offset(y: carry)
-        .zIndex(carry == 0 ? 0 : 1)
-        .background {
-            GeometryReader { proxy in
-                Color.clear.onAppear { blockHeight = proxy.size.height }
-                    .onChange(of: proxy.size.height) { _, new in blockHeight = new }
-            }
-        }
-    }
-
-    /// What the grip and the cross do, in words.
-    @ViewBuilder private var rowMenu: some View {
-        let index = row.index ?? 0
-        Button("Move Up") { move(to: index - 1) }
-            .disabled(index == 0)
-        Button("Move Down") { move(to: index + 1) }
-            .disabled(index >= countOfKind - 1)
-        Divider()
-        Button("Remove") {
-            guard let part = row.part else { return }
-            editorState.removeAppearance(part: part, index: index, ids: row.switchIDs)
-        }
-    }
-
-    private func move(to target: Int) {
-        guard let index = row.index, let part = row.part,
-              target >= 0, target < countOfKind else { return }
-        editorState.moveAppearance(part: part, from: index, to: target, ids: row.switchIDs)
-    }
-
-    /// Drag to reorder. The row follows the pointer and lands on release, so
-    /// the list never rearranges itself under the hand that is holding it.
-    private var grip: some View {
-        Image(systemName: "line.3.horizontal")
-            .font(.system(size: 10))
-            .foregroundStyle(carry == 0 ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.primary))
-            .frame(height: ColorPartLayout.rowHeight)
-            .panelEdgeIcon("reorder", of: row.title)
-            .contentShape(Rectangle())
-            .help("Drag to change what paints over what")
-            .gesture(
-                DragGesture(minimumDistance: 3)
-                    .onChanged { carry = $0.translation.height }
-                    .onEnded { value in
-                        defer { carry = 0 }
-                        guard let index = row.index, let part = row.part,
-                              blockHeight > 1 else { return }
-                        _ = part
-                        let steps = Int((value.translation.height / blockHeight).rounded())
-                        move(to: max(0, min(countOfKind - 1, index + steps)))
-                    }
-            )
-            .playtestControl("Reorder", detail: "drag to change the paint order")
-    }
-
-    /// Take this entry out of the list. Different from the tick beside it,
-    /// which keeps the effect and stops it drawing.
-    private var removeButton: some View {
-        Button {
-            guard let index = row.index, let part = row.part else { return }
-            editorState.removeAppearance(part: part, index: index, ids: row.switchIDs)
-        } label: {
-            Image(systemName: "xmark")
-                .font(.system(size: 9, weight: .semibold))
-                .frame(height: ColorPartLayout.rowHeight)
-                .panelEdgeIcon("remove", of: row.title)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(.tertiary)
-        .help("Remove this \(row.title.lowercased())")
-        .playtestControl("Remove", detail: "takes the effect out of the list")
-    }
-
-    /// The colour about to land, drawn where this row's swatch would be: the
-    /// same 18pt square in the same column, ringed the way every swatch in the
-    /// panel rings while a colour is over it.
-    private func landingSwatch(_ paint: Paint) -> some View {
-        PaintFill(paint: paint)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
-            .frame(width: 18, height: 18)
-            .overlay(RoundedRectangle(cornerRadius: 4)
-                .strokeBorder(Color.accentColor, lineWidth: 2))
-            .frame(minWidth: ColorPartLayout.readoutWidth,
-                   minHeight: ColorPartLayout.rowHeight, alignment: .leading)
-            .transition(.opacity)
+        .playtestField(row.title)
     }
 
     // MARK: The switch
@@ -289,9 +198,9 @@ private struct PartRowView: View {
             editorState.setColorEnabled(slot: .fill, on: on)
         case .outline:
             editorState.setOutlineEnabled(ids: row.switchIDs, on: on)
-        case .shadow:
-            editorState.setShadowEnabled(index: row.index ?? 0, ids: row.switchIDs, on: on)
-        case nil:
+        case .shadow, nil:
+            // The shadow is not a row in this panel any more; it is an entry in
+            // the Effects list under it.
             break
         }
     }
@@ -311,14 +220,7 @@ private struct PartRowView: View {
     // MARK: The colour
 
     @ViewBuilder private var colorControl: some View {
-        if row.part == .shadow {
-            // The shadow's colour is not one of the layer's slots, so it has no
-            // saved-styles menu; the well alone sits where every other colour
-            // in the list sits.
-            ShadowColorWell(index: row.index ?? 0)
-                .frame(minWidth: ColorPartLayout.readoutWidth,
-                       minHeight: ColorPartLayout.rowHeight, alignment: .leading)
-        } else if let target = ColorTarget(row.colors) {
+        if let target = ColorTarget(row.colors) {
             // ONE well, however many kinds of line the row speaks for. Over a
             // rectangle and a screenshot it paints the shape its stroke and the
             // picture its ring, in one step one undo puts back.
@@ -330,111 +232,59 @@ private struct PartRowView: View {
             }
         }
     }
+}
 
-    // MARK: The settings
+/// The colour about to land, drawn where a row's swatch would be: the same 18pt
+/// square in the same column, ringed the way every swatch in the panel rings
+/// while a colour is over it.
+struct LandingSwatch: View {
+    let paint: Paint
 
-    @ViewBuilder private var settings: some View {
-        switch row.part {
-        case .shadow:
-            // Behind the layer or cast into it: one setting, because an inner
-            // shadow is the same effect drawn somewhere else rather than a
-            // different effect with its own row.
-            ShadowKindRow(index: row.index ?? 0, ids: row.switchIDs)
-            // Everything else about the shadow except the switch and the
-            // colour, which are up on the row with every other part's.
-            ShadowInspector(showsSwitch: false, showsColor: false, inset: false,
-                            index: row.index ?? 0)
-        default:
-            PartWidthRow(row: row)
-        }
+    var body: some View {
+        PaintFill(paint: paint)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
+            .frame(width: 18, height: 18)
+            .overlay(RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(Color.accentColor, lineWidth: 2))
+            .frame(minWidth: ColorPartLayout.readoutWidth,
+                   minHeight: ColorPartLayout.rowHeight, alignment: .leading)
+            .transition(.opacity)
     }
 }
 
-/// Where the shadow is thrown: behind the layer, or into it.
+/// Settings that belong to the row above them, and say so.
 ///
-/// It reads Mixed when the picked layers disagree, and picking either answer
-/// gives it to all of them, which is what every other control in this panel
-/// does with a selection that does not agree.
-private struct ShadowKindRow: View {
-    @Environment(EditorState.self) private var editorState
-    let index: Int
-    let ids: [UUID]
+/// A shadow carries a Blur, a Size and an Opacity of its own, and the layer
+/// carries a Blur and an Opacity too. Drawn flat in one column they read as the
+/// same thing twice: the user hit exactly that on 2026-09-07 and could not tell
+/// which panel owned which. So a part's settings sit behind a rule of their
+/// own, stepped in from the row that owns them — chosen by the user the same
+/// day, which is what reversed the "no indent" ask from 2026-09-06: the indent
+/// is back because it is now carrying a meaning it did not carry then.
+struct OwnedSettings<Content: View>: View {
+    /// The row these belong to, so a screen reader and a scripted walk can say
+    /// whose Blur they mean.
+    let owner: String
+    @ViewBuilder var content: Content
+
+    /// How far in the settings sit. Enough for the rule to read as a bracket
+    /// down the side of them, not so far that the numbers leave the column
+    /// every other readout in the panel lines up in.
+    static var step: CGFloat { 10 }
 
     var body: some View {
-        let reading = editorState.layerStyleSelection.shadows(at: index)
-            .reading { $0.shadow(at: index)?.kind ?? .drop }
-        HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
-            Text("Kind")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
-            Picker("Kind", selection: Binding(
-                get: { reading.isMixed ? nil : reading.value },
-                set: { new in
-                    guard let new else { return }
-                    editorState.setShadowKind(index: index, ids: ids, to: new)
-                })) {
-                    if reading.isMixed {
-                        Text(LayerStyleSelection.mixedText).tag(ShadowKind?.none)
-                    }
-                    ForEach(ShadowKind.allCases, id: \.self) { kind in
-                        Text(kind.title).tag(ShadowKind?.some(kind))
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .controlSize(.small)
-                // A width, not `fixedSize`: a menu picker asked for its ideal
-                // width inside the dock's column pushed the whole pane wider
-                // than the window, and the shell answered by auto-collapsing
-                // the dock the moment a SECOND one appeared (2026-09-07).
-                .frame(width: 92, alignment: .leading)
-                .help("Drop throws it behind the layer. Inner casts it into the layer.")
-                .playtestControl("Kind", detail: reading.isMixed ? "mixed"
-                                    : (reading.value ?? .drop).title)
-            Spacer(minLength: 0)
+        HStack(alignment: .top, spacing: Self.step - 3) {
+            // The bracket. It runs the full height of what it owns, so two
+            // shadows one under the other never blur into one block.
+            RoundedRectangle(cornerRadius: 1)
+                .fill(.quaternary)
+                .frame(width: 2)
+            VStack(alignment: .leading, spacing: 6) { content }
         }
-        // No field name of its own: it belongs to the shadow row above it, so
-        // a walk names it `{"control": "Kind", "in": "Shadow 2"}` and two
-        // shadows never answer to the same words.
-    }
-}
-
-/// The plus on the Appearance header: one press, a short menu, a new row.
-///
-/// No dialog and no blank state to fill in. The effect arrives with settings
-/// that already look like something, so the next thing you do is tune it rather
-/// than build it.
-///
-/// The menu names the effects in FULL — Shadow, Inner Shadow — because somebody
-/// hunting for an inner shadow is scanning for those two words. Both add the
-/// same kind of row; the second one arrives with its Kind already set.
-///
-/// It was drawn at the foot of the list first, which is where the decision card
-/// showed it. The dock caps a section's height and scrolls what is left over
-/// inside it, and one shadow is already enough to push the foot of Appearance
-/// out of sight, so the plus went where it can always be seen (2026-09-07).
-struct AddAppearanceButton: View {
-    @Environment(EditorState.self) private var editorState
-
-    var body: some View {
-        Menu {
-            ForEach(AppearanceKind.allCases) { kind in
-                Button(kind.title) { editorState.addAppearance(kind) }
-            }
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 11, weight: .medium))
-        }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .disabled(editorState.layerPartRows.isEmpty)
-        // The plus says nothing out loud, so this is both what a screen reader
-        // announces and the name a scripted walk opens it by.
-        .accessibilityLabel("Add Effect")
-        .help("Add an effect: a shadow, or a shadow cast into the layer")
-        .playtestControl("Add Effect", detail: "the plus on the Appearance header")
+        .padding(.leading, 1)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(owner) settings")
     }
 }
 

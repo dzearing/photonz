@@ -197,8 +197,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: shapePartsFlag,
-                    title: "A layer is made of parts",
-                    description: "One list for everything a layer paints: Fill, Outline and Shadow, each with a tick that switches it on or off, the colour it paints, and its own settings folding open underneath. A rectangle\'s outline can be taken off for the first time. The Border row leaves Effects and a box\'s Thickness row leaves its own section, because both are the Outline part now, and the Shadow section folds into the same list. An arrow keeps its Thickness where it is: its line cannot be switched off, so there is no part for the width to live in.",
+                    title: "Appearance is what it is, Effects is what you add",
+                    description: "The panel splits on one rule. Appearance, straight under Layers, holds what a shape simply HAS, always in the same order: opacity, fill, outline, and a corner radius only where there are corners. Effects, under it, starts EMPTY and is a list you add to from one plus: a shadow, a shadow cast into the layer, a blur. The same kind can arrive more than once, so two shadows are two rows with their own settings, and a row can be switched off, taken out, or dragged to change what paints over what. Each row\'s own settings sit behind a rule of their own, so a shadow\'s blur can never be mistaken for the layer\'s. A rectangle\'s outline can be taken off for the first time, and a box\'s Thickness row and a picture\'s Border row are both the Outline part now.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

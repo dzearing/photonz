@@ -83,4 +83,21 @@ public enum PanelSectionOrder {
         result.insert(contentsOf: group, at: landing)
         return result
     }
+
+    /// The same group move, landing immediately AFTER `anchor`.
+    ///
+    /// What "Appearance and Effects sit directly under Layers, in that order"
+    /// needs, and it has to be one move rather than two: moving Appearance
+    /// after Layers and then Effects after Layers would leave Effects on top.
+    public static func moving(_ sections: [String], after anchor: String,
+                              in order: [String]) -> [String] {
+        let group = sections.filter { order.contains($0) && $0 != anchor }
+        guard !group.isEmpty, group.count == sections.filter({ order.contains($0) }).count,
+              order.contains(anchor) else { return order }
+        var result = order
+        result.removeAll { group.contains($0) }
+        guard let landing = result.firstIndex(of: anchor) else { return order }
+        result.insert(contentsOf: group, at: landing + 1)
+        return result
+    }
 }

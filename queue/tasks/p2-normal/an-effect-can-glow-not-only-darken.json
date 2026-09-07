@@ -1,0 +1,29 @@
+{
+  "id": "an-effect-can-glow-not-only-darken",
+  "title": "An effect can glow, not only darken",
+  "goal": "A shape can throw a shadow but it cannot glow. Add a glow to the list of effects you can add, so a button can carry a soft coloured halo outside it or a lit edge inside it, with its own colour, softness, size and opacity, and more than one at a time.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1810,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T20:07:53.632Z",
+  "updated": "2026-09-07T20:07:53.632Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The Effects list was built on 2026-09-07 to make exactly this a one-case change: add a case to LayerEffect in Sources/PhotonzCore/LayerEffects.swift with its settings, and an entry to AddableEffect. Nothing about the plus, the tick, the cross, the grip, the multi-selection sentence or the saved file should need touching; if it does, the extension point is wrong and that is worth reporting. The renderer is the real work: an outer glow reaches past the layer edge, so it has the same problem as an outside border (see a-border-can-sit-outside-the-edge-not-only-insid) and should probably follow it. An INNER glow is cheap and could ship first, since inner shadows already clip to the silhouette in DocumentRenderer.innerShadowed.",
+  "acceptance": [
+    "The plus on the Effects header offers Glow and Inner Glow, and each adds one row",
+    "A glow row carries a colour, a Kind popup, and its own softness, size and opacity",
+    "Two glows of different colours can sit on one shape and the order they are dragged into changes which is on top",
+    "A glow switched off keeps its settings, and the cross takes the row out",
+    "Existing documents are untouched and everything the app already draws keeps drawing"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T20:07:53.632Z",
+      "note": "created (manual)"
+    }
+  ]
+}

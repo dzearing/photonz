@@ -389,15 +389,20 @@ struct LayerPartsTests {
         #expect(fill.reachNote == "Applies to 2 of the 3 selected layers.")
     }
 
-    @Test func aShadowRowSaysHowManyOfThemHaveOneAtAll() throws {
+    @Test func aShadowIsNotAPartOfTheShapeAtAll() throws {
         var shadowed = picture()
         shadowed.style.shadow = ShadowStyle()
         let plain = picture()
         let doc = document([shadowed, plain, picture()])
+        // Appearance is what a shape simply HAS, and a shadow is something you
+        // added, so it is not here: it is an entry in the Effects list below
+        // (the user's split, 2026-09-07).
         let rows = doc.layerPartRows(layerIDs: doc.layers.map(\.id))
-        // Rows line up by POSITION in the list, so the first Shadow row speaks
-        // for the one picture that has a first shadow, and says so.
-        let shadow = try #require(rows.first { $0.part == .shadow })
+        #expect(rows.allSatisfy { $0.part != .shadow })
+        // ...and the row it does have there speaks for the one picture that
+        // has a first shadow, and says so, because rows line up by POSITION.
+        let effects = doc.layerEffectRows(layerIDs: doc.layers.map(\.id))
+        let shadow = try #require(effects.first { $0.kind == .shadow })
         #expect(shadow.switchIDs == [shadowed.id])
         #expect(shadow.reachNote == "Applies to 1 of the 3 selected layers.")
     }

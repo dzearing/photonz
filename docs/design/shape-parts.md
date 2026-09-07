@@ -8,7 +8,10 @@ half-applied is worse than the mess it replaced.
 Status: **built in Next**, behind `next-shape-parts` (on by default there).
 The layout was the user's call and they took it on 2026-09-06: *one list,
 settings unfold*. Later the same day they asked for the fold to go: a part that
-is switched on shows its settings straight away. Current is untouched.
+is switched on shows its settings straight away. On 2026-09-07 they split the
+one list in two: **Appearance is what it IS, Effects is what you ADD**. Read
+"Appearance and Effects" below first; it supersedes anything above it that says
+the shadow is a row in Appearance. Current is untouched.
 
 ## Why
 
@@ -387,3 +390,173 @@ stay the same length as each other from then on.
   SwiftUI drag, so the walk cannot carry out the reorder; the row's own menu
   (Move Up, Move Down, Remove) does the same thing and what both call is
   covered by tests.
+
+
+## Appearance and Effects
+
+Status: **built in Next** (2026-09-07), from the user's answer *Appearance is
+what it IS, Effects is what you ADD*. It replaces "How the list grows" above
+wherever the two disagree: everything that section says about a list you add to
+is still true, but the list is **Effects**, not Appearance.
+
+### Why
+
+The user picked a rectangle and saw an Appearance panel and an Effects panel and
+could not say what belonged in which. Both appeared to carry an opacity and a
+blur. Reproduced: Appearance held Fill, Outline and a Shadow, and the shadow's
+own Blur, Size, Distance, Direction and Opacity were drawn flat underneath its
+row; Effects held the layer's Opacity, Blur and Corner Radius. Nothing on screen
+said which of the two Blurs belonged to what, so a shadow's blur read as a
+second top level blur.
+
+Two faults, not one:
+
+1. **There was no rule.** A shadow is in Appearance and a blur is in Effects,
+   and no sentence explains why.
+2. **A part's settings had no visible owner.** Even with the rule fixed, a
+   shadow's Blur drawn in the same column as everything else reads as the
+   layer's.
+
+### The rule
+
+> **Appearance is what a shape simply HAS.** Opacity, its fill, its outline, and
+> a corner radius only where there are corners. Always there, always in that
+> order, never added and never removed.
+>
+> **Effects is a list you ADD to.** It starts empty. A shadow, a shadow cast
+> into the layer, a blur — and later a glow, a bevel, a filter — arrive from one
+> plus, can arrive more than once where that means something, and can be taken
+> out again.
+
+One sentence tells you which panel a thing is in. The order inside Appearance is
+fixed and short, so the hunt is always the same four rows; anything else you set,
+you added, and added things are in Effects.
+
+### What moved
+
+| Was | Is |
+| --- | --- |
+| Effects: Opacity | **Appearance**, first row. It is the one thing every layer has. |
+| Effects: Corner Radius | **Appearance**, last row, and only where there are corners. |
+| Effects: Blur | **Effects**, but as an entry you ADD rather than a slider that is always there. |
+| Appearance: Shadow rows | **Effects**, where the plus puts them. |
+| Effects: Border width | Already gone: it is the Outline part's Width, in Appearance. |
+
+**A corner radius only where there are corners.** An ellipse, a line and an
+arrow have none, so they show no row rather than a slider that does nothing to
+what you have picked (`Layer.hasCorners`). Everything that is not a shape at all
+— a picture, a label, a frame, a group — is a box, so it has four. Over a mixed
+selection the row is there for the layers that have corners and says how many of
+the picked layers it reaches, the sentence Fill already uses.
+
+**The outline stays in Appearance**, for both kinds of ring. A shape's stroke
+and a picture's ring are one Outline part with one Width (see above), and both
+are what the layer IS rather than something added. The *offset* border the user
+asked about — an inner one and an outer one as two rows — is an Effects entry
+and is NOT built: nothing in the app can draw outside a layer's own edge yet.
+That is `a-border-can-sit-outside-the-edge-not-only-insid` in the queue, and it
+is the piece that unlocks it.
+
+### A part's settings are visibly owned
+
+Everything a row says below itself — its Kind, its Blur, its Size, its Width —
+sits behind a rule of its own, stepped in from the row that owns it
+(`OwnedSettings`). A shadow's Blur is now plainly the shadow's.
+
+This reverses the user's "no indent under a part" ask of 2026-09-06, and it is
+theirs: it was inside the option they chose on 2026-09-07. The indent is back
+because it is now carrying a meaning it did not carry then.
+
+### The panel, top to bottom
+
+```
+Layers
+Appearance     Opacity · Fill · Outline (Width) · Corner Radius
+Effects        (empty)  + plus on the header
+```
+
+**Appearance sits directly under Layers and Effects directly under it**, asked
+for by the user on 2026-09-07. That is above the sections named after the thing
+you picked, which went up there on 2026-09-06 ("Put what you picked first"), so
+those shift down by the height of these two. The trade the user made: Appearance
+and Effects are the two sections touched on every single layer, so they are the
+two that must never need scrolling to.
+
+A rectangle nobody has touched shows an Effects section with one line in it —
+"Nothing added yet. Use the plus above for a shadow or a blur." — and the plus on
+its header. An empty section with nothing in it at all reads as broken, and the
+plus is small enough to be missed the first time.
+
+### The model
+
+`LayerStyle.effects` is ONE ordered list of `LayerEffect`, top nearest the eye.
+`blurRadius` and `shadows` are **views over it**, so the renderer and every
+caller written before the list existed go on working untouched — which is what
+makes "everything already drawn keeps drawing exactly as it does" true by
+construction rather than by inspection.
+
+| Kind | Count | Colour | Its own settings |
+| --- | --- | --- | --- |
+| Shadow | **many** | the shadow colour | Kind (Drop · Inner) · Blur · Size · Distance · Direction · Opacity |
+| Blur | one, pinned | none | Amount |
+| *Glow (next)* | many | the glow colour | Kind (Outer · Inner) · Blur · Size · Opacity |
+| *Border (next)* | many | the border colour | Offset (Inside · Outside) · Width |
+
+**Adding a new kind is a new case in `LayerEffect` plus the settings it
+carries.** Nothing about the plus, the tick, the cross, the grip, the reach
+sentence over a multiple selection or the saved file changes to accept it. The
+next two are named above:
+
+- **Glow** is a shadow with no offset and a colour that lights rather than
+  darkens: one new case, one row of settings, countable, draggable. Nothing else.
+- **Border with an offset** is a `many` kind whose Offset popup says Inside or
+  Outside, so an inner and an outer one are two rows. It waits on the renderer
+  being able to paint past a layer's edge at all.
+
+**Blur is pinned to the top and carries no grip.** The order of the list is the
+order things paint, and a blur is laid over the whole layer while shadows are
+thrown behind it, so there is nowhere else for a blur to be that would look any
+different. A grip that changes nothing is a grip that lies, so it does not have
+one, and a shadow cannot be dropped above it. Order among shadows is real and is
+what the drag is for.
+
+**Off is not remove**, unchanged: the tick keeps every number on the effect and
+stops it drawing, the cross takes the entry out. Everything in Effects was added,
+so everything in it carries a cross — which is simpler than the old rule, where
+only countable parts did, because nothing in this panel is simply there.
+
+### What existing documents keep drawing
+
+Nothing about the renderer changed. A file written before this opens as the list
+its old fields add up to: a blur first if it had one, then its shadows in the
+order they were already in, which is exactly the stack `DocumentRenderer` has
+always painted. A file saved after it still writes `blurRadius`, `shadow` and
+`shadows` where they have always been written, so an older build opens it and
+draws the same picture; the `effects` list goes in beside them and older builds
+ignore it.
+
+A blur switched OFF saves as `blurRadius: 0`, so an older build agrees with what
+is on screen, while this build keeps the number the row was left at.
+
+### Where the code is
+
+- `PhotonzCore/LayerEffects.swift` — `EffectKind`, `LayerEffect`, `BlurEffect`,
+  `AddableEffect` (what the plus offers), `LayerEffectRow`, and the four list
+  edits: add, remove, move, switch. Tested in
+  `Tests/PhotonzCoreTests/EffectsListTests.swift`.
+- `PhotonzCore/Layer.swift` — `LayerStyle.effects` is the list; `blurRadius` and
+  `shadows` read and write it; Codable migrates and writes both shapes.
+- `PhotonzCore/CornerRadiusSelection.swift` — `Layer.hasCorners` and the
+  `cornersOnly` selection Appearance uses.
+- `Photonz/PartsInspector.swift` — Appearance: opacity, the part rows, corner
+  radius, and `OwnedSettings`, the rule that says whose settings these are.
+- `Photonz/EffectsListInspector.swift` — Effects: the rows, the plus, the tick,
+  the cross, the grip, and the empty line.
+
+### What is rough, as built
+
+- **A border with an offset is not here.** It is the one thing in the user's
+  brief that the renderer cannot do yet; filed separately.
+- **The grip's drag is still not scriptable.** A synthesized press cannot start a
+  SwiftUI drag, so a walk reorders through the row's own menu (Move Up, Move
+  Down, Remove), which calls exactly what the grip calls.

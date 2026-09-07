@@ -91,6 +91,21 @@ extension Layer {
     /// masking the picture of it. Only a rectangle has an outline with corners
     /// on it to curve.
     var roundsItsOwnOutline: Bool { annotation?.shape == .rectangle }
+
+    /// True when this layer has corners to round in the first place.
+    ///
+    /// Appearance shows a Corner Radius only where there are corners (the
+    /// user's rule, 2026-09-07). An ellipse, a line and an arrow have none, and
+    /// a slider that does nothing on the thing you have picked is a slider that
+    /// teaches you the panel is lying. Everything that is not a shape at all —
+    /// a picture, a label, a frame, a group — is a box, so it has four.
+    public var hasCorners: Bool {
+        guard let shape = annotation?.shape else { return true }
+        switch shape {
+        case .rectangle, .highlight: return true
+        case .ellipse, .line, .arrow: return false
+        }
+    }
 }
 
 extension PhotonzDocument {
@@ -102,12 +117,19 @@ extension PhotonzDocument {
     /// `style` is how a caller reads one layer's look, so the panel can hand in
     /// the style a drag is previewing and have the row read what is on screen
     /// rather than what is on disk.
+    ///
+    /// `cornersOnly` leaves out the picked layers that have no corners, for the
+    /// Appearance panel's rule that the row is there only where there are
+    /// corners to round. The count of everything picked is kept either way, so
+    /// the row can still say how many layers it is speaking for.
     public func cornerRadiusSelection(layerIDs: [UUID],
+                                      cornersOnly: Bool = false,
                                       style: (Layer) -> LayerStyle = { $0.style })
     -> CornerRadiusSelection {
         var members: [CornerRadiusSelection.Member] = []
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
+            guard !cornersOnly || layer.hasCorners else { continue }
             let bounds = layer.localBounds
             members.append(CornerRadiusSelection.Member(
                 id: id,

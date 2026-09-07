@@ -91,8 +91,19 @@ struct InspectorPanel: View {
     /// somebody chose: shortening it compresses nothing, it just hides controls
     /// behind a second scroller, which is the same hunt one level deeper. So
     /// forms are paid first, at full height, and the lists share what is left.
-    static let scrollingSections: Set<InspectorSectionID> =
-        [.layers, .color, .measurements, .library]
+    ///
+    /// Which of Appearance and Effects is the list flipped with the split
+    /// (`next-shape-parts`, 2026-09-07). Appearance became a FORM — opacity,
+    /// fill, outline, corner radius, four rows somebody designed — and Effects
+    /// became the list, as long as whatever you added to it. Left the other way
+    /// round, two shadows squeezed Appearance until its Width and Corner Radius
+    /// rows were scrolled out of sight, which is the opposite of what the dock
+    /// is for.
+    static var scrollingSections: Set<InspectorSectionID> {
+        var sections: Set<InspectorSectionID> = [.layers, .measurements, .library]
+        sections.insert(Experiments.shared.shapePartsEnabled ? .effects : .color)
+        return sections
+    }
     /// How short a list may be squeezed before the dock stops asking: about
     /// three rows. Under that a list stops reading as a list, and a dock that
     /// scrolls a little is better than six peepholes.
@@ -107,6 +118,11 @@ struct InspectorPanel: View {
     /// ...and then every section named after the thing you picked followed it
     /// up there, so the panel opens on what you just clicked.
     private static let orderVersionPickedAboveGeometry = 3
+    /// Appearance and Effects rose to sit directly under Layers, in that order.
+    /// Asked for by the user on 2026-09-07 with the split between them: what a
+    /// shape IS, then what you have added to it, both within reach without
+    /// scrolling, because they are the two people touch on every layer.
+    private static let orderVersionLookUnderLayers = 4
     /// The sections named after the thing you have picked, in the order they
     /// sit in. One list, so the migration and the rule stay the same sentence.
     private static let pickedSections: [InspectorSectionID] =
@@ -571,14 +587,14 @@ struct InspectorPanel: View {
     /// collapsed Library still says what it is set to.
     private func sectionAccessory(_ id: InspectorSectionID) -> AnyView? {
         switch id {
-        case .color where Experiments.shared.shapePartsEnabled:
-            // The plus that makes Appearance a list you add to. It rides the
+        case .effects where Experiments.shared.shapePartsEnabled:
+            // The plus that makes Effects a list you add to. It rides the
             // HEADER rather than the foot of the list, because the dock gives a
             // section a height and scrolls the rest inside it: one shadow is
             // already enough to push a foot button out of sight, and the one
             // gesture that adds an effect may never be the thing you have to go
             // looking for.
-            return AnyView(AddAppearanceButton())
+            return AnyView(AddEffectButton())
         case .measurements:
             return AnyView(MeasurementsSectionAccessory())
         case .library:
@@ -716,7 +732,14 @@ struct InspectorPanel: View {
                 CanvasInspector()
             }
         case .effects:
-            EffectsInspector()
+            // Appearance is what a shape IS and Effects is what you ADD, so
+            // with the split on this section is the list rather than four
+            // sliders that are always there (`next-shape-parts`).
+            if Experiments.shared.shapePartsEnabled {
+                EffectsListInspector()
+            } else {
+                EffectsInspector()
+            }
         case .shadow:
             ShadowInspector()
         case .library:
@@ -776,6 +799,14 @@ struct InspectorPanel: View {
                                               before: InspectorSectionID.geometry.rawValue,
                                               in: merged)
             orderVersion = Self.orderVersionPickedAboveGeometry
+        }
+        // Next only: it is the split that makes Appearance short enough to sit
+        // up here, so the release without the split keeps its order.
+        if Experiments.shared.shapePartsEnabled, orderVersion < Self.orderVersionLookUnderLayers {
+            merged = PanelSectionOrder.moving(
+                [InspectorSectionID.color.rawValue, InspectorSectionID.effects.rawValue],
+                after: InspectorSectionID.layers.rawValue, in: merged)
+            orderVersion = Self.orderVersionLookUnderLayers
         }
         let ids = merged.compactMap { InspectorSectionID(rawValue: $0) }
         if ids != order { order = ids }
@@ -1077,14 +1108,19 @@ enum InspectorSectionID: String, CaseIterable {
     // and this says what it looks like, and it sits in the SAME place whether
     // one layer is picked or twenty: adding to the selection widens what a row
     // answers for and never moves the row.
+    //
+    // With the Appearance/Effects split on (`next-shape-parts`) these two rise
+    // to sit directly under Layers, in this order, which the user asked for on
+    // 2026-09-07: they are the two sections touched on every single layer, so
+    // they are the two that must never need scrolling to. That is a one-time
+    // move of a saved order rather than a change here, so the release without
+    // the split keeps the arrangement it has always had.
     case color
     // Fade, corners, blur and border: the look of the thing, right beside the
     // colors it is painted, because they are the same question. This is the
     // section people reach for most and it used to sit under Shadow and every
     // per-kind section, which in a normal window put Corner Radius below the
-    // bottom of the panel (reported 2026-09-03). Anyone who already had an
-    // order saved gets Effects moved here once, keeping the rest of their
-    // arrangement: see `inspector.sectionOrder.version`.
+    // bottom of the panel (reported 2026-09-03).
     case effects
     // Shadow stays at the bottom. It is part of the same look family as Color
     // and Effects, but it is a switch you set once rather than a slider you
@@ -3082,7 +3118,16 @@ struct ShadowInspector: View {
             if !shadows.isEmpty {
                 let at = index
                 HStack(spacing: 8) {
-                    LayerStyleSlider(layerIDs: ids, label: "Blur",
+                    // Called Softness in the Effects list, where a row called
+                    // Blur can be sitting right above it: two controls with one
+                    // word between them is exactly what the user reported on
+                    // 2026-09-07. The rule down the side of these settings
+                    // already says whose they are; the name says what it does.
+                    // Current, where there is no Blur row to collide with, is
+                    // untouched.
+                    LayerStyleSlider(layerIDs: ids,
+                                     label: Experiments.shared.shapePartsEnabled
+                                         ? "Softness" : "Blur",
                                      reading: shadows.number { $0.shadow(at: at)?.radius ?? 0 },
                                      range: 0...40, format: points) { style, v in
                         style.updateShadow(at: at) { $0.radius = CGFloat(v) }
@@ -3192,7 +3237,7 @@ struct ShadowColorWell: View {
 
 /// How a style row writes a length. One place, so Blur and Size and Distance
 /// cannot drift apart.
-private func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
+func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
 
 /// The revert arrow belongs to ONE layer's override of its component, so it is
 /// offered only when the section is speaking for one layer. Over a selection
@@ -3210,7 +3255,7 @@ private func selectionCaption(_ count: Int, _ lead: String = "A slider here") ->
 /// layers differ, and how many it speaks for. Said only when there is
 /// something to say — over one layer every row means what it always meant, and
 /// a sentence explaining that is a sentence in the way.
-private struct SelectionStyleNotes: View {
+struct SelectionStyleNotes: View {
     let notes: [String?]
     let caption: String?
 
@@ -3455,7 +3500,7 @@ struct AnnotationInspector: View {
 ///
 /// Dragging previews without recording undo; release commits ONE step,
 /// however many layers it reached.
-private struct CornerRadiusRow: View {
+struct CornerRadiusRow: View {
     @Environment(EditorState.self) private var editorState
     let selection: CornerRadiusSelection
 

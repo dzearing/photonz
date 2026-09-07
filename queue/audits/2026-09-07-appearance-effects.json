@@ -1,0 +1,32 @@
+{
+  "feature": "Appearance is what it is, Effects is what you add",
+  "epic": "ui-building",
+  "summary": "The panel now splits on one sentence. Appearance, straight under Layers, holds what a shape simply has: opacity, fill, outline, and a corner radius only where there are corners. Effects, under it, starts empty and is a list you add to, so a shape can carry two shadows and a blur, each removable, each with settings visibly its own.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Draw a rectangle with R and drag.",
+  "try": [
+    { "do": "Draw a rectangle. Look at Appearance: Opacity, Fill, Outline with its Width, Corner Radius. Effects below it is empty.", "shot": "2026-09-07-appearance-effects-1.png" },
+    { "do": "Press the plus on the Effects header and read the menu: Shadow, Inner Shadow, Blur.", "shot": "2026-09-07-appearance-effects-2.png" },
+    { "do": "Choose Shadow, then press the plus again and choose Shadow a second time." },
+    { "do": "Press the plus once more and choose Blur. The Blur row lands at the top and the box goes soft.", "shot": "2026-09-07-appearance-effects-3.png" },
+    { "do": "Pull Shadow 2's Distance and Direction so the two shadows sit apart, then drag Shadow 2's grip above Shadow 1 and watch which one is on top." },
+    { "do": "Untick the Blur row: the box sharpens and the Amount stays where you left it. Tick it again." },
+    { "do": "Press the cross on the Blur row. The row goes, and Effects is two shadows.", "shot": "2026-09-07-appearance-effects-4.png" },
+    { "do": "Draw an ellipse. Appearance shows no Corner Radius, because an ellipse has no corners." }
+  ],
+  "evaluate": [
+    "Can you say in one sentence which panel a thing belongs in, without being told?",
+    "Reading Shadow 1's Softness, is it obvious it belongs to that shadow and not to the layer?",
+    "Is an empty Effects section with one line of text and a plus enough of an invitation, or does it need something more?",
+    "Opacity now leads Appearance and Corner Radius closes it. Is that the order your hand expects?",
+    "Appearance and Effects moved above the section named after what you picked (Rectangle, Text). Was that the right trade?",
+    "The Blur row has no grip because a blur is laid over the whole layer. Does that read as deliberate, or as missing?"
+  ],
+  "rough": [
+    "A border with an offset, so an inner and an outer one are two rows, is NOT built. Nothing in the app can paint outside a layer's own edge yet: the shape rasterizer would need padding and the layer's reach would have to grow with it. Filed as a-border-can-sit-outside-the-edge-not-only-insid, and it is the only part of the brief that is missing.",
+    "Two shadows and a blur is already taller than the Effects section, so it scrolls inside itself and fades at the bottom edge. Appearance is whole; Effects is the one that gives. That is the right way round now, but a shadow still costs seven rows and that is a lot.",
+    "The shadow's own softness was called Blur and is now called Softness, because a row called Blur can sit directly above it. Only in Next.",
+    "The order of the list is real between shadows and nowhere else yet: a blur is pinned to the top and carries no grip. When a glow arrives it will be draggable like a shadow.",
+    "The grip cannot be driven by a script (a synthesized press cannot start a SwiftUI drag), so reordering was checked through the row's right-click menu and by test rather than by the drag itself.",
+    "Screen Recording was granted, so every picture here is a real capture of the window."
+  ]
+}

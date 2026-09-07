@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T04:17:33.932Z",
-  "updated": "2026-09-07T16:30:57.585Z",
+  "updated": "2026-09-07T20:08:17.090Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rewritten on 2026-09-07 after the user saw the shipped Appearance list beside the older Effects section and could not tell what belonged where. Their split, which supersedes the earlier proposal in this task: Appearance is what a shape intrinsically has, Effects is an addable list. Note that the duplication they report is partly an illusion worth fixing on its own: in their screenshot the Blur, Size, Distance, Direction and Opacity under Appearance are the SHADOW's settings, shown inline beneath the Shadow row by the change that landed the same day, while Effects carries the layer's own opacity, blur and corner radius. Because the inline settings carry no sign of which part owns them, a shadow's blur reads as a second top level blur. So the panel needs a visible owner for a part's settings whatever else is decided, which is why that is its own acceptance item. Two ideas from the earlier draft still hold and should be kept: inner versus outer is a property of an effect rather than a separate effect, which the user has now confirmed by asking for an offset on a border; and once the list is addable, order becomes visible and must be draggable. Read Sources/PhotonzCore/LayerParts.swift and Sources/Photonz/PartsInspector.swift, and coordinate with switching-a-part-on-shows-its-settings-straight, which changes how a row reveals its settings, so the two do not fight.",
@@ -140,7 +140,72 @@
     {
       "t": "2026-09-07T16:30:57.585Z",
       "note": "decision \"What belongs in Appearance, and what belongs in Effects?\" resolved: Appearance is what it IS, Effects is what you ADD"
+    },
+    {
+      "t": "2026-09-07T19:38:45.679Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Decision \"What belongs in Appearance, and what belongs in Effects?\" was already resolved (option A) when this run claimed the task, so it was built rather than blocked again."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Adversarial review, before building. 1) The brief asks for a border with an OFFSET so an inner and an outer one are two rows. Nothing in the app can paint outside a layer's own edge: bordered() insets and crops to the layer extent, and renderBounds/previewPadding do not grow. So that one item is genuinely blocked on a-border-can-sit-outside-the-edge-not-only-insid and is the only part of the brief not built. Said plainly in the audit rather than half-built."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Adversarial review 2) Cross-kind order cannot be honest for a blur. The renderer blurs the content BEFORE rounding the corners, so a blur dragged below a shadow would either change nothing or change how every existing rounded screenshot draws. Resolution: a blur is pinned to the top of the list and carries no grip. Order between shadows is real and is what the drag is for. Written down rather than shipped as a grip that lies."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Adversarial review 3) The word Blur would appear twice: as an effect row and as a shadow's first setting. That IS the thing the user reported. The ownership rule fixes it visually; the shadow's setting is also renamed Softness in Next, so the two never share a word."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Adversarial review 4) Making Appearance a fixed short form and Effects a growing list flips which of the two the dock is allowed to squeeze. Left alone, two shadows squeezed Appearance until its Width and Corner Radius scrolled out of sight. Caught on the probe, fixed, re-verified."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Model: LayerStyle.effects is ONE ordered list of LayerEffect. blurRadius and shadows are VIEWS over it, so the renderer and all 65 borderWidth / 21 blurRadius call sites are untouched, which is what makes \"everything already drawn keeps drawing exactly as it does\" true by construction. DocumentRenderer has no change at all."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "File format: effects goes in beside blurRadius, shadow and shadows, which are still written from the projections, so a file saved today opens in yesterday's build and draws the same picture. A file written before this migrates to [blur?] + shadows, which is the stack the renderer has always painted. A blur switched off saves as blurRadius 0, so an older build agrees with the screen."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Appearance: opacity first, then the part rows, then Corner Radius only where corners exist (Layer.hasCorners; an ellipse, a line and an arrow show none). Effects: empty on a new shape, with one plain line and the plus on the header."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "A part's settings sit behind a rule of their own (OwnedSettings). This reverses the user's no-indent ask of 2026-09-06 and is theirs: it was inside the option they chose on 2026-09-07."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Section order: Appearance then Effects directly under Layers, as a one-time migration (version 4) gated on next-shape-parts, so Current keeps the order it has always had."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Tests: EffectsListTests (30) replaces AppearanceListTests; LayerPartsTests updated where a shadow was a part. Whole suite green, 4507 tests."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Verified on the probe with Scripts/playtest/appearance-effects-walk.json, status ok, from cleared defaults so the section-order migration was exercised from scratch. Screen Recording granted, so the audit carries four real screen captures."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Adversarial review of the built thing, on the real app: two shadows and a blur still overflow the Effects section and it scrolls; a shadow costs seven rows. Appearance is whole, which is the important half. In the audit's rough."
+    },
+    {
+      "t": "2026-09-07T20:08:17.054342Z",
+      "note": "Audit: queue/audits/2026-09-07-appearance-effects.json. Follow-up filed: an-effect-can-glow-not-only-darken."
+    },
+    {
+      "t": "2026-09-07T20:08:17.090Z",
+      "note": "Appearance is what a shape IS (opacity, fill, outline, corner radius where corners exist) and Effects is an empty list you add to (shadows, inner shadows, blur), both directly under Layers. LayerStyle.effects is one ordered list with blurRadius and shadows as views over it, so the renderer and every existing document are untouched. Settings sit behind an ownership rule and the shadow's own blur is now Softness. 4507 tests green; verified on the probe from cleared defaults with four real screen captures. A border with an offset is NOT built: nothing can paint outside a layer edge yet (filed separately). Audit: queue/audits/2026-09-07-appearance-effects.json"
     }
   ],
-  "started": "2026-09-07T15:03:16.237Z"
+  "started": "2026-09-07T19:38:45.678Z",
+  "completed": "2026-09-07T20:08:17.090Z"
 }
