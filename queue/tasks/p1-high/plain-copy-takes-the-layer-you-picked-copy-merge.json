@@ -1,0 +1,36 @@
+{
+  "id": "plain-copy-takes-the-layer-you-picked-copy-merge",
+  "title": "Plain copy takes the layer you picked, copy merged takes everything",
+  "goal": "Select a layer, draw a marquee, press copy, and you get the pixels of every layer flattened together rather than the pixels of the layer you had picked. That is the merged copy, and it should be the one that needs a modifier. Plain copy should take the picked layer inside the selection, and copy from all layers should be command shift C, which is where Photoshop puts copy merged.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T15:35:09.129Z",
+  "updated": "2026-09-07T15:35:09.165Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07. Confirmed by reading: EditorState.copySelectedLayer (Sources/Photonz/EditorState+Clipboard.swift line 23) begins by checking whether a pixel region is selected and, if so, calls copyRegionFromComposite and returns, with a comment stating the rule deliberately: a pixel region supersedes the layer, command C copies the region not the layer. The region is taken from the COMPOSITE, which is why every layer comes with it. Meanwhile command shift C is already taken by Copy Image (EditorCommands.swift line 130), which copies the whole flattened canvas; that is Photoshop's Copy Merged in spirit and its shortcut, so the two can converge rather than fight: make command shift C mean copy merged, of the selection when there is one and of the whole canvas when there is not, and let plain copy take the picked layer. Keep the existing behaviour where a copied measurement also travels as its spec line. Also worth checking while there: New Layer via Copy (line 304) and the cut path, since both share the same idea of what a selection means.",
+  "acceptance": [
+    "With a layer picked and a marquee drawn, plain copy puts that layer's pixels inside the selection on the clipboard and nothing from the layers around it",
+    "Command shift C copies every layer flattened together inside the selection, and says so in the menu",
+    "With no marquee drawn, plain copy still copies the picked layer as a whole, exactly as it does now",
+    "With nothing picked and a marquee drawn, the audit says what plain copy does and why that is the sensible answer",
+    "Both land as a picture other apps can paste, and Photonz's own paste puts them back where they belong",
+    "The menu names both plainly, so the difference is readable without trying it",
+    "Pasting into another app is checked by hand, not only inside Photonz",
+    "Audit written under queue/audits/ with a two layer document, a marquee, and both copies pasted back, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T15:35:09.130Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T15:35:09.165Z",
+      "note": "seq 190 -> 10"
+    }
+  ]
+}
