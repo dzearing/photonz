@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:33.437Z",
-  "updated": "2026-09-07T02:33:22.964276Z",
+  "updated": "2026-09-07T02:33:43.762Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rough line from queue/audits/2026-09-04-type-menu-labels.json: \"The Font menu still sizes itself to whatever family is picked, so a long family name makes it wider than the others.\" The other menus in that section were given captions in the same task, so this is the last row that does not match. Panel code: Sources/Photonz/LayersPanel.swift Text section.",
@@ -82,7 +82,12 @@
     {
       "t": "2026-09-07T02:33:22.964276Z",
       "note": "Shared file, not a Next fork: TextInspector lives in Sources/Photonz/LayersPanel.swift, which both releases use, so Next has this by construction and Current gets the same fix."
+    },
+    {
+      "t": "2026-09-07T02:33:43.761Z",
+      "note": "The Font menu is held to the width its curated list needs (120pt, measured from a real pop-up rather than guessed), so a family name the list picked up from an opened document is shortened with an ellipsis instead of stretching the box. Full names stay in the open menu and in the tip. Sources/Photonz/MenuMetrics.swift, TextStyles.fontOptions, MenuTip, wired in the Text section of LayersPanel.swift; 11 new core tests, 4213 green. Verified on the probe with Screen Recording granted: the Font box measures the same 120pt box with a long family and with SF Pro, and the Size and Weight boxes under it do not move a pixel. Audit: queue/audits/2026-09-07-font-menu-one-width.json"
     }
   ],
-  "started": "2026-09-07T02:09:22.631Z"
+  "started": "2026-09-07T02:09:22.631Z",
+  "completed": "2026-09-07T02:33:43.761Z"
 }
