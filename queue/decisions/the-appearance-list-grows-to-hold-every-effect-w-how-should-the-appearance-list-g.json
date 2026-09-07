@@ -1,0 +1,58 @@
+{
+  "id": "the-appearance-list-grows-to-hold-every-effect-w-how-should-the-appearance-list-g",
+  "taskId": "the-appearance-list-grows-to-hold-every-effect-w",
+  "question": "How should the Appearance list grow when a shape wants two shadows, a border on the inside, or a glow?",
+  "context": "Appearance holds three rows today, Fill, Outline and Shadow, one of each. The effects asked for next do not fit: an inner and an outer border, an inner and an outer shadow, a glow, a bevel. Each option below is drawn as the panel for the SAME rectangle, a red fill, a border sitting inside the edge, and two drop shadows, so the three can be compared on one shape. The strips are in the brief.",
+  "options": [
+    {
+      "id": "a",
+      "label": "One list you add to",
+      "summary": "Fill and Outline stay where they are. At the foot of Appearance there is a plus whose menu names what you can add: Shadow, Inner shadow, Glow, Bevel. Anything you added carries a cross to take it away and a grip to drag it up or down, and the row at the top is the one painted nearest you. A border gains a Position of Inside, Centre or Outside; a shadow gains a Kind of Drop or Inner. Settings stay on screen while an effect is on, exactly as they do today.",
+      "pros": [
+        "Nothing about a plain rectangle changes: the panel you use every day is the one you have now",
+        "Two shadows, and the second one is just another row with its own colour and its own numbers",
+        "A glow or a bevel arrives as one more line in the plus menu and teaches you nothing new",
+        "Keeps the answer you gave yesterday, that a switched on effect shows its settings without being asked"
+      ],
+      "cons": [
+        "A shape with two shadows is a very long panel: twelve slider rows, and you scroll the dock to reach the second one",
+        "Two ways to make an effect go away, the tick and the cross, sitting on the same row"
+      ],
+      "mitigation": "Only things you added can be removed, so a plain shape has just the tick and the cross never appears until you have asked for a second of something. If the length turns out to bite, an effect can learn to fold later without anything else changing."
+    },
+    {
+      "id": "b",
+      "label": "One list, and an effect you are not editing folds to a line",
+      "summary": "The same list, the same plus, the same cross and drag. The difference is density: an effect you are not currently editing shows its settings as a short summary on its own row, Drop 4 pt for one shadow and 4 pt Inside for the border, and clicking the row opens it. One effect is open at a time.",
+      "pros": [
+        "Two shadows cost two lines instead of twelve, so the whole appearance of a shape is readable at a glance",
+        "The summary tells you what an effect is set to without opening it",
+        "The panel stays about the height it is today no matter how many effects you pile on"
+      ],
+      "cons": [
+        "It brings back a fold, which you asked to remove on 2026-09-06",
+        "Changing one number on each of two shadows means two clicks you do not pay today"
+      ],
+      "mitigation": "Unlike the fold that was removed, this one shows the values on the closed row, so a folded effect still answers the question you would have opened it to ask."
+    },
+    {
+      "id": "c",
+      "label": "A fixed row for every effect",
+      "summary": "No plus, no cross, no dragging. Appearance holds a permanent row with a tick for every effect the app knows: Fill, Outline, Inner Border, Shadow, Inner Shadow, Outer Glow, Inner Glow, Bevel. You find an effect by reading the list. You can never have two of anything, so a shape that wants a tight contact shadow and a wide soft one cannot have both.",
+      "pros": [
+        "Everything the app can do is visible without opening a menu",
+        "One gesture only, the tick, so nothing can be accidentally removed",
+        "This is roughly the Photoshop layer effects list, which many people already know"
+      ],
+      "cons": [
+        "The common want, two shadows, is impossible",
+        "The list is long and mostly switched off, so eight rows greet you on a shape using two of them",
+        "Every new effect makes the panel taller for everybody, including people who will never use it"
+      ],
+      "mitigation": "Switched off rows can be pushed to the bottom so the ones in use stay at the top, but the list is still eight rows long on a shape using two."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-07T04:54:23.362Z"
+}

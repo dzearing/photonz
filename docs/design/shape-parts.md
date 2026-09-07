@@ -215,3 +215,138 @@ Two things did not go where the original report asked, and both are deliberate:
 - `Photonz/PartsInspector.swift` — the list, the rows and their settings.
 - The old `SelectionColorInspector` and `ShadowInspector` are still what Current
   draws, unchanged.
+
+## How the list grows
+
+Status: **proposed, decision open** (2026-09-07). Three parts fit in a fixed
+list. The ones people ask for next do not: an inner and an outer border, an
+inner and an outer shadow, a glow, a bevel. Adding six more fixed rows is how a
+panel turns into a wall. This section writes down how the list scales instead,
+so that the next effect costs one entry and no new idea.
+
+### The two ideas the whole thing turns on
+
+**One. Inner and outer are a SETTING, not a different effect.** A border that
+sits inside the edge and one that sits outside it are the same idea drawn in a
+different place, so they are one part with a Position, exactly as a stroke is in
+Figma and Sketch. A shadow thrown behind and one cast into the shape are one
+part with a Kind. Four names people ask for collapse to two rows and two
+popups, and the list stays short.
+
+**Two. Some effects are COUNTABLE.** A second shadow is the common want: one
+tight and dark for contact, one wide and soft for lift. A fixed row cannot hold
+two. So the list has to accept more than one of a kind, which turns a fixed set
+of rows into a list you add to and remove from. Once it is a list, the order is
+visible, and anything visible has to be editable, so rows drag the way layers
+do.
+
+A bevel or an inner glow then costs one new kind and no new interaction.
+
+### What a kind is
+
+Every entry in Appearance is one **kind**, and a kind is described by four
+things and nothing else:
+
+| | |
+| --- | --- |
+| **Name** | What the row is called, and the word the add menu offers |
+| **Count** | `one` — the layer has it or does not — or `many` |
+| **Colour** | The one colour it paints, or none |
+| **Settings** | The rows that appear under it while it is on |
+
+That is the extension point. A kind is added by writing those four things down;
+nothing about the panel, the switch, the add menu, the remove, the drag or the
+document format changes to accept it.
+
+### The kinds
+
+| Kind | Count | Colour | Settings |
+| --- | --- | --- | --- |
+| Fill | one | the fill colour | none (a gradient is a kind of colour, not a setting) |
+| Outline | one for now | the outline colour | Width · **Position** (Inside · Centre · Outside) |
+| Shadow | **many** | the shadow colour | **Kind** (Drop · Inner) · Blur · Size · Distance · Direction · Opacity |
+| *Glow (next)* | many | the glow colour | Kind (Outer · Inner) · Blur · Size · Opacity |
+| *Bevel (next)* | one | two colours, light and dark | Depth · Softness · Direction · Opacity |
+
+Fill and Outline are `one` because nobody has asked for two and the row is the
+same either way if they do: promoting a kind from `one` to `many` is a one word
+change, not a redesign. Shadow is `many` on day one because that is the ask.
+
+**A shadow's Kind and a border's Position are popups on the row, but the add
+menu still names them in full.** The menu offers *Shadow* and *Inner shadow* as
+two entries, because that is what a person is looking for and scanning a popup
+they have not opened yet is not looking. Picking either adds one Shadow row with
+its Kind already set. One row type, two doors into it.
+
+### What order means
+
+The list paints **bottom of the list first**, the same way the layer list does,
+so the entry at the top of Appearance is the one nearest the eye. Drag a row and
+the picture changes.
+
+Where it is visible:
+
+- Two drop shadows of different colours, where they overlap.
+- An inner shadow above or below the fill: below, the fill covers it.
+- An outline above or below an inner shadow, which decides whether the shadow
+  darkens the line.
+
+Where it is not: a single shadow and a single fill can only go one way round
+that makes sense, which is why order has been invisible until now and why it
+only becomes editable when a layer can hold two of something.
+
+Today's fixed order — shadow behind, fill, then outline over the top
+(`DocumentRenderer`) — is what a freshly converted layer gets, so a document
+opened tomorrow paints exactly as it painted yesterday.
+
+### Off is not remove
+
+A row carries both, and they mean different things:
+
+- **The tick** switches the effect off and keeps everything about it. This is
+  the one that is used constantly: compare with and without.
+- **The remove** takes the entry out of the list. Only entries of a `many` kind
+  have one, because taking away the Fill row would leave a shape with no way to
+  get its fill back except the add menu, and every rectangle would start life
+  needing one.
+
+Two ways to make something go away is the real hazard in this model. The answer
+is that only countable things can be removed, so on a plain rectangle there is
+exactly one gesture, the tick, and remove appears only once you have added a
+second of something.
+
+### What existing documents must keep drawing
+
+Two facts, read out of `DocumentRenderer` rather than assumed, and both bind the
+defaults:
+
+- **A picture, frame, label or group's ring is already an INSIDE border.**
+  `bordered(_:box:radius:style:)` insets the box by the full width and cuts the
+  middle out, so the ring sits wholly within the layer's edge.
+- **A shape's own stroke is already CENTRED.** `AnnotationRasterizer` sets a
+  line width and strokes the path, which CoreGraphics straddles.
+
+So Position cannot have one default across every layer. It defaults to **Inside**
+for a ring and **Centre** for a shape's stroke, which is the value each already
+has. Anything else repaints documents that exist, which the model forbids. A
+person who never opens the popup never sees the difference; a person who does is
+being told the truth about what their layer is doing.
+
+### More than one layer picked
+
+The list still speaks for the whole selection, and one rule extends it: **rows
+line up by position in the list, not by kind.** Two boxes that each have one
+shadow show one Shadow row whose settings read Mixed where they differ. A box
+with two shadows picked beside a box with one shows the first shadow as a normal
+row and the second saying it reaches one of the two layers, the same sentence
+Fill already says. Adding an effect adds it to every picked layer, so the lists
+stay the same length as each other from then on.
+
+### Where the code will be
+
+- `PhotonzCore/LayerParts.swift` — kinds, count, and the list itself.
+- `PhotonzCore/Layer.swift` — `LayerStyle.shadow` becomes a list. The single
+  optional stays readable so every document on disk opens unchanged.
+- `PhotonzRender/DocumentRenderer.swift` — walks the list instead of applying
+  one shadow, one border, in a fixed order.
+- `Photonz/PartsInspector.swift` — the add menu, the remove, the drag.

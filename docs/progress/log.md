@@ -10459,3 +10459,46 @@ Next: the queue. The audit asks two questions worth an answer — a default
 rectangle's outline and inside are the same red, so switching the outline off
 changes nothing you can see until one of them is repainted, and switching both
 off means the next shape you draw is invisible until something goes back on.
+
+## 2026-09-07 — How the Appearance list grows: model written, decision open
+
+Appearance holds three fixed rows today, Fill, Outline and Shadow, one of each.
+The effects asked for next do not fit in that: an inner and an outer border, an
+inner and an outer shadow, a glow, a bevel. This session settled the model on
+paper and put the shape of the list to the user rather than guessing at it.
+
+Written down in `docs/design/shape-parts.md`, new section "How the list grows":
+every entry in Appearance is a **kind**, and a kind is four things and nothing
+else — a name, a count (`one` or `many`), a colour, and its settings. Shadow is
+`many` on day one because a tight contact shadow plus a wide soft one is the
+common want; Fill and Outline are `one` for now, and promoting either is a
+one-word change. Inner and outer collapse into a **Position** on the outline and
+a **Kind** on the shadow. Order means paint order, top of the list nearest the
+eye, which is why rows have to drag once a layer can hold two of something.
+
+Two facts read out of the renderer rather than assumed, and both bind the
+defaults: a picture, frame, label or group's ring is ALREADY an inside border
+(`DocumentRenderer.bordered` insets the box by the full width and cuts the
+middle out), and a shape's own stroke is ALREADY centred on its path
+(`AnnotationRasterizer`). So Position cannot have one default across layer
+kinds. It starts at Inside for a ring and Centre for a stroke, or documents that
+exist repaint themselves.
+
+The adversarial pass found the collision worth the user's time: the "settings
+always show" answer from 2026-09-06 is right for one shadow and long for two.
+Measured on the strips, a rectangle with a fill, an inside border and two drop
+shadows is 500 pt of panel today, 890 pt with settings always showing, 560 pt
+with unedited effects folded to a summary line. That is a visible consequence,
+so it went on the card instead of being decided by a runner.
+
+Decision open: `the-appearance-list-grows-to-hold-every-effect-w-how-should-the-appearance-list-g`,
+three options drawn as full panel strips for the same rectangle, recommending A
+(one list you add to, settings always showing) because it keeps the everyday
+panel unchanged and keeps yesterday's answer. Strips come from a new mock
+script, `Scripts/make-appearance-list-mock.swift`. Suite green at 4253; no
+`Sources/` code changed this session.
+
+Next: build whichever model comes back. The build order is the shadow list in
+the document model, then the renderer walking it, then the plus, the remove and
+the drag in the panel. Drag is the first thing to cut if it runs long, since
+between two drop shadows the order only shows where they overlap.

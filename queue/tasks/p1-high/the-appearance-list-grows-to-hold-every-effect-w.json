@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T04:17:33.932Z",
-  "updated": "2026-09-07T04:17:33.969Z",
+  "updated": "2026-09-07T04:56:01.989Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-06: we are missing inner border, outer border, inner shadow, outer shadow, bevel, and they are unsure how to organise these without the UX getting weird. Today LayerPart (Sources/PhotonzCore/LayerParts.swift line 22) has exactly three cases, fill, outline and shadow, each a fixed row in the Appearance list. The two ideas that keep the list from sprawling are worth stating in the task because they are what the answer turns on. First, inner versus outer is a PROPERTY of an effect rather than a different effect, which collapses four requested names into two parts with one extra setting each; that is how Figma and Sketch handle stroke position, and it means the list stays short. Second, some effects are countable, a second shadow being the common want, so the list has to accept more than one of a kind, which turns a fixed set of rows into an addable list with a plus and a remove. Once it is an addable list, order becomes visible and therefore has to be editable, so rows drag like layers. A bevel or an inner glow then costs one new kind and no new interaction. Read the current model first (LayerParts.swift and Sources/Photonz/PartsInspector.swift) and fold in the pending task switching-a-part-on-shows-its-settings-straight, which changes how a row reveals its settings, so the two do not fight.",
@@ -32,6 +32,51 @@
     {
       "t": "2026-09-07T04:17:33.968Z",
       "note": "seq 180 -> 5"
+    },
+    {
+      "t": "2026-09-07T04:47:54.248Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Read the model as built: LayerPart has three cases; LayerStyle carries one optional ShadowStyle; DocumentRenderer paints shadow, fill, border in a fixed order."
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Adversarial review, before building. 1) A picture/frame/label ring is ALREADY an inside border (DocumentRenderer.bordered insets the box by the full width and cuts the middle out) and a shape stroke is ALREADY centred (AnnotationRasterizer strokes the path). So a Position setting cannot have one default across layer kinds without repainting existing documents: it must default to Inside for a ring and Centre for a shape."
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Adversarial review 2) Collapsing inner and outer into a popup makes the add menu useless and hurts discovery: a person hunting for an inner shadow scans for those two words. Resolution kept in the model: the add menu names Shadow and Inner shadow separately, and both add ONE Shadow row with its Kind preset. One row type, two doors in."
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Adversarial review 3) Off and remove are two ways to make a thing go away, which is the real hazard. Resolution: only countable kinds carry a remove, so a plain rectangle has exactly one gesture and remove only appears once you have added a second of something."
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Adversarial review 4) The biggest collision is with what shipped yesterday: settings always showing. With one shadow that is right; with two it is twelve slider rows. Measured on the mock strips: today 503 pt, option A 889 pt, option B 561 pt. That is a UX judgement with a visible consequence, so it is in the decision rather than decided here."
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Adversarial review 5) Reorder by drag is the most expensive piece and the least visible: between two drop shadows the difference only shows where they overlap. It is kept because it becomes real the moment an inner shadow can sit above or below the fill, but it is called out as the first thing to cut if the build runs long."
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Adversarial review 6) Multi-selection needs a rule the fixed list never needed. Written into the doc: rows line up by position in the list, not by kind, and a row that reaches fewer layers says so with the sentence Fill already uses."
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Model written down: docs/design/shape-parts.md, new section How the list grows. Kinds table (name, count, colour, settings), what order means, off vs remove, the two render facts that bind the defaults, and how a new kind arrives."
+    },
+    {
+      "t": "2026-09-07T04:54:00.482Z",
+      "note": "Mock strips rendered: Scripts/make-appearance-list-mock.swift draws the same rectangle (fill, inside border, two drop shadows) under today and three models."
+    },
+    {
+      "t": "2026-09-07T04:56:01.988Z",
+      "note": "Waiting on the decision card: how should the Appearance list grow when a shape wants two shadows, a border on the inside, or a glow? The model is written down in docs/design/shape-parts.md (How the list grows) and three panel strips for the same rectangle are in the brief. Recommended A, one list you add to."
     }
-  ]
+  ],
+  "started": "2026-09-07T04:47:54.247Z"
 }
