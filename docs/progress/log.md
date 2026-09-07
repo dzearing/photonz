@@ -11250,3 +11250,25 @@ grid gave up. Audit: `queue/audits/2026-09-07-grid-chip.json`.
 Next: the audit asks whether two presses to turn the grid on is the right price
 for one door. Filed on the way past: below 620pt of canvas there is no chip at
 all, so View ▸ Grid Settings has nothing to open on.
+
+## 2026-09-07 — the panel's drop mark
+
+- Fixed the red dashed outline that appeared around the whole right hand panel
+  for drags that had nothing to do with files, and then never cleared. Two
+  rules: the panel only answers for a drag carrying a file, a picture or a
+  Photonz document (`FileDrop.isAboutAFile`), and the mark carries its own
+  deadline (`PanelDropMarking` in PhotonzCore, 12 tests) so it clears once
+  nothing is in the air, whatever ended the drag.
+- The route in was the layer row's drop target: it takes plain text so a row
+  being reordered can reach it, and every other thing the app carries travels
+  the same way, so a colour off a swatch marked the whole panel refused.
+- Also: the row delegate now branches on what is in the air rather than on
+  whether a row was picked up, so a row stranded by a drag that never ended can
+  no longer make the next file look like that row coming back.
+- New playtest instruments: a `dragOver` step (carry one of the app's own
+  things over any point and read what the panel says) and a `leave` flag that
+  abandons a drag without telling anything it ended. Regression walk:
+  `Scripts/playtest/panel-mark-walk.json`.
+- Audit: `queue/audits/2026-09-07-panel-mark.json`.
+- Next: the follow-up `a-layer-row-let-go-where-it-cannot-land-is-still` — a row
+  picked up and abandoned is still in the list's hand.

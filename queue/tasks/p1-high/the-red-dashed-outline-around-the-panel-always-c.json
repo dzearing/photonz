@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:39:15.756Z",
-  "updated": "2026-09-07T16:34:42.659Z",
+  "updated": "2026-09-07T16:55:32.388Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user pushed back on 2026-09-07: they never dragged a file, they were dragging elements inside the app, so a file drop marking should not have been involved. They are right, and this is the actual cause rather than the stuck state alone. PanelFileDrop.offerFile (Sources/Photonz/LayersPanel.swift line 1153) arms .refuses for ANY drag whose payload is not a usable file, and FileDrop.carriesUsableFile (FileDrop.swift line 28) is true only for an image or a Photonz document. So dragging a layer row, a library tile or anything else the app moves around arms the refusal, because it is not a file. The layer row target accepts text on top of the file types (line 2154), which is how a row drag travels, but the panel level target does not, so the panel sees an unrecognised drag and says no. Fix both halves: the marking must only speak about drags it is actually there to answer, and it must still have a way out that does not depend on the drag reporting its own end, since an unpredicted path stranded it once already. Reported again by the user on 2026-09-07, after dragging-a-panel-section-lifts-the-whole-section shipped and removed the reorder gesture as a cause. So this is a second route to the same stuck state and the earlier fix did not cover it; their layers are named Copied Selection, so they were copying and pasting rather than reordering. What the marking is: PanelDropAffordance .refuses, driven by panelDropOffer, armed through offerPanelDrop and cleared only through endPanelDrop (Sources/Photonz/EditorState+LayersPanel.swift lines 168 and 175). Both drop delegates clear it only from dropExited and performDrop (LayersPanel.swift lines 1145, 1149, 1219, 1223). A drag that is armed and then ends without either of those firing leaves the offer set with nothing to clear it, which is exactly the reported behaviour. The clearing is also guarded on the owner matching, so an owner that changes mid drag would strand the offer too. Rather than only adding another call site, give the state a way out that does not depend on the drag reporting its own end, for example clearing it whenever no drag is in flight, so an unpredicted path cannot strand it again.",
@@ -75,7 +75,12 @@
     {
       "t": "2026-09-07T16:55:11.582843Z",
       "note": "Adversarial review of the built thing. It reads right in use: picking a colour up no longer flashes a red border at you, and the refusal is now only ever about a file. The one thing left rough is the last-resort second: a mark stranded by something nobody predicted hangs for up to a second rather than going instantly. That is the price of not trusting the drag to report itself, and a second is short enough that it never reads as stuck. Recorded in the audit for the user to disagree with."
+    },
+    {
+      "t": "2026-09-07T16:55:32.388Z",
+      "note": "The panel only marks a drag it is there to answer (a file, a picture, a Photonz document) and never anything the app is carrying itself, and the mark now clears itself within a second when nothing is in the air, whatever ended the drag. New PanelDropMarking in PhotonzCore with 12 tests written first; FileDrop.isAboutAFile guards all three panel drop targets. Verified on the probe with Scripts/playtest/panel-mark-walk.json (real screen captures): colour over a row and row over a row say nothing, an unusable file still refuses and clears, a picture still shows the accepting edge and drop line, and a drag abandoned in the air unmarks itself. Audit: queue/audits/2026-09-07-panel-mark.json. Follow-up filed: a-layer-row-let-go-where-it-cannot-land-is-still."
     }
   ],
-  "started": "2026-09-07T16:34:42.658Z"
+  "started": "2026-09-07T16:34:42.658Z",
+  "completed": "2026-09-07T16:55:32.388Z"
 }
