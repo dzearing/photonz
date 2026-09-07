@@ -3,13 +3,13 @@
   "title": "The zoom group matches the other tool bar groups, and double clicking the number goes to full size",
   "goal": "The zoom group sits at a different height from the tool groups beside it, so the row along the bottom of the canvas does not line up. Give it the same height. And double clicking the zoom percentage should take the picture to full size, which is what a person reaches for when they want to get back to a hundred percent.",
   "epic": "ui-building",
-  "priority": "p2-normal",
-  "seq": 8,
+  "priority": "p1-high",
+  "seq": 12,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:22:35.108Z",
-  "updated": "2026-09-07T15:22:35.147Z",
+  "updated": "2026-09-07T16:17:50.401Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07. The heights are hand written per group and they differ: the zoom bar uses vertical padding of 10 with horizontal 14 (EditorView.swift lines 1459 and following, around line 1496), the tool bar uses vertical 10 with horizontal 18 (line 737), and several other groups use vertical 8 (lines 437, 494, 564). So the row cannot line up, and the fix is to put the value in EditorChromeLayout beside the other chrome numbers and have every group read it, rather than correcting the zoom bar alone. Note the content inside a group can also set the height: the zoom bar holds a Slider and a Menu whose intrinsic heights may exceed the padding, so check the measured height rather than assuming the padding decides it. For the double click: the zoom readout is the label of a Menu (line 1475 onwards), and a Menu swallows clicks, so a double click gesture on the label alone will not arrive; the runner needs to handle that deliberately, for example a separate hit area or a gesture that recognises before the menu, and must keep the single click opening the menu.",
@@ -29,6 +29,14 @@
     {
       "t": "2026-09-07T15:22:35.146Z",
       "note": "seq 1680 -> 8"
+    },
+    {
+      "t": "2026-09-07T16:17:50.361Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-07T16:17:50.401Z",
+      "note": "seq 8 -> 12"
     }
   ]
 }

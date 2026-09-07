@@ -3,13 +3,13 @@
   "title": "Everything on the panel's right edge sits on one line",
   "goal": "The icons down the right side of the panel do not share a centre. The eye icons on the layer rows sit on one line, and the panel collapse button and the section grip each sit somewhere else, so the edge of the panel looks ragged. Put them all on the same vertical centre line, the one the eyes already make.",
   "epic": "ui-building",
-  "priority": "p2-normal",
-  "seq": 14,
+  "priority": "p1-high",
+  "seq": 16,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:40:09.390Z",
-  "updated": "2026-09-07T15:40:09.430Z",
+  "updated": "2026-09-07T16:17:50.692Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 with a screenshot showing a line drawn through the eye icons and the collapse button and grip missing it. The cause is that the trailing space is written separately in several places rather than shared: layer rows use a horizontal padding of 6 (LayersPanel.swift line 2251), the canvas row uses 6 (line 1921), other rows use 3, 5, 8 and 14 at lines 2035, 2209, 1872 and 2516, one row adds a trailing 6 of its own at line 2372, and the collapse button is inset by EditorChromeLayout.cornerInset of 12 (EditorChromeLayout.swift line 126). Different numbers plus different icon sizes give different centres. Put the trailing inset in EditorChromeLayout beside the other chrome numbers and have every row and control on that edge read it. Note the icons differ in size, the eye is 11 point while the collapse button is a 30 point control, so aligning their BOXES is not the same as aligning what is drawn; align the drawn centres, which is what the user's line goes through. Coordinate with the-panel-toggle-sits-in-the-window-title-bar-wh, which moves the collapse button into the title bar entirely; if that lands first this task covers whatever remains on the edge.",
@@ -29,6 +29,14 @@
     {
       "t": "2026-09-07T15:40:09.429Z",
       "note": "seq 1680 -> 14"
+    },
+    {
+      "t": "2026-09-07T16:17:50.657Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-07T16:17:50.692Z",
+      "note": "seq 14 -> 16"
     }
   ]
 }

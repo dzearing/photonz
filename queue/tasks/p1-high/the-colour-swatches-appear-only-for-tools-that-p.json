@@ -3,13 +3,13 @@
   "title": "The colour swatches appear only for tools that paint",
   "goal": "The colour swatches sit on the tool bar whatever tool is in hand, including Select, where they set a colour nothing is about to use. A control that cannot act on anything is noise. Colour should be there for the tools that paint and gone for the ones that do not, so the bar always shows what applies right now.",
   "epic": "ui-building",
-  "priority": "p2-normal",
-  "seq": 9,
+  "priority": "p1-high",
+  "seq": 13,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:23:56.174Z",
-  "updated": "2026-09-07T15:23:56.211Z",
+  "updated": "2026-09-07T16:17:50.472Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07: the colour swatches are not applicable when selecting things. Confirmed by reading: EditorView.colorBar (line 1163) always draws something. It picks the fill and border pair for a shape tool, the style button for other annotation tools and text, and otherwise falls through to fillColorPair (line 1389), the foreground and background pair, which is what shows under Select. The rule to write is which tools paint: shapes, arrow, line, highlight, text and the fill bucket, plus anything added later that creates or paints. Put that on Tool in PhotonzCore beside the existing helpers like createsAnnotationByDrag rather than as a list in the view, so a new tool cannot forget to answer. Note the foreground and background pair is also what the fill bucket and the delete-key fills use, so check what those need when no painting tool is in hand before deciding they can disappear entirely; if they must stay reachable, say where they went. Same measurement point as the grid group task: the tool bar reserves room from a measured content width, so a group that draws nothing has to measure nothing or the gap remains.",
@@ -30,6 +30,14 @@
     {
       "t": "2026-09-07T15:23:56.211Z",
       "note": "seq 1680 -> 9"
+    },
+    {
+      "t": "2026-09-07T16:17:50.435Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-07T16:17:50.471Z",
+      "note": "seq 9 -> 13"
     }
   ]
 }

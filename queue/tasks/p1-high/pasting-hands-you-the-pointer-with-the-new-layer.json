@@ -3,13 +3,13 @@
   "title": "Pasting hands you the pointer with the new layer picked",
   "goal": "Paste something and you are left holding whatever tool you had, with the marquee still live, so the obvious next move, dragging the thing you just pasted, does not work until you switch tools yourself. A paste should leave you with the pointer in hand and the pasted layer picked, ready to move.",
   "epic": "ui-building",
-  "priority": "p2-normal",
-  "seq": 13,
+  "priority": "p1-high",
+  "seq": 15,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:37:34.044Z",
-  "updated": "2026-09-07T15:37:34.083Z",
+  "updated": "2026-09-07T16:17:50.621Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07. Confirmed by reading Sources/Photonz/EditorState+Clipboard.swift: nothing in the paste path calls setTool, so the tool in hand survives the paste. The rule already exists elsewhere and can be copied rather than invented: beginGridAdjustment (EditorState.swift line 309) does exactly this, switching to select when it needs the pointer, and the crop paths do the same at EditorState+Crop.swift lines 57 and 63. Check what the paste already does about picking the layer, since recordPaste (line 165) tracks the ladder of pasted frames for stacking but the picking may be happening elsewhere or not at all. The undo point is worth care: the tool is not part of the document, so restoring it on undo needs deciding rather than assuming, and the audit should say what was chosen.",
@@ -29,6 +29,14 @@
     {
       "t": "2026-09-07T15:37:34.082Z",
       "note": "seq 1680 -> 13"
+    },
+    {
+      "t": "2026-09-07T16:17:50.581Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-07T16:17:50.620Z",
+      "note": "seq 13 -> 15"
     }
   ]
 }
