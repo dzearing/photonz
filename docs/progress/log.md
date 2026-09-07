@@ -11543,3 +11543,22 @@ Filed rather than fixed: `/api/state` is three megabytes every four seconds,
 timing-flaky on an unchanged tree.
 
 Next: the queue's own order decides.
+
+## 2026-09-07 — Add menu rows say what they give you
+
+Reproduced the duplicate rows on the probe first: the whole-path walk's Add menu
+step opened with `Text “Save”` twice, once under Wording and once under Show or
+hide. Fixed by giving every row one grammar, the one the colour and number rows
+already used: the part, then what a copy would get to change about it. The whole
+menu is now built by `ComponentAddMenu` in `PhotonzCore`, so "no two rows read
+the same" is testable where the list exists; `ComponentPanel` only lays it out.
+Two unnamed text layers are now tellable apart in every section, not just under
+Wording. `Scripts/test.sh` green (4515). Audit:
+`queue/audits/2026-09-07-add-menu-rows.json`.
+
+Open: the whole-path walk still stops three steps from its end, at Apply to
+Other Versions, which answers with the Shadow row's name in front of it. Older
+than this change and reproduced before it; filed as
+`the-whole-component-walk-stops-at-the-apply-butt`.
+
+Next: that walk failure, then whatever the queue has at the top of ui-components.

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1640,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T13:59:43.096Z",
-  "updated": "2026-09-07T20:16:52.168Z",
+  "updated": "2026-09-07T20:30:11.220Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-07 whole-path sitting (queue/audits/2026-09-07-component-whole-path.json, shot 2026-09-07-path-3-add-menu.png). The menu is built in ComponentPanel.swift and groups rows under Wording / Show or hide / Color / Number. A text layer appears under both Wording and Show or hide with the identical title Text “Save”. Simplest fix is to have the Show or hide section name the thing rather than quote its words, or to suffix the row with what it makes adjustable.",
@@ -34,7 +34,12 @@
     {
       "t": "2026-09-07T20:41:00.000Z",
       "note": "Adversarial review of the fix before building it. Rejected: grouping the menu by layer instead of by kind (that is the mock's 24-row menu the current design already rejected, and it would put a row reading Show or hide under every layer, which is the same collision moved). Rejected: naming the Show or hide row after the layer only (Text), because two unnamed text layers then collide with each other. Rejected: dropping the section headings, because the last audit asks the user whether grouping by kind reads well and they have not answered yet. Chosen: every row reads part · what copies may change, the grammar the Color and Number rows already use (Rectangle · Fill), so a row says what it gives you even read on its own."
+    },
+    {
+      "t": "2026-09-07T20:30:11.219Z",
+      "note": "Every Add menu row now reads part · what changes (Text “Save” · Wording, Text “Save” · Show or hide, Rectangle · Fill). Menu built in ComponentAddMenu (Sources/PhotonzCore/ComponentProperties.swift), panel just lays it out. Verified on the probe: the whole-path walk opens the Add menu with 13 rows, all different, and picks the Wording row by its new name. Scripts/test.sh green, 4515 tests. Audit: queue/audits/2026-09-07-add-menu-rows.json. Commit dc2464c7, pushed. Two things left alone and recorded: Text “Save” · Text is still odd but the app calls a text layer's colour Text everywhere, and the walk's own older failure three steps from the end is filed as the-whole-component-walk-stops-at-the-apply-butt."
     }
   ],
-  "started": "2026-09-07T20:16:52.167Z"
+  "started": "2026-09-07T20:16:52.167Z",
+  "completed": "2026-09-07T20:30:11.220Z"
 }
