@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 16,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:40:09.390Z",
-  "updated": "2026-09-07T16:17:50.692Z",
+  "updated": "2026-09-07T18:51:08.725Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reported by the user on 2026-09-07 with a screenshot showing a line drawn through the eye icons and the collapse button and grip missing it. The cause is that the trailing space is written separately in several places rather than shared: layer rows use a horizontal padding of 6 (LayersPanel.swift line 2251), the canvas row uses 6 (line 1921), other rows use 3, 5, 8 and 14 at lines 2035, 2209, 1872 and 2516, one row adds a trailing 6 of its own at line 2372, and the collapse button is inset by EditorChromeLayout.cornerInset of 12 (EditorChromeLayout.swift line 126). Different numbers plus different icon sizes give different centres. Put the trailing inset in EditorChromeLayout beside the other chrome numbers and have every row and control on that edge read it. Note the icons differ in size, the eye is 11 point while the collapse button is a 30 point control, so aligning their BOXES is not the same as aligning what is drawn; align the drawn centres, which is what the user's line goes through. Coordinate with the-panel-toggle-sits-in-the-window-title-bar-wh, which moves the collapse button into the title bar entirely; if that lands first this task covers whatever remains on the edge.",
+  "notes": "Reported by the user on 2026-09-07 with a screenshot showing a line drawn through the eye icons and the collapse button and grip missing it. The cause is that the trailing space is written separately in several places rather than shared: layer rows use a horizontal padding of 6 (LayersPanel.swift line 2251), the canvas row uses 6 (line 1921), other rows use 3, 5, 8 and 14 at lines 2035, 2209, 1872 and 2516, one row adds a trailing 6 of its own at line 2372, and the collapse button is inset by EditorChromeLayout.cornerInset of 12 (EditorChromeLayout.swift line 126). Different numbers plus different icon sizes give different centres. Put the trailing inset in EditorChromeLayout beside the other chrome numbers and have every row and control on that edge read it. Note the icons differ in size, the eye is 11 point while the collapse button is a 30 point control, so aligning their BOXES is not the same as aligning what is drawn; align the drawn centres, which is what the user's line goes through. Coordinate with the-panel-toggle-sits-in-the-window-title-bar-wh, which moves the collapse button into the title bar entirely; if that lands first this task covers whatever remains on the edge.\n\nDONE 2026-09-07. The numbers live in EditorChromeLayout (panelEdgeInset 14, panelEdgeIconWidth 17, panelEdgeCenterInset 22.5, panelListGutter 8, panelEdgeInset(insideGutter:)) with tests in Tests/PhotonzCoreTests/EditorChromeLayoutTests.swift (suite PanelEdgeColumnTests). Sources/Photonz/PanelEdge.swift holds the three modifiers every edge control wears: panelEdgeIcon (slot + probe), panelEdgePadding (straight onto the panel), panelEdgeRowPadding (inside a list gutter). Add an icon to that edge with panelEdgeIcon and it lands on the line by construction. Measuring: Scripts/playtest/panel-edge-column-walk.json + panel-edge-narrow-walk.json drive the new panelEdge step, which writes panel-edge-<stage>.json with every icon's centre as points in from the panel's right edge. The probe (Sources/Photonz/Playtest/PanelEdgeProbe.swift) is keyed by VIEW, not by name: keying by name silently lost every row SwiftUI rebuilds, because the replacement's appear ran before the original's disappear.",
   "acceptance": [
     "The panel collapse button, every section grip, and the eye icons on every row share one vertical centre line, measured in a render rather than judged by eye, with the numbers in the audit",
     "The lock icons and anything else on that edge share it too, so the whole right side reads as one column",
@@ -37,6 +37,23 @@
     {
       "t": "2026-09-07T16:17:50.692Z",
       "note": "seq 14 -> 16"
+    },
+    {
+      "t": "2026-09-07T18:51:08.725Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T18:55:53.000Z",
+      "note": "Adversarial review before building. (1) The collapse button has already left the panel: the-panel-toggle-sits-in-the-window-title-bar-wh landed on 2026-09-06 and put it in the window title bar, so this task is only about what is still on the panel edge. (2) Measured the actual glyph boxes at 11pt type rather than trusting the paddings: eye 17pt wide, eye.slash 17, lock.fill 11, lock.open 15, line.3.horizontal 14. So the real raggedness is worse than the paddings suggest. From the panel's inner right edge: the eye's drawn centre is 22.5, the section grip's is 19 (3.5 off, and that is the line the user drew), the Appearance remove cross is 22, and the LOCK moves 2pt sideways depending on whether the layer is locked, because lock.fill and lock.open are different widths. (3) Aligning boxes is not enough for exactly that reason: every icon on the edge has to be drawn in ONE fixed slot so the ink centres agree whatever glyph is in it. (4) Cut from scope: forcing trailing TEXT readouts (the canvas size, the selection counts) into the icon column. They are right-aligned to the same edge inset and no line goes through them. (5) Shortest version that delivers it: one inset plus one slot width in EditorChromeLayout, a modifier every edge icon wears, and the numbers read back off the running app rather than judged by eye."
+    },
+    {
+      "t": "2026-09-07T19:18:45.000Z",
+      "note": "Built and measured. One inset (14) and one icon slot (17, the eye's own width) now live in EditorChromeLayout with tests; every icon on that edge wears panelEdgeIcon, which draws it in the slot and registers it with a new panelEdge playtest step. Read off the running app before: grips 19pt in, eyes 22.5, padlocks 44.25 shut / 46.25 open, spread 3.5. After: every edge icon 22.5, spread 0, padlock column a steady 47.5, and the effect row's cross joins at 22.5 with its grip at 47.5. Held at a 400pt panel in an 860pt window. A pixel comparison of the same walk before and after finds changes only between x 1227 and 1266 of a 1280pt window, so nothing on the left of any row moved. 4494 tests green."
+    },
+    {
+      "t": "2026-09-07T19:18:45.000Z",
+      "note": "Adversarial review of the built thing. The lock's slot grew from its own glyph width to the shared 17, which costs a long layer name about 6pt on a narrow panel; it truncates as before and the steadiness is worth it. The 35 places in the panel that wrote a bare 14 for their content margin now read EditorChromeLayout.panelEdgeInset, proved a no-op by a pixel comparison that found no differing pixels at all. Two things I could not finish: a scripted walk cannot place a measurement at all, so the Measurements list eye was verified by code identity rather than photographed (filed as a-scripted-walk-can-place-a-measurement), and the panel toggle in the window title bar sits 22pt in from the WINDOW edge against this column's 22.5 from the panel's, which is a system-placed toolbar item and is raised in the audit rather than chased."
     }
-  ]
+  ],
+  "started": "2026-09-07T18:51:08.725Z"
 }

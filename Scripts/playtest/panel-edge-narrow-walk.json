@@ -1,0 +1,16 @@
+{
+  "out": "/tmp/photonz-playtest/panel-edge-narrow",
+  "seed": "The same column, on a small window with the panel dragged wider. Every number on that edge is measured from the panel's own right edge, so nothing here should move: if a resize could shift the line, this is where it would show.",
+  "setup": { "forget": ["tools", "grid"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 600, "canvasHeight": 400, "width": 860, "height": 700 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [140, 120], "to": [380, 300] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "v" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelEdge", "stage": "1-narrow-window-wide-panel" },
+    { "do": "snapshot", "name": "1-narrow-window-wide-panel" }
+  ]
+}

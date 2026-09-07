@@ -1069,6 +1069,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// "they line up" is a claim about numbers. This is how a walk proves it
     /// rather than photographing it and hoping.
     case toolBar(stage: String)
+    /// Write the measured frame of every icon parked on the inspector panel's
+    /// trailing edge to the log and to `panel-edge-<stage>.json`: each one's
+    /// centre line, given as a distance in from the panel's own right edge.
+    ///
+    /// The eyes, the locks and the section grips are drawn by three different
+    /// views that each used to carry their own trailing space, so "they sit on
+    /// one line" is a claim about numbers. This is how a walk proves it rather
+    /// than photographing it and hoping.
+    case panelEdge(stage: String)
     /// Put the probe into light or dark for the shots that follow, so one walk
     /// can photograph a surface both ways. It changes THIS app only, never the
     /// machine's setting, so nothing outside the probe notices.
@@ -1087,8 +1096,8 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "expect", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
-        "panel", "panelMenu", "pinch", "press",
-        "readClipboard", "render", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "type", "wait", "waitFor",
+        "panel", "panelEdge", "panelMenu", "pinch", "press",
+        "readClipboard", "render", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -1136,6 +1145,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .readClipboard: "readClipboard"
         case .menus: "menus"
         case .toolBar: "toolBar"
+        case .panelEdge: "panelEdge"
         case .action: "action"
         }
     }
@@ -1351,6 +1361,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"))
         case "toolBar":
             self = .toolBar(stage: try f.string("stage"))
+        case "panelEdge":
+            self = .panelEdge(stage: try f.string("stage"))
         case "appearance":
             self = .appearance(try f.enumValue("value", PlaytestAppearance.self))
         case "action":

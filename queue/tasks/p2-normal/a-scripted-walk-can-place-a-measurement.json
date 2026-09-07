@@ -1,0 +1,27 @@
+{
+  "id": "a-scripted-walk-can-place-a-measurement",
+  "title": "A scripted walk can place a measurement",
+  "goal": "A walk that drives the app for us cannot make a measurement: it picks up the ruler, clicks the two points a person would click, and nothing appears on the picture. That means the measurements list, which is one of the two lists in the right hand panel, can never be photographed or checked by the loop.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1780,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T19:18:28.635Z",
+  "updated": "2026-09-07T19:18:28.635Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-07 while measuring the panel edge column. Tried, in the probe build: tool measure + waitFor edgeMap + measureMode distance + two click steps (with and without move steps in between), and a drag step with 12 steps, on a 900x600 blank canvas with two rectangles. In every case the log state came back measures=[] and no Measurements section arrived in the dock. Scripts/playtest/caliper-catches-a-drawn-edge-walk.json uses three click steps over an opened screenshot and appears to work, so the difference may be the blank canvas, the edge map, or a change to how the caliper takes clicks. Start by re-running that walk and seeing whether it still makes a caliper.",
+  "acceptance": [
+    "A walk that picks the Measure tool and clicks two points on a blank canvas leaves one measurement on the picture and one row in the Measurements list",
+    "The same walk works on an opened screenshot, not only a blank canvas",
+    "Whatever the fix is, one walk under Scripts/playtest proves it and its log names the measurement it made"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T19:18:28.635Z",
+      "note": "created (manual)"
+    }
+  ]
+}

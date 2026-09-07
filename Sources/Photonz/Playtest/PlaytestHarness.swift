@@ -881,6 +881,11 @@ private final class Run {
             write(json: row, to: "toolbar-\(stage).json")
             note(number, step.name, Self.outlineToolBar(row), state: row)
 
+        case .panelEdge(let stage):
+            let edge = Self.readPanelEdge()
+            write(json: edge, to: "panel-edge-\(stage).json")
+            note(number, step.name, Self.outlinePanelEdge(edge), state: edge)
+
         case .describe(let stage, let text):
             note(number, stage, text ?? "", state: describe())
 
@@ -1855,6 +1860,52 @@ private final class Run {
                 "zoomMenuRows": zoom.menuRows,
                 "zoomClicks": zoom.clicks,
                 "zoomWaitsEnded": zoom.waitsEnded]
+    }
+
+    /// Every icon parked on the panel's trailing edge, with the numbers that
+    /// decide whether they sit on one line. `inset` is what a person could
+    /// measure with a ruler: how far the icon's centre is in from the panel's
+    /// own right edge.
+    private static func readPanelEdge() -> [String: Any] {
+        let probe = PanelEdgeProbe.shared
+        let right = probe.panel.maxX
+        let icons = probe.measured.map { control -> [String: Any] in
+            ["kind": control.kind, "owner": control.owner,
+             "width": round2(control.frame.width),
+             "centerX": round2(control.frame.midX),
+             "centerY": round2(control.frame.midY),
+             "inset": round2(right - control.frame.midX)]
+        }
+        // The column a person sees is the LAST icon on each row: the one
+        // against the edge. Everything before it (the lock, a count) makes its
+        // own column further in, and the two must not be averaged together.
+        let byRow = Dictionary(grouping: probe.measured, by: { Int($0.frame.midY.rounded()) })
+        let edgeMost = byRow.values.compactMap { $0.max(by: { $0.frame.midX < $1.frame.midX }) }
+        let insets = Set(edgeMost.map { round2(right - $0.frame.midX) })
+        return ["panelRight": round2(right), "panelWidth": round2(probe.panel.width),
+                "icons": icons,
+                "edgeInsets": insets.sorted(),
+                "spread": round2((insets.max() ?? 0) - (insets.min() ?? 0)),
+                "onOneLine": insets.count <= 1]
+    }
+
+    /// Halves and quarters matter here — a glyph one point wider moves its own
+    /// centre by half a point — so these numbers keep two decimals.
+    private static func round2(_ value: CGFloat) -> Double {
+        (Double(value) * 100).rounded() / 100
+    }
+
+    private static func outlinePanelEdge(_ edge: [String: Any]) -> String {
+        let icons = edge["icons"] as? [[String: Any]] ?? []
+        guard !icons.isEmpty else { return "nothing is parked on the panel's edge" }
+        let line = icons.map { icon -> String in
+            "\(icon["owner"] ?? "?") \(icon["kind"] ?? "?") centre \(icon["inset"] ?? "?")pt in"
+        }.joined(separator: "; ")
+        let verdict = (edge["onOneLine"] as? Bool ?? false)
+            ? "every icon against the edge is on one line"
+            : "they DO NOT share a line: centres \(edge["edgeInsets"] ?? []) in from the edge, "
+              + "a spread of \(edge["spread"] ?? 0)pt"
+        return line + " — " + verdict
     }
 
     private static func outlineToolBar(_ row: [String: Any]) -> String {

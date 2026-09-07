@@ -43,7 +43,7 @@ struct PartsInspector: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
     }
 
@@ -211,7 +211,8 @@ private struct PartRowView: View {
         Image(systemName: "line.3.horizontal")
             .font(.system(size: 10))
             .foregroundStyle(carry == 0 ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.primary))
-            .frame(width: 16, height: ColorPartLayout.rowHeight)
+            .frame(height: ColorPartLayout.rowHeight)
+            .panelEdgeIcon("reorder", of: row.title)
             .contentShape(Rectangle())
             .help("Drag to change what paints over what")
             .gesture(
@@ -238,7 +239,8 @@ private struct PartRowView: View {
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 9, weight: .semibold))
-                .frame(width: 16, height: ColorPartLayout.rowHeight)
+                .frame(height: ColorPartLayout.rowHeight)
+                .panelEdgeIcon("remove", of: row.title)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

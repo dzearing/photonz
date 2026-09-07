@@ -538,3 +538,63 @@ struct GridToolBarCapsuleTests {
         }
     }
 }
+
+/// The column down the right of the inspector panel: the eyes on the layer
+/// rows, the locks beside them, the grip on every section header.
+///
+/// Reported by the user on 2026-09-07 with a line drawn through the eyes that
+/// the grips missed. Measured off the running app before the fix: the eyes'
+/// centres were 22.5pt in from the panel's edge, the grips' 19pt, and the lock
+/// moved between 44.25 and 46.25 depending on whether the layer was locked,
+/// because the closed padlock is a narrower drawing than the open one.
+@Suite struct PanelEdgeColumnTests {
+
+    /// The centre line every icon on that edge is drawn to. It is the line the
+    /// eyes already made, so nothing in the layers list moved to get it.
+    @Test func theCentreLineIsTheOneTheEyesAlreadyMade() {
+        #expect(EditorChromeLayout.panelEdgeInset == 14)
+        #expect(EditorChromeLayout.panelEdgeIconWidth == 17)
+        #expect(EditorChromeLayout.panelEdgeCenterInset == 22.5)
+    }
+
+    /// The line is a distance from the panel's own right edge, so widening the
+    /// panel carries the whole column with it and nothing has to be re-tuned.
+    @Test func theLineFollowsThePanelWhenItIsResized() {
+        for width in [220.0, 264.0, 380.0, 480.0] as [CGFloat] {
+            #expect(EditorChromeLayout.panelEdgeCenterX(panelWidth: width)
+                    == width - 22.5)
+        }
+    }
+
+    /// A row drawn inside a list's gutter reaches the SAME line as one drawn
+    /// against the panel: the gutter is subtracted rather than added to.
+    @Test func aRowInsideAGutterReachesTheSameLine() {
+        for gutter in [0.0, 6.0, 8.0] as [CGFloat] {
+            let trailing = EditorChromeLayout.panelEdgeInset(insideGutter: gutter)
+            let centre = gutter + trailing + EditorChromeLayout.panelEdgeIconWidth / 2
+            #expect(centre == EditorChromeLayout.panelEdgeCenterInset)
+        }
+    }
+
+    /// ...which only works while the gutter is the smaller of the two. A list
+    /// inset further than the edge itself could not reach the line at all, so
+    /// the shared gutter has to stay inside it.
+    @Test func theListGutterStaysInsideTheEdgeInset() {
+        #expect(EditorChromeLayout.panelListGutter <= EditorChromeLayout.panelEdgeInset)
+        #expect(EditorChromeLayout.panelEdgeInset(insideGutter: 40) == 0)
+    }
+
+    /// Two icons of different widths in the same slot still share a centre —
+    /// the whole reason the slot exists, since the padlock, the eye and the
+    /// grip are three different widths.
+    @Test func glyphsOfDifferentWidthsShareTheCentre() {
+        func centre(ofGlyph width: CGFloat) -> CGFloat {
+            // A glyph is centred in the slot, so the slot's centre is its own.
+            EditorChromeLayout.panelEdgeInset
+                + (EditorChromeLayout.panelEdgeIconWidth - width) / 2 + width / 2
+        }
+        for width in [10.5, 14.0, 14.5, 17.0] as [CGFloat] {
+            #expect(centre(ofGlyph: width) == EditorChromeLayout.panelEdgeCenterInset)
+        }
+    }
+}

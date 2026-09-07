@@ -209,7 +209,7 @@ struct ComponentInspector: View {
                                       version: live?.componentVersionID)
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 4)
         .onAppear {
             draft = live?.name ?? layer.name
@@ -301,7 +301,7 @@ struct LibraryComponentInspector: View {
                     .help("Selects the original on the canvas")
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
         }
     }
@@ -405,7 +405,7 @@ struct StarterComponentInspector: View {
                 .controlSize(.small)
                 .help("Puts it in the middle of the canvas. Dragging the tile puts it where you drop it")
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
         }
     }
@@ -638,7 +638,7 @@ struct ComponentInstanceInspector: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
                 .padding(.vertical, 4)
         } else if let componentID = selection.componentID, let main {
             VStack(alignment: .leading, spacing: 8) {
@@ -689,7 +689,7 @@ struct ComponentInstanceInspector: View {
                               : "Turns all \(selection.count) copies into ordinary layers that no longer follow the original")
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
         }
     }
@@ -852,7 +852,7 @@ struct ComponentPieceInspector: View {
                         .playtestControl("Detach")
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
         }
     }
@@ -1104,7 +1104,7 @@ struct ComponentVersionPieceInspector: View {
             }
             ComponentVersionApplyRow()
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 4)
     }
 }

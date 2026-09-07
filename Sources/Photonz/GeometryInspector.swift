@@ -83,7 +83,7 @@ struct GeometryInspector: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .animation(.easeOut(duration: 0.12), value: answer)
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
         // A new set of layers is a new set of numbers, so the sentence about
         // the old one goes rather than sitting over the new caption.

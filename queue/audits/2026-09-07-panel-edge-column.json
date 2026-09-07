@@ -1,0 +1,45 @@
+{
+  "feature": "One column down the right of the panel",
+  "epic": "ui-building",
+  "summary": "Every icon on the right hand edge of the panel now sits on one vertical centre line: the eyes on the layer rows, the padlocks beside them, the grip on every section header, and the grip and cross on an effect row. The line is the one the eyes already made, so nothing in the layers list moved to get it.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    {
+      "do": "Open any picture and look down the right edge of the panel. Hold a ruler, or anything with a straight edge, against the eye icons.",
+      "shot": "2026-09-07-panel-edge-2-after.png"
+    },
+    {
+      "do": "Follow that line up to the grip on the Layers header, and down through the grip on every other section header. They should all be on it. The before picture, for comparison, has the grips sitting inside the line.",
+      "shot": "2026-09-07-panel-edge-1-before.png"
+    },
+    {
+      "do": "Click the padlock on a layer row to lock it, then click it again. The padlock must not shift sideways as its drawing changes."
+    },
+    {
+      "do": "Draw a box, then use the plus on the Appearance header to add a Shadow. The cross on the Shadow row lands on the same line, and its grip lands in the padlock's column.",
+      "shot": "2026-09-07-panel-edge-3-effect-row.png"
+    },
+    {
+      "do": "Drag the panel's left edge to make it wider, then narrower. The whole column travels with the panel and stays one line.",
+      "shot": "2026-09-07-panel-edge-4-wide-panel.png"
+    },
+    {
+      "do": "Make the window small enough that the panel is most of it. The line holds there too."
+    }
+  ],
+  "evaluate": [
+    "Does the right edge read as one clean column now, or does something on it still catch your eye?",
+    "The line is 22.5pt in from the panel's edge, which is where the eyes always were. Is that the right distance, or would you pull the whole column further in or out?",
+    "The padlock now sits in a slot as wide as the eye's, so it is 1.25pt further from the edge than before and never moves again. Does the gap between padlock and eye look right?",
+    "The section grip moved 3.5pt left to join the line, which also moved the plus on the Appearance header. Does that header still read well?",
+    "The window's own panel toggle, up in the title bar, is 22pt in from the WINDOW's edge, which puts it within a point of this column. Close enough, or should it be exact?"
+  ],
+  "rough": [
+    "Measured, not judged by eye. A new playtest step (panelEdge) reads every icon's live frame out of the running app. Before: section grips 19pt in from the panel's edge, eyes 22.5, padlocks 44.25 when shut and 46.25 when open, so the column had a 3.5pt spread and the padlock jumped 2pt every time a layer was locked. After: every icon against the edge is 22.5pt in, spread 0, and the padlock column is a steady 47.5. Confirmed again straight off the screen capture, where the drawn ink centres come out at 22.75 for the eye, the grip and the cross.",
+    "Nothing on the left moved, and that is measured too: a pixel comparison of the same walk before and after finds differences only between x 1227 and x 1266 of a 1280pt window, which is the padlock and the grip. Every other pixel in the window is identical.",
+    "The padlock's slot is now as wide as the eye's, so on a very narrow panel a long layer name gives up about 6pt sooner than it used to. It truncates with an ellipsis exactly as before.",
+    "The measurements list uses the same eye, the same modifier and the same row inset as the layers list, but the walk could not photograph it: a scripted click or drag with the Measure tool on a blank canvas places no measurement at all, so the Measurements section never appeared. Filed as a follow-up about the harness rather than fixed here.",
+    "Screen Recording was granted, so every picture here is a real window capture, not an offscreen render.",
+    "The number and the slot live in EditorChromeLayout beside the other chrome metrics, and every row and control on that edge reads them, so a control added later cannot invent its own trailing space."
+  ]
+}

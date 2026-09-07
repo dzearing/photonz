@@ -1,0 +1,36 @@
+{
+  "out": "/tmp/photonz-playtest/panel-edge",
+  "seed": "The icons down the right side of the panel did not share a centre. The eyes on the layer rows made one line, the section grips sat 3.5pt inside it, and the lock jumped sideways when a layer was locked because the closed padlock is a narrower drawing than the open one. This walk fills the panel with rows and sections, locks one layer so both padlocks are on screen at once, and reads every icon's centre back as a number.",
+  "setup": { "forget": ["panel", "tools", "grid"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [300, 240], "to": [560, 420] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [200, 460], "to": [420, 560] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "v" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "panel", "stage": "1-rows" },
+
+    { "do": "describe", "stage": "2-one-locked", "note": "one layer locked, so the closed padlock and the open one are both on screen: they are different widths and that is what used to make the lock column ragged" },
+    { "do": "press", "control": "Lock", "in": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "selectRow", "row": "Rectangle 2" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "panelEdge", "stage": "1-layers-and-sections" },
+    { "do": "snapshot", "name": "1-panel-edge" },
+
+    { "do": "describe", "stage": "3-a-shadow", "note": "an effect added to the picked shape, so the Appearance list has a row with a cross on the edge beside the eyes and the grips" },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelEdge", "stage": "2-with-an-effect-row" },
+    { "do": "snapshot", "name": "2-panel-edge-with-an-effect" }
+  ]
+}

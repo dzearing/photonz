@@ -78,7 +78,7 @@ struct PlacementInspector: View {
                 contentRows()
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
         .id(layer?.id)
     }

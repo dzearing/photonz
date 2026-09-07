@@ -510,7 +510,7 @@ struct LibraryItemInspector: View {
                     .help("Shows the file in the Finder")
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
         }
     }

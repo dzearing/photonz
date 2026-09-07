@@ -241,6 +241,10 @@ struct InspectorPanel: View {
             // shipping build.
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
                 recordInspectorDockFrame($0)
+                // The edge every icon on the right of the panel is measured
+                // against, so a walk reads "22.5pt in from the edge" rather
+                // than a window coordinate that means nothing on its own.
+                recordPanelEdgeFrame($0)
             }
             .inspectorLayoutProbe(sections: sections)
             // A section the selection asked for that has not been built yet
@@ -1491,8 +1495,12 @@ private struct CollapsibleSection<Content: View>: View {
             Image(systemName: "line.3.horizontal")
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
+                .panelEdgeIcon("section grip", of: title)
         }
-        .padding(.horizontal, 12)
+        // Leading and trailing separately: the title stays exactly where it
+        // was, and the grip joins the column the eyes make down the edge.
+        .padding(.leading, 12)
+        .panelEdgePadding()
         .padding(.vertical, 8)
         // A floor, not a fixed height: a header whose words grow still grows.
         .frame(minHeight: InspectorPanel.headerRowHeight)
@@ -1822,7 +1830,8 @@ struct LayersListView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.horizontal, 14)
+                    .padding(.leading, EditorChromeLayout.panelEdgeInset)
+                    .panelEdgePadding()
                     .padding(.top, 4)
             }
         }
@@ -1893,7 +1902,7 @@ struct LayersListView: View {
             // reorder; selecting it puts resize handles on the canvas boundary.
             canvasRow
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, EditorChromeLayout.panelListGutter)
         .padding(.bottom, LayerListMetrics.bottomPadding)
         .onPreferenceChange(LayerRowHeightKey.self) { rowHeight = max(1, $0) }
         .onPreferenceChange(LayerCanvasRowHeightKey.self) { canvasRowHeight = max(1, $0) }
@@ -1942,7 +1951,8 @@ struct LayersListView: View {
                     .monospacedDigit()
             }
         }
-        .padding(.horizontal, 6)
+        .padding(.leading, 6)
+        .panelEdgeRowPadding()
         .padding(.vertical, 4)
         .background {
             if editorState.isCanvasSelected {
@@ -2261,6 +2271,10 @@ private struct LayersRow: View, Equatable {
             }
             .help(display.isLocked ? "Unlock Layer" : "Lock Layer")
             .playtestControl("Lock", detail: place(display.isLocked ? "locked" : "unlocked"))
+            // The slot is what keeps the padlock still: shut and open are two
+            // drawings of different widths, and without it locking a layer
+            // slid the icon 2pt sideways.
+            .panelEdgeIcon("lock", of: display.name)
             Button {
                 editorState.toggleLayerVisibility(id: id)
             } label: {
@@ -2270,9 +2284,11 @@ private struct LayersRow: View, Equatable {
             }
             .help(display.isVisible ? "Hide Layer" : "Show Layer")
             .playtestControl("Visibility", detail: place(display.isVisible ? "shown" : "hidden"))
+            .panelEdgeIcon("eye", of: display.name)
         }
         .buttonStyle(.borderless)
-        .padding(.horizontal, 6)
+        .padding(.leading, 6)
+        .panelEdgeRowPadding()
         .padding(.vertical, 4)
         .padding(.leading, indent)
         .background {
@@ -2537,7 +2553,7 @@ struct MeasureToolInspector: View {
                 }
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
     }
 
@@ -2582,7 +2598,7 @@ struct WandToolInspector: View {
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
     }
 }
@@ -2611,7 +2627,7 @@ struct CropToolInspector: View {
             .labelsHidden().controlSize(.small)
             .help("What shape the crop keeps. The Crop button holds the same list.")
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
     }
 }
@@ -2679,7 +2695,7 @@ struct CalloutToolInspector: View {
                 }
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
     }
 }
@@ -2755,11 +2771,12 @@ struct MeasurementsListView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.horizontal, 6)
+                    .padding(.leading, 6)
+                    .panelEdgeRowPadding()
                     .padding(.top, 4)
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, EditorChromeLayout.panelListGutter)
         // The Rename command asks for a row's field; only measurement rows this
         // list shows answer it.
         .onChange(of: editorState.layerAwaitingRename) { _, id in
@@ -2812,9 +2829,11 @@ struct MeasurementsListView: View {
                     .foregroundStyle(layer.isVisible ? .primary : .tertiary)
             }
             .help(layer.isVisible ? "Hide Measurement" : "Show Measurement")
+            .panelEdgeIcon("eye", of: MeasureSpecList.displayName(for: layer))
         }
         .buttonStyle(.borderless)
-        .padding(.horizontal, 6)
+        .padding(.leading, 6)
+        .panelEdgeRowPadding()
         .padding(.vertical, 4)
         .background {
             if isSelected {
@@ -2950,7 +2969,7 @@ struct EffectsInspector: View {
                                     borders.count == selection.count || borders.isEmpty
                                         ? "A slider here" : "Every other slider here"))
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
     }
 
@@ -3314,7 +3333,7 @@ struct AnnotationInspector: View {
                 SelectionStyleNotes(notes: [selection.note],
                                     caption: selectionCaption(selection.count))
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 8)
         }
     }
@@ -3742,7 +3761,7 @@ struct TextInspector: View {
                                                 ? selection.downTheBoxNote : nil],
                                     caption: selectionCaption(selection.count, "A change here"))
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 8)
         }
     }
@@ -4074,7 +4093,7 @@ struct MeasureInspector: View {
                     detailsSection(c)
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 8)
         }
     }
@@ -4299,7 +4318,7 @@ struct CanvasInspector: View {
                 gridSection
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
         .onAppear { syncFields() }
         .onChange(of: canvasSize) { syncFields() }
@@ -4414,7 +4433,7 @@ struct CollageInspector: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 8)
         }
     }

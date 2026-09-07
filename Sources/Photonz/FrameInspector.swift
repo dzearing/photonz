@@ -57,7 +57,7 @@ struct FrameInspector: View {
             // section, with every other color, and its checkbox is what used
             // to be the "No background" button in this section's popover.
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
         .id(layer.id)
     }

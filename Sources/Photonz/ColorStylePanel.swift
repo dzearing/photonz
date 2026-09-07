@@ -647,7 +647,7 @@ struct SelectionColorWell: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.top, 12)
             .padding(.bottom, 10)
             Divider()
@@ -814,7 +814,7 @@ struct SelectionColorInspector: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
     }
 
@@ -1077,7 +1077,7 @@ struct LibraryStyleInspector: View {
                     .help("Takes the style off the shelf. Every layer keeps the color it is wearing")
                 }
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
             .onAppear { draft = style.name }
             .onChange(of: style.id) { _, _ in draft = style.name }

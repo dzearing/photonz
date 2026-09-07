@@ -11481,3 +11481,43 @@ Next: the same trap is one gesture away for drag and drop, filed as
 `dropping-a-picture-on-the-canvas-hands-you-the-p` (p2). Open question in the
 audit: whether the tool bar changing shape as the colour swatches leave with
 the drawing tool reads as help or as a twitch.
+
+## 2026-09-07 — One column down the right of the panel
+
+The user reported the panel's right edge as ragged, with a line drawn through
+the eye icons that the section grips missed. Measuring it off the running app
+made it worse than the report: the grips were 19pt in from the panel's edge and
+the eyes 22.5, and the padlock moved between 44.25 and 46.25 depending on
+whether the layer was locked, because `lock.fill` is a narrower drawing than
+`lock.open`. Lining up the trailing PADDING would not have fixed that; what a
+person sees is the drawn centre.
+
+- `EditorChromeLayout` now owns the numbers: `panelEdgeInset` (14),
+  `panelEdgeIconWidth` (17, the eye's own width, so the column lands where the
+  eyes already were), `panelEdgeCenterInset` (22.5), `panelListGutter` (8) and
+  `panelEdgeInset(insideGutter:)` for a row drawn inside a list.
+  `PanelEdgeColumnTests` covers them.
+- `Sources/Photonz/PanelEdge.swift` holds what every control on that edge
+  wears: `panelEdgeIcon` draws the glyph in the shared slot, `panelEdgePadding`
+  and `panelEdgeRowPadding` give it the shared trailing space. The eyes, the
+  padlocks, the section grips and an effect row's grip and cross all use it.
+- The 35 places in the panel that wrote a bare 14 for their content margin now
+  read the shared value. A pixel comparison of the same walk before and after
+  that change found no differing pixels at all.
+- New playtest step `panelEdge` writes every edge icon's centre as points in
+  from the panel's own right edge (`Scripts/playtest/panel-edge-column-walk.json`,
+  `panel-edge-narrow-walk.json`). After: every icon 22.5, spread 0, padlocks a
+  steady 47.5, holding at a 400pt panel in an 860pt window. Nothing on the left
+  moved: the only pixels that changed in the whole window are between x 1227
+  and x 1266 of 1280.
+- The probe behind that step is keyed by VIEW, not by name. Keying by name lost
+  every row SwiftUI rebuilds — the replacement's `onAppear` runs before the
+  original's `onDisappear`, so the goodbye deleted the new measurement and the
+  Appearance rows were quietly missing from the column it reported.
+- Audit at `queue/audits/2026-09-07-panel-edge-column.json`.
+
+Next: a scripted walk cannot place a measurement at all, so the Measurements
+list could not be photographed and was verified by code identity instead. Filed
+as `a-scripted-walk-can-place-a-measurement` (p2). Open question in the audit:
+the window's own panel toggle sits 22pt in from the window edge against this
+column's 22.5 from the panel's, close but not exact.

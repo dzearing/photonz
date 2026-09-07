@@ -81,7 +81,7 @@ struct CalloutInspector: View {
                 .help("Whether the magnified region is drawn in a box or in a circle.")
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
         .id(layer.id)
     }

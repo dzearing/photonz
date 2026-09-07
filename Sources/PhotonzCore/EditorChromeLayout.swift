@@ -145,6 +145,58 @@ public enum EditorChromeLayout {
     // legend now takes its corner outright, so it asks `PanelPlacement` for a
     // slot with no corner chrome to clear.
 
+    // MARK: The panel's right edge
+
+    /// How far in from the inspector panel's own right edge anything parked on
+    /// that edge is drawn: the eye and the lock on a layer row, the grip on a
+    /// section header, the cross that takes an effect out of the list.
+    ///
+    /// ONE number, shared, because the alternative was measured on 2026-09-07
+    /// and reported by the user: each row and control carried its own trailing
+    /// space (6 here, 12 there, 14 somewhere else) and the icons down the right
+    /// of the panel did not share a centre.
+    public static let panelEdgeInset: CGFloat = 14
+
+    /// The slot EVERY icon on that edge is drawn in, whatever glyph is in it.
+    ///
+    /// A shared trailing space is not enough on its own: these glyphs are
+    /// different widths, so lining up their BOXES leaves what is DRAWN on
+    /// different lines, and the line a person sees is the drawn one. Measured
+    /// at 11pt type: the eye is 17 wide, the grip 14, the open padlock 14.5 and
+    /// the closed one 10.5 — so locking a layer used to slide its padlock 2pt
+    /// sideways. A fixed slot with the glyph centred in it makes all of them
+    /// one column.
+    ///
+    /// It is the eye's own width because the eye is the widest of them: the
+    /// column then lands exactly where the eyes already were, so the fix moved
+    /// the grips and the padlocks and left the layers list alone.
+    public static let panelEdgeIconWidth: CGFloat = 17
+
+    /// The gutter a list inside the panel keeps around its rows, so a selected
+    /// row's highlight stops short of the panel's edges instead of running into
+    /// them. The layers list and the measurements list share it.
+    public static let panelListGutter: CGFloat = 8
+
+    /// How far the column's centre line is in from the panel's right edge.
+    /// This is the number a ruler on a screenshot measures.
+    public static let panelEdgeCenterInset: CGFloat = panelEdgeInset + panelEdgeIconWidth / 2
+
+    /// Where that line falls in a panel of this width. A distance from the
+    /// panel's own edge, so resizing the panel carries the whole column with it.
+    public static func panelEdgeCenterX(panelWidth: CGFloat) -> CGFloat {
+        panelWidth - panelEdgeCenterInset
+    }
+
+    /// The trailing space a row needs when it is drawn inside a list that is
+    /// already inset by `gutter`, so it reaches the same line as a control
+    /// drawn straight onto the panel.
+    ///
+    /// Clamped at zero: a list inset further than the edge itself cannot reach
+    /// the line, which is why `panelListGutter` is the smaller of the two.
+    public static func panelEdgeInset(insideGutter gutter: CGFloat) -> CGFloat {
+        max(0, panelEdgeInset - gutter)
+    }
+
     // MARK: Tool bar fit
 
     /// One tool slot's share of the bar: a 28pt control plus the 14pt gap that
