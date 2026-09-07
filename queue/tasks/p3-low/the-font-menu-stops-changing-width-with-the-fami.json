@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T22:08:33.437Z",
-  "updated": "2026-09-06T12:16:42.271Z",
+  "updated": "2026-09-07T02:33:22.964276Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rough line from queue/audits/2026-09-04-type-menu-labels.json: \"The Font menu still sizes itself to whatever family is picked, so a long family name makes it wider than the others.\" The other menus in that section were given captions in the same task, so this is the last row that does not match. Panel code: Sources/Photonz/LayersPanel.swift Text section.",
@@ -42,6 +42,47 @@
     {
       "t": "2026-09-06T12:16:42.271Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-07T02:09:22.631Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T02:17:10.483816Z",
+      "note": "Adversarial review, before building. (1) The reported cause is wrong. Measured offscreen with the same SwiftUI Picker the panel uses: a Mac pop-up menu takes its width from the WIDEST name in its list, not from the one picked. With the six curated families the Font menu is a constant 120pt whether SF Pro or Helvetica Neue is showing, so trying fonts from the menu does not move the row today. It moves when a picked layer wears a family that is NOT on the list (only reachable by opening a document made elsewhere, or by a remembered text style): that name joins the list and stretches the box in EVERY state. So the thing to build is a menu that cannot be stretched by a name, not one that stops sizing to the pick."
+    },
+    {
+      "t": "2026-09-07T02:17:10.483816Z",
+      "note": "Adversarial review (2): the box cannot be made WIDER. A pop-up refuses any width past its own content, proven at 160/210/232 against a 120 intrinsic. So lining the Font box's right edge up with the Weight box's right edge is not available without rebuilding the control in AppKit, which is far too much for a polish task. The largest constant it can hold is the curated list's own width, which is exactly what it shows today, so no curated font moves by a pixel."
+    },
+    {
+      "t": "2026-09-07T02:17:10.483816Z",
+      "note": "Adversarial review (3): do NOT give the Size menu the same treatment. An off-list size would come out as \"128 p...\", and a number that cannot be read is worse than a slightly wider box. Names shorten, numbers do not. Left alone, filed as a note."
+    },
+    {
+      "t": "2026-09-07T02:17:10.483816Z",
+      "note": "Adversarial review (4): shortest version that delivers it. One measured constant plus a clamp. AppKit already truncates a clamped pop-up title with an ellipsis (lineBreakMode is byTruncatingTail), so no custom drawing, and the open menu keeps every name in full."
+    },
+    {
+      "t": "2026-09-07T02:33:22.964276Z",
+      "note": "Built. The Font menu is held to the width the curated family list needs (120pt, measured from a throwaway NSPopUpButton set up the way SwiftUI sets up a small menu picker: the two agree to the point). MenuMetrics.swift is the measuring, TextStyles.fontOptions the list, MenuTip the words the tip says when the box had to shorten a name. 11 new core tests; full suite 4213 green."
+    },
+    {
+      "t": "2026-09-07T02:33:22.964276Z",
+      "note": "Adversarial review of the built thing, on the real app (Scripts/playtest/font-menu-one-width-walk.json, probe, Screen Recording granted). Measured off the captures: the Font box is 2140..2379 px with a long family showing and 2141..2378 px with SF Pro showing, the same 120pt box either way, and the Size and Weight boxes under it sit at identical pixels in both. The long name comes out as \"Bodoni 72 Smal...\" and the open menu still spells it out in full with a tick beside it."
+    },
+    {
+      "t": "2026-09-07T02:33:22.964276Z",
+      "note": "What I could not do: photograph the tip. SwiftUI's .help() sets neither NSView.toolTip nor accessibilityHelp on the backing views, and a synthesized mouse move does not raise a help tag, so a walk can neither read it nor take its picture. I built a panel readout for it, found it always came back empty, and took it back out rather than leave dead code. Its wording is covered by the MenuTip tests. Filed as its own task."
+    },
+    {
+      "t": "2026-09-07T02:33:22.964276Z",
+      "note": "Followups filed: \"A menu in the dock says its whole value when you rest on it\" (the reading gap above) and \"The Size menu stops changing width with the size you pick\" (same defect, needs a different answer since a number cannot be shortened)."
+    },
+    {
+      "t": "2026-09-07T02:33:22.964276Z",
+      "note": "Shared file, not a Next fork: TextInspector lives in Sources/Photonz/LayersPanel.swift, which both releases use, so Next has this by construction and Current gets the same fix."
     }
-  ]
+  ],
+  "started": "2026-09-07T02:09:22.631Z"
 }

@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/font-menu-one-width",
+  "seed": "The Font menu in the Text section is held to ONE width. A Mac pop-up takes its size from the widest name in its list, not from the one showing, and the Font list picks up any family the picked labels already wear, so a label carrying a long family name used to stretch the box past the menus beside it. This walk starts the probe already remembering a long family (Bodoni 72 Smallcaps, written into the probe's own settings before launch, since the menu itself only offers the six curated ones), types a label in it, and then switches the family back to a short one from the menu. The Font box must be the same box in both pictures, the long name shortened with an ellipsis rather than the box growing, and the open menu must still spell every name out in full.",
+  "setup": {
+    "forget": ["panel", "shapes"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Position & Size section" },
+    { "do": "press", "control": "Appearance section" },
+    { "do": "press", "control": "Effects section" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "0-what-the-dock-holds" },
+    { "do": "describe", "stage": "1-long-family",
+      "note": "THE TEST: the picked label is set in Bodoni 72 Smallcaps, a family that is not on the Font menu's own list, so the menu is offering it as well as the six curated ones. The Font box must still be exactly the width it is for SF Pro, with the name shortened by an ellipsis rather than the box growing." },
+    { "do": "snapshot", "name": "font-one-width-1-long-family" },
+    { "do": "panelMenu", "menu": "Font", "shot": "font-one-width-2-menu-open", "choose": "SF Pro" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-short-family",
+      "note": "the same label, now in SF Pro. Nothing in the section may have moved a point: same Font box, same Size and Weight boxes under it, same Across and Down rows." },
+    { "do": "snapshot", "name": "font-one-width-3-short-family" },
+    { "do": "panel", "stage": "3-what-the-dock-holds-after" }
+  ]
+}

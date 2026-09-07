@@ -1,0 +1,46 @@
+{
+  "feature": "The Font menu holds one width",
+  "epic": "ui-building",
+  "summary": "The Font menu in the Text section is now held to one width, so a label carrying a long family name shortens the name in the box with an ellipsis instead of stretching the box and shoving the row sideways. Every family on the menu's own list lands exactly where it did before.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. The long name below only turns up on a label made somewhere else, since the menu itself offers six curated families.",
+  "try": [
+    {
+      "do": "Pick the text tool, click on a blank canvas, type \"Sign in\" and press Command-Return."
+    },
+    {
+      "do": "Switch to the select tool and click the label."
+    },
+    {
+      "do": "Open the Font menu and choose Helvetica Neue, the longest name on the list."
+    },
+    {
+      "do": "Open it again and choose SF Pro, the shortest.",
+      "shot": "2026-09-07-font-menu-one-width-short-sc.png"
+    },
+    {
+      "do": "Switch between those two a few times and watch the Size, Weight, Across and Down rows: nothing below the Font row may move."
+    },
+    {
+      "do": "Open a document made elsewhere whose text is in a long family, and pick that label.",
+      "shot": "2026-09-07-font-menu-one-width-long-sc.png"
+    },
+    {
+      "do": "Open the Font menu on it: the shortened name is spelled out in full on its own row, with a tick beside it.",
+      "shot": "2026-09-07-font-menu-one-width-menu-sc.png"
+    }
+  ],
+  "evaluate": [
+    "The Font box is wider than the word SF Pro sitting in it, because it is sized for the longest name on the list. Does that empty space read as calm, or as a box that does not know what it holds?",
+    "The Font box's right edge stops short of the Weight box's right edge below it. Now that nothing moves, does that step still bother you enough to want a different shape for the section?",
+    "\"Bodoni 72 Smal...\" is what a long family comes out as. Is enough of the name left for you to know which font you are looking at?",
+    "Would you rather a long name were shortened in the MIDDLE (\"Bodoni ... Smallcaps\"), so the distinguishing end of the name survives?",
+    "The full name is on the menu's own row and in the tip when you rest on the box. Is that enough, or should the box itself say the whole thing somehow?"
+  ],
+  "rough": [
+    "The complaint said the menu sizes itself to whatever family is picked. Measured against the real control, that is not what happens: a Mac pop-up takes its width from the widest name in its LIST, so with the six curated families the box was already a constant width and trying fonts never moved it. What did move it was a label wearing a family the list does not have, which joins the list and stretches the box in every state. That is the case this fixes, and it is why the pictures need a document made elsewhere to show anything.",
+    "The box cannot be made WIDER than its content, which a pop-up simply refuses, so lining its right edge up with the Weight box below was not available without rebuilding the control by hand. The widest constant it can hold is what the curated list needs, which is exactly what it shows today, so the section looks the same as it did.",
+    "The tip on the box carries the full family name, and its wording is covered by tests, but there is no picture of it here: a scripted walk cannot make a pointer rest on a control in the dock, and a system help tag does not come up for a synthesized one. Filed as its own task.",
+    "The Size menu has the same defect and was deliberately left alone: an off-list size would come out as \"128 p...\", and a number nobody can read is worse than a slightly wider box. Filed as its own task.",
+    "Screen Recording was granted for this run, so all three pictures are real captures of the window rather than offscreen renders. The dock in them has Position & Size, Appearance and Effects collapsed so the Text section fits; that is the probe's setting, not a change to the app."
+  ]
+}

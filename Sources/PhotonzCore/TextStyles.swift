@@ -39,6 +39,21 @@ public struct TextStyles: Equatable, Codable, Sendable {
     /// The size picker's options, smallest first.
     public static let fontSizes: [CGFloat] = [14, 18, 24, 32, 48, 64, 96]
 
+    /// The families the Font menu offers for a selection: the curated list, in
+    /// its own order, then any family the picked labels already wear that is
+    /// not on it. So a label opened from somewhere else keeps its face instead
+    /// of losing it the moment it is picked.
+    ///
+    /// The curated part comes first and is always all there, which is what lets
+    /// the menu hold ONE width: a Mac pop-up takes its size from the widest
+    /// name in its list, so as long as the widest curated name is present in
+    /// every state, that name, and nothing an opened document brought with it,
+    /// decides how wide the box is.
+    public static func fontOptions(picked: [String]) -> [String] {
+        var seen = Set(fonts)
+        return fonts + picked.filter { seen.insert($0).inserted }
+    }
+
     /// Content for a new text block in the current style.
     public func content(string: String = "") -> TextContent {
         TextContent(string: string, fontName: fontName, fontSize: fontSize,

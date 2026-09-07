@@ -1,0 +1,27 @@
+{
+  "id": "a-menu-in-the-dock-says-its-whole-value-when-you",
+  "title": "A menu in the dock says its whole value when you rest on it",
+  "goal": "When a menu in the right hand panel is too narrow for what it is showing, resting the pointer on it should say the whole thing. That works today, but nothing can check it, so it can break silently. Give the loop a way to read what a control in the panel would say.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1300,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T02:32:30.325Z",
+  "updated": "2026-09-07T02:32:30.326Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while pinning the Font menu width (2026-09-07). SwiftUI .help() is invisible from AppKit: it sets neither NSView.toolTip nor accessibilityHelp on the backing views, and a synthesized mouse move does not raise a help tag, so neither a picture nor a panel readout can prove the tip. Two ways out: (a) a probe-only registry the way InspectorLayoutProbe records section frames, written from the same expression that feeds .help(); (b) move the dock onto the app's own designed tooltip (HintAnchorView, Sources/Photonz/HintTooltip.swift), which a walk can already hover by label and photograph, but that is 30 call sites in LayersPanel.swift and a visible change in Next.",
+  "acceptance": [
+    "A scripted walk can read, in words, what any menu in the panel says when the pointer rests on it",
+    "The Font menu carrying a shortened family name is covered by that check",
+    "Nothing about what a person sees changes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T02:32:30.326Z",
+      "note": "created (manual)"
+    }
+  ]
+}

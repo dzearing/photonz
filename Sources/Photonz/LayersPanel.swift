@@ -3376,7 +3376,8 @@ struct TextInspector: View {
                               reading: selection.reading { $0.fontName },
                               options: fontFamilies(selection),
                               title: { $0 },
-                              help: help("font", selection.count)) {
+                              help: help("font", selection.count),
+                              pinnedWidth: Self.fontMenuWidth) {
                     editorState.setTextStyle(ids: ids, fontName: $0)
                 }
                 HStack(alignment: .top, spacing: 8) {
@@ -3496,7 +3497,19 @@ struct TextInspector: View {
     /// Curated families plus any the picked labels are already set in, so a
     /// label in an off-list font does not lose it just by being picked.
     private func fontFamilies(_ selection: TextLayerSelection) -> [String] {
-        TextStyles.fonts + selection.fontNames.filter { !TextStyles.fonts.contains($0) }
+        TextStyles.fontOptions(picked: selection.fontNames)
+    }
+
+    /// The width the Font menu holds, whatever is in its list.
+    ///
+    /// The curated families are in the list in every state it can be in, so the
+    /// width they need is the narrowest the menu could ever be — and a pop-up
+    /// never accepts a width wider than its content, so this is also the widest
+    /// constant available. Every curated family therefore lands exactly where
+    /// it does today, and only a longer name brought in by an opened document
+    /// is shortened rather than shoving the row sideways.
+    private static var fontMenuWidth: CGFloat {
+        MenuMetrics.width(ofOptions: TextStyles.fonts)
     }
 
     /// Preset sizes plus any the picked labels already wear.
@@ -3516,9 +3529,24 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
     let options: [Value]
     let title: (Value) -> String
     /// What this menu is, in words, for anyone who hovers it. The caption above
-    /// the menu says the same thing without being asked.
+    /// the menu says the same thing without being asked. When the box is too
+    /// narrow for what it is showing, the full value is said here first.
     let help: String
+    /// A width to hold, whatever ends up in the list. Nil for a menu whose list
+    /// never changes, which is every menu but Font: those are already still.
+    var pinnedWidth: CGFloat?
     let choose: (Value) -> Void
+
+    /// The words the box is showing, when it is showing a value at all.
+    private var shownTitle: String? {
+        reading.isMixed ? nil : reading.value.map(title)
+    }
+
+    /// Whether the box had to shorten them.
+    private var isClipped: Bool {
+        guard let pinnedWidth, let shownTitle else { return false }
+        return !MenuMetrics.fits(shownTitle, in: pinnedWidth)
+    }
 
     var body: some View {
         // The caption sits above the menu, the way every other labelled
@@ -3547,6 +3575,12 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
                 }
             }
             .pickerStyle(.menu).labelsHidden().controlSize(.small)
+            // Held to one width, so a name the list picked up from an opened
+            // document cannot stretch the row. A pop-up takes a width smaller
+            // than its content and shortens the closed title with an ellipsis,
+            // which is what should happen to a name too long for the box; the
+            // open menu still spells every name out in full.
+            .frame(width: pinnedWidth)
             .accessibilityLabel(label)
         }
         // The caption names the row, and the row names the menu for a walk.
@@ -3554,7 +3588,7 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
         // so a walk that named it by its words would stop working the first
         // time it used it.
         .playtestField(label)
-        .help(help)
+        .help(MenuTip.text(about: help, showing: shownTitle, isClipped: isClipped))
     }
 }
 
