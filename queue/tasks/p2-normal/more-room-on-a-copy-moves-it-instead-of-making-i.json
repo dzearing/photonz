@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1670,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T14:00:02.655Z",
-  "updated": "2026-09-07T21:29:46.670993Z",
+  "updated": "2026-09-07T21:30:36.369Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-07 whole-path sitting; compare path-7-one-copy-changed-doc.png with path-7c-more-room-doc.png in /tmp/photonz-playtest/component-whole-path. The group is Free arrangement with Width and Height on Hug, so padding inflates the group box and offsets its contents while nothing stretches to the new edges. Either the Free case should keep the contents where they are and grow outward, or the Add menu should only offer Padding where the arrangement can spend it.",
@@ -37,7 +37,7 @@
     },
     {
       "t": "2026-09-07T21:29:46.670993Z",
-      "note": "Verified on the real app, not just in tests. New walk Scripts/playtest/room-lands-on-something-walk.json runs the whole thing: the Add menu on the drawn button lists 21 rows with no \"Save button \u00b7 Padding\"; after the rectangle is named the surface the same menu lists 22 with it back; a copy set to 48 goes from W 83 H 61 to W 147 H 125 in the panel's own readout, 32 more on every side, while X and Y stay at 319 and 590. Screen Recording was granted, so the audit carries real captures."
+      "note": "Verified on the real app, not just in tests. New walk Scripts/playtest/room-lands-on-something-walk.json runs the whole thing: the Add menu on the drawn button lists 21 rows with no \"Save button · Padding\"; after the rectangle is named the surface the same menu lists 22 with it back; a copy set to 48 goes from W 83 H 61 to W 147 H 125 in the panel's own readout, 32 more on every side, while X and Y stay at 319 and 590. Screen Recording was granted, so the audit carries real captures."
     },
     {
       "t": "2026-09-07T21:29:46.670993Z",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-07T21:29:46.670993Z",
       "note": "component-whole-path-walk.json edited: it added a room knob to a drawing that no longer offers one. It now takes two knobs instead of three, its 4-knobs note says why room is absent, and the second-knob-on-a-copy beat turns the rounding down to 4 instead. That walk still stops at step 167 on an unrelated drift in what the Apply to Other Versions button reads; reproduced with this change stashed out, filed as the-whole-component-walk-stops-on-what-the-apply."
+    },
+    {
+      "t": "2026-09-07T21:30:36.368Z",
+      "note": "Room is now offered only where something can spend it. Layer.spendsRoom in PhotonzCore: a stack or grid always spends it; a group that arranges nothing spends it where a piece stretches one way, or where a side is the size of its contents and something is painted to the group's own edges. The Add menu drops the row otherwise, and naming a surface brings it back with every copy's answer intact. Verified live with Scripts/playtest/room-lands-on-something-walk.json: the menu lists 21 rows without it and 22 with it, and a copy set to 48 goes from W 83 H 61 to W 147 H 125 while X and Y stay at 319 and 590. 4543 tests green. Audit: queue/audits/2026-09-07-room-lands-on-something.json"
     }
   ],
-  "started": "2026-09-07T21:04:54.622Z"
+  "started": "2026-09-07T21:04:54.622Z",
+  "completed": "2026-09-07T21:30:36.369Z"
 }
