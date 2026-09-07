@@ -4,6 +4,9 @@ import PhotonzCore
 /// The columns a screen is designed to, drawn on the canvas (Next,
 /// `next-frames`).
 ///
+/// The rule it follows is written down: docs/design/mocks/shared/UX-PATTERNS.md
+/// D16, "A guide draws over your work, and never gets into the picture".
+///
 /// Chrome, not content: drawn by this view rather than by the renderer, so it
 /// can never land in an export or a copied picture, and the document pays
 /// nothing for it beyond the four numbers a screen carries.

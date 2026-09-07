@@ -4,6 +4,9 @@ import PhotonzCore
 /// Guides pinned onto the grid (Next, `next-canvas-grid`): drawing them, and
 /// the three things a press means while the grid is being adjusted.
 ///
+/// The rule it follows is written down: docs/design/mocks/shared/UX-PATTERNS.md
+/// D16, "A guide draws over your work, and never gets into the picture".
+///
 /// A guide is chrome, like the grid: drawn by this view rather than by the
 /// renderer, so it never lands in an export or a copied picture. Unlike the
 /// grid it does NOT come and go with the Show grid switch. You pinned it on

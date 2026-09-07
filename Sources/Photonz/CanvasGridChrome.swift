@@ -3,6 +3,10 @@ import PhotonzCore
 
 /// The grid you build against, drawn on the canvas (Next, `next-canvas-grid`).
 ///
+/// The rule it follows is written down: docs/design/mocks/shared/UX-PATTERNS.md
+/// D16, "A guide draws over your work, and never gets into the picture". Read it
+/// before adding another guide rather than working the answer out again.
+///
 /// It is chrome, not content: it is drawn by this view rather than by the
 /// renderer, so it never lands in an export or a copied picture and costs the
 /// document nothing.

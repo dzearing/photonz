@@ -1,6 +1,11 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.3. §4 gains "a control that cannot act", one rule replacing the six
+**Status: v1.4. §3 gains the canvas guide as a named surface and D16 states the
+rule it follows: a guide drawn on the canvas goes OVER your work, reads as a
+wash or a hairline rather than as something you drew, and never reaches an
+export. Written 2026-09-07, after the canvas grid and a screen's columns each
+worked the same answer out from scratch a day apart, with an audit gate in §9.
+v1.3: §4 gains "a control that cannot act", one rule replacing the six
 different answers six fixes gave the same question on 2026-09-04, with an audit
 gate in §9. Scrubbed 2026-09-04 against what the app actually ships: §3 gains
 the reveal rule, §4 gains "a property keeps its home", and §5's component-copy row
@@ -209,6 +214,13 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
 - **Popover / menu** (`.popover.pop` + `.menu`/`.menuitem`) — transient, anchored
   to its trigger via `[data-menu="#id"]`. Color pickers, add-adjustment menus,
   panel menus, tool-bar overflow, context menus. Dismiss on outside-click or Esc.
+- **Canvas guide** (the canvas grid, a screen's columns, a guide you pinned,
+  the snap line that lights under a drag) — chrome drawn INSIDE the picture's
+  own rectangle to help you place things. It draws over your work, it is a wash
+  or a hairline you can read straight through, and it can never reach an export
+  or a copy. Full rule and the reasoning in **D16**. Not an annotation: a guide
+  helps you PLACE something, while an arrow, a caliper or a gap label EXPLAINS
+  something in the picture and is governed by D14 instead.
 - **Canvas notice** (`.cnv-hint`, bottom centre) — the one transient pill on
   the canvas, shared by the Measure tool's mode hint ("**Gap** Click the space
   between two elements") and the "Copied" confirmation after ⌘C. Its slot
@@ -792,6 +804,10 @@ Every editor/scenario page must satisfy:
       rows list the whole catalogue, not only the keyed ones.
 - [ ] **Both docks collapse** (D9): the side dock to a rail, the bottom dock to
       one row that names the selection.
+- [ ] **Guides draw over the work** (D16): a grid, a screen's columns or a
+      pinned guide sits above the artwork as a wash or hairline you can read
+      straight through, never behind it, and never inside whatever the page
+      presents as the exported picture.
 - [ ] **Nothing inert without an answer** (§4): every control that cannot act
       is dimmed, replaced by its answer, or gone per its kind, and the "who owns
       this" half of its reason is on screen rather than only on hover.
@@ -1536,3 +1552,86 @@ Built for Measure on 2026-08-23: picking it up moved the bar from 1356pt to
 same day: crop's four aspect chips plus its checkmark and cross (207pt) and the
 wand's tolerance slider (152pt) left the bar, and picking up either tool now
 leaves it at exactly the width Select leaves it.
+
+
+---
+
+### D16 — A guide draws over your work, and never gets into the picture
+
+A **guide** is anything the app draws on the canvas to help you place things:
+the canvas grid, a screen's columns, a guide you pinned, the snap line that
+lights up mid-drag, a ruler. It is chrome that happens to be drawn inside the
+picture's own rectangle, which is exactly why it needs a rule. It is NOT an
+annotation. The two are told apart by what they are for: a guide helps you PLACE
+something and says nothing about the picture, while an annotation EXPLAINS
+something in the picture (an arrow, a caliper, a gap label, an alignment
+verdict) and D14 governs where it is allowed to sit.
+
+Two features on 2026-09-05 were each asked for a guide drawn behind the work,
+each decided on its own that behind was wrong, and each shipped it in front:
+the canvas grid (audit `2026-09-05-canvas-grid`) and a screen's columns (audit
+`2026-09-05-screen-columns`). The same answer, reasoned out from scratch twice
+in two days, written down nowhere. Here it is, so the third one does not have to
+argue it again.
+
+**1. Over your work, by default.** The test is one question: *would the first
+thing anybody draws hide it?* A grid you build against has to survive the first
+filled box, and a grid behind your layers is invisible the moment the canvas has
+anything on it. A screen paints itself white, so a column band behind it is a
+band nobody can see and the feature ships looking broken on the very first
+screen anyone makes. A guide that only works on an empty canvas is a guide that
+stops working the moment you start working.
+
+**2. Under only when the guide is acting as the work SURFACE.** There is one
+shipped exception and it is narrow. The grey surround around the canvas always
+carries the grid, and while the grid is switched OFF over the picture the same
+lines run UNDER it, so the canvas's own drop shadow falls across the paper and
+it reads as the surface the picture is lying on rather than as ink printed over
+its shadow (asked for by the user on 2026-09-05, task
+`the-grid-is-always-behind-the-canvas-and-things`). Over the picture it is a
+guide; under the picture it is the desk. If what you are drawing is not the
+desk, it goes over.
+
+**3. Drawn over, it must not read as part of the picture.** Being mistaken for
+something a person drew is the failure mode of rule 1, and every guide we ship
+avoids it the same five ways:
+
+- **Washes and hairlines, never a solid fill and never a hard outline.** What is
+  underneath stays completely readable through it. A guide with a border is a
+  rectangle somebody drew.
+- **Ink sunk out of the way.** The canvas grid is the accent colour mixed most
+  of the way into grey; the columns are a soft warm wash. Nothing saturated,
+  nothing a layer would plausibly be painted.
+- **Two guides that can be on at once differ in KIND, not only in colour.** Fine
+  cool lines against soft warm bands. Two things that read alike read as one
+  broken thing.
+- **Judged against the surface it lies on, not against the app's theme.** A
+  white screen in a dark app is still white, so the columns strengthen on a dark
+  screen and fade on a light one.
+- **Weight in SCREEN points, not document points.** A hairline stays a hairline
+  at every zoom instead of growing into a bar, and a guide that would get too
+  dense thins out rather than filling in (the grid's level-of-detail ladder).
+
+**4. Never in an export, a copy, or a composited render.** A guide is drawn by
+the canvas view, not by the renderer, so it cannot reach a picture even by
+accident, and switching one off leaves the canvas byte for byte what it was.
+Both shipped guides prove it in their walks: the grid walk photographs the
+canvas off, on and off again and the two off pictures hash identically, and the
+columns walk renders the document straight after a snapped drag and finds no
+bands in it. If a guide is tempting to draw in the renderer, the answer is no.
+
+**5. A guide you pinned outlives the ruler you pinned it with.** Switch the grid
+off and a guide dropped onto it stays, and things go on catching it. Something a
+person placed on purpose is not chrome that comes and goes with a view switch,
+even though it is drawn like one.
+
+**Drawing a new guide in a mock:** stack it above the artwork, at an alpha low
+enough to read straight through, as a wash or a hairline; give it a different
+kind from any other guide the page can show at the same time; and keep it out of
+whatever that page presents as the exported or copied picture. If it looks right
+on an empty canvas, that proves nothing.
+
+The test for any guide: **put a filled black rectangle across the whole canvas.**
+The guide should still be visible, and should still be obviously not part of the
+rectangle. Fail the first half and it belongs over; fail the second half and it
+is drawn too strongly.

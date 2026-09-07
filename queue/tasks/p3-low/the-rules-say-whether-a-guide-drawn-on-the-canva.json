@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:14:41.845Z",
-  "updated": "2026-09-06T12:16:42.323Z",
+  "updated": "2026-09-07T09:51:18.813Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-06. Evidence: queue/audits/2026-09-05-canvas-grid.json rough 1 (the grid is drawn OVER your layers, a deliberate change from the plain reading of the ask) and queue/audits/2026-09-05-screen-columns.json rough 1 (the columns draw OVER the screen and its contents, the same call the canvas grid made a day earlier). Grep of docs/design/mocks/shared/UX-PATTERNS.md and docs/design/overview.md finds no rule about it. Section 3 (panels and surfaces taxonomy) is the natural home, or a new short section beside it.",
@@ -32,6 +32,23 @@
     {
       "t": "2026-09-06T12:16:42.323Z",
       "note": "seq 100 -> 100"
+    },
+    {
+      "t": "2026-09-07T09:51:18.813Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T09:56:01.906042Z",
+      "note": "Adversarial review before writing. (1) Is the rule even settled? Checked for a user reaction to the two audits, which both put the over/under call at the top of their evaluate list. No decision card, but the user DID report on the grid a day later (task the-grid-is-always-behind-the-canvas-and-things, done 2026-09-05) and their words were 'the switched on state being the grid drawn OVER the picture'. So over is ratified, not just twice-guessed. (2) A flat 'guides always go over' would already be wrong about what ships: with the grid switched off the same lines are moved UNDER the picture so the canvas drop shadow falls across the surround, and a pinned guide ignores the grid switch entirely. The rule needed those two clauses or the next reader would find the code contradicting it on day one. (3) Shortest version that carries the value: one D entry with the reasoning, one taxonomy bullet so it is found while browsing surfaces, one audit gate so it is enforced. No restatement of the level-of-detail ladder or of snapping, which are their own rules."
+    },
+    {
+      "t": "2026-09-07T09:56:01.906042Z",
+      "note": "Written into docs/design/mocks/shared/UX-PATTERNS.md, three places. D16 'A guide draws over your work, and never gets into the picture': what counts as a guide and how it differs from an annotation (D14); over by default, with the test 'would the first thing anybody draws hide it?'; under only when the guide is acting as the work surface, which is the grid in the grey surround and nothing else; five ways a guide avoids reading as something a person drew (wash or hairline never a solid fill, ink sunk out of the way, two guides differ in kind not just colour, judged against the surface it lies on rather than the app theme, weight in screen points not document points); never in an export, a copy or a composited render; a pinned guide outlives the switch that drew it. Named cases are the canvas grid and a screen's columns with their audit ids. Ends with a checkable test: put a filled black rectangle across the canvas, the guide should still be visible and still obviously not part of it. Section 3 gains a Canvas guide bullet in the surface taxonomy pointing at D16, section 9 gains an audit gate, and the status block goes to v1.4."
+    },
+    {
+      "t": "2026-09-07T09:56:01.906042Z",
+      "note": "Also pointed the three shipped guide files at the rule (CanvasGridChrome, CanvasColumnChrome, CanvasGuideChrome doc comments), since the next person to add a guide is reading Swift rather than the mocks doc. Comment-only. swift build clean, Scripts/test.sh green at 4327 tests. No audit file: this task ships a written rule, not a feature anybody can playtest, so there is nothing to put in front of the user beyond the doc itself."
     }
-  ]
+  ],
+  "started": "2026-09-07T09:51:18.812Z"
 }
