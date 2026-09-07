@@ -1,0 +1,27 @@
+{
+  "id": "one-gap-in-a-card-comes-out-a-point-short",
+  "title": "One gap in a card comes out a point short",
+  "goal": "On the starter Card, the space between the title and the line of text under it is one point smaller than the space above the title, even though the card is set to keep the same gap between everything in it. It is small, but it is the kind of thing that makes a stack of cards look hand-placed.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1550,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T00:03:27.533Z",
+  "updated": "2026-09-07T00:03:27.533Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-09-06. StarterComponents Card, gap 8: Picture content ends 108, Title content 116..136, Body content starts 143 (gap 7, not 8). GroupFlow.stacked works the cursor out from the item boxes measured BEFORE moved() resizes each child, and a text child stretched across the column is re-fitted on the way in, so a height that changes by a point during placement leaves the gap after it short.",
+  "acceptance": [
+    "Every gap between the pieces of a column is the same number the layout was given",
+    "The Card starter shows the same space above and below its title",
+    "A test covers a column whose pieces change size as they are placed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T00:03:27.533Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -81,25 +81,47 @@ public enum TextBlockMetrics {
     /// hugs its words; only a box with room to spare can push its lines down.
     /// The field types the draft at this same offset, so nothing slides
     /// vertically on Return.
+    ///
+    /// The room the words are shared out in is the box a person SEES, not the
+    /// stored frame. A measured box carries `TextRasterizer.frameInset` on
+    /// each side so an antialiased glyph edge has somewhere to round into, and
+    /// down the box every point of it is at the BOTTOM, because the words are
+    /// drawn from the top edge. The model takes that room straight back off
+    /// again (`Layer.withoutSlack`), so it is not room anybody can see. Share
+    /// the stored height out instead and centred words sit about two points
+    /// below the middle of the box they are centred in, and words asked to sit
+    /// on the floor hang through it.
+    ///
+    /// The words are measured at their own height here rather than the height
+    /// a frame holding them has to be, for the same reason: the point of slack
+    /// `laidOutHeight` adds is room for the frame, not room the words are in,
+    /// and counting it would push them half a point back up the box.
     public static func topInset(for text: TextContent, in frameSize: CGSize) -> CGFloat {
         guard text.verticalAlignment != nil, text.usedVerticalAlignment != .top,
               !text.string.isEmpty else { return 0 }
-        let needed = laidOutHeight(text, width: frameSize.width)
-        guard needed < frameSize.height else { return 0 }
-        let slack = frameSize.height - needed
+        let room = frameSize.height - TextRasterizer.frameInset * 2
+        let needed = wordsHeight(text, width: frameSize.width)
+        guard needed < room else { return 0 }
+        let slack = room - needed
         return text.usedVerticalAlignment == .middle ? slack - (slack / 2).rounded() : slack
     }
 
-    /// The height the lines of `text` need inside a box `width` wide, with the
-    /// one point of slack the frame they are handed to needs (the suggestion
-    /// and the frame round differently, and the cost of being one short is a
-    /// dropped line).
-    static func laidOutHeight(_ text: TextContent, width: CGFloat) -> CGFloat {
+    /// The height the lines of `text` take inside a box `width` wide: the
+    /// measurement, with nothing added to it. Where the words ARE, which is
+    /// what anything placing them down a box shares out.
+    static func wordsHeight(_ text: TextContent, width: CGFloat) -> CGFloat {
         let attributed = TextRasterizer.measuringString(text)
         let framesetter = CTFramesetterCreateWithAttributedString(attributed)
         let suggested = CTFramesetterSuggestFrameSizeWithConstraints(
             framesetter, CFRange(location: 0, length: 0), nil,
             CGSize(width: width, height: CGFloat.greatestFiniteMagnitude), nil)
-        return ceil(suggested.height) + 1
+        return ceil(suggested.height)
+    }
+
+    /// The height a FRAME handed those lines has to be: the words, plus one
+    /// point of slack (the suggestion and the frame round differently, and the
+    /// cost of being one short is a dropped line).
+    static func laidOutHeight(_ text: TextContent, width: CGFloat) -> CGFloat {
+        wordsHeight(text, width: width) + 1
     }
 }

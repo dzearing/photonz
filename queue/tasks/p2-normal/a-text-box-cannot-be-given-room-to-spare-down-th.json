@@ -1,0 +1,27 @@
+{
+  "id": "a-text-box-cannot-be-given-room-to-spare-down-th",
+  "title": "A text box cannot be given room to spare down the box",
+  "goal": "The Text section offers Top, Middle and Bottom for where the words sit down their box, and on a plain text box on the canvas none of them does anything, because the box is always exactly as tall as the words in it. Either give a person a way to make a text box taller than its words, or stop offering a choice that cannot bite.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 1540,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T00:03:19.750Z",
+  "updated": "2026-09-07T00:03:19.750Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-06 while fixing where words sit down a box. Dragging the bottom edge of a text box MOVES the layer; dragging a corner re-wraps it and the height follows the words; H in Position & Size is not editable for text. Layer.resized honours a taller box only when fillingHeight is true, which GroupFlow passes for a child whose vertical placement is Stretch, so room today comes only from a container. See Scripts/playtest/words-down-the-box-walk.json, stage 3-middle-does-nothing, and TextBlockMetrics.topInset which is the rule that would then apply.",
+  "acceptance": [
+    "A text box on the canvas can be made taller than the words in it, by a drag or by typing a height",
+    "With that room, pressing Middle moves the words to the middle of it and Bottom moves them to the floor",
+    "If the answer is instead that a text box always hugs, the Down row says why it is doing nothing rather than looking pressable"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T00:03:19.750Z",
+      "note": "created (manual)"
+    }
+  ]
+}

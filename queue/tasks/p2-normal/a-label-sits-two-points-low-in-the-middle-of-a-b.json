@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1510,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T23:05:45.223Z",
-  "updated": "2026-09-06T23:05:45.224Z",
+  "updated": "2026-09-06T23:36:37.822Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 while landing the one-line bar title. A measured text box carries 4 points of slack (TextMeasurement.slack, 2 a side). GroupFlow.moved sets the frame origin to the VISIBLE (content) origin and lets the slack hang past the far edges, which is right along the flow but puts a cross-axis centred box half the slack low. Nav Bar title lands at frame y=15 in a 48 tall bar, content 17..35, middle 26 against the bar middle 24. Look at GroupFlow.moved and GroupFlow.stacked cross-axis span.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-06T23:05:45.224Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-06T23:36:37.822Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T00:03:46.769127Z",
+      "note": "Adversarial review, before building. Reproduced the report first rather than trusting it: rendered the Nav Bar starter with the real CoreText measurement and read the ink off the raster. The title's content box is 15..33 in a 48 tall bar, middle 24 against the bar's 24, and its ink has 18 points above and 18 below. The task's own numbers (content 17..35, middle 26) are not what the app does, and GroupFlow.moved and GroupFlow.stacked, which the note pointed at, are both correct: the flow centres the CONTENT box and hands the slack back past the far edges."
+    },
+    {
+      "t": "2026-09-07T00:03:46.769127Z",
+      "note": "The defect is real but in two other places, both the same mistake about which box the slack belongs to. (1) TextBlockMetrics.topInset shared the STORED frame height out, so words told to sit in the middle of a box with room landed about two points low, and words told to sit at the bottom hung about two points BELOW the bottom edge of the box a person sees. Measured at eight samples per point off real rasters. (2) StarterComponents pen.label centred the stored box on centerY, so every starter that places its own label put it two points high: the Badge count and the Button word were each 1.5 points above the middle of their pill."
+    },
+    {
+      "t": "2026-09-07T00:03:46.769127Z",
+      "note": "Fixed both. topInset now shares out the box a person sees (frame less TextRasterizer.frameInset on each side) and measures the words at their own height (new TextBlockMetrics.wordsHeight) rather than at the height a frame holding them has to be, because the point laidOutHeight adds is room for the frame, not room the words are in. pen.label centres the ink height, the same reading centeredLabel already took across the box."
+    },
+    {
+      "t": "2026-09-07T00:03:46.769127Z",
+      "note": "Tests first, all three failing before the change and passing after. New TextDownTheBoxTests reads ink off rasters and asks only how far the words MOVED between the box they hug and a roomy one, which takes the typography out of the answer; new CentredLabelTests locks the flow's already-correct cross-axis centring; StarterComponentRenderTests gained a vertical twin of its centred-label check, asserting geometry rather than ink because a word's ink is not centred in its own line box and a tolerance loose enough for that would miss the two points. Two old tests that encoded the stored-box rule were rewritten. Full suite 4147 green."
+    },
+    {
+      "t": "2026-09-07T00:03:46.769127Z",
+      "note": "Adversarial review, after building, in Photonz Probe with Screen Recording granted: Scripts/playtest/words-down-the-box-walk.json. The starters read right in the real capture. The other half does not have a click path: a text box on the canvas is always exactly as tall as its words (the bottom edge moves it, a corner re-wraps it, H is not editable), so Top/Middle/Bottom in the Text section cannot move anything there and only bite when a container stretches the box. Filed as a-text-box-cannot-be-given-room-to-spare-down-th. Also filed one-gap-in-a-card-comes-out-a-point-short, seen while measuring."
     }
-  ]
+  ],
+  "started": "2026-09-06T23:36:37.821Z"
 }

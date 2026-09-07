@@ -10154,3 +10154,40 @@ crop of both rows shows the Down glyphs at the same weight, size and track as
 the Across ones. All 4139 tests pass.
 
 Next: back to the queue.
+
+## 2026-09-06 — Words sit in the middle of the box they are centred in
+
+A measured text box is kept a few points taller and wider than its words so
+antialiased glyph edges have somewhere to round into, and all of that room is
+past the far edges. Two places were sharing it out as if it were part of the
+words, which is the wrongness nobody can name and everybody can see.
+
+- `TextBlockMetrics.topInset` shared out the STORED frame height, so words told
+  to sit in the middle of a box that has room landed about two points low, and
+  words told to sit on the floor hung about two points below the bottom edge of
+  the box a person sees. It now shares out the visible box, and measures the
+  words at their own height (`wordsHeight`) rather than at the height a frame
+  holding them has to be.
+- `StarterComponents` `pen.label(centerY:)` centred the stored box, so the
+  Badge's count and the Button's word each sat 1.5 points above the middle of
+  their pill. It now centres the ink, the reading `centeredLabel` already took
+  across the box.
+
+The task said a Nav Bar title sits two points LOW. It does not, and never did:
+measured off a real render it is centred to within half a point, and
+`GroupFlow` was right all along. Reproducing before believing is what found the
+two real cases.
+
+New tests: `TextDownTheBoxTests` (reads ink off rasters and asks only how far
+the words moved, which takes the typography out of the answer),
+`CentredLabelTests`, and a vertical twin of the starter centred-label check.
+Full suite 4147 green. Verified in Photonz Probe with Screen Recording granted:
+`Scripts/playtest/words-down-the-box-walk.json`; audit
+`queue/audits/2026-09-06-words-down-the-box.json`.
+
+Two things found on the way, both filed: the Top/Middle/Bottom row in the Text
+section does nothing on a plain text box, because a text box on the canvas can
+never be taller than its words; and one gap in the starter Card comes out a
+point short of the gap the column was given.
+
+Next: the queue.

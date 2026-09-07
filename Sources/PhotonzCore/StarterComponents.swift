@@ -473,7 +473,13 @@ public enum StarterComponents {
                                       colorHex: palette.style(color).colorHex, weight: weight)
             content.alignment = align
             let natural = measure(content)
-            let frame = CGRect(x: x, y: (px(centerY) - natural.height / 2).rounded(),
+            // `centerY` is where the WORDS go, not where the stored box goes.
+            // A measured box keeps its slack past the far edges, all of it
+            // below the words, so halving the stored height puts a label two
+            // points high in whatever holds it. The same reading `across`
+            // takes (`centeredLabel`), down the box.
+            let ink = max(natural.height - textSlack, 1)
+            let frame = CGRect(x: x, y: (px(centerY) - ink / 2).rounded(),
                                width: natural.width, height: natural.height)
             return Layer(name: name, content: .text(content), frame: frame,
                          colorStyleBindings: [ColorStyleBinding(slot: .text,

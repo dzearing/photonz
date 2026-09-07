@@ -1,0 +1,28 @@
+{
+  "feature": "Words sit in the middle of the box they are centred in",
+  "epic": "ui-layout",
+  "summary": "A label centred inside a control now lands on the middle of it. A text box is kept a few points taller than its words so glyph edges have room to round into, and two places were sharing that room out as if it were part of the words: the starter controls put their labels two points high, and text told to sit in the middle or at the bottom of a box it has room in sat about two points low or hung through the floor.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is how every label is placed.",
+  "try": [
+    { "do": "Open the Library and switch it to Comps.", "shot": "2026-09-06-words-down-the-box-starters-sc.png" },
+    { "do": "Drag the Badge tile onto the canvas and look at the 3 in it." },
+    { "do": "Drag the Button tile onto the canvas and look at the word in it." },
+    { "do": "Drag the Nav Bar tile onto the canvas and look at Title against the bar behind it." },
+    { "do": "Double click the Button's word, type something much longer, and press Return." },
+    { "do": "Drag the Button's right edge much wider and check the word is still on the middle." },
+    { "do": "Press the text tool, click on the canvas, type a word, then press Middle in the Text section's Down row.", "shot": "2026-09-06-words-down-the-box-no-room-sc.png" }
+  ],
+  "evaluate": [
+    "Does the 3 in the Badge look like it is sitting on the middle of the pill, or still a hair high or low?",
+    "Does the Button's word look level with the middle of the button when you cover the rest of the screen?",
+    "Does the Nav Bar title look centred against the bar drawn behind it?",
+    "Is a half point of slop in either direction fine, or do you want these on the exact middle even when that means a half point frame?",
+    "The last step does nothing at all. Is a Down row that cannot move anything on a plain text box worth having on screen there?"
+  ],
+  "rough": [
+    "The task said a Nav Bar title sits two points low. It does not: measured off a real render it is centred to within half a point, and always was. The error was the other way and in two other places, so the fix is real but the report it came from was wrong about where.",
+    "The Down row (Top, Middle, Bottom) does nothing on a plain text box, because a text box on the canvas is always exactly as tall as its words: dragging its bottom edge moves it, dragging a corner re-wraps it, and neither leaves it any room. Down only bites when a container stretches the box. The second screenshot is that non-event, and it is filed as its own task.",
+    "So the half of this fix that lives in the renderer, words going down the box a person sees rather than the stored one, is proven by reading the ink off real rasters at eight samples per point rather than by a click path in the app. The starters half is the one in the picture.",
+    "Half a point of slop stays: a control whose height and words differ by an odd number cannot put its label on the exact middle and keep every frame on a whole point. The Button and the Badge each sit half a point low for that reason."
+  ]
+}

@@ -93,6 +93,33 @@ struct StarterComponentRenderTests {
         }
     }
 
+    /// And it is centred DOWN the control too, which is the half nobody
+    /// checked: a title two points low in a bar is the wrongness nobody can
+    /// name and everybody can see.
+    ///
+    /// Measured on the box a person SEES, not on the ink. A word's ink is not
+    /// centred in its own line box — a capital reaches higher than the line
+    /// asks, and only some letters go below the baseline — so reading rows off
+    /// a raster answers a question about the word rather than about the
+    /// control, and a tolerance loose enough to allow for that is loose enough
+    /// to miss the two points this exists to catch. That the drawn words
+    /// follow the box is `TextDownTheBoxTests`, at the other end.
+    ///
+    /// Half a point of slop, which is the whole point every frame rounds to:
+    /// a control whose height and words differ by an odd number cannot put its
+    /// label on the exact middle and stay on whole points.
+    @Test func aCentredLabelIsVerticallyCentred() throws {
+        for (kind, piece) in [(StarterComponent.button, "Label"), (.badge, "Count"),
+                              (.textField, "Placeholder"), (.navBar, "Title")] {
+            let built = StarterComponents.layer(kind, measure: measure)
+            let label = try #require(built.children.first { $0.name == piece },
+                                     "\(kind.name) has no \(piece)")
+            let middle = label.contentBounds.midY
+            #expect(abs(middle - built.localBounds.midY) <= 0.5,
+                    "\(kind.name) puts its \(piece) at \(middle), not \(built.localBounds.midY)")
+        }
+    }
+
     /// Nothing may hang outside the control it belongs to: a label wider than
     /// its button is the first sign the frame numbers are wrong.
     ///

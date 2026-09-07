@@ -247,20 +247,25 @@ import Testing
         #expect(TextBlockMetrics.topInset(for: text, in: CGSize(width: 500, height: 200)) == 0)
     }
 
+    /// Half the room, and the room is the box a person SEES: a stored box
+    /// keeps a few points past its bottom edge for antialiasing, and counting
+    /// those would put the words below the middle of the box they are centred
+    /// in (`TextDownTheBoxTests`).
     @Test func centredTextSitsHalfTheSlackDown() {
         let text = TextContent(string: "Primary button", verticalAlignment: .middle)
         let box = CGSize(width: 500, height: 200)
         let inset = TextBlockMetrics.topInset(for: text, in: box)
-        let needed = TextBlockMetrics.laidOutHeight(text, width: box.width)
-        #expect(abs(inset - (box.height - needed) / 2) <= 0.5)
+        let seen = box.height - TextRasterizer.frameInset * 2
+        let needed = TextBlockMetrics.wordsHeight(text, width: box.width)
+        #expect(abs(inset - (seen - needed) / 2) <= 0.5)
     }
 
     @Test func bottomTextSitsOnTheFloorOfItsBox() {
         let text = TextContent(string: "Primary button", verticalAlignment: .bottom)
         let box = CGSize(width: 500, height: 200)
         let inset = TextBlockMetrics.topInset(for: text, in: box)
-        let needed = TextBlockMetrics.laidOutHeight(text, width: box.width)
-        #expect(inset == box.height - needed)
+        let seen = box.height - TextRasterizer.frameInset * 2
+        #expect(inset == seen - TextBlockMetrics.wordsHeight(text, width: box.width))
     }
 
     @Test func textTallerThanItsBoxStaysAtTheTop() {
