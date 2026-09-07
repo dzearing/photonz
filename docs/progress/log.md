@@ -11305,3 +11305,36 @@ all, so View ▸ Grid Settings has nothing to open on.
 - Next: the audit asks whether a copy should say what it took; ⌘J still
   promotes the composite (filed), cutting part of a shape still takes the lot
   (filed), and the marquee still has no keyboard shortcut (filed).
+
+## 2026-09-07 — a marquee follows the pointer
+
+- The rectangle and ellipse selection tools no longer magnetize their corners
+  to borders found in the picture. Reported by the user: the marquee snapped to
+  something whatever the grid or the snapping switch said, because neither was
+  ever consulted on that path. It was edge snapping, on by default, with no
+  affordance and no switch, and it made small selections impossible: a 67x27
+  sweep over a button came out 41x1 and a 240x40 one came out 239x50.
+- Reproduced first in the probe app before touching anything, by adding a
+  `region` line to the playtest describe (the selection's bounds in document
+  points) and reading a marquee back in numbers.
+- The policy now lives in one place, `MarqueeDrag.corner(at:)` in PhotonzCore,
+  with the reason beside it: a caliper foot points AT something in the picture
+  and takes the border, a selection is a region chosen by hand and takes the
+  pointer. `CanvasPointerDrags` calls it for the press and for the drag; the
+  edge snapping, the snap hold, the drag gate and the yellow guide are gone
+  from that path, and ⌘ is inert on a fresh marquee instead of being the only
+  escape hatch.
+- The region tools also came out of `snappingEdgeMap`'s tool list, so picking
+  one no longer starts a seconds-long edge sweep on a Retina screenshot for a
+  magnet nothing reads. Measure and the drawing tools still start it.
+- What the magnet existed for is served: one wand click took the Save Changes
+  button's exact bounds (233,756 248x60), and copy takes the layer you picked,
+  so a shape's own bounds come from picking it.
+- Tests: `Tests/PhotonzCoreTests/MarqueeNoMagnetTests.swift`, written red.
+  Walk: `Scripts/playtest/marquee-no-magnet-walk.json` (two zooms, grid on,
+  ⌘ held). Regressions checked with the existing caliper, snap-hold and
+  arrow-tip walks: those magnets all still catch. Audit:
+  `queue/audits/2026-09-07-marquee-no-magnet.json`.
+- Next: if a way to snap a selection is ever wanted it belongs on a deliberate
+  switch or a held key, never as the default. Not filed, since nobody has asked
+  for it.

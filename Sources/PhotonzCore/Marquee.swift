@@ -20,6 +20,19 @@ public struct MarqueeDrag: Equatable, Sendable {
         current = point
     }
 
+    /// Where a marquee corner goes for a pointer at `point`: exactly there.
+    ///
+    /// This exists to say so in one place. A marquee is a region you are
+    /// choosing BY HAND, so unlike a caliper foot or the end of an arrow — both
+    /// of which are pointing AT something in the picture and are magnetized to
+    /// the borders found there — a selection follows the pointer and nothing
+    /// pulls it. It used to take the same magnet, which made a small sweep
+    /// impossible: a 67x27 rectangle drawn over a screenshot came out 41x1,
+    /// with no switch anywhere to turn it off (reported 2026-09-07). If some
+    /// way to snap a selection is ever wanted it belongs on a deliberate switch
+    /// or a held key, never as the default, and it comes through here.
+    public static func corner(at point: CGPoint) -> CGPoint { point }
+
     /// The selection this drag describes: standardized, optionally constrained
     /// to a square (⇧), and clamped to the canvas. `nil` when the drag is
     /// empty or lies entirely outside the canvas.

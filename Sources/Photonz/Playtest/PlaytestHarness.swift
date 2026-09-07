@@ -3773,6 +3773,14 @@ private final class Run {
                 return (editor.document?.allLayers ?? [])
                     .filter { picked.contains($0.id) }.map(\.name)
             }(),
+            // The marquee region's bounds in document points, or "none". A
+            // marquee is a rectangle chosen by hand, so a walk reads this to
+            // prove the corners landed exactly where the pointer went rather
+            // than on something near it.
+            "region": editor.selection.map {
+                let box = $0.path.boundingBoxOfPath
+                return "\(Int(box.minX)),\(Int(box.minY)) \(Int(box.width))x\(Int(box.height))"
+            } ?? "none",
             // The group you are inside, nil out on the canvas.
             "insideGroup": editor.groupContextID
                 .flatMap { editor.document?.layer(id: $0)?.name } ?? "nil",

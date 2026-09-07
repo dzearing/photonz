@@ -335,8 +335,8 @@ extension EditorState {
     var documentPixelScale: CGFloat { document?.pixelScale ?? 1 }
 
     /// Detected UI edges for snapping, but ONLY while a tool that snaps to
-    /// them is active (measure, rect/ellipse region select, any drawing tool)
-    /// or a layer whose handles snap is selected — so the edge sweep never
+    /// them is active (measure, any drawing tool) or a layer whose handles snap
+    /// is selected — so the edge sweep never
     /// runs for documents that aren't being redlined. Analysis takes ~seconds
     /// on a Retina screenshot, so it runs OFF the main thread: the first
     /// access kicks it off and returns `.empty` (snapping is a no-op until it
@@ -347,9 +347,10 @@ extension EditorState {
         let selected = selectedLayerID.flatMap { document?.layer(id: $0) }
         // A caliper handle and an arrow endpoint both magnetize to the picture.
         let selectionSnaps = selected?.measure != nil || selected?.hasEndpointHandles == true
-        let toolSnaps = activeTool == .measure
-            || activeTool == .rectSelect || activeTool == .ellipseSelect
-            || activeTool.createsAnnotationByDrag
+        // The region tools are deliberately absent: a marquee follows the
+        // pointer and takes no magnet, so picking one must not start a sweep
+        // that costs seconds and would never be read.
+        let toolSnaps = activeTool == .measure || activeTool.createsAnnotationByDrag
         guard toolSnaps || selectionSnaps,
               let ref = document?.layers.compactMap(\.imageRef).first else { return .empty }
         if let ready = readyEdgeMaps[ref.id] { return ready.edges }

@@ -1,0 +1,30 @@
+{
+  "feature": "A marquee follows the pointer",
+  "epic": "measure-redline",
+  "summary": "A rectangular or elliptical selection now lands exactly where you drew it. It used to be pulled onto borders found in the picture, with no switch anywhere to stop it, which made small selections impossible: a 67 by 27 sweep over a button came out 41 by 1.",
+  "setup": "Photonz Dev, release Next. Open any screenshot. Nothing to turn on: this is how the selection tools behave now.",
+  "try": [
+    { "do": "Open a screenshot with plenty of borders in it, a settings pane or a toolbar." },
+    { "do": "Press M for the rectangle selection tool." },
+    { "do": "Drag a small selection over a button, starting a few pixels inside its edge. It should be the rectangle you drew, not the button.", "shot": "2026-09-07-marquee-small-sweep.png" },
+    { "do": "Drag a big selection across several borders. Watch for any tug as you cross them: there should be none, and no yellow guide line." },
+    { "do": "Zoom in to 200 percent and drag another one. Then turn the grid on with View, Show Grid, and drag one more." },
+    { "do": "Hold Command and drag one. It should feel exactly the same as without it." },
+    { "do": "Press W for the wand and click once inside a solid button: that is how you take an element's exact bounds now.", "shot": "2026-09-07-marquee-wand-bounds.png" },
+    { "do": "Pick up the measure tool with I and drag a caliper foot near a border, to check the magnet is still there where it belongs." }
+  ],
+  "evaluate": [
+    "Does a small selection over a button now come out the size you drew?",
+    "Does anything still tug the rectangle as you cross a border?",
+    "Now that the magnet is gone, is one click of the wand a good enough way to take an element's exact bounds, or do you miss having the selection snap?",
+    "Command used to be the escape hatch from the magnet and now does nothing on a fresh selection. Did you expect it to do something else?",
+    "Do caliper feet and dragged layers still catch borders the way they did?"
+  ],
+  "rough": [
+    "The magnet was there to make an element's exact bounds easy to take. Two things serve that now: the wand takes a whole button or field in one click (proved in the last shot: it took the Save Changes button exactly), and Copy takes the layer you picked, so a shape's own bounds come from picking it rather than from tracing it. Nothing else was lost, since neither the grid nor the snapping switch was ever consulted on this path.",
+    "If a way to snap a selection is still wanted, it should be a deliberate switch or a held key rather than the default. That is a follow-up, not part of this.",
+    "Picking the selection tools no longer starts the edge sweep, which used to cost seconds of background work on a Retina screenshot for a magnet nothing reads anymore. Picking the measure tool or a drawing tool still starts it, exactly as before.",
+    "A finished selection is still rounded to whole pixels, which is not a magnet: it is what keeps a copied region from landing on half a pixel.",
+    "Verified in the loop's probe app with a scripted walk that reads the selection's bounds back in numbers (Scripts/playtest/marquee-no-magnet-walk.json). The screenshots here are real window captures, not offscreen renders."
+  ]
+}

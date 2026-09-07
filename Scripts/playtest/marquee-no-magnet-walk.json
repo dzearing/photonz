@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/marquee-no-magnet",
+  "setup": { "forget": ["grid", "tools"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "rectSelect" },
+
+    { "do": "drag", "from": [233, 693], "to": [473, 733], "steps": 10, "hold": "1-plain-mid" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "1-plain", "note": "a marquee dragged across the hard edges of a text field: region must read 233,693 240x40" },
+    { "do": "snapshot", "name": "1-plain" },
+
+    { "do": "click", "at": [1100, 200] },
+    { "do": "drag", "from": [233, 693], "to": [473, 733], "steps": 10, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "2-command", "note": "the same drag on a cleared canvas with command held, which used to be the only way to refuse the magnet: must be identical to the plain one, 233,693 240x40" },
+
+    { "do": "drag", "from": [353, 783], "to": [420, 810], "steps": 10 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "3-small", "note": "a small marquee starting on the Save Changes button edge: region must read 353,783 67x27 (it used to come out 41x1)" },
+    { "do": "snapshot", "name": "3-small" },
+
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [700, 430], "to": [760, 470], "steps": 10 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "4-zoomed", "note": "zoomed in, between two cards: region must read 700,430 60x40" },
+
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "showGrid" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "drag", "from": [233, 693], "to": [473, 733], "steps": 10 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "5-grid-on", "note": "the grid is showing and snapping to it is on: the marquee must still read 233,693 240x40" },
+    { "do": "snapshot", "name": "5-grid-on" },
+
+    { "do": "action", "action": "hideGrid" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "wand" },
+    { "do": "click", "at": [270, 790] },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "6-wand", "note": "the magnet is gone, so this is how you take an element's exact bounds now: one click of the wand inside the Save Changes button" },
+    { "do": "snapshot", "name": "6-wand" }
+  ]
+}

@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:35:45.719Z",
-  "updated": "2026-09-07T15:35:45.758Z",
+  "updated": "2026-09-07T17:34:46.381103Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reported by the user on 2026-09-07: even with grid snapping off the marquee snaps to something, and it should never snap. Confirmed by reading CanvasPointerDrags.swift: the marquee's first corner is magnetised at line 162, where the anchor is passed through EdgeSnapping.snap against the edge map unless Command is held, and the drag then updates through the same edge snapping at line 882 with a comment saying it is the same corner magnetising as a measure drag. So this is edge snapping against detected picture edges, which is why it happens regardless of the grid or the snapping switch: neither is consulted on this path. The user wants it gone entirely rather than made conditional. Before removing it, note why it was put there, to make selecting an element's exact bounds easy, and say in the audit what serves that now: the wand already selects a region by content, and a shape's own bounds are reachable by picking the layer, so the magnet may simply be unnecessary. If some way to snap a selection is still wanted it belongs behind a deliberate switch or a held key, never as the default, and that would be a follow-up rather than this task.",
+  "notes": "Reported by the user on 2026-09-07: even with grid snapping off the marquee snaps to something, and it should never snap. Confirmed by reading CanvasPointerDrags.swift: the marquee's first corner is magnetised at line 162, where the anchor is passed through EdgeSnapping.snap against the edge map unless Command is held, and the drag then updates through the same edge snapping at line 882 with a comment saying it is the same corner magnetising as a measure drag. So this is edge snapping against detected picture edges, which is why it happens regardless of the grid or the snapping switch: neither is consulted on this path. The user wants it gone entirely rather than made conditional. Before removing it, note why it was put there, to make selecting an element's exact bounds easy, and say in the audit what serves that now: the wand already selects a region by content, and a shape's own bounds are reachable by picking the layer, so the magnet may simply be unnecessary. If some way to snap a selection is still wanted it belongs behind a deliberate switch or a held key, never as the default, and that would be a follow-up rather than this task. DONE 2026-09-07: removed at both call sites; the policy now lives in MarqueeDrag.corner(at:) in PhotonzCore with the reason beside it.",
   "acceptance": [
     "Dragging a marquee follows the pointer exactly, with no pulling, at every zoom, with the grid on and off and with snapping on and off",
     "No guide line appears while a marquee is being drawn",
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-07T15:35:45.757Z",
       "note": "seq 190 -> 11"
+    },
+    {
+      "t": "2026-09-07T17:21:23.913Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T17:34:46.381103Z",
+      "note": "adversarial review before building: the magnet came from an analogy with the caliper, and the analogy is wrong. A caliper foot points AT something in the picture, so a border is what it means; a marquee is a region you are choosing by hand, so the pointer is what it means. There is no affordance anywhere saying a selection is magnetised and no switch to turn it off, and the one escape hatch (holding Command) is undiscoverable. Shortest version that delivers the value: delete both call sites rather than gate them behind a new switch, which would be UI for a behaviour nobody asked for. Considered inverting Command (hold to snap) and rejected it as a guess; the task already says a deliberate switch is a follow-up."
+    },
+    {
+      "t": "2026-09-07T17:34:46.381103Z",
+      "note": "reproduced first, in the probe app: added a \"region\" line to the playtest describe (the selection's bounds in document points) and drove a marquee over the settings-pane fixture. A drag from 353,783 to 420,810 came out 352,786 41x1 instead of 353,783 67x27, and one from 233,693 to 473,733 came out 234,683 239x50. The same drags with Command held were exact, which pins it on the edge magnet rather than the grid."
+    },
+    {
+      "t": "2026-09-07T17:34:46.381103Z",
+      "note": "test first: Tests/PhotonzCoreTests/MarqueeNoMagnetTests.swift, red before the change (no MarqueeDrag.corner). It proves the fixture edge is strong enough to pull a caliper foot, then holds the marquee corner on the pointer over that same edge, off the pixel grid, and across a drag."
+    },
+    {
+      "t": "2026-09-07T17:34:46.381103Z",
+      "note": "change: MarqueeDrag.corner(at:) in PhotonzCore is now the one place that says a selection corner is the pointer, and CanvasPointerDrags calls it for both the press and the drag; the EdgeSnapping calls, the snap hold, the drag gate and the guide line are gone from that path. The region tools also came out of snappingEdgeMap's tool list, so picking one no longer starts a seconds-long edge sweep for a magnet nothing reads."
+    },
+    {
+      "t": "2026-09-07T17:34:46.381103Z",
+      "note": "verified in the probe app (Scripts/playtest/marquee-no-magnet-walk.json): 233,693 240x40 plain, identical with Command, 353,783 67x27 for the small sweep that used to collapse, 700,430 60x40 zoomed in, and 233,693 240x40 with the grid on and snapping to it on. Every drag logs guides caught 0, changed 0, and the mid-drag capture shows no guide line. Regressions checked with the existing walks: caliper feet still catch (caliper-catches-a-drawn-edge), layer move and resize still catch (snap-hold), arrow tips still snap (arrow-tip-snap). Full suite green, 4453 tests."
+    },
+    {
+      "t": "2026-09-07T17:34:46.381103Z",
+      "note": "the ability the magnet existed for is served by the wand: one click inside the Save Changes button selected 233,756 248x60, its exact bounds. Picking a layer covers a shape's own bounds, since copy takes the layer you picked. Both are in the audit."
+    },
+    {
+      "t": "2026-09-07T17:34:46.381103Z",
+      "note": "audit: queue/audits/2026-09-07-marquee-no-magnet.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-07T17:21:23.912Z"
 }

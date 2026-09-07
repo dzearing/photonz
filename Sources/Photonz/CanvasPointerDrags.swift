@@ -132,9 +132,9 @@ extension CanvasNSView {
             return
         }
         // Region selection tools. The wand floods app-side (async — the
-        // composite sweep is heavy); rect/ellipse start a marquee whose
-        // corners magnetize to detected edges (⌘ = free). The combine mode
-        // (⇧ add / ⌥ subtract / ⇧⌥ intersect) latches at gesture start.
+        // composite sweep is heavy); rect/ellipse start a marquee, which
+        // follows the pointer exactly and takes no magnet at all. The combine
+        // mode (⇧ add / ⌥ subtract / ⇧⌥ intersect) latches at gesture start.
         if tool == .wand {
             onWandAt(p, SelectionRegion.Mode(shift: event.modifierFlags.contains(.shift),
                                              option: event.modifierFlags.contains(.option)))
@@ -158,12 +158,8 @@ extension CanvasNSView {
                 refreshOverlays()
                 return
             }
-            var anchor = p
-            if !event.modifierFlags.contains(.command) {
-                anchor = EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom).point
-            }
-            resetDragMotion(p)
-            regionDrag = (MarqueeDrag(anchor: anchor), mode, tool == .ellipseSelect)
+            regionDrag = (MarqueeDrag(anchor: MarqueeDrag.corner(at: p)), mode,
+                          tool == .ellipseSelect)
             refreshOverlays()
             return
         }
@@ -870,24 +866,9 @@ extension CanvasNSView {
             regionOutlineDrag = session
             refreshOverlays()
         } else if var session = regionDrag {
-            // Same corner magnetizing as a measure drag: the growing edges
-            // window the candidates; ⌘ drags free.
-            let held = snapHold(freeing: event.modifierFlags.contains(.command))
-            if held.isFree {
-                session.drag.update(to: p)
-                snapGuide = nil
-            } else {
-                trackDragMotion(p)
-                let snap = axisGated(
-                    EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
-                                      xSpan: min(session.drag.anchor.x, p.x)...max(session.drag.anchor.x, p.x),
-                                      ySpan: min(session.drag.anchor.y, p.y)...max(session.drag.anchor.y, p.y),
-                                      holding: held),
-                    raw: p)
-                session.drag.update(to: snap.point)
-                snapGuide = (snap.guideX, snap.guideY)
-                snapHold.caught(x: snap.guideX, y: snap.guideY)
-            }
+            // Both corners are the pointer: a selection is chosen by hand and
+            // nothing in the picture pulls it. See `MarqueeDrag.corner`.
+            session.drag.update(to: MarqueeDrag.corner(at: p))
             regionDrag = session
             refreshOverlays()
         } else if var drag = marquee {
