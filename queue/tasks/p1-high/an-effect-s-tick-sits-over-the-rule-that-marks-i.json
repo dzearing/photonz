@@ -1,0 +1,34 @@
+{
+  "id": "an-effect-s-tick-sits-over-the-rule-that-marks-i",
+  "title": "An effect's tick sits over the rule that marks its settings",
+  "goal": "On an effect row the tick and the vertical rule that marks that effect's settings do not share a line, so the rule looks tacked on rather than hanging from the thing it belongs to. Line them up: the rule that runs down beside an effect's settings sits directly under the tick that switches that effect on.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T21:51:11.380Z",
+  "updated": "2026-09-07T21:51:11.417Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07 with a screenshot of a Blur effect. The rule is drawn by OwnedSettings (Sources/Photonz/PartsInspector.swift line 268), a 2 point rounded rectangle with a leading padding of 1, and it is used by both lists, from EffectsListInspector.swift line 124 and PartsInspector.swift line 167. The row above puts the title first at ColorPartLayout.labelWidth of 68 and then the switch at switchWidth of 16 (EffectsListInspector.swift lines 94 to 98, widths in ColorStylePanel.swift lines 221 and 225), so the tick sits about 68 points in while the rule starts at the row's leading edge. Hence the mismatch. Fix by giving the rule the same leading offset the switch column has, taken from ColorPartLayout rather than typed again, and note the tick is 16 wide against a 2 wide rule so centring the rule on the tick means offsetting by the switch column's leading edge plus half the difference. Since OwnedSettings is shared, this lands in both lists at once, which is why the acceptance checks both.",
+  "acceptance": [
+    "The vertical rule beside an effect's settings is centred on the tick above it, measured in a render rather than judged by eye, with the numbers in the audit",
+    "The same holds in the Appearance list, where a part's settings use the same rule, so the two lists agree",
+    "It holds for every effect and every part, whatever its name length, and at a narrow panel width",
+    "The alignment comes from one shared value rather than each list carrying its own inset, so a list added later cannot drift",
+    "Nothing else in either row moves, so names, colours and the controls at the end of the row stay where they are",
+    "Audit written under queue/audits/ with an effect open and a part open, and the measured positions, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T21:51:11.381Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T21:51:11.417Z",
+      "note": "seq 210 -> 5"
+    }
+  ]
+}
