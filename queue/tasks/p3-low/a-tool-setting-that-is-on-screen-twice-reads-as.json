@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 80,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T01:59:23.807Z",
-  "updated": "2026-09-07T09:16:15.899Z",
+  "updated": "2026-09-07T09:16:22.729Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from queue/audits/2026-09-05-tool-settings.json rough 4. The panel sections are MeasureToolInspector, WandToolInspector, CalloutToolInspector and CropToolInspector in LayersPanel.swift, gated by InspectorSectionID .measureTool/.wandTool/.calloutTool/.cropTool. The capsule is Sources/Photonz/ToolSettingsCapsule.swift. Note that Crop keeps a panel section with no capsule (aspect is a mode), so any rule has to cover that case too. Do not just delete the panel sections: the panel is where the settings get their explaining sentence and the wand its long slider.",
@@ -62,6 +62,10 @@
     {
       "t": "2026-09-07T09:16:15.899Z",
       "note": "Build notes for whoever picks this up with an answer in hand. Option A: gate ToolSettingsCapsule on editorState.isInspectorShown being false in EditorView.swift line ~95 (the settings(for:) guard is the one place, so the bar's own inset stays right), and on tool change reveal the tool section using the ScrollViewReader proxy already in LayersPanel.swift line 98, only when the section is not already visible. Nothing in the panel changes. Option B: drop .measureTool/.wandTool/.calloutTool from availableSections while ToolSettingsCapsule.settings(for:) is non-empty, leave .cropTool alone, add a measureMode case to ToolSetting plus its capsule control, and move the wand's explaining sentence into the slider's help text. Either way, keep the panel-hidden capsule exactly as it is, and re-run Scripts/playtest/tool-settings-twice-walk.json to prove the result."
+    },
+    {
+      "t": "2026-09-07T09:16:22.728Z",
+      "note": "Waiting on the decision \"With the panel open, a tool's settings are on screen twice. Where should they live?\" Three options with real window captures of both places; recommended A, the panel holds them while it is open. Build notes for every option are in the task log, so the answer can be built in one run."
     }
   ],
   "started": "2026-09-07T09:09:30.690Z"
