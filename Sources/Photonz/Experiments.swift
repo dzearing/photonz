@@ -170,6 +170,12 @@ extension Experiments {
     /// release's catalog, so Current always reads false.
     var measureGuideSnapEnabled: Bool { isEnabled(FeatureCatalog.measureGuideSnapFlag) }
 
+    /// `next-measure-layer-snap`: whether a caliper foot catches the exact edge
+    /// of a layer on the canvas, rather than only the edges detected in the
+    /// picture underneath. Exists only in the Next release's catalog, so
+    /// Current always reads false.
+    var measureLayerSnapEnabled: Bool { isEnabled(FeatureCatalog.measureLayerSnapFlag) }
+
     /// `next-measure-readout-slide`: whether dragging a readout also slides it
     /// along its own measuring line, instead of only across it.
     var measureReadoutSlideEnabled: Bool { isEnabled(FeatureCatalog.measureReadoutSlideFlag) }

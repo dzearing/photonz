@@ -78,6 +78,11 @@ extension CanvasNSView {
         /// grab time: nothing else on the canvas moves while a handle is held,
         /// and rebuilding them per mouse-moved event would be wasted work.
         var guides: EdgeSnapping.GuideLines = .none
+        /// The layer edges this drag may catch exactly, collected at grab time
+        /// for the same reason: nothing else on the canvas moves while a handle
+        /// is held. Kept apart from `guides` because a layer's box is KNOWN and
+        /// a guide is only offered, and `EdgeSnapping` ranks the two differently.
+        var layerLines: EdgeSnapping.GuideLines = .none
         /// The head-drag landing, resolved against the readout's real geometry:
         /// the signed head offset, and where the number sits along the line when
         /// this drag moved it (nil when it did not).
@@ -150,6 +155,16 @@ extension CanvasNSView {
         return lines
     }
 
+    /// The edges of the LAYERS on the canvas, which a dragged foot catches
+    /// exactly. Unlike everything else a foot lands on, these are not guessed
+    /// from the picture: the app drew those boxes and knows where they are, so
+    /// `EdgeSnapping` lets one win outright. Pass nil to exclude nothing (a
+    /// caliper being placed is not a layer yet).
+    func measureLayerLines(excluding id: UUID?) -> EdgeSnapping.GuideLines {
+        guard Experiments.shared.measureLayerSnapEnabled, let document else { return .none }
+        return MeasureSnapping.layerLines(in: document, excluding: id)
+    }
+
     /// The lines a dragged READOUT CHIP lines up with: where the other chips
     /// centre. A chip is not a measured point, so the picture's own edges have
     /// no say over where it parks — the other chips do.
@@ -204,7 +219,8 @@ extension CanvasNSView {
         guard let viewport, !modifiers.contains(.command) else { return doc }
         return EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom,
                                  includeCenters: measureSnapsToCenters,
-                                 guides: measureGuideLines(excluding: nil)).point
+                                 guides: measureGuideLines(excluding: nil),
+                                 layerLines: measureLayerLines(excluding: nil)).point
     }
 
     /// Snaps the SECOND foot along the measuring line from foot1 (edge magnetize +
@@ -226,6 +242,7 @@ extension CanvasNSView {
                                                    ySpan: min(foot1.y, doc.y)...max(foot1.y, doc.y),
                                                    includeCenters: measureSnapsToCenters,
                                                    guides: measureGuideLines(excluding: nil),
+                                                   layerLines: measureLayerLines(excluding: nil),
                                                    holding: snapHold),
                                   raw: doc)
             snapHold.caught(x: snap.guideX, y: snap.guideY)

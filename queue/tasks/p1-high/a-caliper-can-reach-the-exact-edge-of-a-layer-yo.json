@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 6,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T05:33:01.493Z",
-  "updated": "2026-09-07T05:33:01.529Z",
+  "updated": "2026-09-07T06:30:43.525070Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-06 with numbers: a 128 device pixel box measured 62 logical points instead of 64, two short, symmetric, so one point missing at each end. Cause found by reading, and it explains the symmetry: a caliper snaps ONLY to edges detected in the rendered picture. CanvasMeasure.swift lines 205 and 224 call EdgeSnapping.snap with the edge map and nothing else, and EdgeSnapping has no notion of a layer at all, no peers, no layer bounds, so the exact geometry of a shape the app itself drew is never a candidate. EdgeMap approximates edges from image gradients, and an antialiased boundary puts the strongest gradient a pixel inside the true edge, which is exactly a point short at each end at two times scale. Note that layer geometry IS already available to other drags: the move and resize paths take peers and pass them to Snapping.snapFrameOrigin, so the fix is to give the measure path the same candidates rather than to invent them. Decide and record which boundary a caliper should catch on a stroked shape, the path or the outside of the stroke, since a redliner measuring a button usually means its visible outer edge. This overlaps a-snap-that-is-showing-is-a-snap-you-get-with-no, which governs how a caught snap holds, and a-dragged-measurement-chip-snaps-into-line-with, which adds other measurements as candidates; all three want one candidate list rather than three.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-07T05:33:01.529Z",
       "note": "seq 180 -> 6"
+    },
+    {
+      "t": "2026-09-07T06:05:19.297Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T06:12:39.674323Z",
+      "note": "REPRODUCED (Scripts/playtest, probe, plain 1440x960 picture, zoom 1.68). Drew a rectangle, set it to exactly (400,300) 128x128 in the inspector; its outline is 4 wide and drawn INSIDE the box, so the middle of the line a person sees sits 2 in from the box at each end. Three calipers, each measured on its own with the previous one undone: feet aimed at the exact box numbers (300, 428) read 128; feet aimed at the MIDDLE OF THE VISIBLE LINE (302, 426) read 124, which is the user's 62 instead of 64 at 2x, two short, one at each end; feet a few off (306, 423) read 117. So the shortfall is not a fixed two, it is whatever the hand did: NOTHING pulls a caliper foot onto a layer's edge."
+    },
+    {
+      "t": "2026-09-07T06:12:39.674323Z",
+      "note": "CAUSE (confirmed, and not the one the notes guessed). It is not antialiasing in the edge map. EditorState+MeasurePanel.snappingEdgeMap builds the map from `document.layers.compactMap(\\.imageRef).first` - the background PICTURE only - so a shape the app drew itself is not in the map at all and has no candidate anywhere. The plain-background repro proves it: with no detectable edges under the box, a foot 2 off stays 2 off. The only reason the second caliper in an earlier run looked like it snapped was the FIRST caliper's own feet lines being offered as guides."
+    },
+    {
+      "t": "2026-09-07T06:12:39.674323Z",
+      "note": "WHICH BOUNDARY, decided by reading the renderer rather than by guessing: AnnotationRasterizer insets the path by strokeWidth/2 before stroking, so the outline is drawn INSIDE the layer box and the stroke's OUTER edge lands exactly on that box. The layer frame IS the visible outer edge. So a caliper catching the layer box catches what a redliner means by the edge of a button, and there is no second boundary to choose between. No decision card needed."
+    },
+    {
+      "t": "2026-09-07T06:12:39.674323Z",
+      "note": "ADVERSARIAL REVIEW before building. (1) Shortest version that delivers the value: give the measure path the document's layer boxes as an extra candidate set, the same boxes move and resize already use (PhotonzDocument.snapPeers). No new geometry, no refactor of the three overlapping snap tasks. (2) Cut: layer CENTRES as targets - not asked for, and centres already arrive from the edge map's midpoint rule. (3) Measurement layers are excluded from the new set: MeasureSnapping.lines already offers their feet and head lines exactly, and a caliper's bounding box is not a thing anyone aims at. (4) Feedback for a first-time user already exists: EdgeSnapping reports the captured line and the canvas draws the yellow guide, so a caught box edge looks the same as every other snap. (5) Risk considered and accepted: layer lines are NOT windowed by the moving line's span, matching what Snapping does for peers on a move or resize, so the two magnets behave the same way."
+    },
+    {
+      "t": "2026-09-07T06:30:43.525070Z",
+      "note": "BUILT. PhotonzCore: MeasureSnapping.layerLines(in:excluding:) offers every visible layer's four edges from PhotonzDocument.snapPeers (measurements excluded, they already offer their own lines); EdgeSnapping.snap gains `layerLines:` and treats them as KNOWN. App: flag next-measure-layer-snap (Next, on by default), CanvasNSView.measureLayerLines(excluding:), wired into all three foot paths - snapMeasureAnchor, snapMeasureSecondFoot and the placed-caliper foot drag (MeasureHandleDrag.layerLines, collected at grab time like the other guides). 12 new tests in Tests/PhotonzCoreTests/MeasureLayerEdgeSnappingTests.swift, written before the change."
+    },
+    {
+      "t": "2026-09-07T06:30:43.525070Z",
+      "note": "ADVERSARIAL REVIEW after building, and it caught a regression I had shipped into the working tree. With a known line simply outranking every detected edge - which is acceptance item 5 read literally - the most common redlining move broke: draw a call-out box AROUND a button, measure the button, and the box's edges (12 away) stole both feet from the button's own edges (2 and 4 away), reading 38 where the button is 30. Verified in the probe, not reasoned about. So the rule is now a NEAR-tie rather than an absolute one: a known line wins unless a guessed line is clearly nearer, where clearly is EdgeSnapping.knownEdgeMargin = 2 image pixels. That is not an arbitrary constant - it is the whole size of the disagreement, since an antialiased boundary puts its strongest gradient about a pixel inside the true edge. A guess describing the SAME edge lands inside it and loses; one describing a DIFFERENT edge is further off and keeps the snap. This honours acceptance 5 for the case it means and declines it for the case it did not anticipate; the audit's third question asks the user about the feel."
+    },
+    {
+      "t": "2026-09-07T06:30:43.525070Z",
+      "note": "VERIFIED in the app, not assumed. Scripts/playtest/caliper-catches-a-drawn-edge-walk.json (new, committed): a 128x128 box on a 2x capture, both feet aimed at the middle of its outline, reads 64 at zoom 0.32, 0.50 and 0.98; a caliper placed carelessly at 30 and then corrected by DRAGGING each foot also reads 64; a button in the picture with no layer near it still has both feet pulled onto its own detected edges, so screenshot snapping is unchanged. Grabbiness re-checked after the margin: the call-out box case is back to 30. Suite green at 4265. Eight measure-related walks re-run green (snap-hold, snap-hold-foot, redline, measure-chip-snap, caliper-chip-join, measure-handback, guides-catch-marks, arrow-tip-snap). Real -sc.png window captures copied to queue/audits/ (probe holds Screen Recording)."
     }
-  ]
+  ],
+  "started": "2026-09-07T06:05:19.297Z"
 }

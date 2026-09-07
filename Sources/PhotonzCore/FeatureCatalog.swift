@@ -40,6 +40,8 @@ public enum FeatureCatalog {
 
     public static let measureGuideSnapFlag = "next-measure-guide-snap"
 
+    public static let measureLayerSnapFlag = "next-measure-layer-snap"
+
     public static let measureReadoutSlideFlag = "next-measure-readout-slide"
 
     public static let measureRolesFlag = "next-measure-roles"
@@ -238,6 +240,15 @@ public enum FeatureCatalog {
                     name: measureGuideSnapFlag,
                     title: "Snap to other measurements",
                     description: "Measurements line up with each other. Drag a readout chip and it snaps into line with the other chips on the picture; drag a foot and it snaps to the feet and lines of the other measurements, so two calipers can share a start line. The yellow guide shows what it lined up with. Hold Command to drag free.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: measureLayerSnapFlag,
+                    title: "Snap to the edges of what you drew",
+                    description: "A caliper foot catches the exact edge of any layer on the canvas, not just the edges found in the picture underneath. Measure a box you drew and you get its real size rather than wherever your hand landed on its outline. A known edge wins over one guessed from the picture. Hold Command to drag free.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

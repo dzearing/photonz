@@ -1,0 +1,31 @@
+{
+  "feature": "A caliper reaches the exact edge of a layer you drew",
+  "epic": "measure-redline",
+  "summary": "Measuring a box you drew yourself now gives its real size. A caliper foot catches the exact edge of any layer on the canvas, not just the fuzzy edges found in the picture underneath, so the 64 point box that used to read 62 reads 64.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Snap to the edges of what you drew\" is on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press R and drag a rectangle onto the picture." },
+    { "do": "In the right hand panel type 128 into W and 128 into H, pressing Return after each." },
+    { "do": "Press I for Measure, and set the mode to Distance." },
+    { "do": "Click on the MIDDLE of the box's outline at the top, then at the bottom, aiming at the line you can see rather than at the box behind it.", "shot": "2026-09-07-caliper-layer-edges.png" },
+    { "do": "Click once more off to the side to place the number. It should read exactly half of 128 in points." },
+    { "do": "Press V, then drag either foot a little way into the box and back onto its outline. It catches the edge again.", "shot": "2026-09-07-caliper-foot-dragged.png" },
+    { "do": "Now draw a second rectangle AROUND a button in the picture, then measure that button. The box must not steal the feet." },
+    { "do": "Hold Command while placing a foot to drag free of every magnet, as before." }
+  ],
+  "evaluate": [
+    "Does a box you drew now measure the number you set it to, first try, without nudging?",
+    "When the foot lands on your box, is the yellow guide enough to tell you WHICH edge it caught?",
+    "Drawing a call-out box around something and then measuring the thing inside: does the caliper still catch the thing, or does it feel pulled toward your box?",
+    "Is a layer edge winning over an edge found in the picture the answer you want when both are close?",
+    "Does the magnet feel the same strength as it did before on a plain screenshot, or grabbier?"
+  ],
+  "rough": [
+    "The 62-instead-of-64 had a different cause than the task guessed. It was not antialiasing in the edge map. The edge map is built from the background PICTURE only, so a shape the app drew itself was never a snap candidate at all, and a foot aimed at the middle of the box's 4 pixel outline simply stayed there. Reproduced in the probe: the same box read 128, 124 and 117 depending only on where the hand landed.",
+    "Which boundary a stroked shape offers was not a choice in the end. The renderer strokes the outline INSIDE the layer box, so the outline's outer edge lands exactly on the box and there is one line, not two. Measuring a bordered button gives its visible outer size.",
+    "I built it first with a layer edge simply outranking everything, and it broke the most common redlining move: a call-out box drawn around a button stole both feet when you measured the button, reading 38 where the button is 30. It now only wins by 2 pixels of margin, which is the width of the disagreement an antialiased edge can create. That margin is a judgement call and the third question above is asking you about it.",
+    "The picture layer itself counts as a layer, so the canvas edges are now exact snap targets too. That seems right for measuring to the edge of a capture, but it is a behaviour change nobody asked for.",
+    "Measurements are deliberately not layer edges: a caliper's bounding box is not something anyone aims at, and the other calipers' feet and head lines were already offered.",
+    "Screenshots here are real window captures from the probe, taken with the Screen Recording grant, not offscreen renders."
+  ]
+}

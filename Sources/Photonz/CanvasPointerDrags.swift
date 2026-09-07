@@ -334,6 +334,7 @@ extension CanvasNSView {
                     drag.guides = measureChipGuideLines(excluding: id)
                 } else {
                     drag.guides = measureGuideLines(excluding: id)
+                    drag.layerLines = measureLayerLines(excluding: id)
                 }
                 measureHandleDrag = drag
                 // The hand that invited this drag closes for its duration —
@@ -573,6 +574,7 @@ extension CanvasNSView {
                                       ySpan: min(fixed.y, p.y)...max(fixed.y, p.y),
                                       includeCenters: measureSnapsToCenters,
                                       guides: drag.guides,
+                                      layerLines: drag.layerLines,
                                       holding: held),
                     raw: p)
                 drag.current = snap.point

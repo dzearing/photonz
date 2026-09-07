@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1580,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T04:06:30.774Z",
-  "updated": "2026-09-07T06:04:15.442014Z",
+  "updated": "2026-09-07T06:04:56.148Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fails at step 15: no control called \"Set grid origin\". The mode is entered from the gear button (CanvasGridCopy.adjust, \"Adjust Grid\") and the origin is placed by dragging the two markers on the canvas, so the walk needs a drag rather than a press. Found while running every grid walk for a-grid-size-you-choose-is-the-grid-you-get-one-e; every other grid walk passes.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-07T06:04:15.442014Z",
       "note": "No audit written: this is the loop's own test harness, not a feature a person can try."
+    },
+    {
+      "t": "2026-09-07T06:04:56.148Z",
+      "note": "Scripts/playtest/grid-origin-walk.json rewritten against the real grid bar (gear to enter, markers dragged to place the zero point, cell on the tool bar) and now covers placing the origin, catching a layer corner, nudging by 1 and 10, Done keeping and Escape restoring, plus pinning, re-selecting and deleting a guide. Verified on the probe with real captures, twice, every number read back off the describe steps. Ran all 236 walks: 221 passed, 15 failed, none asking for a control that no longer exists; twelve are one colour style regression filed p1, three filed p2. Suite green at 4253. Shipped in e869e632."
     }
   ],
-  "started": "2026-09-07T04:56:55.134Z"
+  "started": "2026-09-07T04:56:55.134Z",
+  "completed": "2026-09-07T06:04:56.148Z"
 }

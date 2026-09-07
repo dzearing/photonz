@@ -72,6 +72,25 @@ public enum EdgeSnapping {
     /// actually standing on.
     public static let guideStrength: Double = 1.5
 
+    /// How much FARTHER a known line — a layer's own edge — may sit than the
+    /// best line guessed from the picture and still take the snap, in image
+    /// pixels.
+    ///
+    /// It is two because that is the whole size of the disagreement being
+    /// settled: `EdgeMap` reads a boundary off the picture's gradients, and an
+    /// antialiased boundary puts its strongest gradient a pixel or so inside
+    /// the true edge. Where a known line and a guessed one describe the SAME
+    /// edge they land within that of each other, and the known one wins because
+    /// it is the exact number. Where they describe DIFFERENT edges the guess is
+    /// further off than that, and then nearest still wins — which is what stops
+    /// a call-out box drawn around a button from stealing the button's own
+    /// edges when you measure it.
+    ///
+    /// It is a fixed number of image pixels rather than a share of the magnet's
+    /// reach because the thing it measures — how far antialiasing smears an
+    /// edge — does not change with zoom.
+    public static let knownEdgeMargin: CGFloat = 2
+
     /// Half-width of the fallback query window when the caller has no line span.
     public static let defaultSpanRadius: CGFloat = 32
 
@@ -113,6 +132,13 @@ public enum EdgeSnapping {
     /// - snapToPixelGrid: when no edge captures an axis, round it to whole pixels.
     /// - guides: extra lines the caller wants this point to land on, whatever
     ///   the picture underneath says (the other measurements on the canvas).
+    /// - layerLines: the edges of the layers the app itself DREW. These are the
+    ///   one kind of line here that is not a guess: `EdgeMap` approximates a
+    ///   boundary from the picture's gradients and lands a pixel inside an
+    ///   antialiased one, while a rectangle the app drew has an exact box, and
+    ///   a redliner measuring it wants that box and no other number. So one of
+    ///   these takes the snap from anything the picture or a pinned guide
+    ///   offered unless that line is clearly nearer — see `knownEdgeMargin`.
     /// - holding: the lines this drag already caught. A line being SHOWN keeps
     ///   the point until the pointer is clearly away from it, so a wobbling
     ///   hand cannot take a snap and give it back on alternate frames. See
@@ -124,6 +150,7 @@ public enum EdgeSnapping {
                             includeCenters: Bool = false,
                             snapToPixelGrid: Bool = true,
                             guides: GuideLines = .none,
+                            layerLines: GuideLines = .none,
                             holding held: SnapHold = .none) -> Snap {
         let tolerance = tolerance(zoom: zoom, screenTolerance: screenTolerance)
 
@@ -131,7 +158,7 @@ public enum EdgeSnapping {
         let vertical = edges.verticalEdges(
             inYRange: Double(xWindow.lowerBound)...Double(xWindow.upperBound))
         let x = snapAxis(point.x, candidates: vertical, guides: guides.vertical,
-                         tolerance: tolerance,
+                         known: layerLines.vertical, tolerance: tolerance,
                          includeCenters: includeCenters, pixelGrid: snapToPixelGrid,
                          held: held.x)
 
@@ -139,7 +166,7 @@ public enum EdgeSnapping {
         let horizontal = edges.horizontalEdges(
             inXRange: Double(yWindow.lowerBound)...Double(yWindow.upperBound))
         let y = snapAxis(point.y, candidates: horizontal, guides: guides.horizontal,
-                         tolerance: tolerance,
+                         known: layerLines.horizontal, tolerance: tolerance,
                          includeCenters: includeCenters, pixelGrid: snapToPixelGrid,
                          held: held.y)
 
@@ -157,6 +184,7 @@ public enum EdgeSnapping {
     /// side. Returns the captured position as the guide (nil for grid/free).
     private static func snapAxis(_ value: CGFloat, candidates: [EdgeCandidate],
                                  guides: [CGFloat] = [],
+                                 known: [CGFloat] = [],
                                  tolerance: CGFloat, includeCenters: Bool,
                                  pixelGrid: Bool,
                                  held: CGFloat? = nil) -> (value: CGFloat, guide: CGFloat?) {
@@ -209,6 +237,18 @@ public enum EdgeSnapping {
                     best = (position, score)
                 }
             }
+        }
+        // A KNOWN line — a layer's own edge — is the one candidate here that is
+        // not a guess, so it takes the snap from any line the picture offered
+        // unless that line is clearly nearer. See `knownEdgeMargin`: a guess
+        // describing the same edge lands within a pixel or two of it and loses,
+        // one describing a different edge is further off and keeps the snap it
+        // earned. Nearest wins between two known lines, ties to the lower.
+        if let nearest = known.filter({ abs($0 - value) <= tolerance })
+            .min(by: { (abs($0 - value), $0) < (abs($1 - value), $1) }),
+           abs(nearest - value) <= (best.map { abs($0.position - value) } ?? .infinity)
+               + knownEdgeMargin {
+            return (nearest, nearest)
         }
         if let best {
             return (best.position, best.position)

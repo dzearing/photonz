@@ -75,6 +75,46 @@ public enum MeasureSnapping {
         return EdgeSnapping.GuideLines(vertical: tidied(vertical), horizontal: tidied(horizontal))
     }
 
+    /// The edges of the LAYERS on the canvas: every visible layer's left, right,
+    /// top and bottom, in document space.
+    ///
+    /// This is the answer to a caliper measuring a box the app drew itself. The
+    /// picture's own edges (`EdgeMap`) are approximated from gradients, and a
+    /// shape drawn ON TOP of the picture is not in that map at all, so before
+    /// this there was nothing to catch a foot on a rectangle you had just
+    /// drawn: a 128 tall box read 124, because the outline a hand aims at is
+    /// drawn inside the box and the hand landed on the middle of it. A layer's
+    /// box is exact, so `EdgeSnapping` treats these as known rather than
+    /// guessed and lets them win outright.
+    ///
+    /// The box is the one a person can SEE, and for a stroked shape that IS the
+    /// layer box: the renderer insets the path by half the stroke before
+    /// stroking, so the outline's outer edge lands exactly on the box. Measuring
+    /// a bordered button therefore gives its visible outer size, which is what a
+    /// redline means by the size of a button.
+    ///
+    /// Measurements are left out: a caliper's bounding box is not something
+    /// anyone aims at, and `lines(in:excluding:)` already offers their feet and
+    /// head lines precisely. Pass the id of the caliper in hand to keep its own
+    /// box out; pass nil for one that is not a layer yet.
+    public static func layerLines(in document: PhotonzDocument,
+                                  excluding id: UUID?) -> EdgeSnapping.GuideLines {
+        var vertical: [CGFloat] = [], horizontal: [CGFloat] = []
+        // Kept out through `snapPeers`' own exclusion list rather than filtered
+        // afterwards: it hands back boxes, not layers, and it is the one place
+        // that knows which of them a drag may line up with at all.
+        var ids = Set(document.layers.flatMap(\.selfAndDescendants)
+            .filter { $0.measure != nil }.map(\.id))
+        if let id { ids.insert(id) }
+        for box in document.snapPeers(excluding: ids) where !box.isNull {
+            vertical.append(box.minX)
+            vertical.append(box.maxX)
+            horizontal.append(box.minY)
+            horizontal.append(box.maxY)
+        }
+        return EdgeSnapping.GuideLines(vertical: tidied(vertical), horizontal: tidied(horizontal))
+    }
+
     /// The measurement layers a drag may line up with: visible, and not the one
     /// in hand.
     private static func others(in document: PhotonzDocument, excluding id: UUID?) -> [Layer] {

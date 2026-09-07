@@ -494,6 +494,42 @@ the Snap menu shows in the Measure options row only when the flag is on, and
 center snapping covers the caliper feet and the alignment-guide anchor — the
 region-select tools stay edges-only.
 
+## 8b. Snapping to what you drew — `next-measure-layer-snap` (shipped)
+
+No mock: this came from the app. Measuring a rectangle you had drawn yourself
+read short — a 64 point box read 62 — because a caliper foot only ever had the
+edges detected in the PICTURE to catch on, and a shape drawn on top of a
+screenshot is not in that map at all. The shape's outline is stroked inside its
+box, so a hand aiming at the line it can see lands a couple of pixels inside at
+each end, and nothing pulled it back.
+
+`MeasureSnapping.layerLines(in:excluding:)` offers every visible layer's four
+edges, taken from `PhotonzDocument.snapPeers` so a caliper lines up with exactly
+the boxes a move or a resize already does. `EdgeSnapping.snap(layerLines:)`
+treats them as KNOWN rather than guessed: a known line takes the snap from
+anything the picture or a pinned guide offered unless that line is clearly
+nearer, where clearly is `knownEdgeMargin` (2 image pixels — the whole size of
+the disagreement, since an antialiased boundary puts its strongest gradient
+about a pixel inside the true edge).
+
+The margin is the load-bearing part, and it was added after building it without
+one. A known line that simply outranked everything made a redliner's most common
+move go wrong: draw a call-out box AROUND a button, measure the button, and the
+box's edges stole both feet — 38 where the button is 30. With the margin, a line
+that describes the same edge wins and one that describes a different edge does
+not.
+
+Which boundary a stroked shape offers: the layer box, and there is no second
+candidate to choose between. `AnnotationRasterizer` insets the path by half the
+stroke before stroking, so the outline's outer edge lands exactly on the box.
+Measuring a bordered button therefore gives its visible outer size, which is
+what a redline means by the size of a button.
+
+Measurements are excluded from the layer lines: `MeasureSnapping.lines` already
+offers their feet and head lines precisely, and a caliper's bounding box is not
+something anyone aims at. Covers the first foot, the second foot and a foot
+dragged on a placed caliper; ⌘ frees all three, as before.
+
 ## 9. Alignment checks — `next-measure-align` (decision D1: resolved)
 
 Mock: `redline.html` dashed guide spanning four left edges with an `aligned`

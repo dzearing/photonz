@@ -10543,3 +10543,44 @@ try.
 
 Next: the colour style naming regression is the one to take, since twelve walks
 are blind until it is fixed.
+
+## 2026-09-07 — A caliper reaches the exact edge of a layer you drew
+
+Queue task `a-caliper-can-reach-the-exact-edge-of-a-layer-yo` (p1, epic
+measure-redline). The user reported a rectangle they drew measuring 62 points
+instead of 64.
+
+**Reproduced first, and the cause was not the one the task guessed.** In the
+probe, on a plain picture, with a box set to exactly 128 x 128 device pixels:
+feet on the exact box numbers read 128, feet on the middle of the box's 4 wide
+outline read 124, feet a few pixels off read 117. Not antialiasing in the edge
+map — `snappingEdgeMap` builds that map from the background PICTURE only
+(`document.layers.compactMap(\.imageRef).first`), so a shape the app drew itself
+was never a candidate at all and nothing pulled a foot back. The 4 that went
+missing is the outline: it is stroked inside the box, so a hand aiming at the
+line it can see lands 2 in at each end.
+
+**Shipped** behind `next-measure-layer-snap` (Next, on by default):
+`MeasureSnapping.layerLines(in:excluding:)` offers every visible layer's four
+edges, from `PhotonzDocument.snapPeers`, so a caliper lines up with the same
+boxes a move or resize does. `EdgeSnapping.snap(layerLines:)` treats them as
+known rather than guessed. Wired into all three foot paths: first foot, second
+foot, and a foot dragged on a placed caliper. Measurements are excluded (their
+own lines were already offered). Which boundary a stroked shape gives: the layer
+box, because the renderer insets the path by half the stroke, so there is one
+line and not two.
+
+**The second adversarial pass caught a real regression I had built.** With a
+layer edge simply outranking everything, drawing a call-out box around a button
+and then measuring the button read 38 instead of 30: the box stole both feet. A
+known line now wins only by `EdgeSnapping.knownEdgeMargin` (2 image pixels, the
+width of the disagreement an antialiased edge can create), so a line describing
+the same edge wins and one describing a different edge does not.
+
+New walk `Scripts/playtest/caliper-catches-a-drawn-edge-walk.json`: 64 at three
+zooms placed, 64 after dragging the feet, picture edges untouched. Suite green
+at 4265 (12 new PhotonzCore tests, written first). Eight measure-related walks
+re-run and green. Audit: `queue/audits/2026-09-07-caliper-layer-edges.json`.
+
+Next: the audit asks whether the 2 pixel margin is the right feel, and whether
+the picture layer's own edges counting as exact targets is wanted.
