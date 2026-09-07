@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:14:41.845Z",
-  "updated": "2026-09-07T09:51:18.813Z",
+  "updated": "2026-09-07T09:56:17.836Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-06. Evidence: queue/audits/2026-09-05-canvas-grid.json rough 1 (the grid is drawn OVER your layers, a deliberate change from the plain reading of the ask) and queue/audits/2026-09-05-screen-columns.json rough 1 (the columns draw OVER the screen and its contents, the same call the canvas grid made a day earlier). Grep of docs/design/mocks/shared/UX-PATTERNS.md and docs/design/overview.md finds no rule about it. Section 3 (panels and surfaces taxonomy) is the natural home, or a new short section beside it.",
@@ -48,7 +48,12 @@
     {
       "t": "2026-09-07T09:56:01.906042Z",
       "note": "Also pointed the three shipped guide files at the rule (CanvasGridChrome, CanvasColumnChrome, CanvasGuideChrome doc comments), since the next person to add a guide is reading Swift rather than the mocks doc. Comment-only. swift build clean, Scripts/test.sh green at 4327 tests. No audit file: this task ships a written rule, not a feature anybody can playtest, so there is nothing to put in front of the user beyond the doc itself."
+    },
+    {
+      "t": "2026-09-07T09:56:17.835Z",
+      "note": "Written into docs/design/mocks/shared/UX-PATTERNS.md (286f29ba). D16 'A guide draws over your work, and never gets into the picture' says which guides go over and which go under and why, what a guide must do so it does not read as part of the picture (wash or hairline, ink sunk out of the way, two guides differ in kind, judged against the surface it lies on, weight in screen points), and that a guide never reaches an export or a copy. The canvas grid and a screen's columns are named as the cases it comes from, with their audit ids. Section 3 gains a Canvas guide bullet in the surface taxonomy, section 9 an audit gate, and the three shipped guide files point at it from their doc comments. Verified: swift build clean, Scripts/test.sh green at 4327 tests."
     }
   ],
-  "started": "2026-09-07T09:51:18.812Z"
+  "started": "2026-09-07T09:51:18.812Z",
+  "completed": "2026-09-07T09:56:17.836Z"
 }
