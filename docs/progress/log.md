@@ -10916,3 +10916,26 @@ Next: the queue's next task. Open questions for the user, in the audit — wheth
 the same gesture meaning two things depending on whether the screen is picked is
 worth the accident it allows, and whether the surface needs a cursor cue to say
 which one is about to happen.
+
+## 2026-09-07 — One press back from out of view
+
+The orange scissors that marks a cut-off row in the Layers list is now the
+way back, not only the bad news. One press slides the layer inside every
+box cutting it off, the shortest distance, in one undo step; on a shut
+group the same press opens the group so the row that really went is on
+screen. The same move is on the row's context menu and in the Layer menu
+as Bring into View.
+
+Driving the first build through the probe changed the design. On the
+starter Card (a column stack held to 120) moving the layer worked and
+then the stack reflowed and pushed a different layer out of view, so
+nothing was gained and the running order shuffled. The offer now defers
+to `LayerGeometryEditing.canMove`, the same question the inspector's X
+and Y ask, so a layer in a stack or a grid, or a locked one, is not
+offered a move it does not own; the mark says the container is too small
+instead.
+
+Next: `a-container-too-small-for-what-is-inside-it-says` picks up the
+arranging-container half — making the container fit rather than moving
+one layer. Open question in the audit: whether three routes to the same
+move (mark, row menu, Layer menu) is one too many.

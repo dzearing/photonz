@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 110,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:14:41.878Z",
-  "updated": "2026-09-07T09:57:24.042Z",
+  "updated": "2026-09-07T10:15:47.643Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-06. Evidence: queue/audits/2026-09-06-out-of-view.json rough 3, There is no one-click way back, and rough 4, the mark lives in the Layers list only. Small follow-up to the marking work that landed the same day; the mark and its tip are RowOutOfView.swift plus OutOfView in the app layer.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-07T10:15:38.552205Z",
       "note": "Audit: queue/audits/2026-09-07-bring-into-view.json with two real window captures."
+    },
+    {
+      "t": "2026-09-07T10:15:47.643Z",
+      "note": "The orange scissors on an out-of-view row is now the way back: one press slides the layer inside its container (shortest distance, one undo step), and on a shut group the same press opens it. Also on the row's menu and the Layer menu as Bring into View. Not offered inside a stack or grid, where moving one layer only pushes another out; the mark explains the container is too small instead, and a follow-up task is filed. Core in Sources/PhotonzCore/BringIntoView.swift with 21 tests, Scripts/test.sh green at 4348, verified live on the probe with real captures in queue/audits/2026-09-07-bring-into-view.json."
     }
   ],
-  "started": "2026-09-07T09:57:24.041Z"
+  "started": "2026-09-07T09:57:24.041Z",
+  "completed": "2026-09-07T10:15:47.643Z"
 }
