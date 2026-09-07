@@ -101,9 +101,41 @@ struct LayerPartsTests {
         let ink = rows[0]
         #expect(ink.part == nil)
         #expect(!ink.hasSwitch)
-        // It still has a width to set, so the row unfolds.
-        #expect(ink.widthIDs == [arrow.id])
-        #expect(ink.hasSettings)
+    }
+
+    @Test func anArrowsWidthIsNotHiddenInADrawerThisRowCannotOpen() {
+        // A row with no switch is a colour and nothing else, so it has no
+        // drawer to keep a width in. Making an arrow thicker is the commonest
+        // thing anyone does to one, and it was two clicks down inside a row
+        // called Color. The width is the shape's own Thickness setting now,
+        // out where the ending and the head size are.
+        let arrow = shape(.arrow)
+        let doc = document([arrow])
+        let ink = doc.layerPartRows(layerIDs: [arrow.id])[0]
+        #expect(ink.widthIDs.isEmpty)
+        #expect(!ink.hasSettings)
+    }
+
+    @Test func aRectanglesWidthStaysWithTheOutlineItBelongsTo() throws {
+        // The other half of the same rule: where the outline is a part that
+        // switches off, its width is that part's setting and stays in it.
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let doc = document([box])
+        let outline = try #require(doc.layerPartRows(layerIDs: [box.id]).first { $0.part == .outline })
+        #expect(outline.widthIDs == [box.id])
+        #expect(outline.hasSettings)
+    }
+
+    @Test func anArrowPickedWithABoxTakesTheBoxesOutlineWidthRow() throws {
+        // One row speaks for both, it can be switched off (the box can live
+        // without its ring), so the width is in there and reaches both.
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let arrow = shape(.arrow)
+        let doc = document([box, arrow])
+        let rows = doc.layerPartRows(layerIDs: [box.id, arrow.id])
+        let outline = try #require(rows.first { $0.slot == .stroke })
+        #expect(outline.title == "Outline")
+        #expect(outline.widthIDs == [box.id, arrow.id])
     }
 
     @Test func aPictureGetsAnOutlineItCanSwitchOnAndAShadow() {

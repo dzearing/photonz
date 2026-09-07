@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1530,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T23:28:29.119Z",
-  "updated": "2026-09-06T23:28:29.120Z",
+  "updated": "2026-09-07T00:44:55.927702Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing the arrow-endings walk on 2026-09-06. LayerParts.layerPartRows titles a non-switchable outline (arrow, line, highlight) \"Color\", and PartsInspector folds its PartWidthRow behind the chevron, so an arrow's width is two clicks deep. Options worth weighing: keep the width visible on the row for parts that have no switch, or bring a thickness row back into the Arrow section for arrows only. AnnotationInspector.visibleRows currently drops .thickness whenever shapePartsEnabled is on.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-06T23:28:29.120Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T00:35:30.078Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T00:38:25.985932Z",
+      "note": "Adversarial review before building. Walked it as a first-time user: draw an arrow, want it heavier. Today the panel shows Appearance > Color (a chevron hiding a slider called Width) and then a section headed Arrow holding Ending, Head Size, Caption. The word Color does not suggest thickness and the drawer hides it, so the most common arrow edit is three moves. Two candidate shapes: (a) put a width control inline on the part row, (b) put a Thickness row back in the Arrow section for shapes whose line cannot be switched off. Rejected (a): the part row is label + switch + colour and a third control crowds it, and the row would then be one word covering two things. Chose (b): it is the shortest change, the row sits with Ending and Head Size where an arrow's owner already looks, and Thickness is the word for it. Key rule to avoid two controls for one number: the width has ONE home. Where the outline switches off (rectangle, ellipse, picture) it stays the Outline part's Width in the drawer; where the line IS the shape (arrow, line) the part row loses its chevron entirely and the width appears as Thickness in the shape section."
+    },
+    {
+      "t": "2026-09-07T00:44:55.927702Z",
+      "note": "Built and verified. Core: AnnotationContent.outlineIsSwitchable is now the single rule (Layer's reads it), ShapeSelection.widthIsAnOutlineSetting says where the width lives, and layerPartRows gives a row widthIDs only when it has a switch, so an arrow's Color row has no chevron. App: AnnotationInspector.visibleRows keeps the Thickness row whenever no picked shape's outline can be switched off, and the Experiments copy for next-shape-parts was corrected to match. Verified on the probe app, not assumed: shape-parts walk status ok, panel dump for an arrow reads Slider|Thickness with no Settings control, and for a rectangle and an ellipse still Switch|Outline plus Settings|Outline,closed. arrow-endings walk updated (the Settings press dropped, Width renamed Thickness) and finishes status ok, 97 steps. Full suite 4160 tests green."
+    },
+    {
+      "t": "2026-09-07T00:44:55.927702Z",
+      "note": "Adversarial review of the built thing, on the real app. Thickness is the first row under the Arrow heading with the reading beside it, above Caption, Ending and Head Size, which is where the eye already goes. Still rough and recorded in the audit: with an arrow and a box picked together the one shared control is the Outline part's Width behind a chevron, so the word changes with the selection; Corner Radius still shows under Effects for an arrow where it does nothing; and a highlight gets two rows both called Outline, confirmed with a scratch test and filed as its own task."
     }
-  ]
+  ],
+  "started": "2026-09-07T00:35:30.078Z"
 }

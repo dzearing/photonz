@@ -102,6 +102,24 @@ public enum ShapeSettingRow: String, CaseIterable, Hashable, Sendable {
 }
 
 extension AnnotationContent {
+
+    /// Whether the line round this shape is something it can be WITHOUT.
+    ///
+    /// A box or an ellipse has an inside, so its outline is a part with a
+    /// switch. A line or an arrow IS its line: switching that off would leave
+    /// nothing on the canvas, which is a delete rather than a setting. A
+    /// highlight never paints the stroke width it carries, so the only ring it
+    /// can wear is the one its styling draws, and a ring always switches.
+    ///
+    /// This is also what decides where the width is set — see
+    /// `ShapeSelection.widthIsAnOutlineSetting`.
+    public var outlineIsSwitchable: Bool {
+        switch shape {
+        case .rectangle, .ellipse, .highlight: return true
+        case .line, .arrow: return false
+        }
+    }
+
     /// The rows this one shape offers, in the order the section shows them.
     public var settingRows: [ShapeSettingRow] {
         var rows: [ShapeSettingRow] = []
@@ -165,6 +183,22 @@ public struct ShapeSelection: Hashable, Sendable {
         // The caption is one arrow's words, never a selection's.
         if count > 1 { shared.remove(.caption) }
         return ShapeSettingRow.allCases.filter { shared.contains($0) }
+    }
+
+    /// Whether the parts list is holding these shapes' line width for them.
+    ///
+    /// The width has ONE home. Where the outline is a part that switches off,
+    /// the width is that part's setting and folds open with it. Where the line
+    /// IS the shape there is no switch, so the part is a plain colour row with
+    /// nothing to open, and the width belongs out here in the shape's own
+    /// settings under the word its owner would use: Thickness.
+    ///
+    /// Any picked shape with a switch puts the whole selection in the part,
+    /// because that is the one row the panel is showing them: pick an arrow
+    /// with a box and their shared width is the box's Outline width, reaching
+    /// both.
+    public var widthIsAnOutlineSetting: Bool {
+        members.contains { $0.content.outlineIsSwitchable }
     }
 
     public func reading<Value: Hashable & Sendable>(

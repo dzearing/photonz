@@ -1,0 +1,29 @@
+{
+  "feature": "Making an arrow thicker takes one click",
+  "epic": "measure-redline",
+  "summary": "Pick an arrow and its Thickness slider is right there, first row under the Arrow heading, beside its ending and head size. Until now the only way to it was a chevron on a row called Color, which said nothing about how thick a line is, so the commonest edit on a redline arrow was three moves down.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Press A for the arrow tool and drag an arrow across the canvas." },
+    { "do": "Press Escape to skip the caption field." },
+    { "do": "Drag the Thickness slider at the top of the Arrow section and watch the arrow get heavier.", "shot": "2026-09-06-arrow-thickness-1.png" },
+    { "do": "Draw a rectangle and open the chevron on its Outline row in Appearance." },
+    { "do": "Move the Width slider in there and check the box's ring still follows it.", "shot": "2026-09-06-arrow-thickness-2.png" },
+    { "do": "Shift click the arrow as well, so both are picked, and move that same Width slider." },
+    { "do": "Pick the arrow on its own again and confirm its Color row has no chevron to open." }
+  ],
+  "evaluate": [
+    "With an arrow picked, does your eye land on Thickness without hunting?",
+    "Is Thickness the word you would have gone looking for, or would you have expected Width, Weight or Size?",
+    "Does Thickness belong at the top of the Arrow section, above Caption and Ending, or somewhere else in that list?",
+    "With an arrow and a box picked together the one control is called Width and sits in the Outline part. Does that read as the same setting, or as two different ones?",
+    "Now that the arrow's Color row opens nothing, does the row still look clickable when it should not?"
+  ],
+  "rough": [
+    "The pictures are real screen captures from the loop's own probe app, taken with the Screen Recording grant.",
+    "The width has one home, never two. Where a shape's outline can be switched off (a box, an ellipse, a picture) it stays that part's Width in the drawer; where the line IS the shape (an arrow, a line) the part row loses its chevron and the width is the shape's own Thickness. Pick an arrow together with a box and the box wins, because they share a single row.",
+    "Considered putting a width control straight on the part row instead. That row is already a label, a switch and a colour, and a fourth control crowds it while leaving one word covering two things.",
+    "Found on the way and left alone: a highlight gets TWO rows in Appearance, both called Outline, one painting its stroke colour and one its border colour. Filed as its own task.",
+    "Corner Radius still shows under Effects for an arrow, where it does nothing. Not touched here."
+  ]
+}

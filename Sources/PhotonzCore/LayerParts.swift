@@ -59,17 +59,14 @@ extension Layer {
     /// Whether this layer's outline can be switched OFF.
     ///
     /// A box or an ellipse can live without one: it still has an inside. A
-    /// line, an arrow or a highlight IS its line — switching it off would leave
-    /// nothing on the canvas at all, which is not a setting, it is a delete. So
-    /// those carry no switch, and their colour is a property rather than a
-    /// part.
-    public var outlineIsSwitchable: Bool {
-        guard drawsItsOwnOutline, let annotation else { return true }
-        switch annotation.shape {
-        case .rectangle, .ellipse: return true
-        default: return false
-        }
-    }
+    /// line or an arrow IS its line — switching it off would leave nothing on
+    /// the canvas at all, which is not a setting, it is a delete. So those
+    /// carry no switch, and their colour is a property rather than a part.
+    ///
+    /// Anything that is not a shape at all — a picture, a frame, a label, a
+    /// highlight — wears a ring its styling draws, and a ring is always
+    /// something a layer can be without.
+    public var outlineIsSwitchable: Bool { annotation?.outlineIsSwitchable ?? true }
 
     /// The width the outline comes back at when it is switched on and nothing
     /// remembers what it was before. A shape returns to the width a freshly
@@ -179,13 +176,20 @@ extension PhotonzDocument {
         let inked = picked.filter { $0.colorSlots.contains(.stroke) }
         if !inked.isEmpty {
             let switchable = inked.filter { $0.outlineIsSwitchable }
+            // The width has ONE home, and it is the drawer this row opens — so
+            // a row with no switch, which is a colour and nothing else, does
+            // not keep one. An arrow's thickness sits in the arrow's own
+            // settings instead, beside its ending and its head size, where it
+            // is in reach the moment the arrow is picked. It used to be two
+            // clicks down inside a row called Color, which said nothing about
+            // how thick a line is (reported 2026-09-06).
             rows.append(LayerPartRow(
                 part: switchable.isEmpty ? nil : .outline,
                 slot: .stroke,
                 title: switchable.isEmpty ? "Color" : LayerPart.outline.title,
                 switchIDs: switchable.map(\.id),
                 onCount: switchable.filter(\.hasOutline).count,
-                widthIDs: inked.filter(\.drawsItsOwnOutline).map(\.id),
+                widthIDs: switchable.isEmpty ? [] : inked.filter(\.drawsItsOwnOutline).map(\.id),
                 selectionCount: count))
         }
 

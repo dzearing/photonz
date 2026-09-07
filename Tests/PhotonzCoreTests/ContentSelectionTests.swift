@@ -198,6 +198,36 @@ struct ContentSelectionTests {
         #expect(selection.number { $0.strokeWidth }.value == 2)
     }
 
+    // MARK: - Where the line's width lives
+
+    @Test func aShapeWhoseLineCanBeSwitchedOffKeepsItsWidthInThatPart() {
+        // A box and an ellipse have an inside, so the outline is a part with a
+        // switch, and its width is that part's own setting.
+        let doc = document([shape(.rectangle)])
+        #expect(doc.shapeSelection(layerIDs: doc.layers.map(\.id)).widthIsAnOutlineSetting)
+        let round = document([shape(.ellipse)])
+        #expect(round.shapeSelection(layerIDs: round.layers.map(\.id)).widthIsAnOutlineSetting)
+    }
+
+    @Test func anArrowsWidthHasNowhereToHideSoItIsTheShapesOwnThickness() {
+        // An arrow IS its line: there is no switch, so no drawer, so the
+        // thickness has to be one of the shape's own settings, beside the
+        // ending and the head size. Raised on 2026-09-06: making an arrow
+        // thicker took three moves through a row called Color.
+        for kind in [AnnotationShape.arrow, .line] {
+            let doc = document([shape(kind)])
+            #expect(!doc.shapeSelection(layerIDs: doc.layers.map(\.id)).widthIsAnOutlineSetting)
+        }
+    }
+
+    @Test func anArrowPickedWithABoxFollowsTheBox() {
+        // One Outline row speaks for both and it switches, so the width is in
+        // there reaching both, and the shape section does not offer a second
+        // control for the same number.
+        let doc = document([shape(.rectangle), shape(.arrow)])
+        #expect(doc.shapeSelection(layerIDs: doc.layers.map(\.id)).widthIsAnOutlineSetting)
+    }
+
     // MARK: - What the section is called
 
     @Test func aSectionOfOneShapeIsNamedAfterIt() {

@@ -1,0 +1,28 @@
+{
+  "id": "a-highlight-is-offered-two-rows-both-called-outl",
+  "title": "A highlight is offered two rows both called Outline",
+  "goal": "Pick a highlight and the Appearance list shows two rows with the same name, Outline, one above the other. They paint different colours and there is nothing on screen to say which is which, so picking either is a guess. A highlight should offer one line round it, once.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1560,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T00:43:49.357Z",
+  "updated": "2026-09-07T00:43:49.358Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Confirmed 2026-09-06 with a scratch test: doc.layerPartRows for a lone highlight returns [Outline/stroke, Outline/border, Shadow]. In LayerParts.layerPartRows a highlight lands in BOTH the inked set (colorSlots contains .stroke) and the ringed set (!drawsItsOwnOutline), and Layer.outlineIsSwitchable is true for it, so the stroke row keeps a switch it should not have. A highlight never paints its stroke width, so the stroke row is arguably the one to drop, but its colour is the highlight colour people actually set, so check ColorSlot.stroke vs .border on a highlight before deleting either.",
+  "acceptance": [
+    "Selecting a highlight shows exactly one row called Outline",
+    "That row switches the ring on and off and picks its colour",
+    "A rectangle, an ellipse and a picture each still show the rows they show today",
+    "Core tests cover the highlight case"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T00:43:49.358Z",
+      "note": "created (manual)"
+    }
+  ]
+}

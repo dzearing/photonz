@@ -192,7 +192,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: shapePartsFlag,
                     title: "A layer is made of parts",
-                    description: "One list for everything a layer paints: Fill, Outline and Shadow, each with a tick that switches it on or off, the colour it paints, and its own settings folding open underneath. A rectangle\'s outline can be taken off for the first time. The Border row leaves Effects and the Thickness row leaves the shape\'s own section, because both are the Outline part now, and the Shadow section folds into the same list.",
+                    description: "One list for everything a layer paints: Fill, Outline and Shadow, each with a tick that switches it on or off, the colour it paints, and its own settings folding open underneath. A rectangle\'s outline can be taken off for the first time. The Border row leaves Effects and a box\'s Thickness row leaves its own section, because both are the Outline part now, and the Shadow section folds into the same list. An arrow keeps its Thickness where it is: its line cannot be switched off, so there is no part for the width to live in.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

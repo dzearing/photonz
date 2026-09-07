@@ -2992,9 +2992,13 @@ struct AnnotationInspector: View {
             // arrow and neither the field nor its size row belongs here.
             guard Experiments.shared.arrowCaptionsEnabled
                     || (row != .caption && row != .labelSize) else { return false }
-            // The width of the line round a shape is the Outline part's own
-            // setting now (`next-shape-parts`), and it is called Width there.
-            return !(Experiments.shared.shapePartsEnabled && row == .thickness)
+            // Where the outline is a part that switches off — a box, an
+            // ellipse — its width is that part's own setting and is called
+            // Width there (`next-shape-parts`). Where the line IS the shape
+            // the part has no switch and so no drawer, and the thickness
+            // stays right here, in reach the moment the arrow is picked.
+            return !(Experiments.shared.shapePartsEnabled && row == .thickness
+                     && selection.widthIsAnOutlineSetting)
         }
     }
 
@@ -3012,7 +3016,9 @@ struct AnnotationInspector: View {
                         format: { "\(Int($0.rounded())) pt" },
                         preview: { editorState.previewOutlineWidth(ids: $0, $1) },
                         commit: { editorState.commitOutlineWidth(ids: $0, $1) })
-                .help("How thick the line round the shape is. Its color is Outline, in the Color section above")
+                .help(Experiments.shared.shapePartsEnabled
+                      ? "How thick the line is. Its color is the Color row, in Appearance above"
+                      : "How thick the line round the shape is. Its color is Outline, in the Color section above")
         case .caption:
             // ONE arrow only. A single field over three arrows could only give
             // all three the same words, and a caption is what the arrow says,
