@@ -11453,3 +11453,31 @@ and Size panel keeps showing a picked layer's numbers while the arrows are movin
 the marquee.
 
 Next: whatever the queue hands out.
+
+## 2026-09-07 — Pasting hands you the pointer
+
+Paste used to leave you holding whatever tool you had, so the obvious next
+move, dragging the thing you just pasted, drew a new shape over it. A paste
+now switches to the pointer with the pasted layer picked, and undoing that
+paste hands your tool back.
+
+- `PasteToolReturn` (PhotonzCore, `Clipboard.swift`) is the pure piece: it
+  holds the tool a run of pastes displaced and answers when to give it back.
+  The rules that keep a tool from ever arriving unasked are all in there and
+  all tested (`Tests/PhotonzCoreTests/PasteToolReturnTests.swift`, 14 tests).
+- `paste()` captures the tool on the way in; `pasteLayer`/`pasteImage` now
+  return the layer they landed, so a paste that failed or opened a document of
+  its own never steals the tool. `handOverPointer` does the switch and arms the
+  memory. `setTool` and `perform` both clear it.
+- Behind `next-paste-hands-you-the-pointer`, on by default in Next. Current is
+  untouched, and nothing under `Releases/` is forked, so there was nothing to
+  port.
+- Verified on the probe with `Scripts/playtest/paste-hands-you-the-pointer-walk.json`,
+  which reads the tool and every layer's box back in numbers rather than
+  eyeballing a picture. Audit at
+  `queue/audits/2026-09-07-paste-hands-you-the-pointer.json`.
+
+Next: the same trap is one gesture away for drag and drop, filed as
+`dropping-a-picture-on-the-canvas-hands-you-the-p` (p2). Open question in the
+audit: whether the tool bar changing shape as the colour swatches leave with
+the drawing tool reads as help or as a twitch.
