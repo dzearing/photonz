@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1530,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T23:28:29.119Z",
-  "updated": "2026-09-07T00:44:55.927702Z",
+  "updated": "2026-09-07T00:45:11.433Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing the arrow-endings walk on 2026-09-06. LayerParts.layerPartRows titles a non-switchable outline (arrow, line, highlight) \"Color\", and PartsInspector folds its PartWidthRow behind the chevron, so an arrow's width is two clicks deep. Options worth weighing: keep the width visible on the row for parts that have no switch, or bring a thickness row back into the Arrow section for arrows only. AnnotationInspector.visibleRows currently drops .thickness whenever shapePartsEnabled is on.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-09-07T00:44:55.927702Z",
       "note": "Adversarial review of the built thing, on the real app. Thickness is the first row under the Arrow heading with the reading beside it, above Caption, Ending and Head Size, which is where the eye already goes. Still rough and recorded in the audit: with an arrow and a box picked together the one shared control is the Outline part's Width behind a chevron, so the word changes with the selection; Corner Radius still shows under Effects for an arrow where it does nothing; and a highlight gets two rows both called Outline, confirmed with a scratch test and filed as its own task."
+    },
+    {
+      "t": "2026-09-07T00:45:11.433Z",
+      "note": "An arrow's Thickness slider is the first row under the Arrow heading, no chevron to open. The width now has one home: the Outline part's Width where the outline switches off (box, ellipse, picture), the shape's own Thickness where the line IS the shape (arrow, line). Verified on the probe app: shape-parts panel dump reads Slider|Thickness for an arrow with no Settings control, and Switch|Outline plus Settings|Outline for a rectangle and an ellipse; arrow-endings walk updated and finishes ok in 97 steps; 4160 tests green. Audit at queue/audits/2026-09-06-arrow-thickness.json with two real screen captures. Committed 209859c."
     }
   ],
-  "started": "2026-09-07T00:35:30.078Z"
+  "started": "2026-09-07T00:35:30.078Z",
+  "completed": "2026-09-07T00:45:11.433Z"
 }
