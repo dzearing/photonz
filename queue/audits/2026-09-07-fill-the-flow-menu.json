@@ -1,0 +1,29 @@
+{
+  "feature": "Fill the Row: one key gives a piece the room its stack has left",
+  "epic": "ui-layout",
+  "summary": "Telling a piece in a stack to take whatever room the stack has left over used to mean opening the panel and picking it out of a menu. It is now one row in the Layer menu with Option F on it, named after the stack it is about, and pressing it a second time gives the piece back the size it had.",
+  "setup": "Photonz Dev, release Next. Auto layout is on by default, so there is nothing to switch on.",
+  "try": [
+    { "do": "Draw three rectangles side by side on a blank canvas." },
+    { "do": "Select all three and press Control Command G to stack them into a row." },
+    { "do": "With the row still picked, type 700 into W in Position & Size and press Return.", "shot": "2026-09-07-fill-the-flow-1.png" },
+    { "do": "Double click the middle rectangle to pick it inside the row." },
+    { "do": "Open the Layer menu and read the row under Grid Selection: it should say Fill the Row, on Option F." },
+    { "do": "Press Option F. The middle rectangle should take everything the other two and the gaps leave.", "shot": "2026-09-07-fill-the-flow-2.png" },
+    { "do": "Press Option F again. It should go back to the 100 points it was drawn at.", "shot": "2026-09-07-fill-the-flow-3.png" },
+    { "do": "Click a rectangle that is not in any stack and open the Layer menu: the row should be grey, and hovering it should say why." }
+  ],
+  "evaluate": [
+    "Is Option F the key your fingers reach for, sitting beside Option A and the rest of the align set?",
+    "Does the row belong under Stack Selection and Grid Selection, or would you look for it beside Align?",
+    "Reading Fill the Row in the menu and Fill the row in the Layout section, do they read as one control in two places?",
+    "When it is grey, is a hover tip enough of an explanation, or do you want the reason on the row itself?",
+    "With three pieces picked at once, is turning them all on with one press what you expected, or did you want it to flip each one?"
+  ],
+  "rough": [
+    "The row renames itself: Fill the Row inside a row, Fill the Stack inside a column, and Fill the Stack when nothing is picked and it is grey. That last one is a guess at the least misleading name for a dead row, not a considered answer.",
+    "Option F is taken by the menu even while the keyboard is in a text field, so it cannot type a florin sign there. The align set already works this way, so this is consistent rather than new, but it is a real cost.",
+    "Photographing the menu row live is not possible from the loop: macOS leaves a background app's window menus frozen at their launch state, so the shots here show the canvas and the panel, and the menu row plus its Option F was read out of the probe's own menu bar instead. The grey states and their reasons are covered by 21 PhotonzCore tests rather than a picture.",
+    "One thing the menu does that the panel does not: a piece that was filling and is then stretched both ways keeps a rule that now does nothing, and the panel's fill row disappears, so there is nothing left to switch it off with. The menu row stays live whenever a piece is already filling, so taking it off is always reachable."
+  ]
+}

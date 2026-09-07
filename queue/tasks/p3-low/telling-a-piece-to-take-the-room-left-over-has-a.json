@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T00:33:57.133Z",
-  "updated": "2026-09-06T12:16:42.306Z",
+  "updated": "2026-09-07T09:07:58.190192Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The edit already exists: PhotonzDocument.setFillsTheFlow(id:_:), wrapped by EditorState.setFillsTheFlow. Whether it is offered is Layer.canFillTheFlow(in:). The existing stretchSelectionAcross / stretchSelectionDown actions are the pattern to copy, including their playtest action names.",
@@ -32,6 +32,35 @@
     {
       "t": "2026-09-06T12:16:42.306Z",
       "note": "seq 70 -> 70"
+    },
+    {
+      "t": "2026-09-07T08:51:54.754Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T08:55:24.881589Z",
+      "note": "Adversarial review before building. (1) There IS no Arrange menu: the arrange commands live in the Layer menu, so the row goes there, directly under Stack Selection / Grid Selection, because a stack is what makes filling mean anything. (2) The row is a Toggle, not a Button: a checkmark answers 'is this piece filling?' at a glance, which a plain row cannot. (3) It must act on the WHOLE selection in one undo, the way the panel's fill row already does, or the menu is worse than the panel it is shortcutting. (4) The name has to be the panel's own name or nobody connects the two: 'Fill the Row' in a row, 'Fill the Stack' in a column, and 'Fill the Stack' as the greyed default when there is no stack, which reads as 'this needs a stack'. (5) A greyed row with no reason is a puzzle. macOS shows a tooltip on a menu item and this file already leans on that once, so the reason rides on .help. (6) Found a hole worth closing: a piece that is filling and is then stretched both ways becomes the surface, its fill goes inert, and the panel's fill row DISAPPEARS, so there is no way left to clear it. Same for a stack that loses its width. So the menu row stays live whenever the piece is already filling, even where it could not be turned on, and turning it off is always reachable. (7) Shortest version that delivers the value: one toggle row plus one key. Nothing else added."
+    },
+    {
+      "t": "2026-09-07T08:55:24.881589Z",
+      "note": "Key: Option F. The align set is Option and a letter (a h d w v s) and Space Evenly is Control Option h/v, so Option F sits in that family and F for Fill is the letter people guess. Photoshop binds neither the command nor the key, so there is no parity to break."
+    },
+    {
+      "t": "2026-09-07T09:06:22.791868Z",
+      "note": "Built. PhotonzCore holds the whole reading: FlowFillCommand plus PhotonzDocument.flowFillCommand(layerIDs:) says what the row is called, whether it is ticked, whether it is live, and the sentence it shows on hover. The app has one Toggle in the Layer menu under Grid Selection on Option F, and EditorState.toggleFillsTheFlow presses it over the whole selection in one undo. New playtest action fillSelectionInTheFlow presses the same call, and Scripts/playtest/fill-the-flow-walk.json walks it (the design doc had already claimed that file existed, so it does now)."
+    },
+    {
+      "t": "2026-09-07T09:06:22.791868Z",
+      "note": "Verified. 21 new tests in FlowFillCommandTests, full suite 4314 green. In the probe app: the Layer menu dump reads 'Fill the Stack  \u2325F' under Grid Selection, so the row and the key are really there; the walk shows the middle piece of a 700-wide bar taking 420 points on the first press and going back to exactly 100 on the second; the panel agrees with the menu (Horizontal reads 'Fill the row'); and the same press on a piece loose on the canvas leaves the render byte for byte identical, so the guard refuses live."
+    },
+    {
+      "t": "2026-09-07T09:06:22.791868Z",
+      "note": "Adversarial review of the built thing. What is honestly clumsy: (a) the row renames itself and the dead-state name is a guess, 'Fill the Stack' picked as the least misleading of the bad options; (b) Option F is taken by the menu even in a text field, so no florin sign there, which the align set already does but is still a cost; (c) the greying and its reasons cannot be photographed at all from the loop, because macOS freezes a background app's window menus at their launch state, so that half is proved by tests and by the live refusal rather than by a picture. Audit written to queue/audits/2026-09-07-fill-the-flow-menu.json with three real screen captures."
+    },
+    {
+      "t": "2026-09-07T09:07:58.190192Z",
+      "note": "Caught a mistake of my own: the first draft of the walk overwrote Scripts/playtest/fill-the-flow-walk.json, which already existed and covers the PANEL side of this feature. Put it back untouched and the menu walk lives in Scripts/playtest/fill-the-flow-menu-walk.json instead. Both are now named in the design doc."
     }
-  ]
+  ],
+  "started": "2026-09-07T08:51:54.753Z"
 }

@@ -352,6 +352,22 @@ struct EditorCommands: Commands {
                     .disabled(!(editor?.canStackSelection ?? false))
                 Button("Grid Selection") { editor?.stackSelection(.grid) }
                     .disabled(!(editor?.canStackSelection ?? false))
+                // Telling a piece to take whatever room its stack has left is
+                // the answer people reach for most while building a bar, and
+                // until now it was only reachable two rows into a panel that
+                // has to be open to be read. It sits directly under the rows
+                // that MAKE a stack, because a stack is what gives it anything
+                // to take. Option F joins the align set (Option and a letter),
+                // and Photoshop binds neither the command nor the key. It is a
+                // tick rather than a button so the row also answers "is this
+                // piece filling?", and its hover line says why it is grey when
+                // it is: a menu row has nowhere else to explain itself.
+                let fill = editor?.flowFillCommand ?? .none
+                Toggle(fill.title, isOn: Binding(get: { fill.isOn },
+                                                 set: { _ in editor?.toggleFillsTheFlow() }))
+                .keyboardShortcut("f", modifiers: .option)
+                .disabled(!fill.isEnabled)
+                .help(fill.help)
             }
             // Frames sit with the structure commands, because a frame IS a
             // group with a size. Neither row takes a key: F already picks the

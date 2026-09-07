@@ -690,6 +690,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Vertical menu does. It is how a walk shows a label filling the height
     /// of the row holding it instead of hugging one line of words.
     case stretchSelectionDown
+    /// Turn the selected piece's "take the room this stack has left over" on,
+    /// or off again where it is already on (Next, `next-auto-layout`), which
+    /// is what Layer ▸ Fill the Row does and what the Layout section's
+    /// fill row does. The menu and the panel are both out of a walk's reach
+    /// with the pointer, so this is how a walk photographs a bar with a search
+    /// field taking whatever the logo and the buttons leave.
+    case fillSelectionInTheFlow
     /// Set the selected GROUP's rule for everything inside it to Stretch
     /// across (Next, `next-placement`), which is what picking Stretch in the
     /// Layout section's Horizontal menu under "Contents of" does. Same reason

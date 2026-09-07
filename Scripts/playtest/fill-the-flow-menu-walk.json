@@ -1,0 +1,68 @@
+{
+  "out": "/tmp/photonz-playtest/fill-the-flow-menu",
+  "seed": "The Layer menu's side of taking the room a stack has left over. The panel's side is fill-the-flow-walk.json; this one presses the menu row instead: it stacks three pieces into a bar, gives the bar a width, and fills the middle piece and unfills it from the menu, then proves the row refuses a piece that is in no stack at all.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 500, "width": 1360, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [80, 100], "to": [180, 140], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [220, 100], "to": [320, 140], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [360, 100], "to": [460, 140], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [130, 120] },
+    { "do": "click", "at": [270, 120], "modifiers": ["shift"] },
+    { "do": "click", "at": [410, 120], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-a-bar", "note": "three pieces in a row: a bar as wide as what is inside it, so there is nothing left over yet" },
+    { "do": "snapshot", "name": "fill-menu-1-a-bar" },
+    { "do": "render", "name": "fill-menu-1-a-bar-doc" },
+
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "700" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-room-to-spare", "note": "the bar is given a width of 700, so now it has room left over for a piece to take" },
+    { "do": "snapshot", "name": "fill-menu-2-room-to-spare" },
+    { "do": "render", "name": "fill-menu-2-room-to-spare-doc" },
+
+    { "do": "action", "action": "stepIntoSelection" },
+    { "do": "action", "action": "pickNextSibling" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-middle-picked", "note": "the middle piece picked, still the size it was drawn at" },
+    { "do": "snapshot", "name": "fill-menu-3-middle-picked" },
+    { "do": "menus", "stage": "layer-menu", "menu": "Layer" },
+
+    { "do": "action", "action": "fillSelectionInTheFlow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-filling", "note": "THE TEST: Layer > Fill the Row gives the middle piece everything the other two and the gaps leave, and the Layout section's Horizontal row agrees with the menu" },
+    { "do": "snapshot", "name": "fill-menu-4-filling" },
+    { "do": "render", "name": "fill-menu-4-filling-doc" },
+
+    { "do": "action", "action": "fillSelectionInTheFlow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-back", "note": "THE TEST: pressed a second time, the piece is handed back the 100 points it had before it started filling" },
+    { "do": "snapshot", "name": "fill-menu-5-back" },
+    { "do": "render", "name": "fill-menu-5-back-doc" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [80, 300], "to": [200, 360], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [140, 330] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-loose-piece", "note": "a piece loose on the canvas, in no stack at all: the menu row is dead for it" },
+    { "do": "snapshot", "name": "fill-menu-6-loose-piece" },
+    { "do": "render", "name": "fill-menu-6-loose-piece-doc" },
+    { "do": "action", "action": "fillSelectionInTheFlow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-refused", "note": "THE TEST: the same press on the loose piece must change nothing at all, because there is no stack and nothing to take" },
+    { "do": "snapshot", "name": "fill-menu-7-refused" },
+    { "do": "render", "name": "fill-menu-7-refused-doc" }
+  ]
+}

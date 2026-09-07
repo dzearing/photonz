@@ -375,6 +375,14 @@ public struct PlacementEditing: Hashable, Sendable {
         across ? "Fill the row" : "Fill the stack"
     }
 
+    /// The same words in the case a menu row wears them in, kept beside the
+    /// panel's so the two cannot drift into being two different names for the
+    /// one thing. The Layer menu says this; the Layout section says the line
+    /// above; a person reading either has to recognise the other.
+    public static func fillMenuTitle(across: Bool) -> String {
+        across ? "Fill the Row" : "Fill the Stack"
+    }
+
     /// What picking it does, for the hover tip.
     public static func fillReason(_ noun: String) -> String {
         "Take the room \(noun) has left once the other pieces, the gaps and the room at its "

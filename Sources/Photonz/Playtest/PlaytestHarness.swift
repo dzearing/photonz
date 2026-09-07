@@ -1234,6 +1234,8 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.setPlacement(id: id, vertical: .stretch)
                 }
+            case .fillSelectionInTheFlow:
+                editor.toggleFillsTheFlow()
             case .alignWordsLeft:
                 if let id = editor.selectedLayerID {
                     editor.setTextAlignment(layerID: id, TextAlign.left)

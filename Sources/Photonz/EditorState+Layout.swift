@@ -391,6 +391,29 @@ extension EditorState {
         perform { _ = $0.setFillsTheFlow(ids: ids, fills) }
     }
 
+    /// What the Layer menu's fill row reads for what is picked: its name, its
+    /// tick, whether it is live, and what it says on hover. The same reading
+    /// the Layout section's fill row goes by, so the menu and the panel are one
+    /// control in two places rather than two that can disagree.
+    var flowFillCommand: FlowFillCommand {
+        guard Experiments.shared.autoLayoutEnabled, let document else { return .none }
+        return document.flowFillCommand(layerIDs: orderedSelectedLayerIDs)
+    }
+
+    /// Layer ▸ Fill the Row (⌥F): every picked piece takes the room its stack
+    /// has left over, or gives it back, in ONE undo step. Pressing it a second
+    /// time hands each piece the size it had before it started filling.
+    ///
+    /// A selection where some fill and some do not turns them all ON: the tick
+    /// is only there when every one of them is filling, so the first press
+    /// always makes the selection agree.
+    func toggleFillsTheFlow() {
+        let command = flowFillCommand
+        guard command.isEnabled, !command.layers.isEmpty else { return }
+        discardDragPreview()
+        setFillsTheFlow(ids: command.layers, !command.isOn)
+    }
+
     /// The same three edits over EVERY picked group, in ONE undo step however
     /// many they reached. Two cards are told to stack their contents once
     /// rather than twice over, and one undo puts both back.

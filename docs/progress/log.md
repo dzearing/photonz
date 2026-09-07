@@ -10790,3 +10790,33 @@ Next: the queue. Open question for the user, in the audit's `rough`: in the
 light theme the field's well is quiet enough that a boxed number and a plain one
 sit closer together than they do in dark, and whether the "unavailable" number
 state has any real use in this app at all.
+
+## 2026-09-07 — Fill the Row is one key away
+
+Telling a piece in a stack to take the room the stack has left over was only
+reachable two rows into the Layout section. It is now also **Layer ▸ Fill the
+Row** (⌥F), a checkmark row directly under Stack Selection and Grid Selection,
+named after the flow exactly as the panel row is and acting on the whole
+selection in one undo.
+
+The reading lives in `PhotonzCore`: `FlowFillCommand` and
+`PhotonzDocument.flowFillCommand(layerIDs:)` decide the name, the checkmark,
+whether the row is live, and the sentence it shows on hover, so the menu and the
+panel cannot drift. The app side is one `Toggle` in `EditorCommands` and
+`EditorState.toggleFillsTheFlow`. A dead row explains itself: not in a stack, no
+room left over, or a piece painted to the group's own edges each get their own
+reason. The row also stays live whenever a piece is ALREADY filling, which
+closes a hole the panel had: a fill left stranded by a Stretch both ways, or by a
+stack losing its width, had no control left to switch it off with.
+
+Verified in the probe: the Layer menu carries the row on ⌥F, a 700-wide bar's
+middle piece takes 420 points on the first press and goes back to 100 on the
+second, and the same press on a loose piece changes nothing. 21 new tests in
+`FlowFillCommandTests`; full suite 4314 green. Walked by
+`Scripts/playtest/fill-the-flow-menu-walk.json` beside the panel's own
+`fill-the-flow-walk.json`, audited in
+`queue/audits/2026-09-07-fill-the-flow-menu.json`.
+
+**Next:** back to the queue. Open question for the user in the audit: whether
+⌥F is the right key, and whether a hover tip is enough explanation for a grey
+menu row or the reason should be on the row itself.

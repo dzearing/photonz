@@ -2094,7 +2094,8 @@ row in the same place, in one step.
 right under Group: several layers picked become one group that arranges them,
 and a group already picked simply starts arranging itself. Stacking is one
 modifier off grouping, and Photoshop binds neither the command nor the key.
-Grid Selection takes no key.
+Grid Selection takes no key. **Fill the Row** / **Fill the Stack** (⌥F) sits
+directly under them, because a stack is what gives it anything to take.
 
 **Cut from the mock on purpose** (`ui-autolayout` draws eight controls):
 
@@ -2742,6 +2743,27 @@ piece is filling, the size field on that axis is a number to READ, not one to
 type: the flow would put a typed number straight back on its next pass, so it
 loses its box and its tip points at the two controls that do change it.
 
+**It is one row in the Layer menu too** (2026-09-07). Buried two rows into a
+panel that has to be open to be read, this was the answer people reach for most
+while building a bar and the slowest one to reach. So it is also **Layer ▸ Fill
+the Row** (⌥F), directly under the rows that MAKE a stack. It is named after the
+flow exactly as the panel row is, so a row stack says Fill the Row and a column
+says Fill the Stack and neither is a new word to learn; it wears a checkmark
+rather than being a button, because the row also has to answer "is this piece
+filling?"; and it reaches the WHOLE selection in one undo, so three buttons in a
+bar are told once. Option F joins the align set (Option and a letter), and
+Photoshop binds neither the command nor the key.
+
+**A dead row says why, and taking it off is always reachable.** A menu row is a
+name and nothing else, so the one question it cannot answer for itself is why it
+is grey: its hover line carries the reason, which is the same sentence the panel
+already says. Not in a stack, no room left over, and the piece that spans the
+group each get their own. The one place the menu is MORE than the panel: a piece
+that was filling and is then stretched both ways, or one whose stack loses the
+width that gave it room, keeps a rule that now does nothing and the panel's fill
+row disappears, leaving nothing to take it off with. The menu row stays live
+whenever a piece is already filling, even where it could not be switched on.
+
 Not in this slice: a container default ("everything inside fills"), which is a
 grid; growth weights, so one filler can take twice what another does; and a
 minimum a filler will not shrink below.
@@ -2750,8 +2772,11 @@ Model in `FlowFill` and `Layer.flowFill`, the maths in `GroupFlow.alongTheFlow`,
 the offer in `PlacementEditing.canFill` / `fillTitle` / `noRoomToFill` over
 `GroupLayout.hasRoomAlongTheFlow` (which `couldSpread` now reads too, since both
 ask one question), the edit in `PhotonzDocument.setFillsTheFlow`, and the row in
-`PlacementInspector.ownedByTheFlow`. Tested in `GroupFillTests`, walked by
-`Scripts/playtest/fill-the-flow-walk.json`.
+`PlacementInspector.ownedByTheFlow`. The menu row's whole reading is
+`PhotonzDocument.flowFillCommand` returning `FlowFillCommand`, pressed through
+`EditorState.toggleFillsTheFlow`. Tested in `GroupFillTests` and
+`FlowFillCommandTests`, walked by `Scripts/playtest/fill-the-flow-walk.json`
+for the panel and `Scripts/playtest/fill-the-flow-menu-walk.json` for the menu.
 
 
 ## Landed: a component holds more than one version (Next, `next-components`, 2026-09-05)
