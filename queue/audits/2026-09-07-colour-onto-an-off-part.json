@@ -1,0 +1,29 @@
+{
+  "feature": "Letting a colour go on a part that is switched off",
+  "epic": "ui-building",
+  "summary": "A colour can now be dropped on the Outline, Fill or Shadow row of a layer that has none. The part comes on wearing that colour, in one step one undo puts back. Before, those rows refused the colour and the only way to a coloured edge was to find the switch, flip it, and repaint whatever came back.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on: this rides on the Appearance list and colour dragging, both already on.",
+  "try": [
+    { "do": "Draw a rectangle, then click it with the arrow tool." },
+    { "do": "In Appearance, click the Outline switch to take the line off.", "shot": "2026-09-07-off-part-1-no-line.png" },
+    { "do": "Press and hold the Fill swatch, then drag it left onto the word Outline.", "shot": "2026-09-07-off-part-2-in-flight.png" },
+    { "do": "Let go. The outline comes on wearing the fill colour, with its Width row under it.", "shot": "2026-09-07-off-part-3-landed.png" },
+    { "do": "Press Command Z once and check the whole thing goes back, colour and line together." },
+    { "do": "Drag the Fill swatch onto the Shadow row and let go." },
+    { "do": "Drag a saved colour off the Library shelf onto a switched-off Outline row." }
+  ],
+  "evaluate": [
+    "When you are holding a colour over an off row, does the ring plus the swatch appearing in the colour column make it obvious what letting go will do?",
+    "Is aiming at the whole row easier than aiming at a swatch would have been?",
+    "Does one undo taking back both the line and the colour feel right, or would you rather undo the colour and keep the line?",
+    "The row still shows nothing at rest. Is a name and an off switch enough to tell you the part is absent, or do you want the colour it would come back at showing there?",
+    "Should the same drop work on the Shadow row, or is a shadow different enough that it should stay switch-first?"
+  ],
+  "rough": [
+    "The row shows nothing at rest, on purpose: the Appearance list is built on off looking off. So this gesture is not discoverable by looking. It only helps someone already carrying a colour, which is the case that used to be refused. If you want off rows to advertise a colour, that is a different and bigger change.",
+    "Dropping on a mixed row (one box outlined, one not) gives all of them the line in that colour, matching what the switch already does. It has core tests but no walk.",
+    "The Fill row taking a drop while it is off has core tests but is not in the walk either; only Outline and Shadow are walked.",
+    "The queued task also asked whether a freshly drawn rectangle has no outline. It does have one: the default is a 4 pt stroke. The bare box in the task's evidence came from the panel arming the tool, which is deliberate, so nothing was changed there.",
+    "Screen Recording was granted, so every picture here is a real window capture, not an offscreen render."
+  ]
+}

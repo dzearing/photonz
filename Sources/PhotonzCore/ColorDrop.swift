@@ -75,6 +75,15 @@ public enum ColorDrop {
         /// True when this is the very swatch the drag started from, where
         /// letting go can only put back what is already there.
         public var isSource: Bool
+        /// True when the part this stands for is not on the layer at all: a
+        /// box with no line round it, a shape with no fill.
+        ///
+        /// The row still carries a colour underneath — a bare box remembers
+        /// what its outline was last painted — but nobody can see it, so it is
+        /// not what the row is WEARING and the no-op refusal must not fire on
+        /// it. Letting go there both switches the part on and paints it, which
+        /// is a real change even when the colour is the one already filed.
+        public var isAbsent: Bool
         /// Whether this swatch can hold a ramp. The wells that are not part of
         /// a layer's colour set — a shadow, a backdrop — cannot, and neither
         /// can Text or a border.
@@ -82,6 +91,7 @@ public enum ColorDrop {
 
         public init(part: String, wearing: Paint, styleName: String? = nil,
                     styleID: UUID? = nil, reaches: Int = 1, isSource: Bool = false,
+                    isAbsent: Bool = false,
                     acceptsGradient: Bool = false,
                     welcome: StyleWelcome = .neverWearsNames) {
             self.part = part
@@ -90,6 +100,7 @@ public enum ColorDrop {
             self.styleID = styleID
             self.reaches = reaches
             self.isSource = isSource
+            self.isAbsent = isAbsent
             self.acceptsGradient = acceptsGradient
             self.welcome = welcome
         }
@@ -143,8 +154,9 @@ public enum ColorDrop {
         if let brought, target.welcome == .wearsIt {
             // The same name arriving on the swatch already wearing it is as
             // much of a no-op as the same colour arriving twice, and it stays
-            // one even after somebody recolours the style.
-            guard target.styleID != brought.id else {
+            // one even after somebody recolours the style. Unless the part is
+            // not there: switching it on is a change whatever it is filed as.
+            guard target.isAbsent || target.styleID != brought.id else {
                 return Answer(landing: nil,
                               note: "\(opening(target.part)) is already \(brought.name).")
             }
@@ -156,7 +168,7 @@ public enum ColorDrop {
         // that lights up and writes an undo step is worse than one that says
         // so. Wearing a SAVED colour is different: letting go there still
         // takes it off the name, whatever colour the name stands for today.
-        if target.styleName == nil, landing.draws(sameAs: target.wearing) {
+        if !target.isAbsent, target.styleName == nil, landing.draws(sameAs: target.wearing) {
             return Answer(landing: nil, note: "\(opening(target.part)) is already this colour.")
         }
         let result = Landing(paint: landing, flattened: flattens,
@@ -181,6 +193,15 @@ public enum ColorDrop {
             return "\(away.name) is kept for other parts, so \(target.part) takes its colour."
         }
         let colour = landing.brings.map { $0.name } ?? "this colour"
+        // A part that is not there yet is being SWITCHED ON as well as
+        // painted, and saying only that it would be painted would promise half
+        // the drop.
+        if target.isAbsent {
+            let who = target.reaches > 1 ? " for all \(target.reaches) of them" : ""
+            var sentence = "Turns \(target.part) on\(who), painted with \(colour)"
+            if let name = landing.letsGoOf { sentence += " and lets go of \(name)" }
+            return sentence + "."
+        }
         var sentence = target.reaches > 1
             ? "Paints \(target.part) on all \(target.reaches) of them with \(colour)"
             : "Paints \(target.part) with \(colour)"

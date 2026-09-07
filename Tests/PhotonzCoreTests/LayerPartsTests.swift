@@ -531,4 +531,97 @@ struct LayerPartsTests {
         let doc = document([arrow])
         #expect(doc.layerPartRow(layerIDs: [arrow.id], slot: .fill) == nil)
     }
+
+    // MARK: - Letting a colour go on a part that is switched off
+
+    /// A box with no line round it showed an Outline row with an off switch
+    /// and an EMPTY colour column, so a colour carried over from Fill had
+    /// nowhere to land and the only way to a coloured edge was to find the
+    /// switch, flip it, and then repaint whatever came back (reported
+    /// 2026-09-07). Letting go of a colour on the row is that whole errand in
+    /// one move — and one move is one undo.
+
+    @Test func aColourLetGoOnASwitchedOffOutlineGivesTheBoxALineWearingIt() {
+        let box = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
+        var doc = document([box])
+        #expect(doc.turnOnPart(.outline, layerIDs: [box.id], paint: Paint(hex: "#B0184A")) == 1)
+        let after = try! #require(doc.layer(id: box.id))
+        #expect(after.hasOutline)
+        #expect(after.annotation?.strokeWidth == AnnotationContent.defaultStrokeWidth)
+        #expect(after.colorHex(for: .stroke) == "#B0184A")
+    }
+
+    @Test func theLineComesBackAtTheWidthItWasTakenAwayAt() {
+        let box = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
+        var doc = document([box])
+        doc.turnOnPart(.outline, layerIDs: [box.id], paint: Paint(hex: "#B0184A"),
+                       restoring: [box.id: 12])
+        #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == 12)
+    }
+
+    /// A ring round a picture is the same part, so it takes a colour the same
+    /// way — and it has to gain its width first, because a layer with no ring
+    /// has no border colour to paint at all.
+    @Test func aPicturesRingTakesAColourTheSameWay() {
+        let shot = picture()
+        var doc = document([shot])
+        #expect(doc.turnOnPart(.outline, layerIDs: [shot.id], paint: Paint(hex: "#0A84FF")) == 1)
+        let after = try! #require(doc.layer(id: shot.id))
+        #expect(after.style.borderWidth > 0)
+        #expect(after.colorHex(for: .border) == "#0A84FF")
+    }
+
+    @Test func aColourLetGoOnASwitchedOffFillFillsTheBoxWithIt() {
+        let box = shape(.rectangle, fillHex: nil)
+        var doc = document([box])
+        #expect(doc.turnOnPart(.fill, layerIDs: [box.id], paint: Paint(hex: "#B0184A")) == 1)
+        // The colour that landed, not the starting colour the switch would
+        // have seeded: the person chose one by letting go of it.
+        #expect(doc.layer(id: box.id)?.colorHex(for: .fill) == "#B0184A")
+    }
+
+    @Test func aColourLetGoOnASwitchedOffShadowGivesItOneInThatColour() {
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        var doc = document([box])
+        #expect(doc.turnOnPart(.shadow, layerIDs: [box.id], paint: Paint(hex: "#0A84FF")) == 1)
+        #expect(doc.layer(id: box.id)?.style.shadow?.colorHex == "#0A84FF")
+    }
+
+    /// A row where one box is outlined and the other is not shows the word
+    /// Mixed and no swatch either, and its switch resolves to ON for all of
+    /// them. A colour let go of on it does the same thing: they all end up
+    /// wearing it, in one step.
+    @Test func aColourOnAMixedRowGivesEveryOneOfThemTheLine() {
+        let bare = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
+        let lined = shape(.rectangle, strokeWidth: 6, fillHex: "#00FF00")
+        var doc = document([bare, lined])
+        let row = try! #require(doc.layerPartRows(layerIDs: [bare.id, lined.id])
+            .first { $0.part == .outline })
+        #expect(row.isMixed)
+        #expect(doc.turnOnPart(.outline, layerIDs: row.switchIDs,
+                               paint: Paint(hex: "#B0184A")) == 2)
+        #expect(doc.layer(id: bare.id)?.hasOutline == true)
+        #expect(doc.layer(id: bare.id)?.colorHex(for: .stroke) == "#B0184A")
+        // The one that already had a line keeps the width it had and takes the
+        // colour, rather than being reset to a fresh one.
+        #expect(doc.layer(id: lined.id)?.annotation?.strokeWidth == 6)
+        #expect(doc.layer(id: lined.id)?.colorHex(for: .stroke) == "#B0184A")
+    }
+
+    @Test func aLockedLayerTakesNoColourThisWayEither() {
+        let box = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00", locked: true)
+        var doc = document([box])
+        #expect(doc.turnOnPart(.outline, layerIDs: [box.id], paint: Paint(hex: "#B0184A")) == 0)
+        #expect(doc.layer(id: box.id)?.hasOutline == false)
+    }
+
+    /// An arrow IS its line, so there is no width to switch on: the colour
+    /// simply lands on the ink, which is the only thing the row could mean.
+    @Test func anArrowJustTakesTheColourBecauseItHasNoLineToSwitchOn() {
+        let arrow = shape(.arrow)
+        var doc = document([arrow])
+        #expect(doc.turnOnPart(.outline, layerIDs: [arrow.id], paint: Paint(hex: "#B0184A")) == 1)
+        #expect(doc.layer(id: arrow.id)?.annotation?.strokeWidth == 4)
+        #expect(doc.layer(id: arrow.id)?.colorHex(for: .stroke) == "#B0184A")
+    }
 }

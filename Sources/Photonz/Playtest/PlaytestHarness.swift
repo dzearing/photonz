@@ -2150,6 +2150,16 @@ private final class Run {
            }) {
             return shelf
         }
+        if let well = try? colorWell(name) { return well }
+        // A part that is switched OFF has no swatch at all, and the whole ROW
+        // takes the drop instead. So a walk that names Outline on a box with
+        // no line round it finds the row, which is the very thing a pointer
+        // would be over.
+        if let field = try panelTargets().first(where: {
+            $0.kind == .field && $0.name.caseInsensitiveCompare(name) == .orderedSame
+        }) {
+            return field
+        }
         return try colorWell(name)
     }
 

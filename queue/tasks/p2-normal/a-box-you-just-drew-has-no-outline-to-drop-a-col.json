@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1600,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T06:45:08.920Z",
-  "updated": "2026-09-07T06:45:08.921Z",
+  "updated": "2026-09-07T07:59:11.738Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-07 while fixing saving-a-colour-as-a-style-never-asks-for-a-name. colour-onto-a-swatch-walk fails at step 13 (dragColor from Fill onto Outline) with: no colour swatch for \"Outline\" is in the panel; the ones that are: Background fill, Foreground fill, Fill. Evidence: /tmp/photonz-playtest/colour-onto-a-swatch/colour-1-two-colours-sc.png, a real capture, shows Outline with an unticked switch and an empty colour column. Cause is not the naming path: a drawn rectangle comes out with strokeWidth 0, so Layer.hasOutline is false and colorStyleSelection(.stroke) is empty, and ColorStyleRow.showsWell returns false for an empty reading over a selection. Note the readouts disagree: the walk step before it asserts selectedColors reads stroke #FF3B30 while the panel says the box has no outline at all, so decide which is telling the truth before changing either. Either the rectangle tool should draw an outline, or an Outline row that is switched off should still offer the colour it would come back at, or the walk is stale and should switch the outline on first.",
@@ -22,6 +22,43 @@
     {
       "t": "2026-09-07T06:45:08.920Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T07:59:11.737Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T08:13:56.431Z",
+      "note": "Reproduced before changing anything. Ran colour-onto-a-swatch-walk on a clean probe: it passes end to end, so the walk is NOT stale. Then reproduced the reported state directly (draw a box, switch Outline off, draw another): the Outline row is a name and an off switch with an empty column, and dragColor from Fill onto Outline fails with \"no colour swatch for Outline\"."
+    },
+    {
+      "t": "2026-09-07T08:13:56.431Z",
+      "note": "Adversarial review of the three theories in the notes. (1) The rectangle tool DOES draw an outline: ShapeDefaults.standard gives every shape a 4 pt stroke. The bare box in the evidence came from the Outline switch arming the tool, which was asked for by the user on 2026-09-06, so making the tool always draw a line would undo their own request. Rejected. (3) The walk is stale: it passes, so no. Rejected. (2) An off Outline row offering the colour it would come back at: this is the real gap, but showing a swatch at rest contradicts the written rule the Appearance list is built on, that off has to look off. So the shortest version that delivers the same value is to give the colour somewhere to LAND without putting anything on screen at rest."
+    },
+    {
+      "t": "2026-09-07T08:13:56.431Z",
+      "note": "Built: a part row whose switch is off takes a colour drop across the whole row. While a colour is over it the row rings and the colour column shows the colour about to land; at rest the row is exactly what it was. Letting go switches the part on AND paints it as ONE edit, so one undo puts back both. A colour arriving under a saved name points the part at that name rather than at a copy."
+    },
+    {
+      "t": "2026-09-07T08:13:56.431Z",
+      "note": "Core (TDD, red first): PhotonzDocument.turnOnPart(_:layerIDs:paint:restoring:) in LayerParts.swift covers fill, outline (a shape stroke and a picture ring, width set before painting because a layer with no ring has no border colour), shadow, mixed rows, locked layers and an arrow with no width to switch. ColorDrop.Target gains isAbsent so the \"already this colour\" refusal stands down for a part nobody can see, and the sentence reads \"Turns Outline on, painted with this colour.\" 8 new core tests, all 4280 pass."
+    },
+    {
+      "t": "2026-09-07T08:13:56.431Z",
+      "note": "App (next only, all behind next-shape-parts): EditorState.dropColorOnOffPart, the OffPartColorDrop modifier, and a landing swatch in PartsInspector. The playtest harness now falls back to the ROW as a drop target when a part has no swatch, so a walk can name Outline on a bare box."
+    },
+    {
+      "t": "2026-09-07T08:13:56.431Z",
+      "note": "Verified on the real app with Scripts/playtest/colour-onto-an-off-part-walk.json (new, status ok): outline off reads fill #B0184A stroke #FF3B30, the drop lands stroke #B0184A with the Width row at 4 pt, ONE undo returns stroke #FF3B30 with the switch off, and the same gesture works on Shadow. Regression: colour-onto-a-swatch, one-outline-two-kinds, switch-says-mixed and parts-settings-inline all still ok."
+    },
+    {
+      "t": "2026-09-07T08:13:56.431Z",
+      "note": "Acceptance 1 (\"makes plain whether it has an outline\") judged already met and left alone: the capture shows Outline as a name plus an off switch, which reads the same way Shadow does. Changing the resting look would contradict the design rule above. Put it to the user as an evaluate question in the audit instead of deciding it silently."
+    },
+    {
+      "t": "2026-09-07T08:13:56.431Z",
+      "note": "Audit: queue/audits/2026-09-07-colour-onto-an-off-part.json, with three real window captures (Screen Recording granted)."
     }
-  ]
+  ],
+  "started": "2026-09-07T07:59:11.737Z"
 }

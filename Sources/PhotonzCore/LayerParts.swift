@@ -341,6 +341,73 @@ extension PhotonzDocument {
         }
     }
 
+    /// Gives a part BOTH its presence and a colour in one move, for a colour
+    /// let go of on a row whose switch is off.
+    ///
+    /// A row that is off shows its name and its switch and nothing else, which
+    /// is the point of the switch: off looks off. The cost was that a colour
+    /// carried over from another row had nowhere to land, so giving a bare box
+    /// a red edge meant finding the switch, flipping it, and then repainting
+    /// whatever came back (reported 2026-09-07). Letting go of a colour says
+    /// both things at once — give this part to these layers, and paint it this
+    /// — so it is one edit, and one undo puts all of it back.
+    ///
+    /// Every named layer ends up wearing the colour, including the ones that
+    /// already had the part. That is what a row where some of them are outlined
+    /// and some are not already promises: its switch resolves to ON for all of
+    /// them rather than stripping the ones that have it.
+    ///
+    /// A layer that already has the part KEEPS the width it was tuned to; only
+    /// the ones gaining it take a width, `restoring` first and the width a
+    /// fresh one wears otherwise. Returns how many layers changed.
+    @discardableResult
+    public mutating func turnOnPart(_ part: LayerPart, layerIDs: [UUID], paint: Paint,
+                                    restoring: [UUID: CGFloat] = [:]) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked else { continue }
+            switch part {
+            case .fill:
+                guard layer.colorSlots.contains(.fill) else { continue }
+                updateLayer(id: id) {
+                    $0.unbindColorStyle(for: .fill)
+                    // The colour that landed, not the one the switch would have
+                    // seeded: somebody chose this one by letting go of it.
+                    $0.setPaint(paint, for: .fill)
+                }
+            case .outline:
+                let width = max(1, restoring[id] ?? layer.startingOutlineWidth)
+                updateLayer(id: id) { target in
+                    // The width goes on FIRST: a layer with no ring has no
+                    // border colour at all, so painting before widening would
+                    // paint nothing. An arrow has no width to switch — it IS
+                    // its line — and simply takes the colour.
+                    if !target.hasOutline, target.outlineIsSwitchable {
+                        if target.drawsItsOwnOutline {
+                            target.setOutlineWidth(width)
+                        } else {
+                            target.style.borderWidth = width
+                        }
+                    }
+                    let slot = target.outlineSlot
+                    target.unbindColorStyle(for: slot)
+                    target.setPaint(paint, for: slot)
+                }
+            case .shadow:
+                updateLayer(id: id) { target in
+                    // A layer that already throws one keeps the shadow it
+                    // tuned and only changes colour, exactly as its own switch
+                    // promises.
+                    var shadow = target.style.shadow ?? ShadowStyle()
+                    shadow.colorHex = paint.hex
+                    target.style.shadow = shadow
+                }
+            }
+            changed += 1
+        }
+        return changed
+    }
+
     /// Switches the line round a set of layers on or off, whichever ring each
     /// one draws. Returns how many changed, so a caller can tell a no-op from
     /// an edit.

@@ -284,4 +284,49 @@ struct DraggingASavedColourTests {
         #expect(!answer.lightsUp)
         #expect(answer.note == "Brand is already on the shelf.")
     }
+
+    // MARK: - A part that is not there yet
+
+    /// A box with no line round it shows an Outline row with an off switch and
+    /// nothing beside it, so the whole ROW takes the drop and letting go both
+    /// gives the box a line and paints it (reported 2026-09-07).
+    ///
+    /// The colour the slot happens to be carrying while the line is absent is
+    /// not "what Outline is wearing" — nobody can see it — so the no-op
+    /// refusal has to stand down. Otherwise the one drop that would bring the
+    /// line back at the colour it was last seen in is the one drop refused.
+    @Test func aPartThatIsNotThereTakesEvenTheColourItAlreadyCarries() {
+        let answer = ColorDrop.answer(dropping: blue,
+                                      on: ColorDrop.Target(part: "Outline", wearing: blue,
+                                                           isAbsent: true))
+        #expect(answer.lightsUp)
+        #expect(answer.landing?.paint == blue)
+        #expect(answer.note == "Turns Outline on, painted with this colour.")
+    }
+
+    @Test func aPartThatIsNotThereSaysHowManyItWouldTurnOn() {
+        let answer = ColorDrop.answer(dropping: red,
+                                      on: ColorDrop.Target(part: "Outline", wearing: blue,
+                                                           reaches: 3, isAbsent: true))
+        #expect(answer.note == "Turns Outline on for all 3 of them, painted with this colour.")
+    }
+
+    @Test func aNameLandingOnAPartThatIsNotThereTurnsItOnWearingTheName() {
+        let brand = ColorDrop.SavedColor(id: UUID(), name: "Brand")
+        let answer = ColorDrop.answer(dropping: blue, bringing: brand,
+                                      on: ColorDrop.Target(part: "Outline", wearing: red,
+                                                           isAbsent: true, welcome: .wearsIt))
+        #expect(answer.landing?.brings == brand)
+        #expect(answer.note == "Turns Outline on, painted with Brand.")
+    }
+
+    /// Still nothing to do when the colour is going straight back where it was
+    /// picked up: an absent part cannot be a drag source in the first place,
+    /// and the rule that says so costs nothing to keep.
+    @Test func anAbsentPartIsStillNotSomewhereAColourCameFrom() {
+        let answer = ColorDrop.answer(dropping: blue,
+                                      on: ColorDrop.Target(part: "Outline", wearing: blue,
+                                                           isSource: true, isAbsent: true))
+        #expect(!answer.lightsUp)
+    }
 }

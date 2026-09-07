@@ -64,9 +64,22 @@ struct PartsInspector: View {
 /// That is the whole point of the switch: off has to look off, so the colour
 /// and the settings of an outline nobody can see are not sitting there
 /// pretending to do something. Switch it on and its settings are simply there.
+///
+/// Off still TAKES A COLOUR, though. Showing nothing meant a colour carried
+/// over from another row was refused by the Outline row of a box with no line
+/// round it, so the only way to a coloured edge was to find the switch, flip
+/// it, and repaint whatever came back (reported 2026-09-07). The whole row is
+/// the landing spot instead, and while a colour is over it the column where
+/// the swatch would be shows the colour about to land. Nothing new sits there
+/// the rest of the time, so off still looks off.
 private struct PartRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerPartRow
+
+    /// What is being held over this row right now, while it is switched off.
+    /// Nil the rest of the time, and whenever what is in the air is not a
+    /// colour.
+    @State private var incoming: ColorDrop.Answer?
 
     /// Whether this part is showing anything at all. A colour that is a
     /// property rather than a part — a line's ink, a letter's ink — has no
@@ -96,6 +109,10 @@ private struct PartRowView: View {
                        height: ColorPartLayout.rowHeight, alignment: .leading)
                 if isOn {
                     colorControl
+                } else if let paint = incoming?.landing?.paint {
+                    // A colour is over the row: this is where it would land,
+                    // wearing it, so letting go is never a guess.
+                    landingSwatch(paint)
                 } else if row.isMixed {
                     // The word where the row shows its value, which is where
                     // this row's colour says Mixed too. A part that only some
@@ -108,6 +125,10 @@ private struct PartRowView: View {
                 }
                 Spacer(minLength: 0)
             }
+            // The whole row takes the drop while the part is off, because
+            // there is no swatch to aim at and a person carrying a colour
+            // aims at the row's NAME. Nothing is drawn here at rest.
+            .modifier(OffPartColorDrop(row: row, active: !isOn, incoming: $incoming))
             // Out at the margin with the settings: everything a row has to say
             // below itself shares one left edge, so nothing under a part is a
             // step further in than anything else under it.
@@ -123,6 +144,21 @@ private struct PartRowView: View {
         // row's own word is what tells the outline's from the fill's:
         // `press "Switch" in "Outline"`.
         .playtestField(row.title)
+    }
+
+    /// The colour about to land, drawn where this row's swatch would be: the
+    /// same 18pt square in the same column, ringed the way every swatch in the
+    /// panel rings while a colour is over it.
+    private func landingSwatch(_ paint: Paint) -> some View {
+        PaintFill(paint: paint)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
+            .frame(width: 18, height: 18)
+            .overlay(RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(Color.accentColor, lineWidth: 2))
+            .frame(minWidth: ColorPartLayout.readoutWidth,
+                   minHeight: ColorPartLayout.rowHeight, alignment: .leading)
+            .transition(.opacity)
     }
 
     // MARK: The switch

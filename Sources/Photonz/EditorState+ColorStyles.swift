@@ -410,6 +410,68 @@ extension EditorState {
         armOutlineFromSelection(targets)
     }
 
+    /// Letting a colour go on a part whose switch is OFF: the part comes on
+    /// wearing that colour, in one step one undo puts back.
+    ///
+    /// A row that is off shows its name and its switch and nothing else, which
+    /// is the point of the switch. The cost, until this, was that the colour
+    /// had nowhere to land: a colour carried over from Fill was refused by the
+    /// Outline row of a bare box, and the only way to a coloured edge was to
+    /// find the switch, flip it, and repaint whatever came back (reported
+    /// 2026-09-07). Letting go says both things at once.
+    ///
+    /// A colour that arrived under a NAME points the part at that name, the
+    /// same way the row's own menu does, so the drag is never the quieter,
+    /// lossier way to do it. The shadow keeps only the colour: its row has no
+    /// saved colours to offer in the first place.
+    func dropColorOnOffPart(_ row: LayerPartRow, landing: ColorDrop.Landing) {
+        guard let part = row.part, let document else { return }
+        let ids = row.switchIDs.filter { document.layer(id: $0)?.isLocked == false }
+        guard !ids.isEmpty else { return }
+        let remembered = rememberedOutlineWidths
+        discardDragPreview()
+        perform { doc in
+            _ = doc.turnOnPart(part, layerIDs: ids, paint: landing.paint,
+                               restoring: remembered)
+            guard let brings = landing.brings else { return }
+            for (slot, group) in Self.styleSlots(part, ids: ids, in: doc) {
+                _ = doc.bindColorStyle(layerIDs: group, slot: slot, styleID: brings.id)
+            }
+        }
+        // Armed the same way every other edit on this row is, so the next box
+        // comes out the way this one was just left.
+        switch part {
+        case .outline:
+            armOutlineFromSelection(ids)
+            for (slot, group) in Self.styleSlots(part, ids: ids, in: document) {
+                armToolsFromSelection(slot: slot, targets: group)
+            }
+        case .fill:
+            armToolsFromSelection(slot: .fill, targets: ids)
+        case .shadow:
+            rememberStyleDefault(of: ids)
+        }
+        recordRecentColor(hex: landing.paint.hex)
+    }
+
+    /// Which colour of each layer a part's row stands for, grouped by kind, so
+    /// one Outline row over a box and a screenshot points the shape's stroke
+    /// and the picture's ring at the same name. The shadow has none: its
+    /// colour is not one of the layer's slots.
+    private static func styleSlots(_ part: LayerPart, ids: [UUID],
+                                   in doc: PhotonzDocument) -> [ColorSlot: [UUID]] {
+        var slots: [ColorSlot: [UUID]] = [:]
+        for id in ids {
+            guard let layer = doc.layer(id: id) else { continue }
+            switch part {
+            case .fill: slots[.fill, default: []].append(id)
+            case .outline: slots[layer.outlineSlot, default: []].append(id)
+            case .shadow: break
+            }
+        }
+        return slots
+    }
+
     /// Hands the line the picked shapes are wearing NOW to the tools that draw
     /// them. Read after the change, per kind of shape, so taking a box's
     /// outline off leaves the ellipse tool alone and a selection that ends up
