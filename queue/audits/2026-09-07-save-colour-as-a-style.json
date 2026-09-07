@@ -1,0 +1,29 @@
+{
+  "feature": "Saving a colour as a style",
+  "epic": "ui-building",
+  "summary": "Asking to save the selected shape's colour under a name now opens the name box on the row that colour is on, and pressing Return puts the colour on the Styles shelf with the row reading its name.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Appearance list and saved colours are both on by default.",
+  "try": [
+    { "do": "Draw a rectangle with the rectangle tool, then press V to pick it." },
+    { "do": "Open the palette button to the right of the Fill colour in Appearance and choose Save as Style.", "shot": "2026-09-07-save-colour-name-field.png" },
+    { "do": "Type Accent over the suggested name and press Return.", "shot": "2026-09-07-save-colour-on-the-shelf.png" },
+    { "do": "Check the Fill row: the palette button now reads Accent instead of a swatch outline." },
+    { "do": "Draw a second rectangle and point its Fill at Accent from the same button." },
+    { "do": "Click the Accent tile in the Library and change its colour in the Style section.", "shot": "2026-09-07-save-colour-style-section.png" },
+    { "do": "Press Command Z once and check both boxes go back together." }
+  ],
+  "evaluate": [
+    "Does the name box open where you expect it, under the colour you asked to save, rather than somewhere else in the panel?",
+    "Is Color a useful name to open on, or would you rather it opened empty and made you type one?",
+    "The saved colour lands in the Library at the bottom of the panel, well below the Fill row you saved from. Do you notice it arrive?",
+    "Does the Fill row reading Accent tell you clearly enough that the box is now wearing a name rather than a colour of its own?",
+    "Pressing Return saves and hands the keyboard back to the picture. Does Escape behaving as cancel read the same way to you?"
+  ],
+  "rough": [
+    "Nothing about the row's own Save as Style button was broken before this. What was dead is asking for a colour by the KIND of colour it is, which is how every scripted walk asks, and how a menu command or a keyboard shortcut would ask. Eleven walks were failing on it.",
+    "The name box is unlabelled: it opens holding the suggested name with the text selected, and the only words near it are the Save button. It reads fine because it appears the instant you ask, but on its own it is just a field.",
+    "The suggested name is Color, then Color 2, Color 3. It is honest and unhelpful in equal measure.",
+    "The screenshots are real captures of the running app, not offscreen renders.",
+    "One walk in the same group, colour-onto-a-swatch-walk, still fails and it is a different fault: a freshly drawn box has its Outline switched off, so there is no Outline swatch to drag a colour onto. Filed as its own task."
+  ]
+}

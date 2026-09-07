@@ -483,4 +483,52 @@ struct LayerPartsTests {
         #expect(doc.layer(id: a.id)!.hasOutline == false)
         #expect(doc.layer(id: b.id)!.hasOutline == false)
     }
+
+    // MARK: - Finding the row that paints one kind of colour
+
+    /// Naming a colour by the kind it is — a menu command, a keyboard step —
+    /// has to land on the row a person can actually see. The Appearance list
+    /// builds each row knowing WHICH picked layers wear which colour, so the
+    /// kind on its own no longer addresses anything: this is the lookup that
+    /// turns one back into the other.
+    @Test func theRowThatPaintsAKindOfColourIsTheOneOnScreen() {
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let doc = document([box])
+        let fill = doc.layerPartRow(layerIDs: [box.id], slot: .fill)
+        #expect(fill?.title == LayerPart.fill.title)
+        #expect(fill?.colors == [PartColor(slot: .fill, layerIDs: [box.id])])
+    }
+
+    /// A shape and a picture share ONE Outline row, and asking for either kind
+    /// of line finds that same row, ring and stroke together. Saving from it
+    /// keeps one colour for both, which is what the single row promises.
+    @Test func bothKindsOfLineFindTheOneOutlineRow() {
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let shot = picture(style: border(2))
+        let doc = document([box, shot])
+        let byStroke = doc.layerPartRow(layerIDs: [box.id, shot.id], slot: .stroke)
+        let byBorder = doc.layerPartRow(layerIDs: [box.id, shot.id], slot: .border)
+        #expect(byStroke == byBorder)
+        #expect(byStroke?.title == LayerPart.outline.title)
+        #expect(byStroke?.colors.map(\.slot) == [.stroke, .border])
+    }
+
+    /// A highlight's wash is a stroke colour that is not a line round
+    /// anything, so it gets a row of its own. Asking for a stroke finds that
+    /// row rather than the Outline row beside it, because that is the row the
+    /// wash is on.
+    @Test func aWashIsFoundOnItsOwnRowRatherThanTheOutlineRow() {
+        let wash = shape(.highlight)
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let doc = document([wash, box])
+        let row = doc.layerPartRow(layerIDs: [wash.id, box.id], slot: .stroke)
+        #expect(row?.part == nil)
+        #expect(row?.colors == [PartColor(slot: .stroke, layerIDs: [wash.id])])
+    }
+
+    @Test func nothingPaintsAKindOfColourNobodyPicked() {
+        let arrow = shape(.arrow)
+        let doc = document([arrow])
+        #expect(doc.layerPartRow(layerIDs: [arrow.id], slot: .fill) == nil)
+    }
 }

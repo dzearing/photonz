@@ -1,0 +1,27 @@
+{
+  "id": "a-box-you-just-drew-has-no-outline-to-drop-a-col",
+  "title": "A box you just drew has no outline to drop a colour on",
+  "goal": "Draw a rectangle and the Appearance list shows Outline with its switch off and no colour beside it, so there is no outline swatch to carry a colour onto. Anyone trying to give a fresh box a coloured edge has to find and flip a switch first, and a colour dragged from Fill has nowhere to land.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T06:45:08.920Z",
+  "updated": "2026-09-07T06:45:08.921Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-07 while fixing saving-a-colour-as-a-style-never-asks-for-a-name. colour-onto-a-swatch-walk fails at step 13 (dragColor from Fill onto Outline) with: no colour swatch for \"Outline\" is in the panel; the ones that are: Background fill, Foreground fill, Fill. Evidence: /tmp/photonz-playtest/colour-onto-a-swatch/colour-1-two-colours-sc.png, a real capture, shows Outline with an unticked switch and an empty colour column. Cause is not the naming path: a drawn rectangle comes out with strokeWidth 0, so Layer.hasOutline is false and colorStyleSelection(.stroke) is empty, and ColorStyleRow.showsWell returns false for an empty reading over a selection. Note the readouts disagree: the walk step before it asserts selectedColors reads stroke #FF3B30 while the panel says the box has no outline at all, so decide which is telling the truth before changing either. Either the rectangle tool should draw an outline, or an Outline row that is switched off should still offer the colour it would come back at, or the walk is stale and should switch the outline on first.",
+  "acceptance": [
+    "Drawing a rectangle and looking at Appearance makes plain whether it has an outline, with no reading between a switch and an empty column",
+    "A colour dragged from the Fill swatch can be dropped on the Outline row of a freshly drawn box",
+    "Scripts/playtest.sh Scripts/playtest/colour-onto-a-swatch-walk.json runs to the end and reports ok"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T06:45:08.920Z",
+      "note": "created (manual)"
+    }
+  ]
+}

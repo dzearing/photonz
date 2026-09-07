@@ -326,6 +326,21 @@ extension PhotonzDocument {
         return rows
     }
 
+    /// The row on screen that paints one kind of colour, or nil when no picked
+    /// layer wears it.
+    ///
+    /// A row used to be addressable by the kind of colour alone, because that
+    /// is all a row was. Now each one knows WHICH picked layers take each of
+    /// its colours, so anything that names a colour by kind — a menu command,
+    /// a scripted step — has to come back through here to reach the row a
+    /// person is looking at. The first row wins, which is why a highlight's
+    /// wash is found on its own row rather than on the Outline row under it.
+    public func layerPartRow(layerIDs: [UUID], slot: ColorSlot) -> LayerPartRow? {
+        layerPartRows(layerIDs: layerIDs).first { row in
+            row.colors.contains { $0.slot == slot }
+        }
+    }
+
     /// Switches the line round a set of layers on or off, whichever ring each
     /// one draws. Returns how many changed, so a caller can tell a no-op from
     /// an edit.

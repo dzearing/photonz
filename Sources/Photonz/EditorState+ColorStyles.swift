@@ -85,11 +85,28 @@ extension EditorState {
         return styleID
     }
 
-    /// Save as Style: opens the name field under that color row. The row it
-    /// belongs to is the one for that slot, whatever is picked, because only
-    /// one field is open at a time and the selection is what it is about.
+    /// Save as Style: opens the name field under the row that paints this kind
+    /// of colour, whatever is picked, because only one field is open at a time
+    /// and the selection is what it is about.
     func beginNamingColorStyle(slot: ColorSlot) {
-        beginNamingColorStyle(ColorTarget(slot))
+        beginNamingColorStyle(colorRowTarget(slot: slot))
+    }
+
+    /// The row on screen that paints a kind of colour.
+    ///
+    /// The name field belongs to a row, and the Appearance list builds each of
+    /// its rows knowing WHICH picked layers wear which colour. A bare kind of
+    /// colour therefore addresses no row that is actually up: asking to name a
+    /// fill that way opened a field under a row nobody could see, so Save as
+    /// Style looked like a button that did nothing (reported 2026-09-07).
+    /// Everything that reaches a row by the colour it paints comes through
+    /// here first.
+    func colorRowTarget(slot: ColorSlot) -> ColorTarget {
+        guard Experiments.shared.shapePartsEnabled, let document else {
+            return ColorTarget(slot)
+        }
+        let row = document.layerPartRow(layerIDs: colorStyleTargetIDs, slot: slot)
+        return row.flatMap { ColorTarget($0.colors) } ?? ColorTarget(slot)
     }
 
     /// The same, for a row that paints more than one kind of colour.

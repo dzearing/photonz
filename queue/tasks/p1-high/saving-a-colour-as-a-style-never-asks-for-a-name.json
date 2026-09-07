@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 180,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T06:03:14.279Z",
-  "updated": "2026-09-07T06:03:14.280Z",
+  "updated": "2026-09-07T06:49:05.938518Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by running every walk on 2026-09-07 (221 passed, 15 failed). Eleven of the fifteen share this root cause: the playtest action saveColorStyle calls EditorState.beginNamingColorStyle(slot:) and no field ever appears, so the later focus 'Style name' or type step fails. Failing walks: border-color-walk, colour-onto-a-swatch-walk, link-break-walk, multi-style-walk, name-field-handback, saved-colour-cannot-come-walk, saved-colour-not-for-that-part-walk, selection-color-walk, shape-settings-walk, styled-row-walk, styles-walk, tool-holds-saved-colour-walk. Evidence: /tmp/photonz-playtest/styles-walk/styles-naming-sc.png is a real capture taken right after the save, panel unchanged and the Library still on Media. 'Style name' still exists in the sources (DesignedColorPicker, ColorStylePanel, LibraryColorDrop), so this is behaviour, not a renamed control. Check whether colorStyleSlots / colorStyleSelection(slot:).savablePaint still finds a slot for a plain filled rectangle after the recent Appearance-list work. Reproduce: Scripts/playtest.sh Scripts/playtest/styles-walk.json",
@@ -22,6 +22,47 @@
     {
       "t": "2026-09-07T06:03:14.280Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T06:32:37.605Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T06:43:26.875092Z",
+      "note": "Reproduced first: Scripts/playtest.sh Scripts/playtest/styles-walk.json failed at step 8 with 'no editable field labelled \"Style name\" is on screen; the ones that are: X, Y, W, H, Search media'."
+    },
+    {
+      "t": "2026-09-07T06:43:26.875092Z",
+      "note": "Root cause, and it is not the one the notes guessed. colorStyleSlots and savablePaint are fine. The name field is keyed on the ROW it belongs to (ColorStyleNamingRequest holds a ColorTarget, and ColorStyleRow shows the field only when colorStyleNaming == its own target). The Appearance list builds every row with the exact picked layers each colour reaches (PartColor.layerIDs), while beginNamingColorStyle(slot:) built a bare ColorTarget(slot) with layerIDs nil. Those two values are never equal, so the request addressed a row that is not on screen and the field never appeared."
+    },
+    {
+      "t": "2026-09-07T06:43:26.875092Z",
+      "note": "Adversarial pass before building: the row's own Save as Style menu item passes the row's target, so a person clicking the button in the app was never broken. What was dead is every path that names a colour by the KIND of colour it is, which is what the walks use and what any future menu command or shortcut would use. A request to name a colour that quietly addresses nothing is the defect, so the fix belongs at that seam rather than in the harness."
+    },
+    {
+      "t": "2026-09-07T06:43:26.875092Z",
+      "note": "Fix: PhotonzDocument.layerPartRow(layerIDs:slot:) in PhotonzCore returns the row on screen that paints a kind of colour (tests first, 4 new cases in LayerPartsTests). EditorState.colorRowTarget(slot:) turns a slot into that row's target when the Appearance list is up, and falls back to the old bare target when the flag is off. beginNamingColorStyle(slot:) goes through it."
+    },
+    {
+      "t": "2026-09-07T06:43:26.875092Z",
+      "note": "Verified: Scripts/test.sh green (4269 tests). Eleven of the twelve walks in the notes now run to the end and report ok: border-color, link-break, multi-style, name-field-handback, saved-colour-cannot-come, saved-colour-not-for-that-part, selection-color, shape-settings, styled-row, styles, tool-holds-saved-colour."
+    },
+    {
+      "t": "2026-09-07T06:43:26.875092Z",
+      "note": "The twelfth, colour-onto-a-swatch-walk, fails for a DIFFERENT reason and is out of scope: it drags a colour from Fill onto Outline, but a freshly drawn rectangle now has its Outline switched off, so there is no Outline swatch to drop on ('the ones that are: Background fill, Foreground fill, Fill'). Filed separately."
+    },
+    {
+      "t": "2026-09-07T06:49:05.938518Z",
+      "note": "Adversarial pass on the built thing, on real captures from the probe: the name box opens under the Fill row with the suggested name selected, and one beat after Return the Accent tile is on the Styles shelf with the Fill row reading Accent. I first suspected the shelf lagged, because the capture taken the instant Return lands still showed media thumbnails under the Styles pill; a second run with a 1s settle proved that was capture timing, not the app. Left rough and recorded in the audit: the suggested name is Color, the box carries no label of its own, and the saved tile lands at the bottom of the panel a long way from the row you saved from."
+    },
+    {
+      "t": "2026-09-07T06:49:05.938518Z",
+      "note": "Also ran the three other walks that reach a save through a slot (border-color, gradient-style, one-color-picker): all ok. Started a full 237-walk sweep but stopped it after ten walks; at roughly a minute each it would have run for hours, and the change has exactly one call site, so the twelve walks in the notes plus these three plus 4269 unit tests is the honest coverage."
+    },
+    {
+      "t": "2026-09-07T06:49:05.938518Z",
+      "note": "Audit written: queue/audits/2026-09-07-save-colour-as-a-style.json, with three real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-07T06:32:37.605Z"
 }
