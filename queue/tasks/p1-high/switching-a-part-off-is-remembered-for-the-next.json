@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T03:27:08.256Z",
-  "updated": "2026-09-07T04:24:34.452Z",
+  "updated": "2026-09-07T04:47:22.011Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-06. The mechanism exists and one of the three switches uses it, which is why the behaviour is inconsistent rather than absent. setColorEnabled (Sources/Photonz/EditorState+ColorStyles.swift line 427) ends by calling armToolsFromSelection, with a comment saying switching a box's inside off arms the tool with no inside so the next box comes out an outline. setOutlineEnabled (line 370) does the document change and returns, arming nothing, so the outline switch is forgotten. setSelectionShadowEnabled (line 340) routes through setLayerStyle, which does call rememberStyleDefault, so a shadow switched off ought to stick already; confirm that by test rather than by reading, since it is the same claim this bug disproved for the outline. Note the existing rule in rememberStyleDefault (EditorState+LayersPanel.swift line 270) that only a single layer edit teaches the tool, because over a selection there is no one style to hand it; keep that rule rather than widening it. The outline is the awkward one because a shape can carry its own stroke or a layer style border and setOutlineEnabled handles both, stashing widths in rememberedOutlineWidths to restore later; whatever is armed has to say the part is OFF rather than that its width is zero, or switching it back on will bring back a zero width outline that draws nothing.",
@@ -70,7 +70,12 @@
     {
       "t": "2026-09-07T04:46:28.428Z",
       "note": "Audit queue/audits/2026-09-06-parts-off-is-remembered.json with two real window captures."
+    },
+    {
+      "t": "2026-09-07T04:47:22.010Z",
+      "note": "The Outline switch now arms the tool the way Fill and Shadow already did: PhotonzCore outlineArming(layerIDs:) plus EditorState.setOutlineEnabled (shared, so both releases). Reproduced first on the probe, verified after with Scripts/playtest/parts-off-is-remembered-walk.json (all three switches, ellipse untouched), a 9pt ring and a 4pt fallback measured in the render, and a cold start proving it survives quitting. Suite green at 4253. Audit queue/audits/2026-09-06-parts-off-is-remembered.json. Pushed as c80a2a44."
     }
   ],
-  "started": "2026-09-07T04:24:34.451Z"
+  "started": "2026-09-07T04:24:34.451Z",
+  "completed": "2026-09-07T04:47:22.011Z"
 }
