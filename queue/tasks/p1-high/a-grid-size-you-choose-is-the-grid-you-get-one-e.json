@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T03:06:34.043Z",
-  "updated": "2026-09-07T03:06:34.082Z",
+  "updated": "2026-09-07T03:26:35.924356Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-06: set grid sizes do not work, at four points they see a bunch of lines that are not four points apart. Confirmed by reading: CanvasGridSettings.liveSpacing (CanvasGrid.swift line 188) and the drawing both call CanvasGridLevels.levels, which returns up to maximumLevels of three rungs chosen from the zoom whatever the person set, so an explicit spacing is only ever the FINEST rung and two coarser ones are drawn with it. The ladder exists for a good reason and the user has now named where it belongs: only under automatic, which already exists as CanvasGridCellStops.automatic and is read through cellIsAutomatic (line 207). So the change is to branch, not to delete: a chosen size draws one spacing, automatic keeps the ladder. That also collapses most of snapping-pulls-to-the-grid-you-can-see-not-one-y for the chosen case, since drawn and set become the same thing; read that task and say in the audit what remains of it under automatic. Transparency: maximumOpacity is 0.30 (line 284); pick a lower number by looking at a fine grid zoomed in, not by taste alone, and keep it readable on a dark and a light picture. The slider labels are the tool bar's cell popup from the-grid-tool-bar-is-two-buttons-and-adjust-mode; if that task has not landed yet, coordinate rather than building the popup twice.",
@@ -32,6 +32,19 @@
     {
       "t": "2026-09-07T03:06:34.081Z",
       "note": "seq 180 -> 1"
+    },
+    {
+      "t": "2026-09-07T03:21:31.488Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T03:26:35.924356Z",
+      "note": "Adversarial review before building. (1) The ladder is right for automatic and wrong for a chosen size: a chosen size is a promise about the picture, and today the promise is broken in the one case a person can check by counting. Branch, do not delete. (2) A first-time user who picks 4 pt and then zooms out to 50% will find the grid gone under the new rule, because 4 pt at 50% is two screen points and there is nothing honest to draw. That is the one place this change can read as broken; it goes in the audit as a question rather than being papered over with a coarser grid nobody asked for. (3) The nine numbers beside the size slider are decoration: the slider already has nine stops and the button already says the size. One readout at the foot says more with less, and it is the thing the user asked for. (4) Shortest version: one branch, in CanvasGridSettings.levels(atZoom:), which the drawing, the pull and the readouts all go through, plus one new drawing rule and one lower opacity. No new settings, no new mode."
+    },
+    {
+      "t": "2026-09-07T03:26:35.924356Z",
+      "note": "Reading taken on the bold line (acceptance 2): it stays. A bold every N lands ON lines the chosen grid already draws, so it adds emphasis, never a new line position. It fades in and out with the fine grid rather than outliving it, so there is never a moment where the only thing on screen is a density nobody chose."
     }
-  ]
+  ],
+  "started": "2026-09-07T03:21:31.487Z"
 }

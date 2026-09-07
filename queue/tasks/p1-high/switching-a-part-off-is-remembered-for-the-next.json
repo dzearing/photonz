@@ -1,0 +1,35 @@
+{
+  "id": "switching-a-part-off-is-remembered-for-the-next",
+  "title": "Switching a part off is remembered for the next shape you draw",
+  "goal": "Draw a rectangle, switch its outline off, draw another, and the outline is back. Everything else the tool remembers, colours, thickness, corner radius, so a part being switched off should stick too. The next shape of that kind starts the way you left the last one, and the same holds for every part, not just the outline.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T03:27:08.256Z",
+  "updated": "2026-09-07T03:27:08.292Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-06. The mechanism exists and one of the three switches uses it, which is why the behaviour is inconsistent rather than absent. setColorEnabled (Sources/Photonz/EditorState+ColorStyles.swift line 427) ends by calling armToolsFromSelection, with a comment saying switching a box's inside off arms the tool with no inside so the next box comes out an outline. setOutlineEnabled (line 370) does the document change and returns, arming nothing, so the outline switch is forgotten. setSelectionShadowEnabled (line 340) routes through setLayerStyle, which does call rememberStyleDefault, so a shadow switched off ought to stick already; confirm that by test rather than by reading, since it is the same claim this bug disproved for the outline. Note the existing rule in rememberStyleDefault (EditorState+LayersPanel.swift line 270) that only a single layer edit teaches the tool, because over a selection there is no one style to hand it; keep that rule rather than widening it. The outline is the awkward one because a shape can carry its own stroke or a layer style border and setOutlineEnabled handles both, stashing widths in rememberedOutlineWidths to restore later; whatever is armed has to say the part is OFF rather than that its width is zero, or switching it back on will bring back a zero width outline that draws nothing.",
+  "acceptance": [
+    "Switching a part off on a shape, then drawing another of the same kind, gives a shape with that part off",
+    "Switching it back on and drawing again gives a shape with it on, at the settings last used",
+    "This holds for every part with a switch, the outline, the inside and the shadow, and the audit names each one tested",
+    "The memory is per kind of shape, so turning a rectangle's outline off does not change what an ellipse or an arrow starts with",
+    "It survives quitting and reopening the app, as the other tool defaults do",
+    "Switching a part off across a multiple selection does not arm the tool with one of them, matching the existing rule that only a single edit teaches the tool",
+    "Audit written under queue/audits/ with a rectangle drawn after each switch, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T03:27:08.257Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T03:27:08.291Z",
+      "note": "seq 180 -> 4"
+    }
+  ]
+}
