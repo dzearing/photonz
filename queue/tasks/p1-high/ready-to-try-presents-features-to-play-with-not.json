@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 17,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T16:30:48.842Z",
-  "updated": "2026-09-07T19:37:38.536880Z",
+  "updated": "2026-09-07T19:38:08.507Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-07: the select with three hundred items is not a design, and they want progressive disclosure on a surface that reads as a polished professional dashboard. Today auditPicker (docs/design/mocks/pages/dashboard.html line 1198) builds a single select of every file name and renderAudits draws one report below it. There are 325 reports and they already carry what a card needs: feature, epic, summary, setup, try, evaluate and rough. The epic is the grouping, and recent ones spread across ui-building, ui-components, ui-layout, measure-redline and unmanned-loop, so grouping by it is meaningful rather than decorative. Two things to get right that a naive rebuild will miss. First the data: the state payload deliberately carries only audit NAMES and each report is fetched when opened, so a card list needs the summary line without fetching all of them; either widen what the state carries for the recent set only, or fetch lazily as cards come into view, and say which in the audit. Second, the reports are dated by file name, so ordering and the landed date should come from that rather than from reading each file. Keep the reaction machinery untouched, since that is what turns a comment into a task.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-07T19:37:38.536880Z",
       "note": "Found on the way, filed not fixed: /api/state is 3,043,595 bytes every 4 seconds, 2.5MB of it task logs (the-dashboard-downloads-three-megabytes-every-fo); decision-drill.mjs is timing-flaky (the-decision-drill-fails-about-half-the-time-on)."
+    },
+    {
+      "t": "2026-09-07T19:38:08.506Z",
+      "note": "Ready to try opens on the newest 24 reports as cards grouped by pillar epic (docs/design/mocks/pages/dashboard.html), each with feature name, summary, day landed and step count; a card opens in place with scroll anchored to its header. New /api/audit-index (queue-lib.mjs + dev-server.mjs) draws the list in one 152KB request, 2-5ms, cached; bodies still load per card. Verified in a browser on the real dashboard: arrival, open/close scroll anchoring measured, keyboard Tab/Return/Escape, search across all 333, area filter, Show all in 54ms, and a real reaction filed a task then dropped. Dark and light, 820px. Scripts/test.sh green, check-reserved clean, new audit-index-drill.mjs passes. Audit: queue/audits/2026-09-07-ready-to-try-cards.json"
     }
   ],
-  "started": "2026-09-07T19:21:12.980Z"
+  "started": "2026-09-07T19:21:12.980Z",
+  "completed": "2026-09-07T19:38:08.507Z"
 }
