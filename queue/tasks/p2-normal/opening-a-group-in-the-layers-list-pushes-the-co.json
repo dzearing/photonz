@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1610,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T07:54:51.552Z",
-  "updated": "2026-09-07T08:23:23.172064Z",
+  "updated": "2026-09-07T08:23:40.880Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing out-of-view-mark-walk on 2026-09-07: the walk had to gain a scrollPanel step because pressing Twist on the Card added four rows and put Clip contents below the fold. Panel dumps: /tmp/photonz-playtest/out-of-view-mark/panel-1-overflows.json vs panel-3-open-card.json. Likely shape: give the layers list its own scroll area with a bounded height inside the dock column, so the inspector sections keep their place. Next release only.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-07T08:23:23.172064Z",
       "note": "Scripts/test.sh green: 4283 tests in 359 suites."
+    },
+    {
+      "t": "2026-09-07T08:23:40.879Z",
+      "note": "The layers area now keeps room for every row a twist could reveal, so opening or shutting a group scrolls inside the list and nothing under it moves. Verified with a new playtest walk: Component, Position & Size and Layout all hold the same y through open, shut and open again. Full suite green (4283 tests). Audit: queue/audits/2026-09-07-layers-hold-their-place.json. Pushed as 2535b672."
     }
   ],
-  "started": "2026-09-07T08:14:48.238Z"
+  "started": "2026-09-07T08:14:48.238Z",
+  "completed": "2026-09-07T08:23:40.880Z"
 }
