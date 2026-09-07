@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T03:12:39.245Z",
-  "updated": "2026-09-07T04:08:25.090Z",
+  "updated": "2026-09-07T04:23:45.275Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-06, immediately after the Appearance list shipped (one-way-to-add-colour-and-remove-any-part-of-a-s). What is there now, from a read of Sources/Photonz/PartsInspector.swift: a part row draws a chevron when it is on and has settings (opens at line 86), the settings render only when that part is the one open (line 132, gated on openPart matching the row at line 38), and both the settings and the note are indented by the label column width (lines 130 and 134). So there are three things to undo: the chevron, the single open part rule, and the indent. The single open part rule is the one worth thinking about rather than deleting blindly, since it was presumably there to keep the panel short; the user has asked for every on part to show its settings, so the panel gets taller and that is accepted, but check it still reads at a small window height and say so in the audit. The reach note under a row keeps its own indent question: decide whether it follows the settings out to the margin or stays as it is, and say which.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-07T04:23:21.087682Z",
       "note": "Decided the reach note question the task left open: the note follows the settings out to the margin. Checked it on a mixed two-box selection, where it reads in line with the Position & Size note, the Appearance caption and the Effects note, so the whole dock has one left edge for anything a row says about itself. Doc updated: docs/design/shape-parts.md 'The panel'. Audit: queue/audits/2026-09-06-parts-settings-inline.json with three real captures."
+    },
+    {
+      "t": "2026-09-07T04:23:45.274Z",
+      "note": "A switched on part shows its settings on the lines under its row, at the same left edge as everything else: chevron, one-part-at-a-time rule and indent all gone (Sources/Photonz/PartsInspector.swift, Next only behind next-shape-parts). Told apart by the tick column and the gap instead, and the reach note moved out to the margin with them. Also fixed the empty line that made the shadow's settings sit further from their row than Outline's Width. Verified on the probe with real captures at one part on, three on, all off, and off-then-on-again returning to the exact starting layout, plus a 640 pt window that scrolls rather than squeezes; suite green at 4240. Walk: Scripts/playtest/parts-settings-inline-walk.json. Audit: queue/audits/2026-09-06-parts-settings-inline.json"
     }
   ],
-  "started": "2026-09-07T04:08:25.090Z"
+  "started": "2026-09-07T04:08:25.090Z",
+  "completed": "2026-09-07T04:23:45.275Z"
 }
