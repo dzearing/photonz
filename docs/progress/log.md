@@ -10882,3 +10882,37 @@ moves the screen. That is why frames still draw no wall.
 Next: the queue's next task. Open question for the user, in the audit —
 whether a solid hairline is heavy enough to catch the eye mid-drag, and
 whether an empty band should keep you inside the group.
+
+## 2026-09-07 — A band swept inside a screen picks what is on that screen
+
+The bug the last task found is fixed. Dragging across a screen's empty
+background used to pick the screen up and move it, so a rubber band inside a
+screen could not be drawn at all. It now sweeps a band latched to that screen,
+which takes in that screen's own contents and never the screen itself or
+anything beside it.
+
+`PhotonzDocument.screenSurfacePress` (LayerGrouping.swift, 13 tests) answers
+what a press on a frame's own empty room means: sweep when the screen is not
+picked, move when it is. `CanvasPointerDrags.mouseDown` asks it just before the
+group-aware pick. A new `marqueeClickTarget` carries what a band that never
+travels picks, so a click on that surface still picks the screen and a
+shift-click still adds it: only the DRAG changed meaning.
+
+Two ways to move a screen, both Figma's. A picked screen drags from its middle
+rather than sweeping, so a selected screen never feels stuck. And the name above
+a screen is a real handle now — dragging it moves the screen with nothing picked
+first. It used to be clickable and not draggable.
+
+The frame guard in `refreshGroupContextOutline` is lifted for the lit case, as
+the last task's note asked: a screen draws the context wall while a band is
+being swept on it, and nowhere else.
+
+Verified in the app: `Scripts/playtest/band-inside-a-screen-walk.json`, 49
+steps, with the Screen Recording grant so the audit's pictures are real
+captures. Ten neighbouring frame walks re-run green; band-level's stage 7 now
+actually delivers what its note always claimed.
+
+Next: the queue's next task. Open questions for the user, in the audit — whether
+the same gesture meaning two things depending on whether the screen is picked is
+worth the accident it allows, and whether the surface needs a cursor cue to say
+which one is about to happen.
