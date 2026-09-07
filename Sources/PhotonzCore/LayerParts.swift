@@ -175,7 +175,15 @@ extension PhotonzDocument {
         // then be an outline you cannot remove.
         let inked = picked.filter { $0.colorSlots.contains(.stroke) }
         if !inked.isEmpty {
-            let switchable = inked.filter { $0.outlineIsSwitchable }
+            // This row is the Outline part only for layers whose outline IS
+            // this slot. A highlight's stroke colour is the wash it paints, not
+            // a line round anything — it never draws the stroke width it
+            // carries — so calling it Outline handed a highlight two rows of
+            // that name, one above the other, whose switches both wrote the
+            // same ring while their colour wells pointed at different colours
+            // (reported 2026-09-06). Its wash is a colour with no switch, the
+            // way a line's ink is.
+            let switchable = inked.filter { $0.outlineSlot == .stroke && $0.outlineIsSwitchable }
             // The width has ONE home, and it is the drawer this row opens — so
             // a row with no switch, which is a colour and nothing else, does
             // not keep one. An arrow's thickness sits in the arrow's own

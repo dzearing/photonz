@@ -1,0 +1,29 @@
+{
+  "id": "two-layers-picked-together-are-offered-outline-t",
+  "title": "Two layers picked together are offered Outline twice",
+  "goal": "Pick a rectangle and a picture at the same time and the Appearance list shows two rows called Outline, one for the line the shape draws itself and one for the ring the picture wears. They are the same idea to a person, so one row should speak for both, switching and colouring whichever line each layer actually has.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1570,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T01:45:45.704Z",
+  "updated": "2026-09-07T01:45:45.705Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "LayerPartRow carries ONE slot, which is why the inked (.stroke) and ringed (.border) rows cannot merge today: PartsInspector reads row.slot straight into ColorStyleRow. Merging means a row whose colour is per-layer (Layer.outlineSlot already says which each one uses), so ColorStyleRow / colorStyleSelection(slot:) would need to take a per-layer slot map rather than one slot. Split out of the highlight task on 2026-09-06.",
+  "acceptance": [
+    "A rectangle and a picture picked together show exactly one row called Outline",
+    "That row switches the line on and off for both of them at once",
+    "Picking a colour there paints the shape its stroke and the picture its ring",
+    "A single rectangle, picture, highlight, arrow and text layer each show the rows they show today",
+    "Core tests cover a mixed selection"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T01:45:45.705Z",
+      "note": "created (manual)"
+    }
+  ]
+}

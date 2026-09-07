@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1560,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T00:43:49.357Z",
-  "updated": "2026-09-07T00:43:49.358Z",
+  "updated": "2026-09-07T01:39:59.748Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Confirmed 2026-09-06 with a scratch test: doc.layerPartRows for a lone highlight returns [Outline/stroke, Outline/border, Shadow]. In LayerParts.layerPartRows a highlight lands in BOTH the inked set (colorSlots contains .stroke) and the ringed set (!drawsItsOwnOutline), and Layer.outlineIsSwitchable is true for it, so the stroke row keeps a switch it should not have. A highlight never paints its stroke width, so the stroke row is arguably the one to drop, but its colour is the highlight colour people actually set, so check ColorSlot.stroke vs .border on a highlight before deleting either.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-07T00:43:49.358Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T01:39:59.748Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T02:20:00.000Z",
+      "note": "Reproduced first: doc.layerPartRows for a lone highlight returned [Outline/stroke, Outline/border, Shadow], and both switches wrote the SAME thing (style.borderWidth), while their colour wells pointed at different colours. Adversarial pass on the idea: the highlight rasterizer fills its box with annotation.colorHex, so the .stroke slot on a highlight is its WASH, not a line round anything. That makes it a property with no switch, exactly like a line's or a letter's ink, not an Outline part. Dropping the stroke row outright would have cost the highlight the one colour people actually set."
+    },
+    {
+      "t": "2026-09-07T02:21:00.000Z",
+      "note": "Fix (LayerParts.swift): the stroke row is the Outline part only for layers whose outline IS that slot (outlineSlot == .stroke && outlineIsSwitchable), instead of outlineIsSwitchable alone. A highlight therefore falls out of it and takes the no-switch Color row, keeping its wash; the ring keeps the one Outline row, switch and width and all. One-line change, no model or storage churn."
+    },
+    {
+      "t": "2026-09-07T02:22:00.000Z",
+      "note": "Tests written first, watched fail, then pass: five new cases in LayerPartsTests (one Outline row for a highlight, the wash is a Color with no switch or width, the ring still switches both ways, a highlight picked with a box leaves the box's stroke row alone, an ellipse unchanged). Full suite green, 4194 tests."
+    },
+    {
+      "t": "2026-09-07T02:23:00.000Z",
+      "note": "Verified in the real app, not just the model: Scripts/playtest/highlight-one-outline-walk.json on the probe. panel-highlight.json lists Color, one Switch in Outline, one Switch in Shadow; panel-rectangle.json is unchanged (Fill switch+colour, Outline switch+colour+settings, Shadow). Screen Recording granted, so the captures are real. Pressing the one Outline switch put a ring round the highlight and pressing it again took it off with the wash intact."
+    },
+    {
+      "t": "2026-09-07T02:24:00.000Z",
+      "note": "Left undone on purpose: a rectangle picked WITH a picture (or with a highlight) still shows two rows called Outline, since LayerPartRow carries one slot and those are two different colours underneath. Pre-existing, bigger than this report, filed as two-layers-picked-together-are-offered-outline-t. Audit: queue/audits/2026-09-06-highlight-one-outline.json."
     }
-  ]
+  ],
+  "started": "2026-09-07T01:39:59.747Z"
 }

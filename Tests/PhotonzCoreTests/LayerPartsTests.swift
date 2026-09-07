@@ -151,6 +151,70 @@ struct LayerPartsTests {
         #expect(!rows[0].isOn)
     }
 
+    // MARK: - A highlight, which was offered the same name twice
+
+    @Test func aHighlightIsOfferedOneLineRoundItNotTwo() throws {
+        // Reported 2026-09-06: picking a highlight put two rows called Outline
+        // one above the other. Both switches wrote the same border width and
+        // they painted different colours, so picking either was a guess.
+        let wash = shape(.highlight)
+        let doc = document([wash])
+        let rows = doc.layerPartRows(layerIDs: [wash.id])
+        #expect(rows.filter { $0.title == "Outline" }.count == 1)
+        let outline = try #require(rows.first { $0.title == "Outline" })
+        // The one that is real: the ring the highlight's styling draws.
+        #expect(outline.slot == .border)
+        #expect(outline.switchIDs == [wash.id])
+        #expect(outline.widthIDs == [wash.id])
+    }
+
+    @Test func aHighlightsWashIsAColorRatherThanAnOutline() {
+        // A highlight IS its wash, the way an arrow is its line: there is no
+        // switching it off, and the stroke width it carries is never painted.
+        let wash = shape(.highlight)
+        let doc = document([wash])
+        let rows = doc.layerPartRows(layerIDs: [wash.id])
+        #expect(rows.map(\.title) == ["Color", "Outline", "Shadow"])
+        let ink = rows[0]
+        #expect(ink.slot == .stroke)
+        #expect(ink.part == nil)
+        #expect(!ink.hasSwitch)
+        #expect(ink.widthIDs.isEmpty)
+        #expect(!ink.hasSettings)
+    }
+
+    @Test func aHighlightsRingIsStillTheSameSwitch() {
+        // Dropping the duplicate must not cost the highlight its ring.
+        let wash = shape(.highlight)
+        var doc = document([wash])
+        #expect(doc.setOutlineEnabled(layerIDs: [wash.id], on: true) == 1)
+        #expect(doc.layer(id: wash.id)!.style.borderWidth > 0)
+        #expect(doc.setOutlineEnabled(layerIDs: [wash.id], on: false) == 1)
+        #expect(doc.layer(id: wash.id)!.style.borderWidth == 0)
+    }
+
+    @Test func aHighlightPickedWithABoxLeavesTheBoxesOutlineAlone() throws {
+        // The box still owns the stroke row, switch, width and all; the
+        // highlight is simply not in it.
+        let box = shape(.rectangle, fillHex: "#00FF00")
+        let wash = shape(.highlight)
+        let doc = document([box, wash])
+        let rows = doc.layerPartRows(layerIDs: [box.id, wash.id])
+        let stroke = try #require(rows.first { $0.slot == .stroke })
+        #expect(stroke.title == "Outline")
+        #expect(stroke.switchIDs == [box.id])
+        #expect(stroke.widthIDs == [box.id])
+    }
+
+    @Test func anEllipseStillGetsFillOutlineAndShadow() {
+        let oval = shape(.ellipse, fillHex: "#00FF00")
+        let doc = document([oval])
+        let rows = doc.layerPartRows(layerIDs: [oval.id])
+        #expect(rows.map(\.title) == ["Fill", "Outline", "Shadow"])
+        #expect(rows[1].slot == .stroke)
+        #expect(rows[1].widthIDs == [oval.id])
+    }
+
     @Test func nothingIsCalledABorderAnyMore() {
         let shot = picture(style: border(3))
         let doc = document([shot])

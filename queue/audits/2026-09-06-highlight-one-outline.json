@@ -1,0 +1,26 @@
+{
+  "feature": "A highlight offers one line round it, once",
+  "epic": "measure-redline",
+  "summary": "Picking a highlight used to put two rows called Outline one above the other, painting different colours, with nothing on screen to say which was which. A highlight now shows Color for the wash it paints and one Outline for the ring round it.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "New blank canvas. Press the highlighter tool in the tool bar." },
+    { "do": "Drag a highlight across the canvas." },
+    { "do": "Press V to go back to the pointer, then click the highlight." },
+    { "do": "Read the Appearance section: it says Color, Outline, Shadow, once each.", "shot": "2026-09-06-highlight-one-outline-1-sc.png" },
+    { "do": "Tick Outline. A ring appears round the highlight.", "shot": "2026-09-06-highlight-one-outline-2-sc.png" },
+    { "do": "Open the Outline row with its chevron and pull the width. Then untick it: the ring goes, the wash stays." },
+    { "do": "Draw a rectangle and click it. Fill, Outline and Shadow read the way they always did." }
+  ],
+  "evaluate": [
+    "Is Color the right word for the wash a highlighter lays down, or would you look for Fill?",
+    "Is a ring round a highlight something you would ever switch on, or is that row in the way?",
+    "When you tick Outline, should the ring come up in the highlight's own colour rather than black?",
+    "Picking a highlight together with a rectangle still shows two rows called Outline, because they are two different colours underneath. Does that bother you enough to fix?"
+  ],
+  "rough": [
+    "The wash row is called Color rather than Fill on purpose: pick a highlight together with a rectangle and a row called Fill would appear twice, which is the problem this task was about.",
+    "The mixed selection case is untouched. A rectangle picked with a picture, or with a highlight, still shows an Outline for the shape's own stroke and another for the ring, because one row can only point at one colour today. Filed as its own task.",
+    "Screen Recording was granted, so both pictures here are real captures of the window, not offscreen renders."
+  ]
+}
