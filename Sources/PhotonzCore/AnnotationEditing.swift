@@ -211,6 +211,18 @@ extension Layer {
            abs(frame.standardized.width - self.frame.standardized.width) > 0.01 {
             layer.wrappedByItsContainer = nil
         }
+        // The other way round: a width the STACK worked out is not an answer
+        // either, so it is marked as the container's and worked out again from
+        // the words on the next pass. Leave it unmarked and the box reads as a
+        // paragraph somebody chose the width of, so re-wording it keeps a
+        // width nobody typed and the flow stops re-wrapping it. Words that
+        // stay on one line are not marked: a container hands one of those a
+        // width and nothing about the box changes.
+        if placedByContainer, case .text(let content) = content,
+           content.staysOnOneLine != true,
+           abs(frame.standardized.width - self.frame.standardized.width) > 0.01 {
+            layer.wrappedByItsContainer = true
+        }
         // A text box's width IS its wrap width, so a new one re-wraps the words
         // and the box becomes as tall as they now need — dragged narrower it
         // gains lines, dragged wider it gives them back, and the top edge stays

@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1520,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T23:05:45.258Z",
-  "updated": "2026-09-06T23:05:45.259Z",
+  "updated": "2026-09-07T00:05:45.464Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-06 while landing the one-line bar title. Two parts. (1) GroupFlow.wrapRooms bails when two labels look outgrown, and a very long label starves every sibling so they all look outgrown: filter the bail to labels the container has not already decided a width for, or answer the single filler outright since its room is not ambiguous. (2) GroupFlow.arranged places from contentBounds, then moved -> Layer.resized re-wraps the text at the new fill width, so the height grows AFTER the placement was decided. The one-line bar title dodges both because its height never changes.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-06T23:05:45.259Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T00:05:45.464Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T00:33:58.473477Z",
+      "note": "Reproduced first, four ways: (a) a row with a short label plus a filling long label places the filler centred on its ONE line height, so it sits half a line low; (b) two filling labels in a row, same; (c) the flow was not idempotent, the second pass moved the label again; (d) a stretched label in a fixed width column was drawn straight through the row under it."
+    },
+    {
+      "t": "2026-09-07T00:33:58.473477Z",
+      "note": "Adversarial review before building: the note suggested patching the wrapRooms bail. That only answers the filler case and leaves the stretch case, so the shorter and more general answer was taken instead: GroupFlow.arranged now runs the flow twice, round one to settle the widths, then any text re-measured at the width it was handed, then the real placement. wrapRooms was left exactly as it was."
+    },
+    {
+      "t": "2026-09-07T00:33:58.473477Z",
+      "note": "Also: Layer.resized now marks a width the container worked out as the container's (wrappedByItsContainer), so a filled label does not quietly become a paragraph with a width nobody typed."
+    },
+    {
+      "t": "2026-09-07T00:33:58.473477Z",
+      "note": "Verified in the real app with a new walk, Scripts/playtest/label-fills-a-row-walk.json, on the loop's probe app with Screen Recording granted. Honest finding: the canvas looks the same before and after, because History.perform runs reflowLayouts up to three times and the second run corrected the first. The fix is that the first run is now right, so the layout settles in one pass instead of two, and the single pass paths (starter components, the live resize preview) get the right answer too. The stale comment on reflowLayouts saying a second pass is needed for this was corrected."
+    },
+    {
+      "t": "2026-09-07T00:33:58.473477Z",
+      "note": "Tests: six new ones in GroupTextWrapTests, four of which fail on the old code. Full suite 4154 green."
     }
-  ]
+  ],
+  "started": "2026-09-07T00:05:45.464Z"
 }

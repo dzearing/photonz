@@ -1,0 +1,272 @@
+{
+  "out": "/tmp/photonz-playtest/label-fills-a-row",
+  "seed": "A label told to take the room a row has left over. The walk draws a square and a long label, groups them into a row, gives the row a size of its own, and then tells the label to fill it. The words wrap into the room left for them, and the picture is the proof that matters: the wrapped label sits in the middle of the row it is in, not half a line below the middle with its last line hanging out of the bottom.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        180,
+        180
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        220,
+        130
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Everything you missed while you were away"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        80,
+        80
+      ],
+      "to": [
+        860,
+        300
+      ],
+      "steps": 10
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "Stack",
+      "in": "Arrangement"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Outline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Vertical",
+      "choose": "Middle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-a-row",
+      "note": "a square and a long label, grouped and told to be a row"
+    },
+    {
+      "do": "snapshot",
+      "name": "fills-a-row-1-a-row"
+    },
+    {
+      "do": "press",
+      "control": "Fixed",
+      "in": "Width"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Fixed",
+      "in": "Height"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "400"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "focus",
+      "field": "H"
+    },
+    {
+      "do": "type",
+      "text": "140"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-a-size-of-its-own",
+      "note": "the row given a size of its own, 400 by 140. The label keeps its own width and runs out of the right hand edge, which is what Fill is for."
+    },
+    {
+      "do": "snapshot",
+      "name": "fills-a-row-2-a-size-of-its-own"
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "selectRow",
+      "row": "Text"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Horizontal",
+      "shot": "fills-a-row-3-menu",
+      "choose": "Fill the row"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        600
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-filled",
+      "note": "THE TEST: the label took the room left over, wrapped onto two lines inside it, and sits in the MIDDLE of the 140 tall row. Before this fix it was placed as if it were still one line, so it sat half a line low and its second line hung out of the bottom."
+    },
+    {
+      "do": "snapshot",
+      "name": "fills-a-row-4-filled"
+    },
+    {
+      "do": "render",
+      "name": "fills-a-row-4-filled-doc"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "5-mid-drag",
+      "note": "THE OTHER TEST: the row's right edge dragged in, photographed with the button still down. A live drag lays the row out once, so this is the picture that used to show the label placed as if it had not wrapped: half a line low, with its last line through the bottom edge."
+    },
+    {
+      "do": "drag",
+      "from": [
+        519,
+        190
+      ],
+      "to": [
+        400,
+        190
+      ],
+      "steps": 12,
+      "hold": "fills-a-row-5-mid-drag"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-let-go",
+      "note": "and where it settles once the button comes up"
+    },
+    {
+      "do": "snapshot",
+      "name": "fills-a-row-6-let-go"
+    },
+    {
+      "do": "render",
+      "name": "fills-a-row-6-let-go-doc"
+    }
+  ]
+}

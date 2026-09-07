@@ -166,12 +166,13 @@ extension PhotonzDocument {
     /// a document with none in it is untouched, and so is a stack whose
     /// contents are already where they belong.
     ///
-    /// It runs until nothing moves, because one pass is not always enough: a
-    /// stack works out where its rows go from the sizes they had going in, and
-    /// a label stretched across the stack RE-WRAPS to the width it was given,
-    /// so it is taller than it was when the row under it was placed. The second
-    /// pass closes that gap. Passes are capped, so a pair of rules that
-    /// disagreed could never spin here.
+    /// It runs until nothing moves. A label handed a width RE-WRAPS inside it
+    /// and comes out taller than it was when the flow started, which used to
+    /// take a second pass to settle; the flow now settles that itself, by
+    /// working out the widths, re-measuring the words at them and only then
+    /// placing anything (`GroupFlow.arranged`). What is left here is the
+    /// safety net: passes are capped, so a pair of rules that disagreed could
+    /// never spin, and the loop stops the moment a pass changes nothing.
     public mutating func reflowLayouts() {
         for _ in 0..<Self.reflowPasses {
             let flowed = layers.map(GroupFlow.flowing)

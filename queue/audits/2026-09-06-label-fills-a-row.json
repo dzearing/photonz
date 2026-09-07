@@ -1,0 +1,27 @@
+{
+  "feature": "A label that fills a row is placed after it knows how tall it is",
+  "epic": "ui-layout",
+  "summary": "A row now works out how wide every piece is, re-measures any label at the width it was just handed, and only then decides where things sit. A label told to take the room left over used to be placed as if it were still one line tall, so a wrapped one sat half a line low and its last line could hang out of the bottom.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on: auto layout is the Layout section in the right hand panel.",
+  "try": [
+    { "do": "Draw a small square, then click the text tool and type a sentence long enough to fill a line." },
+    { "do": "Sweep both up and press Command G, then press Stack in the Layout section." },
+    { "do": "Switch the group's Outline on so you can see the row's own edges." },
+    { "do": "Set Width and Height to Fixed, then type 400 into W and 140 into H." },
+    { "do": "Set the group's Contents Vertical to Middle." },
+    { "do": "Step into the group, pick the text layer, and set its Horizontal to Fill the row.", "shot": "2026-09-06-label-fills-a-row-2.png" },
+    { "do": "Pick the group again and drag its right edge in and out, watching the label while the button is down.", "shot": "2026-09-06-label-fills-a-row-1.png" }
+  ],
+  "evaluate": [
+    "While you drag the row's edge, does the wrapped label stay in the middle of the row rather than jumping about?",
+    "When a label wraps, does the row grow the exact amount the extra line needs?",
+    "Does a label that does NOT wrap behave exactly as it always did?",
+    "Is Fill the row easy to find for a label, or did you expect it somewhere else?"
+  ],
+  "rough": [
+    "Honest scope: on the canvas this looks the same before and after, because every edit already ran the whole document's layout up to three times and the second run happened to correct the first. The fix is that the first run is now right, so the layout settles in one pass instead of two, and paths that only ever lay out once (a starter component being built, a live resize preview) get the right answer too.",
+    "The pictures here are real screen captures from the loop's own probe app, taken with the Screen Recording grant.",
+    "Two more cases fell out of the same fix and are covered by tests: two labels sharing a row, and a label stretched across a fixed width column, which used to be drawn straight through the row underneath it.",
+    "A width a stack works out for a label is now marked as the container's rather than left looking like a width somebody typed. Before, a filled label quietly became a paragraph with a width nobody had chosen."
+  ]
+}

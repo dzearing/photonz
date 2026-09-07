@@ -279,4 +279,131 @@ struct GroupTextWrapTests {
         #expect(label(back)?.wrappedByItsContainer == true)
         #expect(back.children.map(\.frame) == held.children.map(\.frame))
     }
+
+    // MARK: - A label that takes the room a row has left over
+
+    /// The same words, told to take the room the row has left over.
+    private func filling(_ layer: Layer) -> Layer {
+        var out = layer
+        out.flowFill = FlowFill(sizeBefore: layer.frame.standardized.size)
+        return out
+    }
+
+    /// A bar 200 across: something at the near end, and a label taking the
+    /// rest. `height` nil leaves the bar as tall as what is in it.
+    private func bar(_ near: Layer, saying string: String, height: CGFloat?) -> Layer {
+        var layout = GroupLayout(kind: .stack, direction: .row, gap: 8)
+        layout.width = 200
+        layout.height = height
+        return group([near, filling(words(string, at: 0, 0))],
+                     layout: layout,
+                     contents: LayerPlacement(horizontal: .center, vertical: .center))
+    }
+
+    private func icon() -> Layer { box("Icon", CGRect(x: 0, y: 0, width: 40, height: 40)) }
+
+    private func title() -> Layer {
+        var layer = words("Title", at: 0, 0)
+        layer.name = "Title"
+        return layer
+    }
+
+    /// The label these tests are about: the one taking the room left over.
+    private func filler(_ layer: Layer) -> CGRect {
+        (layer.children.first { $0.name == "Label" }?.contentBounds ?? .null)
+    }
+
+    @Test("A label that fills a row is centred on the height it ends up with")
+    func aFillingLabelIsCentredOnTheHeightItEndsUp() {
+        let row = GroupFlow.flowing(bar(title(), saying: "Save all of the changes you have made",
+                                        height: 60))
+        let wrapped = filler(row)
+        // It wrapped: two lines of words where there was one.
+        #expect(wrapped.height > oneLine - TextMeasurement.slack)
+        // ...and it is centred on THOSE two lines, not on the one line it was
+        // when the row worked out where to put it.
+        #expect(wrapped.midY == 30)
+        #expect(label(row)?.wrappedByItsContainer == true)
+    }
+
+    @Test("Nothing hangs out of the bottom of a row whose label wraps")
+    func nothingHangsOutOfTheBottom() {
+        let row = GroupFlow.flowing(bar(icon(), saying: "Save all of the changes you have made",
+                                        height: nil))
+        let box = row.localBounds
+        for child in row.children {
+            #expect(child.contentBounds.maxY <= box.maxY)
+            #expect(child.contentBounds.minY >= box.minY)
+        }
+        #expect(filler(row).height > oneLine - TextMeasurement.slack)
+    }
+
+    @Test("Two labels sharing a row are both centred on the height they end up with")
+    func twoFillingLabelsAreBothCentred() {
+        var layout = GroupLayout(kind: .stack, direction: .row, gap: 8)
+        layout.width = 300
+        layout.height = 60
+        var second = words("Save all of the changes you have made", at: 0, 0)
+        second.name = "Second"
+        let row = GroupFlow.flowing(
+            group([filling(words("Save all of the changes you have made", at: 0, 0)), filling(second)],
+                  layout: layout,
+                  contents: LayerPlacement(horizontal: .center, vertical: .center)))
+        for child in row.children {
+            #expect(child.contentBounds.height > oneLine - TextMeasurement.slack)
+            #expect(child.contentBounds.midY == 30)
+        }
+    }
+
+    @Test("A row with a label that does not wrap is unchanged")
+    func aRowWhoseLabelFitsIsUnchanged() {
+        var layout = GroupLayout(kind: .stack, direction: .row, gap: 8)
+        layout.width = 200
+        layout.height = 60
+        let plain = words("Save", at: 0, 0)
+        let row = GroupFlow.flowing(
+            group([icon(), plain], layout: layout,
+                  contents: LayerPlacement(horizontal: .center, vertical: .center)))
+        // One line, exactly as wide as its own words, in the middle of the
+        // row: the answer a row gave before any of this existed.
+        #expect(piece(row, "Label").size == plain.frame.standardized.size)
+        #expect(filler(row).midY == 30)
+        #expect(label(row)?.wrappedByItsContainer == nil)
+        #expect(piece(row, "Icon") == CGRect(x: 0, y: 10, width: 40, height: 40))
+    }
+
+    @Test("A label with room to spare fills the row on one line")
+    func aFillingLabelWithRoomToSpareStaysOnOneLine() {
+        let row = GroupFlow.flowing(bar(icon(), saying: "Save", height: 60))
+        let wrapped = filler(row)
+        #expect(wrapped.height == oneLine - TextMeasurement.slack)
+        #expect(wrapped.midY == 30)
+        // 200 across, a 40 wide icon and an 8 gap: 152 left.
+        #expect(wrapped.width == 152)
+    }
+
+    @Test("A row settles rather than moving its label again on the next pass")
+    func aFilledRowSettles() {
+        let once = GroupFlow.flowing(bar(title(), saying: "Save all of the changes you have made",
+                                         height: 60))
+        let twice = GroupFlow.flowing(once)
+        let thrice = GroupFlow.flowing(twice)
+        #expect(twice.children.map(\.frame) == once.children.map(\.frame))
+        #expect(thrice.children.map(\.frame) == once.children.map(\.frame))
+    }
+
+    @Test("A stretched label pushes the row under it down by the lines it gained")
+    func aStretchedLabelPushesTheRowUnderItDown() {
+        var layout = GroupLayout(kind: .stack, direction: .column, gap: 8)
+        layout.width = 120
+        var stretched = words("Save all of the changes you have made", at: 0, 0)
+        stretched.placement = LayerPlacement(horizontal: .stretch, vertical: nil)
+        let column = GroupFlow.flowing(
+            group([stretched, box("Under", CGRect(x: 0, y: 0, width: 40, height: 20))],
+                  layout: layout))
+        let wrapped = label(column)!.contentBounds
+        #expect(wrapped.height > oneLine - TextMeasurement.slack)
+        #expect(piece(column, "Under").minY == wrapped.maxY + 8)
+        #expect(column.localBounds.height == wrapped.height + 8 + 20)
+    }
 }
