@@ -11424,3 +11424,32 @@ all, so View ▸ Grid Settings has nothing to open on.
   background and cropping outward still paint from that pair under tools that
   no longer show it. Filed as `the-fill-keys-say-which-colours-they-will-use`
   (p2), with leaving it alone listed as a real option.
+
+## 2026-09-07 — Arrow keys move a marquee selection
+
+The arrow keys had a branch for several picked layers and one for a single
+picked layer, and none for a pixel region, so drawing a marquee and pressing an
+arrow did nothing. A region now takes the keys: one point per press, ten with
+shift, outline only.
+
+The precedence rule is `Nudge.target` in `PhotonzCore/Nudge.swift`, pure and
+tested, with the tool in your hand as the whole of it — a selection tool means
+the marquee even with a layer picked, anything else leaves the layer branches
+alone, and a live region with nothing movable picked takes the keys rather than
+letting them do nothing. The branch itself is in `Sources/Photonz/CanvasKeys.swift`,
+next to the two it sits in front of, and `nudgeWouldMoveALayer` in `CanvasView.swift`
+asks the same question those two branches ask.
+
+No magnet (the marquee drag takes none) and no clamp at the picture edge (the
+Command drag of this same outline does not clamp either).
+
+Verified in the probe with `Scripts/playtest/nudge-the-marquee-walk.json`; the
+existing `nudge-selection-walk.json` still passes unchanged; 4474 tests green.
+Audit: `queue/audits/2026-09-07-nudge-the-marquee.json`.
+
+Open questions, both filed as p2 tasks: nudging a selection is not an undo step
+because nothing about a selection is (it never reaches History), and the Position
+and Size panel keeps showing a picked layer's numbers while the arrows are moving
+the marquee.
+
+Next: whatever the queue hands out.
