@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1580,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T04:06:30.774Z",
-  "updated": "2026-09-07T04:06:30.775Z",
+  "updated": "2026-09-07T05:03:41.504608Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fails at step 15: no control called \"Set grid origin\". The mode is entered from the gear button (CanvasGridCopy.adjust, \"Adjust Grid\") and the origin is placed by dragging the two markers on the canvas, so the walk needs a drag rather than a press. Found while running every grid walk for a-grid-size-you-choose-is-the-grid-you-get-one-e; every other grid walk passes.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-07T04:06:30.775Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T04:56:55.135Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T05:03:41.504608Z",
+      "note": "Reproduced first: the old walk died at step 15 on \"Set grid origin\". The panel listing in that failure is the whole story of what the bar has now: Show Grid, Cell, Adjust Grid."
+    },
+    {
+      "t": "2026-09-07T05:03:41.504608Z",
+      "note": "Adversarial read of the old walk before rewriting it. Three of its steps were checking things the app no longer has: the Set grid origin button (now the gear, CanvasGridCopy.adjust = \"Adjust Grid\"), a Smallest cell field in the Canvas section (removed, the cell is the tool bar button with the sizes behind it), and a readout in the mode bar counting the nudges (the bar stopped explaining itself). Worse, its click-to-place-the-origin step would have passed while proving nothing: a click inside the mode now PINS A GUIDE, so the walk would have been reporting ok on a step that no longer does what its note says. The origin is dragged by its markers now."
+    },
+    {
+      "t": "2026-09-07T05:03:41.504608Z",
+      "note": "Also dropped the smallest-cell-at-zoom stage: grid-chosen-size-walk owns that check, and this walk is about where the grid starts. Shortest version that keeps the value."
+    },
+    {
+      "t": "2026-09-07T05:03:41.504608Z",
+      "note": "Rewritten walk (16 pt cell so the lines are in known places): grid on at 0,0 -> Adjust Grid -> pin x416 -> pin y288 -> click x416 to take hold of it again -> backspace deletes it -> drag the markers to 500,560 -> drag onto the rectangle's bottom right corner and catch 620,420 with the yellow guides -> arrows nudge to 622,431 (Shift steps ten) -> Done keeps it -> re-enter, drag to 100,120, Escape puts back 622,431 and keeps the guide."
+    },
+    {
+      "t": "2026-09-07T05:03:41.504608Z",
+      "note": "Every number above is read back off the describe steps in log.json (gridStart and guides), not assumed: the run matches all of them."
     }
-  ]
+  ],
+  "started": "2026-09-07T04:56:55.134Z"
 }

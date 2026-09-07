@@ -1,0 +1,34 @@
+{
+  "id": "the-panel-toggle-sits-in-the-window-title-bar-wh",
+  "title": "The panel toggle sits in the window title bar, where a Mac keeps it",
+  "goal": "The button that collapses the right hand panel sits inside the panel's own header, beside the word Layers. On a Mac that control belongs in the window's title bar at the top right, which is where Finder, Mail and Xcode all put it, and where a person's hand goes without thinking. Put it there. It also means the button does not disappear along with the thing it collapses.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 14,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T05:25:13.487Z",
+  "updated": "2026-09-07T05:25:13.524Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked by the user on 2026-09-06, and the honest answer to why not yet is that nothing has put anything in the title bar before. The editor window is declared hiddenTitleBar (Sources/Photonz/PhotonzApp.swift line 43), which hides the title and the bar but keeps the title bar AREA where the traffic lights live, so a toolbar item can still be placed there; this is the same arrangement Finder uses. Two routes: attach a SwiftUI toolbar with a trailing item to the editor scene, or add an NSToolbar to the window and place the control in it. Prefer whichever keeps the current look, which is no visible bar and no title text, since adding a toolbar can bring a background and a divider that would change the window. Check both what the traffic lights do at a narrow width and whether the item survives full screen. Supersedes the-panel-collapse-button-sits-in-the-panel-s-ow, which moved the button from the canvas into the panel header; that was the previous step and this replaces it, so fold in anything it left behind, in particular the corner rect other chrome avoids and the measure legend that used to park under the old position.",
+  "acceptance": [
+    "The panel toggle sits at the trailing end of the window title bar, level with the traffic lights, and looks like a title bar control rather than a button placed on top of the canvas",
+    "It shows the panel's state and toggles it, keeps its tooltip and its keyboard shortcut, and still brings the panel back when it has closed itself on a narrow window",
+    "With the panel collapsed the button is still there in the same place, so the way back never moves",
+    "The title bar carries no other clutter, and the top of the canvas gains the room the old button occupied",
+    "The window keeps its current look: no visible title text and no bar drawn across the top, only the control",
+    "Audit written under queue/audits/ with the panel open and closed, at a wide and a narrow window, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T05:25:13.487Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T05:25:13.524Z",
+      "note": "seq 1590 -> 14"
+    }
+  ]
+}
