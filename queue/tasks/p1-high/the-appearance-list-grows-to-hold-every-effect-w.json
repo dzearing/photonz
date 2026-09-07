@@ -1,7 +1,7 @@
 {
   "id": "the-appearance-list-grows-to-hold-every-effect-w",
-  "title": "The Appearance list grows to hold every effect without growing a new idea",
-  "goal": "The panel handles three parts today and the ones people expect next, an inner and an outer border, an inner and an outer shadow, a glow, a bevel, do not fit by adding six more fixed rows. Settle how the list scales, then build it. The proposal to start from: inner and outer are not separate effects, they are a setting on one effect, so a border gains a position of inside, centred or outside, and a shadow gains a kind of drop or inner. Effects that can be wanted twice, shadows most of all, become a list you add to, with a plus at the foot of Appearance offering the kinds that can be added, a remove on anything added, and rows you can reorder by dragging since the order is what they paint in. A bevel or a glow is then just another kind in the same list, so nothing new has to be learned when one arrives.",
+  "title": "Appearance holds what a shape is, Effects is a list you add to",
+  "goal": "A rectangle shows an Appearance panel and an Effects panel and it is not clear what belongs in which: both appear to carry an opacity and a corner radius. Split them on a rule anyone can state. Appearance holds the things every shape simply has, in the same order every time, starting with opacity, then its fill and its outline, and a corner radius only on shapes that have corners. Effects is a list you add to on demand: a border, a glow, a shadow, a blur, and later filters. You can add more than one of a kind, so two borders with different offsets give you an inner and an outer one. You can select an effect to change it, remove it, or drag it to change the order things paint in. Appearance sits directly under the layers panel and above Effects.",
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 30,
@@ -12,17 +12,21 @@
   "updated": "2026-09-07T15:03:16.238Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Asked by the user on 2026-09-06: we are missing inner border, outer border, inner shadow, outer shadow, bevel, and they are unsure how to organise these without the UX getting weird. Today LayerPart (Sources/PhotonzCore/LayerParts.swift line 22) has exactly three cases, fill, outline and shadow, each a fixed row in the Appearance list. The two ideas that keep the list from sprawling are worth stating in the task because they are what the answer turns on. First, inner versus outer is a PROPERTY of an effect rather than a different effect, which collapses four requested names into two parts with one extra setting each; that is how Figma and Sketch handle stroke position, and it means the list stays short. Second, some effects are countable, a second shadow being the common want, so the list has to accept more than one of a kind, which turns a fixed set of rows into an addable list with a plus and a remove. Once it is an addable list, order becomes visible and therefore has to be editable, so rows drag like layers. A bevel or an inner glow then costs one new kind and no new interaction. Read the current model first (LayerParts.swift and Sources/Photonz/PartsInspector.swift) and fold in the pending task switching-a-part-on-shows-its-settings-straight, which changes how a row reveals its settings, so the two do not fight.",
+  "notes": "Rewritten on 2026-09-07 after the user saw the shipped Appearance list beside the older Effects section and could not tell what belonged where. Their split, which supersedes the earlier proposal in this task: Appearance is what a shape intrinsically has, Effects is an addable list. Note that the duplication they report is partly an illusion worth fixing on its own: in their screenshot the Blur, Size, Distance, Direction and Opacity under Appearance are the SHADOW's settings, shown inline beneath the Shadow row by the change that landed the same day, while Effects carries the layer's own opacity, blur and corner radius. Because the inline settings carry no sign of which part owns them, a shadow's blur reads as a second top level blur. So the panel needs a visible owner for a part's settings whatever else is decided, which is why that is its own acceptance item. Two ideas from the earlier draft still hold and should be kept: inner versus outer is a property of an effect rather than a separate effect, which the user has now confirmed by asking for an offset on a border; and once the list is addable, order becomes visible and must be draggable. Read Sources/PhotonzCore/LayerParts.swift and Sources/Photonz/PartsInspector.swift, and coordinate with switching-a-part-on-shows-its-settings-straight, which changes how a row reveals its settings, so the two do not fight.",
   "acceptance": [
-    "Write the model down in the design docs first: what a part is, which parts are single and which can be added more than once, what settings each carries, and what order means",
-    "Open a decision card showing the Appearance panel drawn under two or three models, with a shape carrying two shadows and an inside border in each, and wait for the answer",
-    "Inner and outer are a setting on one effect, not separate entries, unless the card says otherwise: a border has a position and a shadow has a kind",
-    "An effect that can be wanted twice can be added twice, each with its own settings, and removed independently",
-    "Rows can be reordered, and reordering visibly changes what paints over what",
-    "Adding an effect is one obvious gesture from the Appearance list and needs no dialog",
+    "Write the split down in the design docs first: what makes something an appearance property rather than an effect, and the fixed order Appearance uses",
+    "Open a decision card showing the two panels drawn under this split, with a shape carrying two borders and a shadow, and wait for the answer",
+    "Appearance shows opacity first, then fill and outline, in the same order for every kind of shape, and shows a corner radius only where corners exist",
+    "No control appears in both panels, and nothing in either is named the same as something in the other unless they are genuinely the same setting",
+    "Blur moves out of Appearance and becomes an effect you add",
+    "Effects starts empty on a new shape and gains rows only when you add them, from one obvious gesture that needs no dialog",
+    "The same kind of effect can be added more than once, each with its own settings, including an offset on a border so an inner and an outer one are two rows",
+    "An effect row can be selected, removed, and dragged to reorder, and reordering visibly changes what paints over what",
+    "A part's settings are visibly owned by that part, so a shadow's own blur can never be mistaken for the layer's blur",
+    "Appearance sits directly below the layers panel and above Effects, and stays there",
     "Every effect the app already draws keeps drawing exactly as it does, and existing documents are untouched",
     "The model is written so a new effect is a new kind in the list and nothing else has to change to accept it, and the audit names the next two that would be added and how",
-    "Audit written under queue/audits/ with a shape carrying two shadows, an inside border and a bevel, anything rough filed as a follow-up"
+    "Audit written under queue/audits/ with a shape carrying two borders, a shadow and a blur, and the panels in order, anything rough filed as a follow-up"
   ],
   "log": [
     {
