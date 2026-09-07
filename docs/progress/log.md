@@ -11612,3 +11612,31 @@ Verified in Photonz Probe (Screen Recording granted, real captures) with
 
 Next: the reproduced follow-up `version-labels-on-the-canvas-stop-covering-each`
 — the purple on-canvas name labels print over each other in a row of versions.
+
+## 2026-09-07 — Room on a copy lands on something
+
+Fixed "More room on a copy moves it instead of making it roomier". A button
+drawn by hand is a box and a word both sitting where they were drawn, so
+nothing in it reaches the group's own edges and the room kept there is air:
+turning it up inflated an invisible box and slid the drawing across and down.
+
+`Layer.spendsRoom` (`Sources/PhotonzCore/LayerPlacement.swift`) is the rule.
+A stack or a grid always spends room. A group that arranges nothing spends it
+where a piece stretches one way, or where a side is the size of its contents
+and something is painted to the group's own edges. `knobValue(for: .padding)`
+returns nil otherwise, which is the existing "a number the original has stopped
+having" path, so the Add menu drops the row, overrides stop being written, and
+every copy's answer is kept until a surface is named.
+
+Verified live: `Scripts/playtest/room-lands-on-something-walk.json`. A copy set
+to 48 goes from W 83 H 61 to W 147 H 125 and stays at X 319 Y 590.
+Audit: `queue/audits/2026-09-07-room-lands-on-something.json`.
+
+Next / open questions:
+- No signpost tells you why the room row is missing or that naming a surface
+  brings it back. Raised in the audit's evaluate and rough lines.
+- The Layout section still lets you type room onto a loose drawing, where it
+  still slides it. Filed as `room-typed-on-a-loose-drawing-slides-it-instead`.
+- `component-whole-path-walk.json` still stops at step 167 on what the Apply to
+  Other Versions button reads. Reproduced with this change stashed out, so it is
+  older drift; filed as `the-whole-component-walk-stops-on-what-the-apply`.
