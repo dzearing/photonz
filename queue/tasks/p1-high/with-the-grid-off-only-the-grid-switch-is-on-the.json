@@ -1,0 +1,44 @@
+{
+  "id": "with-the-grid-off-only-the-grid-switch-is-on-the",
+  "title": "The grid takes no room on the tool bar when it is off, and its icon opens its settings",
+  "goal": "Switching the grid off leaves its controls sitting on the tool bar taking up space for a grid that is not there. Nothing of the grid should occupy the bar except one icon, and even that icon should stop being a switch: pressing it opens the grid's settings, which is where turning the grid on belongs alongside everything else about it. The size button, the divider and the adjust button appear only once the grid is on.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T15:19:30.227Z",
+  "updated": "2026-09-07T15:21:38.189Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported again by the user on 2026-09-07 as a regression: with the grid off they still see space taken by the grid controls, and they asked that the grid icon open the settings rather than toggle the grid. Raised to p1. Today EditorView.gridChip (line 670) builds the whole group whenever the feature is on and a document is open; isVisible only lights the switch, and the size button, divider and gear are built unconditionally below it. Two things follow. The obvious one is to branch so those three are only built when the grid is on. The one that will be missed is the SPACE: EditorChromeLayout.showsGridChip decides whether the group fits at the current width, and the tool bar reserves room from a measured content width, so a group that draws less must also measure less or the gap stays exactly as the user describes. That is why the acceptance asks for measured numbers rather than a look. On the icon becoming a settings button: the popover already exists (CanvasGridSettingsPopover, opened today from the View menu's Grid Settings through isGridSettingsPresented), so this is a rewiring rather than a new surface, and the grid's on and off switch has to move into it. Keep the shortcut working and show it there.",
+  "acceptance": [
+    "With the grid off, the grid occupies one icon on the tool bar and no more: no size button, no divider, no adjust button, and no empty space where they were",
+    "Measure the tool bar in both states and put the numbers in the audit, so the claim that the room is actually given back is proved rather than eyeballed",
+    "Pressing the grid icon opens the grid's settings rather than switching the grid; switching the grid on and off is one of the things in those settings",
+    "Switching the grid on from there brings the size button, divider and adjust button back, and switching it off takes them away again",
+    "Switching off and on repeatedly leaves the bar exactly as it started, and nothing beside the grid shifts by more than the room the grid gave up",
+    "The keyboard shortcut that toggles the grid keeps working and is shown in the settings, since the icon no longer toggles",
+    "The size popover cannot be left open and adjust mode cannot be entered as the grid goes off",
+    "Audit written under queue/audits/ with the bar in both states and the settings open, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T15:19:30.228Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T15:19:30.264Z",
+      "note": "seq 1680 -> 7"
+    },
+    {
+      "t": "2026-09-07T15:21:38.120Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-07T15:21:38.188Z",
+      "note": "seq 7 -> 1"
+    }
+  ]
+}
