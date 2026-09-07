@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T16:19:57.489Z",
-  "updated": "2026-09-06T12:16:42.300Z",
+  "updated": "2026-09-07T08:50:43.401763Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-number-you-cannot-type-into-stops-looking-like (done 2026-09-05). App side: GeometryReadout in Sources/Photonz/GeometryInspector.swift, text from LayerGeometrySelection.readoutText / .blankText (en dash U+2013). Rules now written up in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a number you cannot type looks like\". Mock side: docs/design/mocks/shared/components/input.css has only .input.disabled (opacity .42 on the box), which is the rejected look; needs a real read-only variant rather than a dimmed input.",
@@ -31,6 +31,39 @@
     {
       "t": "2026-09-06T12:16:42.300Z",
       "note": "seq 60 -> 60"
+    },
+    {
+      "t": "2026-09-07T08:42:05.603Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T08:50:43.401763Z",
+      "note": "Adversarial review, before building. (1) Premise checked and true: the mock library had .input.disabled / .stepper.disabled (opacity .42) and nothing else, and comp-fields listed 'disabled' as one of six number states right beside mixed and bound, so that swatch WAS the exemplar someone would copy. (2) It is not quite true that there was nothing: app-patterns.css already has .val, the canonical static value. .val is not enough, and the reason is the acceptance item: it is bare ink with no letter, no slot and no column, so four of them do not line up with four fields. Said so in the CSS and in UX-PATTERNS so the next person does not add a third. (3) Shortest version that delivers the value: one class, .stepper's geometry with a transparent bezel, so alignment is guaranteed by construction rather than matched by hand. Rejected a .stepper.readonly variant because the whole rule is that a readout is NOT a field, and the name would put the mock author back where they started. (4) Cut: no hover paint and no focus ring on the readout, because either one reads as 'type here'."
+    },
+    {
+      "t": "2026-09-07T08:50:43.401763Z",
+      "note": "Name: .readout was taken. tooltip.js creates <div class='tip readout'> for the drag readout, so a bare .readout rule would land on it. Used .reading, which is free everywhere and matches the app's LayerGeometryReading."
+    },
+    {
+      "t": "2026-09-07T08:50:43.401763Z",
+      "note": "Built .reading in shared/components/input.css (plus .sm, .block, .spin for a row whose fields show spinners, and .numgrid support). The en dash comes from CSS (.reading>.v:empty::before) so no page can spell it with a hyphen."
+    },
+    {
+      "t": "2026-09-07T08:50:43.401763Z",
+      "note": "Docs: comp-fields.html gains block 03 'The number you cannot type' (blocks 03-07 renumbered to 04-08), with a live specimen where clicking a plain number writes the reason into the line under the panel, the app's actual behaviour rather than a description of it; a second specimen showing the three things it can say plus the rejected dimmed field, labelled rejected; a row in the API table; and block 02's 'disabled' swatch relabelled 'unavailable' with the docrule pointing at 03. comp-index.html gains a Read-only number tile next to Number field. UX-PATTERNS section 4 now names the class and shows the markup."
+    },
+    {
+      "t": "2026-09-07T08:50:43.401763Z",
+      "note": "Acceptance item 3, honestly: swept every page for a non-typable number drawn as a dimmed box and found none outside comp-fields, where both remaining instances are deliberate specimens. Nothing to convert. What I DID find is a bigger, older problem: most mock inspectors draw X/Y/W/H as the legacy .field grey k/v box, which is neither a field nor a readout. Not swept here because R and Rot in the same row are typable and a blanket conversion would say the wrong thing. Filed as size-and-position-rows-in-the-mock-panels-are-pi."
+    },
+    {
+      "t": "2026-09-07T08:50:43.401763Z",
+      "note": "Adversarial review, after building, in the browser at 127.0.0.1:8791. Measured: readout and field are both 24px tall and 95px wide, the value's right edge and the input's right edge both sit 7px in, both letters sit 6px from the left, fonts match, ::before is U+2013, value ink is --dim against the field's --ink. Click on a readout writes the reason under the panel and expires after six seconds; tabIndex is -1. Checked in both themes. check-fieldwrap, check-reserved, check-a11y-names, check-states and check-elevation all pass."
+    },
+    {
+      "t": "2026-09-07T08:50:43.401763Z",
+      "note": "Rough, carried into the audit: in the light theme the field's well is so quiet that the boxed number and the plain one sit closer together than they do in dark. That is the existing well, not this component, but it is the first thing to look at."
     }
-  ]
+  ],
+  "started": "2026-09-07T08:42:05.602Z"
 }

@@ -10,6 +10,11 @@
      <label class="input search"><i class="ic ic-search"></i><input placeholder="Search"></label>
      <label class="input area"><textarea rows="3"></textarea></label>
 
+   Plus the one that is not a field at all and must not look like one: a number
+   the app worked out for you, which is `.reading` at the bottom of this file.
+
+     <span class="reading"><span class="k">W</span><span class="v">204</span></span>
+
    THE CLASS GOES ON THE WRAPPER, NEVER ON THE FIELD. `.input` paints the well;
    `.input>input` paints the ink. `<input class="input">` gets the dark well and
    keeps the browser's black text, which on a dark theme is invisible while you
@@ -136,13 +141,94 @@
   box-shadow:var(--well-sh), var(--ring)}
 .stepper.mixed>input{color:var(--faint)}          /* multi-select, differing values */
 .stepper.linked{border-color:var(--accent-line)}  /* driven by a token or constraint */
+/* `.disabled` is for a control that is TEMPORARILY unavailable and will take
+   the keyboard again once you fix whatever is in the way. It is NOT how you
+   draw a number the app worked out for you: that is `.reading` below, and
+   dimming a field to say "you cannot type here" is the exact look the app
+   built, photographed and rejected on 2026-09-05. */
 .stepper.disabled,.stepper:has(>input:disabled){opacity:.42;pointer-events:none}
+
+/* ============================================================
+   READ-ONLY NUMBER — a number you cannot type
+   ============================================================
+   A locked layer's X, a piece's width once Stretch decides it, an arrow that
+   has no width at all. The panel still has to show the number; what it must
+   not do is show it in a box.
+
+     <span class="reading sm"><span class="k">W</span><span class="v">204</span></span>
+     <span class="reading sm"><span class="k">H</span><span class="v"></span></span>   ← en dash, no number
+
+   NO BOX, and that is the whole point. The rounded bezel is this system's
+   promise that the keyboard lands there, so a number that refuses the keyboard
+   does not wear one. A dimmed field is worse than either: it looks like an
+   input, it reads as broken, and it was built and rejected side by side with
+   this one. Settled in shared/UX-PATTERNS.md, "What a number you cannot type
+   looks like"; shipped as `GeometryReadout` in the app.
+
+   SAME SLOT AS THE FIELD. The geometry below is `.stepper`'s, with the border
+   turned transparent rather than removed, so a readout is exactly as tall and
+   exactly as wide as the field beside it and its last digit lands in the same
+   column. Lock one layer of a selection and nothing on the panel shifts.
+
+   `.val` in app-patterns.css is the other static value, and it is not this: it
+   is bare ink for a stray number in prose or a status strip ("5200K", "3
+   variants"). It carries no letter, no column and no slot, so a row of four of
+   them does not line up with a row of four fields.
+
+   QUIET BUT READABLE — secondary ink, not faint. A locked layer is stating
+   where it sits, not whispering it.
+
+   NO PLACEHOLDER, EVER. A field's grey placeholder promises that typing that
+   thing here would work; on a readout it is a lie, and it puts the letter on
+   the row twice. When there is no number at all, leave `.v` empty and an en
+   dash appears. A lone W with a gap after it reads as a row that failed to
+   draw.
+
+   CLICKING IT ANSWERS. The whole slot is the hit target, including the empty
+   space beside a dash, and pressing it puts the reason in the line under the
+   section straight away. Never a hover tip alone, so author it as
+   `<button class="reading" tabindex="-1">` when the page can answer. The
+   `tabindex` is not optional: Tab moves between the numbers you can type. */
+.reading{
+  --st-h:var(--ctl-h);
+  display:inline-flex;align-items:center;gap:6px;
+  height:var(--st-h);padding:0 var(--s2) 0 var(--gap-sm);min-width:72px;
+  border:1px solid transparent;border-radius:var(--r2);
+  background:transparent;box-shadow:none;
+  text-align:left;cursor:default;
+}
+.reading.sm{--st-h:var(--ctl-h-sm);min-width:60px;padding:0 6px 0 var(--gap-sm);border-radius:var(--r1)}
+.reading.block{display:flex;width:100%;min-width:0}
+/* the letter sits where the field's scrub handle sits, minus the handle */
+.reading>.k{
+  flex:none;font-size:10.5px;font-weight:600;color:var(--faint);letter-spacing:-.005em;
+  padding:2px 3px;margin-left:-3px;
+  -webkit-user-select:none;user-select:none;
+}
+.reading>.v{
+  flex:1;min-width:0;text-align:right;
+  font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums;
+  color:var(--dim);font-weight:520;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* no number at all: an en dash (U+2013), supplied here so no page can spell it
+   with a hyphen or an em dash */
+.reading>.v:empty::before{content:"\2013"}
+.reading>.u{flex:none;font-family:var(--mono);font-size:10px;color:var(--faint)}
+/* when the field beside it shows spinners, they hold 15px of the field's width;
+   the readout gives that column back so the digits stay in line */
+.reading.spin{padding-right:calc(var(--s2) + 15px)}
+.reading.sm.spin{padding-right:calc(6px + 15px)}
+/* it is a control only in the sense that it answers; it never takes focus and
+   it never paints a state, because both would read as "type here" */
+button.reading{-webkit-appearance:none;appearance:none;font:inherit;color:inherit}
+.reading:focus{outline:none}
 
 /* the 2-up / 3-up numeric grid every transform panel needs, so no panel
    re-authors the column rhythm */
 .numgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm);padding:var(--s1) 0}
 .numgrid.n3{grid-template-columns:repeat(3,1fr)}
-.numgrid .stepper{min-width:0}
+.numgrid .stepper,.numgrid .reading{min-width:0}
 /* the constraint link that sits between two of them (W/H aspect lock) */
 .numgrid .lk{display:grid;place-items:center;color:var(--faint)}
 .numgrid .lk.on{color:var(--accent)}

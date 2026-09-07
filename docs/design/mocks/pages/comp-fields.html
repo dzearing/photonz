@@ -17,6 +17,15 @@
   #comp-fields .cf-math .ln .ar{color:var(--faint)}
   #comp-fields .cf-math .ln .out{color:var(--accent)}
   #comp-fields .cf-cursor{position:absolute;pointer-events:none;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+  /* the line under the readout specimen: where a click on a plain number is
+     answered, which is the rule this block is here to show */
+  #comp-fields .cf-why{display:block;font-size:10.5px;line-height:1.45;color:var(--faint);
+    min-height:30px;padding-top:2px;transition:color .12s ease}
+  #comp-fields .cf-why.on{color:var(--dim)}
+  #comp-fields .cf-vs{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #comp-fields .cf-vs .ln{display:flex;align-items:center;gap:var(--gap-sm)}
+  #comp-fields .cf-vs .lb{flex:none;width:96px;font-size:10px;color:var(--faint);text-align:right}
+  #comp-fields .cf-vs .bad .lb{color:var(--crit)}
 </style>
 </head>
 <body class="page">
@@ -74,12 +83,12 @@
           <div class="docsp mid"><span class="docsp-l">focus</span><span class="pad"><span class="stepper sm" style="border-color:var(--accent);box-shadow:inset 0 1px 0 var(--edge-hi),var(--ring)"><span class="k">R</span><input value="12"></span></span></div>
           <div class="docsp mid"><span class="docsp-l">mixed selection</span><span class="pad"><span class="stepper sm mixed"><span class="k">R</span><input value="Mixed"></span></span></div>
           <div class="docsp mid"><span class="docsp-l">bound to a token</span><span class="pad"><span class="stepper sm linked"><span class="k">R</span><input value="radius/md"></span></span></div>
-          <div class="docsp mid"><span class="docsp-l">disabled</span><span class="pad"><span class="stepper sm"><span class="k">R</span><input value="12" disabled></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">unavailable</span><span class="pad"><span class="stepper sm"><span class="k">R</span><input value="12" disabled></span></span></div>
         </div>
       </div>
       <div class="docmeta">
         <div class="docnum">02</div><h3 class="docname">Number states</h3>
-        <p class="docrule">Two states here exist nowhere else in the system and both matter. <b>Mixed</b> is what a multi-selection shows: the word, not a made-up average, and typing replaces it for every selected object. <b>Bound</b> means the value comes from a token or a constraint, so editing it either breaks the link or asks first.</p>
+        <p class="docrule">Two states here exist nowhere else in the system and both matter. <b>Mixed</b> is what a multi-selection shows: the word, not a made-up average, and typing replaces it for every selected object. <b>Bound</b> means the value comes from a token or a constraint, so editing it either breaks the link or asks first. <b>Unavailable is the narrow one</b>: a field that will take the keyboard again once you fix what is in the way. A number that is <i>never</i> yours to type is not a dimmed field at all, it is the readout in <b>03</b>.</p>
         <div class="docdd">
           <span class="do">Show the token name when a value is bound, not the resolved number.</span>
           <span class="no">Show 0 for a mixed selection. Zero is a value someone might keep.</span>
@@ -88,7 +97,51 @@
       </div>
     </div>
 
-    <!-- 3 · TEXT FIELDS -->
+    <!-- 3 · THE NUMBER YOU CANNOT TYPE -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="pad col">
+              <span class="cf-insp" style="width:224px">
+                <span class="numgrid">
+                  <button class="reading sm" tabindex="-1" data-why="This layer is locked. Unlock it to move or resize it."><span class="k">X</span><span class="v">128</span></button>
+                  <button class="reading sm" tabindex="-1" data-why="This layer is locked. Unlock it to move or resize it."><span class="k">Y</span><span class="v">64</span></button>
+                  <button class="reading sm" tabindex="-1" data-why="Stretch is set to Fill, so the row decides this width."><span class="k">W</span><span class="v">204</span></button>
+                  <span class="stepper sm"><span class="k">H</span><input value="44" aria-label="Height"></span>
+                </span>
+                <span class="cf-why" id="cf-why">Four numbers, one of them still yours. Click a plain one.</span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Read-only beside typed</b> .reading · .stepper</span>
+            <p class="docsp-d">Same letter in front, same right-hand column, same row height. Lock a layer and nothing on the panel moves.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="cf-vs">
+                <span class="ln"><span class="lb">yes</span><span class="reading sm"><span class="k">W</span><span class="v">204</span></span></span>
+                <span class="ln"><span class="lb">no number at all</span><span class="reading sm"><span class="k">W</span><span class="v"></span></span></span>
+                <span class="ln"><span class="lb">they differ</span><span class="reading sm"><span class="k">W</span><span class="v">Mixed</span></span></span>
+                <span class="ln bad"><span class="lb">rejected</span><span class="stepper sm disabled"><span class="k">W</span><input value="204" disabled></span></span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>The three things it can say</b></span>
+            <p class="docsp-d">A dash means there is no such number. <b>Mixed</b> means there are several and they disagree. The dimmed field means neither, which is why it is gone.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">The number you cannot type</h3>
+        <p class="docrule"><b>No box.</b> The rounded bezel is this system's promise that the keyboard lands there, so a number the app worked out for you does not wear one: it is plain text in the same slot, secondary strength, monospaced digits. Both looks were built and photographed side by side and the plain one won. <b>Clicking it answers</b> in the line under the section, straight away, because a click that does nothing is the first thing a person learns about a panel that ignores them.</p>
+        <div class="docdd">
+          <span class="do">Leave the value empty and take the en dash the component supplies.</span>
+          <span class="no">Dim a field to say a number is not yours. It looks like an input and reads as broken.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>selection.frame.w</code> still answers; what changes is <code>.editable</code>, and the panel picks the control from that. Never in the tab order: Tab moves between the numbers you can type.</p>
+      </div>
+    </div>
+
+    <!-- 4 · TEXT FIELDS -->
     <div class="docblk">
       <div class="docspec">
         <div class="docgrid n2">
@@ -110,7 +163,7 @@
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">03</div><h3 class="docname">Text fields</h3>
+        <div class="docnum">04</div><h3 class="docname">Text fields</h3>
         <p class="docrule">A <b>rounded rectangle, not a capsule</b>, and that is deliberate: a capsule says "press me", a well says "put something here". The round ends would also waste the first and last 8px of a 92px field and stop a column of values from lining up. Monospace whenever the content is compared down a column: hex, sizes, timecode.</p>
         <div class="docdd">
           <span class="do">Commit on blur and on Return; Escape reverts.</span>
@@ -120,7 +173,7 @@
       </div>
     </div>
 
-    <!-- 4 · SELECT -->
+    <!-- 5 · SELECT -->
     <div class="docblk">
       <div class="docspec">
         <div class="docrow mid">
@@ -139,7 +192,7 @@
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">04</div><h3 class="docname">Select</h3>
+        <div class="docnum">05</div><h3 class="docname">Select</h3>
         <p class="docrule">For <b>5 or more exclusive options</b>, or fewer when space is tight. Below that use a <code>.seg</code>. The closed state always shows the current value in full, never a placeholder, and the open menu <b>ticks the current item</b> rather than highlighting it, because highlight means "keyboard cursor is here".</p>
         <div class="docdd">
           <span class="do">Show a preview swatch when the option has a visual result.</span>
@@ -149,7 +202,7 @@
       </div>
     </div>
 
-    <!-- 5 · SWITCH / CHECK / RADIO -->
+    <!-- 6 · SWITCH / CHECK / RADIO -->
     <div class="docblk">
       <div class="docspec">
         <div class="docgrid n3">
@@ -187,7 +240,7 @@
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">05</div><h3 class="docname">Switch, check, radio</h3>
+        <div class="docnum">06</div><h3 class="docname">Switch, check, radio</h3>
         <p class="docrule">The choice between them is about <b>when it takes effect and how many there are</b>, never about which looks better in the layout. Geometry follows the round-inside-round rule: the knob in a capsule track is a circle, the checkbox is a rounded square so it cannot be mistaken for a switch at a glance.</p>
         <div class="docdd">
           <span class="do">Put the switch on the right of its label, in a <code>.setrow</code>.</span>
@@ -197,7 +250,7 @@
       </div>
     </div>
 
-    <!-- 6 · IN CONTEXT -->
+    <!-- 7 · IN CONTEXT -->
     <div class="docblk">
       <div class="docspec top">
         <div class="cf-insp">
@@ -216,7 +269,7 @@
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">06</div><h3 class="docname">In context</h3>
+        <div class="docnum">07</div><h3 class="docname">In context</h3>
         <p class="docrule">A real 264px inspector column. Every row is <b>label left, control right</b>, on the same grid, with a 9px uppercase caption over each run. That rhythm is what lets you scan forty values without reading any of them, and it is why the row containers (<code>.setrow</code>, <code>.slrow</code>, <code>.numgrid</code>) ship with the components rather than being written per panel.</p>
         <div class="docdd">
           <span class="do">Let controls fill the right column to a common width.</span>
@@ -226,14 +279,15 @@
       </div>
     </div>
 
-    <!-- 7 · TABLE -->
+    <!-- 8 · TABLE -->
     <div class="doccard">
-      <div class="dochead"><span class="docnum">07</span><h3>In the API</h3><span class="k">picking the right control</span></div>
+      <div class="dochead"><span class="docnum">08</span><h3>In the API</h3><span class="k">picking the right control</span></div>
       <div class="docbody">
         <table class="doctbl">
           <thead><tr><th>Control</th><th>Class</th><th>Use when</th><th>Command shape</th></tr></thead>
           <tbody>
             <tr><td><b>Number</b></td><td><code>.stepper</code></td><td>Any numeric property. Always, with scrub and arithmetic.</td><td><code>node.frame.w = 320</code></td></tr>
+            <tr><td><b>Read-only number</b></td><td><code>.reading</code></td><td>A number the app worked out: a locked layer, a size Stretch decides, a thing with no such number</td><td><code>selection.frame.w</code> reads, nothing writes</td></tr>
             <tr><td><b>Text</b></td><td><code>.input</code></td><td>A name, a label, alt text, a search query</td><td><code>node.name = "Hero"</code></td></tr>
             <tr><td><b>Multiline</b></td><td><code>.input.area</code></td><td>Prose: alt text, notes, a prompt</td><td><code>node.alt = "…"</code></td></tr>
             <tr><td><b>Select</b></td><td><code>.select</code></td><td>5+ exclusive options, or tight space</td><td><code>layer.blend = "multiply"</code></td></tr>
@@ -258,6 +312,27 @@
 <script>
   // the mixed-state checkbox on this page is a specimen, so set it explicitly
   (function(){ var c = document.getElementById('cf-ind'); if (c) c.indeterminate = true; })();
+
+  /* Block 03 is a rule about what a click does, so the specimen does it rather
+     than describing it: pressing a plain number writes the reason into the line
+     under the panel, the same place the app puts it. The line goes back to rest
+     after a few seconds so the panel says what it says at rest. */
+  (function(){
+    var why = document.getElementById('cf-why');
+    if (!why) return;
+    var rest = why.textContent, timer = null;
+    document.querySelectorAll('#comp-fields .reading[data-why]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        why.textContent = el.getAttribute('data-why');
+        why.classList.add('on');
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          why.textContent = rest;
+          why.classList.remove('on');
+        }, 6000);
+      });
+    });
+  })();
 </script>
 </body>
 </html>

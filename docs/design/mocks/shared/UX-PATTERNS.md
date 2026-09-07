@@ -569,6 +569,25 @@ Built as `GeometryReadout` in `Sources/Photonz/GeometryInspector.swift`, with th
 words and the spelling in `LayerGeometrySelection` (`readoutText`, `blankText`)
 so the panel cannot drift from what is tested.
 
+**Drawing one in a mock: `.reading`**, in `shared/components/input.css`, added
+2026-09-07. It is `.stepper`'s geometry with the bezel turned transparent, so a
+readout is exactly as tall and as wide as the field beside it and its last digit
+lands in the same column. Leave `.v` empty and the en dash appears; the class
+supplies it so no page spells it with a hyphen.
+
+```html
+<span class="reading sm"><span class="k">W</span><span class="v">204</span></span>
+<span class="reading sm"><span class="k">H</span><span class="v"></span></span>          <!-- no number -->
+<button class="reading sm" tabindex="-1">…</button>                     <!-- when the page can answer the click -->
+```
+
+`.val` in `app-patterns.css` is NOT this: it is bare ink for a stray number in
+prose or a status strip, with no letter, no column and no slot, so four of them
+do not line up with four fields. And `.stepper.disabled` is not this either: a
+disabled field is one that will take the keyboard again once you fix what is in
+the way. Dimming a field to say a number is never yours is the look that was
+rejected. Specimen and rules: `pages/comp-fields.html`, block **03**.
+
 **Which numbers these are is one question, asked once.** The look above was
 settled for a paragraph's height and then applied a case at a time, so three
 audits in one cycle reported the same wart in three rooms: a piece stretched

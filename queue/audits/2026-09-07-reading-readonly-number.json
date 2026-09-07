@@ -1,0 +1,30 @@
+{
+  "feature": "A read-only number in the mock library",
+  "epic": "ui-building",
+  "summary": "The design study can now draw a number the app worked out for you the way the app draws it: plain text in the field's slot, no box, an en dash when there is no number. Before this, anyone sketching a panel reached for a dimmed field, which is the exact look that was built, photographed and rejected on 2026-09-05.",
+  "setup": "The design dashboard at http://127.0.0.1:8791. Open the Component library group in the left rail. No app build, no flags: this is the mock library the study is drawn with.",
+  "try": [
+    { "do": "Open Component library, then Overview & inventory, and scroll to The inventory." },
+    { "do": "Look at the two tiles side by side under Value & input: Number field and Read-only number.", "shot": "2026-09-07-reading-comp-index.png" },
+    { "do": "Click the Read-only number tile to open Fields & choice." },
+    { "do": "Scroll to block 03, The number you cannot type.", "shot": "2026-09-07-reading-comp-fields.png" },
+    { "do": "Click the plain X in the left specimen and read the line that appears under the four numbers." },
+    { "do": "Click the plain W and read the different reason it gives." },
+    { "do": "Press Tab repeatedly from the H field and watch the plain numbers get skipped." },
+    { "do": "Compare the right specimen's four rows: a number, a dash, Mixed, and the rejected dimmed field." }
+  ],
+  "evaluate": [
+    "Reading the left specimen cold, is it obvious which one number is yours to type?",
+    "Do the plain numbers sit quietly enough without disappearing into the panel?",
+    "Does the dash read as no such number, or does it read as a row that failed to draw?",
+    "Is the answer that appears under the numbers in the right place, or does your eye go somewhere else first?",
+    "Are two tiles for a number field and a read-only number one tile too many in the inventory?"
+  ],
+  "rough": [
+    "No mock page had to be converted. A sweep found no page that draws a computed number as a dimmed box, so acceptance item three was already satisfied once the two specimens on the fields page were fixed. Saying that plainly rather than converting something to look busy.",
+    "There is a bigger, older problem next door: most mock inspectors draw X, Y, W and H as the old grey key-and-value box, which is neither a field nor a readout. Those rows are pictures of numbers. Filed as its own task rather than swept blind here, because R and Rot in the same row are typable and a blanket conversion would say the wrong thing.",
+    "In the light theme the field's well is very quiet, so the boxed number and the plain one sit closer together than they do in dark. That is the existing well design, not this component, but it is the case worth looking at first.",
+    "The disabled number swatch in block 02 is kept and relabelled unavailable, for a control that will take the keyboard again once you clear whatever is in the way. If that state has no real use in this app it should go, and that is a call worth making out loud.",
+    "Screenshots here are browser captures of the design dashboard, not app captures. There is no app surface in this task to playtest."
+  ]
+}
