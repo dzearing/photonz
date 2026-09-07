@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T00:33:57.133Z",
-  "updated": "2026-09-07T09:07:58.190192Z",
+  "updated": "2026-09-07T09:08:58.453Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The edit already exists: PhotonzDocument.setFillsTheFlow(id:_:), wrapped by EditorState.setFillsTheFlow. Whether it is offered is Layer.canFillTheFlow(in:). The existing stretchSelectionAcross / stretchSelectionDown actions are the pattern to copy, including their playtest action names.",
@@ -51,7 +51,7 @@
     },
     {
       "t": "2026-09-07T09:06:22.791868Z",
-      "note": "Verified. 21 new tests in FlowFillCommandTests, full suite 4314 green. In the probe app: the Layer menu dump reads 'Fill the Stack  \u2325F' under Grid Selection, so the row and the key are really there; the walk shows the middle piece of a 700-wide bar taking 420 points on the first press and going back to exactly 100 on the second; the panel agrees with the menu (Horizontal reads 'Fill the row'); and the same press on a piece loose on the canvas leaves the render byte for byte identical, so the guard refuses live."
+      "note": "Verified. 21 new tests in FlowFillCommandTests, full suite 4314 green. In the probe app: the Layer menu dump reads 'Fill the Stack  ⌥F' under Grid Selection, so the row and the key are really there; the walk shows the middle piece of a 700-wide bar taking 420 points on the first press and going back to exactly 100 on the second; the panel agrees with the menu (Horizontal reads 'Fill the row'); and the same press on a piece loose on the canvas leaves the render byte for byte identical, so the guard refuses live."
     },
     {
       "t": "2026-09-07T09:06:22.791868Z",
@@ -60,7 +60,12 @@
     {
       "t": "2026-09-07T09:07:58.190192Z",
       "note": "Caught a mistake of my own: the first draft of the walk overwrote Scripts/playtest/fill-the-flow-walk.json, which already existed and covers the PANEL side of this feature. Put it back untouched and the menu walk lives in Scripts/playtest/fill-the-flow-menu-walk.json instead. Both are now named in the design doc."
+    },
+    {
+      "t": "2026-09-07T09:08:58.452Z",
+      "note": "Layer > Fill the Row (Option F), a checkmark row under Stack Selection and Grid Selection, turns filling on and off for the whole selection in one undo. Named after the flow exactly as the panel row is, greyed with its own reason when there is no stack, no room, or the piece spans the group, and still live whenever a piece is already filling so a stranded rule can always be taken off. Reading in PhotonzCore (FlowFillCommand, 21 new tests); full suite 4314 green. Verified live in the probe: the menu carries the row on Option F, a 700-wide bar's middle piece takes 420 points and goes back to 100 on the second press, and the press on a loose piece changes nothing. Audit: queue/audits/2026-09-07-fill-the-flow-menu.json. Walk: Scripts/playtest/fill-the-flow-menu-walk.json."
     }
   ],
-  "started": "2026-09-07T08:51:54.753Z"
+  "started": "2026-09-07T08:51:54.753Z",
+  "completed": "2026-09-07T09:08:58.453Z"
 }
