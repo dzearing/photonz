@@ -196,10 +196,18 @@ extension Layer {
             return hasRoundableCorners ? .number(roundedCornerRadius) : nil
         case .thickness:
             return drawsItsOwnOutline ? .number(outlineWidth) : nil
-        case .gap, .padding:
-            // Only something that arranges its contents holds them apart, and
-            // only a group that has been given a layout keeps room at its
-            // edges, so the layout answers for both.
+        case .gap:
+            // Only something that arranges its contents holds them apart, so
+            // the layout answers for this one.
+            return group?.layout?.knobValue(for: slot)
+        case .padding:
+            // Room needs something to land on. A stack or a grid holds every
+            // piece in from its edges, and a piece stretched to the group's own
+            // edges paints the room standing off what is beside it; a drawing
+            // where neither is true has room nobody can see, which used to be
+            // offered as a knob that slid the copy across and down instead of
+            // making it roomier (`Layer.spendsRoom`).
+            guard spendsRoom else { return nil }
             return group?.layout?.knobValue(for: slot)
         }
     }

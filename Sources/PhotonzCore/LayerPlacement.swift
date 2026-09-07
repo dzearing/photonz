@@ -243,6 +243,41 @@ extension Layer {
     /// leading edge.
     public var placesItsContents: Bool { isFrame || group?.layout?.arranges == true }
 
+    /// Whether room at this group's edges is room anything can SPEND.
+    ///
+    /// Room is the clear space between a container's edges and what is inside
+    /// it, and something has to answer to it or nobody ever sees it. Two things
+    /// do. A stack or a grid ARRANGES what it holds, so the flow starts every
+    /// piece in from the edges by exactly that much. A piece stretched to the
+    /// group's own edges IS those edges — the surface a button's fill is — so
+    /// the room shows up as the fill standing off the label.
+    ///
+    /// A control drawn by hand is neither: a box and a word, both sitting
+    /// exactly where they were drawn, inside a group that simply closes around
+    /// them. Room there inflates a box nothing paints and slides the drawing
+    /// across and down, leaving the button the size it always was. So the room
+    /// row is not offered for one (`ComponentNumberKnob.swift`), and naming the
+    /// box as the surface brings it straight back.
+    public var spendsRoom: Bool {
+        guard let group, let layout = group.layout else { return false }
+        // A stack or a grid starts every piece it holds in from its edges by
+        // exactly this much, whatever is in it.
+        if layout.arranges { return true }
+        let rules = group.children.map { $0.resolvedPlacement(in: self) }
+        // The surface behind everything is painted to the box's OWN edges, room
+        // and all, so it can only show the room on a side where the room is
+        // part of what makes the box: a side that is the size of its contents.
+        // A screen's box is a frame somebody drew, so neither of its sides is.
+        let hugs = !group.isFrame && (layout.usedWidth == nil || layout.usedHeight == nil)
+        if hugs, rules.contains(where: \.isSurface) { return true }
+        // A piece stretched one way only is painted to the room INSIDE the
+        // edges, so it stands off them by that much however the box was
+        // arrived at.
+        return rules.contains {
+            !$0.isSurface && ($0.horizontal == .stretch || $0.vertical == .stretch)
+        }
+    }
+
     /// How this layer behaves when the group holding it is resized, resolved
     /// against that group's default.
     public func resolvedPlacement(in container: Layer?) -> ResolvedPlacement {

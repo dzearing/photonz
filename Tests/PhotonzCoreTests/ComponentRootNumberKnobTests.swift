@@ -87,10 +87,23 @@ struct ComponentRootNumberKnobTests {
                                          kind: .visible) == nil)
     }
 
-    /// A card that arranges nothing has room at its edges but no gap: nothing
-    /// is being held apart, so a Gap knob would turn a number nobody can see.
-    @Test func aCardThatArrangesNothingOffersRoomOnly() {
+    /// A card that arranges nothing, with nothing painted to its edges, offers
+    /// NEITHER number. There is no gap, because nothing is being held apart;
+    /// and there is no room either, because two labels sitting where they were
+    /// drawn answer to none — turning it up would inflate a box nobody can see
+    /// and slide the drawing across and down (`Layer.spendsRoom`).
+    @Test func aCardThatArrangesNothingAndPaintsNothingOffersNeither() {
         let c = withCard(kind: nil)
+        #expect(rootCandidate(c) == nil)
+    }
+
+    /// Give that same card a surface and the room comes back on its own: the
+    /// fill is painted to the card's own edges, so the room is the space it
+    /// keeps around the labels. Still no gap, because it still arranges
+    /// nothing.
+    @Test func aCardThatArrangesNothingButPaintsItsEdgesOffersRoomOnly() {
+        var c = withCard(kind: nil)
+        c.doc.updateLayer(id: c.titleID) { $0.placement = .fill }
         #expect(rootCandidate(c)?.numberSlots == [.padding])
     }
 

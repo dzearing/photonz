@@ -1,0 +1,27 @@
+{
+  "id": "room-typed-on-a-loose-drawing-slides-it-instead",
+  "title": "Room typed on a loose drawing slides it instead of growing around it",
+  "goal": "Type room into the Layout section of a group that arranges nothing and the whole drawing slides across and down by that much instead of the box growing outward around it. Nothing on screen gets roomier, it just moves. Room on a group like that should leave everything exactly where it was put and grow the box outward, which is what that arrangement promises everywhere else.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1870,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T21:29:27.651Z",
+  "updated": "2026-09-07T21:29:27.652Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "GroupFlow.closedAround moves the contents to padding.left/padding.top and Layer.arrangedBounds keeps the frame origin, so the contents move and the box grows down and right. Growing outward means also moving the layer frame by -dx/-dy in GroupFlow.flowing; it is idempotent, because the second pass computes dx = 0. Careful with the case a surface is present: there the top left is anchored today and a button grows to the right, which is right and must not change. Found while fixing more-room-on-a-copy-moves-it-instead-of-making-i on 2026-09-07: the copy knob was taken off drawings like this, but the inspector still offers it.",
+  "acceptance": [
+    "Typing room into the Layout section of a group set to Free leaves every piece inside it exactly where it was on the canvas",
+    "The group box grows outward by that much on every side that is the size of its contents",
+    "A group with a surface in it still grows the way it does today, so a button does not start moving when its room changes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T21:29:27.652Z",
+      "note": "created (manual)"
+    }
+  ]
+}

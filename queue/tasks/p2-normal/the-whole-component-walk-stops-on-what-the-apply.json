@@ -1,0 +1,27 @@
+{
+  "id": "the-whole-component-walk-stops-on-what-the-apply",
+  "title": "The whole component walk stops on what the Apply button says",
+  "goal": "The scripted run of the whole component path stops near the end: after a shadow is put on the original, the button that carries it to the other drawings is expected to say \"there is something to carry\" and says \"Shadow, there is something to carry\" instead. Either the button gained a word it should not have or the script is out of date, and until one of them is settled that walk cannot be run to the end.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 1860,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T21:29:17.752Z",
+  "updated": "2026-09-07T21:29:17.752Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-07 twice, and it is NOT caused by the room-knob change: with Sources/PhotonzCore/LayerPlacement.swift and ComponentNumberKnob.swift stashed back to ec95e005 it fails identically.\n\n  $ Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json\n  ...\n  {\"error\": \"step 167 (expect): the control called \\\"Apply to Other Versions\\\" reads \\\"Shadow, there is something to carry\\\", not \\\"there is something to carry\\\"\", \"status\": \"failed\", \"steps\": 166}\n\nSources/Photonz/ComponentPanel.swift:1067 passes only the two constants to .playtestControl(\"Apply to Other Versions\", detail:), so the \"Shadow, \" is coming from somewhere else: look at pressTargets() in Sources/Photonz/Playtest/PlaytestHarness.swift, which is what builds the detail an expect step reads. Was already failing in the 13:40 run of 2026-09-07 (no path-12/13/14 pictures in /tmp/photonz-playtest/component-whole-path from it).",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json finishes with status ok",
+    "Whichever of the two was wrong, the button and the script say the same thing",
+    "The last four stages of that walk write their pictures again"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T21:29:17.752Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "feature": "Room on a copy lands on something",
+  "epic": "ui-components",
+  "summary": "The Add menu no longer offers a copy the room at a drawing's edges when nothing in that drawing would answer to it. Where room does land on something, turning it up makes the copy visibly roomier and leaves it exactly where it was dropped.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Draw a rounded rectangle, then put the word Save on top of it with the text tool." },
+    { "do": "Select both, press Command G, and type 16 into Padding in the Layout section." },
+    { "do": "Make it a component (Layer menu), then open the Add menu on the Component section.", "shot": "2026-09-07-room-no-row.png" },
+    { "do": "Read the Number group: it offers the rectangle's rounding and thickness, and no room for the button itself." },
+    { "do": "Double click into the button, pick the rectangle, and set Horizontal and Vertical to Stretch in Layout. The button tightens to the word plus its 16." },
+    { "do": "Select the button again and open the Add menu: Save button - Padding is now on it. Pick it." },
+    { "do": "Drop a copy of the button lower down the canvas, then type 48 into its Padding row.", "shot": "2026-09-07-room-lands-on-something.png" }
+  ],
+  "evaluate": [
+    "When the room row is missing from the Add menu, do you understand why, or does it just look like the app forgot it?",
+    "Is naming the rectangle the surface a step you would have found on your own?",
+    "The button tightening to the word plus its room the moment you name a surface: right, or alarming?",
+    "The roomier copy grows to the right and down from where its top left already was. Should it grow out in every direction around the word instead?",
+    "Is Padding the right word for this row, next to a Layout section that already says Padding?"
+  ],
+  "rough": [
+    "There is no signpost. A drawing that cannot spend room simply has no room row, and nothing tells you that naming a surface would bring it back. That is the biggest thing left rough here.",
+    "The Layout section still lets you type room straight onto a drawing that arranges nothing, and there it still slides the drawing across and down instead of growing around it. Only the copy's knob was fixed; the inspector was left alone because typing room there is how you set the room a surface will later take.",
+    "A drawing with a size of its own, whose only stretchy piece is the surface, is also not offered room: the surface is painted to the box's own edges and the box is a number somebody typed, so there is nowhere for the room to go.",
+    "The screenshots are real screen captures: the probe had the Screen Recording grant on this run."
+  ]
+}

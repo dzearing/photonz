@@ -1,0 +1,374 @@
+{
+  "out": "/tmp/photonz-playtest/room-lands-on-something",
+  "seed": "Room on a copy has to land on something. A button drawn by hand is a box and a word sitting where they were drawn, so room at the group's edges used to be offered as a knob that grew an invisible box and slid the drawing across and down. Now the Add menu does not offer it for a drawing like that. Naming the box as the surface behind everything brings the row straight back, and from then on more room on a copy makes a visibly roomier button that stays exactly where it was dropped.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "text",
+      "panel",
+      "groups",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1360,
+      "height": 1080
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        180
+      ],
+      "to": [
+        600,
+        300
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "dragShapeCorners"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        220
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Save"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        190,
+        140
+      ],
+      "to": [
+        660,
+        360
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "16"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Save button"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Add Version",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-drawn",
+      "note": "a button drawn by hand: a rounded box with the word Save on it, grouped, named and made a component. The box is just another piece sitting where it was drawn, so nothing in this group is painted to the group's own edges"
+    },
+    {
+      "do": "snapshot",
+      "name": "room-1-drawn"
+    },
+    {
+      "do": "render",
+      "name": "room-1-drawn-doc"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add",
+      "shot": "room-2-no-room-row"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-no-room-row",
+      "note": "the Add menu on that drawing. It offers the words, the rounding, the colours: everything a copy could really change. It does NOT offer Save button, because the only number that layer could hand over is the room at its edges and nothing in it would answer to it"
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        240
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionAcross"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionDown"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "3-surface",
+      "note": "the box named as the surface behind everything, both ways. It stops being one of the pieces the group closes around and becomes the group's own edges, so it takes whatever box the word and its 16 of room add up to: the drawing tightens into a real button"
+    },
+    {
+      "do": "snapshot",
+      "name": "room-3-surface"
+    },
+    {
+      "do": "render",
+      "name": "room-3-surface-doc"
+    },
+    {
+      "do": "selectRow",
+      "row": "Save button"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add",
+      "shot": "room-4-room-row-back",
+      "choose": "Save button · Padding"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "4-room-offered",
+      "note": "the same menu on the same drawing, one rule later: Save button · Padding is back on it, and picking it made the Room knob. The row is offered exactly where the room has something to spend itself on"
+    },
+    {
+      "do": "snapshot",
+      "name": "room-4-knob"
+    },
+    {
+      "do": "panel",
+      "stage": "4-room-offered"
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        360,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "Padding",
+      "reads": "16"
+    },
+    {
+      "do": "describe",
+      "stage": "5-copy",
+      "note": "a copy dropped below the original, following it at 16 of room"
+    },
+    {
+      "do": "snapshot",
+      "name": "room-5-copy"
+    },
+    {
+      "do": "render",
+      "name": "room-5-copy-doc"
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "48"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "field": "Padding",
+      "reads": "48"
+    },
+    {
+      "do": "expect",
+      "control": "Revert Padding",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "6-more-room",
+      "note": "THE POINT: 48 of room on that one copy makes a visibly roomier button, and it is still sitting where it was dropped. Compare room-5-copy-doc with room-6-more-room-doc: the copy grows around its word instead of sliding across and down at the size it always was"
+    },
+    {
+      "do": "snapshot",
+      "name": "room-6-more-room"
+    },
+    {
+      "do": "render",
+      "name": "room-6-more-room-doc"
+    },
+    {
+      "do": "press",
+      "control": "Revert Padding"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "Padding",
+      "reads": "16"
+    },
+    {
+      "do": "expect",
+      "control": "Revert Padding",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "7-put-back",
+      "note": "the way back pressed: this copy follows the original's 16 again"
+    },
+    {
+      "do": "render",
+      "name": "room-7-put-back-doc"
+    }
+  ]
+}

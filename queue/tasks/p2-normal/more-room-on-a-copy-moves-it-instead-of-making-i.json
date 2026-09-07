@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1670,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T14:00:02.655Z",
-  "updated": "2026-09-07T14:00:02.655Z",
+  "updated": "2026-09-07T21:29:46.670993Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-09-07 whole-path sitting; compare path-7-one-copy-changed-doc.png with path-7c-more-room-doc.png in /tmp/photonz-playtest/component-whole-path. The group is Free arrangement with Width and Height on Hug, so padding inflates the group box and offsets its contents while nothing stretches to the new edges. Either the Free case should keep the contents where they are and grow outward, or the Add menu should only offer Padding where the arrangement can spend it.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-07T14:00:02.655Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T21:04:54.623Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T21:29:46.670993Z",
+      "note": "Adversarial review before building. The mock is not the problem here; the model is. Room is the clear space between a container's edges and what is inside it, and something has to answer to it or nobody sees it. A hand-drawn button is a box and a word both sitting where they were drawn, so the group's edges are painted by nothing: room there inflates an invisible box and slides the drawing. Two ways out. Make room reach the drawn box by promoting it to the surface automatically, which is a guess about what somebody meant by grouping two overlapping shapes and can silently resize their drawing. Or stop offering room where nothing answers to it, which is acceptance item 3 and what the goal itself allows. Took the second: it is honest, it costs no capability (naming a surface brings the row straight back, answers and all, through the machinery that already handles a knob whose number went away), and it needed no guess."
+    },
+    {
+      "t": "2026-09-07T21:29:46.670993Z",
+      "note": "Layer.spendsRoom in Sources/PhotonzCore/LayerPlacement.swift is the whole rule: a stack or grid always spends room; a group that arranges nothing spends it where a piece stretches one way (it is painted to the room inside the edges) or where a side is the size of its contents and something is painted to the group's own edges. Layer.knobValue(for: .padding) returns nil otherwise, which is the existing path for a number the original has stopped having, so the Add menu drops the row, applyRootOverrides stops writing it, and every copy's answer is kept."
+    },
+    {
+      "t": "2026-09-07T21:29:46.670993Z",
+      "note": "Verified on the real app, not just in tests. New walk Scripts/playtest/room-lands-on-something-walk.json runs the whole thing: the Add menu on the drawn button lists 21 rows with no \"Save button \u00b7 Padding\"; after the rectangle is named the surface the same menu lists 22 with it back; a copy set to 48 goes from W 83 H 61 to W 147 H 125 in the panel's own readout, 32 more on every side, while X and Y stay at 319 and 590. Screen Recording was granted, so the audit carries real captures."
+    },
+    {
+      "t": "2026-09-07T21:29:46.670993Z",
+      "note": "Adversarial review of the built thing. What is still rough: there is no signpost saying why the room row is absent or that naming a surface brings it back, and the Layout section still lets you type room straight onto a loose drawing where it slides it. The first is an evaluate line and a rough line in the audit so the user can call it; the second is filed as room-typed-on-a-loose-drawing-slides-it-instead."
+    },
+    {
+      "t": "2026-09-07T21:29:46.670993Z",
+      "note": "component-whole-path-walk.json edited: it added a room knob to a drawing that no longer offers one. It now takes two knobs instead of three, its 4-knobs note says why room is absent, and the second-knob-on-a-copy beat turns the rounding down to 4 instead. That walk still stops at step 167 on an unrelated drift in what the Apply to Other Versions button reads; reproduced with this change stashed out, filed as the-whole-component-walk-stops-on-what-the-apply."
     }
-  ]
+  ],
+  "started": "2026-09-07T21:04:54.622Z"
 }
