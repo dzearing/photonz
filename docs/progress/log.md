@@ -10820,3 +10820,34 @@ second, and the same press on a loose piece changes nothing. 21 new tests in
 **Next:** back to the queue. Open question for the user in the audit: whether
 ⌥F is the right key, and whether a hover tip is enough explanation for a grey
 menu row or the reason should be on the row itself.
+
+## 2026-09-07 — A tool setting that is on screen twice
+
+Ran the p3 task about the same tool setting appearing in the capsule above the
+tool bar and in the right hand panel at once. Reproduced it before deciding
+anything: `Scripts/playtest/tool-settings-twice-walk.json` opens a screenshot at
+1280x840 with the panel showing and cycles Measure, the Magic Wand, the Zoom
+Callout and Crop, then hides the panel. Screen Recording was granted, so all
+seven pictures are real window captures rather than offscreen renders.
+
+What the captures settled. The Zoom Callout's panel section is a literal
+duplicate of its capsule: Shape and Magnification, same words, same order, same
+controls. The wand's is a duplicate with more detail, since only the panel has
+the full width slider and the sentence explaining tolerance. Measure is split,
+because Mode is only in the panel. Crop is the reverse and has a panel section
+with no capsule at all, so no rule can simply say "the capsule wins".
+
+Filed the decision rather than guessing, since the acceptance asked for one:
+three options (panel wins while open, capsule wins whenever up, leave it as it
+is), recommended the first, marked the third `declines` so an answer of no
+retires the task. The brief at
+`queue/decisions/a-tool-setting-that-is-on-screen-twice-reads-as-with-the-panel-open-a-tool-s-set.md`
+carries close-ups of each place plus the two awkward cases. Per-option build
+notes are in the task log, including the two hook points: the capsule's `if` in
+`EditorView.swift`, and the `ScrollViewReader` already sitting in
+`LayersPanel.swift` for revealing a tool's section on pickup.
+
+No app code changed; suite green at 4314.
+
+**Next:** the task is blocked on that answer. When it lands, one run builds the
+chosen option and re-runs the same walk to prove it.
