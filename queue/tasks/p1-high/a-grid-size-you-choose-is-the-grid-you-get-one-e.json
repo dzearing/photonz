@@ -1,0 +1,37 @@
+{
+  "id": "a-grid-size-you-choose-is-the-grid-you-get-one-e",
+  "title": "A grid size you choose is the grid you get, one even grid at every zoom",
+  "goal": "Setting the grid to four points does not give a four point grid. The canvas draws several densities at once, thinning and thickening as you zoom, so what you see is a wash of lines at spacings you never asked for. A size you choose should mean exactly that: one even grid, the same everywhere, at every zoom. The several-densities behaviour belongs only to the automatic setting, where following the zoom is the whole point. The lines should also be fainter than they are, so a fine grid sits behind the work instead of shouting over it. And while dragging the size slider, the label that says automatic should show the size being chosen, rather than a column of numbers beside the track that do not line up with the positions.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T03:06:34.043Z",
+  "updated": "2026-09-07T03:06:34.082Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-06: set grid sizes do not work, at four points they see a bunch of lines that are not four points apart. Confirmed by reading: CanvasGridSettings.liveSpacing (CanvasGrid.swift line 188) and the drawing both call CanvasGridLevels.levels, which returns up to maximumLevels of three rungs chosen from the zoom whatever the person set, so an explicit spacing is only ever the FINEST rung and two coarser ones are drawn with it. The ladder exists for a good reason and the user has now named where it belongs: only under automatic, which already exists as CanvasGridCellStops.automatic and is read through cellIsAutomatic (line 207). So the change is to branch, not to delete: a chosen size draws one spacing, automatic keeps the ladder. That also collapses most of snapping-pulls-to-the-grid-you-can-see-not-one-y for the chosen case, since drawn and set become the same thing; read that task and say in the audit what remains of it under automatic. Transparency: maximumOpacity is 0.30 (line 284); pick a lower number by looking at a fine grid zoomed in, not by taste alone, and keep it readable on a dark and a light picture. The slider labels are the tool bar's cell popup from the-grid-tool-bar-is-two-buttons-and-adjust-mode; if that task has not landed yet, coordinate rather than building the popup twice.",
+  "acceptance": [
+    "With a size chosen, exactly one grid is drawn, at that spacing, at every zoom, with no second or third density behind it",
+    "The bolder line every so often may stay, since that is one grid emphasised rather than a second grid, and the audit says which reading was taken",
+    "With automatic chosen, the grid follows the zoom as it does now, and that is the only setting where the density changes on its own",
+    "The lines are fainter than today, checked at a fine spacing zoomed in, where the wash is worst, and still visible on both a light and a dark picture",
+    "Dragging the size slider shows the size being chosen where the automatic label sits, and the loose column of numbers beside the track is gone",
+    "Snapping pulls to the one grid drawn, which with a chosen size is simply that size at every zoom",
+    "A grid so fine it would be a solid wash at the current zoom is handled deliberately rather than by drawing mud; the audit says what happens and why",
+    "Core logic covered by tests in PhotonzCore written before the change, asserting one spacing out at several zooms for a chosen size",
+    "Audit written under queue/audits/ with a four point grid at three zooms, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T03:06:34.044Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T03:06:34.081Z",
+      "note": "seq 180 -> 1"
+    }
+  ]
+}
