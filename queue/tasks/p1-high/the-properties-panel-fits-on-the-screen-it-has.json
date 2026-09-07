@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T10:29:36.039Z",
-  "updated": "2026-09-07T13:01:32.715Z",
+  "updated": "2026-09-07T13:27:48.115Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-07 while making mixed-one-look-walk honest. Measured, not guessed: the walk asks for a 1180pt window and this display gives it 1028pt of content; the dock reports dockViewport 996 against sections running Layers 6-217, Text 217-393, Position & Size 393-528, Appearance 528-858, Effects 858-1016 with ONE layer picked, and a second layer adds an Arrange section that pushes the total to roughly 1310. Corner Radius is the last row of the last section, so it sits about 290pt below the fold. Reproduce with Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json and read panel-two-picked.json in the out folder: every Effects control comes back inWindow=false. Worth an adversarial look before building: collapsing sections by default, moving Corner Radius up next to the other shape controls, and letting the dock use two columns are all different products, and the mocks do not settle it.\n\nTriage 2026-09-07: promoted from p3-low to p1-high and merged with the-look-controls-come-back-above-the-fold (dropped as a duplicate; its acceptance is folded in above). This is the most-cited defect of the day. Evidence beyond the original measurement: audit 2026-09-07-mixed-one-look (panel runs about 1310pt against 1028pt of display, Corner Radius roughly 290pt below the fold, the walk has to scroll twice); audit 2026-09-07-layers-hold-their-place (\"Appearance, Effects and Library sit below the fold whether or not any group is open\"); audit 2026-09-07-font-menu-one-width (three sections had to be collapsed by hand just to photograph the Text section); and three walks that stop dead on a control below the fold (the-clip-contents-walk-reaches-the-switch-it-is, the-panel-controls-walk-reaches-the-revert-arrow, plus the-mixed-one-look-walk which was fixed by scrolling). The model to build to is written down already: docs/design/mocks/shared/UX-PATTERNS.md section 3, panel group -- \"The body has its own bounded max-height and its own scroller, so a 60-layer stack scrolls inside Layers and never pushes Effects or Library off screen. Exactly one group per dock may be .grow and take the leftover space.\" In the app only the Layers list does this (LayersPanel.swift:1493-1526); everything else lives in the one outer ScrollView at LayersPanel.swift:99. Do the walks named above as part of this, or leave them a note saying they now pass.",
@@ -66,7 +66,12 @@
     {
       "t": "2026-09-07T13:27:18.230280Z",
       "note": "What is left is copy, not layout, so it is filed rather than guessed: the same 'N layers, a change here changes every one of them' sentence is printed six times across the panel, about 190pt, which is more than the 34 still missing. Filed as the-panel-says-once-that-a-change-reaches-everyt with a decision card and a brief. UX-PATTERNS section 3 amended with the list-versus-form rule the build taught. Notes left on the-panel-controls-walk-reaches-the-revert-arrow and the-clip-contents-walk-reaches-the-switch-it-is (both still pending) to re-run before changing anything."
+    },
+    {
+      "t": "2026-09-07T13:27:48.114Z",
+      "note": "Dock height budget shipped (PhotonzCore/DockHeightBudget.swift + LayersPanel). Lists give up room and scroll inside themselves, forms are drawn whole; a shortened body fades at its cut edge. Verified by measurement, not by eye: Scripts/playtest/dock-fits-the-window-walk.json reads the dock's section offsets back at six stages, and Corner Radius comes back inWindow=true in all six panel dumps (one text, two text, four picked, an arrow, a callout, fifteen layers) where every Effects control used to be inWindow=false. Scripts/test.sh green, 4375 tests. Audit 2026-09-07-dock-fits-the-window with real captures. Two pieces of text is still 34pt over -- reachable but on the bottom edge -- and the cause is repeated copy rather than layout, filed as the-panel-says-once-that-a-change-reaches-everyt with a decision card."
     }
   ],
-  "started": "2026-09-07T13:01:32.714Z"
+  "started": "2026-09-07T13:01:32.714Z",
+  "completed": "2026-09-07T13:27:48.115Z"
 }
