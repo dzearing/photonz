@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1600,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T06:45:08.920Z",
-  "updated": "2026-09-07T07:59:11.738Z",
+  "updated": "2026-09-07T08:14:14.189Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-07 while fixing saving-a-colour-as-a-style-never-asks-for-a-name. colour-onto-a-swatch-walk fails at step 13 (dragColor from Fill onto Outline) with: no colour swatch for \"Outline\" is in the panel; the ones that are: Background fill, Foreground fill, Fill. Evidence: /tmp/photonz-playtest/colour-onto-a-swatch/colour-1-two-colours-sc.png, a real capture, shows Outline with an unticked switch and an empty colour column. Cause is not the naming path: a drawn rectangle comes out with strokeWidth 0, so Layer.hasOutline is false and colorStyleSelection(.stroke) is empty, and ColorStyleRow.showsWell returns false for an empty reading over a selection. Note the readouts disagree: the walk step before it asserts selectedColors reads stroke #FF3B30 while the panel says the box has no outline at all, so decide which is telling the truth before changing either. Either the rectangle tool should draw an outline, or an Outline row that is switched off should still offer the colour it would come back at, or the walk is stale and should switch the outline on first.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-07T08:13:56.431Z",
       "note": "Audit: queue/audits/2026-09-07-colour-onto-an-off-part.json, with three real window captures (Screen Recording granted)."
+    },
+    {
+      "t": "2026-09-07T08:14:14.188Z",
+      "note": "A part row whose switch is off now takes a colour drop: the whole row is the landing spot, and letting go switches the part on wearing that colour in one undo step. Core turnOnPart + ColorDrop isAbsent (TDD, 8 new tests, all 4280 pass); app in OffPartColorDrop/PartsInspector/EditorState, next only. Verified on the probe with the new colour-onto-an-off-part walk; colour-onto-a-swatch now runs to the end and reports ok. Audit: queue/audits/2026-09-07-colour-onto-an-off-part.json."
     }
   ],
-  "started": "2026-09-07T07:59:11.737Z"
+  "started": "2026-09-07T07:59:11.737Z",
+  "completed": "2026-09-07T08:14:14.189Z"
 }
