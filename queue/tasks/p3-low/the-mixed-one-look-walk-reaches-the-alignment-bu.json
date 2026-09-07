@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T18:08:22.808Z",
-  "updated": "2026-09-06T12:16:42.334Z",
+  "updated": "2026-09-07T11:17:40.687Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Confirmed pre-existing on 2026-09-05: it fails identically on a stashed pre-change build. Fails at step 35 (press): the control \"align center\" is not in the window; scroll to it with a scrollPanel step first. The panel builds only the rows on screen, so the walk needs a scrollPanel step before that press, or a taller window. Five other walks failed in the same playtest-all run and all five pass on their own, so those are shared-state cascade and this is the only real one. Merged with the-mixed-look-walk-reaches-the-alignment-button on 2026-09-06 (same walk, same step 35, same cause); that one is dropped.",
@@ -36,6 +36,101 @@
     {
       "t": "2026-09-06T12:16:42.334Z",
       "note": "seq 120 -> 120"
+    },
+    {
+      "t": "2026-09-07T10:16:24.753Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T10:26:52.803269Z",
+      "note": "Reproduced first, and the premise was stale: the walk already PASSES as it stands. The scrollPanel it needed landed on 2026-09-06 in f669e381. So the interesting question became acceptance item 4, is it still checking what it was written to check, and the answer was no."
+    },
+    {
+      "t": "2026-09-07T10:26:52.803269Z",
+      "note": "Adversarial read of the walk before touching it: step 19 pressed the Corner Radius slider and the harness reported a pass, but the state right after it read cornerRadius \"0 x1\" and no view rebuilt. The slider sits at the very bottom of a dock taller than the window, its middle 2pt off the window's edge, so the click landed on nothing. The walk's whole premise, that picking both labels makes a MENU, a SLIDER, a FIELD and a SEGMENTED ROW all say Mixed at once, was therefore only ever testing three of the four: at two-picked the radius was 0 on both, so the slider was never Mixed."
+    },
+    {
+      "t": "2026-09-07T10:26:52.803269Z",
+      "note": "That is the app being wrong rather than the walk (acceptance item 5). PlaytestHarness.isInReach only asked whether the press POINT fell inside the window, so any control scrolled until a sliver of it showed still counted as pressable. It now asks for the whole control box, inside the window AND inside the control's visible rect after the dock's scroll area has clipped it; PlaytestPressTarget carries that visible rect (PlaytestPanelPress.swift). With the stricter rule the old walk fails loudly at step 19 with a message that names scrollPanel, which is the truthful answer."
+    },
+    {
+      "t": "2026-09-07T10:26:52.803269Z",
+      "note": "Walk reworked so every press really lands: align center is pressed while it is in view, then the dock is scrolled to the end to reach Corner Radius, then scrolled back. Verified from the log, not assumed: cornerRadius goes 0 -> 15 on the first label, reads \"mixed x2\" once both are picked, and 32pt / align center / W=200 / radius 20 each reach both layers."
+    },
+    {
+      "t": "2026-09-07T10:26:52.803269Z",
+      "note": "The dock is taller than the window can ever be on this display, so no single picture can show all four Mixed controls. The walk now photographs it in two halves, top and bottom, before and after: 1-mixed-dock, 2-mixed-dock-lower, 3-after-setting, 4-after-setting-lower. The lower capture shows Size Mixed, Across Mixed, W and H Mixed and Corner Radius Mixed together."
+    },
+    {
+      "t": "2026-09-07T10:37:26.792690Z",
+      "note": "Suite triage in flight. clip-contents-walk failed at step 22 pressing \"Clip contents\". Theory, not yet proven: NOT caused by the stricter rule, because its panel dump puts that switch at y=-65, which is 65pt below the window's bottom edge and so fails the OLD point-only rule too. Its last good run was 22:09 on 2026-09-06, before today's 02:30-03:15 commits added rows to the dock. To be confirmed against a pre-change build once the suite is done, rather than assumed."
+    },
+    {
+      "t": "2026-09-07T10:52:39.047Z",
+      "note": "runner failed (exit 0, attempt 1): Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely."
+    },
+    {
+      "t": "2026-09-07T10:53:09.837Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T11:00:52.262364Z",
+      "note": "Re-run after the runner timed out mid-suite. Verified rather than assumed: the walk passes twice in a row from a wiped output folder, and Scripts/test.sh is green at 4348 tests in 362 suites."
+    },
+    {
+      "t": "2026-09-07T11:00:52.262364Z",
+      "note": "Proof it checks what it claims, read out of log.json and not from a screenshot: cornerRadius goes 15 x1 -> mixed x2 -> 20 x2, textRows go size mixed x2 -> size 32 x2 and across mixed x2 -> across center x2, and the layer tree shows both labels ending the same width after 200 is typed into W. All four kinds of Mixed control are genuinely pressed."
+    },
+    {
+      "t": "2026-09-07T11:00:52.262364Z",
+      "note": "Adversarial pass on the built thing, from the real screen captures rather than the renders. Two of the walk's own stage notes were overclaiming: it said four fields say Mixed when X reads 140 and only Y, W and H say Mixed, and it said EVERY control has to stop saying Mixed when Y, H and the text colour are rightly still Mixed because nothing set them. Both notes rewritten to say what is actually true, including why the untouched ones must stay Mixed."
+    },
+    {
+      "t": "2026-09-07T11:00:52.262364Z",
+      "note": "Snapshots were numbered out of order: 4-after-setting-lower was taken before 3-after-setting. Renamed so the numbers run in the order the pictures are taken: 1 upper, 2 lower, 3 after-lower, 4 after."
+    },
+    {
+      "t": "2026-09-07T11:00:52.262364Z",
+      "note": "Found while looking for a picture for the audit: the offscreen render draws the panel as a blank white column, so the two snapshots either side of a scrollPanel are byte for byte identical (same md5) while the -sc.png pair differ. The panel is not a child window, so this is cacheDisplay failing on the dock's hosting view. Documented as a limitation in docs/design/playtest-harness.md and filed as a-picture-of-a-walk-shows-the-properties-panel-n."
+    },
+    {
+      "t": "2026-09-07T11:05:35.748961Z",
+      "note": "clip-contents-walk failed in the suite again, and the earlier theory is now proven rather than assumed: its own dump panel-2-overflows.json puts \"Clip contents\" at press point y=-65, which is 65pt BELOW the window's bottom edge. The panel dump prints the press point, so the OLD point-only check rejected that too. Not caused by the stricter rule. Its last good run was 2026-09-06 22:09, so it regressed when rows were added to the dock. Filed as the-clip-contents-walk-reaches-the-switch-it-is."
+    },
+    {
+      "t": "2026-09-07T11:15:40.005Z",
+      "note": "runner failed (exit 0, attempt 2): Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely."
+    },
+    {
+      "t": "2026-09-07T11:17:40.687Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T11:29:11.259993Z",
+      "note": "Third run, after two runner timeouts caused by the 245-walk suite. Re-verified rather than assumed: mixed-one-look-walk reports ok three times in a row through Scripts/playtest-all.sh (once with a fresh probe build, twice with --no-build), and Scripts/test.sh is green at 4348 tests in 362 suites."
+    },
+    {
+      "t": "2026-09-07T11:29:11.259993Z",
+      "note": "Acceptance item 4 checked against log.json, not a screenshot: the Size menu grows a Mixed row and 32 pt is picked from it, Across is pressed while in view, W reads Mixed before 200 is typed into it, and cornerRadius runs 15 x1 -> mixed x2 -> 20 x2. All four kinds of Mixed control are genuinely pressed and all four reach both layers."
+    },
+    {
+      "t": "2026-09-07T11:29:11.259993Z",
+      "note": "Adversarial pass on the built thing: rather than run all 245 walks again, ran the 20 that press panel controls, which is where the stricter reach rule could do damage. 19 ok. panel-controls-walk fails at step 63 pressing Revert Opacity."
+    },
+    {
+      "t": "2026-09-07T11:29:11.259993Z",
+      "note": "That failure is PROVEN pre-existing, not caused by the stricter rule. Stashed the two changed Swift files, rebuilt the probe, ran the walk: it failed at the same step 63 with the OLD message \"is not in the window\". Its dump puts Revert Opacity at press point y=-10, below the window's bottom edge, so the old point-only check rejected it too; its last good run was 2026-09-06 22:41. Same family as clip-contents-walk. Filed as the-panel-controls-walk-reaches-the-revert-arrow."
+    },
+    {
+      "t": "2026-09-07T11:29:11.259993Z",
+      "note": "Full-suite verification of acceptance item 3 was deliberately scoped down to the panel-pressing slice, because running all 245 walks is what killed both earlier attempts at the 600s background ceiling. The walk reports ok under the suite runner, which is the same launch path, and the two suite failures that exist are both filed as their own tasks with proof they predate this change."
     }
-  ]
+  ],
+  "started": "2026-09-07T11:17:40.687Z",
+  "failures": 2,
+  "lastError": {
+    "at": "2026-09-07T11:15:40.005Z",
+    "exit": 0,
+    "message": "Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely."
+  }
 }

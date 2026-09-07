@@ -1,0 +1,29 @@
+{
+  "feature": "Pick two layers and read every Mixed control in one look",
+  "epic": "unmanned-loop",
+  "summary": "Pick two text layers that differ and the panel says Mixed in five different ways at once: a menu, a segmented row, three fields, a colour chip and a slider. There are now two real pictures of that, top half and bottom half, because the panel is taller than the window can be. The scripted walk that guards this used to report a pass while quietly clicking on nothing; it now presses all four of the controls it claims to press, and the pictures are the proof.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Any document with two text layers in it.",
+  "try": [
+    { "do": "Press T, click on the canvas, type Sign in, press Command Return." },
+    { "do": "Press T, click lower down, type Use your account, press Command Return." },
+    { "do": "Press V, click the first label, and set its Size to 48 pt." },
+    { "do": "Click the first label, then Shift click the second so both are picked." },
+    { "do": "Read the top half of the panel: Size, Across, Y, W, H and the text colour.", "shot": "2026-09-07-mixed-one-look-1-upper.png" },
+    { "do": "Scroll the panel to the bottom and read Corner Radius.", "shot": "2026-09-07-mixed-one-look-2-lower.png" },
+    { "do": "Drag the Corner Radius slider, then look at both labels on the canvas.", "shot": "2026-09-07-mixed-one-look-3-after-lower.png" }
+  ],
+  "evaluate": [
+    "The word Mixed appears five ways on one screen: as a menu's title, as a grey word beside the Across label with no button lit, as right aligned text in a field, as a filled pill next to the colour swatch, and as a value at the end of the Corner Radius row. Does that read as one idea, or as five?",
+    "A Mixed slider still parks its knob at a definite spot, and after setting 20 pt the knob barely moves. Can you tell Mixed from a real value by looking at the slider alone, and should you be able to?",
+    "Across says Mixed by lighting none of its three buttons. Is nothing lit the right way to say the two layers disagree, or does it read as no alignment at all?",
+    "After setting Size, Across, W and Corner Radius, the Y and H fields and the text colour are still Mixed because nothing touched them. Is that reassuring, or does a panel half full of Mixed feel unfinished?",
+    "You cannot see Size Mixed and Corner Radius Mixed at the same time on this screen. Does that matter in practice, or do you only ever look at one section at a time?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so all three pictures are real captures of the window, cropped to the panel. They are not offscreen renders.",
+    "The offscreen render the walks always take draws the panel as a blank white column, so before this there was no picture of the panel at all unless the screen could be recorded. Two snapshots taken either side of a panel scroll came back byte for byte identical. Filed separately as a picture of a walk shows the properties panel, not a white gap.",
+    "The panel does not fit. With two layers picked it runs about 1310 pt against the 1028 pt this display allows, so Corner Radius sits roughly 290 pt below the fold and the walk has to scroll twice to reach it. Filed separately as the properties panel fits on the screen it has.",
+    "The walk was previously lying. It pressed Corner Radius, was told it worked, and the radius stayed at zero: the press only ever checked that the point it aimed at was inside the window, and a row scrolled until a sliver showed still passed that test. So the fourth Mixed control was never actually being checked. A press now needs the whole control showing, and refuses with a message naming scrollPanel otherwise.",
+    "Typing 200 into W gives both layers a reported width of 204 in the layer tree. Both agree, so the field reached both layers, but the number the tree prints is not the number typed. Not chased here."
+  ]
+}

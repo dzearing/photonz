@@ -1,0 +1,28 @@
+{
+  "id": "the-clip-contents-walk-reaches-the-switch-it-is",
+  "title": "The clip contents walk reaches the switch it is written to flip",
+  "goal": "One of the scripted walks that checks what happens when a group is too small for what is inside it stops partway through, because the Clip contents switch it wants to flip now sits below the bottom of the window. Nothing is checking that part of the app any more.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1390,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T11:05:30.596Z",
+  "updated": "2026-09-07T11:05:30.597Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured on 2026-09-07, NOT caused by the stricter press rule that landed the same day. Proof: its own dump /tmp/photonz-playtest/clip-contents/panel-2-overflows.json puts \"Clip contents\" (Group, off) at x=1033 y=-65. The panel dump prints the press POINT (PlaytestHarness.readPanel -> control.point), and y=-65 is 65pt BELOW the window content bottom edge, so the OLD point-only check rejected it too. Last good run was 2026-09-06 22:09 (panel-3-cut.json, panel-4-not-clicked.json and panel-5-back.json in that folder still carry that timestamp; only panel-1 and panel-2 are from today). So it regressed when rows were added to the dock between then and now. Likely fix is a scrollPanel step before step 22, the same shape as the fix mixed-one-look-walk got. Related: the-properties-panel-fits-on-the-screen-it-has, which is the app side of the same squeeze.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/clip-contents-walk.json passes on its own",
+    "It passes twice in a row",
+    "The walk still checks what it was written to check: a group that is too small, and clipping turned on and off",
+    "If the switch is out of reach because the panel is too tall, that is said in the log and pointed at the panel task rather than quietly worked around"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T11:05:30.596Z",
+      "note": "created (manual)"
+    }
+  ]
+}

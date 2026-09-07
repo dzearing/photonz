@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/mixed-one-look",
-  "seed": "Two labels are typed on a blank canvas. One is made bigger, given a corner radius, centred and repainted, so that picking both makes every kind of control in the dock answer Mixed at once: a menu, a slider, a field and a segmented row of pictures. The walk photographs the whole dock in that state, which is the only way to see whether the word reads the same way in all four. It starts from the text settings a fresh machine would have, because it changes the remembered size on its way through. Then a value is set from each Mixed control in turn, to prove a control saying Mixed is still a control: what you choose reaches every picked layer and the word goes away.",
+  "seed": "Two labels are typed on a blank canvas. One is made bigger, given a corner radius, centred and repainted, so that picking both makes every kind of control in the dock answer Mixed at once: a menu, a slider, a field and a segmented row of pictures. The dock is taller than the window, so the walk photographs it in two halves, top then bottom, which together are the only way to see whether the word reads the same way in all four. It starts from the text settings a fresh machine would have, because it changes the remembered size on its way through. Then a value is set from each Mixed control in turn, to prove a control saying Mixed is still a control: what you choose reaches every picked layer and the word goes away, and the same two halves are photographed again to show it.",
   "setup": {
     "forget": [
       "text"
@@ -100,6 +100,24 @@
     },
     {
       "do": "press",
+      "control": "align center",
+      "in": "Across"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text section",
+      "by": -400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
       "control": "Slider",
       "in": "Corner Radius"
     },
@@ -108,9 +126,13 @@
       "seconds": 0.6
     },
     {
-      "do": "press",
-      "control": "align center",
-      "in": "Across"
+      "do": "scrollPanel",
+      "row": "Text section",
+      "by": 400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "action",
@@ -161,11 +183,33 @@
     {
       "do": "describe",
       "stage": "2-two-picked-mixed",
-      "note": "two labels picked that differ in size, roundness and alignment: a menu, a slider, four fields and a segmented row all have to say Mixed at once, and say it the same way"
+      "note": "two labels picked that differ in size, roundness, width and alignment: a menu, a slider, three fields, a colour chip and a segmented row all have to say Mixed at once, and say it the same way"
     },
     {
       "do": "snapshot",
       "name": "1-mixed-dock"
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text section",
+      "by": -400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "2-mixed-dock-lower"
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text section",
+      "by": 400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "panelMenu",
@@ -177,23 +221,9 @@
       "seconds": 0.8
     },
     {
-      "do": "scrollPanel",
-      "row": "Text section",
-      "by": -160
-    },
-    {
       "do": "press",
       "control": "align center",
       "in": "Across"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.6
-    },
-    {
-      "do": "press",
-      "control": "Slider",
-      "in": "Corner Radius"
     },
     {
       "do": "wait",
@@ -216,13 +246,44 @@
       "seconds": 0.8
     },
     {
-      "do": "describe",
-      "stage": "3-set-from-mixed",
-      "note": "a value chosen from each Mixed control in turn: the menu, the segmented row, the slider and a field. Every one of them has to have reached BOTH labels, and every control has to have stopped saying Mixed"
+      "do": "scrollPanel",
+      "row": "Text section",
+      "by": -400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
     },
     {
       "do": "snapshot",
-      "name": "2-after-setting"
+      "name": "3-after-setting-lower"
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text section",
+      "by": 400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-set-from-mixed",
+      "note": "a value chosen from each Mixed control in turn: the Size menu, the Across row, the W field and the Corner Radius slider. Every one of those four has to have reached BOTH labels and stopped saying Mixed. Y, H and the text colour are still Mixed on purpose: nothing here set them, and a control nobody touched must not quietly agree on a value"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-after-setting"
     }
   ]
 }

@@ -1,0 +1,28 @@
+{
+  "id": "the-panel-controls-walk-reaches-the-revert-arrow",
+  "title": "The panel controls walk reaches the revert arrow it is written to press",
+  "goal": "One of the scripted walks that checks the properties panel stops partway through, because the little arrow that puts a copied layer's opacity back to whatever the original says now sits below the bottom of the window. Nothing is checking that part of the app any more.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1400,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T11:27:48.780Z",
+  "updated": "2026-09-07T11:27:48.781Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured on 2026-09-07 and PROVEN not caused by the stricter press rule that landed the same day: the walk was stashed back to the pre-change build (git stash of PlaytestHarness.swift + PlaytestPanelPress.swift), the probe rebuilt, and it failed at the same step 63 with the OLD message \"is not in the window\". Its own dump /tmp/photonz-playtest/panel-controls/panel-8-own-opacity.json puts \"Revert Opacity\" at press point x=1082 y=-10, which is below the window content bottom edge, so the old point-only check rejected it too. Last good run was 2026-09-06 22:41 (panel-9-following-again.json in that folder still carries that timestamp), so it regressed when rows were added to the dock. Likely fix is a scrollPanel step before step 62, the same shape as the fix mixed-one-look-walk got. Same family as the-clip-contents-walk-reaches-the-switch-it-is; the app side of the squeeze is the-properties-panel-fits-on-the-screen-it-has.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json passes on its own",
+    "It passes twice in a row",
+    "The walk still checks what it was written to check: an overridden opacity, the revert arrow, and the override going away",
+    "If the arrow is out of reach because the panel is too tall, that is said in the log and pointed at the panel task rather than quietly worked around"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T11:27:48.781Z",
+      "note": "created (manual)"
+    }
+  ]
+}

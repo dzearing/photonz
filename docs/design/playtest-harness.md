@@ -406,6 +406,17 @@ segment is a real AppKit control and does know. And a control scrolled out of
 the dock is still built and still listed, but a press refuses it and asks for a
 `scrollPanel` first, rather than clicking a spot that is not on screen.
 
+The second of those means the WHOLE control, not the one point a press aims at.
+A row scrolled until only its last two points show still has those two points
+inside the window, and a press at its middle lands just off the panel's edge and
+changes nothing: mixed-one-look-walk pressed Corner Radius that way twice and
+was told it worked both times while the radius stayed at zero. So a press now
+asks for the control's whole box, inside the window and inside what is left of
+it after the dock's scrolling area has cut it off, and the `inWindow` flag a
+`panel` step prints answers the same question. A walk that starts failing with
+"is not where a person could click it" is being told the truth for the first
+time: put a `scrollPanel` in front of the press.
+
 ## Reading the cost of a step
 
 A `click` resets a meter on the main run loop; the click's own log line and
@@ -507,6 +518,13 @@ selection latency (numbers from 2026-09-03 in its commit).
 - **Glass and vibrancy do not render offscreen**: a snapshot shows the
   window's content, not the system's translucency. Toasts and the capture
   overlay are not covered; the walk starts at the editor.
+- **The properties dock does not render offscreen at all.** `<name>.png` draws
+  the canvas and the tool bar and leaves the dock's whole column white, so two
+  snapshots taken either side of a `scrollPanel` come back byte for byte
+  identical (measured on mixed-one-look-walk, 2026-09-07). Nothing about the
+  dock can be judged from an offscreen render: use `<name>-sc.png`, and if the
+  Screen Recording grant is missing, say in the audit that there is no picture
+  of the dock rather than showing a blank one.
 - **The offscreen render gets some colors wrong.** It resolves each layer's
   colors on its own, and a plain tool button has come out pure black on the
   dark bar while its neighbour came out pure white. Never judge brightness,

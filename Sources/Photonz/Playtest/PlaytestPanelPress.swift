@@ -32,6 +32,18 @@ struct PlaytestPressTarget {
     /// middle; `pressed(across:)` moves along this instead, which is the only
     /// way to put a slider's knob anywhere but halfway.
     var box: CGRect = .zero
+    /// The part of that box a person can actually see, in the same
+    /// coordinates: what is left of it after the dock's scrolling area has cut
+    /// off whatever has run past its top or bottom edge.
+    ///
+    /// This is not the same as being inside the window. A row scrolled until
+    /// only its last two points show is still inside the window, and a press
+    /// aimed at its middle lands on the panel's edge and changes nothing --
+    /// which is exactly how a walk came to press Corner Radius twice and
+    /// report a pass both times while the radius never moved. `.infinite`
+    /// means nothing is known to clip this one, so only the window bounds
+    /// decide.
+    var visible: CGRect = .infinite
     /// Nothing happens if this is pressed, and the walk should say so rather
     /// than reporting a pass.
     var isEnabled: Bool
@@ -64,6 +76,7 @@ enum PlaytestPanelPress {
                                     named fields: [PanelTargetView]) -> [PlaytestPressTarget] {
         segmentedControls(in: content).flatMap { control -> [PlaytestPressTarget] in
             let box = control.convert(control.bounds, to: nil)
+            let shown = control.convert(control.visibleRect, to: nil)
             let chosen = control.selectedSegment
             let row = field(at: box, among: fields)
             let anchors = hintAnchors(in: content)
@@ -81,6 +94,7 @@ enum PlaytestPanelPress {
                     name: label, detail: detail,
                     point: point,
                     box: box,
+                    visible: shown,
                     isEnabled: control.isEnabled && control.isEnabled(forSegment: index),
                     window: control.window)
             }

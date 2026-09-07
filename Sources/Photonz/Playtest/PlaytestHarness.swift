@@ -1359,10 +1359,12 @@ private final class Run {
         // popover and not the editor: the point is in its coordinates and the
         // event has to be addressed to it, or the click lands on the editor
         // window at whatever happens to be under those numbers.
-        guard let window = target.window, let content = window.contentView,
-              content.convert(content.bounds, to: nil).contains(target.point) else {
-            throw Failure(description: "the control \"\(target.name)\" is not in the window; "
-                + "scroll to it with a \"scrollPanel\" step first")
+        guard let window = target.window, window.contentView != nil, Self.isInReach(target) else {
+            throw Failure(description: "the control \"\(target.name)\" is not where a person could "
+                + "click it: it is off the window, or the dock has scrolled it far enough that the "
+                + "panel's edge cuts across the point a press would land on. Scroll to it with a "
+                + "\"scrollPanel\" step first. A `panel` step lists every control with an "
+                + "\"inWindow\" flag that says which ones are reachable right now.")
         }
         let flags = eventFlags(modifiers)
         let stamp = ProcessInfo.processInfo.systemUptime
@@ -1654,7 +1656,9 @@ private final class Run {
             }
             return PlaytestPressTarget(name: target.name, detail: pieces.joined(separator: ", "),
                                        point: CGPoint(x: frame.midX, y: frame.midY),
-                                       box: frame, isEnabled: true, window: window)
+                                       box: frame,
+                                       visible: target.convert(target.visibleRect, to: nil),
+                                       isEnabled: true, window: window)
         }
         return marked + PlaytestPanelPress.segments(in: content, named: fields)
     }
@@ -1663,9 +1667,24 @@ private final class Run {
     /// the dock is still built and still listed, but out of reach until the
     /// walk scrolls to it. Judged against the control's OWN window, so a
     /// popover's contents are not measured against the editor behind them.
+    ///
+    /// Being inside the window is not enough, and neither is the one point a
+    /// press aims at. The dock scrolls, and a row pushed until only a sliver
+    /// of it shows still has that sliver inside the window: a press aimed at
+    /// its middle lands a couple of points off the window's own edge and
+    /// changes nothing, which is how a walk pressed Corner Radius and was told
+    /// it worked while the radius stayed at zero. So the whole control has to
+    /// be showing before a walk may press it. Anything less is a control a
+    /// person would scroll to first, and so is a walk.
     private static func isInReach(_ target: PlaytestPressTarget) -> Bool {
         guard let content = target.window?.contentView else { return false }
-        return content.convert(content.bounds, to: nil).contains(target.point)
+        let inWindow = content.convert(content.bounds, to: nil)
+        guard inWindow.contains(target.point), target.visible.contains(target.point) else { return false }
+        // A marker with no size of its own has only its point to go on.
+        // `contains` answers no to an empty rectangle whichever side it is on,
+        // so asking about one would wrongly put every such control out of reach.
+        guard !target.box.isEmpty else { return true }
+        return inWindow.contains(target.box) && target.visible.contains(target.box)
     }
 
     /// What the panel is showing, in the names a walk has to use.
