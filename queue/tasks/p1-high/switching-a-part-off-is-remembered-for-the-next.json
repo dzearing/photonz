@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T03:27:08.256Z",
-  "updated": "2026-09-07T03:27:08.292Z",
+  "updated": "2026-09-07T04:24:34.452Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-06. The mechanism exists and one of the three switches uses it, which is why the behaviour is inconsistent rather than absent. setColorEnabled (Sources/Photonz/EditorState+ColorStyles.swift line 427) ends by calling armToolsFromSelection, with a comment saying switching a box's inside off arms the tool with no inside so the next box comes out an outline. setOutlineEnabled (line 370) does the document change and returns, arming nothing, so the outline switch is forgotten. setSelectionShadowEnabled (line 340) routes through setLayerStyle, which does call rememberStyleDefault, so a shadow switched off ought to stick already; confirm that by test rather than by reading, since it is the same claim this bug disproved for the outline. Note the existing rule in rememberStyleDefault (EditorState+LayersPanel.swift line 270) that only a single layer edit teaches the tool, because over a selection there is no one style to hand it; keep that rule rather than widening it. The outline is the awkward one because a shape can carry its own stroke or a layer style border and setOutlineEnabled handles both, stashing widths in rememberedOutlineWidths to restore later; whatever is armed has to say the part is OFF rather than that its width is zero, or switching it back on will bring back a zero width outline that draws nothing.",
@@ -30,6 +30,47 @@
     {
       "t": "2026-09-07T03:27:08.291Z",
       "note": "seq 180 -> 4"
+    },
+    {
+      "t": "2026-09-07T04:24:34.452Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "Reproduced on the probe before touching anything: drew a box, unticked Outline, drew another, and the Outline tick was back on. The Fill and the Shadow switches both stuck already, so the report was about the outline alone."
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "Adversarial review before building. The outline is the awkward part because a shape strokes its own path while a picture wears a ring its styling draws, and only the first has a tool to teach. Kept the shortest version: read what the shapes are wearing AFTER the press, per kind of shape, and hand that to the tool. No new switch, no new setting, nothing on screen changes."
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "Found a case the plain version gets wrong: two boxes of 2pt and 10pt switched off and back on come back different, so a rule of \"only arm when they agree\" would leave the tool saying no line right after the person put the line back. So whether the part is there is always handed over and only the thickness is withheld, and the tool keeps its own thickness unless that thickness is the nothing the switch just left there."
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "PhotonzCore/ToolArming.swift gained outlineArming(layerIDs:), mirroring toolArming for colour: per kind of shape, locked layers have no say, a ring on a picture or a highlight is left to the layer-style memory. 13 tests in Tests/PhotonzCoreTests/OutlineArmingTests.swift, written first."
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "EditorState.setOutlineEnabled now arms from that reading and also calls rememberStyleDefault, so a highlight or a measure ring switched off rides along with the rest of that layer’s remembered look. Shared file, no Next fork, so both releases have it."
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "Verified on the probe, Screen Recording granted. Scripts/playtest/parts-off-is-remembered-walk.json: box, outline off, next box off; ellipse untouched; outline back on, next box on; fill off inherited; shadow on inherited. All eight panel readings correct."
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "Width verified in pixels rather than by eye: a box thickened to 9pt, its outline switched off and back on, then a fresh box drawn measures a 9px ring in the offscreen render. Multi-selection verified the same way: 9pt and 3pt boxes switched off and on leave the next box at the standard 4pt, so the tool was not handed one of theirs."
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "Survives quitting: planted the remembered styles in the probe’s own settings, launched cold, drew a box, and it came out with no outline while the ellipse was untouched. The Codable round trip is pinned by a test too."
+    },
+    {
+      "t": "2026-09-07T04:46:28.428Z",
+      "note": "Audit queue/audits/2026-09-06-parts-off-is-remembered.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-07T04:24:34.451Z"
 }

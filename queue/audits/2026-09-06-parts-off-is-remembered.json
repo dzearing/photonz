@@ -1,0 +1,28 @@
+{
+  "feature": "Switching a part off is remembered for the next shape",
+  "epic": "ui-building",
+  "summary": "Take a box's outline off and the next box comes out with no outline, the way taking its inside off already worked. Every part with a switch now teaches the tool that draws it, per kind of shape, and it lasts until you change it back.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on: the Appearance list is on by default there.",
+  "try": [
+    { "do": "Draw a rectangle." },
+    { "do": "In Appearance, untick Outline." },
+    { "do": "Draw another rectangle, and look at its Outline tick.", "shot": "2026-09-06-parts-off-second-box.png" },
+    { "do": "Draw an ellipse: its outline should still be there, untouched." },
+    { "do": "Tick Outline back on for one of the boxes, then draw another box." },
+    { "do": "Untick Fill on it, draw another, then tick Shadow on and draw one more.", "shot": "2026-09-06-parts-off-every-part.png" },
+    { "do": "Quit Photonz, open it again, and draw a rectangle: it starts where you left it." }
+  ],
+  "evaluate": [
+    "Does the next shape starting the way you left the last one feel right, or do you want a fresh box to be a fresh box?",
+    "A box's outline and its inside are the same red by default, so switching the outline off changes nothing you can see on the canvas until you repaint one of them. Is that worth fixing?",
+    "Switching both the inside and the outline off means the next shape you draw is invisible until you switch something back on. Should the app stop you, or is the selection frame enough to find it by?",
+    "Turning a part off, drawing a few shapes, then turning it back on: does the tool keep up with you, or does it feel like it is a step behind?",
+    "Does anything else in the panel feel like it should stick and does not?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures are real captures of the window rather than offscreen renders.",
+    "Two boxes picked at once, with lines of different thickness, switched off and then back on: the tool learns that boxes have a line, but the thickness has to come from somewhere and there is no one answer, so it falls back to the standard 4pt rather than the thickness the tool held before. Rare, and the alternative would be arming a number nobody chose.",
+    "A shape drawn with no outline that you then switch on comes back at 4pt, not at the thickness of some earlier shape. Nothing remembers a width that shape never had.",
+    "The shadow switch and the fill switch already taught the tool before this change. Only the outline did not, which is why the behaviour looked random rather than missing. Both are now covered by the same walk, Scripts/playtest/parts-off-is-remembered-walk.json."
+  ]
+}

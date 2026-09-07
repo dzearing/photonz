@@ -113,3 +113,72 @@ public extension AnnotationStyles {
         setColorStyleID(styleID, slot: slot, forShape: shape, name: name)
     }
 }
+
+/// One kind of shape, and the line the tool that draws it comes away with after
+/// the Outline switch settled the shapes of that kind.
+public struct OutlineArming: Hashable, Sendable {
+    public let shape: AnnotationShape
+    /// Zero when the line was switched off, which is a real answer: the next
+    /// box of that kind comes out with no line round it, exactly the way a nil
+    /// paint on the Fill row means the next one comes out empty.
+    ///
+    /// Nil means the line is ON but there is no ONE thickness to hand over,
+    /// because the shapes it reached came back at widths that differ. The tool
+    /// keeps the thickness it already had rather than being given a number
+    /// nobody chose.
+    public let width: CGFloat?
+
+    public init(shape: AnnotationShape, width: CGFloat?) {
+        self.shape = shape
+        self.width = width
+    }
+}
+
+public extension PhotonzDocument {
+
+    /// Which tools the Outline switch leaves armed, and with what line.
+    ///
+    /// Switching a box's outline off is the person saying they want boxes with
+    /// no outline, the same way emptying its inside says they want boxes with
+    /// no fill and pulling Thickness says how thick the next one is. Read AFTER
+    /// the change, so it is the line the shapes are wearing now rather than the
+    /// one that was aimed at them.
+    ///
+    /// Every KIND is answered for on its own, so taking the outline off a box
+    /// leaves the ellipse tool alone.
+    ///
+    /// WHETHER the line is there is always handed over: the switch just set it,
+    /// so there is nothing to guess. The THICKNESS is only handed over when the
+    /// shapes agree on one. Switch two boxes of 2 and 10 off and then on again
+    /// and they come back different, so the tool learns that boxes have a line
+    /// and keeps its own thickness — being left saying "no line" right after
+    /// somebody put the line back is the thing that would surprise them.
+    ///
+    /// Locked layers have no say, for the same reason they have none on a
+    /// colour row: the switch could not reach them, so letting one hold the old
+    /// width would stop the press arming anything.
+    ///
+    /// A ring round a picture, a label or a highlight is not here. That ring is
+    /// styling laid over the layer rather than part of the shape, so it rides
+    /// along with the rest of that layer's remembered look — the same way
+    /// pulling its width in the Effects section already does.
+    func outlineArming(layerIDs: [UUID]) -> [OutlineArming] {
+        var order: [AnnotationShape] = []
+        var widths: [AnnotationShape: [CGFloat]] = [:]
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked, layer.drawsItsOwnOutline,
+                  let shape = layer.annotation?.shape else { continue }
+            if widths[shape] == nil { order.append(shape) }
+            widths[shape, default: []].append(layer.outlineWidth)
+        }
+        return order.compactMap { shape in
+            guard let seen = widths[shape], let first = seen.first else { return nil }
+            // A kind that cannot even agree whether it HAS a line is a kind the
+            // switch only half reached, so it teaches nothing.
+            let on = first > 0
+            guard seen.allSatisfy({ ($0 > 0) == on }) else { return nil }
+            let agreed = seen.allSatisfy { $0 == first }
+            return OutlineArming(shape: shape, width: agreed ? first : nil)
+        }
+    }
+}

@@ -10419,3 +10419,43 @@ Next: the queue. Two things this left on the table, both already filed — a par
 that only some of the picked layers have still shows no settings at all, and
 Shadow's softness slider and the Effects section both say "Blur", which now
 collide on screen more often than they used to.
+
+## 2026-09-06 — switching a part off is remembered for the next shape
+
+Reported by the user: take a rectangle's outline off, draw another rectangle,
+and the outline is back. Reproduced on the probe before touching anything, and
+the report turned out to be about the outline alone: the Fill switch already
+armed the tool (`setColorEnabled` ends in `armToolsFromSelection`) and the
+Shadow switch already did too (it routes through `setLayerStyle`, which calls
+`rememberStyleDefault`). `setOutlineEnabled` changed the document and armed
+nothing, which is why the behaviour read as random rather than missing.
+
+`PhotonzCore/ToolArming.swift` gained `outlineArming(layerIDs:)`, the outline's
+answer to the colour rows' `toolArming`: read AFTER the press, one answer per
+kind of shape, locked layers with no say, and a ring round a picture or a
+highlight left out because that ring is styling laid over the layer and is
+already remembered with the rest of its look.
+
+The one judgment call. A rule of "arm only when they agree" gets a real case
+wrong: switch two boxes of 2pt and 10pt off and then back on and they come back
+different, so the tool would be left saying "no line" a moment after somebody
+put the line back. So WHETHER the part is there is always handed over, since
+the press just set it, and only the THICKNESS is withheld. The tool then keeps
+its own thickness, unless that thickness is the zero this same switch left
+there, in which case a new shape starts at the standard 4pt.
+
+Verified on the probe with Screen Recording granted, so both audit pictures are
+real window captures. New walk `Scripts/playtest/parts-off-is-remembered-walk.json`
+covers all three switches and an ellipse that must stay untouched. Two things
+were measured in pixels rather than trusted: a box thickened to 9pt, switched
+off and back on, leaves the next box wearing a 9px ring, and the mixed 9pt/3pt
+selection leaves the next box at 4pt. Survival across a launch was checked by
+planting the remembered styles in the probe's own settings and starting it cold.
+
+Suite green at 4253. Audit:
+`queue/audits/2026-09-06-parts-off-is-remembered.json`.
+
+Next: the queue. The audit asks two questions worth an answer — a default
+rectangle's outline and inside are the same red, so switching the outline off
+changes nothing you can see until one of them is repainted, and switching both
+off means the next shape you draw is invisible until something goes back on.

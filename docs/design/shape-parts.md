@@ -93,6 +93,30 @@ by the window rather than the document, so switching straight back on restores
 it, and reopening the file tomorrow brings the outline back at the width a fresh
 one wears. Undo restores it exactly, either way.
 
+### The tool learns from the switch
+
+**Switching a part off is remembered for the next shape you draw**, the same way
+picking a colour, pulling Width or pulling Corner Radius already is. Take a
+box's outline off and the next box comes out with no outline; put it back and
+the next box has one, at the width you left it. The user reported the missing
+half of this on 2026-09-06: the Fill switch taught the tool and the Outline
+switch did not, so the outline came straight back on the next box.
+
+The memory is per kind of shape, so taking a rectangle's outline off leaves the
+ellipse and the arrow alone, and it lives with the other tool defaults, so it
+survives quitting the app.
+
+Over several layers picked at once, the switch teaches only what they agree on
+(`PhotonzCore/ToolArming.swift`). Whether the part is there is never in doubt,
+because the press just set it. Its thickness can be: switch two boxes of 2pt
+and 10pt off and back on and they come back different, so the tool learns that
+boxes have an outline and keeps the thickness it already had rather than being
+handed one of theirs.
+
+A ring round a picture, a label or a highlight is styling laid over the layer
+rather than part of the shape, so it is remembered with the rest of that layer's
+look, the way pulling its width under Effects already is.
+
 ### What is NOT a part
 
 - **Opacity and Blur** are laid over the whole finished layer, whatever parts it

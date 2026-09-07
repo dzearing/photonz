@@ -367,6 +367,13 @@ extension EditorState {
     /// back on brings the same ring back rather than a default one. The memory
     /// is this window's, not the document's: an outline that is off is off, and
     /// nothing about the saved file records what it used to be.
+    ///
+    /// It also arms the tool, so the next box comes out the way you left the
+    /// last one. Switching a part off is a choice like any other the panel
+    /// takes — the Fill switch beside it, the Width under it, Corner Radius,
+    /// the colour — and every one of those already reaches the tool. This one
+    /// did not, which is why taking a box's outline off and drawing another
+    /// brought the outline straight back (reported by the user on 2026-09-06).
     func setOutlineEnabled(ids: [UUID], on: Bool) {
         guard let document else { return }
         let targets = ids.filter { document.layer(id: $0)?.isLocked == false }
@@ -383,6 +390,36 @@ extension EditorState {
             _ = $0.setOutlineEnabled(layerIDs: targets, on: on,
                                      restoring: self.rememberedOutlineWidths)
         }
+        armOutlineFromSelection(targets)
+    }
+
+    /// Hands the line the picked shapes are wearing NOW to the tools that draw
+    /// them. Read after the change, per kind of shape, so taking a box's
+    /// outline off leaves the ellipse tool alone and a selection that ends up
+    /// disagreeing teaches nothing (`PhotonzCore/ToolArming.swift`).
+    private func armOutlineFromSelection(_ targets: [UUID]) {
+        guard let document else { return }
+        let arming = document.outlineArming(layerIDs: targets)
+        if !arming.isEmpty {
+            for entry in arming {
+                if let width = entry.width {
+                    annotationStyles.setStrokeWidth(width, forShape: entry.shape)
+                } else if annotationStyles.strokeWidth(forShape: entry.shape) <= 0 {
+                    // They came back on at widths that differ, so the tool keeps
+                    // its own thickness — unless that thickness is the nothing
+                    // this same switch left there a moment ago, which would draw
+                    // the next box bare right after the line was put back.
+                    annotationStyles.setStrokeWidth(AnnotationContent.defaultStrokeWidth,
+                                                    forShape: entry.shape)
+                }
+            }
+            saveAnnotationStyles()
+        }
+        // A ring round a picture, a label or a highlight is styling laid over
+        // the layer rather than part of the shape, so it rides along with the
+        // rest of that layer's remembered look — exactly the way pulling its
+        // width in the Effects section already does, single edits only.
+        rememberStyleDefault(of: targets)
     }
 
     /// What one color row shows: the picked layers that have a color in this
