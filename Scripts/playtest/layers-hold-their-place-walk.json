@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/layers-hold-their-place",
+  "seed": "Opening a group in the layers list used to make the list taller, which carried the size, layout and appearance controls under it down the panel and off the bottom of the screen. The walk drops a Card, notes where the controls sit, twists the card open, and looks for the controls in exactly the same places.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "dragTile", "tile": "Card", "to": [420, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "describe", "stage": "1-shut", "note": "the Card is picked and shut. The layers list shows two rows, and the Layout controls sit under it." },
+    { "do": "panel", "stage": "1-shut" },
+    { "do": "snapshot", "name": "layers-place-1-shut" },
+
+    { "do": "press", "control": "Twist", "in": "Card" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-open", "note": "THE TEST: the four layers inside the card have appeared in the list, and every control under the list is still exactly where it was." },
+    { "do": "panel", "stage": "2-open" },
+    { "do": "snapshot", "name": "layers-place-2-open" },
+
+    { "do": "press", "control": "Twist", "in": "Card" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-shut-again", "note": "THE TEST: shutting the card again also moves nothing." },
+    { "do": "panel", "stage": "3-shut-again" },
+    { "do": "snapshot", "name": "layers-place-3-shut-again" }
+  ]
+}

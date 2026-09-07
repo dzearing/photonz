@@ -1480,6 +1480,12 @@ struct LayersListView: View {
     /// sections off the bottom of the inspector — you keep the other palettes in
     /// view and scroll layers on their own.
     ///
+    /// The area is sized to every row a twist could reveal rather than to the
+    /// rows on screen, so opening a group scrolls inside this height instead
+    /// of changing it. Before that, twisting a four layer group open in a two
+    /// layer document made the area 80 points taller and carried the Layout
+    /// controls off the bottom of the panel.
+    ///
     /// Five rows at rest. It was eight, which in a document with any real number
     /// of layers spent a third of the panel on a list you were not looking at
     /// and pushed the look of the thing off the bottom. Drag the grabber under
@@ -1506,12 +1512,16 @@ struct LayersListView: View {
     /// rows, which reports a smaller height, which shrinks the frame again.
     var body: some View {
         let displays = editorState.layerRows
-        let natural = LayerListMetrics.naturalHeight(rowCount: displays.count,
-                                                     rowHeight: rowHeight,
-                                                     canvasRowHeight: canvasRowHeight)
+        // The area is sized to every row a twist COULD reveal, not to the rows
+        // showing right now, so opening a group scrolls inside the list rather
+        // than growing it and pushing the controls under it off the panel.
+        let reserved = LayerListMetrics.naturalHeight(
+            rowCount: editorState.layerListReservedRowCount(visibleRowCount: displays.count),
+            rowHeight: rowHeight,
+            canvasRowHeight: canvasRowHeight)
         // The height the list is actually given, which is also the height of
         // the window of rows worth drawing pictures for.
-        let viewport = min(natural, maxHeight)
+        let viewport = PanelAreaResize.height(contentHeight: reserved, ceiling: maxHeight)
         return VStack(spacing: 0) {
             ScrollView(.vertical) {
                 rows(displays, viewport: viewport)
@@ -1530,7 +1540,7 @@ struct LayersListView: View {
             }
 
             multiSelectionCount
-            resizeHandle(natural: natural)
+            resizeHandle(reserved: reserved)
         }
         // The Rename command asks for a row's field. Only rows this list shows
         // answer, so the Measurements list next door does not open a second
@@ -1639,10 +1649,14 @@ struct LayersListView: View {
     /// only while the list is taller than the area's floor, since below that
     /// the list is already showing everything it has and no drag could change
     /// the picture.
-    private func resizeHandle(natural: CGFloat) -> some View {
+    ///
+    /// `reserved` is the room the area keeps, which counts the rows a shut
+    /// group is hiding: the same number the area is drawn at, so the bar and
+    /// the frame under it can never disagree about how far a drag may go.
+    private func resizeHandle(reserved: CGFloat) -> some View {
         PanelAreaResizeHandle(maxHeight: $maxHeight,
                               area: "Layers",
-                              contentHeight: natural,
+                              contentHeight: reserved,
                               minHeight: Self.minHeight,
                               maxAllowedHeight: Self.maxAllowedHeight,
                               help: "Drag to resize the layers area")

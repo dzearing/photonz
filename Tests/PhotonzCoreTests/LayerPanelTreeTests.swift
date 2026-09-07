@@ -312,4 +312,31 @@ struct LayerPanelTreeTests {
         #expect(PhotonzDocument.rowsCarried(byDragging: c, selection: [a, b]) == [c])
         #expect(PhotonzDocument.rowsCarried(byDragging: a, selection: []) == [a])
     }
+
+    // MARK: - Room the list keeps
+
+    /// What the layers area sizes itself to. Counting the rows a twist COULD
+    /// reveal is what stops opening a group from shoving the controls under
+    /// the list off the bottom of the panel.
+    @Test("Every layer at every depth counts as a row the list could show")
+    func fullyExpandedCountsTheWholeTree() {
+        let document = doc([leaf("Background"),
+                            group("Card", [leaf("Picture"), leaf("Title"),
+                                           group("Body", [leaf("Line")])])])
+        #expect(document.fullyExpandedRowCount == 6)
+        // ...and it does not care which groups happen to be open.
+        #expect(document.panelRows(expanded: []).count == 2)
+        #expect(document.panelRows(expanded: document.openableGroupIDs).count == 6)
+    }
+
+    @Test("A flat document keeps room for exactly its layers")
+    func fullyExpandedFlatDocument() {
+        let document = doc([leaf("A"), leaf("B"), leaf("C")])
+        #expect(document.fullyExpandedRowCount == 3)
+    }
+
+    @Test("An empty document keeps room for nothing")
+    func fullyExpandedEmptyDocument() {
+        #expect(doc([]).fullyExpandedRowCount == 0)
+    }
 }

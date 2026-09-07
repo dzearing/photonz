@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1610,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T07:54:51.552Z",
-  "updated": "2026-09-07T07:54:51.553Z",
+  "updated": "2026-09-07T08:23:23.172064Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing out-of-view-mark-walk on 2026-09-07: the walk had to gain a scrollPanel step because pressing Twist on the Card added four rows and put Clip contents below the fold. Panel dumps: /tmp/photonz-playtest/out-of-view-mark/panel-1-overflows.json vs panel-3-open-card.json. Likely shape: give the layers list its own scroll area with a bounded height inside the dock column, so the inspector sections keep their place. Next release only.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-07T07:54:51.553Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T08:14:48.239Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T08:23:23.172064Z",
+      "note": "Adversarial review before building. Reproduced from the 2026-09-07 panel dumps: opening the Card grew the layers area from 120 to its 200 point ceiling and carried every control under it down by exactly 80 points. Rejected scroll-anchoring the dock column (compensating for the growth by scrolling) because the dock is at the top when Layers is the first section, so there is nothing to scroll away and the sections move anyway. Rejected a flat fixed height because a document that can never hold a group would pay for room it will never use. Shortest version that delivers the value: one height rule, no new chrome and no new state."
+    },
+    {
+      "t": "2026-09-07T08:23:23.172064Z",
+      "note": "Built: the layers area is sized to every row a twist COULD reveal (PhotonzDocument.fullyExpandedRowCount, new and tested) rather than to the rows on screen, then capped by the stored ceiling through the existing PanelAreaResize.height. The grabber reads the same number, so bar and frame agree. Gated on the groups flag, which is Next only, so Current's arithmetic is byte for byte what it was."
+    },
+    {
+      "t": "2026-09-07T08:23:23.172064Z",
+      "note": "Verified with Scripts/playtest/layers-hold-their-place-walk.json (new). Every section header and every control below the list holds the same y through open, shut and open again: Component 595, Position & Size 295, Layout 160, unchanged. Only the Background row moves, and that is inside the list where it belongs. Screen Recording was granted, so the audit carries real captures."
+    },
+    {
+      "t": "2026-09-07T08:23:23.172064Z",
+      "note": "Adversarial review of the built thing. The cost is about 85 points of empty glass under the Canvas row while a group is shut; the grabber takes it back. The right panel still overflows on its own (Appearance, Effects, Library and the Padding row are below the fold either way) which this change stops the twist from worsening but does not fix. Both written into the audit's rough."
+    },
+    {
+      "t": "2026-09-07T08:23:23.172064Z",
+      "note": "Scripts/test.sh green: 4283 tests in 359 suites."
     }
-  ]
+  ],
+  "started": "2026-09-07T08:14:48.238Z"
 }

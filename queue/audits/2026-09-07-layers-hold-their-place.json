@@ -1,0 +1,26 @@
+{
+  "feature": "Opening a group leaves the controls under the list alone",
+  "epic": "ui-building",
+  "summary": "Twisting a group open or shut in the layers list no longer moves anything under it. The list keeps room for the rows a shut group is hiding, so opening one scrolls inside the list instead of growing it and carrying the size, layout and appearance controls off the bottom of the panel.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs \"Group what you selected\", which is on by default in Next.",
+  "try": [
+    { "do": "Open a new picture and show the component shelf.", "shot": "2026-09-07-layers-hold-their-place-1-shut.png" },
+    { "do": "Drag the Card component onto the canvas." },
+    { "do": "Note where the Layout controls sit in the right panel." },
+    { "do": "Click the twist arrow on the Card row in the layers list.", "shot": "2026-09-07-layers-hold-their-place-2-open.png" },
+    { "do": "Check the Layout controls: they should not have moved a pixel." },
+    { "do": "Click the twist arrow again to shut the Card." },
+    { "do": "Drag the grabber under the layers list up and down to resize it." }
+  ],
+  "evaluate": [
+    "With the Card shut, does the empty space under the Canvas row read as room the list is holding, or as a gap that looks broken?",
+    "Is holding that room worth it, given the controls now stay put?",
+    "When the group opens, is it obvious the list scrolled rather than grew?",
+    "Does the grabber under the list still feel like it does what you expect now that it can be dragged even when only two rows are showing?"
+  ],
+  "rough": [
+    "The empty space is the cost: a document with one shut group reserves room for its contents, so with two rows showing there is about 85 points of empty glass above the grabber. That is the price of nothing moving, and the grabber shrinks it if you want the room back.",
+    "The right panel still overflows on its own. Appearance, Effects and Library sit below the fold whether or not any group is open, and the Padding row inside Layout does too. This change stops the twist from making that worse; it does not fix the crowding, which is a separate problem.",
+    "A group sitting near the bottom of a long list still opens its contents below the visible part of the list, so you scroll to reach them. That was true before this change too."
+  ]
+}

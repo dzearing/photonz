@@ -95,6 +95,23 @@ extension EditorState {
             marksOutOfView: Experiments.shared.autoLayoutEnabled) ?? []
     }
 
+    /// How many rows the layers area keeps room for: every row a twist could
+    /// reveal, whether or not the group holding it is open right now.
+    ///
+    /// The area used to size itself to the rows on screen, so opening a group
+    /// made it taller and shoved the size, layout and appearance controls
+    /// under it down the panel and off the bottom of the screen — the switch
+    /// you were reaching for moved out from under the pointer. Keeping the
+    /// room a shut group would need means a twist scrolls inside the list and
+    /// nothing under it moves.
+    ///
+    /// With groups off nothing can be twisted open, so this is exactly the
+    /// rows on screen and the list is the one it has always been.
+    func layerListReservedRowCount(visibleRowCount: Int) -> Int {
+        guard Experiments.shared.layerGroupsEnabled, let document else { return visibleRowCount }
+        return max(visibleRowCount, document.fullyExpandedRowCount)
+    }
+
     /// The twist-open control on a group row.
     func toggleGroupExpanded(id: UUID) {
         if expandedGroupIDs.contains(id) { expandedGroupIDs.remove(id) } else { expandedGroupIDs.insert(id) }

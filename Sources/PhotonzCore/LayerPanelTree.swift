@@ -137,6 +137,27 @@ extension PhotonzDocument {
         return rows
     }
 
+    /// How many rows the list would hold with every group twisted open: one
+    /// for every layer the panel could ever show, at any depth.
+    ///
+    /// This is the room the layers area keeps for itself. Sizing the area to
+    /// the rows on screen meant opening a group made it taller, which shoved
+    /// the size, layout and appearance controls under it down the panel and
+    /// off the bottom of the screen; sizing it to what a twist COULD reveal
+    /// means a twist scrolls inside the list and nothing under it moves.
+    ///
+    /// Counts the same rows `panelRows` does, so a copy of a component counts
+    /// as one row: its contents belong to its original and the list never
+    /// shows them.
+    public var fullyExpandedRowCount: Int {
+        func count(_ list: [Layer]) -> Int {
+            list.reduce(0) { total, layer in
+                total + 1 + (layer.isOpenableGroup ? count(layer.children) : 0)
+            }
+        }
+        return count(layers)
+    }
+
     /// Every group in the document the layers list can twist open, at any
     /// depth. A copy of a component is not one: what is inside it belongs to
     /// its original, so its row has no twist open.
