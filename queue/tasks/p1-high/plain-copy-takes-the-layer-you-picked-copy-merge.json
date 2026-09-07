@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:35:09.129Z",
-  "updated": "2026-09-07T17:20:34.637612Z",
+  "updated": "2026-09-07T17:20:55.038Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07. Confirmed by reading: EditorState.copySelectedLayer (Sources/Photonz/EditorState+Clipboard.swift line 23) begins by checking whether a pixel region is selected and, if so, calls copyRegionFromComposite and returns, with a comment stating the rule deliberately: a pixel region supersedes the layer, command C copies the region not the layer. The region is taken from the COMPOSITE, which is why every layer comes with it. Meanwhile command shift C is already taken by Copy Image (EditorCommands.swift line 130), which copies the whole flattened canvas; that is Photoshop's Copy Merged in spirit and its shortcut, so the two can converge rather than fight: make command shift C mean copy merged, of the selection when there is one and of the whole canvas when there is not, and let plain copy take the picked layer. Keep the existing behaviour where a copied measurement also travels as its spec line. Also worth checking while there: New Layer via Copy (line 304) and the cut path, since both share the same idea of what a selection means.",
@@ -91,7 +91,12 @@
     {
       "t": "2026-09-07T17:20:34.637612Z",
       "note": "open question for the user, in the audit rather than as a decision card, since it does not block: nothing on screen says which copy you just took."
+    },
+    {
+      "t": "2026-09-07T17:20:55.037Z",
+      "note": "Plain copy now takes the picked layer's pixels inside the marquee (trimmed, path clipped, beeps when the marquee misses); shift command C is Edit > Copy Merged, under Copy, of the marquee or the whole picture; command X slices instead of deleting the layer. CopyRoute in PhotonzCore + DocumentRenderer.render(_:store:only:) in PhotonzRender, both tested; rides next-copy-picks-your-layer. Verified in the probe (Scripts/playtest/copy-takes-your-layer-walk.json) and by another process reading the clipboard. Audit: queue/audits/2026-09-07-copy-picks-your-layer.json. Commit 2f0b04dc."
     }
   ],
-  "started": "2026-09-07T16:56:08.100Z"
+  "started": "2026-09-07T16:56:08.100Z",
+  "completed": "2026-09-07T17:20:55.038Z"
 }
