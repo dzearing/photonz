@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T12:16:37.314Z",
-  "updated": "2026-09-07T20:12:50.356Z",
+  "updated": "2026-09-07T20:16:12.345775Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-06. Evidence: the-app-you-playtest-with-is-rebuilt-after-every, created 12:10 UTC, dropped in the same triage pass. Its notes said queue/bin/refresh-dev-app.sh was a bash syntax error; the file is #!/bin/zsh and zsh -n is clean, queue/loop.log holds 180 successful refreshes with the last at 05:10:36 the same morning, and go-loop.sh:125 already prints a line when a refresh fails, which the task also said was missing. queue/bin/runner-prompt.md has no rule about reproducing a bug before filing it (grep for reproduce finds nothing).",
@@ -43,6 +43,27 @@
     {
       "t": "2026-09-07T20:12:50.355Z",
       "note": "priority p3-low -> p2-normal"
+    },
+    {
+      "t": "2026-09-07T20:13:26.144Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T20:16:12.345775Z",
+      "note": "Adversarial review of the idea first. A prose rule alone gets skimmed, so it is placed at the exact moment of filing (directly under the addjson command a runner uses) and backed by a second gate in triage, which catches whatever slips past the first. Rejected for this task: making queue.mjs refuse a p1 with no evidence, because the schema has no way to tell a bug from a feature task and inventing a kind field is a separate change. Also scoped the rule deliberately: it binds bugs the loop files against itself, and exempts user reports, whose report is itself the evidence and which must stay p1."
+    },
+    {
+      "t": "2026-09-07T20:16:12.345775Z",
+      "note": "Verified the facts before writing them down, since a doc that misstates its own example would be the same mistake. refresh-dev-app.sh is #!/bin/zsh; as of 324ab540 both bash -n and zsh -n are clean on it, so that exact false positive cannot recur and the rule is written about the habit, not the script. queue/loop.log holds 1127 refresh lines. grep for reproduc across queue/bin/*.md found nothing before this change."
+    },
+    {
+      "t": "2026-09-07T20:16:12.345775Z",
+      "note": "Shipped: runner-prompt.md gains 'A bug you file must be reproduced, not just read' (show the command and its output, run a script with the interpreter on its shebang rather than reading it or checking it with another shell, look for evidence it already worked, and if it cannot be reproduced file it at p2-normal as an open question, never p0/p1). digest-prompt.md triage gains a spot-check bullet that reruns the evidence on every new p0/p1 bug and demotes any that has none. manager-prompt.md gains a one-line version, since the manager files bugs too. go-loop.sh cats all three at runtime (lines 103, 213, 263), so the next pass picks them up. Scripts/test.sh green, 4507 tests."
+    },
+    {
+      "t": "2026-09-07T20:16:12.345775Z",
+      "note": "No audit written: this changes the instructions the loop works from, not the app, so there is nothing for the user to try. Left undone and worth a later look: nothing enforces this mechanically, so a runner determined to skip it still can."
     }
-  ]
+  ],
+  "started": "2026-09-07T20:13:26.143Z"
 }

@@ -38,6 +38,40 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 - One task per run. Do not claim or start other tasks. If you discover new work, add it to the queue with the structured form so it is legible to a human:
   `node queue/bin/queue.mjs addjson '{"title":"...","goal":"...","epic":"<objective id this serves>","acceptance":["...","..."],"priority":"p2-normal","notes":"..."}'`
 
+### A bug you file must be reproduced, not just read
+
+Filing work is cheap and the top of the queue is expensive: a p1 bug takes the
+slot the focus feature would have had, and a whole runner cycle goes to it. So a
+follow-up that claims something is broken is held to the same standard as the
+work itself.
+
+- **Show it broken.** The task's `notes` carry the exact command you ran and the
+  output it printed. No command and no output, no bug. "I read the code and it
+  looks wrong" is a hypothesis, not a finding.
+- **Run a script the way the machine runs it.** These scripts get executed, not
+  read, and not all of them are bash: `queue/bin/refresh-dev-app.sh` is
+  `#!/bin/zsh`. Checking a zsh script with `bash -n` reports errors that never
+  happen in the real run, and that alone produced two false p1 bugs, one dropped
+  on 2026-09-06 and an identical one on 2026-09-07. Run the script, or at least
+  check it with the interpreter named on its own shebang line. Same rule for the
+  app: build it, launch the probe, and watch the failure happen before you call
+  it a failure.
+- **Look for the evidence that it already worked.** The logs are right there:
+  `queue/loop.log` for the loop, `queue/history.jsonl` for events, `git log` for
+  what landed. A thing you believe never runs, having run successfully a hundred
+  times with the last one an hour ago, is your answer.
+- **If you cannot reproduce it, file it as something to look into, at
+  `p2-normal`.** Title it as the open question ("Find out whether the dev app is
+  being rebuilt between tasks"), say in the goal what you saw and what you could
+  not confirm, and put the reproduction attempts that failed in `notes`. Never
+  file an unreproduced problem as `p0-critical` or `p1-high`: priority is what
+  makes a bug jump the queue ahead of the focus, and an unconfirmed one has not
+  earned that.
+
+This is about bugs the loop files against itself. A report from the user is
+different: their report is the evidence, it stays p1, and reproducing it is the
+first act of fixing it rather than a gate on filing it.
+
 ### Every task must be readable before it is implementable
 
 A task carries three kinds of writing and they are not interchangeable:
