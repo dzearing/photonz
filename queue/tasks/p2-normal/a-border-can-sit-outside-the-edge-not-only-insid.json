@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1680,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:46:34.063Z",
-  "updated": "2026-09-07T15:46:34.064Z",
+  "updated": "2026-09-07T21:36:26.596Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-appearance-list-grows-to-hold-every-effect-w on 2026-09-07 after reading the render path. Facts established there: AnnotationRasterizer insets the box by strokeWidth/2 and strokes, so a shape stroke lands wholly INSIDE the frame; DocumentRenderer.bordered insets the box by the full width and cuts the middle out, then crops to image.extent, so a ring is inside too. Outside therefore needs (a) AnnotationRasterizer to rasterize into a padded bitmap, which the composite already centres so a symmetric pad lands correctly, (b) bordered() to stop cropping to image.extent for centred/outside, (c) LayerStyle.previewPadding and Layer.renderBounds to include the outset so groups and frames do not clip it. Storage: LayerStyle.borderPosition for the ring and a matching setting on AnnotationContent for a shape stroke, both defaulting to inside so no document repaints. docs/design/shape-parts.md, section How the list grows, already writes the model down.",
@@ -24,6 +24,19 @@
     {
       "t": "2026-09-07T15:46:34.064Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T21:31:08.322Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T21:36:26.596Z",
+      "note": "Adversarial review before building. (1) The ask is real for UI work: a 2pt line that grows the button instead of eating into it is what every design tool calls an outside stroke, and the focus epic is ui-building. (2) Read the render path rather than trusting the plan. The note was right that the shape rasterizer bakes into a frame-sized bitmap, but it MISSED that DocumentRenderer scales whatever comes back to fit the frame, so a padded bitmap would be squashed straight back down and the outside line would land inside again. The scale step has to know about the pad, not only the centring step. (3) Cut nothing: Inside, Center and Outside are the vocabulary people arrive with, and once the outset machinery exists Center costs one number. (4) Shortest version: no new panel and no new section, one popup on the line directly under the Outline width, drawn exactly like the shadow Kind popup so there is nothing new to learn. (5) Chose Center over Centred for the word on screen, matching Align and Text align. (6) Hit testing and the selection ring read the layer frame, which this does not touch, so clicking keeps following the shape."
+    },
+    {
+      "t": "2026-09-07T21:36:26.596Z",
+      "note": "Plan: BorderPosition in PhotonzCore (inside/center/outside, default inside; LayerStyle.borderPosition written only when it is not inside so existing files stay byte identical). AnnotationContent.strokePosition for a shape stroke. The rasterizer pads its bitmap by the outset and offsets the stroke path. DocumentRenderer scales to the padded target, leaves the ring uncropped, and renderBounds/previewPadding grow so groups, frames, drag sprites and dirty rects all reach far enough."
     }
-  ]
+  ],
+  "started": "2026-09-07T21:31:08.321Z"
 }

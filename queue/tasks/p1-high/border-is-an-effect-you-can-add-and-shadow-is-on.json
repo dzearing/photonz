@@ -1,0 +1,36 @@
+{
+  "id": "border-is-an-effect-you-can-add-and-shadow-is-on",
+  "title": "Border is an effect you can add, and Shadow is one entry that goes inner or outer",
+  "goal": "There is no way to add a border. The list of effects you can add offers a drop shadow, an inner shadow and a blur, and nothing else, so a second edge, an offset one, or an inner one simply cannot be made. Add Border to that list, as something you can add more than once, with an offset so an inner and an outer border are two of them. And the two shadow entries should be one: a single Shadow you add, with a switch on it for inner or outer, since that is the same idea and the model already knows the difference.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T21:46:23.217Z",
+  "updated": "2026-09-07T21:46:23.254Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07 in two parts. First, they cannot add a border: AddableEffect in Sources/PhotonzCore/LayerEffects.swift offers exactly dropShadow, innerShadow and blur, and there is no border among them. The only edge is LayerPart.outline in Appearance, which is one edge on the layer's own boundary with no offset and no second copy, so what they want cannot be expressed at all. Second, the two shadow entries: the underlying model already has one shadow kind with a ShadowKind of drop or inner, and only the add menu splits it into two names, so making it one entry with a switch is a menu change plus a control on the row, not a model change. That also matches the rule already agreed in this area, that inner versus outer is a property of an effect rather than a separate effect, which is exactly what the border offset gives. The awkward part to decide rather than dodge is the relationship between the Appearance outline and an added border, since they will otherwise be two ways to draw the same line; the acceptance asks for an answer in user words or for one to absorb the other.",
+  "acceptance": [
+    "Border appears in the list of effects you can add, and adding one gives an edge with a colour, a thickness and an offset",
+    "More than one border can be added, each with its own settings, so an inner and an outer one are two entries in the list",
+    "The add list offers one Shadow rather than a drop shadow and an inner shadow, and an added shadow carries a switch for inner or outer that changes it in place",
+    "A shadow saved before this opens as the same shadow it was, inner or outer, with its switch already set",
+    "The existing outline in Appearance is not duplicated by this: the audit says plainly what the outline is for and what an added border is for, in words a user would accept, or folds one into the other",
+    "Effects can still be removed and reordered, and a border obeys the order like every other effect",
+    "Core logic covered by tests in PhotonzCore written before the change, including two borders with different offsets on one shape",
+    "Audit written under queue/audits/ with a shape carrying an inner and an outer border and a shadow switched between inner and outer, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T21:46:23.218Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-07T21:46:23.253Z",
+      "note": "seq 210 -> 3"
+    }
+  ]
+}
