@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1650,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T14:00:02.585Z",
-  "updated": "2026-09-07T20:45:22.171365Z",
+  "updated": "2026-09-07T20:45:34.690Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found in the 2026-09-07 whole-path sitting; see 2026-09-07-path-9-shelf-set.png in queue/audits, rows four and five, which read \"\u2026  Disabled  2\" and \"S\u2026  Default  2\". Row is LayersPanel.swift around the display name plus badges. Widening the dock is not the answer; the badge and count should give way before the name does, or the badge should move under the name.",
+  "notes": "Found in the 2026-09-07 whole-path sitting; see 2026-09-07-path-9-shelf-set.png in queue/audits, rows four and five, which read \"…  Disabled  2\" and \"S…  Default  2\". Row is LayersPanel.swift around the display name plus badges. Widening the dock is not the answer; the badge and count should give way before the name does, or the badge should move under the name.",
   "acceptance": [
     "A layer row carrying a version badge still shows enough of its name to recognise it",
     "No row ever collapses to just an ellipsis at the default dock width",
@@ -29,7 +29,7 @@
     },
     {
       "t": "2026-09-07T20:45:22.171365Z",
-      "note": "reproduced first: Scripts/playtest/version-row-name-walk.json (new, kept) builds a Save button component, adds a Disabled version and photographs the two rows. Before the fix they read \"S\u2026  \u25c8 Disabled  2\" and \"Sa\u2026  \u25c8 Default  2\" at the dock's default 264pt. Measured: name and chip shared about 86pt of the row, the chip took 58 of it with .fixedSize(), the name got about 30."
+      "note": "reproduced first: Scripts/playtest/version-row-name-walk.json (new, kept) builds a Save button component, adds a Disabled version and photographs the two rows. Before the fix they read \"S…  ◈ Disabled  2\" and \"Sa…  ◈ Default  2\" at the dock's default 264pt. Measured: name and chip shared about 86pt of the row, the chip took 58 of it with .fixedSize(), the name got about 30."
     },
     {
       "t": "2026-09-07T20:45:22.171365Z",
@@ -45,7 +45,7 @@
     },
     {
       "t": "2026-09-07T20:45:22.171365Z",
-      "note": "review after building: a copy's row still says nothing about which version it shows (only originals do) \u2014 filed as a-copy-does-not-say-which-version-it-is-showing. The component diamond now rides the name's line rather than the row's middle. The bare grey version word could read as a state rather than a version name; put to the user in the audit."
+      "note": "review after building: a copy's row still says nothing about which version it shows (only originals do) — filed as a-copy-does-not-say-which-version-it-is-showing. The component diamond now rides the name's line rather than the row's middle. The bare grey version word could read as a state rather than a version name; put to the user in the audit."
     },
     {
       "t": "2026-09-07T20:45:22.171365Z",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-07T20:45:22.171365Z",
       "note": "audit: queue/audits/2026-09-07-version-row-name.json with two -sc.png captures."
+    },
+    {
+      "t": "2026-09-07T20:45:34.689Z",
+      "note": "The version now prints under the name in the layers list (LayersPanel.swift nameBlock), so a Save button with a Disabled version reads as its name again instead of an ellipsis. Row height unchanged. Verified on the probe with real captures at 264pt and at the narrowest 220pt, while renaming, and with a copy alongside; Scripts/test.sh green. Walk: Scripts/playtest/version-row-name-walk.json. Audit: queue/audits/2026-09-07-version-row-name.json."
     }
   ],
-  "started": "2026-09-07T20:30:42.634Z"
+  "started": "2026-09-07T20:30:42.634Z",
+  "completed": "2026-09-07T20:45:34.690Z"
 }

@@ -11562,3 +11562,23 @@ than this change and reproduced before it; filed as
 `the-whole-component-walk-stops-at-the-apply-butt`.
 
 Next: that walk failure, then whatever the queue has at the top of ui-components.
+
+## 2026-09-07 — A version row says its name again
+
+- Fixed the layers row where a component version's badge squeezed the name out:
+  reproduced first on the probe (rows read "S…  Disabled  2"), measured that the
+  name and the chip were sharing about 86pt of a 264pt dock, and moved the
+  version UNDER the name rather than beside it. The row is not taller for it,
+  since both lines together are shorter than the 30pt thumbnail that sets the
+  row's height, so the list stays one shape. `Sources/Photonz/LayersPanel.swift`,
+  new `nameBlock`.
+- Kept `Scripts/playtest/version-row-name-walk.json` as the walk that reads it:
+  two versions at the dock's default width, one being renamed, and a copy
+  alongside. Verified again at the dock's narrowest, 220pt.
+- Audit: `queue/audits/2026-09-07-version-row-name.json`.
+- Filed two follow-ups: a copy's row still does not say which version it shows,
+  and `component-whole-path-walk.json` fails at step 173 on an "Apply to Other
+  Versions" wording — reproduced with the change stashed, so it predates it.
+- Next: whatever the queue hands out. Open question for the user in the audit:
+  does a bare grey version word under the name read as the version, or as a
+  state the layer is stuck in?
