@@ -11218,3 +11218,35 @@ owned means indenting them, which reverses an explicit request from 2026-09-06.
 
 Open question in the audit: two shadows do not fit. A shadow costs seven rows,
 so the second one's row is already below the fold of the Appearance section.
+
+## 2026-09-07 — The grid takes one icon of the bar while it is off
+
+Reported again as a regression, and reproduced before anything was touched: a
+walk read the floating tool bar at 983pt with the grid OFF and 983pt with it ON,
+and put the grid's three controls at exactly the same positions in both states.
+The group was built whole whatever the grid was doing, so a grid nobody was
+using still took 113pt of the scarcest strip in the app for a size button and a
+gear that act on lines that are not there.
+
+Now the rule is one line of PhotonzCore, tested:
+`EditorChromeLayout.gridChipParts(canvasWidth:isGridVisible:)`. With the grid off
+the capsule is one icon; with it on the icon, the cell button, a divider and the
+gear. And the icon stopped being a switch — it opens the grid's settings, where
+switching the grid on is the first row and ⌘' is written beside it, so the whole
+of the grid is behind one door instead of a switch here and its numbers
+elsewhere.
+
+The parts that would have been missed: the sizes are a popover hung off the cell
+button, and adjust mode has taken the whole bar over, so both had to end as the
+grid goes off. Every switch of the grid now runs through
+`EditorState.setCanvasGridVisible`, which does that. `beginGridAdjustment`
+refuses with the grid hidden, and View ▸ Adjust Grid is dimmed there for the
+reason Snap to Grid above it already was.
+
+Measured after: 870pt off, 983pt on, and off/on/off lands back on exactly 870.
+Nothing beside the grid moves more than 57pt, which is less than the room the
+grid gave up. Audit: `queue/audits/2026-09-07-grid-chip.json`.
+
+Next: the audit asks whether two presses to turn the grid on is the right price
+for one door. Filed on the way past: below 620pt of canvas there is no chip at
+all, so View ▸ Grid Settings has nothing to open on.

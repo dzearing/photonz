@@ -607,10 +607,10 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("'", modifiers: .command)
                 .disabled(!hasDocument)
                 // Right under the switch, because the menu you turn the grid on
-                // from is the first place you look for what shapes it. It also
-                // switches the grid on when it was off: the settings open on
-                // the canvas, and there is nothing to judge a spacing against
-                // with no lines drawn.
+                // from is the first place you look for what shapes it. It is
+                // also the same popover the grid's icon in the tool bar opens,
+                // and it leaves the grid alone either way: the switch above is
+                // the first row of what it raises.
                 Button(CanvasGridCopy.settingsMenuItem) {
                     editor?.showGridSettings()
                 }
@@ -628,10 +628,16 @@ struct EditorCommands: Commands {
                 // ellipsis rather than as a switch. The tool bar's Adjust Grid
                 // button is the same door on a canvas wide enough to hold it;
                 // this is how you get in at any width.
+                //
+                // Dimmed with the grid hidden, for the reason Snap above it is:
+                // the whole mode is placing a zero point against lines you can
+                // see. With the grid off the gear is not on the tool bar
+                // either, so the two doors say the same thing.
                 Button(CanvasGridCopy.adjustMenuItem) {
                     editor?.beginGridAdjustment()
                 }
-                .disabled(!hasDocument || (editor?.isAdjustingGrid ?? false))
+                .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false)
+                          || (editor?.isAdjustingGrid ?? false))
             }
             Divider()
         }

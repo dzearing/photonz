@@ -445,4 +445,53 @@ struct GridToolBarCapsuleTests {
         #expect(EditorChromeLayout.gridChipMinCanvasWidth
                 == EditorChromeLayout.zoomSliderMinCanvasWidth)
     }
+
+    // MARK: A grid that is not drawn takes one icon and no more
+
+    @Test func aGridThatIsOffIsOneIcon() {
+        #expect(EditorChromeLayout.gridChipParts(canvasWidth: 1135,
+                                                 isGridVisible: false) == [.settings])
+    }
+
+    @Test func aGridThatIsOnCarriesTheCellAndTheGearToo() {
+        #expect(EditorChromeLayout.gridChipParts(canvasWidth: 1135,
+                                                 isGridVisible: true)
+                == [.settings, .cell, .adjust])
+    }
+
+    /// The cell and the gear act on lines that are on the picture. With no
+    /// lines there they would be room asked for to do nothing.
+    @Test func theCellAndTheGearNeedLinesOnThePicture() {
+        let off = EditorChromeLayout.gridChipParts(canvasWidth: 1135, isGridVisible: false)
+        #expect(!off.contains(.cell))
+        #expect(!off.contains(.adjust))
+    }
+
+    /// Off and on and off again is the same bar it started as, which is what
+    /// keeps everything beside the grid from creeping across the bar.
+    @Test func switchingItOffAndOnLeavesTheBarWhereItStarted() {
+        let first = EditorChromeLayout.gridChipParts(canvasWidth: 1135, isGridVisible: false)
+        _ = EditorChromeLayout.gridChipParts(canvasWidth: 1135, isGridVisible: true)
+        let again = EditorChromeLayout.gridChipParts(canvasWidth: 1135, isGridVisible: false)
+        #expect(first == again)
+    }
+
+    /// A canvas too cramped for the capsule gets nothing, grid or no grid: the
+    /// View menu is the whole feature down there.
+    @Test func aCrampedCanvasGetsNoneOfIt() {
+        #expect(EditorChromeLayout.gridChipParts(canvasWidth: 435,
+                                                 isGridVisible: true).isEmpty)
+        #expect(EditorChromeLayout.gridChipParts(canvasWidth: 435,
+                                                 isGridVisible: false).isEmpty)
+    }
+
+    /// The icon never leaves while the capsule is there. It is the only thing
+    /// on the bar saying the grid exists, and it is the door to the switch.
+    @Test func theIconIsThereWheneverTheCapsuleIs() {
+        for showing in [true, false] {
+            #expect(EditorChromeLayout.gridChipParts(canvasWidth: 1135,
+                                                     isGridVisible: showing)
+                .contains(.settings))
+        }
+    }
 }

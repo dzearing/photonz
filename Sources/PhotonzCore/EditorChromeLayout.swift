@@ -241,11 +241,41 @@ public enum EditorChromeLayout {
     /// is 587.
     public static let gridChipMinCanvasWidth: CGFloat = zoomSliderMinCanvasWidth
 
-    /// Whether the grid's chip appears in the tool bar at this canvas width.
-    /// Only asked while the grid is actually showing: with no lines on the
-    /// picture the chip would be a door to a room nobody is in.
+    /// Whether the grid has anything at all in the tool bar at this canvas
+    /// width. With the grid off that is one icon; see `gridChipParts`.
     public static func showsGridChip(canvasWidth: CGFloat) -> Bool {
         canvasWidth >= gridChipMinCanvasWidth
+    }
+
+    /// One of the things the grid's capsule in the tool bar can carry.
+    public enum GridChipPart: String, Sendable, CaseIterable {
+        /// The grid's own icon. A DOOR, not a switch: it opens the settings,
+        /// where the switch that draws the grid is the first row. Always there
+        /// when the capsule is there at all.
+        case settings
+        /// The button reading the cell the grid works to, with the sizes
+        /// behind it.
+        case cell
+        /// The gear that takes the canvas over to place the zero point and pin
+        /// guides. It brings its own divider with it.
+        case adjust
+    }
+
+    /// What the grid's capsule carries right now.
+    ///
+    /// The rule is the one thing the whole capsule turns on: **a grid that is
+    /// not drawn takes one icon of the bar and no more.** The cell and the gear
+    /// only ever act on lines that are on the picture, so with the grid off
+    /// they are two controls asking for room on the scarcest strip in the app
+    /// to do nothing. They come back the moment the grid does.
+    ///
+    /// The icon stays either way, because with the grid off it is the only
+    /// thing left saying the grid exists, and pressing it is how you get to the
+    /// switch.
+    public static func gridChipParts(canvasWidth: CGFloat,
+                                     isGridVisible: Bool) -> [GridChipPart] {
+        guard showsGridChip(canvasWidth: canvasWidth) else { return [] }
+        return isGridVisible ? [.settings, .cell, .adjust] : [.settings]
     }
 
     /// The narrowest canvas on which the CROP tool's options still lay

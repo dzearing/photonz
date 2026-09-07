@@ -26,7 +26,7 @@
     {
       "do": "describe",
       "stage": "1-grid-off",
-      "note": "the capsule is there with the grid off: switch, size button, divider, gear"
+      "note": "the capsule with the grid off: the grid icon and nothing else"
     },
     {
       "do": "snapshot",
@@ -34,7 +34,23 @@
     },
     {
       "do": "press",
-      "control": "Show Grid"
+      "control": "Grid Settings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Show grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "escape"
     },
     {
       "do": "wait",
@@ -43,7 +59,7 @@
     {
       "do": "describe",
       "stage": "2-grid-on",
-      "note": "switch lit, grid drawn, size button reads Auto"
+      "note": "on from the settings: the icon is lit, the grid is drawn, and the size button and gear have arrived"
     },
     {
       "do": "snapshot",
@@ -326,7 +342,7 @@
     {
       "do": "describe",
       "stage": "15-kept",
-      "note": "out of the mode: the guide stayed, the bar is the four things again"
+      "note": "out of the mode: the guide stayed, and the bar is the three things again"
     },
     {
       "do": "snapshot",
@@ -343,7 +359,7 @@
     {
       "do": "describe",
       "stage": "16-settings",
-      "note": "View > Grid Settings still has a home: it opens on the switch, carrying spacing, bold every, lines and the magnet"
+      "note": "View > Grid Settings still has a home: it opens on the grid's icon, carrying the switch, spacing, bold every, lines and the magnet"
     },
     {
       "do": "snapshot",

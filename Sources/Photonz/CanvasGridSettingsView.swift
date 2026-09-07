@@ -14,10 +14,11 @@ import SwiftUI
 /// reachable three ways, and they are the SAME controls each time rather than
 /// three arrangements that drift apart:
 ///
-/// - **From the grid itself.** The grid's capsule in the floating tool bar
-///   carries the switch that draws it, the cell it works to, and the gear that
-///   takes the canvas over; these settings open on that switch, which is where
-///   View \u{25B8} Grid Settings raises them too.
+/// - **From the grid itself.** The grid's icon in the floating tool bar opens
+///   these and nothing else. It is a door, not a switch: the switch that draws
+///   the grid is the first row in here, which is why that icon is all the grid
+///   takes of the bar while it is off. With the grid on, the cell it works to
+///   and the gear that takes the canvas over join the icon out there.
 ///
 /// When the zoom has coarsened the grid, the Spacing row carries a second line
 /// saying what is actually being drawn. It is the only place that number is
@@ -28,8 +29,8 @@ import SwiftUI
 /// move them. See `EditorView.gridChip` and `CanvasGridSizeButton`.
 ///
 /// - **From where the grid is switched on.** View ▸ Grid Settings, directly
-///   under Show Grid, opens the same popover — and switches the grid on first
-///   if it was off, because nobody tunes a grid they cannot see.
+///   under Show Grid, opens the same popover, and leaves the grid exactly as it
+///   found it: switching it on is the first row of what it opens.
 /// - **From the Canvas**, where it always was, for anyone who arrives by
 ///   clicking the Canvas row. Nothing that worked before stopped working.
 ///
@@ -46,14 +47,26 @@ struct CanvasGridControls: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Toggle(CanvasGridCopy.grid, isOn: Binding(
-                get: { grid.isVisible },
-                set: { editorState.canvasGrid.isVisible = $0 }))
-                .font(.callout)
-                .controlSize(.small)
-                .help(CanvasGridCopy.gridCaption)
-                .playtestControl(CanvasGridCopy.grid,
-                                 detail: "Grid settings, \(grid.isVisible ? "shown" : "hidden")")
+            // The switch, with its key beside it. The icon on the tool bar
+            // opens this rather than toggling the grid, so the fast way to show
+            // and hide it is the key — and a key nobody is told about is a key
+            // nobody presses, which is why it is written here rather than left
+            // on the View menu alone.
+            HStack(spacing: 8) {
+                Toggle(CanvasGridCopy.grid, isOn: Binding(
+                    get: { grid.isVisible },
+                    set: { editorState.setCanvasGridVisible($0) }))
+                    .font(.callout)
+                    .controlSize(.small)
+                    .help(CanvasGridCopy.gridCaption)
+                    .playtestControl(CanvasGridCopy.grid,
+                                     detail: "Grid settings, \(grid.isVisible ? "shown" : "hidden")")
+                Spacer(minLength: 8)
+                Text(CanvasGridCopy.gridShortcut)
+                    .font(.callout.monospaced())
+                    .foregroundStyle(.tertiary)
+                    .help(CanvasGridCopy.gridShortcutHelp)
+            }
             if grid.isVisible {
                 // Only while the grid is showing: with no lines on the picture
                 // there is nothing to pull to, so a switch for it would be a

@@ -778,8 +778,22 @@ public enum CanvasGridCopy {
     public static let cellTooFineHelp =
         "Too fine to draw at this zoom, so the grid is not showing. Zoom in and it comes back."
 
-    /// The switch on the tool bar, and what it does.
-    public static let showGridHelp = "Draw the grid over the picture so you can build to it."
+    /// The grid's icon on the tool bar, and what pressing it does. It is a
+    /// DOOR, not a switch: it opens the settings, where drawing the grid is the
+    /// first row. The line names the key as well, because the icon used to be
+    /// the switch and anyone who knew that needs somewhere to go.
+    public static let settingsHelp =
+        "Everything about the grid: whether it is drawn, how far apart the lines are, "
+        + "and what a drag pulls to. \(gridShortcut) shows and hides it without opening this."
+    /// What a scripted walk calls that icon. Not "Show Grid" any more: it does
+    /// not show the grid, it opens the place where you can.
+    public static let settingsControl = "Grid Settings"
+
+    /// The key that shows and hides the grid, written the way a menu writes it.
+    /// Said beside the switch in the settings, since the icon on the bar no
+    /// longer toggles and this is now the fast way.
+    public static let gridShortcut = "\u{2318}'"
+    public static let gridShortcutHelp = "Show or hide the grid without opening this."
 
     /// The one line under the controls, in both places they are drawn.
     public static let footnote =

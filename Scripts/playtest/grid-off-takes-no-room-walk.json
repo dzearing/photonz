@@ -1,0 +1,238 @@
+{
+  "out": "/tmp/photonz-playtest/grid-off-takes-no-room",
+  "setup": {
+    "forget": [
+      "grid",
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-off",
+      "note": "grid off: the bar's measured width, to compare against every later reading"
+    },
+    {
+      "do": "panel",
+      "stage": "1-off"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-off"
+    },
+    {
+      "do": "menus",
+      "stage": "1-off",
+      "menu": "View"
+    },
+    {
+      "do": "press",
+      "control": "Grid Settings"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "2-settings",
+      "note": "the icon opened the settings and did NOT switch the grid on"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-settings"
+    },
+    {
+      "do": "panel",
+      "stage": "2-settings"
+    },
+    {
+      "do": "press",
+      "control": "Show grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "3-on",
+      "note": "switched on from the settings: the bar grows the cell button, divider and gear"
+    },
+    {
+      "do": "panel",
+      "stage": "3-on"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-on"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "4-bar-on"
+    },
+    {
+      "do": "menus",
+      "stage": "4-on",
+      "menu": "View"
+    },
+    {
+      "do": "press",
+      "control": "Cell"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-sizes",
+      "note": "the sizes are open under the cell button"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-sizes"
+    },
+    {
+      "do": "action",
+      "action": "hideGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "6-off-by-key",
+      "note": "what the menu's Show Grid (\u2318') runs: the grid goes off, the sizes go with it, and the bar is back to its starting width"
+    },
+    {
+      "do": "panel",
+      "stage": "6-off-by-key",
+      "note": "what the menu's Show Grid (\u2318') runs: the grid goes off, the sizes go with it, and the bar is back to its starting width"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-off-by-key"
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-on-again",
+      "note": "on again, the same width as the first time on"
+    },
+    {
+      "do": "action",
+      "action": "hideGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-off-again",
+      "note": "off again: exactly the width it started at, nothing crept"
+    },
+    {
+      "do": "panel",
+      "stage": "8-off-again",
+      "note": "off again: exactly the width it started at, nothing crept"
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Adjust Grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "9-adjusting",
+      "note": "in adjust mode with the grid on: the bar is the mode's own"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-adjusting"
+    },
+    {
+      "do": "action",
+      "action": "hideGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "describe",
+      "stage": "10-off-from-the-mode",
+      "note": "switching the grid off from inside adjust mode puts the mode back and hands the bar over as it was"
+    },
+    {
+      "do": "panel",
+      "stage": "10-off-from-the-mode",
+      "note": "switching the grid off from inside adjust mode puts the mode back and hands the bar over as it was"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-off-from-the-mode"
+    },
+    {
+      "do": "action",
+      "action": "adjustGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "11-no-mode-with-no-grid",
+      "note": "asking for adjust mode with the grid off does nothing: the bar is still the one icon, not the mode's bar"
+    },
+    {
+      "do": "panel",
+      "stage": "11-no-mode-with-no-grid"
+    }
+  ]
+}

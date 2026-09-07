@@ -281,22 +281,17 @@ final class EditorState {
     /// it. Per window, like the settings it sits beside.
     var isGridCellSizesPresented = false
 
-    /// Open the grid's settings, from the View menu or from anywhere else that
-    /// is not the chip itself.
+    /// Open the grid's settings: from the icon on the tool bar, from the View
+    /// menu, from anywhere.
     ///
-    /// It switches the grid ON first when it was off, for the reason adjusting
-    /// it does: nobody tunes a grid they cannot see, and the chip the popover
-    /// hangs off only exists while there are lines on the picture. The chip has
-    /// to be in the view tree before the popover can point at it, so the raise
-    /// waits one turn of the run loop when the grid had to be switched on for it.
+    /// It leaves the grid exactly as it found it. It used to switch the grid ON
+    /// first, on the grounds that nobody tunes a grid they cannot see — but the
+    /// switch that draws the grid is now the FIRST ROW of what this opens, so
+    /// opening the settings is how you turn the grid on, and doing it for you
+    /// would take that press away from you.
     func showGridSettings() {
         guard Experiments.shared.canvasGridEnabled else { return }
-        guard !canvasGrid.isVisible else {
-            isGridSettingsPresented = true
-            return
-        }
-        canvasGrid.isVisible = true
-        Task { @MainActor in self.isGridSettingsPresented = true }
+        isGridSettingsPresented = true
     }
 
     /// Take the canvas over to place the zero point and pin guides. Nothing is
@@ -304,6 +299,12 @@ final class EditorState {
     /// costs nothing and takes no undo step.
     func beginGridAdjustment() {
         guard Experiments.shared.canvasGridEnabled, let document else { return }
+        // Only on a grid that is drawn. The whole mode is placing lines you can
+        // see against the picture and pinning guides onto them; with the grid
+        // off there is nothing on screen to place anything against. The gear is
+        // not on the tool bar then, and the View menu's row is dimmed, so this
+        // is the last of three doors saying the same thing.
+        guard canvasGrid.isVisible else { return }
         // Two modes on one canvas is one mode too many: a live crop ends first.
         if cropRect != nil { cancelCrop() }
         if activeTool != .select { setTool(.select) }
@@ -332,7 +333,7 @@ final class EditorState {
         // Outside the mode the same slider edits the grid directly.
         if gridAdjustment == nil {
             canvasGrid.minimumCell = CanvasGridSettings.clamped(minimumCell: cell)
-            canvasGrid.isVisible = true
+            setCanvasGridVisible(true)
         }
     }
 
@@ -388,7 +389,29 @@ final class EditorState {
         // no undo step to spend putting it.
     }
 
-    func toggleCanvasGrid() { canvasGrid.isVisible.toggle() }
+    func toggleCanvasGrid() { setCanvasGridVisible(!canvasGrid.isVisible) }
+
+    /// Draw the grid, or stop drawing it. EVERY switch goes through here —
+    /// \u{2318}', the View menu, the switch in the settings, the Canvas section — because
+    /// switching it off has to take the grid's other controls with it.
+    ///
+    /// The cell button and the gear leave the tool bar the moment the lines do
+    /// (`EditorChromeLayout.gridChipParts`). Two things were left holding onto
+    /// a control that is no longer there: the sizes, which are a popover hung
+    /// off the cell button, and adjust mode, which has taken the whole bar over
+    /// to place a zero point on lines that are about to stop existing. So the
+    /// sizes close and the mode is put back, in that order — the mode's own
+    /// Escape closes the sizes first and stays, which is not what is wanted
+    /// here. The SETTINGS stay open on purpose: the switch that was just
+    /// pressed is in them.
+    func setCanvasGridVisible(_ shown: Bool) {
+        guard canvasGrid.isVisible != shown else { return }
+        if !shown {
+            isGridCellSizesPresented = false
+            if isAdjustingGrid { cancelGridAdjustment() }
+        }
+        canvasGrid.isVisible = shown
+    }
 
     func toggleSnapToGrid() { canvasGrid.snapsToGrid.toggle() }
 
@@ -399,12 +422,12 @@ final class EditorState {
     /// they cannot see.
     func setCanvasGridSpacing(_ spacing: CGFloat) {
         canvasGrid.spacing = CanvasGridSettings.clamped(spacing: spacing)
-        canvasGrid.isVisible = true
+        setCanvasGridVisible(true)
     }
 
     func setCanvasGridMajorEvery(_ every: Int) {
         canvasGrid.majorEvery = CanvasGridSettings.clamped(majorEvery: every)
-        canvasGrid.isVisible = true
+        setCanvasGridVisible(true)
     }
     /// The active editor tool. Drawing tools are STICKY (Photoshop-style, 17.12):
     /// after a shape is drawn the tool stays active so you can draw more of them.

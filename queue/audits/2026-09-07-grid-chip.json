@@ -1,0 +1,47 @@
+{
+  "feature": "The grid takes one icon of the tool bar while it is off",
+  "epic": "ui-building",
+  "summary": "With the grid switched off the tool bar now carries one grid icon and nothing else: the size button, the divider and the gear only exist while there are lines on the picture. The icon is a door rather than a switch, so pressing it opens the grid's settings, and switching the grid on is the first row in there.",
+  "setup": "Photonz Dev, release Next. The grid is off in a fresh window. Measured on a 1240x900 window with the panel open, which leaves a 975pt canvas.",
+  "try": [
+    {
+      "do": "Open a window with the grid off. The bar shows one # icon between the colours and the zoom.",
+      "shot": "2026-09-07-grid-off-bar.png"
+    },
+    {
+      "do": "Press the # icon. The settings open with one row: Show grid, with its key beside it.",
+      "shot": "2026-09-07-grid-settings.png"
+    },
+    {
+      "do": "Tick Show grid. The lines arrive, and so do the size button, the divider and the gear.",
+      "shot": "2026-09-07-grid-on-bar.png"
+    },
+    {
+      "do": "Press Escape, then press ⌘' twice. The grid goes off and back on, and the bar goes narrow and wide with it."
+    },
+    {
+      "do": "With the grid on, press the size button to open the sizes, then press ⌘' while they are open. The grid goes off and the sizes go with it."
+    },
+    {
+      "do": "Press the gear, pin a guide, then press ⌘'. Adjust mode puts itself back and the bar returns to the one icon."
+    },
+    {
+      "do": "With the grid off, open the View menu: Adjust Grid is dimmed, and Grid Settings still opens the same popover."
+    }
+  ],
+  "evaluate": [
+    "Turning the grid ON is now two presses (icon, then the switch) where it used to be one. Does that feel right, given the icon is now the way to everything else about the grid?",
+    "Is one switch alone in the popover enough to say what the grid is, or should the popover say more while the grid is off?",
+    "The whole bar re-centres when the grid comes and goes, so the tools slide about 57pt sideways. Is that movement fine, distracting, or should it animate?",
+    "With the grid off the icon is dark and with it on the icon is blue. Is that enough to tell the state without pressing anything?",
+    "Is ⌘' beside the switch where you would look for it, or does it read as decoration?"
+  ],
+  "rough": [
+    "The numbers, measured by a walk rather than eyeballed. Before: the bar was 983pt wide with the grid off and 983pt with it on, the same to the point. After: 870pt off and 983pt on, so 113pt comes back. Switching off, on and off again lands on exactly 870 again, and the widest anything beside the grid moves is 57pt (the colour capsule at x609 with the grid off, x552 with it on), which is less than the room the grid gave up.",
+    "The bar snaps between the two widths rather than springing. That was deliberate: this capsule is glass, and the code here already carries a note that animating a glass resize costs about 350ms of pegged CPU per change. If the snap reads as cheap, say so and it can be revisited.",
+    "With the grid off, the settings popover is one switch in a 300pt box, so there is a lot of empty space between Show grid and ⌘'. It keeps its width on purpose, so that ticking the switch does not make the popover jump sideways as well as taller.",
+    "The keyboard shortcut could not be pressed by the walk. A probe window is never the active app, so a window-scoped chord is never claimed by the menu bar; the walk calls what the menu item calls instead, and a separate step reads the View menu and confirms Show Grid still carries ⌘'. The same limit means the walk cannot prove Adjust Grid is dimmed with the grid off, so that is proved the other way: asking for adjust mode with the grid off leaves the bar exactly as it was.",
+    "On a canvas narrower than 620pt the grid has no chip at all, and View ▸ Grid Settings then has nothing to hang a popover on, so it opens nothing. That was already true before this change, but the icon being the main door makes it matter more. Filed as its own task.",
+    "Ticking Show grid leaves the settings open and they grow from one row to a tall panel that covers a good part of the picture, because everything about the grid unfolds under the switch. Staying open is deliberate (you just pressed something in there), but the jump in height is abrupt, and you have to press Escape to see the grid you just switched on."
+  ]
+}

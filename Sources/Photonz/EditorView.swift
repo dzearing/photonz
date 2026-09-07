@@ -649,54 +649,69 @@ struct EditorView: View {
     }
 
     /// The grid's own capsule: a glass bar beside the zoom carrying the whole
-    /// of working the grid in four things and no more — the switch that draws
-    /// it, a button reading the cell it works to, a divider, and the gear that
-    /// takes the canvas over to place where it starts and pin guides onto it.
+    /// of working the grid, and carrying NOTHING while the grid is off but the
+    /// icon that opens it. With the grid drawn that is the icon, a button
+    /// reading the cell it works to, a divider, and the gear that takes the
+    /// canvas over to place where it starts and pin guides onto it.
     ///
     /// It got here by losing things. It used to read the grid's unit and the
     /// cell together ("4 \u{2192} 32 pt"), park a slider on the bar beside them, and
     /// spell out Adjust Grid in words, which is a row of numbers and sentences
     /// permanently in front of the picture, saying more while you work than
-    /// anybody needs. The cell is now one number behind one button, and the
-    /// grid's other settings — spacing, bold lines, which way they run, the
-    /// magnet — are on the View menu and in the Canvas section of the panel,
-    /// which is where you go when you are tuning a grid rather than using one.
+    /// anybody needs. The cell is now one number behind one button.
     ///
-    /// The switch is here rather than only on the View menu because a capsule
-    /// that appeared and vanished with the grid could not be the thing that
-    /// turned the grid on. It is on a canvas roomy enough to hold it, the same
-    /// width the zoom slider needs; on anything narrower the View menu is the
-    /// whole feature.
+    /// Then it lost the last thing it was keeping room for. The cell and the
+    /// gear sat on the bar whatever the grid was doing, so a grid that was
+    /// switched OFF still took the same 165pt of the scarcest strip in the app
+    /// as a grid you were building to, for two buttons that act on lines that
+    /// are not there. `EditorChromeLayout.gridChipParts` is that rule, tested.
+    ///
+    /// And the icon stopped being a switch. It is a door: pressing it opens the
+    /// grid's settings, where drawing the grid is the first row and everything
+    /// else about the grid is under it — one place for the whole feature
+    /// instead of a switch here and its numbers somewhere else. \u{2318}' still shows
+    /// and hides the grid without opening anything, and the settings say so.
+    ///
+    /// The capsule is on a canvas roomy enough to hold it, the same width the
+    /// zoom slider needs; on anything narrower the View menu is the whole
+    /// feature.
     @ViewBuilder private var gridChip: some View {
         @Bindable var state = editorState
+        let parts = EditorChromeLayout.gridChipParts(
+            canvasWidth: canvasContentWidth,
+            isGridVisible: editorState.canvasGrid.isVisible)
         if Experiments.shared.canvasGridEnabled, editorState.document != nil,
-           EditorChromeLayout.showsGridChip(canvasWidth: canvasContentWidth) {
+           !parts.isEmpty {
             let showing = editorState.canvasGrid.isVisible
             HStack(spacing: 8) {
-                Button { editorState.toggleCanvasGrid() } label: {
+                Button { editorState.showGridSettings() } label: {
                     Image(systemName: "grid")
                         .font(.system(size: 14, weight: .medium))
                 }
+                // Lit while the grid is drawn. It is not a switch any more, but
+                // it is still the one thing on the bar saying whether there are
+                // lines on the picture, and going dark is how it says so.
                 .buttonStyle(.tool(isActive: showing))
-                .help(CanvasGridCopy.showGridHelp)
-                .playtestControl(MenuToggleNames.grid,
-                                 detail: "Tool bar, \(showing ? "on" : "off")")
-                // The grid's other settings still open here, because the View
-                // menu's Grid Settings has to appear somewhere and this is the
-                // switch it sits under on that menu.
+                .help(CanvasGridCopy.settingsHelp)
+                .playtestControl(CanvasGridCopy.settingsControl,
+                                 detail: "Tool bar, grid \(showing ? "on" : "off")")
                 .popover(isPresented: $state.isGridSettingsPresented, arrowEdge: .top) {
                     CanvasGridSettingsPopover()
                 }
-                CanvasGridSizeButton(settings: editorState.canvasGrid,
-                                     isPresented: $state.isGridCellSizesPresented)
-                Divider().frame(height: 20)
-                Button { editorState.beginGridAdjustment() } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 14, weight: .medium))
+                if parts.contains(.cell) {
+                    CanvasGridSizeButton(settings: editorState.canvasGrid,
+                                         isPresented: $state.isGridCellSizesPresented)
                 }
-                .buttonStyle(.tool())
-                .help(CanvasGridCopy.adjustHelp)
-                .playtestControl(CanvasGridCopy.adjust, detail: "Tool bar")
+                if parts.contains(.adjust) {
+                    Divider().frame(height: 20)
+                    Button { editorState.beginGridAdjustment() } label: {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .buttonStyle(.tool())
+                    .help(CanvasGridCopy.adjustHelp)
+                    .playtestControl(CanvasGridCopy.adjust, detail: "Tool bar")
+                }
             }
             .fixedSize()
             .padding(.horizontal, 12)
