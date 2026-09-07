@@ -33,8 +33,12 @@
     { "do": "panel", "stage": "3-open-card" },
     { "do": "snapshot", "name": "out-of-view-3-open-card" },
 
+    { "do": "scrollPanel", "row": "Layout section", "by": -260 },
+    { "do": "wait", "seconds": 0.5 },
     { "do": "press", "control": "Clip contents" },
     { "do": "wait", "seconds": 1.0 },
+    { "do": "scrollPanel", "row": "Layers section", "by": 260 },
+    { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "4-back", "note": "unticking the switch puts the words back and every mark goes with it: nothing is marked while the container is not cutting anything off." },
     { "do": "panel", "stage": "4-back" },
     { "do": "snapshot", "name": "out-of-view-4-back" }

@@ -10643,3 +10643,46 @@ Next: the audit asks whether the open/closed difference (full strength against
 grey) reads at a glance, whether the View menu should say Panel rather than Show
 Layers now the tooltip does, and whether full screen needs a way back on the
 picture at all.
+
+## 2026-09-07 — Three walks that stopped before the thing they were checking
+
+`out-of-view-mark-walk` was the only one of the three that was actually broken,
+and it was the walk, not the app. The right hand dock is one scrolling column,
+so pressing Twist on the Card added four layer rows and pushed the Layout
+section below the fold; the last press could no longer reach Clip contents. The
+walk now scrolls the dock down to the Layout section, unticks the switch, and
+scrolls back up before the final reading, so stage 4 still reads the mark off
+the Body row (it says "layer" where stage 3 said "layer, out of view, cut off by
+Card"). The squeeze underneath is real and is filed on its own: opening a group
+should not shove the controls you were using off the screen.
+
+`history-menu-title-walk` and `history-tooltips-walk` were never broken. Each
+passes on its own — twelve consecutive runs, plus the same five walks in the
+order the sweep ran them — and nothing touching the overlay or the menu bar had
+changed since the sweep that failed them. What they are is REACHABLE FROM
+OUTSIDE. The capture history overlay closes on any mouse-down in another app,
+and the probe registered the system-wide Carbon hotkeys, ⇧⌘H among them. The
+sweep ran at 23:01 while the user was working on the same machine (they
+committed at 23:19), so one click aimed at another window, or one real ⇧⌘H aimed
+at their own Photonz, took the overlay down mid-walk. That matches both
+failures: the menu-title walk got its picture at step 8 and found the item
+unticked at step 9; the tooltips walk found no overlay at all.
+
+So the probe now keeps its hands off the keyboard and the mouse:
+`AppFlavor.claimsInputOutsideItself` (PhotonzCore, tested) is false only for the
+probe, which registers none of the capture hotkeys and does not install the
+click-in-another-app dismiss monitor. Dev and release are untouched, and nothing
+a walk checks is lost: `shortcut` presses ⇧⌘H through the menu bar in-process,
+and Escape and a click on another Photonz window still dismiss the overlay. The
+tooltips walk also gained a `checked: false` guard on its ⇧⌘H, so an overlay
+that is somehow already up fails at the shortcut with a plain message instead of
+confusingly at a snapshot two steps later. Written up in
+`docs/design/playtest-harness.md`.
+
+Honest limit: the outside click could not be reproduced on demand — driving
+another app needs the Accessibility grant this terminal does not have — so the
+cause is inference from the evidence, not a reproduction. The hardening closes
+both ways in.
+
+Next: the dock squeeze task ("Opening a group in the layers list pushes the
+controls you were using off screen").

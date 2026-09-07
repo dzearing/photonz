@@ -124,6 +124,17 @@ public enum AppFlavor: String, Sendable, CaseIterable, Codable {
     /// not run locally (update checks, self-updating) has one thing to ask.
     public var isShipping: Bool { self == .release }
 
+    /// Whether this build may reach outside its own windows for input: claim
+    /// system-wide shortcuts, and take its overlays down when someone clicks in
+    /// another app.
+    ///
+    /// Every build a PERSON uses should. The probe should not: it is driven by
+    /// a script while its owner keeps working on the same machine, so a stray
+    /// click or a real ⇧⌘H lands in the middle of a walk. That is what took the
+    /// capture history down under the two walks that were checking it during
+    /// the sweep on 2026-09-06, where both passed on their own minutes later.
+    public var claimsInputOutsideItself: Bool { self != .probe }
+
     /// What this flavor adds to the end of the app's name, or nil for the one
     /// that is just "Photonz".
     public var nameSuffix: String? {

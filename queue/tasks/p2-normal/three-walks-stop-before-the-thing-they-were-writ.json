@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1590,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T06:03:23.356Z",
-  "updated": "2026-09-07T06:03:23.357Z",
+  "updated": "2026-09-07T07:38:36.319Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the full sweep on 2026-09-07 (221 passed, 15 failed; the other twelve are the colour style naming regression, filed separately). history-menu-title-walk: step 9, 'Capture > Show History is not ticked and it should be ticked before command+shift+h'. history-tooltips-walk: step 5, no window called 'Capture History' is open. out-of-view-mark-walk: step 27, the control 'Clip contents' is not in the window, so it needs a scrollPanel step first (that one is almost certainly the walk, not the app). Run one with Scripts/playtest.sh <walk>; run the lot with Scripts/playtest-all.sh.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-07T06:03:23.357Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T07:38:36.319Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T07:54:18.746025Z",
+      "note": "Reproduced each one on its own with Scripts/playtest.sh. out-of-view-mark-walk fails every time. The two history walks PASS on their own: 12 runs in a row, plus a run of the same five walks the sweep ran in that order, all green."
+    },
+    {
+      "t": "2026-09-07T07:54:18.746164Z",
+      "note": "Adversarial read before touching anything. out-of-view-mark: opening the Card in the layers list adds four rows to the one scrolling dock column, which pushes the Layout section below the fold, so the last press cannot reach Clip contents. The walk is wrong, not the app, but the underlying squeeze is real and worth a look on its own: the layers list and the inspector share one column, so opening a group can shove a control you were using off screen."
+    },
+    {
+      "t": "2026-09-07T07:54:18.746166Z",
+      "note": "out-of-view-mark-walk fixed: scroll the dock down to the Layout section, untick Clip contents, scroll back up. Stage 4 still reads the mark off the Body row (it says 'layer' where stage 3 said 'layer, out of view, cut off by Card'), so the check it was written for survives."
+    },
+    {
+      "t": "2026-09-07T07:54:18.746168Z",
+      "note": "The two history walks are not broken, they are reachable from outside. The capture history overlay closes on any mouse-down in ANOTHER app, and the probe registers system-wide Carbon hotkeys including the real command+shift+H. During the 2026-09-06 sweep the user was working on the same machine (they committed at 23:19, the sweep ran at 23:01), so one click or one command+shift+H aimed at their own Photonz took the overlay down mid-walk. That matches both failures exactly: the menu-title walk got its picture at step 8 and found the item unticked at step 9, and the tooltips walk found no overlay at all. No code touching the overlay or the menus changed between that sweep and now."
+    },
+    {
+      "t": "2026-09-07T07:54:18.746169Z",
+      "note": "Fix: AppFlavor.claimsInputOutsideItself (PhotonzCore, tested). The probe no longer registers the system-wide capture/history hotkeys and no longer installs the click-in-another-app dismiss monitor. Escape and click-away inside the app still take the overlay down, which is what the walks actually exercise, and the dev and release builds are untouched. Also gave the tooltips walk a checked:false guard on its command+shift+H so an already-open overlay fails at the shortcut with a plain message instead of confusingly at a snapshot two steps later."
+    },
+    {
+      "t": "2026-09-07T07:54:18.746171Z",
+      "note": "Honest limit: the outside click could not be reproduced on demand (driving another app needs the Accessibility grant, which this terminal does not have), so the cause is inference from the evidence rather than a reproduction. The hardening covers both ways in."
     }
-  ]
+  ],
+  "started": "2026-09-07T07:38:36.318Z"
 }

@@ -175,6 +175,24 @@ When a walk changes a setting it never declared, the same log line names it
 machine is already back; it is the line to read when you want to know what a
 walk is quietly touching, and therefore what it may be quietly reading.
 
+### The probe keeps its hands off the keyboard and the mouse
+
+The probe runs on a machine somebody else is using. So, alone among the three
+bundles, it takes no system-wide input: it registers none of the capture
+hotkeys (⇧⌘3/4/5/6, ⌃⇧F5, ⇧⌘H), and the capture history overlay does not close
+when a click lands in another app. The switch is `AppFlavor.claimsInputOutsideItself`
+in PhotonzCore; the dev and release builds behave exactly as before.
+
+Without that, a walk is steerable by whoever is at the keyboard. The two
+history walks failed in the sweep on 2026-09-06 and passed twelve times in a
+row on a quiet machine minutes later: one click aimed at another window, or one
+real ⇧⌘H aimed at the user's own Photonz, had taken the overlay down under a
+walk that was checking it.
+
+Nothing is lost from what a walk can check. A `shortcut` step presses ⇧⌘H
+through the menu bar, which is in-process, and Escape and a click on another
+Photonz window still dismiss the overlay, which is what the walks exercise.
+
 A walk that has to prove what comes BACK when a document is opened afresh does
 it inside itself, with `closeDocument` and a second `open`. Handing that proof
 to a second walk, which is how it used to be done, made a walk that only passed

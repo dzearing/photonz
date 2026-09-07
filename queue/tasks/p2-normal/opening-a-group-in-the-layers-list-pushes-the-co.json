@@ -1,0 +1,27 @@
+{
+  "id": "opening-a-group-in-the-layers-list-pushes-the-co",
+  "title": "Opening a group in the layers list pushes the controls you were using off screen",
+  "goal": "The right hand panel is one long scrolling column: the layer list sits on top of the controls for whatever is selected. Open a group and the four layers inside it appear, shoving the size, layout and appearance controls below the bottom of the screen, so the switch you were about to use is gone and you have to scroll to find it again.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1610,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T07:54:51.552Z",
+  "updated": "2026-09-07T07:54:51.553Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing out-of-view-mark-walk on 2026-09-07: the walk had to gain a scrollPanel step because pressing Twist on the Card added four rows and put Clip contents below the fold. Panel dumps: /tmp/photonz-playtest/out-of-view-mark/panel-1-overflows.json vs panel-3-open-card.json. Likely shape: give the layers list its own scroll area with a bounded height inside the dock column, so the inspector sections keep their place. Next release only.",
+  "acceptance": [
+    "Opening or closing a group in the layer list leaves the controls below it in the same place on screen",
+    "A person can open a group and reach the Layout controls without scrolling",
+    "The layer list stops growing at a sensible height instead of pushing everything below it away"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T07:54:51.553Z",
+      "note": "created (manual)"
+    }
+  ]
+}

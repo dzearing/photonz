@@ -4,7 +4,7 @@
   "steps": [
     { "do": "blank", "canvasWidth": 800, "canvasHeight": 600, "width": 1100, "height": 800 },
     { "do": "wait", "seconds": 1.5 },
-    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History" },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
     { "do": "wait", "seconds": 1.5 },
     { "do": "snapshot", "name": "1-overlay", "window": "Capture History" },
 

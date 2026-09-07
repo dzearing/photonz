@@ -598,6 +598,12 @@ struct AppFlavorTests {
         #expect(AppFlavor.dev.nameSuffix == "(Dev)")
         #expect(AppFlavor.probe.nameSuffix == "(Probe)")
     }
+
+    @Test func onlyTheProbeKeepsItsHandsOffTheKeyboardAndMouse() {
+        #expect(AppFlavor.release.claimsInputOutsideItself)
+        #expect(AppFlavor.dev.claimsInputOutsideItself)
+        #expect(!AppFlavor.probe.claimsInputOutsideItself)
+    }
 }
 
 @Suite("ExperimentsStore")

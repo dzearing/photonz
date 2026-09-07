@@ -60,6 +60,12 @@ final class CaptureCenter {
         // background can be auto-declined (and the decision sticks), so we ask
         // only in response to a user-initiated capture (see ensurePermission).
         needsScreenRecordingPermission = !ScreenCapturer.hasPermission
+        // The task loop's probe never takes the machine's shortcuts. It is
+        // driven by a script while its owner keeps working, and a real ⇧⌘4 or
+        // ⇧⌘H aimed at their own Photonz would fire a capture or flip the
+        // history overlay inside somebody else's walk. A walk presses these
+        // through the menu bar anyway, which is in-process and unaffected.
+        guard AppInfo.flavor.claimsInputOutsideItself else { return }
         hotkeys.register(.commandShift(kVK_ANSI_3)) { [weak self] in self?.captureFullScreen() }
         hotkeys.register(.commandShift(kVK_ANSI_4)) { [weak self] in self?.beginRectCapture() }
         hotkeys.register(.commandShift(kVK_ANSI_5)) { [weak self] in self?.toggleRecording() }

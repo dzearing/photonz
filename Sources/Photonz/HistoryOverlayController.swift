@@ -134,7 +134,11 @@ final class HistoryOverlayController {
             if event.window !== panel { self.hide() }
             return event
         }
-        // Clicks in other apps dismiss it too.
+        // Clicks in other apps dismiss it too — except in the task loop's probe,
+        // which is being driven by a script while its owner keeps working on the
+        // same machine. There, a click meant for another window is somebody
+        // else's business and must not reach into a running walk.
+        guard AppInfo.flavor.claimsInputOutsideItself else { return }
         globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.hide()
         }
