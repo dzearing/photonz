@@ -1,0 +1,28 @@
+{
+  "feature": "Every gap in a stack is the gap you typed",
+  "epic": "ui-layout",
+  "summary": "A piece that changes size on its way into a stack no longer leaves the gap after it short. A label that re-wraps, or a whole stack that re-flows, when it is stretched across a column now settles before anything is placed, so the piece under it sits the gap you typed below it while you are dragging, not only after you let go.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is how stacks lay out now.",
+  "try": [
+    { "do": "New blank canvas. Draw a small square, and under it a text box saying a sentence long enough to wrap." },
+    { "do": "Select both, press Command G, then press Stack in the Layout section." },
+    { "do": "Draw one square above that group and one below it." },
+    { "do": "Select all three, press Command G, press Stack again." },
+    { "do": "In Layout, set Width to Fixed and type 300." },
+    { "do": "Under Contents of, set Horizontal to Stretch. The inner stack narrows to 300 and its words wrap onto more lines." },
+    { "do": "Drag the group's right edge further in and WATCH the bottom square while the button is still down.", "shot": "2026-09-06-even-gaps-mid-drag-sc.png" },
+    { "do": "Drop a Card from the Library and read the space above and below its title." }
+  ],
+  "evaluate": [
+    "While you drag the edge, does the bottom square keep an even distance under the words, or does it swim?",
+    "Does the spacing you see mid drag match what you get when you let go?",
+    "On the Card, does the title look equally spaced from the picture above it and the line below it?",
+    "Is a stack inside a stack something you would actually build this way, or did the steps above feel like a trick?"
+  ],
+  "rough": [
+    "I could not reproduce the reported one point gap on the Card. Measured with both the app's real text measurement and the model's own, the settled Card has exactly 8 above and 8 below its title, before and after this change. What IS real is the mechanism the report named: a piece that changes size as it is placed. It shows during a live drag, where a group is laid out once: the square under the inner stack used to sit 28 points too high, exactly the wrapped line the stack had just gained.",
+    "The before and after pictures are both here: 2026-09-06-even-gaps-mid-drag-before-sc.png and 2026-09-06-even-gaps-mid-drag-sc.png, same walk, same moment, the only difference being this fix. Screen Recording was granted, so both are real captures of the window.",
+    "The document level reflow was hiding this after the fact by running the whole layout again, so a settled document already looked right. That is why the fix is also faster: reflowing a document whose stacks hold pieces that re-fit went from 5.5ms to 4.0ms, since the pass it no longer needs costs more than the asking does. A document where nothing re-fits pays about 11 percent more inside its one pass.",
+    "The flow gives up after three rounds of asking. A piece that can never take the size it is given, like words with a single word too long for the room, keeps its overhang and the last answer stands, which is what it did before."
+  ]
+}

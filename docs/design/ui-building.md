@@ -573,6 +573,32 @@ itself whenever the two things that decide its shape change:
   A paragraph somebody dragged narrower by hand is not touched. That width is
   an answer, not a derivation.
 
+### Every gap is the gap you typed (landed 2026-09-06)
+
+A stack works out where everything goes from the sizes its pieces have GOING
+IN, and some pieces are not that size once they get there. Stretch a label
+across a column and it re-wraps and comes out taller. Stretch a stack across
+one and it lays itself out again in its new width, so it comes out taller too.
+Place from the size that went in and the gap after that piece is short by
+exactly what the piece gained: a point under a card's title, a whole wrapped
+line under a nested stack, which reads as one thing drawn through another.
+
+So the flow settles before it places. It works the boxes out, hands each piece
+the box it worked out, and asks again wherever a piece came back a size nobody
+expected. Two sizes are no surprise and settle nothing: the size the piece
+already was, which is the size the flow just used, and the size the flow ASKED
+for, which is its own answer for a piece told to stretch. It gives up after
+three rounds, so a piece that can never take the size it is given (words with a
+word too long for the room) costs a bounded amount of work and the last answer
+stands.
+
+A stack of plain boxes is byte for byte the layout it always had. The document
+reflow used to paper over this by running the whole flow again, up to three
+passes, so what you SAW after an edit was usually right and what you saw during
+a live drag was not: a drag lays a group out once. Settling inside the pass
+fixes the drag and pays for itself, since the pass it saves costs more than the
+asking does.
+
 ### A title stays on one line (landed 2026-09-06)
 
 Some words are one line and stay one line. A bar title is the plain case: a bar

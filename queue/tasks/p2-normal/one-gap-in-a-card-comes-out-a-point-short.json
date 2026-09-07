@@ -5,14 +5,14 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1550,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T00:03:27.533Z",
-  "updated": "2026-09-07T00:03:27.533Z",
+  "updated": "2026-09-07T01:37:53.864737Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Seen on 2026-09-06. StarterComponents Card, gap 8: Picture content ends 108, Title content 116..136, Body content starts 143 (gap 7, not 8). GroupFlow.stacked works the cursor out from the item boxes measured BEFORE moved() resizes each child, and a text child stretched across the column is re-fitted on the way in, so a height that changes by a point during placement leaves the gap after it short.",
+  "notes": "Fixed in GroupFlow.arranged: the flow now settles before it places. It works out every box, hands each piece the box it worked out, and asks again wherever a piece came back a size nobody expected; the size it already was and the size the flow ASKED for are both no surprise, so a stack of plain boxes is byte for byte what it was. Bounded at three rounds (GroupFlow.settlingRounds) so a piece that can never take its box costs a fixed amount. targets() now also hands back the size each piece had going in, which is the number the loop compares against and saves a contentBounds per piece per round.\n\nWhat I could NOT reproduce: the Card's one point gap. Settled, the Card measures exactly 8 above and 8 below its title with both the model's own text measurement and the app's CoreText one, and it did so before this change and before ebf48480 as well - the document reflow runs the whole layout up to three times, so it converged. The mechanism the report named is real all the same, and it shows where only ONE pass runs: a live drag. Same walk, same moment, the square under a nested stack sat 28pt (one wrapped line) too high before this fix.\n\nPerf: reflowing a document whose stacks hold pieces that re-fit 5.5ms -> 4.0ms (one pass instead of two); a document where nothing re-fits 1.84ms -> 2.04ms. Composite path untouched.\n\nWalk: Scripts/playtest/gaps-stay-even-walk.json. Tests: Tests/PhotonzCoreTests/GroupGapTests.swift (the nested-stack one fails on the old code). Doc: docs/design/ui-building.md, \"Every gap is the gap you typed\".",
   "acceptance": [
     "Every gap between the pieces of a column is the same number the layout was given",
     "The Card starter shows the same space above and below its title",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-07T00:03:27.533Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T01:10:07.638Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T01:37:53.864737Z",
+      "note": "reproduced: a column whose middle piece is a stretched stack placed the piece under it for the size that went in, writing 16pt through it in a single flow pass (GroupGapTests)"
+    },
+    {
+      "t": "2026-09-07T01:37:53.864737Z",
+      "note": "fix: GroupFlow.arranged settles every piece, not only text, and re-asks the flow until nothing surprises it (bounded at 3 rounds)"
+    },
+    {
+      "t": "2026-09-07T01:37:53.864737Z",
+      "note": "verified on the probe with Scripts/playtest/gaps-stay-even-walk.json, before and after: mid-drag the box under the nested stack moved from 28pt too high to exactly the typed gap. Full suite green (4189)."
+    },
+    {
+      "t": "2026-09-07T01:37:53.864737Z",
+      "note": "could not reproduce the Card's one point gap: settled, it measures 8 above and 8 below its title in both measurement paths, and did before this change too. Said so in the audit."
     }
-  ]
+  ],
+  "started": "2026-09-07T01:10:07.637Z"
 }

@@ -479,41 +479,69 @@ enum GroupFlow {
             children[$0].isVisible && !rules[$0].stepsOutOfTheFlow(of: layout)
         }
         guard !taking.isEmpty else { return children }
-        // Round one only settles how WIDE everything is. A label handed a
-        // width is not the height it was — it re-wraps inside that width and
-        // comes out taller — so the words are re-measured at the width they
-        // have just been given and the whole flow is worked out again from the
-        // boxes they really are. Place from the height a label had before it
-        // wrapped and it sits off centre in its row and hangs out of the
-        // bottom of the box (`docs/design/ui-building.md`, "A label grows to
-        // fit what it says").
-        let first = targets(children, taking: taking, rules: rules,
-                            layout: layout, bounds: bounds)
+        // Round one only settles how WIDE everything is. A piece handed a width
+        // is not the size it was — a label re-wraps inside it and comes out
+        // taller, a stack inside a stack lays itself out again in it — so
+        // everything is fitted to the width it has just been given and the
+        // whole flow is worked out again from the boxes the pieces really are.
+        // Place from the size a piece had going in and the gap after it comes
+        // out short: a point under a card's title, a whole wrapped line under
+        // a nested stack, which is one thing written through another
+        // (`docs/design/ui-building.md`, "A label grows to fit what it says").
         var settled = children
-        var remeasured = false
-        for (slot, index) in taking.enumerated() where children[index].text != nil {
-            let fitted = moved(children[index], to: first[slot].box,
-                               fillingHeight: first[slot].fillsHeight)
-            guard fitted.contentBounds.size != children[index].contentBounds.size else { continue }
-            settled[index] = fitted
-            remeasured = true
+        var boxes = targets(settled, taking: taking, rules: rules,
+                            layout: layout, bounds: bounds)
+        for _ in 0..<settlingRounds {
+            var changed = false
+            for (slot, index) in taking.enumerated() {
+                let asked = boxes[slot].box
+                let was = boxes[slot].going
+                // A piece handed the size it already has is only being moved,
+                // and a move re-fits nothing, so there is nothing here to
+                // settle and nothing to pay for: this is every piece of a
+                // stack of plain boxes.
+                guard asked.size != was else { continue }
+                let fitted = moved(settled[index], to: asked,
+                                   fillingHeight: boxes[slot].fillsHeight)
+                settled[index] = fitted
+                // Two sizes are no surprise and settle nothing. The size it
+                // already was is the size the flow just used, and the size the
+                // flow ASKED for is the flow's own answer — a piece stretched
+                // across the stack is meant to come back that wide. Anything
+                // else moves whatever is under it, so the flow is asked again.
+                let now = fitted.contentBounds.size
+                guard now != was, now != asked.size else { continue }
+                changed = true
+            }
+            // Nothing changed shape: the answer this round gave is the answer,
+            // byte for byte the layout a group of plain boxes always had.
+            guard changed else { break }
+            boxes = targets(settled, taking: taking, rules: rules,
+                            layout: layout, bounds: bounds)
         }
-        // Nothing changed shape: the answer round one gave is the answer, byte
-        // for byte the layout a group without a word in it always had.
-        let final = remeasured ? targets(settled, taking: taking, rules: rules,
-                                         layout: layout, bounds: bounds)
-                               : first
         var out = settled
         for (slot, index) in taking.enumerated() {
-            out[index] = moved(settled[index], to: final[slot].box,
-                               fillingHeight: final[slot].fillsHeight)
+            out[index] = moved(settled[index], to: boxes[slot].box,
+                               fillingHeight: boxes[slot].fillsHeight)
         }
         return out
     }
 
+    /// How many times the flow will ask again after a piece came back a size
+    /// nobody expected.
+    ///
+    /// One round settles a label that re-wraps or a stack that re-flows, which
+    /// is every shape anybody builds; the second proves nothing moved. The
+    /// third is there so a piece that cannot take the size it is given — words
+    /// with a word too long for the room, a shape held open by a floor — costs
+    /// a bounded amount of work instead of spinning, and the last answer stands.
+    private static let settlingRounds = 3
+
     /// Where the flow puts each piece it arranges, in the order those pieces
-    /// sit in `taking`, and whether the height in that box is the flow's
-    /// answer or the piece's own.
+    /// sit in `taking`: the box, whether the height in it is the flow's answer
+    /// or the piece's own, and the size the piece had GOING IN, which is the
+    /// number the flow worked the boxes out from and so the one a piece has to
+    /// come back at for those boxes to still be right.
     ///
     /// The height is only the flow's where the flow decides heights at all, so
     /// a Stretch in a column fills nothing. A column stack decides one height
@@ -521,7 +549,8 @@ enum GroupFlow {
     /// left over.
     private static func targets(_ children: [Layer], taking: [Int],
                                 rules: [ResolvedPlacement], layout: GroupLayout,
-                                bounds: Bounds) -> [(box: CGRect, fillsHeight: Bool)] {
+                                bounds: Bounds)
+    -> [(box: CGRect, fillsHeight: Bool, going: CGSize)] {
         let items = taking.map { index in
             Item(box: children[index].contentBounds,
                  horizontal: rules[index].horizontal.span,
@@ -530,11 +559,12 @@ enum GroupFlow {
         }
         let order = flowOrder(items.map(\.box), layout: layout)
         let boxes = laidOut(order.map { items[$0] }, layout: layout, bounds: bounds)
-        var out = [(box: CGRect, fillsHeight: Bool)](repeating: (.zero, false), count: taking.count)
+        var out = [(box: CGRect, fillsHeight: Bool, going: CGSize)](
+            repeating: (.zero, false, .zero), count: taking.count)
         for (slot, position) in order.enumerated() {
             let stretched = layout.decidesHeight && items[position].vertical == .stretch
             let fillsDown = !layout.decidesHeight && items[position].fills
-            out[position] = (boxes[slot], stretched || fillsDown)
+            out[position] = (boxes[slot], stretched || fillsDown, items[position].box.size)
         }
         return out
     }
