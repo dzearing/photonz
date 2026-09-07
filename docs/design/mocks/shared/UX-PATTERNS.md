@@ -480,15 +480,37 @@ here rather than in the middle of whatever feature meets it next.
 - **The reach line underneath stays.** It answers a different question, how many
   the rows below reach, and the switch saying Mixed does not say that.
 
-*(`ShadowInspector` binds to `selection.hasShadowEverywhere`, which is why a
-part-shadowed selection currently reads plain off. Fixing it is
-`a-switch-says-mixed-the-way-every-other-control`.)*
+*(Shipped 2026-09-06, `a-switch-says-mixed-the-way-every-other-control`,
+audit `2026-09-06-switch-says-mixed`. The reading is
+`LayerStyleSelection.shadowIsMixed` for the Shadow section's own switch and
+`LayerPartRow.isMixed` for the parts list, so what a switch SAYS and what it
+DOES cannot drift. The walk that keeps it true is
+`Scripts/playtest/switch-says-mixed-walk.json`.*
+
+*Two things the rule did not anticipate, both settled the same way. The switch
+in the parts list is a CHECKBOX rather than a switch, and a Mac checkbox does
+have a third position, the dash; it is not used, because SwiftUI only draws it
+for a Toggle built from one binding per layer, and that would split "give the
+other two a shadow" into one undo step per layer. So a checkbox over layers that
+disagree says it the way everything else does: the word beside it, the control
+one step quieter. And a part in that list is switched on and off from a row
+rather than from a section, so the word goes where the row shows its value,
+which is where its colour says Mixed too, and the sentence underneath is what
+says which of the two the word is about.)*
 
 **Built, and the thing to copy:** `InstanceShowKnob` in `ComponentPanel.swift`
 (2026-09-05), the show-or-hide knob over several copies. It wears
 `MixedLook.controlOpacity`, which is the one step quieter for a control made of
 picture rather than words, and the word sits beside the switch. The Shadow
-switch adopts the same two when its own task lands.
+switch wears the same two as of 2026-09-06, and so does every switch in the
+parts list: `ShadowInspector` in `LayersPanel.swift` and `PartRowView` in
+`PartsInspector.swift`.
+
+**The word goes AFTER the control, not between it and its caption.** Both were
+built and looked at: putting it in the middle moves the switch sideways the
+moment a second layer is picked, which is the one thing this rule has been
+saying not to do everywhere else. After it, nothing on the row moves for a
+selection that agrees.
 
 ### A control that cannot act
 

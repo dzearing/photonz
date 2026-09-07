@@ -1,0 +1,28 @@
+{
+  "feature": "A switch says Mixed",
+  "epic": "ui-components",
+  "summary": "Pick several layers where only some have a shadow, or an outline, and the switch no longer reads plain off. It says Mixed beside itself, is drawn one step quieter while it has no position to show, and a line underneath says how many already have the part and what one press would do.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: this is how the Appearance list behaves now.",
+  "try": [
+    { "do": "Draw three rectangles side by side." },
+    { "do": "Click just the first one, and tick Shadow in the Appearance list." },
+    { "do": "Drag a band around all three." , "shot": "2026-09-06-switch-says-mixed-1.png" },
+    { "do": "Read the Shadow row: the tick box is quieter, the word Mixed sits beside it, and the line underneath says 1 of the 3 have a shadow." },
+    { "do": "Press that tick box once. All three get a shadow and the word goes." },
+    { "do": "Press Command Z once. All three go back at once, the first one keeps the shadow it had, and the row says Mixed again." },
+    { "do": "Click the middle box on its own, untick Outline, then band-select all three again.", "shot": "2026-09-06-switch-says-mixed-2.png" }
+  ],
+  "evaluate": [
+    "Does Mixed beside the tick box tell you more than the grey line under it used to, or is it one more thing to read?",
+    "Is the quieter tick box different enough from a plain empty one that you can see it without reading the word?",
+    "When you press a Mixed tick box, is switching everything ON the answer you expected, rather than switching everything off?",
+    "The word sits where the row's colour would be. Does it read as being about the tick box, or does it look like it is about the colour?",
+    "Two Mixed rows at once carry two three-line grey notes plus the section's own line. Is that too much grey?"
+  ],
+  "rough": [
+    "The task named the Enable Shadow switch in the old Shadow section, but with A layer is made of parts on (which is the default in Next) that section is not on screen: the shadow switch is a row in the Appearance list, sharing one control with Fill and Outline. Both got the change, so this is right either way, and the third picture shows the old section for anyone who turns parts off.",
+    "In the Appearance list the control is a tick box, not a switch, and a Mac tick box does have a third position: the dash. It is not used, because SwiftUI only draws that for a tick box built from one binding per layer, and that would split give the other two a shadow into one undo step per layer. So it says it with the word and the quieter draw, like every other Mixed in the app.",
+    "A Mixed row still cannot be unfolded, so with 1 of 3 shadowed there is no way to tune that one shadow without first giving the other two one. That was already true of an off row and is not made worse here; filed as its own task.",
+    "The three screen captures are real, from the probe with Screen Recording granted, not offscreen renders."
+  ]
+}

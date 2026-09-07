@@ -332,6 +332,74 @@ struct LayerPartsTests {
         #expect(!outline.isOn)
     }
 
+    @Test func aRowWhosePickedLayersDisagreeSaysMixedRatherThanReadingOff() throws {
+        let outlined = shape(.rectangle)
+        let plain = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
+        let doc = document([outlined, plain])
+        let rows = doc.layerPartRows(layerIDs: [outlined.id, plain.id])
+        let outline = try #require(rows.first { $0.slot == .stroke })
+        #expect(outline.isMixed)
+        // And it says how many, in words, because the switch saying Mixed does
+        // not say which of them already have the part.
+        #expect(outline.reachNote
+                == "1 of the 2 selected layers has an outline. "
+                + "Switching this on gives the rest one too.")
+    }
+
+    @Test func aRowWhosePickedLayersAgreeIsNeverMixed() throws {
+        let a = shape(.rectangle, fillHex: "#00FF00")
+        let b = shape(.rectangle, fillHex: "#0000FF")
+        let doc = document([a, b])
+        let rows = doc.layerPartRows(layerIDs: [a.id, b.id])
+        // Both outlined, both filled, neither shadowed: nothing to disagree
+        // about anywhere in the list.
+        #expect(rows.allSatisfy { !$0.isMixed })
+        #expect(rows.allSatisfy { $0.reachNote == nil })
+        // One layer has nothing to disagree with either.
+        #expect(doc.layerPartRows(layerIDs: [a.id]).allSatisfy { !$0.isMixed })
+    }
+
+    @Test func aRowThatBothSkipsALayerAndDisagreesSaysBoth() throws {
+        let filled = shape(.rectangle, fillHex: "#00FF00")
+        let hollow = shape(.rectangle)
+        let arrow = shape(.arrow)
+        let doc = document([filled, hollow, arrow])
+        let rows = doc.layerPartRows(layerIDs: [filled.id, hollow.id, arrow.id])
+        let fill = try #require(rows.first { $0.slot == .fill })
+        // An arrow has no inside, so the row skips it; of the two it does
+        // reach, one is filled and one is not. Both are true and both are said.
+        #expect(fill.isMixed)
+        #expect(fill.reachNote
+                == "Applies to 2 of the 3 selected layers. "
+                + "1 of those has a fill. Switching this on gives the rest one too.")
+    }
+
+    @Test func aRowThatSkipsALayerWithoutDisagreeingStillSaysOnlyThat() throws {
+        let hollow = shape(.rectangle)
+        let alsoHollow = shape(.rectangle)
+        let arrow = shape(.arrow)
+        let doc = document([hollow, alsoHollow, arrow])
+        let rows = doc.layerPartRows(layerIDs: [hollow.id, alsoHollow.id, arrow.id])
+        let fill = try #require(rows.first { $0.slot == .fill })
+        // Neither box is filled, so there is nothing to disagree about: a row
+        // that goes on to explain a disagreement nobody has is noise.
+        #expect(!fill.isMixed)
+        #expect(fill.reachNote == "Applies to 2 of the 3 selected layers.")
+    }
+
+    @Test func aShadowRowSaysHowManyOfThemAlreadyThrowOne() throws {
+        var shadowed = picture()
+        shadowed.style.shadow = ShadowStyle()
+        let plain = picture()
+        let doc = document([shadowed, plain, picture()])
+        let rows = doc.layerPartRows(layerIDs: doc.layers.map(\.id))
+        let shadow = try #require(rows.first { $0.part == .shadow })
+        #expect(shadow.isMixed)
+        #expect(shadow.reachNote
+                == "1 of the 3 selected layers has a shadow. "
+                + "Switching this on gives the rest one too.")
+    }
+
     @Test func aLockedLayerIsLeftOutOfEveryRow() {
         let box = shape(.rectangle, locked: true)
         let doc = document([box])

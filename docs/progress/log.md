@@ -10313,3 +10313,26 @@ Audit: `queue/audits/2026-09-07-one-outline-two-kinds.json`.
 a black ring while the shape keeps its own colour, so the row reads Mixed right
 afterwards; and a row where only one of the two layers has a line reads off,
 hiding the colour of the one that does. Both are in the audit's `evaluate`.
+
+## 2026-09-06 — A switch says Mixed the way every other control does
+
+A selection where three layers have a shadow and two do not used to show a
+plain off switch, which is exactly what it shows when none of them have one.
+Both switches in the dock now say Mixed out loud: the Shadow section's own
+`Enable Shadow`, and every switch in the Appearance parts list (Fill, Outline,
+Shadow), which is the one the default Next actually puts on screen. The word
+sits beside the control in `MixedWord`, the control is drawn at
+`MixedLook.controlOpacity` while it has no position to show, and the first
+press resolves to on for every picked layer in one undo step.
+
+The readings are `LayerStyleSelection.shadowIsMixed` and `LayerPartRow.isMixed`
+in `PhotonzCore`, and `LayerPartRow.reachNote` now also says how many of the
+picked layers already have the part, which the parts list had never said at all.
+
+Verified in the probe with real screen captures:
+`Scripts/playtest/switch-says-mixed-walk.json`, audit
+`queue/audits/2026-09-06-switch-says-mixed.json`.
+
+Next: `the-settings-of-a-part-only-some-of-them-have-ca` — a Mixed row still
+cannot be unfolded, so the shadows that DO exist cannot be tuned without first
+giving every picked layer one.

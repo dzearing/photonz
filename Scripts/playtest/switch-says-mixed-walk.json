@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/switch-says-mixed",
+  "setup": { "forget": ["shapes", "panel", "color"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 150], "to": [380, 320], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 150], "to": [660, 320], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [700, 150], "to": [940, 320], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [260, 240] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "1-one-shadowed" },
+    { "do": "describe", "stage": "1-one-shadowed", "note": "one box shadowed on its own, so the selection about to be made really does disagree" },
+
+    { "do": "drag", "from": [100, 110], "to": [1000, 360], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "2-three-picked" },
+    { "do": "describe", "stage": "2-three-picked", "note": "three picked, one shadowed: the Shadow row says Mixed beside a switch drawn one step quieter, and the line under it says 1 of the 3 have one" },
+    { "do": "snapshot", "name": "1-shadow-mixed" },
+
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "panel", "stage": "3-all-shadowed" },
+    { "do": "describe", "stage": "3-all-shadowed", "note": "one press: all three have a shadow, the word is gone and the switch is at full strength" },
+    { "do": "snapshot", "name": "2-shadow-on" },
+    { "do": "render", "name": "three-shadowed" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "4-one-undo" },
+    { "do": "describe", "stage": "4-one-undo", "note": "ONE undo puts all three back: the first box keeps the shadow it had and the row says Mixed again" },
+    { "do": "render", "name": "after-one-undo" },
+
+    { "do": "click", "at": [540, 240] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Switch", "in": "Outline" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "drag", "from": [100, 110], "to": [1000, 360], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "5-outline-mixed" },
+    { "do": "describe", "stage": "5-outline-mixed", "note": "the same answer on another part: two of the three still have an outline, so the Outline row says Mixed too" },
+    { "do": "snapshot", "name": "3-outline-mixed" }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-04T21:25:38.250Z",
-  "updated": "2026-09-06T12:16:42.277Z",
+  "updated": "2026-09-07T02:48:55.267Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/LayersPanel.swift, the Shadow section: the Toggle binds to selection.hasShadowEverywhere, so a part-shadowed selection reads off. A Mac switch has no mixed position (a checkbox does, via NSControl.StateValue.mixed), so the answer is either a checkbox, a word beside the switch, or a third visual state. The one look is MixedLook.style / MixedValue.text and the rule is in docs/design/mocks/shared/UX-PATTERNS.md section 4, What Mixed looks like. Found while doing mixed-reads-the-same-way-in-every-control; audit queue/audits/2026-09-04-mixed-one-look.json rough 4.\n\nDecided 2026-09-05 in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a switch does, since a Mac switch has no third position\": it stays a switch (never becomes a checkbox on multi-select), the word sits beside its own caption as \"Enable Shadow  Mixed\", the switch wears MixedLook.style while it has no position, the first press resolves to on for every picked layer in one undo step and never returns to Mixed, and the reach line underneath (shadowReachNote) stays because it answers a different question.",
@@ -36,6 +36,27 @@
     {
       "t": "2026-09-06T12:16:42.277Z",
       "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-09-07T02:34:15.137Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T02:37:51.084Z",
+      "note": "Adversarial review before building. (1) The task names the Enable Shadow switch in the Shadow section, but next-shape-parts is on by default in Next, and with it on that section is not on screen at all: the shadow switch is a row in the parts list, sharing one control with Fill and Outline. Fixing only the named switch would ship a change nobody sees on a default Next, so both switches get it, and all three parts, since they are one control. (2) The parts row is worse than the section it replaced: a part-shadowed selection there reads plain off with no note at all, because reachNote only covers layers the row skips. It gets the sentence the Shadow section already has. (3) Nothing decorative to cut: the word and the one step quieter both already exist (MixedWord, MixedLook.controlOpacity), and InstanceShowKnob is the shipped exemplar UX-PATTERNS points at. (4) Shortest version: one reading in core per surface, no new control kind, no checkbox."
+    },
+    {
+      "t": "2026-09-07T02:48:55.267Z",
+      "note": "Built. Core: LayerStyleSelection.shadowIsMixed for the Shadow section switch, LayerPartRow.isMixed for the parts list, and LayerPartRow.reachNote now carries the sentence saying how many already have the part (it can say both halves at once, since a Fill row over two boxes and an arrow skips one layer AND speaks for two that disagree). App: both switches wear MixedLook.controlOpacity while they have no position, carry MixedWord beside them, and resolve their first press to on for every picked layer in one step. The word goes AFTER the control, not between it and its caption, so nothing on the row moves for a selection that agrees."
+    },
+    {
+      "t": "2026-09-07T02:48:55.267Z",
+      "note": "Verified in the probe with Screen Recording granted. Scripts/playtest/switch-says-mixed-walk.json: the Shadow row reads 'Shadow, mixed' with three picked and one shadowed, 'Shadow, on' after one press, 'Shadow, mixed' again after one undo, and 'Fill, on' throughout (nothing changes for a row whose layers agree). A second walk with the parts list turned off photographed the Shadow section itself: 'Enable Shadow [quiet switch] Mixed' with the reach line intact. Three real screen captures are in queue/audits/."
+    },
+    {
+      "t": "2026-09-07T02:48:55.267Z",
+      "note": "Adversarial review of the built thing. (1) The parts list control is a tick box, not a switch, and a Mac tick box HAS a mixed dash; not used, because SwiftUI only draws it for a Toggle built from one binding per layer and that would split the change into one undo step per layer. Written down in UX-PATTERNS so the next person does not re-open it. (2) Two mixed rows at once stack two three-line grey notes above the section's own line, which is grey-heavy; left as is and put to the user in the audit. (3) A mixed row still cannot be unfolded, so the three shadows that DO exist cannot be tuned without giving the other two one. Pre-existing, filed as the-settings-of-a-part-only-some-of-them-have-ca."
     }
-  ]
+  ],
+  "started": "2026-09-07T02:34:15.136Z"
 }

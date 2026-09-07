@@ -2699,18 +2699,39 @@ struct ShadowInspector: View {
         let shadows = selection.shadows
         let ids = shadows.layerIDs
         VStack(alignment: .leading, spacing: 8) {
+            let isMixed = selection.shadowIsMixed
             HStack(spacing: 6) {
                 if showsSwitch {
-                    Toggle(isOn: Binding(
-                        get: { selection.hasShadowEverywhere },
-                        set: { editorState.setSelectionShadowEnabled($0) })) {
-                        Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
-                    }
+                    // The caption is the switch's own, and it is out here
+                    // rather than inside the Toggle so that the one step
+                    // quieter below lands on the switch alone: a caption
+                    // dimmed with it would fade into the notes around it.
+                    Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
+                    Toggle("", isOn: Binding(
+                        // A switch has on and off and nothing else, so while
+                        // the picked layers disagree it shows neither: the
+                        // first press resolves to ON for all of them, the way
+                        // a mixed checkbox has always behaved here, and it
+                        // never returns to Mixed, because Mixed is a report
+                        // about the selection rather than a state anyone sets.
+                        get: { isMixed ? false : selection.hasShadowEverywhere },
+                        set: { editorState.setSelectionShadowEnabled(isMixed ? true : $0) }))
+                    .labelsHidden()
                     .toggleStyle(.switch)
                     .controlSize(.mini)
-                    .help(shadowSwitchHelp(selection))
+                    .accessibilityLabel("Enable Shadow")
+                    // Off is a true answer — none of them have one — so a
+                    // disagreeing selection may not wear it at full strength.
+                    .opacity(isMixed ? MixedLook.controlOpacity : 1)
+                    .help(shadowSwitchHelp(selection, isMixed: isMixed))
                     .playtestControl("Enable Shadow",
-                                     detail: selection.hasShadowEverywhere ? "Shadow, on" : "Shadow, off")
+                                     detail: isMixed ? "Shadow, mixed"
+                                         : (selection.hasShadowEverywhere ? "Shadow, on" : "Shadow, off"))
+                    // The word goes beside the switch, since there is no room
+                    // for it inside one, and after it rather than between it
+                    // and its caption so that nothing moves on a selection
+                    // that agrees.
+                    if isMixed { MixedWord() }
                 }
                 // A shadow is ONE part of the look: its softness, size,
                 // distance, direction, opacity and colour are six controls for
@@ -2790,8 +2811,12 @@ struct ShadowInspector: View {
             + "The rows below change those; the switch gives the rest one too."
     }
 
-    private func shadowSwitchHelp(_ selection: LayerStyleSelection) -> String {
-        selection.count > 1
+    private func shadowSwitchHelp(_ selection: LayerStyleSelection,
+                                  isMixed: Bool) -> String {
+        // While they disagree the switch has no state to turn off, so the tip
+        // says what the press it CAN take would do.
+        if isMixed { return "Gives all \(selection.count) of them a shadow" }
+        return selection.count > 1
             ? "Turns the shadow on or off for all \(selection.count) of them"
             : "Turns the shadow on or off"
     }

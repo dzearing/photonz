@@ -107,7 +107,18 @@ private struct PartRowView: View {
                 }
                 .frame(width: ColorPartLayout.switchWidth,
                        height: ColorPartLayout.rowHeight, alignment: .leading)
-                if isOn { colorControl }
+                if isOn {
+                    colorControl
+                } else if row.isMixed {
+                    // The word where the row shows its value, which is where
+                    // this row's colour says Mixed too. A part that only some
+                    // of them have has no colour on screen to collide with it,
+                    // and the line under the row says which of the two the
+                    // word is about.
+                    MixedWord()
+                        .frame(minWidth: ColorPartLayout.readoutWidth,
+                               minHeight: ColorPartLayout.rowHeight, alignment: .leading)
+                }
                 Spacer(minLength: 0)
                 if opens { chevron }
             }
@@ -133,11 +144,20 @@ private struct PartRowView: View {
     // MARK: The switch
 
     @ViewBuilder private var partSwitch: some View {
-        Toggle(row.title, isOn: Binding(get: { row.isOn }, set: { setOn($0) }))
+        // A switch has on and off and nothing else, so while the picked layers
+        // disagree it shows neither: it is drawn one step quieter, because off
+        // is the true answer that means none of them have this part, and the
+        // first press resolves to ON for all of them. It never returns to
+        // Mixed, which is a report about the selection rather than a state
+        // anyone can set (`UX-PATTERNS.md` section 4).
+        Toggle(row.title, isOn: Binding(get: { row.isMixed ? false : row.isOn },
+                                        set: { setOn(row.isMixed ? true : $0) }))
             .labelsHidden()
             .controlSize(.small)
+            .opacity(row.isMixed ? MixedLook.controlOpacity : 1)
             .help(switchHelp)
-            .playtestControl("Switch", detail: row.isOn ? "on" : "off")
+            .playtestControl("Switch",
+                             detail: row.isMixed ? "mixed" : (row.isOn ? "on" : "off"))
     }
 
     private func setOn(_ on: Bool) {
@@ -155,6 +175,11 @@ private struct PartRowView: View {
 
     private var switchHelp: String {
         let noun = row.title.lowercased()
+        // While they disagree the switch has no state to turn off, so the tip
+        // says what the press it CAN take would do.
+        if row.isMixed {
+            return "Gives all \(row.switchIDs.count) of them \(row.part?.article ?? "a") \(noun)"
+        }
         return row.switchIDs.count > 1
             ? "Turns the \(noun) on or off for all \(row.switchIDs.count) of them"
             : "Turns the \(noun) on or off"

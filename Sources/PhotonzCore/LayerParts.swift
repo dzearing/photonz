@@ -38,6 +38,16 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
         case .shadow: return "Shadow"
         }
     }
+
+    /// The word in front of the part's name in a sentence about it: "1 of the 3
+    /// selected layers has an outline". Written down beside the name so a
+    /// sentence cannot end up saying "a outline".
+    public var article: String {
+        switch self {
+        case .fill, .shadow: return "a"
+        case .outline: return "an"
+        }
+    }
 }
 
 extension Layer {
@@ -175,13 +185,41 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
     /// chevron rather than opening an empty drawer.
     public var hasSettings: Bool { part == .shadow || !widthIDs.isEmpty }
 
-    /// What the row says out loud when it is leaving a picked layer out. Nil
-    /// when it reaches all of them, because a sentence saying "this does what
-    /// it looks like it does" is a sentence in the way.
+    /// True while some of the layers this row's switch reaches have the part
+    /// and the rest do not.
+    ///
+    /// Off is a true answer — none of them have it — so a row where one box is
+    /// outlined and the other is not may not borrow it. A Mac switch has no
+    /// third position, so the row says the word beside the switch instead and
+    /// the switch is drawn one step quieter while it has no position to show
+    /// (`UX-PATTERNS.md` section 4). A row with no switch has nothing to
+    /// disagree about.
+    public var isMixed: Bool { onCount > 0 && onCount < switchIDs.count }
+
+    /// What the row says out loud when it is leaving a picked layer out, or
+    /// when the layers it reaches disagree. Nil when it reaches all of them and
+    /// they agree, because a sentence saying "this does what it looks like it
+    /// does" is a sentence in the way.
+    ///
+    /// Both halves can be true at once — an arrow has no inside, so a Fill row
+    /// over two boxes and an arrow skips one layer AND speaks for two that
+    /// disagree — and each is a different question, so each gets its own
+    /// sentence rather than one of them being dropped.
     public var reachNote: String? {
         let reach = max(switchIDs.count, widthIDs.count)
-        guard reach > 0, reach < selectionCount else { return nil }
-        return "Applies to \(reach) of the \(selectionCount) selected layers."
+        let skips = reach > 0 && reach < selectionCount
+        var lines: [String] = []
+        if skips {
+            lines.append("Applies to \(reach) of the \(selectionCount) selected layers.")
+        }
+        if isMixed, let part {
+            let verb = onCount == 1 ? "has" : "have"
+            let noun = "\(part.article) \(part.title.lowercased())"
+            let of = skips ? "\(onCount) of those"
+                : "\(onCount) of the \(selectionCount) selected layers"
+            lines.append("\(of) \(verb) \(noun). Switching this on gives the rest one too.")
+        }
+        return lines.isEmpty ? nil : lines.joined(separator: " ")
     }
 }
 

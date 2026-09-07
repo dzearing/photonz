@@ -119,6 +119,20 @@ public struct LayerStyleSelection: Hashable, Sendable {
         !members.isEmpty && members.allSatisfy { $0.style.shadow != nil }
     }
 
+    /// True while some of the picked layers throw a shadow and the rest do not.
+    ///
+    /// Off is a true answer — none of them have one — so a selection where
+    /// three of five are shadowed may not borrow it: it reads exactly like the
+    /// answer that means nobody has one. A Mac switch has no third position, so
+    /// the panel says the word beside the switch's own caption and draws the
+    /// switch one step quieter while it has no position to show
+    /// (`UX-PATTERNS.md` section 4). One layer, or none, has nothing to
+    /// disagree with.
+    public var shadowIsMixed: Bool {
+        let shadowed = members.filter { $0.style.shadow != nil }.count
+        return shadowed > 0 && shadowed < members.count
+    }
+
     /// The picked layers that have a shadow to talk about. The shadow's own
     /// rows speak for these, so Softness over a selection where one box is
     /// unshadowed changes the two that are rather than inventing a shadow on

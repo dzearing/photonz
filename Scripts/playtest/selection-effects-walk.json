@@ -280,7 +280,7 @@
     {
       "do": "describe",
       "stage": "9-half-shadowed",
-      "note": "three picked, one shadowed: the switch reads off, and the shadow rows say they reach 1 of the 3"
+      "note": "three picked, one shadowed: the switch says Mixed rather than reading off, and the shadow rows say they reach 1 of the 3"
     },
     {
       "do": "snapshot",

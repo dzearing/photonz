@@ -1,0 +1,28 @@
+{
+  "id": "the-settings-of-a-part-only-some-of-them-have-ca",
+  "title": "The settings of a part only some of them have can still be reached",
+  "goal": "Pick five layers where three have a shadow. The Shadow row says Mixed, but there is no way to open it and change those three shadows: the only move on offer is giving all five one. Opening a part that only some of the picked layers have should show its settings, speaking for the ones that have it.",
+  "epic": "ui-components",
+  "priority": "p3-low",
+  "seq": 1320,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T02:47:48.252Z",
+  "updated": "2026-09-07T02:47:48.253Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "PartsInspector.PartRowView: opens = isOn && row.hasSettings, so a mixed row hides its chevron. The old Shadow section did this already: ShadowInspector draws its sliders for selection.shadows, the subset that has one. The parts list threw that away when the switch moved up onto the row. Found while doing a-switch-says-mixed-the-way-every-other-control (audit 2026-09-06-switch-says-mixed, rough 3).",
+  "acceptance": [
+    "A part row that says Mixed can be unfolded like any other row",
+    "Its settings change only the picked layers that have that part, in one undo step",
+    "The line under the row still says how many it reaches",
+    "A part no picked layer has still shows nothing to unfold"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T02:47:48.253Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -91,6 +91,29 @@ struct LayerStyleSelectionTests {
         #expect(!selection([off, off]).hasShadowEverywhere)
     }
 
+    @Test func aPartShadowedSelectionSaysMixedRatherThanReadingOff() {
+        var on = LayerStyle(); on.shadow = ShadowStyle()
+        let off = LayerStyle()
+        // Off is a true answer — none of them have one — so a selection where
+        // three have a shadow and two do not may not borrow it. A Mac switch
+        // has no third position, so the panel says the word beside it
+        // (UX-PATTERNS section 4) and this is the reading it says it from.
+        #expect(selection([on, off]).shadowIsMixed)
+        #expect(selection([on, on, off, off, on]).shadowIsMixed)
+    }
+
+    @Test func aSwitchWhoseLayersAgreeIsNeverMixed() {
+        var on = LayerStyle(); on.shadow = ShadowStyle()
+        let off = LayerStyle()
+        #expect(!selection([on, on]).shadowIsMixed)
+        #expect(!selection([off, off]).shadowIsMixed)
+        // One layer has nothing to disagree with, and nothing picked is not a
+        // disagreement either.
+        #expect(!selection([on]).shadowIsMixed)
+        #expect(!selection([off]).shadowIsMixed)
+        #expect(!selection([]).shadowIsMixed)
+    }
+
     @Test func shadowRowsSpeakForTheLayersThatHaveOne() {
         var on = LayerStyle(); on.shadow = ShadowStyle(radius: 6)
         let off = LayerStyle()
