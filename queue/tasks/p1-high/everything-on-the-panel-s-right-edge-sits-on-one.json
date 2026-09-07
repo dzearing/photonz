@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 16,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:40:09.390Z",
-  "updated": "2026-09-07T18:51:08.725Z",
+  "updated": "2026-09-07T19:19:53.969Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 with a screenshot showing a line drawn through the eye icons and the collapse button and grip missing it. The cause is that the trailing space is written separately in several places rather than shared: layer rows use a horizontal padding of 6 (LayersPanel.swift line 2251), the canvas row uses 6 (line 1921), other rows use 3, 5, 8 and 14 at lines 2035, 2209, 1872 and 2516, one row adds a trailing 6 of its own at line 2372, and the collapse button is inset by EditorChromeLayout.cornerInset of 12 (EditorChromeLayout.swift line 126). Different numbers plus different icon sizes give different centres. Put the trailing inset in EditorChromeLayout beside the other chrome numbers and have every row and control on that edge read it. Note the icons differ in size, the eye is 11 point while the collapse button is a 30 point control, so aligning their BOXES is not the same as aligning what is drawn; align the drawn centres, which is what the user's line goes through. Coordinate with the-panel-toggle-sits-in-the-window-title-bar-wh, which moves the collapse button into the title bar entirely; if that lands first this task covers whatever remains on the edge.\n\nDONE 2026-09-07. The numbers live in EditorChromeLayout (panelEdgeInset 14, panelEdgeIconWidth 17, panelEdgeCenterInset 22.5, panelListGutter 8, panelEdgeInset(insideGutter:)) with tests in Tests/PhotonzCoreTests/EditorChromeLayoutTests.swift (suite PanelEdgeColumnTests). Sources/Photonz/PanelEdge.swift holds the three modifiers every edge control wears: panelEdgeIcon (slot + probe), panelEdgePadding (straight onto the panel), panelEdgeRowPadding (inside a list gutter). Add an icon to that edge with panelEdgeIcon and it lands on the line by construction. Measuring: Scripts/playtest/panel-edge-column-walk.json + panel-edge-narrow-walk.json drive the new panelEdge step, which writes panel-edge-<stage>.json with every icon's centre as points in from the panel's right edge. The probe (Sources/Photonz/Playtest/PanelEdgeProbe.swift) is keyed by VIEW, not by name: keying by name silently lost every row SwiftUI rebuilds, because the replacement's appear ran before the original's disappear.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-07T19:18:45.000Z",
       "note": "Adversarial review of the built thing. The lock's slot grew from its own glyph width to the shared 17, which costs a long layer name about 6pt on a narrow panel; it truncates as before and the steadiness is worth it. The 35 places in the panel that wrote a bare 14 for their content margin now read EditorChromeLayout.panelEdgeInset, proved a no-op by a pixel comparison that found no differing pixels at all. Two things I could not finish: a scripted walk cannot place a measurement at all, so the Measurements list eye was verified by code identity rather than photographed (filed as a-scripted-walk-can-place-a-measurement), and the panel toggle in the window title bar sits 22pt in from the WINDOW edge against this column's 22.5 from the panel's, which is a system-placed toolbar item and is raised in the audit rather than chased."
+    },
+    {
+      "t": "2026-09-07T19:19:53.968Z",
+      "note": "Every icon on the panel's right edge now sits on one centre line, 22.5pt in from the panel's own edge: eyes, padlocks, section grips, and an effect row's grip and cross. One inset and one icon slot in EditorChromeLayout (tested), worn by every control through PanelEdge.swift. Measured in the running app with a new panelEdge playtest step: before, grips 19, eyes 22.5, padlocks 44.25/46.25, spread 3.5; after, spread 0 and the padlock steady at 47.5, holding at a 400pt panel in an 860pt window. A pixel comparison of the same walk before and after shows the only changed pixels in the whole window are x 1227-1266, so nothing on the left moved. 4494 tests green. Audit: queue/audits/2026-09-07-panel-edge-column.json"
     }
   ],
-  "started": "2026-09-07T18:51:08.725Z"
+  "started": "2026-09-07T18:51:08.725Z",
+  "completed": "2026-09-07T19:19:53.968Z"
 }
