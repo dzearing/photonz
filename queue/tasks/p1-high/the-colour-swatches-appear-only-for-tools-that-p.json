@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 13,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T15:23:56.174Z",
-  "updated": "2026-09-07T18:13:19.954Z",
+  "updated": "2026-09-07T18:26:51.019Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07: the colour swatches are not applicable when selecting things. Confirmed by reading: EditorView.colorBar (line 1163) always draws something. It picks the fill and border pair for a shape tool, the style button for other annotation tools and text, and otherwise falls through to fillColorPair (line 1389), the foreground and background pair, which is what shows under Select. The rule to write is which tools paint: shapes, arrow, line, highlight, text and the fill bucket, plus anything added later that creates or paints. Put that on Tool in PhotonzCore beside the existing helpers like createsAnnotationByDrag rather than as a list in the view, so a new tool cannot forget to answer. Note the foreground and background pair is also what the fill bucket and the delete-key fills use, so check what those need when no painting tool is in hand before deciding they can disappear entirely; if they must stay reachable, say where they went. Same measurement point as the grid group task: the tool bar reserves room from a measured content width, so a group that draws nothing has to measure nothing or the gap remains.",
@@ -82,7 +82,12 @@
     {
       "t": "2026-09-07T18:55:00.000Z",
       "note": "filed follow-up the-fill-keys-say-which-colours-they-will-use (p2). Full suite green: 4466 tests. Audit at queue/audits/2026-09-07-colour-where-it-paints.json with three real window captures."
+    },
+    {
+      "t": "2026-09-07T18:26:51.018Z",
+      "note": "The colour capsule is now a property of the tool (Tool.colorControl / Tool.paints in PhotonzCore, exhaustive so a new tool has to answer), and EditorView.colorBar is an if, so Select, the marquee pair, the wand, crop, measure, the zoom callout and the frame carry no swatches and the bar closes up. Measured on the probe with Screen Recording granted: 1280pt Select = Tools x115 w514, Grid x639 w52, Zoom x701 w199; a rectangle is exactly 63pt wider (53pt capsule + 10pt gap) split evenly, every other group unchanged; a six-tool round trip returns to x115 w514 to the pixel; 760pt behaves the same. The pair survives Select, wand and crop and comes back on the bucket unchanged (#FF3B30 through walk stages 14-16). Full suite green, 4466 tests. Audit queue/audits/2026-09-07-colour-where-it-paints.json with three real window captures; follow-up filed for the fill keys that still use the pair under tools with no swatches."
     }
   ],
-  "started": "2026-09-07T18:13:19.954Z"
+  "started": "2026-09-07T18:13:19.954Z",
+  "completed": "2026-09-07T18:26:51.019Z"
 }
