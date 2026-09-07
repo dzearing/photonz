@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1590,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T06:03:23.356Z",
-  "updated": "2026-09-07T07:38:36.319Z",
+  "updated": "2026-09-07T07:58:28.330Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the full sweep on 2026-09-07 (221 passed, 15 failed; the other twelve are the colour style naming regression, filed separately). history-menu-title-walk: step 9, 'Capture > Show History is not ticked and it should be ticked before command+shift+h'. history-tooltips-walk: step 5, no window called 'Capture History' is open. out-of-view-mark-walk: step 27, the control 'Clip contents' is not in the window, so it needs a scrollPanel step first (that one is almost certainly the walk, not the app). Run one with Scripts/playtest.sh <walk>; run the lot with Scripts/playtest-all.sh.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-07T07:54:18.746171Z",
       "note": "Honest limit: the outside click could not be reproduced on demand (driving another app needs the Accessibility grant, which this terminal does not have), so the cause is inference from the evidence rather than a reproduction. The hardening covers both ways in."
+    },
+    {
+      "t": "2026-09-07T07:58:28.329Z",
+      "note": "All three walks run to the end and report ok, twice in a row, and green alongside every menu walk (8 passed, 0 failed). out-of-view-mark-walk was the only broken one and the walk was at fault: opening the Card in the layers list pushed the Layout section below the fold, so it now scrolls to Clip contents and back, and stage 4 still reads the mark off the Body row. The two history walks were never broken; they were reachable from outside, so the probe now registers none of the system-wide capture hotkeys and does not close the capture history when a click lands in another app (AppFlavor.claimsInputOutsideItself, PhotonzCore, tested). Dev and release untouched. Suite green at 4268. Committed as 52f77241."
     }
   ],
-  "started": "2026-09-07T07:38:36.318Z"
+  "started": "2026-09-07T07:38:36.318Z",
+  "completed": "2026-09-07T07:58:28.330Z"
 }
