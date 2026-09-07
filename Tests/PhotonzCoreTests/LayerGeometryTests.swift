@@ -188,8 +188,14 @@ struct LayerGeometryTests {
         let editing = LayerGeometryEditing(layer: text)
         #expect(editing.allows(.x))
         #expect(editing.allows(.width))
+        // With nowhere to spend room down the box, the height still follows
+        // the words and the field says so.
         #expect(!editing.allows(.height))
-        #expect(editing.fixedReason(for: .height) != nil)
+        #expect(editing.fixedReason(for: .height) == LayerGeometryEditing.textHeightReason)
+        // With the Down row on, Height is ROOM the words then sit in.
+        let roomy = LayerGeometryEditing(layer: text, textTakesAHeight: true)
+        #expect(roomy.allows(.height))
+        #expect(roomy.fixedReason(for: .height) == nil)
     }
 
     @Test("An image takes all four")

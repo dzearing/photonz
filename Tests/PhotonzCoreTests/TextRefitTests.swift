@@ -80,12 +80,17 @@ struct TextRefitTests {
         #expect(moved.frame.origin == CGPoint(x: label.frame.minX + 25, y: label.frame.minY - 12))
     }
 
-    /// Dragging the BOTTOM edge of a text box does nothing: height follows the
-    /// words, which is what the inspector's Height field already says.
-    @Test func draggingTheBottomEdgeDoesNotStretchTheGlyphs() {
+    /// Dragging the BOTTOM edge of a text box gives it ROOM: the box gets
+    /// taller, the words are not stretched with it, and Down then decides where
+    /// in that room they sit. A height that came from anywhere but a hand still
+    /// belongs to the words.
+    @Test func draggingTheBottomEdgeGivesTheBoxRoomWithoutStretchingTheGlyphs() {
         let label = hugging("Save")
-        let taller = label.resized(to: CGRect(x: 0, y: 0, width: label.frame.width, height: 90))
-        #expect(taller.frame.height == label.frame.height)
+        let box = CGRect(x: 0, y: 0, width: label.frame.width, height: 90)
+        let taller = label.resized(to: box, chosenByHand: true)
+        #expect(taller.frame.height == 90)
+        #expect(taller.text?.fontSize == label.text?.fontSize)
+        #expect(label.resized(to: box).frame.height == label.frame.height)
     }
 
     // MARK: - Inside a stack
@@ -236,9 +241,13 @@ struct TextRefitTests {
         let filled = LayerGeometryEditing(layer: row.children[0], in: row)
         #expect(!filled.allows(.height))
         #expect(filled.fixedReason(for: .height) == LayerGeometryEditing.filledHeightReason)
-        // A label in the same row that was told nothing still follows its words.
+        // A label in the same row that was told nothing still follows its
+        // words, until the Down row gives that height somewhere to be spent.
         let hugger = LayerGeometryEditing(layer: hugging("Save"), in: row)
         #expect(hugger.fixedReason(for: .height) == LayerGeometryEditing.textHeightReason)
+        let roomy = LayerGeometryEditing(layer: hugging("Save"), in: row, textTakesAHeight: true)
+        #expect(roomy.allows(.height))
+        #expect(roomy.fixedReason(for: .height) == nil)
     }
 
     /// Taking the choice back gives the height to the words again. A box that

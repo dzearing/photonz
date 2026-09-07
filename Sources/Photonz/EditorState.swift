@@ -1615,8 +1615,10 @@ final class EditorState {
             // renderer draws them in underneath it again.
             return LayerGeometrySelection.Member(id: layer.id,
                                                  frame: layer.withoutSlack(frame),
-                                                 editing: LayerGeometryEditing(layer: layer,
-                                                                               in: holder),
+                                                 editing: LayerGeometryEditing(
+                                                    layer: layer, in: holder,
+                                                    textTakesAHeight: Experiments.shared
+                                                        .placementEnabled),
                                                  slack: layer.boxSlack)
         }
         return LayerGeometrySelection(members)
@@ -1653,12 +1655,17 @@ final class EditorState {
                 guard let frame = moves[layer.id] else { return nil }
                 return (layer.id, frame)
             }
+        // A height typed into a text box is ROOM its words then sit in, and the
+        // only place to spend that room is the Down row, which is part of the
+        // placement experiment (`next-placement`). Off, a text box goes on
+        // taking its height from its words exactly as it always did.
+        let byHand = Experiments.shared.placementEnabled
         perform { document in
             let canvas = document.canvasSize
             for move in ordered {
                 document.updateLayer(id: move.id) {
                     $0 = AnnotationBuilder.planningCaption(
-                        $0.resized(to: move.frame), canvas: canvas,
+                        $0.resized(to: move.frame, chosenByHand: byHand), canvas: canvas,
                         captionPillSize: $0.measuredCaptionPillSize)
                 }
             }

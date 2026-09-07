@@ -187,6 +187,63 @@ extension Layer {
     /// nobody can name but everyone can see.
     public var contentBounds: CGRect { withoutSlack(localBounds) }
 
+    /// Whether this text box is taller than the words in it, so that where the
+    /// words sit DOWN it is a question with an answer. False for everything
+    /// that is not text, and for every text box that hugs what it says.
+    public var hasRoomDownTheBox: Bool {
+        guard case .text(let content) = self.content else { return false }
+        let box = frame.standardized
+        return box.height > TextMeasurement.size(of: content, wrappingAt: box.width).height + 0.5
+    }
+
+    /// The box a text layer takes when one of its handles is dragged to
+    /// `proposed`, in the space a person SEES — the box the outline hugs, the
+    /// one the drag itself is in.
+    ///
+    /// The handles do two different jobs on a text box, and which one depends
+    /// on the edge you grabbed:
+    ///
+    /// - **Across it** (the sides, and the corners) they set the WRAP WIDTH,
+    ///   and the words decide how tall the box comes out. That is what a text
+    ///   handle has always done.
+    /// - **Down it** (the top and bottom edges) they give the box ROOM. The
+    ///   words never re-wrap, the box simply gets taller than they are, and
+    ///   Down then shares that room out. Dragged back up past the words the
+    ///   box hugs them again, so the room can always be handed back.
+    ///
+    /// Either way the box never goes narrower than a caption can be read at,
+    /// nor shorter than the words need.
+    ///
+    /// `givingRoom` is off where there is nowhere to spend the room: the Down
+    /// row is part of the placement experiment, so without it the top and
+    /// bottom edges do what they always did, which is let the words decide.
+    public func textResized(from start: CGRect, to proposed: CGRect,
+                            handle: ResizeHandle, givingRoom: Bool = true) -> CGRect {
+        guard case .text(let content) = self.content else { return proposed }
+        let start = start.standardized
+        let proposed = proposed.standardized
+        let slack = boxSlack
+        // The words as a person sees them: measured in the box the renderer
+        // draws them in, with that room taken off again for the answer, so the
+        // outline keeps hugging the letters through the whole drag.
+        func seenWordsHeight(at width: CGFloat) -> CGFloat {
+            max(0, TextMeasurement.size(of: content, wrappingAt: width + slack.width).height
+                    - slack.height)
+        }
+        // Room already given by hand is a floor on both kinds of drag: dragging
+        // a side to re-wrap must not quietly collapse a box somebody made tall.
+        let room = max(0, (heightChosenByHand ?? 0) - slack.height)
+        if givingRoom, handle == .top || handle == .bottom {
+            let height = max(proposed.height, seenWordsHeight(at: start.width))
+            let y = handle.movesMinY ? proposed.maxY - height : proposed.minY
+            return CGRect(x: start.minX, y: y, width: start.width, height: height)
+        }
+        let width = max(proposed.width, TextMeasurement.minimumContentWidth)
+        let height = max(seenWordsHeight(at: width), room)
+        let x = handle.movesMinX ? proposed.maxX - width : proposed.minX
+        return CGRect(x: x, y: start.minY, width: width, height: height)
+    }
+
     /// Whether this box is as wide as its words want to be.
     ///
     /// A box nobody has narrowed hugs its words: re-wording it should stay on
@@ -238,7 +295,10 @@ extension Layer {
         let allowed = max(max(1, room + boxSlack.width), TextMeasurement.widestWord(in: content))
         guard TextMeasurement.size(of: content).width > allowed else { return self }
         let box = frame.standardized
-        let height = TextMeasurement.size(of: content, wrappingAt: allowed).height
+        // Room somebody gave the box is theirs, so a container narrowing it
+        // re-wraps the words inside the room rather than taking it away.
+        let height = max(TextMeasurement.size(of: content, wrappingAt: allowed).height,
+                         heightChosenByHand ?? 0)
         var out = self
         out.frame = CGRect(x: box.minX, y: box.minY, width: allowed, height: height)
         out.wrappedByItsContainer = true
@@ -255,8 +315,10 @@ extension Layer {
         guard wrappedByItsContainer == true,
               case .text(let content) = self.content else { return self }
         let box = frame.standardized
+        var size = TextMeasurement.size(of: content)
+        size.height = max(size.height, heightChosenByHand ?? 0)
         var out = self
-        out.frame = CGRect(origin: box.origin, size: TextMeasurement.size(of: content))
+        out.frame = CGRect(origin: box.origin, size: size)
         out.wrappedByItsContainer = nil
         return out
     }
@@ -271,8 +333,11 @@ extension Layer {
     func textRefitted(hugging: Bool, anchor: HorizontalPlacement) -> Layer {
         guard case .text(let content) = self.content else { return self }
         let box = frame.standardized
-        let size = hugging ? TextMeasurement.size(of: content)
+        var size = hugging ? TextMeasurement.size(of: content)
                            : TextMeasurement.size(of: content, wrappingAt: box.width)
+        // Room somebody gave the box outlives every re-fit: re-wording a tall
+        // box keeps it tall, and the words go on sitting where Down says.
+        size.height = max(size.height, heightChosenByHand ?? 0)
         let width = hugging ? size.width : box.width
         guard width != box.width || size.height != box.height else { return self }
         let x: CGFloat

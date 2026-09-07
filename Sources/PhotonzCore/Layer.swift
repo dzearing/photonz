@@ -883,6 +883,20 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// answer, which is every one written before this.
     public var wrappedByItsContainer: Bool?
 
+    /// The height somebody GAVE this text box, in stored points, when that is
+    /// more than its words need. Nil is a box that hugs its words, which is
+    /// every text box until it is dragged or typed taller and every one written
+    /// before this existed.
+    ///
+    /// A text box works its own height out from the words in it, which is why
+    /// Middle and Bottom had nothing to move them in: there was never any room
+    /// to share out unless a container stretched the box. This is that room
+    /// made by hand, and it has to be written down rather than read off the
+    /// frame, because the frame's height is re-derived every time the words
+    /// re-wrap (`docs/design/ui-building.md`, "Where the words sit in their
+    /// box").
+    public var heightChosenByHand: CGFloat?
+
     public init(id: UUID = UUID(), name: String, content: LayerContent, frame: CGRect,
                 crop: CGRect? = nil, transform: LayerTransform = .identity,
                 style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false,
@@ -914,6 +928,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          colorStyleBindings: colorStyleBindings, placement: placement,
                          flowFill: flowFill)
         copy.wrappedByItsContainer = wrappedByItsContainer
+        copy.heightChosenByHand = heightChosenByHand
         copy.repointComponentProperties(map)
         return copy
     }
@@ -939,6 +954,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          colorStyleBindings: colorStyleBindings, placement: placement,
                          flowFill: flowFill)
         copy.wrappedByItsContainer = wrappedByItsContainer
+        copy.heightChosenByHand = heightChosenByHand
         map[id] = copy.id
         return copy
     }

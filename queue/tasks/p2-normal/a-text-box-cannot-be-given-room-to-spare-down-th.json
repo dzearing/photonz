@@ -5,14 +5,14 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 1540,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T00:03:19.750Z",
-  "updated": "2026-09-07T00:03:19.750Z",
+  "updated": "2026-09-07T00:46:00.964Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found on 2026-09-06 while fixing where words sit down a box. Dragging the bottom edge of a text box MOVES the layer; dragging a corner re-wraps it and the height follows the words; H in Position & Size is not editable for text. Layer.resized honours a taller box only when fillingHeight is true, which GroupFlow passes for a child whose vertical placement is Stretch, so room today comes only from a container. See Scripts/playtest/words-down-the-box-walk.json, stage 3-middle-does-nothing, and TextBlockMetrics.topInset which is the rule that would then apply.",
+  "notes": "Found on 2026-09-06 while fixing where words sit down a box. Dragging the bottom edge of a text box MOVES the layer; dragging a corner re-wraps it and the height follows the words; H in Position & Size is not editable for text. Layer.resized honours a taller box only when fillingHeight is true, which GroupFlow passes for a child whose vertical placement is Stretch, so room today comes only from a container. See Scripts/playtest/words-down-the-box-walk.json, stage 3-middle-does-nothing, and TextBlockMetrics.topInset which is the rule that would then apply. RESOLVED 2026-09-06 by giving a person the room rather than taking the choice away. See docs/design/ui-building.md, \"A text box can be given room by hand\", queue/audits/2026-09-06-text-box-room.json, and Scripts/playtest/text-box-room-walk.json.",
   "acceptance": [
     "A text box on the canvas can be made taller than the words in it, by a drag or by typing a height",
     "With that room, pressing Middle moves the words to the middle of it and Bottom moves them to the floor",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-07T00:03:19.750Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T00:46:00.964Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T01:09:01.618969Z",
+      "note": "Adversarial review before building: the two obvious answers were (a) let a person make the room and (b) hide Down when a box hugs. (b) is wrong: the room is genuinely wanted (a label centred in a card, a title sitting on the floor of a bar) and hiding the row would take away the one thing that already works, a container stretching a box. So: make the room reachable. Shortest version that delivers it: a height a PERSON hands a text box is kept, everything else is unchanged. Rejected making the corners set the height too (Figma does) because it would silently pin a box's height on any sideways corner drag."
+    },
+    {
+      "t": "2026-09-07T01:09:01.618969Z",
+      "note": "Built. Core: Layer.heightChosenByHand records room somebody made, Layer.resized honours it behind a new chosenByHand flag that only the two hand paths pass (typed fields, canvas drag commit), Layer.textResized owns the handle rule (sides re-wrap, top and bottom give room), textRefitted/textUnwrapped/textWrapped keep the room through a re-wrap, LayerGeometryEditing lets H take a number for text and floors it at the words, TextLayerSelection.downTheBoxNote explains a Down row with no room. App: CanvasView calls textResized, the three hand paths pass chosenByHand, the Text section shows the note. All of it gated on next-placement so Current is untouched."
+    },
+    {
+      "t": "2026-09-07T01:09:01.618969Z",
+      "note": "Verified on the real app with Scripts/playtest/text-box-room-walk.json (probe, Screen Recording granted, real -sc.png captures): H took 160 and the words jumped to the middle; Bottom put them on the floor without moving the box; the bottom edge handle dragged the box from 160 to 260 tall with the letters unstretched; dragging it back up past the words returned H to 29 and the box hugged again. Suite: 4184 tests, all green."
+    },
+    {
+      "t": "2026-09-07T01:09:01.618969Z",
+      "note": "Review after building: on a ONE LINE label the app offers corner handles only (Handles drops edge midpoints under 40 screen points), so the bottom edge is not there to drag until the box has room. Typing H always works and the explanation line says to do that. Changing the handle rule would change handles for every layer, so it was left alone and raised in the audit for the user to judge."
     }
-  ]
+  ],
+  "started": "2026-09-07T00:46:00.963Z"
 }

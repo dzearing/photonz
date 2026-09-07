@@ -243,6 +243,25 @@ inspector has an Align row with the two of them, behind `next-placement`.
   words, and the inspector's Height tip still says the words decide it. Nothing
   re-measures when a file is opened, so a document saved with the choice already
   set is exactly what it was until its container is next resized.
+- **A text box can be given room by hand** (landed 2026-09-06). Stretching down
+  was the only way to make room, so on a plain canvas Down was a row of three
+  pictures that looked pressable and moved nothing: a text box works its height
+  out from its words, and there was never any spare. Now a height a PERSON hands
+  a text box is room, and the box keeps it. Two ways in: type a number into H in
+  Position & Size, which a text box now takes (it stops at the words, and the
+  hover tip says so), or drag the box's top or bottom edge, which gives it room
+  rather than re-wrapping anything. The sides and the corners are unchanged:
+  those set the wrap width and the words decide the height, as they always did.
+  Dragged or typed back below the words, the box hugs them again, so the room can
+  always be handed back. The room is written down (`Layer.heightChosenByHand`)
+  rather than read off the frame, because the frame's height is re-derived every
+  time the words re-wrap; that is what lets a roomy box be re-worded, re-wrapped
+  or narrowed and stay roomy. A container's answer is never room: a stack, a grid
+  or a screen handing a box a height says how tall it is this pass only.
+  While the box has none and Down is set to Middle or Bottom, the Text section
+  says so in a line under the rows rather than leaving a dead control there.
+  All of it rides with `next-placement`, because the Down row is the only place
+  the room can be spent.
 - **A box too small for its words keeps every line.** CoreText fills a frame
   from the top down and drops what does not fit, so text that needs at least the
   box it has is drawn exactly as it always was rather than centred into losing

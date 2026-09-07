@@ -1,0 +1,61 @@
+{
+  "out": "/tmp/photonz-playtest/text-box-room",
+  "seed": "A text box you can give room to. Until now a plain text box on the canvas was always exactly as tall as the words in it, so the Text section's Down row (Top, Middle, Bottom) looked pressable and moved nothing. This walk types a height into H to make room, checks that Middle and Bottom then actually move the words, drags the bottom edge to make more room by hand, and drags it back up past the words to hand the room back.",
+  "setup": { "forget": ["text", "shapes", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [500, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Words down the box" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [560, 315] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-hugging",
+      "note": "a plain text box, selected. The outline sits on the words. H in Position & Size should now be a field you can TYPE IN rather than a number you can only read." },
+    { "do": "snapshot", "name": "room-1-hugging" },
+    { "do": "panel", "stage": "1-hugging" },
+
+    { "do": "press", "control": "Middle", "in": "Down" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-middle-with-no-room",
+      "note": "Middle is chosen and the words have not moved, because the box has no room. The Text section should now SAY so, in a line under the rows: the box is exactly as tall as its words, drag the bottom edge or type a height." },
+    { "do": "snapshot", "name": "room-2-middle-with-no-room" },
+    { "do": "panel", "stage": "2-middle-with-no-room" },
+
+    { "do": "focus", "field": "H" },
+    { "do": "type", "text": "160" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-typed-a-height",
+      "note": "THE TEST: H took 160, the box is now much taller than its words, and because Down is already on Middle the words should have jumped to the middle of it. The explanation line under the Text rows should be gone." },
+    { "do": "snapshot", "name": "room-3-typed-a-height" },
+    { "do": "render", "name": "room-3-typed-a-height-doc" },
+    { "do": "panel", "stage": "3-typed-a-height" },
+
+    { "do": "press", "control": "Bottom", "in": "Down" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-bottom",
+      "note": "Bottom should put the words on the floor of the same box. The box itself must not move or change size." },
+    { "do": "snapshot", "name": "room-4-bottom" },
+    { "do": "render", "name": "room-4-bottom-doc" },
+
+    { "do": "press", "control": "Top", "in": "Down" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [605, 460], "to": [605, 560] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-dragged-taller",
+      "note": "the bottom edge dragged down 100 points. The box should be about 260 tall now, the words still at the top of it, and nothing about the letters stretched." },
+    { "do": "snapshot", "name": "room-5-dragged-taller" },
+    { "do": "panel", "stage": "5-dragged-taller" },
+
+    { "do": "drag", "from": [605, 560], "to": [605, 320] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-room-handed-back",
+      "note": "dragged the bottom edge back up past the words. The box should hug them again, exactly as it started, so the room can always be given back." },
+    { "do": "snapshot", "name": "room-6-room-handed-back" },
+    { "do": "panel", "stage": "6-room-handed-back" }
+  ]
+}

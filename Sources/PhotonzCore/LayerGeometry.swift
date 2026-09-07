@@ -193,7 +193,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// Why a measurement has no typeable size.
     public static let measurementReason = "Drag this measurement's ends on the canvas to change what it measures."
 
-    /// Why text has no typeable height.
+    /// Why text has no typeable height where there is nowhere to spend one.
     public static let textHeightReason = "Height follows the text. Change the width to re-wrap it, or the font size in the Text section."
 
     /// Why a piece stretched down the thing holding it has no typed height: the
@@ -265,14 +265,30 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// matters when that group arranges itself: a stack or a grid decides
     /// where its contents sit, so typing a position there would be undone
     /// before you saw it, and the field says who owns it instead.
-    public init(layer: Layer, in container: Layer? = nil) {
+    /// `textTakesAHeight` says whether a text box's Height field is a number
+    /// you can type. It is, wherever there is somewhere to spend the room a
+    /// height gives: the Down row of the Text section, which is part of the
+    /// placement experiment. Without that row the field reads the height the
+    /// words came out to and takes nothing, as it always did.
+    public init(layer: Layer, in container: Layer? = nil, textTakesAHeight: Bool = false) {
         // Text is the one content with a floor of its own: below it a caption
         // is an unreadable sliver, so the canvas refuses to drag one narrower
         // and the field refuses to type one.
         // Counted on the words, because the words are what the field shows.
         minimumWidth = layer.resizeWidthOnly ? TextMeasurement.minimumContentWidth
                                              : LayerGeometry.minimumSide
-        minimumHeight = LayerGeometry.minimumSide
+        // And a floor down the box for the same reason: a height typed here is
+        // ROOM the words then sit in, so the shortest it can be is the words
+        // themselves. Counted without the room the renderer draws them in,
+        // because the field speaks the box a person sees.
+        if case .text(let content) = layer.content {
+            minimumHeight = max(LayerGeometry.minimumSide,
+                                TextMeasurement.size(of: content,
+                                                     wrappingAt: layer.frame.standardized.width)
+                                    .height - layer.boxSlack.height)
+        } else {
+            minimumHeight = LayerGeometry.minimumSide
+        }
         frameIsTheShape = !layer.hasEndpointHandles
         isLocked = layer.isLocked
         // A container that arranges its contents, or that closes around them,
@@ -326,11 +342,16 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         let heightIsTheirs = layer.sizeIsDecidedByItsContainer(across: false, in: container)
         if layer.allowsFrameResize {
             canSetWidth = !widthIsTheirs
-            canSetHeight = !layer.resizeWidthOnly && !heightIsTheirs
+            // Height takes a number on a text box too: it is how you give one
+            // room for its words to sit in, and it stops at the words
+            // (`docs/design/ui-building.md`, "Where the words sit in their
+            // box").
+            let hugsForever = layer.resizeWidthOnly && !textTakesAHeight
+            canSetHeight = !hugsForever && !heightIsTheirs
             widthReason = widthIsTheirs ? decidedReason(across: true) : nil
             heightReason = if heightIsTheirs {
                 decidedReason(across: false)
-            } else if layer.resizeWidthOnly {
+            } else if hugsForever {
                 Self.textHeightReason
             } else {
                 nil

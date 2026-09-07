@@ -3399,7 +3399,9 @@ struct TextInspector: View {
                 // a box is bigger than its words, which is what a box told to
                 // stretch is (Next, `next-placement`).
                 if Experiments.shared.placementEnabled { alignRow(selection, ids: ids) }
-                SelectionStyleNotes(notes: [selection.note],
+                SelectionStyleNotes(notes: [selection.note,
+                                            Experiments.shared.placementEnabled
+                                                ? selection.downTheBoxNote : nil],
                                     caption: selectionCaption(selection.count, "A change here"))
             }
             .padding(.horizontal, 14)

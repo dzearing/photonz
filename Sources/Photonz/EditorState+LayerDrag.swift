@@ -96,7 +96,9 @@ extension EditorState {
         }
         guard dragPreview?.layerID != id else { return }
         guard var doc = document, doc.layer(id: id) != nil else { return }
-        doc.updateLayer(id: id) { $0 = $0.resized(to: frame) }
+        doc.updateLayer(id: id) {
+            $0 = $0.resized(to: frame, chosenByHand: Experiments.shared.placementEnabled)
+        }
         submit(doc)
     }
 
@@ -113,11 +115,14 @@ extension EditorState {
         dragPreviewGeneration += 1 // cancels an in-flight preview session
         clearPreviewAfterNextFrame = dragPreview != nil
         var joined: [UUID] = []
+        // See `commitGeometry`: room down a text box is the placement
+        // experiment's, because the Down row is the only place to spend it.
+        let byHand = Experiments.shared.placementEnabled
         perform { document in
             let canvas = document.canvasSize
             document.updateLayer(id: id) {
                 $0 = AnnotationBuilder.planningCaption(
-                    $0.resized(to: frame), canvas: canvas,
+                    $0.resized(to: frame, chosenByHand: byHand), canvas: canvas,
                     captionPillSize: $0.measuredCaptionPillSize)
             }
             // In the SAME mutation as the move, so one undo puts the layer back

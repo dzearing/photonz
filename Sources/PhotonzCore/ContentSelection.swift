@@ -22,10 +22,15 @@ public struct TextLayerSelection: Hashable, Sendable {
     public struct Member: Hashable, Sendable {
         public let id: UUID
         public let content: TextContent
+        /// Whether this box is taller than the words in it. Where the words sit
+        /// DOWN a box is only a question a box with room can answer, so the
+        /// section has to know which of the picked boxes have any.
+        public let hasRoomDownTheBox: Bool
 
-        public init(id: UUID, content: TextContent) {
+        public init(id: UUID, content: TextContent, hasRoomDownTheBox: Bool = false) {
             self.id = id
             self.content = content
+            self.hasRoomDownTheBox = hasRoomDownTheBox
         }
     }
 
@@ -78,6 +83,26 @@ public struct TextLayerSelection: Hashable, Sendable {
     /// Nil when it reaches everything, because a sentence saying "this does
     /// what it looks like it does" is a sentence in the way.
     public var note: String? { reachNote(count: count, selectionCount: selectionCount) }
+
+    /// What the section says when Down has been asked for something it has no
+    /// room to do: the box is exactly as tall as its words, so Middle and
+    /// Bottom look pressable and move nothing.
+    ///
+    /// Nil while every picked box either has room or is happy at the top,
+    /// because a sentence explaining a control that is behaving is a sentence
+    /// in the way. It appears the moment somebody asks for Middle or Bottom on
+    /// a box that hugs, which is exactly when they are owed an explanation.
+    public var downTheBoxNote: String? {
+        let stuck = members.filter {
+            !$0.hasRoomDownTheBox && $0.content.usedVerticalAlignment != .top
+        }
+        guard !stuck.isEmpty else { return nil }
+        let subject = stuck.count == 1 && count == 1
+            ? "This box is exactly as tall as its words"
+            : "\(stuck.count) of these boxes are exactly as tall as their words"
+        return subject + ", so Middle and Bottom have no room to move them in. "
+            + "Type a height under Position & Size to give it some."
+    }
 }
 
 // MARK: - Shapes
@@ -253,7 +278,8 @@ extension PhotonzDocument {
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked,
                   case .text(let content) = layer.content else { continue }
-            members.append(TextLayerSelection.Member(id: id, content: content))
+            members.append(TextLayerSelection.Member(id: id, content: content,
+                                                     hasRoomDownTheBox: layer.hasRoomDownTheBox))
         }
         return TextLayerSelection(members: members, selectionCount: layerIDs.count)
     }

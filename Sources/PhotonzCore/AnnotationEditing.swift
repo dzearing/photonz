@@ -184,8 +184,15 @@ extension Layer {
     /// matters for exactly one thing — a copy stretched across the shelf it
     /// sits in must not go on claiming that width as its own answer once the
     /// shelf changes.
+    /// `chosenByHand` is the third: whether a PERSON set this box, by dragging
+    /// a handle or typing a number, rather than anything working it out. Only
+    /// the two places a person's answer arrives (the canvas drag commit and the
+    /// Position & Size fields) pass it, and it matters for exactly one thing —
+    /// a text box only takes ROOM down its box from a hand, so a height that
+    /// merely came out of a scale or a flow never becomes room it then keeps.
     public func resized(to frame: CGRect, fillingHeight: Bool = false,
-                        placedByContainer: Bool = false) -> Layer {
+                        placedByContainer: Bool = false,
+                        chosenByHand: Bool = false) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
@@ -226,40 +233,50 @@ extension Layer {
         // A text box's width IS its wrap width, so a new one re-wraps the words
         // and the box becomes as tall as they now need — dragged narrower it
         // gains lines, dragged wider it gives them back, and the top edge stays
-        // put either way. A move, or a drag of the bottom edge, changes no wrap
-        // and re-measures nothing (`docs/design/ui-building.md`, "A label grows
-        // to fit what it says").
+        // put either way. A move changes no wrap and re-measures nothing
+        // (`docs/design/ui-building.md`, "A label grows to fit what it says").
+        //
+        // The HEIGHT is the other half. Normally the words decide it, which is
+        // why a text box was always exactly as tall as what it said and Middle
+        // and Bottom had nothing to move the words in. A height handed over on
+        // purpose — the bottom edge dragged down, a number typed into H — is
+        // ROOM, and the box keeps it: the words then sit in it wherever Down
+        // says, and re-wording or re-wrapping never takes it away. Never less
+        // than the words need, because a room too small to hold them is not a
+        // reason to cut the last line off.
         if case .text(let content) = content, resizeWidthOnly {
             let box = frame.standardized
+            let was = self.frame.standardized
             let width = box.width
-            if content.staysOnOneLine == true {
-                // One line, and a new width is no argument against that: the
-                // box takes the width it was handed and stays exactly as tall
-                // as one line of these words. A title too long for the width
-                // ends in an ellipsis rather than falling out of the bottom of
-                // the bar it is in (`docs/design/ui-building.md`, "A title
-                // stays on one line").
-                let line = TextMeasurement.size(of: content).height
-                layer.frame = CGRect(x: box.minX, y: box.minY, width: width,
-                                     height: fillingHeight ? max(box.height, line) : line)
-            } else if fillingHeight {
-                // Told to fill the box it is in: it keeps the height it was
-                // handed, and the words sit in it wherever Align says. Never
-                // less than the words need, because a room too small to hold
-                // them is not a reason to cut the last line off
-                // (`docs/design/ui-building.md`, "Where the words sit in their
-                // box").
-                let needed = TextMeasurement.size(of: content, wrappingAt: width).height
-                layer.frame = CGRect(x: box.minX, y: box.minY,
-                                     width: width, height: max(box.height, needed))
-            } else if abs(width - self.frame.standardized.width) > 0.01 {
-                layer.frame = CGRect(x: box.minX, y: box.minY,
-                                     width: width,
-                                     height: TextMeasurement.size(of: content,
-                                                                  wrappingAt: width).height)
+            // A title too long for its width ends in an ellipsis rather than
+            // falling out of the bottom of the bar it is in, so one line of
+            // these words is all it ever needs (`docs/design/ui-building.md`,
+            // "A title stays on one line"). `TextMeasurement` already ignores
+            // the wrap width for those, so this one question answers both.
+            let needed = TextMeasurement.size(of: content, wrappingAt: width).height
+            let heightAsked = abs(box.height - was.height) > 0.01
+            // A container's answer is not a person's: a stack, a grid or a
+            // screen handing this box a height (`fillingHeight`,
+            // `placedByContainer`) says how tall the box is THIS pass, and the
+            // next pass works it out again. Only a hand makes room.
+            var room = heightChosenByHand
+            if heightAsked, chosenByHand, !fillingHeight, !placedByContainer { room = box.height }
+            // Asked for less than the words need: the box goes back to hugging
+            // them, which is how a drag of the bottom edge upward, or a small
+            // number typed into H, hands the room back.
+            if let given = room, given <= needed + 0.5 { room = nil }
+            layer.heightChosenByHand = room
+            let height: CGFloat
+            if fillingHeight {
+                height = max(box.height, needed)
+            } else if let room {
+                height = max(room, needed)
+            } else if heightAsked || abs(width - was.width) > 0.01 {
+                height = needed
             } else {
-                layer.frame.size.height = self.frame.standardized.height
+                height = was.height
             }
+            layer.frame = CGRect(x: box.minX, y: box.minY, width: width, height: height)
         }
         return layer
     }

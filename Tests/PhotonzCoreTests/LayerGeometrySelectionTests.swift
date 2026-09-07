@@ -259,13 +259,21 @@ struct LayerGeometrySelectionTests {
 
     // MARK: Numbers you can read but not type
 
-    @Test("A text box shows how tall it turned out, even though the height cannot be typed")
-    func textHeightIsReadableWithoutBeingTypeable() {
+    @Test("A text box shows how tall it turned out, and takes a taller number to give it room")
+    func textHeightIsReadableAndTypeable() {
         let words = CGRect(x: 0, y: 0, width: 200, height: 74)
-        let sel = LayerGeometrySelection([member(text(words), words)])
-        #expect(sel.reading(.height) == .agreed(74))
-        #expect(!sel.allows(.height))
-        #expect(sel.fixedReason(for: .height) == LayerGeometryEditing.textHeightReason)
+        let label = text(words)
+        let roomy = LayerGeometrySelection([
+            LayerGeometrySelection.Member(id: label.id, frame: words,
+                                          editing: LayerGeometryEditing(layer: label,
+                                                                        textTakesAHeight: true))])
+        #expect(roomy.reading(.height) == .agreed(74))
+        #expect(roomy.allows(.height))
+        #expect(roomy.fixedReason(for: .height) == nil)
+        // With nowhere to spend the room, the same number is one to read only.
+        let hugging = LayerGeometrySelection([member(label, words)])
+        #expect(hugging.reading(.height) == .agreed(74))
+        #expect(!hugging.allows(.height))
     }
 
     @Test("Two text boxes of different heights read as Mixed, the same as any other field would")
@@ -299,18 +307,22 @@ struct LayerGeometrySelectionTests {
 
     @Test("A number only some of the selected layers could show is shown for none of them")
     func aReadOnlyNumberSpeaksForEveryoneOrNobody() {
-        let words = CGRect(x: 0, y: 0, width: 200, height: 74)
+        // A locked box has a height worth reading; an arrow's box is padding
+        // round a stroke and has none. Neither takes a number, so the field
+        // speaks for both or for neither.
+        let ends = CGRect(x: 0, y: 0, width: 200, height: 74)
         let box = CGRect(x: 0, y: 0, width: 200, height: 74)
-        let sel = LayerGeometrySelection([member(text(words), words), member(arrow(box), box)])
+        let sel = LayerGeometrySelection([member(rectangle(box, locked: true), box),
+                                          member(arrow(ends), ends)])
         #expect(sel.reading(.height) == .empty)
     }
 
     @Test("A number worked out for you is read only, and the one beside it you type is not")
     func aWorkedOutNumberIsReadOnly() {
-        let words = CGRect(x: 0, y: 0, width: 200, height: 74)
-        let sel = LayerGeometrySelection([member(text(words), words)])
+        let box = CGRect(x: 0, y: 0, width: 200, height: 74)
+        let sel = LayerGeometrySelection([member(arrow(box), box)])
         #expect(sel.isReadOnly(.height))
-        #expect(!sel.isReadOnly(.width))
+        #expect(sel.isReadOnly(.width))
         #expect(!sel.isReadOnly(.x))
     }
 
@@ -338,10 +350,10 @@ struct LayerGeometrySelectionTests {
 
     @Test("Clicking a number you cannot type answers with the sentence the hover tip carries")
     func aReadOnlyFieldAnswersAClick() {
-        let words = CGRect(x: 0, y: 0, width: 200, height: 74)
-        let sel = LayerGeometrySelection([member(text(words), words)])
-        #expect(sel.explanation(for: .height) == LayerGeometryEditing.textHeightReason)
-        #expect(sel.explanation(for: .width) == nil)
+        let box = CGRect(x: 0, y: 0, width: 100, height: 40)
+        let sel = LayerGeometrySelection([member(arrow(box), box)])
+        #expect(sel.explanation(for: .height) == LayerGeometryEditing.endpointReason)
+        #expect(sel.explanation(for: .x) == nil)
     }
 
     @Test("Every field that takes no typing has an answer ready, whatever took it away")
@@ -361,7 +373,7 @@ struct LayerGeometrySelectionTests {
     func typeableFieldsIgnoreTheReadOnlyOnes() {
         let box = CGRect(x: 0, y: 0, width: 120, height: 40)
         let words = CGRect(x: 0, y: 60, width: 200, height: 74)
-        let sel = LayerGeometrySelection([member(rectangle(box), box), member(text(words), words)])
+        let sel = LayerGeometrySelection([member(rectangle(box), box), member(arrow(words), words)])
         #expect(sel.reading(.height) == .agreed(40))
         #expect(sel.allows(.height))
     }

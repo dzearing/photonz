@@ -1238,20 +1238,15 @@ final class CanvasNSView: NSView {
                                                zoom: viewport?.zoom ?? 1,
                                                holding: held)
         frame = result.frame
-        if let layer, layer.resizeWidthOnly, case .text(let content) = layer.content {
+        if let layer, layer.resizeWidthOnly, layer.text != nil {
             // Every number here is the box a person SEES: the handles are on
             // the words, so the width dragged out is the words' width and the
-            // height handed back is how tall they came out. The room the
-            // renderer draws them in goes on top for the measurement, and is
-            // taken off again for the answer, so the outline keeps hugging
-            // the letters through the whole drag.
-            let slack = layer.boxSlack
-            let w = max(frame.width, TextMeasurement.minimumContentWidth)
-            let measured = TextRasterizer.naturalSize(content, maxWidth: w + slack.width,
-                                                      minWidth: TextRasterizer.minimumTextWidth)
-            let minX = handle.movesMinX ? frame.maxX - w : frame.minX
-            frame = CGRect(x: minX, y: start.minY, width: w,
-                           height: max(0, measured.height - slack.height))
+            // height handed back is how tall they came out. The rule itself
+            // lives in `Layer.textResized` — the sides set the wrap width, the
+            // top and bottom edges give the box room — so the drag and the
+            // frame it commits cannot disagree about it.
+            frame = layer.textResized(from: start, to: frame, handle: handle,
+                                      givingRoom: Experiments.shared.placementEnabled)
         }
         if let layer {
             frame = Handles.anchoredFrame(start: start, proposed: frame, handle: handle,

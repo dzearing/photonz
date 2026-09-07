@@ -1,0 +1,27 @@
+{
+  "feature": "A text box can be given room down the box",
+  "epic": "ui-layout",
+  "summary": "A text box used to be exactly as tall as its words, so the Text section's Down row (Top, Middle, Bottom) looked pressable and moved nothing. You can now make a text box taller than its words, by typing a height or by dragging its top or bottom edge, and Middle and Bottom then actually move the words in that room.",
+  "setup": "Photonz Dev, Experiments window, release Next. Rides with the placement flag, which is on by default in Next.",
+  "try": [
+    { "do": "Press T, click on the canvas and type a few words, then press Escape and click the box to select it." },
+    { "do": "In the Text section, press Middle under Down. Nothing moves, and the section now says why.", "shot": "2026-09-06-text-box-room-2.png" },
+    { "do": "Type 160 into H under Position & Size and press Return. The box gets taller and the words jump to the middle of it.", "shot": "2026-09-06-text-box-room-3.png" },
+    { "do": "Press Bottom under Down. The words drop to the floor of the same box, which does not move." },
+    { "do": "Press Top, then drag the handle on the middle of the box's bottom edge down. The box gets taller and the letters are not stretched.", "shot": "2026-09-06-text-box-room-5.png" },
+    { "do": "Drag that same bottom handle back up past the words. The box hugs them again and H reads what it did at the start." },
+    { "do": "Drag a side handle in to re-wrap a roomy box, and check that the room survives the re-wrap." }
+  ],
+  "evaluate": [
+    "Is typing a height the way you would have reached for room, or did you go looking for a handle first?",
+    "Does the sentence that appears under Down tell you what to do next, or does it read as an excuse?",
+    "When you drag the bottom edge, does the box feel like it is being given room rather than being stretched?",
+    "Should a roomy box also gain some visible sign that its height is now fixed, the way a wrapped paragraph differs from a hugging label?",
+    "Is dragging the bottom edge back up past the words the right way to hand the room back, or would you expect a control for it?"
+  ],
+  "rough": [
+    "A one line label offers only its four corner handles, because the app drops the edge midpoints on any box under 40 points on screen. So on the exact box this task came from there is no bottom edge to drag until you have typed a height once, and the explanation line says to type a height for that reason. Once the box has room the top and bottom handles appear and the drag works. Whether short boxes should keep their vertical handles is a change to how handles work everywhere, so it was left alone.",
+    "Corners still re-wrap and let the words decide the height, which is what they always did. Only the top and bottom edges give room. That split is a guess at what reads best and is worth disagreeing with.",
+    "There is no visible difference between a box that hugs its words and one whose height happens to equal them. If you drag the bottom edge to exactly the words' height, the box quietly goes back to hugging."
+  ]
+}
