@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 6,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T05:33:01.493Z",
-  "updated": "2026-09-07T06:30:43.525070Z",
+  "updated": "2026-09-07T06:31:57.085Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-06 with numbers: a 128 device pixel box measured 62 logical points instead of 64, two short, symmetric, so one point missing at each end. Cause found by reading, and it explains the symmetry: a caliper snaps ONLY to edges detected in the rendered picture. CanvasMeasure.swift lines 205 and 224 call EdgeSnapping.snap with the edge map and nothing else, and EdgeSnapping has no notion of a layer at all, no peers, no layer bounds, so the exact geometry of a shape the app itself drew is never a candidate. EdgeMap approximates edges from image gradients, and an antialiased boundary puts the strongest gradient a pixel inside the true edge, which is exactly a point short at each end at two times scale. Note that layer geometry IS already available to other drags: the move and resize paths take peers and pass them to Snapping.snapFrameOrigin, so the fix is to give the measure path the same candidates rather than to invent them. Decide and record which boundary a caliper should catch on a stroked shape, the path or the outside of the stroke, since a redliner measuring a button usually means its visible outer edge. This overlaps a-snap-that-is-showing-is-a-snap-you-get-with-no, which governs how a caught snap holds, and a-dragged-measurement-chip-snaps-into-line-with, which adds other measurements as candidates; all three want one candidate list rather than three.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-07T06:30:43.525070Z",
       "note": "VERIFIED in the app, not assumed. Scripts/playtest/caliper-catches-a-drawn-edge-walk.json (new, committed): a 128x128 box on a 2x capture, both feet aimed at the middle of its outline, reads 64 at zoom 0.32, 0.50 and 0.98; a caliper placed carelessly at 30 and then corrected by DRAGGING each foot also reads 64; a button in the picture with no layer near it still has both feet pulled onto its own detected edges, so screenshot snapping is unchanged. Grabbiness re-checked after the margin: the call-out box case is back to 30. Suite green at 4265. Eight measure-related walks re-run green (snap-hold, snap-hold-foot, redline, measure-chip-snap, caliper-chip-join, measure-handback, guides-catch-marks, arrow-tip-snap). Real -sc.png window captures copied to queue/audits/ (probe holds Screen Recording)."
+    },
+    {
+      "t": "2026-09-07T06:31:57.084Z",
+      "note": "A caliper foot now catches the exact edge of any layer on the canvas, so a box you drew measures the size you set it to. Reproduced first in the probe (128 tall box read 128, 124 or 117 depending only on where the hand landed) and the cause was not the antialiasing the report guessed: the edge map is built from the background picture only, so a shape the app drew was never a candidate. Shipped as MeasureSnapping.layerLines + EdgeSnapping.snap(layerLines:) behind next-measure-layer-snap, wired into both placement feet and the placed-caliper foot drag. A known line wins only by a 2 pixel margin, because outranking everything made a call-out box drawn around a button steal the button's own edges (38 where it is 30). Verified in the app: Scripts/playtest/caliper-catches-a-drawn-edge-walk.json reads 64 at three zooms placed and 64 after dragging the feet, picture snapping unchanged; suite green at 4265; eight measure walks re-run green. Audit queue/audits/2026-09-07-caliper-layer-edges.json. Shipped in edf936f1."
     }
   ],
-  "started": "2026-09-07T06:05:19.297Z"
+  "started": "2026-09-07T06:05:19.297Z",
+  "completed": "2026-09-07T06:31:57.085Z"
 }
