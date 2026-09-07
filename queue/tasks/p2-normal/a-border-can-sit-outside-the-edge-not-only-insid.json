@@ -1,0 +1,29 @@
+{
+  "id": "a-border-can-sit-outside-the-edge-not-only-insid",
+  "title": "A border can sit outside the edge, not only inside it",
+  "goal": "Every line Photonz draws round a shape or a picture sits just inside that layer's edge. People ask for one that sits outside it, or straddles it, and there is nowhere for it to be drawn today: the drawing of a layer stops at its own box, so a line past the edge is simply cut off. Give a border a position of inside, centred or outside, and make the layer's drawing reach far enough that the outside one is really there.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1680,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T15:46:34.063Z",
+  "updated": "2026-09-07T15:46:34.064Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of the-appearance-list-grows-to-hold-every-effect-w on 2026-09-07 after reading the render path. Facts established there: AnnotationRasterizer insets the box by strokeWidth/2 and strokes, so a shape stroke lands wholly INSIDE the frame; DocumentRenderer.bordered insets the box by the full width and cuts the middle out, then crops to image.extent, so a ring is inside too. Outside therefore needs (a) AnnotationRasterizer to rasterize into a padded bitmap, which the composite already centres so a symmetric pad lands correctly, (b) bordered() to stop cropping to image.extent for centred/outside, (c) LayerStyle.previewPadding and Layer.renderBounds to include the outset so groups and frames do not clip it. Storage: LayerStyle.borderPosition for the ring and a matching setting on AnnotationContent for a shape stroke, both defaulting to inside so no document repaints. docs/design/shape-parts.md, section How the list grows, already writes the model down.",
+  "acceptance": [
+    "A border row carries a position of Inside, Centred or Outside, and every existing document opens on Inside, drawing exactly what it draws today",
+    "Setting Outside on a rectangle, an ellipse, a picture and a group draws the whole line outside the layer edge, with nothing clipped at any zoom",
+    "A layer with an outside border reports a reach that includes it, so nothing inside a group or a frame cuts it off",
+    "Selection and clicking still follow the shape, not the extra ring",
+    "A perf note in the commit: the composite path for a layer with no border is unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T15:46:34.064Z",
+      "note": "created (manual)"
+    }
+  ]
+}

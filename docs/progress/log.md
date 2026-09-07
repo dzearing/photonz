@@ -11181,3 +11181,40 @@ the next reader of the budget will see it, it would have been filed a fifth.
 
 Next: the queue's next task. Room for Effects, if anyone still wants it, has
 to come from somewhere other than the words.
+
+## 2026-09-07 — A layer can throw more than one shadow
+
+Shipped (`b90ea5c7`): the Appearance list became a list you add to, from the
+user's answer *one list you add to*. `LayerStyle.shadows` is the list, nearest
+the eye first, with `shadow` still reading and writing the first one so nothing
+written before this broke; `ShadowStyle` gained a Kind (drop or inner) and its
+own switch. The renderer walks the list — inner shadows cast into the layer and
+clipped to its silhouette, drops behind it — and a document with no shadow or
+one drop shadow goes through exactly the filter chain it always did. Files with
+one shadow save the same bytes; two write the first where it has always been
+written, so an older build still draws it. The panel gained a plus on the
+Appearance header, a Kind popup, a cross, a grip, and a row menu that does the
+same three things in words.
+
+Found and fixed on the way: with two shadows the whole right hand dock closed
+itself. The Kind popup asked for its ideal width, the pane grew wider than the
+window, and the shell auto-collapsed the dock.
+
+Corrected an earlier claim in `docs/design/shape-parts.md`: a shape's own stroke
+is not centred on its frame edge, it sits wholly inside it, exactly like the
+ring round a picture. Inside is the only border position anything in the app has
+ever drawn, and Outside needs the rasterizer padded and a layer's reach grown —
+filed as `a-border-can-sit-outside-the-edge-not-only-insid` rather than
+half-built.
+
+Next: the user rewrote the task mid-run after seeing the shipped panel beside
+the older Effects section. A shadow's Blur, Size and Opacity under Appearance
+read like a second copy of the layer's own Blur and Opacity in Effects. A
+decision card is open — *What belongs in Appearance, and what belongs in
+Effects?* — with three panels drawn for the same rectangle carrying two borders
+and a shadow. Recommended A: Appearance is what a shape simply has, Effects is
+what you add. Not decided in-session because making a part's settings visibly
+owned means indenting them, which reverses an explicit request from 2026-09-06.
+
+Open question in the audit: two shadows do not fit. A shadow costs seven rows,
+so the second one's row is already below the fold of the Appearance section.

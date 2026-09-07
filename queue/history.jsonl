@@ -1858,3 +1858,6 @@
 {"t":"2026-09-07T15:39:15.798Z","ev":"task_resequenced","id":"the-red-dashed-outline-around-the-panel-always-c","from":190,"to":2}
 {"t":"2026-09-07T15:40:09.390Z","ev":"task_created","id":"everything-on-the-panel-s-right-edge-sits-on-one","priority":"p2-normal","title":"Everything on the panel's right edge sits on one line"}
 {"t":"2026-09-07T15:40:09.430Z","ev":"task_resequenced","id":"everything-on-the-panel-s-right-edge-sits-on-one","from":1680,"to":14}
+{"t":"2026-09-07T15:46:34.064Z","ev":"task_created","id":"a-border-can-sit-outside-the-edge-not-only-insid","priority":"p2-normal","title":"A border can sit outside the edge, not only inside it"}
+{"t":"2026-09-07T15:48:35.243Z","ev":"decision_opened","id":"the-appearance-list-grows-to-hold-every-effect-w-what-belongs-in-appearance-and-w","taskId":"the-appearance-list-grows-to-hold-every-effect-w","question":"What belongs in Appearance, and what belongs in Effects?"}
+{"t":"2026-09-07T15:49:28.546Z","ev":"task_blocked","id":"the-appearance-list-grows-to-hold-every-effect-w","from":"in_progress","note":"The list you add to shipped (two shadows, an inner shadow, add/remove/reorder, b90ea5c7). The rewritten brief needs a UX answer first: what belongs in Appearance and what belongs in Effects. Card open with three panels drawn for the same rectangle."}

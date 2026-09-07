@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T04:17:33.932Z",
-  "updated": "2026-09-07T15:03:16.238Z",
+  "updated": "2026-09-07T15:49:28.546Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rewritten on 2026-09-07 after the user saw the shipped Appearance list beside the older Effects section and could not tell what belonged where. Their split, which supersedes the earlier proposal in this task: Appearance is what a shape intrinsically has, Effects is an addable list. Note that the duplication they report is partly an illusion worth fixing on its own: in their screenshot the Blur, Size, Distance, Direction and Opacity under Appearance are the SHADOW's settings, shown inline beneath the Shadow row by the change that landed the same day, while Effects carries the layer's own opacity, blur and corner radius. Because the inline settings carry no sign of which part owns them, a shadow's blur reads as a second top level blur. So the panel needs a visible owner for a part's settings whatever else is decided, which is why that is its own acceptance item. Two ideas from the earlier draft still hold and should be kept: inner versus outer is a property of an effect rather than a separate effect, which the user has now confirmed by asking for an offset on a border; and once the list is addable, order becomes visible and must be draggable. Read Sources/PhotonzCore/LayerParts.swift and Sources/Photonz/PartsInspector.swift, and coordinate with switching-a-part-on-shows-its-settings-straight, which changes how a row reveals its settings, so the two do not fight.",
@@ -92,6 +92,50 @@
     {
       "t": "2026-09-07T15:03:16.238Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "The task was rewritten by the user mid-run (Appearance vs Effects split). What had already been built to the OLD brief shipped anyway, because it is needed under every answer to the new one: b90ea5c7."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Shipped: LayerStyle.shadows is a list, nearest the eye first; `shadow` still reads/writes the first so nothing written before this broke. ShadowStyle gains kind (drop/inner) and isOn. A file with one shadow saves the same bytes; two writes the first where it always was, so an older build still draws it."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Shipped: renderer walks the list. Inner shadows cast into the layer clipped to its silhouette, drops go behind, nearest the eye first. Perf unchanged for 0 or 1 drop shadow. Tests: AppearanceListTests (18), ShadowListRenderTests (6)."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Shipped: panel is a list you add to. Plus on the Appearance HEADER (not the foot, which the card had shown: the dock caps a section's height and scrolls the rest inside it, and one shadow already pushes a foot button out of sight). Kind popup, cross to remove, grip to drag, and a right-click row menu that does the same three in words."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Bug found and fixed on the way: with TWO shadows the whole right hand dock closed itself. The Kind popup asked for its ideal width (.fixedSize), the pane grew wider than the window, and the shell auto-collapsed the dock. It has a width now. Reproduced and confirmed fixed on the probe."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Outline Position (inside/centre/outside) NOT built, and the earlier note in this log about a shape's stroke being centred was wrong: AnnotationRasterizer insets the box by strokeWidth/2 and strokes, so the stroke lands wholly INSIDE the frame, exactly like a picture's ring. Inside is the only position anything in the app has ever drawn. Outside needs the rasterizer padded and Layer.renderBounds / previewPadding grown, which is a piece of work of its own: filed as a-border-can-sit-outside-the-edge-not-only-insid."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Verified on the probe with Scripts/playtest/appearance-list-walk.json (status ok, real screen captures, Screen Recording granted). The walk cannot drive the grip: a synthesized press cannot start a SwiftUI drag. Reorder is covered by core tests plus a render test that proves two shadows of different colours swap which is on top."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Adversarial review of the built thing, on the real app: two shadows do NOT fit. A shadow costs seven rows, so the second shadow's own row is already below the fold of the Appearance section and a playtest press on it fails the reach check. That is the density option B of the first card was about, now real rather than predicted. It is in the audit's rough and it is why the new split matters."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Audit: queue/audits/2026-09-07-appearance-list.json, with three real screen captures."
+    },
+    {
+      "t": "2026-09-07T15:49:28.503318Z",
+      "note": "Blocked on the new card: \"What belongs in Appearance, and what belongs in Effects?\" Three panels drawn for the same rectangle carrying two borders and a shadow, brief written. Recommended A. NOT decided here, because making a part's settings visibly owned means indenting them, and the user asked on 2026-09-06 for no indent under a part: reversing that is theirs to call, so it is inside the options rather than done quietly."
+    },
+    {
+      "t": "2026-09-07T15:49:28.545Z",
+      "note": "The list you add to shipped (two shadows, an inner shadow, add/remove/reorder, b90ea5c7). The rewritten brief needs a UX answer first: what belongs in Appearance and what belongs in Effects. Card open with three panels drawn for the same rectangle."
     }
   ],
   "started": "2026-09-07T15:03:16.237Z"

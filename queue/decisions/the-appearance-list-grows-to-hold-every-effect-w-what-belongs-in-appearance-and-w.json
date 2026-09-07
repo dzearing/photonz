@@ -1,0 +1,58 @@
+{
+  "id": "the-appearance-list-grows-to-hold-every-effect-w-what-belongs-in-appearance-and-w",
+  "taskId": "the-appearance-list-grows-to-hold-every-effect-w",
+  "question": "What belongs in Appearance, and what belongs in Effects?",
+  "context": "A rectangle today shows an Appearance panel and an Effects panel, and it is not clear what belongs in which. Both appear to carry an opacity and a blur. The strips in the brief draw the same rectangle under each answer, carrying two borders (one inside the edge, one outside) and a shadow.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Appearance is what it IS, Effects is what you ADD",
+      "summary": "Two panels, split on one rule anyone can state. Appearance holds the things every shape simply has, always in the same order: opacity, fill, outline, and a corner radius only where there are corners. Effects starts empty and grows: press the plus for a border, a shadow, a glow, a blur. You can add the same kind twice, so two borders with different offsets give you an inner one and an outer one. A part's settings sit behind a line of their own, so a shadow's blur can never read as the layer's blur.",
+      "pros": [
+        "The rule is one sentence, so you never wonder which panel a thing is in",
+        "Two borders, two shadows, a glow and a blur all become the same move",
+        "Nothing is named twice: Blur under Effects is only ever an effect you added",
+        "A new shape starts with a short, quiet panel"
+      ],
+      "cons": [
+        "Blur and corner radius change homes, so a habit has to be relearned once",
+        "Two panels means two places to look when you are hunting for something you set earlier"
+      ],
+      "mitigation": "The order inside Appearance is fixed and short, so the hunt is always the same four rows; anything else you set, you added, and added things are in Effects."
+    },
+    {
+      "id": "b",
+      "label": "One panel, no line to learn",
+      "summary": "No second section at all. Everything the layer wears is in one list called Appearance: what it always has at the top, what you added underneath, with one plus on the header. There is no rule about which panel a thing lives in, because there is only one panel.",
+      "pros": [
+        "Nothing to learn and nothing to remember: one place, one plus",
+        "One less section header eating room in the dock",
+        "Impossible to look in the wrong panel"
+      ],
+      "cons": [
+        "One long list mixes what a shape always has with what you chose to add",
+        "Nothing to collapse: today you can shut Effects and keep Appearance open",
+        "With two shadows the list is already long enough to scroll"
+      ],
+      "mitigation": "The always-there rows stay pinned at the top in a fixed order, so the added ones never push them about."
+    },
+    {
+      "id": "c",
+      "label": "Change nothing but the ownership",
+      "summary": "The two panels stay exactly as they are. The only change is a line down the left of a part's settings, so a shadow's Blur, Size and Opacity are visibly the shadow's and never read as the layer's. No second border, no move for blur or corner radius.",
+      "pros": [
+        "The smallest change that fixes the thing you actually reported",
+        "Nothing you already know moves"
+      ],
+      "cons": [
+        "Appearance still carries an added shadow, so the split you asked for is not made",
+        "Still nowhere to put a second border",
+        "Effects still holds three sliders that are not effects anybody added"
+      ],
+      "mitigation": "It can be a first step: the ownership line is needed under any of these three."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-07T15:48:35.243Z"
+}
