@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 1280,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T19:40:23.123Z",
-  "updated": "2026-09-06T19:40:23.124Z",
+  "updated": "2026-09-07T12:56:08.338Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the shape-parts work on 2026-09-06 (docs/design/shape-parts.md). A shape paints ColorSlot.stroke, everything else paints ColorSlot.border, and ColorStyleSelection plus the whole saved-styles path is keyed by slot, so one row cannot yet read or write both. PhotonzCore/LayerParts.swift builds the two rows; each carries a reachNote so nothing is silently lost today.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-09-06T19:40:23.124Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:56:08.337Z",
+      "note": "duplicate of two-layers-picked-together-are-offered-outline-t, which shipped exactly this on 2026-09-07: one Outline row over both kinds of line, with its switch, its colour and its Width reaching a shape and a picture together. Audit queue/audits/2026-09-07-one-outline-two-kinds.json."
     }
   ]
 }

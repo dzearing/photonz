@@ -1,18 +1,18 @@
 {
   "id": "the-clip-contents-walk-reaches-the-switch-it-is",
   "title": "The clip contents walk reaches the switch it is written to flip",
-  "goal": "One of the scripted walks that checks what happens when a group is too small for what is inside it stops partway through, because the Clip contents switch it wants to flip now sits below the bottom of the window. Nothing is checking that part of the app any more.",
+  "goal": "One of the scripted walks that checks what happens when a group is too small for what is inside it stops partway through, because the Clip contents switch it wants to flip now sits below the bottom of the window. Nothing is checking that part of the app any more. It unblocks the focus: this is the only automated check that a group too small for its contents behaves, and auto layout is the epic being built right now.",
   "epic": "unmanned-loop",
   "priority": "p3-low",
-  "seq": 1390,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T11:05:30.596Z",
-  "updated": "2026-09-07T11:05:30.597Z",
+  "updated": "2026-09-07T12:58:26.907Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Measured on 2026-09-07, NOT caused by the stricter press rule that landed the same day. Proof: its own dump /tmp/photonz-playtest/clip-contents/panel-2-overflows.json puts \"Clip contents\" (Group, off) at x=1033 y=-65. The panel dump prints the press POINT (PlaytestHarness.readPanel -> control.point), and y=-65 is 65pt BELOW the window content bottom edge, so the OLD point-only check rejected it too. Last good run was 2026-09-06 22:09 (panel-3-cut.json, panel-4-not-clicked.json and panel-5-back.json in that folder still carry that timestamp; only panel-1 and panel-2 are from today). So it regressed when rows were added to the dock between then and now. Likely fix is a scrollPanel step before step 22, the same shape as the fix mixed-one-look-walk got. Related: the-properties-panel-fits-on-the-screen-it-has, which is the app side of the same squeeze.",
+  "notes": "Measured on 2026-09-07, NOT caused by the stricter press rule that landed the same day. Proof: its own dump /tmp/photonz-playtest/clip-contents/panel-2-overflows.json puts \"Clip contents\" (Group, off) at x=1033 y=-65. The panel dump prints the press POINT (PlaytestHarness.readPanel -> control.point), and y=-65 is 65pt BELOW the window content bottom edge, so the OLD point-only check rejected it too. Last good run was 2026-09-06 22:09 (panel-3-cut.json, panel-4-not-clicked.json and panel-5-back.json in that folder still carry that timestamp; only panel-1 and panel-2 are from today). So it regressed when rows were added to the dock between then and now. Likely fix is a scrollPanel step before step 22, the same shape as the fix mixed-one-look-walk got. Related: the-properties-panel-fits-on-the-screen-it-has, which is the app side of the same squeeze.\n\nTriage 2026-09-07: this and the-panel-controls-walk-reaches-the-revert-arrow are the same story as the-properties-panel-fits-on-the-screen-it-has, which is now p1-high. Do that one first: if the panel holds itself to the window, both switches come back into reach and these two may need nothing more than a re-run. If the walk still cannot reach the control after that, fix the walk.",
   "acceptance": [
     "Scripts/playtest.sh Scripts/playtest/clip-contents-walk.json passes on its own",
     "It passes twice in a row",
@@ -23,6 +23,14 @@
     {
       "t": "2026-09-07T11:05:30.596Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:56:59.212Z",
+      "note": "Triage 2026-09-07: sequenced behind the-properties-panel-fits-on-the-screen-it-has (now p1-high), which is the shared root cause."
+    },
+    {
+      "t": "2026-09-07T12:58:26.907Z",
+      "note": "seq 1390 -> 130"
     }
   ]
 }

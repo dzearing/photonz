@@ -1780,3 +1780,36 @@
 {"t":"2026-09-07T11:41:51.662Z","ev":"task_started","id":"a-full-walk-run-finishes-in-an-hour-not-four","title":"A full walk run finishes in an hour, not four","priority":"p3-low"}
 {"t":"2026-09-07T12:49:50.825Z","ev":"task_created","id":"the-tool-tips-walk-finds-the-panel-button-it-is","priority":"p3-low","title":"The tool tips walk finds the panel button it is written to rest on"}
 {"t":"2026-09-07T12:51:06.599Z","ev":"task_done","id":"a-full-walk-run-finishes-in-an-hour-not-four","from":"in_progress","note":"Scripts/playtest-all.sh now finishes in 40m 21s (was about 60m at 14.6s a walk), and prints its own seconds per walk, total, average and slowest. The cost was not process overhead as the task assumed: 50.6% of in-app time was wait steps sleeping, 31.1 minutes of it across the 247 scripts. A wait now watches for the editor to go quiet (PlaytestSettle in PhotonzCore, tested; PHOTONZ_PLAYTEST_PACE=full puts it back on the clock). Verified by a full 247-walk run: 244 passed, and the 3 that failed fail identically under the old clock behaviour, so none is from this change. Committed as 97d7749a."}
+{"t":"2026-09-07T12:56:08.339Z","ev":"task_dropped","id":"one-outline-row-when-a-shape-and-a-picture-are-p","from":"pending","note":"duplicate of two-layers-picked-together-are-offered-outline-t, which shipped exactly this on 2026-09-07: one Outline row over both kinds of line, with its switch, its colour and its Width reaching a shape and a picture together. Audit queue/audits/2026-09-07-one-outline-two-kinds.json."}
+{"t":"2026-09-07T12:56:08.374Z","ev":"task_dropped","id":"the-look-controls-come-back-above-the-fold","from":"pending","note":"duplicate of the-properties-panel-fits-on-the-screen-it-has, which is the same defect with harder measurements. Its acceptance items (text, arrow and zoom callout each reach Corner Radius without scrolling; the picked-thing section stays at the top; a walk reads the dock offsets back and proves it) were folded into the keeper before this was dropped."}
+{"t":"2026-09-07T12:56:26.450Z","ev":"task_reprioritized","id":"the-properties-panel-fits-on-the-screen-it-has","from":"p3-low","to":"p1-high"}
+{"t":"2026-09-07T12:56:42.685Z","ev":"task_reprioritized","id":"a-picture-of-a-walk-shows-the-properties-panel-n","from":"p3-low","to":"p2-normal"}
+{"t":"2026-09-07T12:57:30.594Z","ev":"task_created","id":"the-whole-component-path-is-played-again-now-tha","priority":"p1-high","title":"The whole component path is played again, now that it has versions and knobs"}
+{"t":"2026-09-07T12:57:50.237Z","ev":"task_created","id":"one-name-for-the-button-that-shows-and-hides-the","priority":"p2-normal","title":"One name for the button that shows and hides the properties panel"}
+{"t":"2026-09-07T12:57:50.278Z","ev":"task_created","id":"a-screen-says-whether-a-drag-will-move-it-or-dra","priority":"p2-normal","title":"A screen says whether a drag will move it or draw a selection band"}
+{"t":"2026-09-07T12:58:03.854Z","ev":"task_created","id":"the-dock-rules-say-plainly-that-they-govern-the","priority":"p3-low","title":"The dock rules say plainly that they govern the app, not just the mock pages"}
+{"t":"2026-09-07T12:58:20.248Z","ev":"task_resequenced","id":"the-properties-panel-fits-on-the-screen-it-has","from":1370,"to":10}
+{"t":"2026-09-07T12:58:20.289Z","ev":"task_resequenced","id":"the-whole-component-path-is-played-again-now-tha","from":1380,"to":20}
+{"t":"2026-09-07T12:58:20.323Z","ev":"task_resequenced","id":"the-appearance-list-grows-to-hold-every-effect-w","from":5,"to":30}
+{"t":"2026-09-07T12:58:20.358Z","ev":"task_resequenced","id":"a-picture-of-a-walk-shows-the-properties-panel-n","from":1380,"to":10}
+{"t":"2026-09-07T12:58:20.391Z","ev":"task_resequenced","id":"one-name-for-the-button-that-shows-and-hides-the","from":1630,"to":20}
+{"t":"2026-09-07T12:58:20.425Z","ev":"task_resequenced","id":"a-screen-says-whether-a-drag-will-move-it-or-dra","from":1640,"to":30}
+{"t":"2026-09-07T12:58:26.497Z","ev":"task_resequenced","id":"a-bug-filed-at-the-end-of-a-task-has-been-reprod","from":150,"to":10}
+{"t":"2026-09-07T12:58:26.532Z","ev":"task_resequenced","id":"room-on-one-side-can-be-a-knob","from":1240,"to":20}
+{"t":"2026-09-07T12:58:26.566Z","ev":"task_resequenced","id":"a-wrapped-label-says-which-width-you-are-looking","from":1250,"to":30}
+{"t":"2026-09-07T12:58:26.600Z","ev":"task_resequenced","id":"a-caption-reserves-the-room-its-pill-really-need","from":1260,"to":40}
+{"t":"2026-09-07T12:58:26.635Z","ev":"task_resequenced","id":"two-groups-arranged-differently-say-it-in-one-li","from":1270,"to":50}
+{"t":"2026-09-07T12:58:26.669Z","ev":"task_resequenced","id":"a-menu-in-the-dock-says-its-whole-value-when-you","from":1300,"to":60}
+{"t":"2026-09-07T12:58:26.703Z","ev":"task_resequenced","id":"the-size-menu-stops-changing-width-with-the-size","from":1310,"to":70}
+{"t":"2026-09-07T12:58:26.737Z","ev":"task_resequenced","id":"the-settings-of-a-part-only-some-of-them-have-ca","from":1320,"to":80}
+{"t":"2026-09-07T12:58:26.771Z","ev":"task_resequenced","id":"a-number-that-springs-back-says-why-it-did","from":1330,"to":90}
+{"t":"2026-09-07T12:58:26.806Z","ev":"task_resequenced","id":"one-way-to-make-a-piece-the-surface-behind-the-r","from":1340,"to":100}
+{"t":"2026-09-07T12:58:26.840Z","ev":"task_resequenced","id":"size-and-position-rows-in-the-mock-panels-are-pi","from":1350,"to":110}
+{"t":"2026-09-07T12:58:26.874Z","ev":"task_resequenced","id":"a-container-too-small-for-what-is-inside-it-says","from":1360,"to":120}
+{"t":"2026-09-07T12:58:26.907Z","ev":"task_resequenced","id":"the-clip-contents-walk-reaches-the-switch-it-is","from":1390,"to":130}
+{"t":"2026-09-07T12:58:26.941Z","ev":"task_resequenced","id":"the-panel-controls-walk-reaches-the-revert-arrow","from":1400,"to":140}
+{"t":"2026-09-07T12:58:26.975Z","ev":"task_resequenced","id":"the-tool-tips-walk-finds-the-panel-button-it-is","from":1410,"to":150}
+{"t":"2026-09-07T12:58:27.008Z","ev":"task_resequenced","id":"the-dock-rules-say-plainly-that-they-govern-the","from":1420,"to":160}
+{"t":"2026-09-07T12:58:27.041Z","ev":"task_resequenced","id":"a-tool-setting-that-is-on-screen-twice-reads-as","from":80,"to":170}
+{"t":"2026-09-07T12:58:41.895Z","ev":"triage","summary":"merged 2 duplicates (one-outline-row..., the-look-controls-come-back-above-the-fold), moved 2 up (properties-panel p3->p1, walk-panel-picture p3->p2), re-tagged 1 epic (mock number rows -> design-system), reset 0 (nothing stuck), groomed 8 goals/acceptance/notes, added 4 from the design review; open tasks 21 -> 23, all seq renumbered to steps of 10"}
+{"t":"2026-09-07T13:01:04.336Z","ev":"digest","file":"2026-09-07.md"}

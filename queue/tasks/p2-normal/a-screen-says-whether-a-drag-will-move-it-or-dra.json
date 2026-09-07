@@ -1,0 +1,33 @@
+{
+  "id": "a-screen-says-whether-a-drag-will-move-it-or-dra",
+  "title": "A screen says whether a drag will move it or draw a selection band",
+  "goal": "Dragging across the empty background of a screen now does one of two different things depending on whether that screen is already picked: it either sweeps a selection band over the things on the screen, or it picks the whole screen up and moves it. Nothing on screen tells you which one you are about to get, and the pointer looks the same either way. Say which one is coming before the button goes down.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T12:57:50.277Z",
+  "updated": "2026-09-07T12:58:20.425Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by the 2026-09-07 digest design review off audit queue/audits/2026-09-07-band-inside-a-screen.json, roughs 2 and 3. Rough 2: 'Nothing on screen tells the two apart before you press. The pointer stays an arrow either way. A cue on hover over a picked screen's surface would say it, and I left that out rather than invent a cursor for it in this task.' Rough 3: 'Option-dragging a screen's background used to duplicate the screen and now sweeps instead. Option-dragging its name duplicates it, so the gesture moved rather than went away, but nobody is told that.' The rule is Figma's and was the right call; this is the missing half of it. Code: PhotonzDocument.screenSurfacePress plus CanvasPointerDrags/CanvasPointerCue. Note UX-PATTERNS D12 covers tooltips and D16 covers guides, so check which vocabulary a hover cue on the canvas belongs to before inventing one.",
+  "acceptance": [
+    "Resting over the empty background of a screen makes it clear whether a drag from there will move the screen or sweep a band",
+    "It is clear for both cases, picked and not picked, and it costs nothing while you are just moving the pointer around",
+    "Holding Option over a picked screen's background says what Option will do there too, because Option dragging used to duplicate the screen and now sweeps",
+    "Nothing about the two gestures themselves changes",
+    "Audit written under queue/audits/ with real captures of both cases"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T12:57:50.278Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:58:20.425Z",
+      "note": "seq 1640 -> 30"
+    }
+  ]
+}

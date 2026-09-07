@@ -1,0 +1,35 @@
+{
+  "id": "the-whole-component-path-is-played-again-now-tha",
+  "title": "The whole component path is played again, now that it has versions and knobs",
+  "goal": "Component design is the feature in focus, and it has grown a lot in four days: versions, a number you can hand a copy, room on four sides, placing a particular version off the shelf, and carrying one change to every version at once. The last time anyone played the whole path as one sitting was 2026-09-03, before any of that landed. Play it again from nothing, as somebody who has never seen the app: draw a control, make it a component, give it a version and a knob, place three copies, override one, change the original, and put the override back. Then say honestly where it is clumsy.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T12:57:30.593Z",
+  "updated": "2026-09-07T12:58:20.289Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-on from author-a-component-and-reuse-it-start-to-finish (done 2026-09-03, walk Scripts/playtest/component-end-to-end-walk.json, audit queue/audits/2026-09-03-component-end-to-end.json). Shipped since then and not covered by that walk: a-component-can-hold-more-than-one-version-of-it, a-knob-can-be-a-number (audit 2026-09-06-a-knob-can-be-a-number), room-that-differs-side-to-side-can-be-a-knob (2026-09-06-uneven-room-knob), a-copy-can-have-its-own-room-inside (2026-09-06-component-own-room), place-a-copy-of-a-particular-version-straight-fr (2026-09-06-place-a-version), a-change-can-be-made-to-every-version-of-a-compo (2026-09-06-apply-to-versions), the-dock-opens-on-the-section-that-answers-the-la (2026-09-06-dock-component-first). Filed by the 2026-09-07 digest design review: eight pieces shipped, eight one-feature audits, and no audit anyone could hand a first-time user. Known rough spots to watch for on the way through, from those audits: a knob cannot reach the original's own outermost group; a copy's Version row and knobs sit above Position and Size now, so check the panel still reads in a sensible order; the properties panel may not fit (the-properties-panel-fits-on-the-screen-it-has).",
+  "acceptance": [
+    "One scripted walk drives the whole path end to end and passes twice in a row",
+    "It covers the pieces added since 2026-09-03: a second version, a number knob, room as a knob, placing a named version off the shelf, and carrying a change to every version",
+    "Every step is checked by what is actually on screen, not by the walk saying it pressed something",
+    "One undo puts back each step that claims to be one step",
+    "An audit under queue/audits/ that a person could follow with no other reading, with real captures at each turn",
+    "The audit says plainly what a first-time user would get wrong, and each of those becomes its own task",
+    "The 2026-09-03 walk and audit are either updated or retired, so there is one current answer and not two"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T12:57:30.594Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:58:20.288Z",
+      "note": "seq 1380 -> 20"
+    }
+  ]
+}

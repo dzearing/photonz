@@ -2,17 +2,17 @@
   "id": "size-and-position-rows-in-the-mock-panels-are-pi",
   "title": "Size and position rows in the mock panels are pictures of numbers, not numbers",
   "goal": "Lots of mock pages draw a layers X, Y, W and H as small grey boxes that were never meant to be typed into. In the real app three of those four take the keyboard and one sometimes does not, so anyone sketching a panel from these pages copies a row that behaves like nothing in the product. Make those rows use the real number field for the numbers you can type and the new plain read-only number for the ones you cannot.",
-  "epic": "ui-building",
+  "epic": "design-system",
   "priority": "p3-low",
-  "seq": 1350,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T08:49:58.902Z",
-  "updated": "2026-09-07T08:49:58.902Z",
+  "updated": "2026-09-07T12:58:26.840Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "The legacy pattern is .field (canvas.css: a read-only k/v display box) used as <div class=\"field\"><span class=\"k\">W</span><span class=\"v\">168</span></div>, in editor.html, agent.html, agent-edit.html, app-shell.html, component-configure-wt.html, ds-build-wt.html, icon-draw-wt.html, draw.html and others. The right targets are .stepper (typable) and .reading (read-only, added 2026-09-07 in input.css). Do NOT convert whole grid2 blocks blindly: R and Rot are typable too, and some .field uses are genuine status readouts in prose or a strip, where .val is the right answer. Found while adding .reading; kept out of that task because it needs a per-row judgment call, not a sweep.",
+  "notes": "The legacy pattern is .field (canvas.css: a read-only k/v display box) used as <div class=\"field\"><span class=\"k\">W</span><span class=\"v\">168</span></div>, in editor.html, agent.html, agent-edit.html, app-shell.html, component-configure-wt.html, ds-build-wt.html, icon-draw-wt.html, draw.html and others. The right targets are .stepper (typable) and .reading (read-only, added 2026-09-07 in input.css). Do NOT convert whole grid2 blocks blindly: R and Rot are typable too, and some .field uses are genuine status readouts in prose or a strip, where .val is the right answer. Found while adding .reading; kept out of that task because it needs a per-row judgment call, not a sweep.\n\nTriage 2026-09-07: re-tagged from ui-building to design-system. It changes mock pages, not the app, so it serves 'one design system, zero drift' rather than the focus. Kept at p3-low, which is where a next-stage epic parks. It still matters: a mock that draws a fake number field is the proposal a future panel task builds from.",
   "acceptance": [
     "Every mock inspector that shows X, Y, W, H or Rotation uses the number field for values a person can type",
     "A value the app works out for itself, such as a size decided by a layout, uses the plain read-only number instead",
@@ -23,6 +23,14 @@
     {
       "t": "2026-09-07T08:49:58.902Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:57:13.635Z",
+      "note": "Triage 2026-09-07: epic ui-building -> design-system (mock pages, not app work). Stays p3-low."
+    },
+    {
+      "t": "2026-09-07T12:58:26.839Z",
+      "note": "seq 1350 -> 110"
     }
   ]
 }

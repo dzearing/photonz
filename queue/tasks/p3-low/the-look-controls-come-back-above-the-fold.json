@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 1290,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T19:56:15.947Z",
-  "updated": "2026-09-06T19:56:15.948Z",
+  "updated": "2026-09-07T12:56:08.374Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-06 after the picked-first reorder landed. Clean document, text picked: Layers 6-177, Text 177-353, Position & Size 353-488, Appearance 488-623, Effects 623-781, viewport 688 - the Effects header is on screen but Corner Radius sits about 120pt into it, so around 743. Before the reorder Effects sat 417-575 and Corner Radius was reachable. The user weighed this exact tradeoff on 2026-09-06 in the decision \"The properties panel holds more than fits on a laptop\" and chose picked-first anyway, so this task must NOT undo that order. The unchosen option c is the lead: the layers and measurements lists opening about a third shorter, and Shadow starting closed, gave back roughly 150pt. Harness: Scripts/playtest/dock-picked-first-walk.json, plus the sectionInView waitFor condition added the same day.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-06T19:56:15.948Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:56:08.373Z",
+      "note": "duplicate of the-properties-panel-fits-on-the-screen-it-has, which is the same defect with harder measurements. Its acceptance items (text, arrow and zoom callout each reach Corner Radius without scrolling; the picked-thing section stays at the top; a walk reads the dock offsets back and proves it) were folded into the keeper before this was dropped."
     }
   ]
 }

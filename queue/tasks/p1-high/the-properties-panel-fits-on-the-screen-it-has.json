@@ -1,0 +1,43 @@
+{
+  "id": "the-properties-panel-fits-on-the-screen-it-has",
+  "title": "The properties panel fits on the screen it has",
+  "goal": "The properties panel down the right hand side is taller than the tallest window a laptop screen allows, so Corner Radius and the rest of Effects are always below the fold. Anyone rounding the corners of what they picked has to scroll and hunt for the control every single time. Four audits and three scripted walks hit this in one day, and the last five fixes each trimmed one section rather than settling how the panel holds itself, so settle it here: the design rules already say every panel group has its own bounded height and its own scroller, with exactly one group taking the leftover room. The Layers list is the only group that works that way today.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T10:29:36.039Z",
+  "updated": "2026-09-07T12:58:20.248Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-07 while making mixed-one-look-walk honest. Measured, not guessed: the walk asks for a 1180pt window and this display gives it 1028pt of content; the dock reports dockViewport 996 against sections running Layers 6-217, Text 217-393, Position & Size 393-528, Appearance 528-858, Effects 858-1016 with ONE layer picked, and a second layer adds an Arrange section that pushes the total to roughly 1310. Corner Radius is the last row of the last section, so it sits about 290pt below the fold. Reproduce with Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json and read panel-two-picked.json in the out folder: every Effects control comes back inWindow=false. Worth an adversarial look before building: collapsing sections by default, moving Corner Radius up next to the other shape controls, and letting the dock use two columns are all different products, and the mocks do not settle it.\n\nTriage 2026-09-07: promoted from p3-low to p1-high and merged with the-look-controls-come-back-above-the-fold (dropped as a duplicate; its acceptance is folded in above). This is the most-cited defect of the day. Evidence beyond the original measurement: audit 2026-09-07-mixed-one-look (panel runs about 1310pt against 1028pt of display, Corner Radius roughly 290pt below the fold, the walk has to scroll twice); audit 2026-09-07-layers-hold-their-place (\"Appearance, Effects and Library sit below the fold whether or not any group is open\"); audit 2026-09-07-font-menu-one-width (three sections had to be collapsed by hand just to photograph the Text section); and three walks that stop dead on a control below the fold (the-clip-contents-walk-reaches-the-switch-it-is, the-panel-controls-walk-reaches-the-revert-arrow, plus the-mixed-one-look-walk which was fixed by scrolling). The model to build to is written down already: docs/design/mocks/shared/UX-PATTERNS.md section 3, panel group -- \"The body has its own bounded max-height and its own scroller, so a 60-layer stack scrolls inside Layers and never pushes Effects or Library off screen. Exactly one group per dock may be .grow and take the leftover space.\" In the app only the Layers list does this (LayersPanel.swift:1493-1526); everything else lives in the one outer ScrollView at LayersPanel.swift:99. Do the walks named above as part of this, or leave them a note saying they now pass.",
+  "acceptance": [
+    "With two text layers picked in a window as tall as the screen allows, Corner Radius can be used without scrolling the panel",
+    "The same holds with one layer picked and with three or more, and for a piece of text, an arrow and a zoom callout",
+    "The section named after what you picked stays at the top of the panel",
+    "A section with more in it than fits scrolls inside itself rather than pushing the sections under it off the bottom",
+    "Nothing that was reachable before the change becomes harder to reach",
+    "A playtest walk reads the dock section offsets back and proves it, rather than a screenshot alone",
+    "Audit written under queue/audits/ with a real capture of the panel at full height"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T10:29:36.039Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:56:26.414Z",
+      "note": "Triage 2026-09-07: promoted to p1-high, merged with the-look-controls-come-back-above-the-fold, and pointed at the dock model already written in UX-PATTERNS section 3."
+    },
+    {
+      "t": "2026-09-07T12:56:26.449Z",
+      "note": "priority p3-low -> p1-high"
+    },
+    {
+      "t": "2026-09-07T12:58:20.248Z",
+      "note": "seq 1370 -> 10"
+    }
+  ]
+}

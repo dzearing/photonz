@@ -1,0 +1,34 @@
+{
+  "id": "one-name-for-the-button-that-shows-and-hides-the",
+  "title": "One name for the button that shows and hides the properties panel",
+  "goal": "The same button answers to three different names right now. Resting on it says Panel, the View menu calls it Show Layers, and until this morning it was called Inspector. A person who reads the menu and then looks for it on screen is hunting for the wrong word, and one of the scripted checks stopped working for exactly that reason. Pick one name and use it everywhere the panel is named.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T12:57:50.237Z",
+  "updated": "2026-09-07T12:58:20.391Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by the 2026-09-07 digest design review. Evidence: audit queue/audits/2026-09-07-panel-toggle-titlebar.json, rough 3, which names all three words and says the menu was deliberately left alone because renaming it would touch the shipping release. That is the call to settle here rather than leave hanging. It has already cost something: Scripts/playtest/tool-tips.json fails at step 13 looking for Inspector (task the-tool-tips-walk-finds-the-panel-button-it-is). Files: Sources/Photonz/TitlebarPanelToggle.swift for the button, the View menu for Show Layers. Note the shortcut is Option Command L.",
+  "acceptance": [
+    "The tooltip, the View menu row and any other place naming that panel all use one word",
+    "The word is the one the panel itself is called in the app, not a fourth invention",
+    "The keyboard shortcut is unchanged",
+    "The shipping release is either left alone on purpose, with a line in the audit saying why, or changed with it",
+    "A scripted walk rests on the button and reads the name back",
+    "Audit written under queue/audits/ with a real capture of the button and the menu"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T12:57:50.237Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:58:20.391Z",
+      "note": "seq 1630 -> 20"
+    }
+  ]
+}

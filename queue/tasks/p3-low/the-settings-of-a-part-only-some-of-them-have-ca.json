@@ -4,12 +4,12 @@
   "goal": "Pick five layers where three have a shadow. The Shadow row says Mixed, but there is no way to open it and change those three shadows: the only move on offer is giving all five one. Opening a part that only some of the picked layers have should show its settings, speaking for the ones that have it.",
   "epic": "ui-components",
   "priority": "p3-low",
-  "seq": 1320,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T02:47:48.252Z",
-  "updated": "2026-09-07T02:47:48.253Z",
+  "updated": "2026-09-07T12:58:26.737Z",
   "deps": [],
   "blockedBy": [],
   "notes": "PartsInspector.PartRowView: opens = isOn && row.hasSettings, so a mixed row hides its chevron. The old Shadow section did this already: ShadowInspector draws its sliders for selection.shadows, the subset that has one. The parts list threw that away when the switch moved up onto the row. Found while doing a-switch-says-mixed-the-way-every-other-control (audit 2026-09-06-switch-says-mixed, rough 3).",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-07T02:47:48.253Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:58:26.736Z",
+      "note": "seq 1320 -> 80"
     }
   ]
 }

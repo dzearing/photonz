@@ -1,0 +1,39 @@
+{
+  "id": "a-picture-of-a-walk-shows-the-properties-panel-n",
+  "title": "A picture of a walk shows the properties panel, not a white gap",
+  "goal": "The scripted walks take two kinds of picture, and the one that always works shows the canvas but draws the whole right hand properties panel as blank white. This unblocks the focus: nearly everything being built right now lands in that panel, and today the only proof of it is a real screen capture, which only works when the machine happens to have granted screen recording. Anyone reading a walk report without that grant sees a picture with the panel missing, so nothing about the panel can be checked from it.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T10:59:23.661Z",
+  "updated": "2026-09-07T12:58:20.358Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured on 2026-09-07 during the-mixed-one-look-walk task. Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json writes 1-mixed-dock.png and 2-mixed-dock-lower.png with identical md5s while the -sc.png pair differ. The offscreen path is PlaytestHarness.snapshot(_:name:) around line 2885: bitmapImageRepForCachingDisplay + cacheDisplay on the window contentView. The dock is NOT a child window (only HintTooltip.swift adds one), so this is cacheDisplay failing to reproduce the dock hosting view, most likely a layer-backed / material subtree it cannot draw. Likely fix: render through the layer (CALayer.render(in:)) or an ImageRenderer of the dock hosting view, composited into the same bitmap. Docs already updated with the limitation in docs/design/playtest-harness.md.\n\nTriage 2026-09-07: moved p3-low -> p2-normal. Unmanned-loop is a next epic, so its work is normally parked at p3; this one earns the move because it unblocks the focus. Seven of the last day's audits had to add the caveat 'Screen Recording was granted, so these are real captures', which is the same as saying the panel evidence is luck-dependent.",
+  "acceptance": [
+    "A walk snapshot taken with two layers picked shows the properties panel with its real controls, not a white column",
+    "Two snapshots taken either side of a panel scroll differ from each other",
+    "Existing walks that photograph the canvas look the same as before"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T10:59:23.661Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-07T12:56:42.684Z",
+      "note": "priority p3-low -> p2-normal"
+    },
+    {
+      "t": "2026-09-07T12:56:42.719Z",
+      "note": "Triage 2026-09-07: raised to p2-normal because it unblocks the focus. Without an offscreen picture of the panel there is no panel evidence on a machine with no screen recording grant."
+    },
+    {
+      "t": "2026-09-07T12:58:20.357Z",
+      "note": "seq 1380 -> 10"
+    }
+  ]
+}
