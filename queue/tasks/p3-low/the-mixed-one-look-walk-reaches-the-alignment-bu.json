@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-05T18:08:22.808Z",
-  "updated": "2026-09-07T11:17:40.687Z",
+  "updated": "2026-09-07T11:29:30.402Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Confirmed pre-existing on 2026-09-05: it fails identically on a stashed pre-change build. Fails at step 35 (press): the control \"align center\" is not in the window; scroll to it with a scrollPanel step first. The panel builds only the rows on screen, so the walk needs a scrollPanel step before that press, or a taller window. Five other walks failed in the same playtest-all run and all five pass on their own, so those are shared-state cascade and this is the only real one. Merged with the-mixed-look-walk-reaches-the-alignment-button on 2026-09-06 (same walk, same step 35, same cause); that one is dropped.",
@@ -124,6 +124,10 @@
     {
       "t": "2026-09-07T11:29:11.259993Z",
       "note": "Full-suite verification of acceptance item 3 was deliberately scoped down to the panel-pressing slice, because running all 245 walks is what killed both earlier attempts at the 600s background ceiling. The walk reports ok under the suite runner, which is the same launch path, and the two suite failures that exist are both filed as their own tasks with proof they predate this change."
+    },
+    {
+      "t": "2026-09-07T11:29:30.401Z",
+      "note": "The walk was reporting a pass while clicking on nothing: a press only checked that its aim point was inside the window, so a row scrolled to a sliver still counted. A press now needs the whole control showing and names scrollPanel when it does not. Walk reworked so all four Mixed controls are really pressed, verified from log.json (cornerRadius 15 x1 -> mixed x2 -> 20 x2). Passes 3x in a row through playtest-all; Scripts/test.sh green at 4348 tests. Audit + 3 real screen captures at queue/audits/2026-09-07-mixed-one-look.json. Committed a146bd64."
     }
   ],
   "started": "2026-09-07T11:17:40.687Z",
@@ -132,5 +136,6 @@
     "at": "2026-09-07T11:15:40.005Z",
     "exit": 0,
     "message": "Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely."
-  }
+  },
+  "completed": "2026-09-07T11:29:30.402Z"
 }
