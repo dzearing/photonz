@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 14,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T05:25:13.487Z",
-  "updated": "2026-09-07T06:49:49.967Z",
+  "updated": "2026-09-07T07:38:03.850Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-06, and the honest answer to why not yet is that nothing has put anything in the title bar before. The editor window is declared hiddenTitleBar (Sources/Photonz/PhotonzApp.swift line 43), which hides the title and the bar but keeps the title bar AREA where the traffic lights live, so a toolbar item can still be placed there; this is the same arrangement Finder uses. Two routes: attach a SwiftUI toolbar with a trailing item to the editor scene, or add an NSToolbar to the window and place the control in it. Prefer whichever keeps the current look, which is no visible bar and no title text, since adding a toolbar can bring a background and a divider that would change the window. Check both what the traffic lights do at a narrow width and whether the item survives full screen. Supersedes the-panel-collapse-button-sits-in-the-panel-s-ow, which moved the button from the canvas into the panel header; that was the previous step and this replaces it, so fold in anything it left behind, in particular the corner rect other chrome avoids and the measure legend that used to park under the old position.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-07T07:09:00.000Z",
       "note": "Shared code, not Next-only: the editor shell, the dock and the chrome layout are all shared files that Next has not forked, so Next gets this by construction and Current gets the same move. This is a relocation of existing chrome, not a new feature, so no flag."
+    },
+    {
+      "t": "2026-09-07T07:38:03.849Z",
+      "note": "The panel toggle now sits at the trailing end of the window's own title bar, level with the traffic lights, in the same place whether the panel is open or closed. Built as a titlebar accessory (Sources/Photonz/TitlebarPanelToggle.swift), not a toolbar, so the window keeps its look: no title text, no bar drawn across the top. Both old homes are gone: the dock's header button and the glass capsule that floated in the picture's corner, along with EditorChromeLayout.inspectorToggleFrame and the gap the measure key used to leave under it. Verified on the probe with Screen Recording: Scripts/playtest/panel-toggle-titlebar-walk.json and panel-toggle-narrow-walk.json, plus legend-corner-slots, layers-lazy-rows and dock-component-first as regressions; 4267 tests green. Measured off the capture, the traffic lights and the glyph centre on the same row. Full screen hides the title bar and the button with it, the way a Mac does for a window with no toolbar; the shortcut still works there, and that is filed in the audit. Two harness bugs fixed on the way that had made any title bar control untestable. Audit: queue/audits/2026-09-07-panel-toggle-titlebar.json with five real captures."
     }
   ],
-  "started": "2026-09-07T06:49:49.966Z"
+  "started": "2026-09-07T06:49:49.966Z",
+  "completed": "2026-09-07T07:38:03.850Z"
 }
