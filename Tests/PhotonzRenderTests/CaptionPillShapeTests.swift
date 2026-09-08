@@ -149,6 +149,33 @@ struct CaptionPillShapeTests {
         }
     }
 
+    /// The frame reservation is the number the badge floor and the on-picture
+    /// clamp are both built on, so what it reserves has to hold what is drawn,
+    /// on a plain one line caption as much as on a stacked one. It used to
+    /// assume a line box of 1.3 em plus padding, which at the default size
+    /// reserved 44 points for a pill that draws 45.78: nothing clipped, because
+    /// the shadow leaves slack around the pill, but every clamp that trusted
+    /// the number was working from a pill two points too short. Swept across
+    /// the whole Label size slider, both ends included.
+    @Test func theReservedBoxHoldsTheDrawnPillAtEverySliderSize() {
+        let sizes = stride(from: MeasureContent.labelSizeRangePx.lowerBound,
+                           through: MeasureContent.labelSizeRangePx.upperBound,
+                           by: 1)
+        for caption in ["", "1", "Hi", "Save the changes", "A much longer caption"] {
+            for fontSize in sizes {
+                var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+                content.caption = caption
+                content.captionFontSize = fontSize
+                let drawn = CaptionMetrics.pillSize(for: caption, in: content)
+                let reserved = content.estimatedCaptionSize
+                #expect(reserved.height >= drawn.height,
+                        "\(caption.debugDescription) at \(fontSize)pt draws \(drawn.height) tall, reserved \(reserved.height)")
+                #expect(reserved.width >= drawn.width,
+                        "\(caption.debugDescription) at \(fontSize)pt draws \(drawn.width) wide, reserved \(reserved.width)")
+            }
+        }
+    }
+
     @Test func aLongCaptionIsStillJustItsTextPlusPadding() {
         var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
         content.captionFontSize = 20

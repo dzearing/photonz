@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T16:42:13.681Z",
-  "updated": "2026-09-08T12:09:07.083Z",
+  "updated": "2026-09-08T19:00:28.722037Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "AnnotationContent.estimatedCaptionSize (Sources/PhotonzCore/Layer.swift) computes its height as captionFontSize * 1.3 + 2 * captionPadding. Measured: at 20pt the drawn pill is 45.78 tall and the estimate reserves 44; at 8pt the drawn pill is 21.11 and the estimate reserves 18. captionPillHeight (added 2026-09-06 for the badge floor) is the correct upper bound (captionFontSize * 1.2 + 5 + 2 * captionPadding) and is pinned by CaptionPillShapeTests.theAssumedPillHeightIsNeverShorterThanTheDrawnOne. Point the estimate at it. Watch CaptionDropPlacementTests and the caption placement fixtures: a taller reservation can change which direction a pill grows near an edge.",
+  "notes": "AnnotationContent.estimatedCaptionSize (Sources/PhotonzCore/Layer.swift) computes its height as captionFontSize * 1.3 + 2 * captionPadding. Measured: at 20pt the drawn pill is 45.78 tall and the estimate reserves 44; at 8pt the drawn pill is 21.11 and the estimate reserves 18. captionPillHeight (added 2026-09-06 for the badge floor) is the correct upper bound (captionFontSize * 1.2 + 5 + 2 * captionPadding) and is pinned by CaptionPillShapeTests.theAssumedPillHeightIsNeverShorterThanTheDrawnOne. Point the estimate at it. Watch CaptionDropPlacementTests and the caption placement fixtures: a taller reservation can change which direction a pill grows near an edge.\n\nRESOLVED 2026-09-08: the estimate was already pointed at captionPillHeight(forLines:) by f095dc89 (multi-line captions), which landed hours after this task was filed. This run added the missing regression pin only: CaptionPillShapeTests.theReservedBoxHoldsTheDrawnPillAtEverySliderSize walks every whole point of labelSizeRangePx and compares estimatedCaptionSize against CaptionMetrics.pillSize in both axes. Confirmed it catches the old formula (120 failures when the 1.3 em line box is put back). Anything that later wants a caption pill height without glyphs to measure must still use captionPillHeight, never a fresh constant.",
   "acceptance": [
     "The room reserved for a caption is at least as tall as the pill that gets drawn, at every caption size the slider offers",
     "A caption near the bottom edge of a picture still lands in the same place it does today",
@@ -30,6 +30,27 @@
     {
       "t": "2026-09-08T12:09:07.082Z",
       "note": "seq 40 -> 30"
+    },
+    {
+      "t": "2026-09-08T18:54:46.179Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T19:00:28.722037Z",
+      "note": "Adversarial read first: the code fix is already IN. estimatedCaptionSize (Layer.swift 374-380) has taken its height from captionPillHeight(forLines:) since f095dc89 (2026-09-06 15:39 PDT, the multi-line caption task), which landed about six hours after this task was filed. So the remaining work is not the change, it is the pin: nothing asserted reserved >= drawn for a ONE line caption. That held only by a chain of two tests (captionPillHeight >= drawn in the render suite, estimate == captionPillHeight in the model suite), and a chain is exactly what drifts."
+    },
+    {
+      "t": "2026-09-08T19:00:28.722037Z",
+      "note": "Reproduced the reported shortfall rather than trusting the note: put the old formula (captionFontSize * 1.3 + 2 * captionPadding) back in estimatedCaptionSize and ran the new test. 120 failures across the slider, e.g. \"A much longer caption\" at 30pt draws 66.67 tall against 66.0 reserved. Restored the current line and it is green."
+    },
+    {
+      "t": "2026-09-08T19:00:28.722037Z",
+      "note": "Shipped: CaptionPillShapeTests.theReservedBoxHoldsTheDrawnPillAtEverySliderSize, sweeping every whole point of MeasureContent.labelSizeRangePx (8...64, both ends) across five captions from empty to a sentence, asserting estimatedCaptionSize is at least the drawn CaptionMetrics.pillSize in BOTH axes. It is the one line counterpart to CaptionMultiLineTests.theReservedBoxHoldsTheDrawnPillAtEveryLineCount. No production code changed this run, so acceptance item 2 (a caption near an edge lands where it does today) holds by construction; CaptionDropPlacementTests and the caption placement fixtures are green regardless."
+    },
+    {
+      "t": "2026-09-08T19:00:28.722037Z",
+      "note": "Verified: Scripts/test.sh green, 4907 tests in 416 suites. All eleven caption playtest walks re-run on the probe build and each reported status ok (arrow-caption-anchor/drag/field/pill/touch, caption-badge, caption-drop-lands, caption-two-lines, caption-width, locked-caption, short-caption-pill). Probe quit afterwards. No audit written: nothing on screen changed, the drawn pill is byte-identical to yesterday's, so there is nothing new for the user to try. The pill work this pins was already audited in queue/audits/2026-09-06-caption-badge.json."
     }
-  ]
+  ],
+  "started": "2026-09-08T18:54:46.178Z"
 }
