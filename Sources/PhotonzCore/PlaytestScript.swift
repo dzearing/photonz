@@ -1052,6 +1052,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// about the blur's tick would be answered by the fill's.
     case expect(thing: PlaytestPanelThing, named: String, inRow: String?,
                 reads: String?, present: Bool?)
+    /// The layers that must be PICKED right now, by name, however they came to
+    /// be picked: one clicked, several ⇧-clicked, or a whole sweep.
+    ///
+    /// `expect` asks the panel what it is showing; this asks what the app is
+    /// holding, which is the thing a snapshot cannot photograph. It is what a
+    /// walk uses to prove an undo handed the picking back along with the
+    /// drawing: before this, a walk could press Undo, see both boxes return
+    /// and pass, while the panel had gone empty and the next Stack Selection
+    /// or ⌫ did nothing at all (reported 2026-09-08).
+    ///
+    /// An empty list is as much of the point as a full one: it says nothing
+    /// should be picked here.
+    case expectPicked(layers: [String])
     /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
     /// down the list). A list that builds only the rows you can see has to be
     /// scrolled to prove the rest arrive, and that is not something a click can
@@ -1121,7 +1134,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectPicked", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
@@ -1165,6 +1178,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .press: "press"
         case .panel: "panel"
         case .expect: "expect"
+        case .expectPicked: "expectPicked"
         case .scrollPanel: "scrollPanel"
         case .reveal: "reveal"
         case .describe: "describe"
@@ -1384,6 +1398,11 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expect(thing: thing, named: try f.string(thing.rawValue),
                            inRow: inRow, reads: reads, present: present)
+        case "expectPicked":
+            guard fields["layers"] != nil else {
+                throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")
+            }
+            self = .expectPicked(layers: try f.optionalStrings("layers"))
         case "scrollPanel":
             self = .scrollPanel(row: fields["row"] as? String, by: try f.number("by"))
         case "reveal":

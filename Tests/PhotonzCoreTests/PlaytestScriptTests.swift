@@ -1286,6 +1286,43 @@ struct PlaytestScriptTests {
     // the app answered. `expect` is the other half: it names a thing in the
     // right hand panel and the words it must be showing, and fails the run
     // when it says anything else.
+    // A walk that presses Undo and photographs the result proves the picture
+    // came back, not that the layers came back PICKED. `expectPicked` is the
+    // half that notices: it names every layer that must be picked, and fails
+    // the run when the panel is holding anything else.
+    @Test("An expectPicked step names the layers that must be picked")
+    func expectPickedNamesTheLayers() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"] } ] }
+        """)
+        guard case .expectPicked(let layers) = script.steps[0] else {
+            Issue.record("expectPicked"); return
+        }
+        #expect(layers == ["Rectangle", "Rectangle 2"])
+        #expect(script.steps[0].name == "expectPicked")
+        #expect(PlaytestStep.names.contains("expectPicked"))
+    }
+
+    /// An empty list is as much of the point as a full one: it is how a walk
+    /// says nothing should be picked here.
+    @Test func expectPickedTakesAnEmptyList() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPicked", "layers": [] } ] }
+        """)
+        guard case .expectPicked(let layers) = script.steps[0] else {
+            Issue.record("expectPicked"); return
+        }
+        #expect(layers.isEmpty)
+    }
+
+    @Test func expectPickedHasToSayWhichLayers() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectPicked" } ] }
+            """)
+        }
+    }
+
     @Test("An expect step names a field and the words it must be showing")
     func expectStepReadsAField() throws {
         let script = try decode("""

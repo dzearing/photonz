@@ -13,6 +13,7 @@
 
     { "do": "drag", "from": [80, 50], "to": [520, 380], "steps": 10 },
     { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"] },
     { "do": "describe", "stage": "1-band-caught-both", "note": "a rubber band drawn round both boxes: both picked, the band still on screen" },
     { "do": "snapshot", "name": "stack-band-1-picked" },
 
@@ -23,12 +24,14 @@
 
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"], "note": "and the two boxes are PICKED again: this walk used to pass with the panel empty, because nothing in it asked (2026-09-08)" },
     { "do": "describe", "stage": "3-one-undo", "note": "THE TEST: ONE undo takes the stack apart and leaves the two boxes where they were, with the band back. The band coming down rides with the stack, so it must not cost a press of its own (2026-09-08)" },
     { "do": "snapshot", "name": "stack-band-3-undone" },
 
     { "do": "action", "action": "redo", "note": "and forward again in one press" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "4-redone", "note": "one redo puts the stack back and takes the band down again, the same one step in reverse" },
+    { "do": "expectPicked", "layers": ["Group"] },
+    { "do": "describe", "stage": "4-redone", "note": "one redo puts the stack back and takes the band down again, the same one step in reverse, and the stack is picked the way it was" },
     { "do": "snapshot", "name": "stack-band-4-redone" }
   ]
 }

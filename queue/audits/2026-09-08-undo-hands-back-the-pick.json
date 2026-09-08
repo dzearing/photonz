@@ -1,0 +1,28 @@
+{
+  "feature": "Undo puts back what was picked",
+  "epic": "ui-building",
+  "summary": "Undo now hands back the picking along with the drawing: undo a stack and the two things the band caught are picked again, undo a delete and the things that came back are picked again, so the press after an undo is your work rather than sweeping the same band a second time.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to switch on: it rides with the flag \"Undo puts back a marquee you lost\", which is on by default.",
+  "try": [
+    { "do": "Open a blank canvas and draw two rectangles, one above the other." },
+    { "do": "Take the arrow tool and sweep a band round both of them." },
+    { "do": "Press Stack Selection, so the two become one stack." },
+    { "do": "Press Command Z once.", "shot": "2026-09-08-undo-pick-stack.png" },
+    { "do": "Without touching anything else, press Stack Selection again: it stacks the same two." },
+    { "do": "Press Command Z, then press Backspace to delete the two the band caught." },
+    { "do": "Press Command Z again, then press Backspace straight away.", "shot": "2026-09-08-undo-pick-delete.png" }
+  ],
+  "evaluate": [
+    "When the stack comes apart, does the panel look exactly the way it did before you stacked, rows lit and all?",
+    "Is being handed the picking back what you expected, or did you expect an undo to leave you holding nothing?",
+    "Redo picks the stack again rather than leaving you empty handed. Does that read as the same step in reverse?",
+    "Undo a delete and press Backspace straight away: does removing the same things again feel right, or too easy to do by accident?",
+    "Does clicking a layer row still feel free, in the sense that Command Z never spends a press stepping back over a click?"
+  ],
+  "rough": [
+    "The screenshots are real window captures: the probe had the Screen Recording grant on this run.",
+    "The pick rides with a history step and is never a step of its own, so picking layers by clicking rows is still outside undo entirely. That is deliberate (undo should reach your work, not your clicks), but it means the one thing undo will not hand back is a pick you made purely by clicking and then changed by clicking again.",
+    "A band that caught nothing is unchanged: it stays a pixel region over the layer you were already holding, and undo hands that same state back.",
+    "Walks could pass while the panel sat empty, because nothing in them asked what was picked. There is now an expectPicked step for that, and Scripts/playtest/stack-from-a-band-walk.json has been given the assertion it was missing."
+  ]
+}

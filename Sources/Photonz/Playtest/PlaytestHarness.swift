@@ -852,6 +852,9 @@ private final class Run {
                  try checkPanel(thing, named: named, inRow: inRow, reads: reads, present: present),
                  state: describe())
 
+        case .expectPicked(let layers):
+            note(number, step.name, try checkPicked(layers), state: describe())
+
         case .scrollPanel(let row, let by):
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
@@ -1935,6 +1938,24 @@ private final class Run {
     }
 
     /// Hold the panel to what the walk says it is showing.
+    /// What the app is HOLDING, checked by name: every layer a menu row would
+    /// act on, in draw order. A snapshot cannot photograph a pick that is
+    /// missing — the rows simply sit there unhighlighted — so this is the step
+    /// that fails a walk when an undo hands back the drawing without the
+    /// picking.
+    private func checkPicked(_ layers: [String]) throws -> String {
+        let editor = try requireEditor()
+        let picked = editor.actionableLayerIDs
+        let all = editor.document?.allLayers ?? []
+        let holding = all.filter { picked.contains($0.id) }.map(\.name)
+        func list(_ names: [String]) -> String { names.isEmpty ? "nothing" : names.joined(separator: ", ") }
+        guard holding == layers else {
+            throw Failure(description: "the layers picked are \(list(holding)), not \(list(layers)); "
+                + "the ones in the document: \(list(all.map(\.name)))")
+        }
+        return "picked: \(list(holding)), as claimed"
+    }
+
     private func checkPanel(_ thing: PlaytestPanelThing, named: String, inRow: String?,
                             reads: String?, present: Bool?) throws -> String {
         let reading = try panelReading(thing, named: named, inRow: inRow)

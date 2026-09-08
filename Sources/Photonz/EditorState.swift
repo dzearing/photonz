@@ -213,10 +213,12 @@ final class EditorState {
     private(set) var selectionTargetsPixels = false {
         didSet { history?.syncSelection(selectionSnapshot) }
     }
-    /// The marquee as History stores it: the outline and what it means, which
-    /// travel together because they are one thing on screen.
+    /// The marquee as History stores it: the outline, what it means, and the
+    /// layers picked with it, which travel together because they are one thing
+    /// on screen.
     var selectionSnapshot: SelectionSnapshot {
-        SelectionSnapshot(region: selection, targetsPixels: selectionTargetsPixels)
+        SelectionSnapshot(region: selection, targetsPixels: selectionTargetsPixels,
+                          picked: LayerPick(primary: selectedLayerID, multi: multiSelectedLayerIDs))
     }
     /// Magic-wand color tolerance (Euclidean RGBA distance, 0–255 units).
     /// Persisted like the fill colors — a tuned tolerance outlives relaunch.
@@ -507,6 +509,11 @@ final class EditorState {
                 // group on the canvas opens the groups above it in the panel,
                 // so the row that is selected is a row you can see.
                 if let selectedLayerID { revealInLayersList(selectedLayerID) }
+                // Which layers are picked is part of the step the stack is
+                // about to push, so it follows the outline into History the
+                // same way. It is never a step of its OWN: clicking a row must
+                // not cost a press of ⌘Z (`SelectionSnapshot`).
+                history?.syncSelection(selectionSnapshot)
             }
             // Selecting anything (or explicitly deselecting) drops the Canvas
             // pseudo-selection; selectCanvas() re-raises the flag afterwards.
@@ -535,7 +542,10 @@ final class EditorState {
             // A half-typed style name belongs to the layers that were picked
             // when the field opened, and those are not the layers any more
             // (Next, `next-styles`).
-            if multiSelectedLayerIDs != oldValue { colorStyleNaming = nil }
+            if multiSelectedLayerIDs != oldValue {
+                colorStyleNaming = nil
+                history?.syncSelection(selectionSnapshot)
+            }
         }
     }
     /// The Library tile that is picked, by `LibraryEntry.id` (Next,
@@ -2045,6 +2055,22 @@ final class EditorState {
         guard Experiments.shared.selectionUndoEnabled, let snapshot = history?.selection else { return }
         selection = snapshot.region
         selectionTargetsPixels = snapshot.targetsPixels
+        // ...and the layers that were picked under it, so the step after an
+        // undo is the work rather than a re-pick: undo a stack and the two
+        // things the band caught are picked again, undo a delete and ⌫
+        // removes the same things again.
+        if selectedLayerID != snapshot.picked.primary { selectedLayerID = snapshot.picked.primary }
+        if multiSelectedLayerIDs != snapshot.picked.multi {
+            multiSelectedLayerIDs = snapshot.picked.multi
+            // A band has no anchor row, the same as when it was first swept:
+            // the next ⇧-click in the list starts over from the row it lands on.
+            rowSelection = ListSelection(selected: snapshot.picked.multi)
+        }
+        // Every write above told History the marquee had moved, which is true
+        // of a person moving it and wrong of a restore: those didSets have
+        // just overwritten the step's own snapshot with the half-restored one.
+        // Putting it back last is what makes a second ⌘Z land where it should.
+        history?.syncSelection(snapshot)
     }
 
     func undo() {

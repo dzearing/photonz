@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/undo-hands-back-the-pick",
+  "seed": "Undo has to hand back the PICKING as well as the drawing. Sweep a band round two boxes, stack them, and press Undo: the boxes come back, the band comes back, and the two boxes must be picked again, or the next thing you do is sweep the same band a second time. Same for a delete: the boxes come back picked, so pressing Backspace again removes the same two. Every claim here is an expectPicked step, because a snapshot cannot photograph a pick that has gone missing - the rows just sit there unhighlighted and the walk passes.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 90], "to": [340, 150], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 220], "to": [300, 280], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "drag", "from": [80, 50], "to": [520, 380], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"] },
+    { "do": "describe", "stage": "1-band-caught-both", "note": "a rubber band drawn round both boxes: both picked, the band still on screen" },
+    { "do": "snapshot", "name": "pick-1-band-caught-both" },
+
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Group"] },
+    { "do": "describe", "stage": "2-stacked", "note": "the two boxes are one stack now, the band has come down, and the stack itself is what is picked" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"] },
+    { "do": "describe", "stage": "3-undo-hands-back-the-pick", "note": "THE TEST: one Undo takes the stack apart, puts the band back AND picks the two boxes again, so Stack Selection is there to press a second time without sweeping anything (2026-09-08)" },
+    { "do": "snapshot", "name": "pick-3-undone" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Group"] },
+    { "do": "describe", "stage": "4-redo-keeps-it-right", "note": "forward again in one press, and the stack it puts back is picked the way it was" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"] },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "describe", "stage": "5-swept-and-deleted", "note": "Backspace over a band that caught layers removes the ones it caught: both boxes gone, nothing picked" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": ["Rectangle", "Rectangle 2"] },
+    { "do": "describe", "stage": "6-undo-after-a-delete", "note": "THE OTHER TEST: the two boxes come back PICKED, which is the only way the next Backspace can mean anything" },
+    { "do": "snapshot", "name": "pick-6-undone-delete" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "describe", "stage": "7-delete-again-removes-the-same-two", "note": "and pressing Backspace straight after the undo really does remove the same two again, which is the sentence the bug report was written in" }
+  ]
+}

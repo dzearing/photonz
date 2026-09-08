@@ -279,6 +279,105 @@ struct SelectionHistoryTests {
         #expect(history.selection.region == nil)
     }
 
+    // MARK: - Undo hands back what was PICKED, not only what was drawn
+
+    /// The band caught two pictures and stacking them consumed the band. One
+    /// ⌘Z has to hand back the pictures, the outline AND the two pictures
+    /// being picked, or the very next thing you do is sweep the same band
+    /// again before you can stack them a second time (reported three times on
+    /// 2026-09-08).
+    @Test func undoHandsBackTheLayersThatWerePicked() {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
+                                                        layers: [sweptLayer("left"), sweptLayer("right")]))
+        let ids = Set(history.current.layers.map(\.id))
+        history.syncSelection(SelectionSnapshot(region: region(80, 80).region,
+                                                targetsPixels: false,
+                                                picked: LayerPick(multi: ids)))
+
+        history.perform { _ = $0.stackSelection(ids: ids, kind: .stack) }
+        let group = history.current.layers[0].id
+        // The stack consumed the band and left the new stack picked.
+        history.syncSelection(SelectionSnapshot(picked: LayerPick(primary: group)))
+
+        history.undo()
+        #expect(history.selection.picked.ids == ids)
+        #expect(history.selection.region != nil)
+    }
+
+    /// ...and forward again: redo is the same step read the other way round,
+    /// so the stack it puts back is picked the way it was.
+    @Test func redoHandsBackThePickToo() {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
+                                                        layers: [sweptLayer("left"), sweptLayer("right")]))
+        let ids = Set(history.current.layers.map(\.id))
+        history.syncSelection(SelectionSnapshot(region: region(80, 80).region, picked: LayerPick(multi: ids)))
+        history.perform { _ = $0.stackSelection(ids: ids, kind: .stack) }
+        let group = history.current.layers[0].id
+        history.syncSelection(SelectionSnapshot(picked: LayerPick(primary: group)))
+
+        history.undo()
+        history.redo()
+        #expect(history.selection.picked.primary == group)
+        #expect(history.selection.picked.ids == [group])
+    }
+
+    /// A sweep and a ⌫: the two pictures come back picked, so pressing ⌫
+    /// straight after the undo removes the same two again.
+    @Test func undoAfterADeleteHandsBackThePick() {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
+                                                        layers: [sweptLayer("left"), sweptLayer("right")]))
+        let ids = Set(history.current.layers.map(\.id))
+        history.syncSelection(SelectionSnapshot(region: region(80, 80).region, picked: LayerPick(multi: ids)))
+
+        history.perform { $0.removeLayers(ids: ids) }
+        history.syncSelection(SelectionSnapshot()) // the delete took the band and the pick with it
+
+        history.undo()
+        #expect(history.current.layers.count == 2)
+        #expect(history.selection.picked.ids == ids)
+    }
+
+    /// A step that never had a pick does not invent one.
+    @Test func aStepWithNoPickHandsBackNoPick() {
+        var history = makeHistory()
+        history.syncSelection(region(0, 0))
+        history.perform { $0.resize(to: CGSize(width: 50, height: 50)) }
+        history.syncSelection(SelectionSnapshot())
+        history.undo()
+        #expect(history.selection.picked.isEmpty)
+        #expect(history.selection == region(0, 0))
+    }
+
+    /// One picked layer travels as the PRIMARY pick and several as the band's
+    /// multi-pick, exactly as the editor holds them, so what comes back is
+    /// what was there rather than a re-derived guess.
+    @Test func onePickAndSeveralComeBackAsTheyWere() {
+        var history = makeHistory()
+        let one = UUID()
+        let both = Set([UUID(), UUID()])
+        history.syncSelection(SelectionSnapshot(picked: LayerPick(primary: one)))
+        history.perform { $0.resize(to: CGSize(width: 50, height: 50)) }
+        history.syncSelection(SelectionSnapshot(picked: LayerPick(multi: both)))
+        history.perform { $0.resize(to: CGSize(width: 25, height: 25)) }
+
+        history.undo()
+        #expect(history.selection.picked == LayerPick(multi: both))
+        history.undo()
+        #expect(history.selection.picked == LayerPick(primary: one))
+    }
+
+    /// The pick is part of what a marquee step compares, so a band that caught
+    /// different layers is a change even when the outline lands in the same
+    /// place.
+    @Test func aChangeOfPickIsAChange() {
+        var history = makeHistory()
+        let before = SelectionSnapshot(region: region(0, 0).region, picked: LayerPick(primary: UUID()))
+        history.syncSelection(SelectionSnapshot(region: region(0, 0).region,
+                                                picked: LayerPick(primary: UUID())))
+        let recorded = history.recordSelectionChange(from: before)
+        #expect(recorded)
+    }
+
     @Test func undoEndsTheRunSoTheNextNudgeStandsAlone() {
         var history = makeHistory()
         history.syncSelection(region(0, 0))
