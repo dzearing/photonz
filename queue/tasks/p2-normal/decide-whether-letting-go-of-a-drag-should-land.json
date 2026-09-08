@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T07:17:48.374Z",
-  "updated": "2026-09-08T16:31:27.786758Z",
+  "updated": "2026-09-08T16:32:14.383Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08. Ran Scripts/playtest.sh Scripts/playtest/distance-lands-on-release.json against the probe build. Log at /tmp/photonz-playtest/distance-lands-on-release/log.json: step 8 drags (234,786)->(480,786) in distance mode and step 10 (stage 1-button-width, note \"one drag, number placed by the app\") reports measures=[]. The caliper is sitting in .secondPlaced waiting for a third click. Two separate causes: (a) Experiments measureDistanceLandsOnRelease is a sub-flag of next-measure-modes and is off, so CanvasMeasure.measureLandsOnRelease is false and advanceMeasurePlacement goes to .secondPlaced instead of committing; (b) the walk re-arms with a bare key i at step 11, which cycles the MODE rather than the tool, so stage 2 is actually measured in Size mode, not Distance, and that is the only reason the walk ends with any measurements at all. Use the measureMode step to arm a mode. The new measuring field in a walk log now names the in-flight state, which is how this was spotted.",
@@ -53,8 +53,13 @@
     },
     {
       "t": "2026-09-08T16:31:27.786758Z",
-      "note": "Written down in docs/design/next-measure.md: \u00a7 3 says Distance is three clicks and why the drag was turned down, \u00a7 10 gains row D6b recording the resolution. expectMeasures documented in docs/design/playtest-harness.md. Tests 4866 green."
+      "note": "Written down in docs/design/next-measure.md: § 3 says Distance is three clicks and why the drag was turned down, § 10 gains row D6b recording the resolution. expectMeasures documented in docs/design/playtest-harness.md. Tests 4866 green."
+    },
+    {
+      "t": "2026-09-08T16:32:14.381Z",
+      "note": "Distance is three clicks, which is what the user already chose on 2026-09-02; the declined drag-lands-on-release gesture, its switch and its copy are removed, so there is one code path. New expectMeasures playtest step, proved to fail on an over-claim. distance-lands-on-release.json deleted; distance-three-clicks.json asserts 0/0/1/2 and passes on the probe (123 px, 602 px, real capture). Swept the 11 other measure walks: none claims a measurement its own log denies. Written down in docs/design/next-measure.md 3 and D6b. Tests 4866 green. Audit queue/audits/2026-09-08-distance-three-clicks.json. Commit 2545e090, pushed."
     }
   ],
-  "started": "2026-09-08T16:17:51.910Z"
+  "started": "2026-09-08T16:17:51.910Z",
+  "completed": "2026-09-08T16:32:14.382Z"
 }
