@@ -511,16 +511,23 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case toggleFillSwitch
     /// Give every picked layer a border, which is what pulling the Effects
     /// section's Border slider off zero over a selection does. It is what puts
-    /// the Border row in the Color section, so a walk can photograph it.
+    /// one Border row in the Effects list speaking for the whole selection, so
+    /// a walk can photograph it.
     case borderSelection
     /// Paint every picked layer's BORDER one crimson (#B0184A), which is what
-    /// choosing a color in the Border row's well does. Same reason as
-    /// `paintSelectionColor`: the well opens a popover a walk cannot reach.
+    /// choosing a color in the Border row's well does over a selection. Same
+    /// reason as `paintSelectionColor`: the well opens a popover, and reaching
+    /// it by hand is several steps a walk about something else should not
+    /// spend. A walk that IS about the picker presses the well itself.
+    ///
+    /// There is no `saveBorderColorStyle` beside this any more. It named a row
+    /// by the KIND of colour it painted, and the Appearance list stopped having
+    /// a Border row when a layer's edge became a Border effect
+    /// (`OutlineRetirement.swift`), so it opened a name field under a row that
+    /// was not on screen and looked like a button that did nothing. Save as
+    /// Style is a row on the Border row's own colour menu, and a walk reaches
+    /// it there: `panelMenu "Color" in "Border" choose "Save as Style"`.
     case paintSelectionBorderColor
-    /// Open the name field under the Border row, which is what Save as Style
-    /// on that row does. The field takes typing like any other, and Return
-    /// saves the border color under that name.
-    case saveBorderColorStyle
     /// Paint every picked layer's first gradient-taking slot with a straight
     /// gradient running out of the colour it already has, which is what
     /// choosing Linear in the picker's type row does. The type row is inside a

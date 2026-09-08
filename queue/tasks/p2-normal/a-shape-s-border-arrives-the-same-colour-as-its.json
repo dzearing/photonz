@@ -1,0 +1,27 @@
+{
+  "id": "a-shape-s-border-arrives-the-same-colour-as-its",
+  "title": "A shape's border arrives the same colour as its fill, so turning it up shows nothing",
+  "goal": "Draw a box and drag its Border width up and nothing appears to happen: the box just gets bigger. The border is there, it is simply painted the exact colour the fill already is, so there is no line to see until you also go and change its colour. A first border should read as a border.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T18:24:56.607Z",
+  "updated": "2026-09-08T18:24:56.610Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-08 while repairing the five stale border walks. Reproduced on the probe build at 0ef9bd9f.\n\nCommand (walk body saved at /tmp/pz-probe/border-invisible.json: blank 900x600, key r, drag 340,300 to 560,460, press Slider in Border across 0.3, panelMenu Border choose Outside, render, press Color in Border, panel):\n\n  Scripts/playtest.sh /tmp/pz-probe/border-invisible.json --no-build\n\nOutput:\n  border picker swatch marked as current: [{'detail': '#FF2114, already picked', 'name': 'Shades 5'}]\n  fill centre pixel: (255, 59, 48)\n  11pt outside border pixel: (255, 59, 48)\n\nThe panel at that moment reads Fill (red swatch), Border > Color (the same red swatch), Position Outside, Width 11 pt. An 11 pt outside ring painted in the fill colour is invisible on white, and the only visible effect of dragging Width is that the shape grows.\n\nThis is why corner-radius-rounds-walk and ellipse-border-walk now have to press the Border Color well and pick Shades 9 before their ring is legible: without it the walk passes while photographing nothing. Those two walks are the regression test to keep honest if this changes.\n\nA shape arrives at Width 0, so nobody sees the clash until they pull the slider. Likely fix is in the arriving style (PhotonzCore AnnotationStyles.arrivingStyle(forShape:)) or wherever a new layer's border colour is seeded: a first border wants a colour that contrasts with the fill rather than a copy of it. Whether that should be a fixed ink, a darker shade of the fill, or the last border colour you used is a UX judgment, hence p2 and not a silent fix.",
+  "acceptance": [
+    "Drawing a shape and dragging its Border width off zero puts a line on screen you can see against the fill, with no second trip to the colour well",
+    "The border colour a shape arrives with is still whatever you last left a border on that kind of shape, so the memory rule is not undone",
+    "A walk proves it: the pixel under an outside border is a different colour from the pixel inside the fill"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T18:24:56.609Z",
+      "note": "created (manual)"
+    }
+  ]
+}

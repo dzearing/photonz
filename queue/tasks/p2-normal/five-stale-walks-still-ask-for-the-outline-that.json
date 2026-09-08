@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2060,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T18:06:02.560Z",
-  "updated": "2026-09-08T18:06:02.563Z",
+  "updated": "2026-09-08T18:25:16.029739Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08 on the pre-change code (git stash of the border-row work), so these are stale rather than caused by it. Command:\n\n  Scripts/playtest-all.sh border-color corner-radius-rounds effect-colour ellipse-border outline-position\n\nOutput:\n  border-color-walk           7s  FAILED  step 26 (type): no text field has the keyboard (first responder is CanvasNSView)\n  corner-radius-rounds-walk   3s  FAILED  step 8 (press): no control called \"Slider\" in \"Border\" is in the panel; the ones that are: Color (Border 1, Color, Border), Color (Border 2, Color, Border)\n  effect-colour-walk          4s  FAILED  step 8 (press): same as above\n  ellipse-border-walk         3s  FAILED  step 10 (press): same as above\n  outline-position-walk       4s  FAILED  step 14 (panelMenu): no menu called \"Position\" is in the window; the ones that are: 100%, Add Effect, Color, Border (Inside)\n\nThree of them share one cause: a shape now ARRIVES holding a Border, so the walk step Add Effect > Border makes a SECOND one and the rows become Border 1 and Border 2, which no step names. Either drop the Add Effect step and tune the row the shape came with, or name Border 1. outline-position-walk looks for a Position menu that is now on the Border row itself. border-color-walk is a different fault: a type step lands with the canvas holding the keyboard.\n\nThe same run reported 43 other walks passing, so the harness itself is fine.",
@@ -22,6 +22,47 @@
     {
       "t": "2026-09-08T18:06:02.562Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T18:08:34.927Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "Reproduced first, unchanged: Scripts/playtest-all.sh border-color corner-radius-rounds effect-colour ellipse-border outline-position gave 0 passed, 5 failed with exactly the errors in notes."
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "Read what the app actually shows now (panel dumps against the probe): a drawn shape ARRIVES holding a Border effect, at Inside, width 0. Add Effect > Border therefore makes a second one and the rows become Border 1 and Border 2. The position menu is named after the row, so it is \"Border\", not \"Position\". There is no Border row in Appearance at all any more (OutlineRetirement, 2026-09-07)."
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "Adversarial pass on the walks before touching them: the cheap repair is to name the row Border 1 and move on, but that would have every walk assert a two-border document nobody would ever build. The claim each walk exists to make is about ONE border, so the right repair is to drop the Add Effect step and tune the border the shape came with. Kept every stage note and every picture; only the route to the row changed."
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "corner-radius-rounds, effect-colour, ellipse-border: Add Effect > Border removed, the arriving Border row used instead. corner-radius and ellipse also say Outside explicitly, because the plus used to default to Outside and the arriving row defaults to Inside, so without it stage 1's claim would have quietly become false."
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "First repair passed and was still wrong. The arriving border is painted the SAME colour as the fill, so an 11 pt outside ring was invisible and the walks were photographing a blank shape while reporting ok. corner-radius-rounds and ellipse-border now press the Border colour well and pick Shades 9 first, and the renders show a dark ring following the corner and following the oval. Filed the underlying product problem separately as a-shape-s-border-arrives-the-same-colour-as-its."
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "outline-position: panelMenu \"Position\" became panelMenu \"Border\", which is what the menu is called now that it sits on the effect row."
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "border-color was a deeper stale: it drove the probe action saveBorderColorStyle, which asks for a name field under the Appearance Border row. That row no longer exists, so the request opened a field nobody could see and the type step landed on the canvas. The walk now uses the real surface, the Border row's own colour menu, and the menu even says \"Save as Style for All 2\", so the two-frames-at-once claim is now made by the app's own words. Removed saveBorderColorStyle from the harness: unused by every walk and silently broken, which is a trap for the next walk author."
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "Verified: three consecutive runs of the acceptance command, 5 passed 0 failed each time. Scripts/test.sh green (4906 tests). Renders and -sc.png captures checked by eye against every stage note. Screen Recording was granted this run, so the pictures are real captures."
+    },
+    {
+      "t": "2026-09-08T18:25:16.029739Z",
+      "note": "No audit written: this repairs the test harness, it ships no feature a person can try. Matches how the earlier walk-repair tasks were closed."
     }
-  ]
+  ],
+  "started": "2026-09-08T18:08:34.926Z"
 }

@@ -1212,15 +1212,14 @@ private final class Run {
                 if fill.isOffered { editor.setColorEnabled(slot: .fill, on: !fill.isOn) }
             case .borderSelection:
                 // The Effects Border slider over everything picked: this is
-                // what makes the Border row appear in the Color section. It
-                // reaches only layers with no line of their own, exactly as the
-                // row does — a shape's width is its own Thickness row.
+                // what puts a Border row in the Effects list for every one of
+                // them at once. There is no Border row in Appearance any more
+                // (`OutlineRetirement.swift`) — a layer's edge is a Border and
+                // only a Border — so this is the one row the colour lands on.
                 let ids = editor.layerStyleSelection.borders.layerIDs
                 if !ids.isEmpty { editor.setLayerStyle(ids: ids) { $0.borderWidth = 4 } }
             case .paintSelectionBorderColor:
                 editor.setSelectionColor(slot: .border, hex: "#B0184A")
-            case .saveBorderColorStyle:
-                editor.beginNamingColorStyle(slot: .border)
             case .pickFirstColorStyle:
                 if let first = editor.colorStyleEntries.first {
                     editor.selectLibraryItem(first.id)

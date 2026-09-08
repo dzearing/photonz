@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/outline-position",
+  "setup": { "forget": ["shapes", "color", "panel"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1 },
@@ -16,14 +17,14 @@
     { "do": "snapshot", "name": "1-inside" },
     { "do": "render", "name": "1-canvas-inside" },
 
-    { "do": "panelMenu", "menu": "Position", "shot": "2-position-menu" },
-    { "do": "panelMenu", "menu": "Position", "choose": "Center" },
+    { "do": "panelMenu", "menu": "Border", "shot": "2-position-menu" },
+    { "do": "panelMenu", "menu": "Border", "choose": "Center" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "2-center", "note": "the line now straddles the selection ring" },
     { "do": "snapshot", "name": "2-center" },
     { "do": "render", "name": "2-canvas-center" },
 
-    { "do": "panelMenu", "menu": "Position", "choose": "Outside" },
+    { "do": "panelMenu", "menu": "Border", "choose": "Outside" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "3-outside",
       "note": "the line is wholly outside the selection ring, and the box kept its size" },
