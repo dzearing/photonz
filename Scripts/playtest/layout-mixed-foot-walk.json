@@ -1,0 +1,290 @@
+{
+  "out": "/tmp/photonz-playtest/layout-mixed-foot",
+  "seed": "Pick two groups arranged in different ways and the Layout section used to end in a five line paragraph: 'These are not all arranged the same way. A pick here reaches every one of them, and in the ones that line their contents up, the arrangement still decides one of the two directions.' It ran off the bottom of the panel, and its first sentence was the Arrangement row two above it reading Mixed. This walk reaches both shapes of that state, a stack beside a grid and two stacks running different ways, and reads the foot line back by name: it must be one line, it must still promise the pick reaches every picked group, and it must name the row a stack has already decided rather than saying 'one of the two directions'.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        100
+      ],
+      "to": [
+        200,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        170
+      ],
+      "to": [
+        200,
+        210
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        80,
+        60
+      ],
+      "to": [
+        260,
+        250
+      ],
+      "steps": 10
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        100
+      ],
+      "to": [
+        500,
+        140
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        170
+      ],
+      "to": [
+        500,
+        210
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        60
+      ],
+      "to": [
+        560,
+        250
+      ],
+      "steps": 10
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Stack",
+      "in": "Arrangement"
+    },
+    {
+      "do": "press",
+      "control": "Stack",
+      "in": "Arrangement"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Grid",
+      "in": "Arrangement"
+    },
+    {
+      "do": "press",
+      "control": "Grid",
+      "in": "Arrangement"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "1-stack-and-grid",
+      "note": "THE CLAIM: a column stack beside a grid. Arrangement reads Mixed, and the foot of the section is ONE line that names the row the stack has already decided: 'One pick reaches all. Stacks set Vertical.' Read it back on the Layout note control, and read the Library header's offset: the section is 52 points shorter than the same state with the old paragraph in it."
+    },
+    {
+      "do": "panel",
+      "stage": "1-stack-and-grid"
+    },
+    {
+      "do": "snapshot",
+      "name": "layout-mixed-foot-1-stack-and-grid"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Stack",
+      "in": "Arrangement"
+    },
+    {
+      "do": "press",
+      "control": "Stack",
+      "in": "Arrangement"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "reveal",
+      "control": "Row",
+      "in": "Direction"
+    },
+    {
+      "do": "press",
+      "control": "Row",
+      "in": "Direction"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "scrollPanel",
+      "by": -120,
+      "row": "Layout section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-two-directions",
+      "note": "THE OTHER SHAPE: one stack runs down and the other across, so a stack has taken a row each and neither name would be the whole truth. The foot is still one line: 'One pick reaches all. Stacks set both above.'"
+    },
+    {
+      "do": "panel",
+      "stage": "2-two-directions"
+    },
+    {
+      "do": "snapshot",
+      "name": "layout-mixed-foot-2-two-directions"
+    }
+  ]
+}

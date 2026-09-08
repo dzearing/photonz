@@ -13099,3 +13099,34 @@ so nothing on the canvas moved.
 ok on the probe build. Commits 62ebe63c and 18796427.
 
 Next: back to the queue.
+
+## 2026-09-08 — The mixed arrangement foot is one line
+
+The last paragraph left in the Layout section is gone. Pick two groups arranged
+in different ways and the section used to end in five lines that ran off the
+bottom of the panel: "These are not all arranged the same way. A pick here
+reaches every one of them, and in the ones that line their contents up, the
+arrangement still decides one of the two directions." Reproduced first on the
+probe with `contents-for-several-walk.json` stage 6.
+
+Its first sentence was the Arrangement row two above it reading Mixed, so it
+went the same way the rest of this section's restatement went on 2026-09-06.
+Its third was the only fact unique to the state and it was vague where it could
+be exact, so it now NAMES the row: `ContentsSelection.flowsDifferNote` is
+computed from a new `flowOwnedRows` and reads "One pick reaches all. Stacks set
+Vertical." (or Horizontal, or "both above" when a row stack and a column stack
+are picked together). Naming the row echoes "Set by the stack", the words those
+same rows wear when the arrangements agree.
+
+The width budget was measured, not guessed. A first attempt at 46 characters
+still wrapped to two lines, so the line is now held to 44, which is one line at
+today's dock width. `Scripts/playtest/layout-mixed-foot-walk.json` reaches both
+shapes of the state and reads the wording back off a new "Layout note" playtest
+control; A/B in that one walk puts the section at 335 → 283 points for a stack
+beside a grid and 379 → 340 for two stacks running different ways.
+
+Tests first, four in `ContentsSelectionTests`, including the character budget.
+`Scripts/test.sh` green at 4911. Audit `2026-09-08-layout-mixed-foot` with two
+real window captures.
+
+Next: back to the queue.

@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T19:04:32.417Z",
-  "updated": "2026-09-08T12:09:07.119Z",
+  "updated": "2026-09-08T19:01:14.924Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ContentsSelection.flowsDifferNote, rendered at the foot of PlacementInspector.contentRows. Left deliberately long on 2026-09-06 when the rest of the section was cut (task layout-stops-lecturing-and-starts-fitting) because a mixed arrangement is genuinely confusing and over-explaining seemed the safer error. Measure it the same way: Scripts/playtest/layout-fits-walk.json reads dock section offsets back, and contents-for-several-walk.json already reaches the state.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-09-08T12:09:07.118Z",
       "note": "seq 50 -> 40"
+    },
+    {
+      "t": "2026-09-08T19:01:14.923Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T19:20:00.000Z",
+      "note": "Reproduced. Probe + contents-for-several-walk stage 6 (one stack, one grid picked): the Layout section ends in 'These are not all arranged the same way. A pick here reaches every one of them, and in the ones that line their contents up, the arrangement still decides one of the two directions.' It wraps to five lines and runs off the bottom of the panel in the 1280x900 window. Screenshot contents-several-6-mixed-arrangement-sc.png."
+    },
+    {
+      "t": "2026-09-08T19:21:00.000Z",
+      "note": "Adversarial review of the note itself. Sentence one, 'These are not all arranged the same way', is what the Arrangement row two rows above already reads as Mixed: pure restatement, cut. Sentence two is the reach promise every multi-pick state makes, keep it but shorter. Sentence three is the only fact unique to this state, and it is vague where it should be exact: 'one of the two directions' makes the reader map it back onto a row. Naming the row (Vertical, or Horizontal) is both shorter and more useful, and it echoes 'Set by the stack', the words those rows wear when the arrangements agree. Measured the dock caption wrap at about 47 characters from the captions already on screen, so the replacement is built to that budget."
+    },
+    {
+      "t": "2026-09-08T19:55:00.000Z",
+      "note": "Shipped. ContentsSelection.flowsDifferNote is now a computed line built from flowOwnedRows: 'One pick reaches all. Stacks set Vertical.' (or Horizontal, or 'both above' when a row stack and a column stack are picked together). Tests first in ContentsSelectionTests, four of them, including a 44 character budget. The foot Text in PlacementInspector carries a playtestControl named 'Layout note' so a walk can read the wording back."
+    },
+    {
+      "t": "2026-09-08T19:56:00.000Z",
+      "note": "Measured A/B in one walk, Scripts/playtest/layout-mixed-foot-walk.json, by reading the Layout and Library section header offsets (scroll invariant). Stack beside grid: section height 335 -> 283 points. Two stacks running different ways: 379 -> 340. Both states verified one line in the real screen captures, and in the first the Library header is now visible under the section instead of the paragraph running off the bottom of the window."
+    },
+    {
+      "t": "2026-09-08T19:57:00.000Z",
+      "note": "Wording budget found by measurement, not guesswork: the first attempt, 'A pick reaches them all. Stacks set both above.' at 46 characters, still wrapped to two lines, so the reach half was cut to 'One pick reaches all.' and everything now fits in 44."
+    },
+    {
+      "t": "2026-09-08T19:58:00.000Z",
+      "note": "Adversarial review of the built thing. What is still rough: the Vertical row looks fully live and takes a pick the stacks will ignore, and it cannot go dead because the non-stack groups need it, so the foot line is the only warning. 'both above' is the one phrase that is not perfectly plain. Both recorded in the audit."
     }
-  ]
+  ],
+  "started": "2026-09-08T19:01:14.922Z"
 }

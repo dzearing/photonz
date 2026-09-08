@@ -242,6 +242,55 @@ struct ContentsSelectionTests {
         #expect(contents.flow.canSetVertical)
     }
 
+    /// The foot of the section is one line, not a paragraph. Measured on the
+    /// real panel rather than guessed: at the width the dock actually is, a
+    /// caption of 44 characters comes out one line and one of 46 comes out
+    /// two, so 44 is the budget the line is written to.
+    private let captionWrap = 44
+
+    @Test("The line says which row a stack has already decided, by its name")
+    func flowsDifferNoteNamesTheRow() {
+        var f = fixture()
+        f.doc.setGroupLayout(id: f.left, kind: .stack)
+        f.doc.updateGroupLayout(ids: [f.left]) { layout, _ in layout.direction = .column }
+        f.doc.setGroupLayout(id: f.right, kind: .grid)
+        let contents = f.doc.contentsSelection(layerIDs: [f.left, f.right])
+        #expect(contents.flowsDifferNote == "One pick reaches all. Stacks set Vertical.")
+        #expect(contents.flowsDifferNote.count <= captionWrap)
+    }
+
+    @Test("A row-running stack names the other row instead")
+    func flowsDifferNoteNamesHorizontal() {
+        var f = fixture()
+        f.doc.setGroupLayout(id: f.left, kind: .stack)
+        f.doc.updateGroupLayout(ids: [f.left]) { layout, _ in layout.direction = .row }
+        f.doc.setGroupLayout(id: f.right, kind: .grid)
+        let contents = f.doc.contentsSelection(layerIDs: [f.left, f.right])
+        #expect(contents.flowsDifferNote == "One pick reaches all. Stacks set Horizontal.")
+        #expect(contents.flowsDifferNote.count <= captionWrap)
+    }
+
+    @Test("Two stacks running different ways have taken a row each, and it still fits")
+    func flowsDifferNoteWhenBothRowsAreTaken() {
+        var f = fixture()
+        f.doc.setGroupLayout(ids: [f.left, f.right], kind: .stack)
+        f.doc.updateGroupLayout(ids: [f.left]) { layout, _ in layout.direction = .row }
+        f.doc.updateGroupLayout(ids: [f.right]) { layout, _ in layout.direction = .column }
+        let contents = f.doc.contentsSelection(layerIDs: [f.left, f.right])
+        #expect(contents.flowsDiffer)
+        #expect(contents.flowsDifferNote == "One pick reaches all. Stacks set both above.")
+        #expect(contents.flowsDifferNote.count <= captionWrap)
+    }
+
+    @Test("The line still promises the pick reaches every picked group")
+    func flowsDifferNoteKeepsTheReach() {
+        var f = fixture()
+        f.doc.setGroupLayout(id: f.left, kind: .stack)
+        f.doc.setGroupLayout(id: f.right, kind: .grid)
+        let contents = f.doc.contentsSelection(layerIDs: [f.left, f.right])
+        #expect(contents.flowsDifferNote.hasPrefix("One pick reaches all."))
+    }
+
     @Test("With arrangements switched off nothing is arranging anything")
     func arrangementsOff() {
         var f = fixture()

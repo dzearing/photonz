@@ -1,0 +1,28 @@
+{
+  "feature": "The Layout section stops lecturing about mixed arrangements",
+  "epic": "ui-layout",
+  "summary": "Pick two groups that are arranged in different ways and the Layout section now ends in one line, 'One pick reaches all. Stacks set Vertical.', instead of a five line paragraph that ran off the bottom of the panel. The line names the row a stack has already decided instead of saying 'one of the two directions' and leaving you to work out which.",
+  "setup": "Photonz Dev, Experiments window, release Next. Layout needs the Auto layout flag, which is on by default.",
+  "try": [
+    { "do": "Draw two rectangles one above another, sweep over both and press ⌘G. Do it again to the right, so you have two groups." },
+    { "do": "Click the first group in the Layers list and press Stack in the Layout section's Arrangement row." },
+    { "do": "Click the second group and press Grid in the same row." },
+    { "do": "Click the first group, then shift-click the second so both are picked." },
+    { "do": "Read the foot of the Layout section: one line, and the Library section starts right under it.", "shot": "2026-09-08-layout-mixed-foot-1-stack-and-grid.png" },
+    { "do": "Set the second group to Stack as well, then press Row in its Direction row." },
+    { "do": "Pick both groups again: now a stack has taken a row each and the line reads 'Stacks set both above.'", "shot": "2026-09-08-layout-mixed-foot-2-two-directions.png" }
+  ],
+  "evaluate": [
+    "Does 'One pick reaches all.' tell you enough that you trust a pick to reach both groups?",
+    "Does naming the row, 'Stacks set Vertical.', land faster than the old 'one of the two directions'?",
+    "Now that the line no longer says the groups are arranged differently, is Arrangement reading Mixed enough to tell you that?",
+    "In the two-stacks case, is 'Stacks set both above.' clear that it means the two rows above and not the two groups?",
+    "Would you rather the Vertical row itself carried this, rather than a line at the foot of the section?"
+  ],
+  "rough": [
+    "The Vertical row still looks fully live in this state and still takes a pick, even though the stacks among the picked groups ignore it. It cannot go dead, because the groups that are not stacks genuinely need it. The line at the foot is the only warning, which is why it now names the row by name.",
+    "'Stacks set both above.' is the one phrase here that is not perfectly plain. It means the two rows above it. The longer, clearer 'Stacks set Horizontal and Vertical.' wrapped to two lines, which is the thing this task existed to stop.",
+    "The line is written to a 44 character budget, measured on the real panel: 44 characters is one line at the dock's width and 46 is two. That is a fact about today's dock width, so a narrower dock would wrap it again.",
+    "Screen Recording was granted, so both pictures above are real captures of the window, not offscreen renders."
+  ]
+}

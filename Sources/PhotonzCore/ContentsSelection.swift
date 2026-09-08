@@ -233,13 +233,40 @@ public struct ContentsSelection: Hashable, Sendable {
         return !groups.allSatisfy { $0.editing == first }
     }
 
-    /// The one line under the rows for that case, in the two halves the wording
-    /// law asks for: what is true, and what it means for what you are about to
-    /// do.
-    public static let flowsDifferNote =
-        "These are not all arranged the same way. A pick here reaches every one of them, "
-        + "and in the ones that line their contents up, the arrangement still decides one "
-        + "of the two directions."
+    /// Which of the two rows below at least one picked group's own flow has
+    /// already decided, named the way the rows themselves are labelled. A
+    /// stack owns the way it runs and nothing else, so this is one row where
+    /// every picked stack runs the same way and both where they do not.
+    public var flowOwnedRows: [String] {
+        var names: [String] = []
+        if groups.contains(where: { !$0.editing.canSetHorizontal }) { names.append("Horizontal") }
+        if groups.contains(where: { !$0.editing.canSetVertical }) { names.append("Vertical") }
+        return names
+    }
+
+    /// The ONE line under the rows for that case, in the two halves the wording
+    /// law asks for: what a pick here does, and the one place it is not the
+    /// last word.
+    ///
+    /// It used to be three sentences and five lines, which ran off the bottom
+    /// of the panel. The first of them, "These are not all arranged the same
+    /// way", is what the Arrangement row two above already reads as Mixed, so
+    /// it is gone the same way the rest of this section's restatement went on
+    /// 2026-09-06. What is left is the promise every pick of several makes,
+    /// said shorter, and the one fact that is only true here, said by NAMING
+    /// the row it is about: "one of the two directions" left the reader to work
+    /// out which row it meant, and the row it means is the row that wears "Set
+    /// by the stack" whenever the arrangements agree.
+    ///
+    /// Built to fit ONE line, and measured rather than guessed: at the width
+    /// the dock actually is, a caption of 44 characters is one line and one of
+    /// 46 is two, so the whole thing is held to 44.
+    public var flowsDifferNote: String {
+        let reach = "One pick reaches all."
+        let names = flowOwnedRows
+        guard let only = names.first else { return reach }
+        return "\(reach) Stacks set \(names.count == 1 ? only : "both above")."
+    }
 
     // MARK: - Who is not following
 

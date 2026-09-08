@@ -476,10 +476,11 @@ struct PlacementInspector: View {
                 // differently from the rest, said out loud rather than left for
                 // somebody to discover by setting one and watching two move. It
                 // carries the reach itself, so it replaces the line below.
-                Text(ContentsSelection.flowsDifferNote)
+                Text(contents.flowsDifferNote)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .playtestControl("Layout note", detail: contents.flowsDifferNote)
             } else if contents.count > 1, !showsFollowCaption {
                 // The line above already carries this where it is there. This
                 // is the same promise for the arranged case, where it is not.
