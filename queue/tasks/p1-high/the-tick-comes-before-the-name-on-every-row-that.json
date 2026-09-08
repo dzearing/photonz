@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T04:59:46.419Z",
-  "updated": "2026-09-08T05:48:37.867263Z",
+  "updated": "2026-09-08T05:49:37.041Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 with a screenshot, saying they asked for this before. An earlier screenshot the same day did show the tick first, so this reversed during that day's work; the row was touched by four commits between noon and half past four, so find which and say so rather than assuming. Today EffectsListInspector.swift line 89 lays the row out as the title at ColorPartLayout.labelWidth then the switch at switchWidth, so the name comes first. The widths live in ColorStylePanel.swift lines 221 and 225 and are shared with the Appearance list, so put the ORDER there too rather than swapping two views and leaving the next list to guess. Note this interacts with an-effect-s-tick-sits-over-the-rule-that-marks-i, which lines the settings rule up under the tick: once the tick is the left column that alignment becomes simple, so whichever lands second should check the other still holds.",
@@ -37,7 +37,7 @@
     },
     {
       "t": "2026-09-08T05:31:50.802Z",
-      "note": "runner failed (exit 1, attempt 1): API Error: Can't reach the API server \u2014 check your internet or DNS (ENOTFOUND)"
+      "note": "runner failed (exit 1, attempt 1): API Error: Can't reach the API server — check your internet or DNS (ENOTFOUND)"
     },
     {
       "t": "2026-09-08T05:32:23.037Z",
@@ -70,6 +70,10 @@
     {
       "t": "2026-09-08T05:48:37.867263Z",
       "note": "Audit: queue/audits/2026-09-08-tick-leads.json with three real captures."
+    },
+    {
+      "t": "2026-09-08T05:49:37.041Z",
+      "note": "The tick leads every row in both panel lists, ordered by one shared PanelRowHead so a later list cannot come out reversed. Tickless rows hold the column open, and the settings rule now hangs centred under the tick. Verified on the probe app with Scripts/playtest/tick-leads-walk.json (Screen Recording granted, real captures measured pixel by pixel) and Scripts/test.sh green. Audit: queue/audits/2026-09-08-tick-leads.json. Commit 9923e740, pushed."
     }
   ],
   "started": "2026-09-08T05:32:23.037Z",
@@ -77,6 +81,7 @@
   "lastError": {
     "at": "2026-09-08T05:31:50.801Z",
     "exit": 1,
-    "message": "API Error: Can't reach the API server \u2014 check your internet or DNS (ENOTFOUND)"
-  }
+    "message": "API Error: Can't reach the API server — check your internet or DNS (ENOTFOUND)"
+  },
+  "completed": "2026-09-08T05:49:37.041Z"
 }
