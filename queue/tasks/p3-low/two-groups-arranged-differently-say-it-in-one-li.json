@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T19:04:32.417Z",
-  "updated": "2026-09-08T19:01:14.924Z",
+  "updated": "2026-09-08T19:19:10.432Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ContentsSelection.flowsDifferNote, rendered at the foot of PlacementInspector.contentRows. Left deliberately long on 2026-09-06 when the rest of the section was cut (task layout-stops-lecturing-and-starts-fitting) because a mixed arrangement is genuinely confusing and over-explaining seemed the safer error. Measure it the same way: Scripts/playtest/layout-fits-walk.json reads dock section offsets back, and contents-for-several-walk.json already reaches the state.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-08T19:58:00.000Z",
       "note": "Adversarial review of the built thing. What is still rough: the Vertical row looks fully live and takes a pick the stacks will ignore, and it cannot go dead because the non-stack groups need it, so the foot line is the only warning. 'both above' is the one phrase that is not perfectly plain. Both recorded in the audit."
+    },
+    {
+      "t": "2026-09-08T19:19:10.430Z",
+      "note": "The Layout section's last paragraph is one line. ContentsSelection.flowsDifferNote now reads 'One pick reaches all. Stacks set Vertical.' (or Horizontal, or 'both above'), naming the row a stack has already decided instead of saying 'one of the two directions'. Held to 44 characters, which is one line at the dock's width. Verified on the probe with Scripts/playtest/layout-mixed-foot-walk.json: section height 335 -> 283 points for a stack beside a grid and 379 -> 340 for two stacks running different ways, one line in both real captures. Tests first, four in ContentsSelectionTests; Scripts/test.sh green at 4911. Audit 2026-09-08-layout-mixed-foot. Commit 09cc465b."
     }
   ],
-  "started": "2026-09-08T19:01:14.922Z"
+  "started": "2026-09-08T19:01:14.922Z",
+  "completed": "2026-09-08T19:19:10.431Z"
 }
