@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T16:42:13.681Z",
-  "updated": "2026-09-08T19:00:28.722037Z",
+  "updated": "2026-09-08T19:00:40.437Z",
   "deps": [],
   "blockedBy": [],
   "notes": "AnnotationContent.estimatedCaptionSize (Sources/PhotonzCore/Layer.swift) computes its height as captionFontSize * 1.3 + 2 * captionPadding. Measured: at 20pt the drawn pill is 45.78 tall and the estimate reserves 44; at 8pt the drawn pill is 21.11 and the estimate reserves 18. captionPillHeight (added 2026-09-06 for the badge floor) is the correct upper bound (captionFontSize * 1.2 + 5 + 2 * captionPadding) and is pinned by CaptionPillShapeTests.theAssumedPillHeightIsNeverShorterThanTheDrawnOne. Point the estimate at it. Watch CaptionDropPlacementTests and the caption placement fixtures: a taller reservation can change which direction a pill grows near an edge.\n\nRESOLVED 2026-09-08: the estimate was already pointed at captionPillHeight(forLines:) by f095dc89 (multi-line captions), which landed hours after this task was filed. This run added the missing regression pin only: CaptionPillShapeTests.theReservedBoxHoldsTheDrawnPillAtEverySliderSize walks every whole point of labelSizeRangePx and compares estimatedCaptionSize against CaptionMetrics.pillSize in both axes. Confirmed it catches the old formula (120 failures when the 1.3 em line box is put back). Anything that later wants a caption pill height without glyphs to measure must still use captionPillHeight, never a fresh constant.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-08T19:00:28.722037Z",
       "note": "Verified: Scripts/test.sh green, 4907 tests in 416 suites. All eleven caption playtest walks re-run on the probe build and each reported status ok (arrow-caption-anchor/drag/field/pill/touch, caption-badge, caption-drop-lands, caption-two-lines, caption-width, locked-caption, short-caption-pill). Probe quit afterwards. No audit written: nothing on screen changed, the drawn pill is byte-identical to yesterday's, so there is nothing new for the user to try. The pill work this pins was already audited in queue/audits/2026-09-06-caption-badge.json."
+    },
+    {
+      "t": "2026-09-08T19:00:40.435Z",
+      "note": "The reservation was already correct (fixed in passing by f095dc89); shipped the missing regression pin, CaptionPillShapeTests.theReservedBoxHoldsTheDrawnPillAtEverySliderSize, which sweeps every point of the Label size slider and fails 120 times against the old formula. Scripts/test.sh green at 4907; all eleven caption playtest walks ok on the probe. Commit 62ebe63c."
     }
   ],
-  "started": "2026-09-08T18:54:46.178Z"
+  "started": "2026-09-08T18:54:46.178Z",
+  "completed": "2026-09-08T19:00:40.436Z"
 }
