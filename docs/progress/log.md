@@ -11917,3 +11917,48 @@ three real screen captures at
 Open question for the user, in the audit: the new layer goes to the TOP of the
 layers list rather than directly above the layer it came out of, which is where
 Photoshop puts it. Left as it was rather than changed as a side effect.
+
+## 2026-09-07 — The marquee answers to M, and a second press swaps it
+
+The task said the marquee had no letter and you had to reach for the tool bar
+every time. It already had one. `Tool.shortcutKey` returns nil for
+`rectSelect` and `ellipseSelect`, which is what the task was read off, but the
+letter lives on `ToolGroup.selection.groupKey`, and a probe walk from the arrow
+tool came back with `rectSelect` on the first press of M. The second and third
+presses came back with `rectSelect` as well, so the missing thing was the swap,
+not the letter.
+
+Reading the walk turned up something worse than a missing swap: M could hand
+you the MAGIC WAND. The family's letter picked whichever member you used last,
+and the wand is a member, so W then M gave the wand straight back. A letter
+that means "marquee" on one press and "wand" on the next is the thing the house
+rule about keys exists to stop.
+
+So a letter now owns tools, in `PhotonzCore` where a test can hold it still
+(`ToolGroup.tools(answeringTo:)` and `tool(forKey:active:remembered:)`, tests
+first in `ToolTests.swift`). A member's own letter owns that member alone, so O
+is Ellipse however often you press it. The family's letter owns the members
+with no letter of their own, which is exactly Photoshop's marquee pair. A press
+while already holding one of the letter's tools moves to the next: M swaps the
+box for the ellipse and back, and M never hands over the wand, which keeps W.
+⇧ plus any of the family's letters still walks the whole slot, wand included.
+
+In the app, `ToolGroupShortcuts` now asks what a letter means at the MOMENT of
+the press rather than baking a tool in when the view was built, the tooltip and
+the flyout teach the swap ("M swaps Rectangle Select and Ellipse Select"), and
+the overflow stand-ins stopped registering the marquee slot's own M on top of
+the family's, which would have left one of the two answering. Next only, in the
+grouped bar behind `next-tool-groups`; Current's selection slot is untouched.
+
+Verified on the probe: `Scripts/playtest/marquee-answers-to-m-walk.json` (box,
+ellipse, box; the tooltip capture reads "Rectangle Select M"; W then M gives a
+marquee), `marquee-m-narrow-walk.json` on the compact bar, and
+`tool-bar-families.json` rewritten for the new selection rules. The
+`current-selection-slot`, `tool-bar-feedback`, `shift-letter-shortcut` and
+`frame-name-rename` walks all still pass. `Scripts/test.sh`: 4645 green. Audit
+and two real window captures at
+`queue/audits/2026-09-08-marquee-answers-to-m.json`.
+
+Worth disagreeing with, and in the audit: M no longer gives the wand back, and
+the marquee pair shares one memory with the wand, so ellipse then W then M
+gives the rectangle rather than the ellipse you left.
