@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 2090,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T21:50:13.465Z",
-  "updated": "2026-09-08T22:08:35.686110Z",
+  "updated": "2026-09-08T22:08:55.637Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed 2026-09-08 by the pass that wrote the rule this breaks: UX-PATTERNS section 3, Panels and surfaces, \"The question you can silence\", which requires a way back and records that nothing ships one.\n\nThe only silenceable question today is Turn Into Picture: Sources/PhotonzCore/RasterizePrompt.swift holds the words, Sources/Photonz/EditorState+LayerOps.swift:217 holds the answer at UserDefaults key photonz.turnIntoPicture.dontAsk (per app bundle, so dev, probe and release each keep their own). Not reproduced as a defect because there is nothing to reproduce: the code has one setter and no reader anywhere else and no UI reaches it. Verified by grep, not by a walk.\n\nOPEN UX QUESTION for whoever takes this, worth a decision card rather than a guess: where the list lives. Photonz has no Settings window today; the candidates are a new Settings pane, a section in the Experiments window (which is a developer surface, so probably wrong for a normal person), or offering it back inline the next time the command runs. Also worth deciding whether the list names one question or is written to hold the ten it will have in a year.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-09-08T22:08:35.686110Z",
       "note": "Epic note for the manager: this is filed under design-system, staged next rather than now, and it is really an overlays-and-foundations item. It is small and it protects the user from a door that locks behind them, so it was worth the run, but it is not focus work."
+    },
+    {
+      "t": "2026-09-08T22:08:55.635Z",
+      "note": "The store that remembers silenced questions is built, tested and shipped; where the list of them lives is a UX decision waiting on the user (Settings window, inline offer, Experiments section, or leave it)."
     }
   ],
   "started": "2026-09-08T22:02:53.550Z"
