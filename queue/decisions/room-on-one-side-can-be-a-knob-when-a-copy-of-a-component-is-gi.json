@@ -1,0 +1,54 @@
+{
+  "id": "room-on-one-side-can-be-a-knob-when-a-copy-of-a-component-is-gi",
+  "taskId": "room-on-one-side-can-be-a-knob",
+  "question": "When a copy of a component is given more room on one side, should the other three sides keep following the original?",
+  "context": "A component can already offer the room it keeps inside its edges as one knob, four sides behind a chevron, and typing one side leaves the other three where they were. What is not settled is what happens NEXT: today, answering any one side quietly hands the copy all four, so when the component's top padding changes later, the copies somebody widened on the left do not move with it.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Untouched sides keep following",
+      "summary": "Typing 40 into Left on a copy makes only the left side that copy's own. Top, right and bottom carry on matching the original, so when you later change the component the copy still gets it there. Each side gets its own small way back, and the closed field shows which numbers are the copy's.",
+      "pros": [
+        "Change the original's top and every copy moves, even the ones somebody made roomier on the left",
+        "One number typed on one copy stops being a quiet decision to stop following on the other three sides",
+        "Matches how the rest of a copy works: only what you touched is yours"
+      ],
+      "cons": [
+        "A room row now holds two kinds of number at once, some yours and some the original's, which is a new thing to read on a narrow panel"
+      ],
+      "mitigation": "The numbers you own read in the ordinary ink with a way-back arrow beside them; the ones still following stay quiet and grey, the same as every other knob a copy has not answered."
+    },
+    {
+      "id": "b",
+      "label": "Leave it: an answer takes the whole room",
+      "summary": "Exactly what happens today. Typing one side hands the copy all four: the other three freeze at whatever the original had at that moment, and later changes to the component stop reaching that copy's room entirely until you press the way back.",
+      "pros": [
+        "One rule, one way back, nothing new to read",
+        "A copy you made roomier never changes shape again on its own"
+      ],
+      "cons": [
+        "Changing the component's top padding silently skips every copy that was ever nudged on the left",
+        "Nothing on screen says that typing one number stopped the other three from following"
+      ],
+      "mitigation": "The revert arrow already puts the whole knob back to following, so a copy that drifted can be rejoined to the family in one press.",
+      "declines": true
+    },
+    {
+      "id": "c",
+      "label": "Whole room still, but any side can be handed back",
+      "summary": "Typing one side still takes all four, as today, but each side gets its own way back. A copy that only meant to change the left can put top, right and bottom back to following afterwards, one at a time.",
+      "pros": [
+        "Today's rule is unchanged, so nothing you already know moves",
+        "There is finally a way out of an accidental freeze"
+      ],
+      "cons": [
+        "The freeze still happens by default and still happens silently, so most copies drift anyway",
+        "Four extra small controls on the panel for a fix somebody has to know to apply"
+      ],
+      "mitigation": "The way-back arrows only appear on the sides that are actually the copy's own, so a copy following everything shows none of them."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-08T18:40:48.313Z"
+}

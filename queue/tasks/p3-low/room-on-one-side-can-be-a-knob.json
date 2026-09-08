@@ -1,22 +1,22 @@
 {
   "id": "room-on-one-side-can-be-a-knob",
-  "title": "Room on one side can be a knob",
-  "goal": "A card with 16 points of room at the sides and 10 at the top and bottom cannot offer its room to copies at all today, because a knob has to show one number and there is no single number there. This lets one side be offered on its own, so a copy can be given more room at the top without touching the other three.",
+  "title": "A copy keeps following the original on the sides of its room it did not touch",
+  "goal": "A copy of a component can already be given more room on one side, and the other three are left alone. What it cannot do is keep FOLLOWING the original on those three: answering any one side quietly hands the copy all four, so when the component is made roomier later, every copy anybody ever nudged is skipped and nothing on screen says why. This makes each side of a copy's room follow the original, or be the copy's own, on its own.",
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:01:53.423Z",
-  "updated": "2026-09-08T12:09:07.010Z",
+  "updated": "2026-09-08T18:41:51.083Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "ComponentNumberSlot.padding reads GroupLayout.usedPadding.uniform and returns nil when the sides disagree, so the slot is simply not offered. A per-side knob means either widening ComponentNumberSlot with four side cases or giving the slot a GroupPadding.Side. Watch the Add menu size: four extra rows per group is exactly the bloat the kind-grouped menu exists to stop, so only offer sides where they already disagree.",
+  "notes": "Rewritten 2026-09-08 after the original premise expired. The old notes said the padding slot returns nil when the sides disagree; that has not been true since 19b75988 (2026-09-06), which gave ComponentPropertyValue a .room(GroupPadding) case so the knob carries all four sides. Four separate side knobs are explicitly NOT wanted (Add menu bloat, 264pt panel). What is left is partial following: ComponentPropertyValue.room holds a whole GroupPadding, so setInstanceRoom reads the original's four sides, writes one and stores all four as the copy's answer. Doing this means the stored answer has to record WHICH sides were answered (an optional per side, or an answered-side set beside the room) and the resolve path in ComponentProperties has to merge answered sides over the original's rather than replacing. Panel work is in ComponentPanel.sides(of:): per-side ink and a per-side revert. Blocked on the decision room-on-one-side-can-be-a-knob-when-a-copy-of-a-component-is-gi. Was titled 'Room on one side can be a knob'.",
   "acceptance": [
-    "Room on one named side of a group can be offered as a knob",
-    "A copy shows it as a number field, and the other three sides stay the original's",
-    "A group whose four sides already agree still offers the single Padding knob it offers today, not four extra rows",
+    "Typing one side of a copy's room leaves the other three following the original, so changing the original's padding still reaches them",
+    "A copy's panel shows which sides are the copy's own and which are still following, and each side the copy owns has its own way back",
+    "A group whose four sides agree still offers the single Padding knob it offers today, not four extra rows",
     "Tests in PhotonzCore cover it before the app code is written"
   ],
   "log": [
@@ -31,6 +31,39 @@
     {
       "t": "2026-09-08T12:09:07.009Z",
       "note": "seq 20 -> 10"
+    },
+    {
+      "t": "2026-09-08T18:36:36.856Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T18:40:25.900638Z",
+      "note": "Adversarial review before building, and the premise did not survive it. The task says a card with 16 beside and 10 above 'cannot offer its room to copies at all today'. That stopped being true about an hour after this task was written: 'Room that differs side to side can be a knob too' landed the same day (19b75988, 2026-09-06) and the room knob now carries all four sides. So three of the four acceptance items are already met, and the shortest version of what is left is nothing at all until one question is answered."
+    },
+    {
+      "t": "2026-09-08T18:40:25.900638Z",
+      "note": "Checked each acceptance item against the app as it stands rather than assuming. (1) Room on a group whose sides disagree IS offered, as one Padding knob rather than four rows. (2) A copy shows it as a number field per side, opened by a chevron, and typing one side leaves the other three alone at that moment. (3) A group whose four sides agree still gets exactly one Padding row, so the Add menu never grew. (4) 23 tests cover it in PhotonzCore. Evidence: Scripts/test.sh --filter 'ComponentRoomKnobTests|ComponentRoomOfferTests' passes 23 tests in 2 suites, including typingOneSideKeepsTheOtherThree and typingOneSideOverTwoCopiesKeepsEachOnesOwnThree."
+    },
+    {
+      "t": "2026-09-08T18:40:25.900638Z",
+      "note": "Four knobs, one per side, was the shape this task proposed and it is the wrong shape. Its own notes say four extra rows per group is the bloat the kind-grouped Add menu exists to stop, and the copy's panel is 264pt wide. One room knob with four sides behind a chevron is the canvas control a person already knows, so it costs no new idea and no new rows. Not building four knobs."
+    },
+    {
+      "t": "2026-09-08T18:40:25.900638Z",
+      "note": "One thing the task asks for is genuinely missing, and I reproduced it rather than reading it. Temporary test in Tests/PhotonzCoreTests (removed after): a copy types Left 40, then the author changes the ORIGINAL's top from 10 to 32. Printed: 'after typing left 40: top 10, right 16, bottom 10, left 40' then 'original top -> 32, copy now: top 10, right 16, bottom 10, left 40'. So answering one side quietly takes the whole knob over and freezes the other three at whatever the original happened to be. Acceptance item 2 says the other three should stay the original's; today they only stay the original's numbers, not the original's."
+    },
+    {
+      "t": "2026-09-08T18:40:25.900638Z",
+      "note": "That is a UX bargain the user should pick, not a bug I should decide: the audit for the knob already raised it on 2026-09-06 (queue/audits/2026-09-06-uneven-room-knob.json, evaluate question 3 and the third rough line) and it was never answered. Decision opened; blocked on it. If the answer is that untouched sides keep following, this task comes back with real work in it. If the answer is that an answer takes the whole knob, the task retires, because everything else in it already shipped."
+    },
+    {
+      "t": "2026-09-08T18:41:44.028055Z",
+      "note": "Retitled and rewritten so the dashboard stops showing a goal that is no longer true. The old goal said a card with uneven room 'cannot offer its room to copies at all today' (A card with 16 points of room at the sides and 10 at the top...), which the four-sided room knob fixed on 2026-09-06. Acceptance now names the one thing actually left: the sides a copy did not touch should keep following the original."
+    },
+    {
+      "t": "2026-09-08T18:41:51.082Z",
+      "note": "Three of the four acceptance items already shipped on 2026-09-06 with the four-sided room knob (19b75988), verified by running the 23 tests in ComponentRoomKnobTests and ComponentRoomOfferTests. The fourth is real and I reproduced it: a copy typed to left 40 keeps top 10 even after the original's top is changed to 32, because answering one side hands the copy all four. Whether the untouched sides should keep following is a UX bargain the user picks, and the knob's own audit asked it in September and was never answered, so it is a decision card now. Task retitled and its goal rewritten to the one thing left."
     }
-  ]
+  ],
+  "started": "2026-09-08T18:36:36.855Z"
 }
