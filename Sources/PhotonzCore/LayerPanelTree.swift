@@ -485,9 +485,16 @@ extension PhotonzDocument {
                         // out whether a layer's position is its own means
                         // measuring text and reading the container's layout,
                         // and nearly every row in the list is not marked.
+                        let canReturn = cutter != nil && canBringLayerIntoView(id: layer.id)
+                        // Asked only where the layer has no move of its own,
+                        // which is the only case it answers anything but nil,
+                        // and where a container's whole layout is worked out
+                        // twice over to be sure the fix works.
+                        let grows = cutter != nil && !canReturn
+                            ? containerFit(bringingIntoView: layer.id)?.change : nil
                         outOfView = RowOutOfView(
                             container: cutter, hiddenInside: hidden,
-                            canReturn: cutter != nil && canBringLayerIntoView(id: layer.id))
+                            canReturn: canReturn, growsContainer: grows)
                     }
                 }
                 rows.append(LayerRowDisplay(

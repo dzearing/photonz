@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T10:15:15.780Z",
-  "updated": "2026-09-08T12:09:07.367Z",
+  "updated": "2026-09-08T21:36:42.736Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the bring-into-view task on 2026-09-07 (queue/audits/2026-09-07-bring-into-view.json, rough 2). Today RowOutOfView.canReturn is false inside an arranging container because PhotonzDocument.canPlace defers to LayerGeometryEditing.canMove, and the mark falls back to an explanation. The move that would help is clearing or growing the containers height/width limit (GroupLayout.maxHeight/height) so the contents fit. Careful: that undoes a number the user typed on purpose, so the wording has to say what it will change before it is pressed.",
@@ -31,6 +31,32 @@
     {
       "t": "2026-09-08T12:09:07.366Z",
       "note": "seq 120 -> 110"
+    },
+    {
+      "t": "2026-09-08T21:16:53.696Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T21:36:34.956412Z",
+      "note": "Adversarial review before building: the mock (the row mark) assumed a layer you can move, and in a stack there is none. Growing the container is the only fix that helps, but it rewrites a number somebody typed, so the offer has to say the number before it is pressed rather than acting quietly. Shortest version that delivers the value: no new panel, no new dialog, the mark and the row menu it already has."
+    },
+    {
+      "t": "2026-09-08T21:36:34.956412Z",
+      "note": "Built PhotonzCore/ContainerFit.swift: containerFit(bringingIntoView:) finds the nearest cutting container, works out the layout it would have if it were big enough, and verifies on a flowed copy that the layer really comes back before offering anything. makeRoomForLayer(id:) applies it through updateGroupLayout so one undo puts the typed number back. 19 tests in ContainerFitTests."
+    },
+    {
+      "t": "2026-09-08T21:36:34.956412Z",
+      "note": "Caught in the real app, not in the tests: the first build grew BOTH axes, because freeing the width unwraps the card's words and the natural width comes back half as wide again as the card was asked to be. The probe walk read \"bigger (284 x 171)\" on the starter Card. Fixed by growing only the axis the layer actually went out of (OutOfView.outside gives the two sides); the walk now reads \"taller (171)\". A regression test with real wrapped text holds it."
+    },
+    {
+      "t": "2026-09-08T21:36:34.956412Z",
+      "note": "Verified in the probe app: Scripts/playtest/container-too-small-walk.json walks the whole thing green. Tip reads \"Click to make Card taller (171) so everything fits\", the row menu carries \"Make Card Fit\", the press leaves the Card picked with Largest height 171 and no marked row, one undo reads 120 and the mark returns. Full suite 4992 tests green."
+    },
+    {
+      "t": "2026-09-08T21:36:42.734Z",
+      "note": "The out-of-view mark inside a stack or a grid now grows the container to fit, in one press. PhotonzCore/ContainerFit.swift (19 tests), wired through the row mark, its tip and the row menu (Make <Card> Fit). Verified in the probe with Scripts/playtest/container-too-small-walk.json; audit at queue/audits/2026-09-08-container-too-small.json. Full suite 4992 green."
     }
-  ]
+  ],
+  "started": "2026-09-08T21:16:53.695Z",
+  "completed": "2026-09-08T21:36:42.735Z"
 }

@@ -13254,3 +13254,43 @@ Six neighbouring parts/colour walks rerun green. Audit
 it" rule beside "Off means off, everywhere".
 
 Next: back to the queue.
+
+## 2026-09-08 — A container too small for what is inside it can be made to fit
+
+`ui-layout`, next only. Follow-up from the bring-into-view audit: the orange
+scissors on a row inside a stack or a grid could not be pressed. There is no
+move to offer there — the container works out every position on each pass, so
+sliding one layer back only shuffles the running order — and the tip fell back to
+telling you to go and find the container's height yourself.
+
+Now the press grows the CONTAINER. New `PhotonzCore/ContainerFit.swift`:
+`containerFit(bringingIntoView:)` finds the nearest container actually cutting
+the layer off, works out the layout it would have if it were big enough, and
+verifies on a flowed copy that the layer really comes back before offering
+anything; `makeRoomForLayer(id:)` applies it through `updateGroupLayout`, so one
+number on one container changes and one undo puts the typed number back. A given
+Width or Height is rewritten; where a CEILING was holding the box in, the ceiling
+is what moves and the box goes on hugging. Screens, locked containers and copies
+are not offered it.
+
+The one thing the tests did not catch and the real app did: the first build grew
+both axes, because freeing the width unwraps a card's words and the natural width
+comes back half as wide again as the card was asked to be — the probe walk read
+"bigger (284 × 171)" on the starter Card. It now grows only the axis the layer
+actually went out of (`OutOfView.outside`), so a card whose last row fell out of
+the bottom gets taller and keeps the width its words are wrapping to. A
+regression test with real wrapped text holds it.
+
+The offer says the number before it is pressed, because it is rewriting one
+somebody typed: "Click to make Card taller (171) so everything fits". The row's
+menu carries the same move as **Make Card Fit**, and the container ends up picked
+so the Layout section is showing the number that changed.
+
+`Scripts/test.sh` green at 4992, 19 new tests in `ContainerFitTests`. New walk
+`container-too-small-walk.json` proves the tip, the menu row, the press, the
+picked container reading 171 and the undo back to 120. Audit
+`2026-09-08-container-too-small` with three real window captures.
+`docs/design/ui-building.md` gained "The mark is also the way back, and it says
+which one before you press it".
+
+Next: back to the queue.

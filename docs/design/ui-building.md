@@ -949,6 +949,22 @@ Step A2. The first thing in this ladder a person can build a screen on.
   mark you have to open a group to find is a mark nobody sees. A layer half out
   is not marked: half of it is still on screen, and marking it would cry wolf on
   every card whose title runs a little wide.
+- **The mark is also the way back, and it says which one before you press it.**
+  On a layer with a position of its own, one press slides it back over the edge
+  it left by, the shortest distance that puts it inside the box again. Inside a
+  stack or a grid there is no such move — the container works every position out
+  on each pass, so sliding one layer back only shuffles the running order and
+  pushes a different layer out the same edge. What is wrong there is the
+  container's own size, so the press grows the CONTAINER instead, to exactly the
+  size its contents need, and only on the side the layer went out of: a card
+  whose last row fell out of the bottom gets taller and keeps the width its
+  words are wrapping to. The tip says the number first ("Click to make Card
+  taller (171) so everything fits"), because that number is one somebody typed
+  on purpose; the row's own menu carries the same move as **Make <Card> Fit**.
+  One number on one container changes, so one undo puts the typed number back.
+  A screen is not offered it — its box is the box somebody drew to build on —
+  and neither is a locked container or a copy, whose size belongs to its
+  original.
 - **What you draw on a frame lands on it.** A shape, a text block or a callout
   whose CENTRE falls inside a frame becomes a child of that frame, with its
   position rewritten so it does not move. Without this a frame would be a

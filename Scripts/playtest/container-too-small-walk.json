@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/container-too-small",
+  "seed": "A Card held to 120 tall and set to cut off what does not fit swallows its supporting text. The layers list already marked the row, but the mark could not be pressed: in a stack the card decides where every layer sits, so there is no move to make. What is wrong is the card's own size. The walk holds the card down, loses the text, reads what the mark now offers, presses it, and undoes it.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "dragTile", "tile": "Card", "to": [420, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+
+    { "do": "reveal", "control": "Limits", "in": "Height" },
+    { "do": "press", "control": "Limits", "in": "Height" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "focus", "field": "Largest height" },
+    { "do": "type", "text": "120" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "reveal", "control": "Clip contents" },
+    { "do": "press", "control": "Clip contents" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "reveal", "control": "Twist", "in": "Card" },
+    { "do": "press", "control": "Twist", "in": "Card" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-lost", "note": "the supporting text is gone from the card and its row wears the mark." },
+    { "do": "panel", "stage": "1-lost" },
+    { "do": "expect", "control": "Out of view", "present": true },
+    { "do": "snapshot", "name": "container-too-small-1-lost" },
+
+    { "do": "expect", "tooltip": "Out of view", "reads": "Out of view: Card is not big enough for everything in it and is set to cut off what does not fit. Click to make Card taller (171) so everything fits, or turn off Clip contents on it." },
+    { "do": "describe", "stage": "2-offer", "note": "THE TEST: the tip names the container, says it is too small, and says the number the press would type." },
+    { "do": "snapshot", "name": "container-too-small-2-offer" },
+
+    { "do": "rightClick", "on": "Body", "shot": "container-too-small-3-menu" },
+    { "do": "describe", "stage": "3-menu", "note": "THE TEST: the row's own menu carries the same move, named after the container that changes." },
+
+    { "do": "press", "control": "Out of view" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-fits", "note": "THE TEST: the card grew, the text is back, no row is marked, and the card is picked so the number that changed is on screen." },
+    { "do": "panel", "stage": "4-fits" },
+    { "do": "expect", "control": "Out of view", "present": false },
+    { "do": "expectPicked", "layers": ["Card"] },
+    { "do": "expect", "field": "Largest height", "reads": "171" },
+    { "do": "snapshot", "name": "container-too-small-4-fits" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-undone", "note": "THE TEST: one undo puts the typed number back and the mark returns with it." },
+    { "do": "panel", "stage": "5-undone" },
+    { "do": "expect", "field": "Largest height", "reads": "120" },
+    { "do": "expect", "control": "Out of view", "present": true },
+    { "do": "snapshot", "name": "container-too-small-5-undone" }
+  ]
+}

@@ -2110,10 +2110,12 @@ private struct OutOfViewMark: View {
         .panelHelp(explanation)
     }
 
-    /// Whether pressing this would do anything: a layer that can come back, or
-    /// a shut group with rows to show.
+    /// Whether pressing this would do anything: a layer that can come back, a
+    /// container that can be made big enough for it, or a shut group with rows
+    /// to show.
     private var isPressable: Bool {
-        outOfView.container == nil ? outOfView.hiddenInside > 0 : outOfView.canReturn
+        outOfView.container == nil ? outOfView.hiddenInside > 0
+                                   : outOfView.canReturn || outOfView.growsContainer != nil
     }
 
     private var glyph: some View {
@@ -2137,17 +2139,26 @@ private struct OutOfViewMark: View {
     private var explanation: String {
         var lines: [String] = []
         if let container = outOfView.container {
-            lines.append(outOfView.canReturn
-                ? "Out of view: this sits outside \(container), which is set to cut off what "
-                  + "does not fit. Click to bring it back in, or turn off Clip contents on "
-                  + "\(container) to show everything."
-                // A layer whose container decides where it sits cannot be
-                // moved back: what is wrong is that the container is not big
-                // enough for everything in it, and the two things that do fix
-                // that are its size and its Clip contents switch.
-                : "Out of view: \(container) is not big enough for everything in it and is set "
-                  + "to cut off what does not fit. Make \(container) bigger in the Layout "
-                  + "section, or turn off Clip contents on it.")
+            if outOfView.canReturn {
+                lines.append(
+                    "Out of view: this sits outside \(container), which is set to cut off what "
+                    + "does not fit. Click to bring it back in, or turn off Clip contents on "
+                    + "\(container) to show everything.")
+            } else if let change = outOfView.growsContainer {
+                // A layer whose container decides where it sits cannot be moved
+                // back, so the press changes the container instead. It says
+                // which number and what it becomes BEFORE it is pressed,
+                // because that number is one somebody typed on purpose.
+                lines.append(
+                    "Out of view: \(container) is not big enough for everything in it and is set "
+                    + "to cut off what does not fit. Click to make \(container) \(change) so "
+                    + "everything fits, or turn off Clip contents on it.")
+            } else {
+                lines.append(
+                    "Out of view: \(container) is not big enough for everything in it and is set "
+                    + "to cut off what does not fit. Make \(container) bigger in the Layout "
+                    + "section, or turn off Clip contents on it.")
+            }
         }
         if outOfView.hiddenInside > 0 {
             lines.append(outOfView.hiddenInside == 1
@@ -2434,7 +2445,14 @@ private struct LayersRow: View, Equatable {
     /// without going looking.
     private func pressOutOfViewMark(_ outOfView: RowOutOfView) {
         if outOfView.container != nil {
-            editorState.bringLayerIntoView(id: id)
+            // The layer's own move first, always: moving one layer is a smaller
+            // change than resizing the box around it, and only where the layer
+            // has no position of its own does the container grow instead.
+            if outOfView.canReturn {
+                editorState.bringLayerIntoView(id: id)
+            } else {
+                editorState.makeRoomForLayer(id: id)
+            }
         } else {
             withAnimation(.spring(duration: 0.2)) { editorState.toggleGroupExpanded(id: id) }
         }
@@ -2503,6 +2521,13 @@ private struct LayersRow: View, Equatable {
         if display.outOfView?.canReturn == true {
             Divider()
             Button("Bring into View") { editorState.bringLayerIntoView(id: id) }
+        } else if let container = display.outOfView?.container,
+                  display.outOfView?.growsContainer != nil {
+            // The same move as the mark on the row, named, for anybody who goes
+            // to the menu before they go to a small orange glyph. It names the
+            // container because that is the thing that changes.
+            Divider()
+            Button("Make \(container) Fit") { editorState.makeRoomForLayer(id: id) }
         }
         Divider()
         Button("Rename") { beginRename(id, display.name) }

@@ -272,6 +272,34 @@ extension EditorState {
         revealInLayersList(id)
     }
 
+    /// Whether this layer's row can offer to grow the container around it
+    /// instead: the layer has no position of its own to change, so what is
+    /// wrong is that the container is not big enough for what is inside it.
+    func canMakeRoomForLayer(id: UUID) -> Bool {
+        guard Experiments.shared.autoLayoutEnabled else { return false }
+        return document?.canMakeRoomForLayer(id: id) == true
+    }
+
+    /// The one press back from out of view where the layer itself has nowhere
+    /// to go: the container grows until everything inside it fits, and nothing
+    /// else changes. One `perform`, so one undo puts the number that was typed
+    /// back exactly as it was.
+    ///
+    /// The CONTAINER ends up selected, not the layer that came back. It is the
+    /// thing that changed, so the Layout section is looking at the number the
+    /// press just rewrote and a second thought is one field away — and in a
+    /// stack the layer that came back has no position to drag anyway, so
+    /// handles on it would be handles for nothing.
+    func makeRoomForLayer(id: UUID) {
+        guard Experiments.shared.autoLayoutEnabled,
+              let container = document?.containerFit(bringingIntoView: id)?.container
+        else { return }
+        discardDragPreview()
+        perform { $0.makeRoomForLayer(id: id) }
+        selectLayer(container)
+        revealInLayersList(container)
+    }
+
     /// Whether Layer ▸ Bring into View would do anything: at least one picked
     /// layer has been cut off completely by the box it lives in.
     var canBringSelectionIntoView: Bool {

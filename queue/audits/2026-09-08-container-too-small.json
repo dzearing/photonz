@@ -1,0 +1,30 @@
+{
+  "feature": "A container too small for what is inside it can be made to fit",
+  "epic": "ui-layout",
+  "summary": "The orange scissors on a row inside a stack or a grid can now be pressed. It could not be before: in a stack the container decides where every layer sits, so there was no move to offer and the tip just told you to go and find the container's height. Now the press grows the container instead, to exactly the size its contents need, and the tip says which number it is about to change before you press it.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-auto-layout on (it is on by default). No file needed: a blank canvas.",
+  "try": [
+    { "do": "Open the Library and drag the Card component onto the canvas." },
+    { "do": "In the Layout section press Limits on the Height row, type 120 into Largest height, press Return." },
+    { "do": "Tick Clip contents. The supporting text disappears from the card.", "shot": "2026-09-08-container-too-small-1-lost.png" },
+    { "do": "Open the Card in the Layers list and hover the orange scissors on the Body row. Read the number it offers." },
+    { "do": "Right-click the Body row and find Make Card Fit.", "shot": "2026-09-08-container-too-small-3-menu.png" },
+    { "do": "Click the scissors. The card grows to 171, the text is back, and the Card is picked so the number that changed is on screen.", "shot": "2026-09-08-container-too-small-2-fits.png" },
+    { "do": "Press Command Z once. The card is back at 120 and the mark returns." }
+  ],
+  "evaluate": [
+    "The tip says \"Click to make Card taller (171) so everything fits\". Is naming the number before the press enough warning that it is about to rewrite one you typed?",
+    "It grows to exactly the size the contents need, with no air beyond the card's own padding. Is that the number you wanted, or would you rather it left some room to add another line?",
+    "The Card ends up picked, not the text that came back, so the Layout section shows the height that changed. Is that the right thing to be looking at, or did you want handles on the layer you were hunting for?",
+    "It grows only the side the layer went out of, so a card whose words wrap to its width gets taller and never wider. Does that match what you would expect from a press that says \"so everything fits\"?",
+    "\"Make Card Fit\" in the row's menu: does it read as the same move as the scissors, or as something else?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so all three pictures here are real captures of the window, not offscreen renders.",
+    "The tooltip itself is not in any picture. A scripted walk can read the panel's tips exactly but cannot make one appear on screen, so the words in step 4 were read back rather than photographed.",
+    "A screen (a frame) is deliberately not offered this. Its box is the box you drew to build on, so a row in the layers list resizing it felt like the wrong place to do that from. A layer cut off by a screen whose contents are stacked still only gets the explanation.",
+    "A locked container and a copy of a component are not offered it either: a lock exists so nothing changes the layer, and a copy's size belongs to its original.",
+    "The Layer menu has Bring into View for the other case but no Make Fit beside it. The move is only on the row's mark and the row's menu.",
+    "If you then type more into the card it overflows again and the mark comes back. Nothing here makes the container keep following its contents; it is one press, one number."
+  ]
+}

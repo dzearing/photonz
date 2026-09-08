@@ -34,11 +34,23 @@ public struct RowOutOfView: Hashable, Sendable {
     /// says that instead of offering a move that would only shuffle the
     /// running order and push a different layer out.
     public let canReturn: Bool
+    /// What one press would make of the container instead, in the words the
+    /// row says it in: "taller (120)". This is the way back where the layer has
+    /// no position of its own — the container is not big enough for what is
+    /// inside it, so the container grows until it is. Nil wherever that is not
+    /// the fix, which includes every row that can simply move back.
+    ///
+    /// The number is in the words on purpose. Growing a card rewrites a height
+    /// somebody typed, so the offer says which number it is about to change
+    /// before it is taken (`ContainerFit`).
+    public let growsContainer: String?
 
-    public init(container: String?, hiddenInside: Int, canReturn: Bool = false) {
+    public init(container: String?, hiddenInside: Int, canReturn: Bool = false,
+                growsContainer: String? = nil) {
         self.container = container
         self.hiddenInside = hiddenInside
         self.canReturn = canReturn
+        self.growsContainer = growsContainer
     }
 }
 
@@ -48,11 +60,14 @@ public struct RowOutOfView: Hashable, Sendable {
 struct ClipScope: Hashable, Sendable {
     var rect: CGRect
     var name: String
+    /// The container itself, so a fix that has to change the container can find
+    /// it from the same walk that decided the layer was cut off.
+    var id: UUID
 
     /// The same box seen from one level further in, where child frames are
     /// stored against `origin` instead.
     func inside(_ origin: CGPoint) -> ClipScope {
-        ClipScope(rect: rect.offsetBy(dx: -origin.x, dy: -origin.y), name: name)
+        ClipScope(rect: rect.offsetBy(dx: -origin.x, dy: -origin.y), name: name, id: id)
     }
 }
 
@@ -66,8 +81,16 @@ enum OutOfView {
     /// than saying nothing at all. Comparing the edges instead asks the
     /// question that matters — is every part of this past one side of the box.
     static func isOutside(_ box: CGRect, of clip: CGRect) -> Bool {
+        let sides = outside(box, of: clip)
+        return sides.horizontal || sides.vertical
+    }
+
+    /// The same question, one axis at a time: which way did it go. What a fix
+    /// that grows the container reads, so a card whose last row fell out of the
+    /// bottom is made taller and not also wider.
+    static func outside(_ box: CGRect, of clip: CGRect) -> (horizontal: Bool, vertical: Bool) {
         let b = box.standardized, c = clip.standardized
-        return b.maxX <= c.minX || b.minX >= c.maxX || b.maxY <= c.minY || b.minY >= c.maxY
+        return (b.maxX <= c.minX || b.minX >= c.maxX, b.maxY <= c.minY || b.minY >= c.maxY)
     }
 
     /// The scopes in force for the layers INSIDE `layer`: everything already
@@ -81,7 +104,7 @@ enum OutOfView {
         var inner = clips.map { $0.inside(origin) }
         if layer.clipsToBounds {
             inner.append(ClipScope(rect: box.offsetBy(dx: -origin.x, dy: -origin.y),
-                                   name: layer.name))
+                                   name: layer.name, id: layer.id))
         }
         return inner
     }
@@ -93,7 +116,13 @@ enum OutOfView {
     /// pushed out of a card inside a screen is the card's doing, and saying
     /// "Screen" would send them to the wrong place.
     static func cutter(of box: CGRect, under clips: [ClipScope]) -> String? {
-        clips.last { isOutside(box, of: $0.rect) }?.name
+        cutting(box, under: clips)?.name
+    }
+
+    /// The same answer as `cutter`, as the container itself, for the fix that
+    /// has to go and change that container's size.
+    static func cutting(_ box: CGRect, under clips: [ClipScope]) -> ClipScope? {
+        clips.last { isOutside(box, of: $0.rect) }
     }
 
     /// How many layers under `clips` are out of view, counting a whole group
