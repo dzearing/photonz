@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1900,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T23:41:19.493Z",
-  "updated": "2026-09-08T11:16:31.671Z",
+  "updated": "2026-09-08T11:44:24.925Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised in the audit queue/audits/2026-09-07-marquee-keeps-your-layer.json on 2026-09-07. The rule now lives in BareCanvasPress.sweepDecidesSelection (Sources/PhotonzCore/Marquee.swift): a band takes over the selection only when it catches something, and a band that caught nothing becomes a pixel region on the layer already picked. Honest, but invisible. The mid-sweep chrome already knows which it is (CanvasDisplay refreshMultiSelectOutline reads the same call), so the drawing side has the answer in hand.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-08T11:40:46.647057Z",
       "note": "Verified in Photonz Probe with Screen Recording granted. Scripts/playtest/a-box-says-what-it-picks-walk.json photographs all three states mid-drag in ONE document: caught nothing (crawling black dashes), crossing two boxes but containing neither (still the ants, which is the rule made visible), and round both (still blue line, blue wash, both boxes outlined). Scripts/test.sh green, 4809 tests."
+    },
+    {
+      "t": "2026-09-08T11:44:24.923Z",
+      "note": "A rubber band now shows whether it is picking layers or picking pixels while you draw it: caught nothing keeps the crawling black dashes, caught something stops dead, closes into one unbroken blue line and washes the inside blue over what it would take. The wash comes off on release so nothing is left over the picture. MarqueeIntent in PhotonzCore derives the look from the same call that decides the behavior (10 tests); drawing in CanvasDisplay.applyMarqueeBandStyle behind next-a-box-says-what-it-picks (Next only, on by default). Verified in the probe with Screen Recording granted: Scripts/playtest/a-box-says-what-it-picks-walk.json photographs all three states mid-drag in one document. Scripts/test.sh green (4809), 13 marquee and band walks pass. Audit queue/audits/2026-09-08-a-box-says-what-it-picks.json. Commit 1ee9fce1."
     }
   ],
-  "started": "2026-09-08T11:16:31.669Z"
+  "started": "2026-09-08T11:16:31.669Z",
+  "completed": "2026-09-08T11:44:24.924Z"
 }
