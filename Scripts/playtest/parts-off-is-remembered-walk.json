@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/parts-off-is-remembered",
-  "seed": "Switching a part off is remembered for the next shape you draw. Reported by the user on 2026-09-06: take a box's outline off, draw another box, and the outline is back. This walk switches each part in turn and draws a fresh shape after every press, so the box that comes out has to match the box the switch was pressed on. It also draws an ellipse in the middle, which must be untouched by anything done to a rectangle.",
+  "seed": "Switching a part off is remembered for the next shape you draw. Reported by the user on 2026-09-06: take a box's outline off, draw another box, and the outline is back. This walk switches each part in turn and draws a fresh shape after every press, so the box that comes out has to match the box the switch was pressed on. It ends on a shadow, which is an effect rather than a part since 2026-09-07 and so is added from the plus rather than switched on. It also draws an ellipse in the middle, which must be untouched by anything done to a rectangle.",
   "setup": { "forget": ["panel", "shapes", "tools"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1400, "height": 950 },
@@ -58,14 +58,15 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "panel", "stage": "7-fill-off-inherited" },
 
-    { "do": "press", "control": "Switch", "in": "Shadow" },
-    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "tool", "tool": "rectangle" },
     { "do": "drag", "from": [120, 470], "to": [300, 580], "steps": 10 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "8-shadow-on-inherited",
-      "note": "every part now stands where the switches left it: no fill, an outline, and a shadow." },
+      "note": "every part now stands where the switches left it: no fill, an outline, and a shadow. A shadow is an effect rather than a part since 2026-09-07, so it is added from the plus on the Effects header, and it is remembered the same way." },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, on" },
     { "do": "panel", "stage": "8-shadow-on-inherited" },
     { "do": "snapshot", "name": "parts-off-is-remembered" }
   ]

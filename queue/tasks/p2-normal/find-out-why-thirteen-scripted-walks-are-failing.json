@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1880,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T23:11:46.913Z",
-  "updated": "2026-09-07T23:11:46.914Z",
+  "updated": "2026-09-08T09:16:15.970Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-07 with the working tree stashed, so this is clean main and not the border work: built the probe from a clean checkout and ran each walk with Scripts/playtest.sh <walk> --no-build. Thirteen failed identically before and after the border change, which is how they were told apart from the one real regression (appearance-list-walk, fixed in that commit).\n\nclip-contents / out-of-view-mark / size-limits: step press: the control \"Limits\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on.\ncontents-for-several: same, for \"Stack\".\ndock-picked-first: step 47 waitFor: sectionInView(\"Text\") did not happen within 4.0s.\ncolour-off-the-shelf / colour-onto-the-library: step dragColor: \"Library\" stayed dark for the colour off \"Fill\", and the walk expected it to take.\ncolour-onto-an-off-part: step 23 dragColor: no colour swatch for \"Shadow\" is in the panel; the ones that are: Fill.\nparts-off-is-remembered / parts-settings-inline / switch-says-mixed: step press: no control called \"Switch\" in \"Shadow\" is in the panel; the ones that are: none.\ncomponent-whole-path: step 167 expect: the control called \"Apply to Other Versions\" reads \"Shadow, there is something to carry\", not \"there is something to carry\".\ntool-tips: step 13 hover: no control with a tooltip starting \"Inspector\".\n\nThe three Shadow ones and colour-onto-an-off-part look like the same cause: the Shadow row left Appearance for the Effects list on 2026-09-07 and those walks still look for it in Appearance. The four dock-reach ones look like one cause too: the dock scrolls further than it did, so a row a walk presses is under its edge. Neither is confirmed.",
@@ -22,6 +22,23 @@
     {
       "t": "2026-09-07T23:11:46.914Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T09:16:15.969Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T09:31:26.099865Z",
+      "note": "Reproduced on a clean probe build of main: 12 of the 13 fail, component-whole-path-walk now passes (fixed by c830cf0c). Four separate causes, each confirmed by running the walk, not by reading code. (1) DOCK REACH, 4 walks (clip-contents, out-of-view-mark, size-limits, contents-for-several): the dock genuinely grew an Effects and a Component section, so Layout sits below the fold and a press on Limits/Stack is refused. Walk is stale. (2) SHADOW MOVED, 4 walks (parts-settings-inline, parts-off-is-remembered, switch-says-mixed, colour-onto-an-off-part): 9a165d31 moved Shadow out of Appearance into the Effects list, so there is no Switch or swatch in Shadow until an effect is added. Walk is stale. (3) HARNESS BUG, 2 walks (colour-off-the-shelf, colour-onto-the-library): PlaytestPanelDrag.destination picks the SMALLEST drop view under the point, and four overlapping drop areas sit over the Library. It picked a 264x263 one instead of the Library's own 264x299 one, so the Library's delegate was never asked at all (instrumented and confirmed: validateDrop never ran). App is fine, harness is wrong. (4) REAL APP REGRESSION, dock-picked-first: picking a Text layer leaves the Text section at 602-778 in a 688pt viewport. The 2026-09-07 migration that moved Appearance and Effects directly under Layers undid the 2026-09-06 decision that the picked thing's section is on screen without scrolling."
+    },
+    {
+      "t": "2026-09-08T10:46:02.722512Z",
+      "note": "ADVERSARIAL REVIEW before touching anything. The tempting fix for the four dock-reach failures was to bump the hand-tuned scroll numbers, and two of those walks were already carrying a -260 that had been tuned once and had quietly stopped being far enough. A number is a measurement of a dock that has since grown, so bumping it buys one more week. Nobody scrolls by 260 points either; they scroll until they can see the thing. So the walks now say the thing, with a new `reveal` step. The danger that comes with it is the opposite one: a `reveal` in front of a press hides a dock that got genuinely worse. That is exactly what dock-picked-first is, so it is left red and owned by a task rather than revealed, and the harness doc now says to read a walk's own claim before adding one."
+    },
+    {
+      "t": "2026-09-08T10:46:02.722662Z",
+      "note": "SHIPPED. 12 of the 13 pass; the 13th is a real app regression with a task of its own. Two harness fixes and one new step: (a) PlaytestPanelDrag.destination now prefers the drop area whose frame matches the marker the walk NAMED, since SwiftUI lays drop areas out as flat siblings and four of them cover the Library; (b) an effect's colour swatch can be named by the effect (\"Shadow\") the way panelMenu already reads `in`; (c) a `reveal` step scrolls until a named control is pressable, with tests in PhotonzCoreTests and a doc section. Five walks updated for the app as it is now. Scripts/test.sh green (4795 tests). The twelve pass twice in a row, and a full Scripts/playtest-all.sh run is 279 passed with only dock-picked-first and region-keeps-your-layer failing, both owned by filed tasks (nine others in that sweep were machine-load flakes that all pass cleanly on their own; noted so nobody chases them). No audit written: nothing user-facing landed, so there is nothing for a person to try in the app."
     }
-  ]
+  ],
+  "started": "2026-09-08T09:16:15.968Z"
 }

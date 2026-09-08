@@ -112,7 +112,20 @@ enum PlaytestPanelDrag {
 
     /// The innermost view under a point in the window that takes drops. The
     /// smallest match wins, so a row is chosen over the list that holds it.
-    static func destination(at windowPoint: CGPoint, in content: NSView) -> NSView? {
+    ///
+    /// `marker` is the invisible anchor the walk NAMED, when there is one, and
+    /// it settles the case smallest-wins gets wrong. SwiftUI lays every drop
+    /// area out as a flat set of sibling views with no ancestry between them,
+    /// so several unrelated ones can cover the same point: over the Library
+    /// four of them do. Smallest-wins picked a 264 by 263 one that had nothing
+    /// to do with the shelf, and the shelf's own delegate was never asked, so
+    /// a colour dragged onto the Library came back "stayed dark" while the app
+    /// was working perfectly (found 2026-09-08, two walks). A marker is put in
+    /// place with `background`, so it wears the very frame of the view its
+    /// `onDrop` is attached to: a drop area that matches it is that view, and
+    /// no measurement of area can say the same.
+    static func destination(at windowPoint: CGPoint, in content: NSView,
+                            marker: NSView? = nil) -> NSView? {
         var found: [NSView] = []
         func walk(_ view: NSView) {
             if !view.isHidden, !view.registeredDraggedTypes.isEmpty,
@@ -122,7 +135,24 @@ enum PlaytestPanelDrag {
             for sub in view.subviews { walk(sub) }
         }
         walk(content)
+        if let marker, marker.window != nil {
+            let wanted = marker.convert(marker.bounds, to: nil)
+            if let exact = found.first(where: {
+                $0.convert($0.bounds, to: nil).isWithinHalfAPoint(of: wanted)
+            }) {
+                return exact
+            }
+        }
         return found.min { $0.bounds.width * $0.bounds.height < $1.bounds.width * $1.bounds.height }
+    }
+}
+
+private extension CGRect {
+    /// The same rectangle, allowing for the fraction of a point SwiftUI's own
+    /// rounding leaves between a view and the anchor laid out behind it.
+    func isWithinHalfAPoint(of other: CGRect) -> Bool {
+        abs(minX - other.minX) <= 0.5 && abs(minY - other.minY) <= 0.5
+            && abs(width - other.width) <= 0.5 && abs(height - other.height) <= 0.5
     }
 }
 

@@ -27,11 +27,17 @@
     { "do": "describe", "stage": "3-one-undo",
       "note": "ONE undo took the whole thing back: the switch reads off again and stroke is #FF3B30" },
     { "do": "snapshot", "name": "offpart-4-one-undo" },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-shadow-off",
+      "note": "a shadow added and then switched off. Its five settings and its colour are gone from the list, so the row itself is all there is to let a colour go on." },
     { "do": "dragColor", "from": "Fill", "onto": "Shadow",
       "hold": "offpart-5-onto-shadow", "expect": "takes" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "4-shadow",
-      "note": "the same gesture works on any part that is off: the box now throws a shadow in the fill colour" },
+    { "do": "describe", "stage": "5-shadow",
+      "note": "the same gesture works on an effect that is switched off: the shadow comes back on in the fill colour" },
     { "do": "snapshot", "name": "offpart-6-shadow" }
   ]
 }

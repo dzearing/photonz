@@ -179,6 +179,11 @@
       "stage": "2-two-groups"
     },
     {
+      "do": "reveal",
+      "control": "Stack",
+      "in": "Arrangement"
+    },
+    {
       "do": "press",
       "control": "Stack",
       "in": "Arrangement"
@@ -263,6 +268,11 @@
       "seconds": 0.5
     },
     {
+      "do": "reveal",
+      "control": "Grid",
+      "in": "Arrangement"
+    },
+    {
       "do": "press",
       "control": "Grid",
       "in": "Arrangement"
@@ -294,6 +304,11 @@
     {
       "do": "panel",
       "stage": "6-mixed-arrangement"
+    },
+    {
+      "do": "reveal",
+      "control": "Stack",
+      "in": "Arrangement"
     },
     {
       "do": "press",
@@ -409,6 +424,11 @@
       "name": "contents-several-9-padding-both-doc"
     },
     {
+      "do": "reveal",
+      "control": "Twist",
+      "in": "Group"
+    },
+    {
       "do": "press",
       "control": "Twist",
       "in": "Group"
@@ -433,6 +453,11 @@
     {
       "do": "wait",
       "seconds": 0.8
+    },
+    {
+      "do": "reveal",
+      "control": "Twist",
+      "in": "Group 2"
     },
     {
       "do": "press",

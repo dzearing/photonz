@@ -1075,6 +1075,39 @@ struct PlaytestScriptTests {
         }
     }
 
+    /// The distance a walk has to scroll is a number that goes stale the
+    /// moment the dock grows a section, so a walk can name the control it
+    /// wants on screen instead and let the step work out the rest.
+    @Test func aRevealStepNamesTheControlItBringsIntoReach() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "reveal", "control": "Limits", "in": "Height" } ] }
+        """)
+        guard case .reveal(let control, let inRow) = script.steps[0] else { Issue.record("reveal"); return }
+        #expect(control == "Limits")
+        #expect(inRow == "Height")
+    }
+
+    @Test func aRevealStepCanLeaveTheRowOut() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "reveal", "control": "Clip contents" } ] }
+        """)
+        guard case .reveal(let control, let inRow) = script.steps[0] else { Issue.record("reveal"); return }
+        #expect(control == "Clip contents")
+        #expect(inRow == nil)
+    }
+
+    @Test func aRevealStepWithoutAControlIsRefused() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "reveal", "in": "Height" } ] }
+            """)
+        }
+    }
+
+    @Test func revealIsOneOfTheStepNames() {
+        #expect(PlaytestStep.names.contains("reveal"))
+    }
+
     @Test func aWalkCanCarryAColourFromOneSwatchToAnother() throws {
         let script = try decode("""
         { "steps": [ { "do": "dragColor", "from": "Fill", "onto": "Outline",

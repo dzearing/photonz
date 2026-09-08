@@ -1062,6 +1062,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// a walk started from has scrolled away and is no longer built, so naming
     /// one every time is a step that stops working halfway down the list.
     case scrollPanel(row: String?, by: Double)
+    /// Scroll the dock until a named control is where a person could press it,
+    /// however far that turns out to be.
+    ///
+    /// `scrollPanel` says a DISTANCE, and a distance is a number that was true
+    /// on the day it was written: the dock grew an Effects section on
+    /// 2026-09-07 and four walks that had scrolled far enough the day before
+    /// were suddenly pressing a control the panel's edge cut across. What a
+    /// person does is scroll until they can see the thing, so a walk says the
+    /// thing. `in` names the row when two controls wear the same word, exactly
+    /// as `press` takes it.
+    case reveal(control: String, inRow: String?)
     /// Write the editor's state (tool, mode, layers, hint, clipboard note) to
     /// the log under `stage`.
     case describe(stage: String, note: String?)
@@ -1112,7 +1123,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "expect", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "pinch", "press",
-        "readClipboard", "render", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -1155,6 +1166,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .scrollPanel: "scrollPanel"
+        case .reveal: "reveal"
         case .describe: "describe"
         case .clearClipboard: "clearClipboard"
         case .readClipboard: "readClipboard"
@@ -1374,6 +1386,8 @@ public enum PlaytestStep: Sendable, Equatable {
                            inRow: inRow, reads: reads, present: present)
         case "scrollPanel":
             self = .scrollPanel(row: fields["row"] as? String, by: try f.number("by"))
+        case "reveal":
+            self = .reveal(control: try f.string("control"), inRow: fields["in"] as? String)
         case "describe":
             self = .describe(stage: try f.string("stage"), note: fields["note"] as? String)
         case "clearClipboard":

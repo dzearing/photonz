@@ -1,0 +1,27 @@
+{
+  "id": "find-out-whether-the-effects-list-tells-the-trut",
+  "title": "Find out whether the Effects list tells the truth about several shapes at once",
+  "goal": "Pick two shapes where only one of them has a shadow and the right hand panel lists a shadow, switched on, as though both had one. Every part in the Appearance list above it says Mixed in that situation. Work out what the Effects list should say when the shapes disagree, and what pressing its switch should then do to all of them.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2020,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T09:45:59.236Z",
+  "updated": "2026-09-08T09:45:59.239Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "SEEN 2026-09-08 while updating switch-says-mixed-walk for the Appearance/Effects split. Not chased any further than the reading below, which is why this is filed as a question rather than as a bug.\n\nReproduction, probe build of clean main:\n\n  cat > /tmp/mix-probe.json  (blank 1100x720 in a 1420x980 window; draw two rectangles; click the first; panelMenu Add Effect -> Shadow; marquee-drag over both; panel step)\n  Scripts/playtest.sh /tmp/mix-probe.json --no-build\n\nThe panel step with BOTH picked reads, in part:\n\n  Switch (Fill, on), Color (Fill), Switch (Outline, on), ...\n  Effects section, Add Effect, Switch (Shadow, on), Reorder (Shadow), Remove (Shadow), Color (Shadow, Color), Kind (Shadow, Drop), Slider (Shadow, Softness) ...\n\nOnly the first rectangle has a shadow, and the row says \"Shadow, on\" with no mention that the second one has none. The Appearance rows in the same panel do carry a mixed reading (switch-says-mixed-walk asserts \"Outline, mixed\" and \"Fill, mixed\"), so the two lists answer the same question differently.\n\nWhat was NOT confirmed: what pressing that switch does to the shape with no shadow, whether one undo puts both back, and whether the Effects list is meant to be a single-shape surface in the first place. Answer those before changing anything.",
+  "acceptance": [
+    "With two shapes picked and only one carrying a shadow, the Effects list says the shapes disagree rather than showing the shadow as simply on",
+    "Pressing a switch on a disagreeing effect row does one thing to every picked shape and one undo puts them all back",
+    "A scripted walk covers it, the way switch-says-mixed-walk covers the Appearance parts"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T09:45:59.238Z",
+      "note": "created (manual)"
+    }
+  ]
+}

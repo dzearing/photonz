@@ -1,5 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/tool-tips",
+  "seed": "Every button on the tool bar says what it is and which key gets it, and the tip follows the pointer from one to the next rather than stacking up. Resting in the open leaves nothing behind. The families are forgotten first, so the walk hovers the tool each family opens on rather than whichever one the last run happened to leave it holding.",
+  "setup": { "forget": ["tools", "measure"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
     { "do": "wait", "seconds": 1 },
@@ -18,8 +20,9 @@
     { "do": "hover", "label": "Rectangle" },
     { "do": "snapshot", "name": "4-shapes-family" },
 
-    { "do": "hover", "label": "Inspector" },
-    { "do": "snapshot", "name": "5-inspector-toggle" },
+    { "do": "hover", "label": "Hide Panel" },
+    { "do": "describe", "stage": "5-panel-toggle", "note": "the right hand panel's own button, in the title bar. It says what pressing it would DO rather than what it is called, so it reads Hide Panel while the panel is open." },
+    { "do": "snapshot", "name": "5-panel-toggle" },
 
     { "do": "hover", "at": [640, 400], "space": "view" },
     { "do": "describe", "stage": "6-left", "note": "resting in the open: nothing showing" },

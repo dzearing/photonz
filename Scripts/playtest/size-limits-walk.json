@@ -17,6 +17,7 @@
     { "do": "render", "name": "limits-1-arrives-doc" },
     { "do": "panel", "stage": "1-arrives" },
 
+    { "do": "reveal", "control": "Limits", "in": "Width" },
     { "do": "press", "control": "Limits", "in": "Width" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "2-opened", "note": "the twist-open shows Smallest and Largest under Width, both empty, both saying None" },
@@ -51,6 +52,7 @@
     { "do": "key", "key": "delete" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.9 },
+    { "do": "reveal", "control": "Limits", "in": "Height" },
     { "do": "press", "control": "Limits", "in": "Height" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "focus", "field": "Smallest height" },

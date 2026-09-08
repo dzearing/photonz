@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/parts-settings-inline",
-  "seed": "Ticking a part used to put its settings behind a chevron, and only one part could be open at a time. This walk draws a box, reads the Appearance list with one part on, switches every part on, switches every part off, and puts them back, checking the settings are simply there under each switched on part and gone the moment it is switched off.",
-  "setup": { "forget": ["panel", "tools"] },
+  "seed": "Ticking a part used to put its settings behind a chevron, and only one part could be open at a time. This walk draws a box and holds every switch in the panel to one rule: what is switched ON shows its settings on the lines under it, and what is switched OFF shows none of them. Since 2026-09-07 a shadow is an EFFECT rather than a part of a shape, so it is added from the plus on the Effects header, and the walk holds its five rows to the very same rule.",
+  "setup": { "forget": ["panel", "tools", "shapes"] },
   "steps": [
     { "do": "blank", "canvasWidth": 760, "canvasHeight": 520, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1.2 },
@@ -12,19 +12,23 @@
     {
       "do": "describe",
       "stage": "1-as-drawn",
-      "note": "the box as drawn. Whatever is switched on shows its settings on the line below it, at the same left edge as the row, with no chevron anywhere in the list."
+      "note": "the box as drawn. Fill and Outline are on, and each shows its settings on the line below it at the same left edge as the row, with no chevron anywhere in the list. Effects is empty: a box out of the tool has nothing added to it."
     },
     { "do": "panel", "stage": "as-drawn" },
     { "do": "snapshot", "name": "parts-1-as-drawn" },
-    { "do": "press", "control": "Switch", "in": "Shadow" },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
     { "do": "wait", "seconds": 0.8 },
     {
       "do": "describe",
       "stage": "2-three-on",
-      "note": "shadow switched on. Every switched on part now shows its own settings at once: Outline's Width and the shadow's five rows are both readable without opening either."
+      "note": "a shadow added. Everything switched on now shows its own settings at once: Outline's Width and the shadow's colour, kind and five sliders are all readable without opening either."
     },
+    { "do": "expect", "control": "Slider", "in": "Softness", "present": true },
+    { "do": "expect", "control": "Color", "in": "Shadow", "present": true },
     { "do": "panel", "stage": "three-on" },
     { "do": "snapshot", "name": "parts-2-three-on" },
+
     { "do": "press", "control": "Switch", "in": "Fill" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "press", "control": "Switch", "in": "Outline" },
@@ -34,23 +38,29 @@
     {
       "do": "describe",
       "stage": "3-all-off",
-      "note": "everything off. Three rows and nothing else: no width, no shadow rows, no colour wells left behind by a part nobody can see."
+      "note": "everything off. Every setting has gone with the switch that owned it: no width, no shadow sliders, no colour wells left behind by something nobody can see. The shadow's row itself stays, because it is still in the list to be switched back on or taken out."
     },
+    { "do": "expect", "control": "Slider", "in": "Softness", "present": false },
+    { "do": "expect", "control": "Color", "in": "Shadow", "present": false },
+    { "do": "expect", "control": "Color", "in": "Fill", "present": false },
+    { "do": "expect", "control": "Remove", "in": "Shadow", "present": true },
     { "do": "panel", "stage": "all-off" },
     { "do": "snapshot", "name": "parts-3-all-off" },
+
     { "do": "press", "control": "Switch", "in": "Fill" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "press", "control": "Switch", "in": "Outline" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "press", "control": "Switch", "in": "Shadow" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "press", "control": "Switch", "in": "Shadow" },
     { "do": "wait", "seconds": 0.8 },
     {
       "do": "describe",
       "stage": "4-back-as-drawn",
-      "note": "switched off and on again. The list has to read exactly as it did at stage 1: same rows, same settings, nothing left open and nothing lost."
+      "note": "switched off and on again. The list has to read exactly as it did at stage 2: same rows, same settings, nothing left open and nothing lost."
     },
+    { "do": "expect", "control": "Slider", "in": "Softness", "present": true },
+    { "do": "expect", "control": "Color", "in": "Shadow", "present": true },
+    { "do": "expect", "control": "Color", "in": "Fill", "present": true },
     { "do": "panel", "stage": "back-as-drawn" },
     { "do": "snapshot", "name": "parts-4-back-as-drawn" }
   ]

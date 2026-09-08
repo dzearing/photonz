@@ -1,0 +1,28 @@
+{
+  "id": "picking-a-text-layer-leaves-its-settings-below-t",
+  "title": "Picking a text layer leaves its settings below the fold again",
+  "goal": "On a laptop-sized window, click a piece of text on the canvas and the Text section of the right hand panel is off the bottom: you have to scroll to reach the font, the size and the colour of the thing you just picked. The same happens for a measurement, an arrow and a zoom callout. This was decided and fixed on 2026-09-06 and it came back on 2026-09-07 when Appearance and Effects moved up under Layers. Make picking something put its settings where you can see them again, without losing the Appearance and Effects arrangement the user asked for.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 230,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T09:45:45.773Z",
+  "updated": "2026-09-08T09:45:45.776Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-08 on clean main with the probe build.\n\n  Scripts/playtest-all.sh --no-build dock-picked-first\n  dock-picked-first-walk  16s  FAILED  step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s\n\nThe dock's own numbers, read out of the walk's describe state (viewport 688pt, window 1200x720, a screenshot with a measurement, four rectangles, a label and a zoom callout on it):\n\n  rectangle picked:   Layers 6-169, Appearance 169-431, Effects 431-512, Measurements 512-599, Position & Size 599-734\n  text picked:        Layers 6-169, Appearance 169-370, Effects 370-515, Measurements 515-602, Text 602-778, Position & Size 778-913\n  measurement picked: Layers 6-169, Appearance 169-334, Effects 334-415, Measurements 415-502, Measurement 502-781, Position & Size 781-916\n\nText runs 602-778 in a 688pt viewport, so its bottom 90pt is below the fold; Measurement is worse. Measured on 2026-09-06 in commit 9c9039be the same document had Text at 344-520, whole.\n\nCAUSE. Sources/Photonz/LayersPanel.swift, the migration orderVersionLookUnderLayers (4), added by 9a165d31 on 2026-09-07: it moves color and effects to sit directly after layers. The picked-thing sections (annotation, callout, text, measure, collage, canvas) sit before geometry, which used to put them third and now puts them fifth. Two user asks in tension: 2026-09-06 \"the panel says what you picked before it explains itself\" and 2026-09-07 \"Appearance and Effects sit directly under Layers\".\n\nDIRECTIONS worth putting on a card, in plain terms:\n(a) The panel scrolls itself to what you picked, so the order stays as it is and the thing you clicked is on screen the moment you click it.\n(b) What you picked comes first, above Appearance and Effects, so it is always the top thing under the lists.\n(c) The sections you are not using fold up while something is picked, so everything fits.\nNone of these is safe for a runner to choose alone; it is a question about how the panel behaves, so it wants a decision card with the numbers above in the brief.\n\nA measurement's section is 279pt here and 470pt in the 2026-09-06 measurement, so under (b) it still would not fit whole; the 2026-09-06 decision settled for its header being on screen. Say so on the card.",
+  "acceptance": [
+    "Scripts/playtest/dock-picked-first-walk.json passes: every sectionInView step holds",
+    "In a 1200 by 720 window with a marked up screenshot, picking a text layer, a measurement, an arrow and a zoom callout each leaves that thing's whole section inside the dock's viewport with nobody scrolling",
+    "Appearance and Effects are still reachable without scrolling on a plain shape, which is what the 2026-09-07 change was for",
+    "The direction is chosen by the user on a decision card, not picked by the runner: it is a question about where the panel puts things"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T09:45:45.775Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "undo-does-not-bring-back-pictures-deleted-with-a",
+  "title": "Undo does not bring back pictures deleted with a marquee band",
+  "goal": "Drop two pictures on the canvas, draw a marquee band round both of them, and press Delete: both pictures go, which is what you asked for. Press Undo once and they do not come back, and neither does a second press bring them back. Work in a marquee band is being deleted with no way to get it back, which is the one thing undo exists to prevent.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 240,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T10:39:33.196Z",
+  "updated": "2026-09-08T10:39:33.199Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-08 on clean main (source changes stashed, probe rebuilt) and again with the walk-set changes in place, so it is not caused by either.\n\n  Scripts/playtest.sh Scripts/playtest/region-keeps-your-layer-walk.json --no-build\n  \"error\": \"step 78 (selectRow): no row called \\\"Photonz drop probe 2\\\" is in the layers list; the ones that are: Background\"\n\nThe layer count out of the walk's own describe state, /tmp/photonz-playtest/region-keeps-your-layer/log.json:\n\n  [46 5-band-caught-both]      layers: 3  canUndo: true  canRedo: false\n  [47 key delete]              layers: 1  canUndo: true  canRedo: false\n  [50 action undo]             layers: 1  canUndo: true  canRedo: true\n\nThe undo is doing SOMETHING (canRedo turns true) but the two picture layers do not come back, and the rest of the walk then fails because the layer it goes looking for is gone. The delete itself is intended: the walk calls step 47 the control, \"delete after a band that CAUGHT layers still removes them, which is the sweep-a-mess-and-clear-it gesture\".\n\nNOT reproduced with shape layers. The same shape of walk written with two rectangles instead of two dropped pictures (/tmp/undo-band-delete.json: blank 1200x800, two rectangles, rectSelect drag 100,100 to 1000,500, delete) never deletes anything at all: layers stays 3 through the delete. So either the band treats a picture and a shape differently, or the delete path that runs on pictures is the one that does not write a history step the undo can use. Start there.\n\nThis was NOT among the thirteen failures triaged on 2026-09-07, so it has appeared since; it turned up in the full sweep on 2026-09-08.",
+  "acceptance": [
+    "After deleting two picture layers caught in a marquee band, one Undo puts both back, in the same order and the same places",
+    "Scripts/playtest/region-keeps-your-layer-walk.json passes end to end",
+    "A test covers it in the core history module, not only the walk"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T10:39:33.198Z",
+      "note": "created (manual)"
+    }
+  ]
+}

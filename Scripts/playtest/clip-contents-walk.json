@@ -15,6 +15,7 @@
     { "do": "render", "name": "clip-1-arrives-doc" },
     { "do": "panel", "stage": "1-arrives" },
 
+    { "do": "reveal", "control": "Limits", "in": "Height" },
     { "do": "press", "control": "Limits", "in": "Height" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "focus", "field": "Largest height" },
@@ -26,6 +27,7 @@
     { "do": "render", "name": "clip-2-overflows-doc" },
     { "do": "panel", "stage": "2-overflows" },
 
+    { "do": "reveal", "control": "Clip contents" },
     { "do": "press", "control": "Clip contents" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "describe", "stage": "3-cut", "note": "THE TEST: the words stop at the card's bottom edge. Nothing past it is drawn, and the export is the same picture." },
@@ -41,6 +43,7 @@
 
     { "do": "click", "at": [470, 320] },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "reveal", "control": "Clip contents" },
     { "do": "press", "control": "Clip contents" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "describe", "stage": "5-back", "note": "unticking it puts the overhang back, unchanged: the switch hides the words, it never deletes them." },
