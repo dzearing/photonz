@@ -12081,3 +12081,49 @@ Audit: `queue/audits/2026-09-08-tick-leads.json`.
 Next: the blocked sibling `an-effect-s-tick-sits-over-the-rule-that-marks-i` is
 now moot — its decision offered "the tick leads the row" and that is what
 shipped.
+
+## 2026-09-08 — An effect's colour becomes one of its settings
+
+**Shipped.** The colour of a border and of a shadow has moved out of the Effects
+row header and into the effect's own settings, as a `Color` row above Position
+and Width. It is drawn with the same well, the same saved-colours menu, the same
+Save as Style and the same name field every other colour row in the app uses, so
+an effect can wear a saved name, follow it when the name is edited, and let go of
+it the moment a colour is picked by hand. The row header now carries only the
+name, the tick, the grip and the cross. A blur brings no colour row rather than a
+blank one.
+
+Underneath: `ColorStyleBinding` gained an optional `effectIndex`, so a colour can
+be addressed by its place in the Effects list rather than by one of the layer's
+slots. `Layer.insertEffect`, `removeEffect` and `moveEffect` are now the only
+ways the list may change, because each has to carry the names on the rows it
+moves. `ColorSlot` gained a `.shadow` case that no layer lists among its own
+slots; it exists so a shadow's colour can be offered and saved through the same
+machinery. Also: the link-break notice tells a layer's border ring from an added
+border's colour and stays quiet when an effect is simply removed; a colour
+dropped on a switched-off effect row keeps the name it arrived under; the
+playtest `panelMenu` step takes an `in`, the way `press` does, because an effect
+row now holds two menus and a shape can hold two borders.
+
+Verified on the probe with `Scripts/playtest/effect-colour-walk.json` (Screen
+Recording granted). `Scripts/test.sh` green at 4724 tests. No renderer change, so
+no perf note. Audit: `queue/audits/2026-09-08-effect-colour.json`.
+
+**Left undone, and why.** The same task also asked for the Outline row to leave
+Appearance. That half is blocked on two things.
+
+1. **A decision only the user can make.** With Outline gone, does a freshly drawn
+   shape arrive with a Border already in its Effects list, or bare? Pressing R
+   today gives a filled box *with a line round it*; taking the row away has to
+   answer what happens to that line, and the answer is felt every time anybody
+   draws. Opened with a brief at
+   `queue/decisions/outline-leaves-appearance-and-an-effect-s-colour-with-outline-gone-from-appearanc.md`.
+2. **A reproduced bug that has to be fixed first.** A Border draws a rounded
+   rectangle round the layer's BOX, never the shape's path, so an ellipse with an
+   added border comes out as a black square round a red oval
+   (`/tmp/photonz-playtest/outline-repro/3-canvas-ellipse-border.png`). "A shape's
+   edge is drawn only by added borders" cannot be true until a border can follow
+   a shape. Filed as *"A border you add to an ellipse follows the ellipse"*, p1,
+   with the reproduction in its notes.
+
+**Next.** The ellipse border, then whichever way the outline decision lands.

@@ -1,0 +1,53 @@
+{
+  "id": "outline-leaves-appearance-and-an-effect-s-colour-with-outline-gone-from-appearanc",
+  "taskId": "outline-leaves-appearance-and-an-effect-s-colour",
+  "question": "With Outline gone from Appearance, what should drawing a shape give you?",
+  "context": "You asked for the Outline row to come out of Appearance so a shape has one edge in one place. Doing it changes what drawing a shape gives you, and that is the part only you can settle. The colour half of the same task has already shipped: an effect's colour is now a Color row in its own settings with the saved colours behind it. There is also one thing to fix before any of this can be built, already queued: a border added to an ellipse currently draws a square ring round it rather than following the oval.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Shapes arrive with their edge already listed",
+      "summary": "Draw a box and it looks exactly as it does today, line and all. The difference is where that line lives: it is a Border in the Effects list, so you can retune it, move it behind another one, or take it off with the cross, all in the one place every edge now lives.",
+      "pros": [
+        "Nothing you draw changes, and nothing already drawn changes",
+        "One place for every line round a shape, so there is never a question which control you are looking at",
+        "The edge you get can immediately do everything a border can: inside or outside, and several at once"
+      ],
+      "cons": [
+        "The Effects list is no longer empty on a fresh shape, so \"Effects is the things you added\" becomes \"the things you added, plus the edge it came with\""
+      ],
+      "mitigation": "The row reads Border like any other and the cross takes it out, so an empty list is one click away when you want a bare shape."
+    },
+    {
+      "id": "b",
+      "label": "Shapes arrive bare, and you add a line when you want one",
+      "summary": "Draw a box and you get a fill and nothing else. The Effects list stays empty until you press the plus and choose Border, and then you get a line.",
+      "pros": [
+        "Everything in the Effects list really is something you added",
+        "A bare shape looks bare, with no rows to read past"
+      ],
+      "cons": [
+        "Every outlined shape becomes two moves instead of one, and outlined shapes are most of them",
+        "The outline colour on the tool bar has nothing to paint until you have added a border, so the swatch you set before drawing stops meaning anything"
+      ],
+      "mitigation": "The plus sits on the section header and the border arrives already looking like something, so it is one click and no dialog."
+    },
+    {
+      "id": "c",
+      "label": "Leave the Outline row where it is for now",
+      "summary": "Appearance keeps its Outline row and Effects keeps Border, and the app goes on offering two ways to draw a line round a shape.",
+      "declines": true,
+      "pros": [
+        "Nothing to migrate, so no risk at all to work already saved",
+        "The rest of the Effects list keeps its plain rule: it starts empty"
+      ],
+      "cons": [
+        "The confusion you reported stays: two controls, both drawing a line round the same box, and no way to tell which one you are looking at"
+      ],
+      "mitigation": "None worth the name. This is the thing you asked to have fixed."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-08T06:25:43.460Z"
+}

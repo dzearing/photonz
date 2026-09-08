@@ -1,0 +1,30 @@
+{
+  "feature": "An effect's colour is a setting of that effect",
+  "epic": "ui-building",
+  "summary": "A border's and a shadow's colour have moved out of the row header and into the effect's own settings, as a Color row above Position and Width. They now carry the saved-colours menu every other colour in the app has, so an effect can wear a saved name, follow it when you edit it, and let go of it the moment you pick a colour by hand.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on: the Effects list and saved colours are on by default.",
+  "try": [
+    { "do": "Draw a rectangle with R, then press V to go back to the pointer." },
+    { "do": "Press the plus on the Effects header and choose Border.", "shot": "2026-09-08-effect-colour-1-in-settings-sc.png" },
+    { "do": "Read the Border row: name, tick, grip and cross on the header, then Color, Position and Width under the rule." },
+    { "do": "Click the swatch beside Color and pick a colour in the picker, then press Escape." },
+    { "do": "Open the small palette menu beside that swatch and choose Save as Style, type Edge and press Return.", "shot": "2026-09-08-effect-colour-2-saved-colours-sc.png" },
+    { "do": "Press the plus again and add a Shadow, then open the palette menu on its Color row and choose Edge.", "shot": "2026-09-08-effect-colour-3-both-wear-a-name-sc.png" },
+    { "do": "Drag the Fill swatch from Appearance onto the Border's Color swatch and let go." },
+    { "do": "Press Command Z twice and watch both the canvas and the row come back together." }
+  ],
+  "evaluate": [
+    "With the colour gone from the header, does the Border row still tell you enough at a glance, or do you miss seeing the colour without opening anything?",
+    "Colour first, then Position, then Width: is that the order you reach for them in?",
+    "The Color row lines up with Fill and Outline in the section above it. Does the panel read as one column of colours, or does the extra indent under the rule break it?",
+    "A shadow's colour is offered the same saved colours a line's is, under the heading \"Outlines and text\". Is that the right shelf for a shadow, or does a shadow want its own?",
+    "Switch a border off: its whole settings drawer folds away, colour included. Is that right, or do you want to see what colour a switched-off border would come back at?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window rather than an offscreen render.",
+    "The saved-colours menu shot shows only Save as Style, because at that point in the walk the document had no saved colours yet. The offer list itself is covered by tests, not by a picture.",
+    "The picker on a shadow's Color row has no opacity slider, because the shadow already carries its own Opacity in its settings and two see-through controls would fight. A border's picker keeps its alpha, so a translucent ring is a translucent colour.",
+    "The other half of the task this came from is NOT here. Taking the Outline row out of Appearance is waiting on a decision, because it changes what drawing a shape gives you, and on one fix: a Border today draws a rounded rectangle round the layer's box, so adding one to an ellipse gives you a black square round a red oval. That is filed as \"A border you add to an ellipse follows the ellipse\" with the reproduction in its notes.",
+    "A scripted walk could not open the Color menu on a second border before this, because the playtest panelMenu step had no way to say which row it meant. It takes an `in` now, the way a press does."
+  ]
+}

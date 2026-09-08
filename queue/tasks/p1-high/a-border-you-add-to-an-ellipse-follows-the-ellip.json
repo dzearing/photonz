@@ -1,0 +1,30 @@
+{
+  "id": "a-border-you-add-to-an-ellipse-follows-the-ellip",
+  "title": "A border you add to an ellipse follows the ellipse",
+  "goal": "Draw an ellipse, add a Border in Effects, and you get a black rectangle round it instead of a ring following the oval. Any shape you add a border to should get a border shaped like that shape.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 220,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T06:25:25.691Z",
+  "updated": "2026-09-08T06:25:25.692Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on the probe on 2026-09-08 while working the outline task. Command: Scripts/playtest.sh with a walk that draws an ellipse with O, switches its Outline off, adds a Border from the Effects plus and widens it. Output: /tmp/photonz-playtest/outline-repro/3-canvas-ellipse-border.png shows a red ellipse inside a black SQUARE ring. The cause is DocumentRenderer.ringed (Sources/PhotonzRender/DocumentRenderer.swift, around line 1000), which builds every ring out of roundedRectImage over the layer box, so the shape of the layer never enters into it. Sources/PhotonzCore/OutlineWidth.swift already calls this out in words: on an ellipse, a line or an arrow the border draws a RECTANGLE round the bounding box, which is an accident of how it is painted rather than something anyone reaches for. This BLOCKS retiring the Appearance outline (see the task outline-leaves-appearance-and-an-effect-s-colour): a shape edge cannot be drawn only by added borders while an added border cannot follow a shape. A line and an arrow are a separate question and are not in this scope: their stroke IS the layer, and a ring round a stroke is a different idea.",
+  "acceptance": [
+    "A border added to an ellipse draws an oval ring that follows the ellipse, inside, centred and outside",
+    "A border added to a rectangle is unchanged, at every corner radius",
+    "A border on a picture, a frame, a label or a group is unchanged: those have no path of their own, so they keep the ring round their box",
+    "Two borders on one ellipse both follow it, and the one nearer the top of the list still paints over the other",
+    "A test in PhotonzRender covers an ellipse with a border, written before the change",
+    "Audit written under queue/audits/ with an ellipse carrying an inside border and an outside one"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T06:25:25.692Z",
+      "note": "created (manual)"
+    }
+  ]
+}
