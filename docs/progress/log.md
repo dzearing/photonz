@@ -12785,3 +12785,25 @@ outline with handles while the marquee keeps its black and white dashes, and
 the two do not read as the same object.
 
 Next: waiting on the answer. Whichever way it lands, the work is small.
+
+## 2026-09-08 — Size mode measures the shape you drew
+
+Size mode could only measure pixels somebody else made. Reproduced first with a
+new walk on the pre-fix build: a 260x180 rectangle on a blank canvas, Size mode,
+hover and click dead centre, `measures=[]`. The cause was that both signals the
+element reader uses (`snappingEdgeMap`, `measureLumaField`) key off the first
+image layer, and a drawn layer is not in that picture at all.
+
+Shipped `PhotonzCore/LayerElements.swift`: the ladder read out of the document
+itself, merged with the picture reader's into ONE ladder nested by size. That
+ordering was the second draft — the first put drawn rungs ahead of everything,
+which meant a highlight box drawn around a button hid the button, a regression
+for the redlining flow this epic exists for.
+
+Verified: `Scripts/playtest/size-measures-a-drawn-shape-walk.json` (66 steps),
+`Scripts/test.sh` green. Audit written with two real screen captures.
+
+Next: Gap and Alignment have the same blind spot, filed as
+`measure-the-gap-between-two-shapes-you-drew`. Open question for the user, in
+the audit: the pick outline is the measure ink over shapes that are often the
+same red, so it is hard to see.

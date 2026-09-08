@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T07:17:37.059Z",
-  "updated": "2026-09-08T16:16:53.777Z",
+  "updated": "2026-09-08T16:17:17.267Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08 in the probe build. Walk: blank 900x600, key r, drag (300,240)->(560,420), key v, escape, measureMode size, waitFor edgeMap, move to (430,330), wait, click (430,330). Log at /tmp/photonz-playtest/repro-size/log.json: every step after the click reports measures=[] and cue=none. The screen capture size-sc.png shows the pointer dot dead centre on the red rectangle with no highlight and the hint pill still reading \"Size  Click an element for its width and height\". Contrast: Scripts/playtest/distance-lands-on-release.json step 13 drags in Size mode over settings-pane-2x.png and lands two measurements (Width = 624 px, Height = 44 px), so the element ladder works on picture pixels but not on drawn layers. Distance mode DOES snap to drawn shapes (Scripts/playtest/caliper-catches-a-drawn-edge-walk.json reads 64 px off a drawn box), so the edge map sees them; the gap is in the Size mode element preview. Start at CanvasMeasure.refreshMeasureHoverReadout / drawElementPreview and ElementBounds.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-08T16:16:53.777Z",
       "note": "Shipped: Sources/PhotonzCore/LayerElements.swift (candidates / merged / neighbors, 18 tests written first) wired into CanvasMeasure.refreshMeasureHoverReadout and CanvasMeasure.neighbors. Rotated and slanted layers are skipped on purpose: contentBounds is stored unturned. Walk green at 66 steps: drawn 260x180 and 180 measured exactly, screenshot button unchanged at 124x30 with identical feet, ] climbs to 144x50. Scripts/test.sh green (4862 tests). Audit at queue/audits/2026-09-08-size-measures-a-drawn-shape.json with two real screen captures."
+    },
+    {
+      "t": "2026-09-08T16:17:17.265Z",
+      "note": "Size mode now reads the document's own boxes as well as the picture's. Shipped Sources/PhotonzCore/LayerElements.swift (18 tests, written first) merged with ElementBounds in CanvasMeasure. Verified by Scripts/playtest/size-measures-a-drawn-shape-walk.json (66 steps, green): a drawn 260x180 rectangle measures 260 px and 180 px exactly and lands two rows under Measurements, the settings screenshot's button still reads 124x30 off identical feet, a highlight box drawn around it does not hide it, and ] climbs to the drawn box at 144x50. Scripts/test.sh green (4862 tests). Audit: queue/audits/2026-09-08-size-measures-a-drawn-shape.json with two real screen captures. Commit 83b69e5a, pushed."
     }
   ],
-  "started": "2026-09-08T15:59:41.141Z"
+  "started": "2026-09-08T15:59:41.141Z",
+  "completed": "2026-09-08T16:17:17.266Z"
 }
