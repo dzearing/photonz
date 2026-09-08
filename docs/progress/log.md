@@ -13380,3 +13380,33 @@ bring back a question you silenced**, so ticking the box gives up a warning for
 good. Both p2-normal.
 
 Next: back to the queue.
+
+## 2026-09-08 — one open effect fits in the Effects list
+
+Reproduced the reported cut first: `Scripts/playtest.sh
+Scripts/playtest/component-whole-path-walk.json` gave `Effects 334-479` in a
+996pt dock, 145 points for a section that needed 165, and the capture shows the
+Border's Width slider sliced clean through.
+
+The cause was the height budget treating Effects like a list of ROWS. Its floor
+was the flat "about three rows", and an effect is not a row: it is a small pane,
+a heading with its own settings under it, so any cut lands inside a control.
+`DockHeightBudget.paneListFloor` now gives a pane list a floor of everything
+down to and including its first OPEN pane, drawn whole, capped at 45% of the
+dock. Reviewing the built thing on the probe turned up the second half: squeezed
+to exactly one whole effect, the list ended on clean empty glass and read as
+holding one Border with the Shadow and Glow simply gone. The floor pays for a
+peek at the next entry too, so the fade has a heading to work on.
+
+New `expectSectionFits` playtest step, which reads the raw pane measurements
+rather than the floor the panel worked out from them, so a floor that stopped
+being applied lowers no bar. Proven: stubbed back to the flat floor, the walk
+fails with "Effects was drawn 112 pt tall and needs 129 pt". Dock rules 2 and 4
+in `UX-PATTERNS.md` updated to say all this.
+
+Open question, filed as `opening-an-effect-brings-it-into-view` (p2): in a short
+window the section can now sit below the fold, so opening an effect puts its
+settings somewhere you have to go looking for. The dock reveal exists; the fold
+control never asks for it.
+
+Next: back to the queue.

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:16:29.781Z",
-  "updated": "2026-09-08T22:52:29.979696Z",
+  "updated": "2026-09-08T22:53:11.833Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-08 on clean main with the probe build, running Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json. Picture: queue/manager/shots/2026-09-08-2215-versions.png (the Border row, bottom right of the panel).\n\nThe dock geometry read out of that walk (dockSections in log.json, viewport 996pt):\n  Layers 6-169, Appearance 169-334, Effects 334-479, Component 479-625, Position & Size 625-760, Layout 760-902, Library 902-1047\n\nSo the Effects list is given 145pt. One open Border is a row head plus Color, Position and Width, which needs about 165pt, and the last 20pt is what gets sliced. The Width label is faded but the slider under it is cut clean through with no fade and no scroll bar.\n\nThis is the height budget landed on 2026-09-07 (forms drawn whole and paid for first, lists share what is left), not the section ORDER question, which is the separate blocked task picking-a-text-layer-leaves-its-settings-below-t. Do not solve that one here.\n\nFlag: next-shape-parts (FeatureCatalog.shapePartsFlag), on by default in Next. Files: Sources/Photonz/LayersPanel.swift for the budget, and the Effects list section within it. The dock rules being scrubbed by the-dock-rules-say-plainly-that-they-govern-the are the rules this has to end up obeying; read them first if that task has landed.",
@@ -52,7 +52,12 @@
     {
       "t": "2026-09-08T22:52:29.979696Z",
       "note": "Verified: Scripts/test.sh 5016 tests green. Walks green: effects-fit-one-open, component-whole-path (the original repro, now Effects 129/129 drawn whole), effect-row-is-a-small-pane, effects-remembered, border-effect, parts-settings-inline, effects-say-their-reach. Audit queue/audits/2026-09-08-effects-list-fits-one-open-effect.json with three real window captures. Follow-up filed: opening-an-effect-brings-it-into-view."
+    },
+    {
+      "t": "2026-09-08T22:53:11.831Z",
+      "note": "The Effects list keeps room to draw its first open effect whole, plus a peek at the next one so a cut says there is more. DockHeightBudget.paneListFloor (PhotonzCore, 12 tests) + EffectsListInspector/InspectorPanel wiring, Next only. Verified: Scripts/test.sh green (5016), the original reproduction walk now reads Effects 129/129 drawn whole, and a new expectSectionFits step in effects-fit-one-open-walk fails the run when the floor is removed. Audit 2026-09-08-effects-list-fits-one-open-effect with three real window captures; follow-up filed: opening-an-effect-brings-it-into-view."
     }
   ],
-  "started": "2026-09-08T22:20:47.974Z"
+  "started": "2026-09-08T22:20:47.974Z",
+  "completed": "2026-09-08T22:53:11.832Z"
 }
