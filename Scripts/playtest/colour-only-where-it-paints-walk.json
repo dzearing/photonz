@@ -83,7 +83,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "tool", "tool": "fill" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "dragColor", "from": "Outline", "onto": "Foreground fill", "expect": "takes" },
+    { "do": "dragColor", "from": "Border", "onto": "Foreground fill", "expect": "takes" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "14-foreground-set", "note": "the bucket's foreground is now the box's red: foregroundFill must read #FF3B30" },
     { "do": "snapshot", "name": "14-foreground-set" },

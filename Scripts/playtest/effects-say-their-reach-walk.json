@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/effects-say-their-reach",
-  "seed": "Pick two shapes that do not agree about an EFFECT and the list has to tell the truth about both of them. There are two disagreements here and they are not the same question. MEMBERSHIP: one shape holds the effect and the other holds nothing there. The tick now says its own reach out loud, \"on for 1 of 2\", instead of announcing a flat on while only a line of grey text underneath carried the count; and where two picked shapes hold DIFFERENT things in the same place, each gets a row, because until 2026-09-08 the second shape's effect vanished from the panel with nothing said about it. THE TICK: both shapes hold the effect and one has it switched off, which the row still answers with the word Mixed and no count, exactly as every Appearance row does, and one press makes them agree.",
+  "seed": "Pick two shapes that do not agree about an EFFECT and the list has to tell the truth about both of them. There are two disagreements here and they are not the same question. MEMBERSHIP: one shape holds the effect and the other holds nothing there. The tick now says its own reach out loud, \"on for 1 of 2\", instead of announcing a flat on while only a line of grey text underneath carried the count; and where two picked shapes hold DIFFERENT things in the same place, each gets a row, because until 2026-09-08 the second shape's effect vanished from the panel with nothing said about it. THE TICK: both shapes hold the effect and one has it switched off, which the row still answers with the word Mixed and no count, exactly as every Appearance row does, and one press makes them agree. Since 2026-09-08 a shape ARRIVES with a Border in its list, so the walk takes that Border off the first shape to set the disagreement up, rather than adding one to the second.",
   "setup": { "forget": ["shapes", "panel", "color", "tools"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
@@ -15,16 +15,19 @@
 
     { "do": "click", "at": [260, 225] },
     { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Remove", "in": "Border" },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-first-shadowed", "note": "one shape picked, one shadow: the tick says on and nothing else, because it reaches everything picked" },
+    { "do": "describe", "stage": "1-first-shadowed", "note": "one shape picked, its Border taken off and a shadow put on: the tick says on and nothing else, because it reaches everything picked" },
     { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, on" },
+    { "do": "expect", "control": "Remove", "in": "Border", "present": false },
 
     { "do": "click", "at": [540, 225] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1b-second-bordered", "note": "the other shape, untouched: it still wears the Border it was drawn with, and holds no shadow" },
     { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, on" },
+    { "do": "expect", "control": "Remove", "in": "Shadow", "present": false },
 
     { "do": "drag", "from": [100, 110], "to": [720, 340], "steps": 10 },
     { "do": "wait", "seconds": 0.8 },

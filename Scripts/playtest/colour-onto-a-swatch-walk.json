@@ -64,7 +64,7 @@
     {
       "do": "dragColor",
       "from": "Fill",
-      "onto": "Outline",
+      "onto": "Border",
       "hold": "colour-2-in-flight",
       "expect": "takes"
     },
@@ -75,7 +75,7 @@
     {
       "do": "describe",
       "stage": "2-landed",
-      "note": "the fill colour was carried onto the outline: selectedColors must read stroke #B0184A"
+      "note": "the fill colour was carried onto the border: selectedColors must read stroke #B0184A"
     },
     {
       "do": "snapshot",
@@ -84,7 +84,7 @@
     {
       "do": "dragColor",
       "from": "Fill",
-      "onto": "Outline",
+      "onto": "Border",
       "expect": "refuses"
     },
     {
@@ -109,7 +109,7 @@
     {
       "do": "describe",
       "stage": "4-one-undo",
-      "note": "ONE undo put the outline back: selectedColors must read stroke #FF3B30 again"
+      "note": "ONE undo put the border back: selectedColors must read stroke #FF3B30 again"
     },
     {
       "do": "snapshot",
@@ -142,7 +142,7 @@
     },
     {
       "do": "dragColor",
-      "from": "Outline",
+      "from": "Border",
       "onto": "Fill",
       "hold": "colour-5-lets-go-of-brand",
       "expect": "takes"

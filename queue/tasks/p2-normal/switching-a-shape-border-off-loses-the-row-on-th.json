@@ -1,0 +1,28 @@
+{
+  "id": "switching-a-shape-border-off-loses-the-row-on-th",
+  "title": "Switching a shape border off loses the row on the next shape",
+  "goal": "Turn the border off on a box, then draw another box: the new box has no Border row at all, so getting the line back means going to the plus and adding a fresh one, at the standard width and on the outside. Every other effect behaves the opposite way: switch a shadow off, draw another shape, and the shadow row is still there, switched off, holding all its numbers, so one click brings it back exactly as it was. A border should be able to do the same.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2050,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T17:15:20.207Z",
+  "updated": "2026-09-08T17:15:20.210Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-08 with two throwaway walks against the probe.\n\nBorder: draw a rectangle, press Switch in Border, draw a second rectangle, dump the panel. First box: Twist/Reorder/Switch(Border, off)/Remove/Color/Position/Slider all present. Second box: only Fill switch, Fill colour, Effects header and Add Effect. No Border row.\n\nShadow, same shape of test (add Shadow, switch it off, draw a second box): second box dump shows Switch | Shadow, off and Remove | Shadow. The row survives. So this is Border-only.\n\nCause is EditorState+LayersPanel.swift rememberable(_:shape:): annotationStyles.setStrokeWidth(edge.isOn ? edge.width : 0, forShape: shape) collapses off into width 0, and AnnotationStyles.arrivingStyle(forShape:) guards `d.strokeWidth > 0` before synthesising the border, so off means no row and the width is lost with it. Collapsing off to 0 was deliberate (the comment cites the 2026-09-06 report that a box came back outlined); the vanished row is the unchosen side effect.\n\nOne fix that needs no model change: in rememberable, when the edge is OFF leave the border effect IN the remembered style.effects instead of removing it, and still setStrokeWidth(0) so arrivingStyle does not synthesise a second one. On stays as it is today (lifted to the tool, row synthesised). Worth checking the Position memory too: Add Effect > Border makes a plain BorderEffect() (Outside), so LayerEffects.swift:490 ignores annotationStyles.strokePosition(forShape:).\n\nNOTE this is SHARED code (EditorState+LayersPanel.swift, not under Releases/), so it changes Current as well as Next. That is why the walk-repair task on 2026-09-08 did not fix it and recorded todays behaviour instead: parts-off-is-remembered step 18 now expects NO Border row, and effects-remembered step 63 the same, both with notes pointing at this task. Those two walks must be updated when this lands.",
+  "acceptance": [
+    "Turning a box border off and drawing another box leaves a Border row on the new box, switched off",
+    "The width, colour and position the border had are still on that row, so switching it back on restores the line you had rather than a standard one",
+    "A box drawn after the border was switched off still paints no line, which is the behaviour the user asked for on 2026-09-06",
+    "Scripts/playtest.sh Scripts/playtest/parts-off-is-remembered-walk.json and effects-remembered-walk.json both run to the end after the change, with their notes updated to claim the new behaviour"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T17:15:20.209Z",
+      "note": "created (manual)"
+    }
+  ]
+}

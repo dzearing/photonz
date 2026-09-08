@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2030,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T15:19:16.854Z",
-  "updated": "2026-09-08T15:19:16.857Z",
+  "updated": "2026-09-08T17:04:39.983Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-08 while building the effect-row heading. Scripts/playtest.sh Scripts/playtest/border-effect-walk.json prints: step 6 (press): no control called \"Switch\" in \"Outline\" is in the panel; the ones that are: none. The same first line comes out of tick-leads, colour-onto-an-off-part, switch-says-mixed and glow-effect. Confirmed PRE-EXISTING rather than caused by the heading work: git stash push -- Sources/, swift build, re-ran all seven, identical failures at identical step numbers, then git stash pop. Two more fail for a different reason and are probably the same drift: effects-remembered-walk step 9 expects no Remove control in the panel and finds one, and effects-say-their-reach-walk step 19 cannot read \"Switch\" in \"Border\" over a two-layer selection. The thirteen files that name Outline: grep -rl '\"Outline\"' Scripts/playtest/. The cause is commit a501ed6a, The Outline row leaves Appearance and a layer's edge is a Border. A previous version of this task, bring-the-scripted-walks-back-in-line-with-the-s, was dropped when the drift was about the Shadow move; this is the next round of the same drift.",
@@ -22,6 +22,57 @@
     {
       "t": "2026-09-08T15:19:16.856Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T16:52:11.244Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T17:00:59.000Z",
+      "note": "Adversarial read of the drift before touching anything. Dumped the real panel off the probe (/tmp/diag-panel.json): a rectangle and an ellipse arrive with Appearance = Opacity, Fill, Corner Radius and Effects = Border (Switch, Remove, Color, Position, Width); a HIGHLIGHT arrives with no Border row at all. So the drift is not one rename. Three walks lost their premise rather than a control name: highlight-one-outline (\"two rows called Outline is the bug\" cannot happen when there is no Outline row), one-outline-two-kinds (same, and a picture no longer arrives with a ring to double up), and effects-say-their-reach (its setup added a Border to a shape that now already has one, which makes Border 1/Border 2 instead of the disagreement it wanted). Those three were rewritten to prove the same thing about the model as it is; the other twelve are ports."
+    },
+    {
+      "t": "2026-09-08T17:04:09.205Z",
+      "note": "runner failed (exit 0, attempt 1): The suite is at walk 58 of 307. I'll continue when the background poller reports."
+    },
+    {
+      "t": "2026-09-08T17:04:39.982Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T17:15:41.651Z",
+      "note": "Ran only the 15 changed walks rather than all 307 (the previous attempt timed out on the whole suite). Grants line said probe Screen Recording granted, so the snapshot steps wrote real -sc.png captures. First pass: 12 of 15 green. The 3 failures were the app disagreeing with what the walk claimed, not name drift, and each was reproduced on its own against the probe before being touched."
+    },
+    {
+      "t": "2026-09-08T17:15:41.651Z",
+      "note": "Finding 1, reproduced: an effect switched OFF does not hide the settings under it. /tmp/diag-off-settings.json dumped the panel with Fill off (its Color well goes, so the Appearance rule holds) and with Shadow and Border off (every slider, colour and position still listed). An effect row carries its own Twist, and /tmp/diag-twist.json showed pressing it takes Border Color, Position and Width away and reads \"Border, shut\". So the app is right and parts-settings-inline was out of date: it was written when a shadow was an Appearance part with no fold. Rewrote its stages 3 to 5 to hold Appearance to the switch and Effects to the twist, which is a stronger claim than it made before, not a weaker one."
+    },
+    {
+      "t": "2026-09-08T17:15:41.651Z",
+      "note": "Finding 2, reproduced: switching a box Border off and drawing another box leaves the new box with NO Border row. /tmp/diag-border-inherit.json: first box has Switch|Border, off plus Remove, Color, Position, Slider; second box has only the Fill switch, Fill colour, Effects header and Add Effect. /tmp/diag-off-inherit.json ran the same test with a Shadow and the off row DID survive, so this is Border only. Cause is rememberable(_:shape:) in EditorState+LayersPanel.swift collapsing off into setStrokeWidth(0), which arrivingStyle(forShape:) then guards on. That file is SHARED, not under Releases/, so fixing it would change Current, which this task may not do. Recorded todays behaviour in the two walks instead, each with a note naming the follow-up, and filed switching-a-shape-border-off-loses-the-row-on-th at p2 with both reproductions and the four-line fix."
+    },
+    {
+      "t": "2026-09-08T17:15:41.651Z",
+      "note": "Acceptance 3 is met by construction rather than by re-running 307 walks: git status shows the change is 15 files under Scripts/playtest and nothing under Sources, so every other walk runs the same binary against the same script and cannot have moved. Verified there are now zero functional references to a control, row or drag target called Outline anywhere in Scripts/playtest (grep over \"in\"/\"control\"/\"onto\"/\"from\"/\"row\"/\"named\"); the word survives only in prose and in three file names, whose seeds explain the history."
+    },
+    {
+      "t": "2026-09-08T17:18:35.883Z",
+      "note": "Green. One clean sequential run of all 15 changed walks: 15 PASS, 0 FAIL, probe quit after. Scripts/test.sh also green, 4880 tests in 414 suites, unchanged since no Swift was touched."
+    },
+    {
+      "t": "2026-09-08T17:18:35.883Z",
+      "note": "Adversarial pass on the result. Two things I chose NOT to do. (1) The three walk FILES are still named highlight-one-outline, one-outline-two-kinds and parts-off-is-remembered while the thing they read is a Border; renaming would move their out folders and every picture name for no gain, and each seed now opens by saying what the row used to be called and when it changed, so a reader is not misled. (2) parts-settings-inline used to claim there was no chevron anywhere in the panel, which stopped being true when effect rows got a twist; that note now says Appearance does not fold at all and an effect row twist starts open, which is the honest version of the same claim."
+    },
+    {
+      "t": "2026-09-08T17:18:35.883Z",
+      "note": "No audit written: this task ships no feature, it puts the walk suite back in a state where a red walk means a real mistake. The two behaviour questions it turned up are carried by the follow-up task instead, where the user can weigh them."
     }
-  ]
+  ],
+  "started": "2026-09-08T17:04:39.981Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-08T17:04:09.204Z",
+    "exit": 0,
+    "message": "The suite is at walk 58 of 307. I'll continue when the background poller reports."
+  }
 }

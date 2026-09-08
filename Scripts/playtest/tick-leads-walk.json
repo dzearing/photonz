@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tick-leads",
-  "seed": "The tick is what a row is for, so it comes before the name. Reported by the user on 2026-09-07 with a screenshot of the Effects list: you read Blur and then hunt for the switch somewhere after it. This walk reads both lists — Appearance, which has rows with a tick and rows without, and Effects, which is all ticks — and holds every one of them to the same order, with the settings rule hanging under the tick.",
+  "seed": "The tick is what a row is for, so it comes before the name. Reported by the user on 2026-09-07 with a screenshot of the Effects list: you read Blur and then hunt for the switch somewhere after it. This walk reads both lists — Appearance, which has rows with a tick and rows without, and Effects, which is all ticks — and holds every one of them to the same order, with the settings rule hanging under the tick. Since 2026-09-08 a shape edge is a Border in Effects rather than an Outline row in Appearance, so the edge tick is read there.",
   "setup": { "forget": ["panel", "shapes", "tools"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1280, "height": 980 },
@@ -11,7 +11,7 @@
     { "do": "wait", "seconds": 0.8 },
 
     { "do": "describe", "stage": "1-appearance",
-      "note": "a rectangle. Appearance holds Fill and Outline, both with a tick, and Opacity and Corner Radius, which have none. Every tick must sit left of the name it belongs to." },
+      "note": "a rectangle. Appearance holds Fill, with a tick, and Opacity and Corner Radius, which have none, and Effects holds the Border the box arrived with, which has one. Every tick must sit left of the name it belongs to." },
     { "do": "panel", "stage": "1-appearance" },
     { "do": "snapshot", "name": "tick-leads-1-appearance" },
 
@@ -33,10 +33,11 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "control": "Switch", "in": "Blur", "reads": "Blur, on" },
 
-    { "do": "press", "control": "Switch", "in": "Outline" },
+    { "do": "press", "control": "Switch", "in": "Border" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "panel", "stage": "4-outline-on" },
-    { "do": "snapshot", "name": "tick-leads-3-outline-on" },
+    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, off" },
+    { "do": "panel", "stage": "4-border-off" },
+    { "do": "snapshot", "name": "tick-leads-3-border-off" },
 
     { "do": "key", "key": "a" },
     { "do": "drag", "from": [560, 180], "to": [780, 340], "steps": 10 },

@@ -8,9 +8,10 @@
     { "do": "key", "key": "r" },
     { "do": "drag", "from": [340, 300], "to": [560, 460] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Switch", "in": "Outline" },
+    { "do": "press", "control": "Remove", "in": "Border" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "1-plain", "note": "a plain filled box with an empty Effects list" },
+    { "do": "expect", "control": "Remove", "present": false },
+    { "do": "describe", "stage": "1-plain", "note": "a plain filled box with an empty Effects list: a box arrives with a Border in Effects, and the cross takes it off" },
     { "do": "snapshot", "name": "1-plain" },
 
     { "do": "panelMenu", "menu": "Add Effect", "shot": "2-add-menu" },

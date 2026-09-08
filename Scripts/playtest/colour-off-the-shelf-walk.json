@@ -186,7 +186,7 @@
     {
       "do": "dragColor",
       "from": "Brand",
-      "onto": "Outline",
+      "onto": "Border",
       "expect": "takes"
     },
     {
@@ -196,7 +196,7 @@
     {
       "do": "describe",
       "stage": "6-kept-for-other-parts",
-      "note": "Brand was saved off a Fill, so the Outline takes its COLOUR and not the name, and the swatch says so before you let go"
+      "note": "Brand was saved off a Fill, so the Border takes its COLOUR and not the name, and the swatch says so before you let go"
     },
     {
       "do": "panel",
@@ -221,7 +221,7 @@
     {
       "do": "describe",
       "stage": "7-undone",
-      "note": "one undo per drop: the outline is back, and the second takes the Fill off Brand and back to the colour it was painted by hand"
+      "note": "one undo per drop: the border is back, and the second takes the Fill off Brand and back to the colour it was painted by hand"
     },
     {
       "do": "panel",

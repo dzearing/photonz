@@ -82,9 +82,9 @@
       "seconds": 0.5
     },
     {
-      "do": "press",
-      "control": "Switch",
-      "in": "Outline"
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
     },
     {
       "do": "wait",
@@ -110,7 +110,7 @@
     {
       "do": "describe",
       "stage": "1-a-row",
-      "note": "a square and a long label, grouped and told to be a row"
+      "note": "a square and a long label, grouped and told to be a row, with a Border added so the row it makes is visible in the picture"
     },
     {
       "do": "snapshot",
