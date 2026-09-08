@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T03:18:26.387Z",
-  "updated": "2026-09-08T20:43:16.924303Z",
+  "updated": "2026-09-08T20:44:26.984Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Decided in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a control shows after a set the picked things refused\": nothing moved at all -> the control returns to the value it had AND the line under the section carries the reason, in the wording law two halves, with no toast. The read-back half landed on 2026-09-06 (GeometryNumberField now sets then re-reads geometrySelection); this is the half that was left.\n\nGeometryInspector.swift already has the mechanism: `explaining: LayerGeometryField?` puts a sentence in the caption line for 6 seconds, but it only answers for READ-ONLY fields via LayerGeometrySelection.explanation(for:). A refusal on a typeable field needs its own state and its own sentence. The reason itself is not in LayerGeometrySelection today: LayerGeometryEditing.minimumWidth only knows the text floor, while a group refused by its own flow (GroupLayout.minWidth/maxWidth, the Layout section Smallest and Largest rows) is refused inside Layer.resized(to:). Either plumb the group layout limits into LayerGeometryEditing so note(for:) warns before you type as well, or work the sentence out from the before/after pair the commit already has.\n\nScripts/playtest/width-reads-back-walk.json is the walk that sets a Smallest width of 160 on a Button and types 50.\n\nTriage 2026-09-07, design review: the line under a section is now doing three jobs with no shared rule, so settle the rule here rather than adding a fourth use of it later. The three: the standing caption ('Up or down arrow steps by 1, Shift by 10'), the six second explanation of why a number cannot be typed, and the refusal reason this task adds. Evidence: audit 2026-09-06-a-decided-number-looks-decided rough 4 says the standing caption still promises stepping on three fields that are now plain text, and the same audit records a stale-explanation bug where the six second message outlived the rule it was explaining.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-08T20:43:16.924303Z",
       "note": "Built and verified in the probe (Screen Recording granted, so real window captures). What landed: (a) LayerSizeRule/LayerSizeHold in PhotonzCore carry a limit that knows its own name, and LayerGeometryEditing now reads a group's own Smallest and Largest (GroupLayout min/max width and height) so the panel knows the limits its flow was going to apply anyway. (b) LayerGeometrySelection.refusal(asking:for:landedOn:) is the sentence, worked out live from what you DID rather than held as words. (c) GeometryInspector's two answer states collapsed into one Answer enum with one lifetime, one precedence rule (newest wins) and one six second fade. (d) caption stops describing controls that are not there: it names the letters an arrow really steps, and where nothing types it points at clicking instead. (e) The rule for the line is written into UX-PATTERNS section 4 as 'The line under a section', and the doc bumped to v1.5. Side effects worth knowing: the W hover tip now warns before you type, and a typed size is clamped to the group's limits on the way out instead of being handed to the flow to bounce back. Post-build review, honestly: the sentence points at a row visible in the same panel a few lines below, which is the best part; the down arrow at the floor now explains itself too, which was not asked for and is welcome; 'holds this at 160 px' reads oddly with several layers picked; a one-line caption becoming a two-line answer nudges the section below down for six seconds, which is how the existing click answer has always behaved. Tests: 4952 green. Walk: Scripts/playtest/refused-width-says-why-walk.json, 50 steps, ok. Audit: queue/audits/2026-09-08-refused-size-says-why.json with three real captures."
+    },
+    {
+      "t": "2026-09-08T20:44:26.982Z",
+      "note": "A refused size now explains itself in the line under Position & Size, and that line has one written rule. Core: LayerSizeRule/LayerSizeHold give a limit its own name, LayerGeometryEditing reads a group's Smallest and Largest, LayerGeometrySelection.refusal is the sentence (re-derived each draw so it dies with its rule). App: GeometryInspector's two answer states collapsed into one Answer with one six second lifetime and newest-wins. Caption stops promising arrow keys for numbers that are plain text. Rule written into UX-PATTERNS section 4 (v1.5). 4952 tests green; verified in the probe with three real window captures via Scripts/playtest/refused-width-says-why-walk.json; audit at queue/audits/2026-09-08-refused-size-says-why.json. Commit b5ee24c7."
     }
   ],
-  "started": "2026-09-08T20:24:11.646Z"
+  "started": "2026-09-08T20:24:11.646Z",
+  "completed": "2026-09-08T20:44:26.983Z"
 }
