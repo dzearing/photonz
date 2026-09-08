@@ -2584,8 +2584,7 @@ struct MeasureToolInspector: View {
                     // The keys the mode answers to, taught here because this
                     // line stays: the canvas hint fades in two seconds and
                     // used to be the only place the [ and ] keys were written.
-                    if let tip = editorState.measureToolMode.keyTip(
-                        landsOnRelease: Experiments.shared.measureDistanceLandsOnRelease) {
+                    if let tip = editorState.measureToolMode.keyTip {
                         Text(tip)
                             .font(.caption)
                             .foregroundStyle(.secondary)

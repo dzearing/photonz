@@ -1323,6 +1323,51 @@ struct PlaytestScriptTests {
         }
     }
 
+    // A walk that drags a caliper and photographs the canvas proves the drag
+    // happened, not that anything landed. `distance-lands-on-release.json` ran
+    // green while every stage measured nothing, because no step ever asked
+    // (2026-09-08). `expectMeasures` is the step that asks.
+    @Test("An expectMeasures step says how many measurements must be on the canvas")
+    func expectMeasuresNamesTheCount() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectMeasures", "count": 2 } ] }
+        """)
+        guard case .expectMeasures(let count) = script.steps[0] else {
+            Issue.record("expectMeasures"); return
+        }
+        #expect(count == 2)
+        #expect(script.steps[0].name == "expectMeasures")
+        #expect(PlaytestStep.names.contains("expectMeasures"))
+    }
+
+    /// Zero is as much of the point as any other number: it is how a walk says
+    /// nothing should have landed here.
+    @Test func expectMeasuresTakesZero() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectMeasures", "count": 0 } ] }
+        """)
+        guard case .expectMeasures(let count) = script.steps[0] else {
+            Issue.record("expectMeasures"); return
+        }
+        #expect(count == 0)
+    }
+
+    @Test func expectMeasuresHasToSayHowMany() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectMeasures" } ] }
+            """)
+        }
+    }
+
+    @Test func expectMeasuresRefusesANegativeCount() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectMeasures", "count": -1 } ] }
+            """)
+        }
+    }
+
     @Test("An expect step names a field and the words it must be showing")
     func expectStepReadsAField() throws {
         let script = try decode("""

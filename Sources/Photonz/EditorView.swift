@@ -1757,9 +1757,7 @@ struct EditorView: View {
             key: Tool.measure.keyEquivalent,
             isActive: editorState.activeTool == .measure,
             modes: modes.map {
-                ToolMode(mode: $0, title: $0.title, symbol: $0.symbol,
-                         help: $0.help(landsOnRelease:
-                                        Experiments.shared.measureDistanceLandsOnRelease))
+                ToolMode(mode: $0, title: $0.title, symbol: $0.symbol, help: $0.help)
             },
             selection: $state.measureToolMode,
             namespace: toolbarNamespace,

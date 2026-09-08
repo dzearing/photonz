@@ -279,22 +279,16 @@ extension CanvasNSView {
         }
     }
 
-    /// Whether the caliper lands the moment the measuring line is done, with its
-    /// number placed for you (Next, `next-measure-modes` / distance-on-release),
-    /// instead of waiting for a third click to set the head.
-    var measureLandsOnRelease: Bool {
-        measureToolMode == .distance && Experiments.shared.measureDistanceLandsOnRelease
-    }
-
     /// Advances placement on mouse-up. `dragged` = the press moved far enough to
     /// count as a drag. The measuring line is set by click/click OR by a single
     /// press-drag-release; the head is a final click (or drag). The last step
     /// commits the caliper (which auto-reverts to the Select tool).
     ///
-    /// With `measureLandsOnRelease` on there is no last step: finishing the line
-    /// commits, and the head and the number are placed the way Gap places its
-    /// own. Moving the number afterwards is a drag on the pill, which is the
-    /// same grab that has always moved it.
+    /// That last click is not ceremony to be optimised away: a gesture that
+    /// landed the caliper on the release, number placed for you, was built and
+    /// turned down on 2026-09-02 because choosing the number's side while you
+    /// are still measuring is worth the click. Do not reintroduce it without a
+    /// fresh answer; `docs/design/next-measure.md` § 10 (D7) holds the history.
     func advanceMeasurePlacement(at raw: CGPoint, dragged: Bool,
                                  modifiers: NSEvent.ModifierFlags) {
         switch measurePlacement {
@@ -312,10 +306,6 @@ extension CanvasNSView {
                 measureFirstFootPress = false
                 let (foot2, mode) = snapMeasureSecondFoot(from: foot1, to: raw, modifiers: modifiers)
                 guard hypot(foot2.x - foot1.x, foot2.y - foot1.y) >= 1 else { break }
-                guard !measureLandsOnRelease else {
-                    finishMeasurePlacement(foot1: foot1, foot2: foot2, mode: mode, headOffset: nil)
-                    break
-                }
                 measurePlacement = .secondPlaced(foot1: foot1, foot2: foot2, mode: mode)
             }
         case .secondPlaced(let foot1, let foot2, let mode):

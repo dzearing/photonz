@@ -70,6 +70,15 @@ what each one does:
 - **Distance** (default) — the shipped two-point caliper: click a point, click
   another, click to place the head. It is the ONLY mode that draws nothing
   under an idle pointer, which is the point of it being the default.
+  **Three clicks, decided (D6b below).** A gesture that landed the caliper the
+  moment you let go of the drag, with its number placed for it the way Gap
+  places its own, was built, photographed on a real capture and turned down on
+  2026-09-02: choosing the number's side while you are still measuring is worth
+  the click. The switch that offered it is gone, so there is exactly one way to
+  draw a Distance measurement. Do not build it again without a fresh answer.
+  (The measuring LINE may still be drawn with one press-drag-release rather
+  than two clicks — that is unchanged and is not the declined gesture. What is
+  fixed is that a third click always places the number.)
 - **Size** — the element under the pointer, outlined with the width and height
   calipers a click would leave behind. The click commits BOTH calipers in one
   undo step. `[` and `]` shrink and grow the pick.
@@ -688,6 +697,7 @@ wobble is half a point, not a misalignment):
 | D4 | ~~The mock's "Describe specs" agent action: omit, script-surface only, or build?~~ **Resolved 2026-08-22: omitted (§ 7)** | `next-measure-describe-specs-agent-action-blocked` |
 | D5 | ~~Where does a gap caliper's number go when two full-width rows box it in?~~ **Resolved 2026-09-02: stay on the line, straddling both rows (§ 4.1)** | `a-caliper-boxed-in-by-two-full-width-rows-finds` |
 | D6 | ~~How far may a readout travel sideways to find whitespace?~~ **Resolved 2026-09-02: keep the long leash, three of the pill's own cross extents (§ 4.1)** | `how-far-a-readout-may-travel-to-find-whitespace` |
+| D6b | ~~Should a Distance measurement finish when you let go of the drag, with its number placed for you?~~ **Resolved 2026-09-02: no, keep the three clicks (§ 3). The gesture and its `distance-on-release` switch were removed on 2026-09-08** | `a-distance-measurement-can-be-one-drag-instead-o` (declined) |
 
 ## 11. Shown in the mocks but deliberately out of scope
 

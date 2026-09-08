@@ -1,0 +1,25 @@
+{
+  "feature": "One way to draw a distance measurement",
+  "epic": "measure-redline",
+  "summary": "There is now exactly one way to draw a distance measurement: click a point, click another, click to park the number. The rival gesture that landed the caliper the moment you let go of a drag, which you turned down on 2026-09-02 but which stayed in the app behind a switch, is gone.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open a screenshot and press I." },
+    { "do": "Read the pill above the tool bar. It should say Click twice, then click to place the number." },
+    { "do": "Click one edge of a button, then the other. The line is drawn and nothing has landed yet." },
+    { "do": "Click below the button. The measurement lands with its number where you put it.", "shot": "2026-09-08-distance-three-clicks.png" },
+    { "do": "Press I again and this time press on one edge, drag to the other, and let go. It draws the line and still waits for your click." },
+    { "do": "Open the Experiments window and find Measure modes. It should carry no switches at all." }
+  ],
+  "evaluate": [
+    "Is the third click still worth it to you, now that it is the only way?",
+    "Does the pill tell you about that third click early enough, or do you find out by waiting?",
+    "When you drag the line instead of clicking twice, does stopping for a third click feel right or does it feel like the app missed your intent?",
+    "Was there anything you used the Distance lands when you let go switch for that you now cannot do?"
+  ],
+  "rough": [
+    "This removes something rather than adding something. If you have changed your mind about the drag gesture, say so on this line and it comes back as a task: the code is one commit away in git history, and the decision card with a photo of each option is still at queue/decisions/a-distance-measurement-can-be-one-drag-instead-o-should-a-distance-measurement-fi.md.",
+    "The 123 px readout under Save Changes in the picture sits right against the button's bottom edge rather than clear of it. That is the readout placer's rule, unchanged by this work, and it is worth a look on its own.",
+    "The picture is a real screen capture of the probe app, not an offscreen render."
+  ]
+}

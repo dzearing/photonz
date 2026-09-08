@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T07:17:48.374Z",
-  "updated": "2026-09-08T12:09:06.974Z",
+  "updated": "2026-09-08T16:31:27.786758Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08. Ran Scripts/playtest.sh Scripts/playtest/distance-lands-on-release.json against the probe build. Log at /tmp/photonz-playtest/distance-lands-on-release/log.json: step 8 drags (234,786)->(480,786) in distance mode and step 10 (stage 1-button-width, note \"one drag, number placed by the app\") reports measures=[]. The caliper is sitting in .secondPlaced waiting for a third click. Two separate causes: (a) Experiments measureDistanceLandsOnRelease is a sub-flag of next-measure-modes and is off, so CanvasMeasure.measureLandsOnRelease is false and advanceMeasurePlacement goes to .secondPlaced instead of committing; (b) the walk re-arms with a bare key i at step 11, which cycles the MODE rather than the tool, so stage 2 is actually measured in Size mode, not Distance, and that is the only reason the walk ends with any measurements at all. Use the measureMode step to arm a mode. The new measuring field in a walk log now names the in-flight state, which is how this was spotted.",
@@ -26,6 +26,35 @@
     {
       "t": "2026-09-08T12:09:06.973Z",
       "note": "seq 1980 -> 90"
+    },
+    {
+      "t": "2026-09-08T16:17:51.911Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T16:31:27.786758Z",
+      "note": "Adversarial review, before touching anything: the question was already answered. Decision card a-distance-measurement-can-be-one-drag-instead-o-should-a-distance-measurement-fi resolved 2026-09-02 with choice \"keep\" (Keep the three clicks), which carries declines:true, and the originating task was dropped as declined. So no new decision card. What was left undone on 2026-09-02 was the cleanup: the declined gesture stayed shipped behind the distance-on-release switch, with its own walk, which is exactly why nobody could tell which way the product meant."
+    },
+    {
+      "t": "2026-09-08T16:31:27.786758Z",
+      "note": "Retired the declined gesture rather than leaving a switch that offers it: removed the distance-on-release parameter from next-measure-modes (FeatureCatalog), Experiments.measureDistanceLandsOnRelease, CanvasMeasure.measureLandsOnRelease and its early-commit branch, and the landsOnRelease: forms of MeasureToolMode.help/hint/keyTip and MeasureModeHint.detail. Distance is three clicks, one code path. The press-drag-release that draws the LINE is untouched; only the third click is now unconditional."
+    },
+    {
+      "t": "2026-09-08T16:31:27.786758Z",
+      "note": "Added an expectMeasures step (PlaytestScript + harness, TDD in PlaytestScriptTests) so a walk can claim how many measurements are on the canvas and fail when it is wrong. The failure names what a half-placed caliper is waiting for. Verified it actually fires: a throwaway walk that drags and claims 1 failed with \"0 measurements on the canvas, not 1; the caliper is both feet are down, waiting for a click to park the number\"."
+    },
+    {
+      "t": "2026-09-08T16:31:27.786758Z",
+      "note": "Deleted Scripts/playtest/distance-lands-on-release.json (it walked the declined gesture). Rewrote distance-three-clicks.json to assert at every stage: 0 before, 0 after two clicks, 1 after the third, 2 at the end. Ran it on the probe: status ok, 123 px and 602 px both landed in Distance mode, real capture at three-clicks-sc.png."
+    },
+    {
+      "t": "2026-09-08T16:31:27.786758Z",
+      "note": "Swept the other measure walks for the same unchecked claim: ran grab-cue, measure-readout-slide, measure-handback, measure-chip-snap, measure-lands-in-the-list, caliper-chip-join, measure-row-menu, caliper-catches-a-drawn-edge, snap-hold-foot, legend-corner-slots, guides-catch-marks on the probe (all ok) and cross-checked every hand-written describe stage against its own log's measures list. No stage claims a landed measurement while its log shows none. Two apparent hits were setup preambles before any measuring."
+    },
+    {
+      "t": "2026-09-08T16:31:27.786758Z",
+      "note": "Written down in docs/design/next-measure.md: \u00a7 3 says Distance is three clicks and why the drag was turned down, \u00a7 10 gains row D6b recording the resolution. expectMeasures documented in docs/design/playtest-harness.md. Tests 4866 green."
     }
-  ]
+  ],
+  "started": "2026-09-08T16:17:51.910Z"
 }

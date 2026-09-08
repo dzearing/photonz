@@ -8,30 +8,37 @@
     { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
     { "do": "measureMode", "mode": "distance" },
 
-    { "do": "describe", "stage": "0-armed", "note": "Distance mode, three-click flow" },
+    { "do": "describe", "stage": "0-armed", "note": "Distance mode, the shipped three-click flow" },
+    { "do": "expectMeasures", "count": 0 },
 
     { "do": "click", "at": [234, 786] },
     { "do": "move", "at": [480, 786] },
     { "do": "click", "at": [480, 786] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectMeasures", "count": 0, "note": "both feet down and nothing landed yet: the third click is the one that places the number, and this walk used to be able to skip it and still read as a success" },
     { "do": "move", "at": [357, 840] },
     { "do": "click", "at": [357, 840] },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "expectMeasures", "count": 1 },
     { "do": "describe", "stage": "1-button-width", "note": "Save Changes width: two clicks on the edges, a third about 54 px below to park the number" },
 
     { "do": "key", "key": "i" },
     { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "measureMode", "mode": "distance" },
     { "do": "click", "at": [64, 191] },
     { "do": "move", "at": [1262, 191] },
     { "do": "click", "at": [1262, 191] },
     { "do": "move", "at": [660, 140] },
     { "do": "click", "at": [660, 140] },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "expectMeasures", "count": 2 },
     { "do": "describe", "stage": "2-row-width", "note": "Launch at login row: card edge to toggle, third click about 50 px above the line" },
 
     { "do": "key", "key": "v" },
     { "do": "waitFor", "condition": "tool", "value": "select" },
     { "do": "click", "at": [120, 920] },
     { "do": "wait", "seconds": 0.6 },
+    { "do": "expectMeasures", "count": 2 },
     { "do": "snapshot", "name": "three-clicks" },
     { "do": "render", "name": "three-clicks-render" }
   ]

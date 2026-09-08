@@ -351,18 +351,15 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.blankCanvasFlag })
     }
 
-    @Test func theDistanceDragIsAParameterOfMeasureModesAndStartsOff() {
-        // Whether a Distance caliper lands when you let go of the drag, with
-        // its number placed for you, is a switch inside Measure modes rather
-        // than a flag of its own: it changes what ONE of the modes does. It
-        // starts off, so Next behaves exactly as it did until the gesture is
-        // chosen.
+    // Measure modes carries no switches of its own. The one it used to have,
+    // "Distance lands when you let go", was turned down on 2026-09-02 and
+    // taken out: a switch that offers a gesture nobody chose is how the
+    // product ends up meaning two things at once.
+    @Test func measureModesOffersNoDistanceDragSwitch() {
         let modes = FeatureCatalog.flags(for: .next)
             .first { $0.name == FeatureCatalog.measureModesFlag }
-        #expect(modes?.parameter(named: FeatureCatalog.measureDistanceOnRelease) != nil)
-        #expect(FeatureCatalog.defaultSettings(for: .next)
-            .boolean(FeatureCatalog.measureModesFlag,
-                     FeatureCatalog.measureDistanceOnRelease) == false)
+        #expect(modes?.parameters.isEmpty == true)
+        #expect(modes?.parameter(named: "distance-on-release") == nil)
     }
 
     @Test func theWindowCaptureFlagIsNextOnlyAndOnByDefault() {

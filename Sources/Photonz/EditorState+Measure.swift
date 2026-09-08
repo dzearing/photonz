@@ -396,11 +396,7 @@ extension EditorState {
 
     /// That chip's line, for the current mode.
     var measureHintText: String {
-        let landsOnRelease = Experiments.shared.measureDistanceLandsOnRelease
-        guard let hint = measureModeHint else {
-            return measureToolMode.hint(landsOnRelease: landsOnRelease)
-        }
-        return hint.detail(landsOnRelease: landsOnRelease)
+        measureModeHint?.detail ?? measureToolMode.hint
     }
 
     // MARK: - Measure styling

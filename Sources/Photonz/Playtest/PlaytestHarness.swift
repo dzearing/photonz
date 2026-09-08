@@ -862,6 +862,9 @@ private final class Run {
         case .expectPicked(let layers):
             note(number, step.name, try checkPicked(layers), state: describe())
 
+        case .expectMeasures(let count):
+            note(number, step.name, try checkMeasures(count), state: describe())
+
         case .scrollPanel(let row, let by):
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
@@ -1966,6 +1969,25 @@ private final class Run {
                 + "the ones in the document: \(list(all.map(\.name)))")
         }
         return "picked: \(list(holding)), as claimed"
+    }
+
+    /// Fails the run unless exactly `count` measurements are on the canvas.
+    ///
+    /// The failure names what a half-placed caliper is still waiting for, so a
+    /// walk that stops one click short of landing one reads as a walk that
+    /// stopped one click short, rather than as an empty list nobody explains.
+    private func checkMeasures(_ count: Int) throws -> String {
+        let editor = try requireEditor()
+        let landed = (editor.document?.allLayers ?? []).filter { $0.measure != nil }
+        func plural(_ n: Int) -> String { n == 1 ? "measurement" : "measurements" }
+        guard landed.count == count else {
+            throw Failure(description: "\(landed.count) \(plural(landed.count)) on the canvas, not \(count)"
+                + "; the caliper is \(canvas?.playtestMeasuringReport ?? "on no canvas")"
+                + (landed.isEmpty ? "" : "; landed: \(landed.map(\.name).joined(separator: ", "))"))
+        }
+        return count == 0
+            ? "nothing has been measured, as claimed"
+            : "\(count) \(plural(count)) on the canvas, as claimed"
     }
 
     private func checkPanel(_ thing: PlaytestPanelThing, named: String, inRow: String?,

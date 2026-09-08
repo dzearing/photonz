@@ -2,6 +2,57 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-08 — a distance measurement is three clicks, and the walk proves it
+
+Task `decide-whether-letting-go-of-a-drag-should-land` (epic `measure-redline`).
+
+The question was already answered. Decision card
+`a-distance-measurement-can-be-one-drag-instead-o-should-a-distance-measurement-fi`
+resolved on 2026-09-02 with **"Keep the three clicks"**, an option carrying
+`declines: true`, and its task was dropped as declined. What never happened was
+the cleanup: the declined gesture stayed in the app behind a
+`distance-on-release` switch, with a walk of its own that claimed a caliper
+landed while its log showed `measures: []`. Two ways to draw the same
+measurement, one of them turned down, and nothing on disk saying which the
+product meant.
+
+Retired the declined one rather than leaving a switch that offers it:
+
+- `FeatureCatalog` loses the `distance-on-release` parameter, so `Measure
+  modes` now carries no switches at all.
+- `Experiments.measureDistanceLandsOnRelease` and
+  `CanvasMeasure.measureLandsOnRelease` are gone, along with the early-commit
+  branch in `advanceMeasurePlacement`. One code path.
+- `MeasureToolMode.help/hint/keyTip` and `MeasureModeHint.detail` lose their
+  `landsOnRelease:` forms; the words that promised the drag are gone with them.
+- The press-drag-release that draws the LINE is untouched. What is now
+  unconditional is the third click that parks the number.
+
+And a walk can now claim a measurement instead of implying one. New
+`expectMeasures` step (`PlaytestScript` + harness, TDD): `{"do":
+"expectMeasures", "count": 1}` fails the run when the canvas holds any other
+number, and the failure names what a half-placed caliper is still waiting for.
+Proved it fires before trusting it — a throwaway walk that drags and claims one
+failed with "0 measurements on the canvas, not 1; the caliper is both feet are
+down, waiting for a click to park the number", which is exactly the sentence the
+old walk should have printed.
+
+`distance-lands-on-release.json` is deleted. `distance-three-clicks.json` now
+asserts at every stage (0, then 0 after two clicks, then 1, then 2) and passes
+on the probe: 123 px and 602 px, both in Distance mode, real capture.
+
+Swept the rest for the same fault: ran the eleven other measure walks on the
+probe and cross-checked every hand-written `describe` stage against its own
+log's `measures` list. None claims a landed measurement where there is none.
+
+Written down in `docs/design/next-measure.md` § 3 (Distance is three clicks,
+and why the drag was turned down) and § 10 row D6b. Tests 4866 green. Audit:
+`queue/audits/2026-09-08-distance-three-clicks.json`.
+
+**Next:** the 123 px readout in the audit picture sits against the bottom edge
+of the Save Changes button rather than clear of it. That is the readout
+placer's rule, untouched by this work, and worth a look on its own.
+
 ## 2026-09-07 — The rule under an effect's tick does not fit where it was asked to go (go loop)
 
 Queue task `an-effect-s-tick-sits-over-the-rule-that-marks-i` (epic

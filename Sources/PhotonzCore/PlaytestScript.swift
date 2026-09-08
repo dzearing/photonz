@@ -1065,6 +1065,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// An empty list is as much of the point as a full one: it says nothing
     /// should be picked here.
     case expectPicked(layers: [String])
+    /// How many measurements must be on the canvas right now.
+    ///
+    /// `expectPicked` asks what the app is holding; this asks what it has
+    /// actually left behind. A walk that drags a caliper and photographs the
+    /// canvas proves the drag happened, not that anything landed:
+    /// `distance-lands-on-release.json` ran green while every stage measured
+    /// nothing, because no step ever asked (2026-09-08). The failure names
+    /// what a half-placed caliper is still waiting for, so a walk that stops
+    /// one click short says so instead of showing an empty list.
+    ///
+    /// Zero is as much of the point as any other number: it says nothing
+    /// should have landed here.
+    case expectMeasures(count: Int)
     /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
     /// down the list). A list that builds only the rows you can see has to be
     /// scrolled to prove the rest arrive, and that is not something a click can
@@ -1134,7 +1147,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectPicked", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectMeasures", "expectPicked", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
@@ -1178,6 +1191,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .press: "press"
         case .panel: "panel"
         case .expect: "expect"
+        case .expectMeasures: "expectMeasures"
         case .expectPicked: "expectPicked"
         case .scrollPanel: "scrollPanel"
         case .reveal: "reveal"
@@ -1398,6 +1412,15 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expect(thing: thing, named: try f.string(thing.rawValue),
                            inRow: inRow, reads: reads, present: present)
+        case "expectMeasures":
+            guard fields["count"] != nil else {
+                throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")
+            }
+            let howMany = try f.number("count")
+            guard howMany >= 0, howMany == howMany.rounded() else {
+                throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
+            }
+            self = .expectMeasures(count: Int(howMany))
         case "expectPicked":
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")
