@@ -12127,3 +12127,50 @@ Appearance. That half is blocked on two things.
    with the reproduction in its notes.
 
 **Next.** The ellipse border, then whichever way the outline decision lands.
+
+## 2026-09-08 — Corner radius rounds the shape you are looking at
+
+The user reported on 2026-09-07 that adding a border and then pulling Corner
+Radius changed nothing: not the rectangle, not the border.
+
+**Reproduced first, and it was not what the task guessed.** The slider was
+writing the right number all along. `setCornerRadius` puts the radius on the
+rectangle's own `cornerRadius` and leaves the layer style's at nought, and the
+rasterizer curves the path from it, so the SHAPE was rounding. What was not
+rounding was every ring on the layer: `bordered` and `borderEffects` took
+`style.cornerRadius`, which is deliberately nought on a shape. With a black
+border over the top, the square frame was all you could see
+(`/tmp/photonz-playtest/corner-repro/3-canvas-rounded.png`).
+
+**One curve now.** `Layer.boxCornerRadius(boxSize:)` and
+`AnnotationContent.boxCornerRadius(in:)` (`PhotonzCore/CornerRadiusSelection.swift`)
+answer how round a layer's box is: for a rectangle, its own silhouette where it
+meets the frame, which is the path radius plus half the line it strokes, less
+however far that line was pushed past the frame, clamped to fully round exactly
+as the rasterizer clamps it. So a box with a thick Outline is hugged on its real
+edge rather than a few points inside it. Everything else — and a rectangle
+rounded by nothing but the old mask — still answers with the style's radius, so
+documents written before the one Corner Radius row paint what they painted.
+`DocumentRenderer.layerImage` now asks two questions where it asked one: a
+`maskRadius` for what `rounded` cuts, unchanged, and a `ringRadius` for what the
+rings follow.
+
+**Fixed on the way past**, because it lands on the same corner: `LayerStyle`
+magnification reached a blur and a shadow through their compatibility properties
+and never touched the effects list, so a border somebody ADDED drew at half
+thickness on a 2x render, and reading a switched-off blur gave nought and wiped
+its radius. Every entry scales through one new `LayerEffect.magnified(by:)`.
+
+Tests first: 23 of them, and 6 of the 9 render tests fail on the old renderer.
+`Scripts/test.sh` green at 4747. Walked on the probe with
+`Scripts/playtest/corner-radius-rounds-walk.json` (Screen Recording granted):
+square, rounded, border inside/centred/outside, resized, at 156%, and inside a
+group. Perf: a handful of arithmetic ops per layer on the composite path, no new
+image passes. Audit:
+`queue/audits/2026-09-08-corner-radius-rounds.json`.
+
+**Next.** Filed *"The selection outline follows a rounded shape"* (p2): the
+dashed selection rect still cuts across the corners of a well rounded box, and
+whether it should mark the frame or the ink is a judgement the user may want to
+make. The ellipse border and the outline decision from yesterday are both still
+open.
