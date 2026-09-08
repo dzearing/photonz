@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1820,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T20:29:32.071Z",
-  "updated": "2026-09-08T07:59:54.532Z",
+  "updated": "2026-09-08T08:30:07.775Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced twice on the probe today, before and after an unrelated Add menu change, so it is not caused by that work.\n\nCommand: Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json\nOutput: {\"error\": \"step 173 (expect): the control called \\\"Apply to Other Versions\\\" reads \\\"Shadow, there is something to carry\\\", not \\\"there is something to carry\\\"\", \"status\": \"failed\", \"steps\": 172}\n\nWhat is going on, as far as it was chased: PlaytestHarness.pressTargets(in:) builds a control detail as \"<the field it sits inside>, <its own detail>\", using PlaytestPanelPress.field(at:among:), which picks the SMALLEST playtestField whose frame CONTAINS the control. Sources/Photonz/ComponentPanel.swift:1067 sets the button detail to \"there is something to carry\". Something named Shadow is being found to contain it: EffectsListInspector.swift:127 puts .playtestField(row.title) on each effect row, and the step before is addShadow, so the reading only goes wrong once the Shadow row is on and expanded. Whether the Shadow row really does enclose the Component section geometrically, or whether one of those frames is stale or unbounded, was not established. Steps 167 and 172 of Scripts/playtest/component-whole-path-walk.json are where it shows.\n\nIt is a walk-only symptom as far as anyone has seen: a person reads the button, not its detail. Fix the reading rather than the expectation, unless the enclosure turns out to be real, in which case the walk should say the row it means.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-08T08:29:09.656Z",
       "note": "No audit written: nothing here reaches a person using the app. The change is inside the probe-only walk harness (#if PHOTONZ_PLAYTEST), so there is nothing for the user to try or judge."
+    },
+    {
+      "t": "2026-09-08T08:30:07.773Z",
+      "note": "A row of the Effects list can no longer claim a control two sections away. The list scrolls inside the dock, so an expanded Shadow's frame ran 150pt past what is on screen and lay across the Component section below; a row now only lends its name to something its own scrolling area holds too. Sources/Photonz/Playtest/PlaytestPanelPress.swift plus its three callers, probe-only. Verified: Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json finishes 181/181 status ok, a two-effect variant reads the button's own words alone and still failed on the unfixed binary, all 52 row-narrowing walks show no new failures, Scripts/test.sh 4776 tests pass. Committed as c830cf0c and pushed."
     }
   ],
-  "started": "2026-09-08T07:59:54.530Z"
+  "started": "2026-09-08T07:59:54.530Z",
+  "completed": "2026-09-08T08:30:07.774Z"
 }

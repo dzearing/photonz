@@ -12362,3 +12362,35 @@ softness 10, 90%. `Scripts/test.sh` green, 4776 tests. Audit:
 Next: the audit's open questions, above all whether a glow should screen
 rather than composite normally, and whether a new glow should take the
 colour you last used instead of the starting blue.
+
+## 2026-09-08 — the whole-component walk finishes again
+
+**Changed.** The scripted whole-component walk stopped at step 167: the
+Apply to Other Versions button answered "Shadow, there is something to
+carry" rather than its own words. Measured on the probe: the right hand
+dock does not scroll as one piece. The Effects list has a scroller of
+its own about 112pt tall, an expanded Shadow row is 255pt tall, and the
+part scrolled out of sight lies straight across the Component section
+below it, which sits in the dock's outer scroller. The walk's rule for
+"which row holds this control" was frame containment alone, so Shadow
+appeared to hold a button two sections away. A row now only lends its
+name to something its own scrolling area holds too.
+`PlaytestPanelPress.fields` takes the view instead of a bare rectangle
+so it can tell; the three callers moved with it. Probe-only code.
+
+**Verified.** The walk finishes 181/181. A variant with two effect rows
+open (Border, then Shadow) reads the button's own words alone, and that
+same variant still failed against the unfixed binary. All 52 walks that
+use row narrowing were run before and after the change: 43 pass, 9 fail
+with byte-identical messages on unmodified main. `Scripts/test.sh`:
+4776 tests in 401 suites passed.
+
+**Next.** Three follow-ups filed for those nine pre-existing failures:
+four walks that cannot find the Shadow entry in the Effects list, four
+that stop on a panel control scrolled out of reach (three of them want
+the same "Limits" control, so a section has probably moved or grown),
+and one where dragging a colour onto the Library shelf never lights it
+up. The last one may be a real user-facing regression and is worth
+watching by hand first.
+
+**Open question.** None.
