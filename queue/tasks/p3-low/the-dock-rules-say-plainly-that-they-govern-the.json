@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "docs",
   "created": "2026-09-07T12:58:03.854Z",
-  "updated": "2026-09-08T21:42:06.122248Z",
+  "updated": "2026-09-08T21:42:48.986Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-07 digest design review. The rule: docs/design/mocks/shared/UX-PATTERNS.md section 3, panel group, 'The body has its own bounded max-height (--gh) and its own scroller, so a 60-layer stack scrolls inside Layers and never pushes Effects or Library off screen. Exactly one group per dock may be .grow and take the leftover space.' In the app, only the Layers list works this way (Sources/Photonz/LayersPanel.swift lines 1493 to 1526, added by opening-a-group-in-the-layers-list-pushes-the-cont on 2026-09-07). Everything else is in the single outer ScrollView at LayersPanel.swift line 99, which is why sections push each other off the bottom. Tasks that treated the symptom one section at a time: layout-stops-lecturing-and-starts-fitting, a-measurement-fits-in-the-panel, the-panel-says-what-you-picked-before-it-explain, the-look-controls-come-back-above-the-fold (dropped), the-properties-panel-fits-on-the-screen-it-has (now p1-high and pointed at this rule). Do this after the app task lands, so the wording can name what the app actually does.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-09-08T21:42:06.122248Z",
       "note": "No behaviour changed: git diff is docs/design/mocks/shared/UX-PATTERNS.md only. Scripts/test.sh run anyway before commit."
+    },
+    {
+      "t": "2026-09-08T21:42:48.984Z",
+      "note": "UX-PATTERNS section 3 panel-group rule and D9 rewritten to lead with the behaviour in plain words and to say they bind the shipping app, not only the mock pages. Section 3 now names the case that kept being met and was never written down: when a dock is asked for more than it has, the dock scrolls and no section is cut down to make it fit. D9 checked and rewritten the same way, with how the app satisfies it recorded (side dock slides away entirely, Show Panel plus the title-bar glyph as the way back, no bottom dock yet, so the summary row is not owed). Section 0 states the general rule and the two section 9 audit gates match. Documentation only, no behaviour changed; Scripts/test.sh green at 4992 tests. Commit ec59a688."
     }
   ],
-  "started": "2026-09-08T21:37:37.468Z"
+  "started": "2026-09-08T21:37:37.468Z",
+  "completed": "2026-09-08T21:42:48.985Z"
 }
