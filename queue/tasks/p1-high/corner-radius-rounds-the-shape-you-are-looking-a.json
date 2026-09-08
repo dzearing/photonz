@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 9,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T05:08:20.575Z",
-  "updated": "2026-09-08T06:42:08.930849Z",
+  "updated": "2026-09-08T06:42:20.600Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07: added a border, adjusted corner radius, nothing happened to the rectangle or the border. There are two corner radii in the app and this is almost certainly which one the slider writes. A rectangle annotation carries its own cornerRadius (Sources/PhotonzCore/Layer.swift line 120, in the annotation's coding keys at line 186) and draws its path with it, while LayerStyle carries a separate cornerRadius that rounds the layer's rendered box. The panel row reads through displayedCornerRadius, which calls layer.roundedCornerRadius(style:) (CornerRadiusSelection.swift lines 150 and 151), so check which of the two that returns and which setCornerRadius writes; if the row is writing the layer style radius on a shape that draws its own path, nothing will move. The renderer does pass the style radius to the border painting (DocumentRenderer.swift lines 526 and 527), so once the right radius is being written the border should follow, but confirm rather than assume. Whatever the answer, the app should not offer two numbers for one visible thing: say in the audit which one survives.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-08T06:42:08.930849Z",
       "note": "Verified. 23 new tests (BoxCornerRadiusTests, EffectMagnificationTests, RoundedBorderRenderTests) written before the change; 6 of the 9 render tests fail on the old renderer and all pass on the new one. Full suite green: 4747 tests in 397 suites. On the probe, Scripts/playtest/corner-radius-rounds-walk.json walks square -> rounded -> border inside/centre/outside -> resized -> zoomed to 156% -> grouped, and the ring follows the corner in every one. Screen Recording was granted, so the audit carries real window captures. Perf: the composite path gained a handful of arithmetic ops per layer, no new image passes."
+    },
+    {
+      "t": "2026-09-08T06:42:20.599Z",
+      "note": "Every ring on a rectangle now follows the shape's own curve. New Layer.boxCornerRadius(boxSize:) in PhotonzCore gives the one radius; DocumentRenderer separates the mask radius from the ring radius. Also fixed: LayerStyle.magnified never scaled added borders (half thickness at 2x) and wiped a switched-off blur's radius. 23 new tests written first, 6 of the 9 render tests fail on the old renderer; full suite green (4747). Walked on the probe: Scripts/playtest/corner-radius-rounds-walk.json. Audit: queue/audits/2026-09-08-corner-radius-rounds.json with four real window captures. Follow-up filed: the-selection-outline-follows-a-rounded-shape (p2). Commit 7058ceac, pushed."
     }
   ],
-  "started": "2026-09-08T06:28:16.301Z"
+  "started": "2026-09-08T06:28:16.301Z",
+  "completed": "2026-09-08T06:42:20.600Z"
 }
