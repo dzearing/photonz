@@ -51,6 +51,13 @@ public struct Viewport: Equatable, Sendable {
         CGPoint(x: origin.x + p.x * zoom, y: origin.y + p.y * zoom)
     }
 
+    /// The same mapping as `viewPoint(fromDocument:)`, as one transform, for
+    /// chrome that hands a whole PATH to the camera rather than a point at a
+    /// time — a curved selection outline cannot be walked corner by corner.
+    public var documentToView: CGAffineTransform {
+        CGAffineTransform(translationX: origin.x, y: origin.y).scaledBy(x: zoom, y: zoom)
+    }
+
     public func documentPoint(fromView p: CGPoint) -> CGPoint {
         guard zoom > 0 else { return .zero }
         return CGPoint(x: (p.x - origin.x) / zoom, y: (p.y - origin.y) / zoom)

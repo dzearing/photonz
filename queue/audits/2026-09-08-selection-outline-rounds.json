@@ -1,0 +1,26 @@
+{
+  "feature": "The selection outline follows a rounded shape",
+  "epic": "ui-building",
+  "summary": "Pick a rounded rectangle and the blue outline round it now traces the same curve the shape has, instead of a hard box that cut across all four corners. Everything else is marked exactly as it was.",
+  "setup": "Photonz Dev, any document. Nothing to turn on: it is how the selection outline is drawn now.",
+  "try": [
+    { "do": "Press R and drag out a rectangle." },
+    { "do": "Pull Corner Radius in Appearance right up." },
+    { "do": "Look at the blue outline where it meets each corner.", "shot": "2026-09-08-selection-outline-rounds-1.png" },
+    { "do": "Zoom in twice with Command Plus and look again." },
+    { "do": "Drag the shape across the canvas and watch the outline travel with it." },
+    { "do": "Press O, drag out an oval, press V and click it: its outline is still the box round it.", "shot": "2026-09-08-selection-outline-rounds-2.png" },
+    { "do": "Shift-click the rounded box so both are picked at once.", "shot": "2026-09-08-selection-outline-rounds-3.png" }
+  ],
+  "evaluate": [
+    "Does the outline now read as belonging to the shape rather than floating around it?",
+    "The four corner handles sit off the curve, out in the space the corner used to fill. Does that read as the box you resize by, or as handles that came loose?",
+    "At a big radius the shape is nearly a capsule. Is the outline still obviously a selection rather than part of the drawing?",
+    "An oval still gets a square box round it. Does that feel inconsistent now that a rounded box does not?"
+  ],
+  "rough": [
+    "The eight handles deliberately stay on the square frame corners, because that is where a resize drag grabs. On a nearly fully round shape the corner handles end up a fair way off the outline, which is the one thing here worth a second opinion.",
+    "An ellipse, a line and an arrow are untouched on purpose: their outline stays the box round what they draw. If the oval's square box now looks wrong beside a curved rectangle, that is a separate change and should be its own task.",
+    "Screen Recording was granted, so every picture above is a real window capture, not an offscreen render."
+  ]
+}

@@ -1,0 +1,259 @@
+{
+  "out": "/tmp/photonz-playtest/selection-outline-rounds",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        700,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-square",
+      "note": "a rectangle just drawn and still picked: the blue outline is a hard box, exactly as it always was"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-square"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius",
+      "across": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-rounded",
+      "note": "corner radius pulled right up: the blue outline should curve with the shape instead of cutting across its corners"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-rounded"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-zoomed",
+      "note": "zoomed in twice: the outline is still on the curve, and the handles are still on the square frame corners where a drag grabs"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-zoomed"
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        60
+      ],
+      "to": [
+        280,
+        180
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "click",
+      "at": [
+        190,
+        120
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-ellipse",
+      "note": "an oval picked with the pointer: its outline is the square box round it, exactly as it always was"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-ellipse"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        250
+      ],
+      "to": [
+        280,
+        320
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "click",
+      "at": [
+        190,
+        285
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-arrow",
+      "note": "an arrow picked: its outline still hugs the stroke it drew, unchanged"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-arrow"
+    },
+    {
+      "do": "click",
+      "at": [
+        520,
+        410
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        520,
+        410
+      ],
+      "to": [
+        580,
+        390
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-moved",
+      "note": "the rounded box dragged across the canvas: its curved outline travels with it"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-moved"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        190,
+        120
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-several",
+      "note": "everything picked at once: each layer wears its own outline, and the rounded box's follows its curve there too"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-several"
+    }
+  ]
+}

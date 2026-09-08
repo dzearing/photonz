@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T06:41:47.388Z",
-  "updated": "2026-09-08T12:09:06.720Z",
+  "updated": "2026-09-08T12:37:58.763Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while auditing corner radius on 2026-09-08: queue/audits/2026-09-08-corner-radius-4-zoomed-sc.png shows the dashed rect cutting across the corners of a 49pt rounded box at 156%. Reproduce with Scripts/playtest.sh Scripts/playtest/corner-radius-rounds-walk.json and look at 6-zoomed-sc.png. The outline is drawn in Sources/Photonz/CanvasDisplay.swift (inkCorners / the selection frame path). Layer.boxCornerRadius(boxSize:) in PhotonzCore/CornerRadiusSelection.swift is the curve to follow, and it is what the renderer rings with. It is a judgement call whether the outline marks the FRAME (as now) or the INK, so it may want the user asked rather than just changed.",
@@ -27,6 +27,27 @@
     {
       "t": "2026-09-08T12:09:06.719Z",
       "note": "seq 1960 -> 20"
+    },
+    {
+      "t": "2026-09-08T12:37:58.762Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T12:45:00.000Z",
+      "note": "Reproduced first: Scripts/playtest.sh Scripts/playtest/corner-radius-rounds-walk.json, 6-zoomed-sc.png shows the dashed rect cutting the corners of a 49pt rounded box at 156%."
+    },
+    {
+      "t": "2026-09-08T12:46:00.000Z",
+      "note": "Review before building. The judgement call in the notes (frame or ink) is already settled by the app's own idiom: the outline has hugged the INK since 2026-09-05, which is why an arrow is ringed round its stroke and not round its padded frame, and the handles have always said something different from the outline (an arrow's are two round ends). So curving the outline follows the rule the app already has. Risk taken knowingly: at a near-fully-round radius the four corner handles end up off the curve. Kept the shortest version: one radius from the existing pure helper, one path builder, used by the single outline and the multi-selection outlines alike. Did NOT touch the ellipse, the line or the arrow."
+    },
+    {
+      "t": "2026-09-08T12:47:00.000Z",
+      "note": "Built. PhotonzCore gains SelectionOutlineShape.path(box:cornerRadius:transform:) and Layer.selectionOutlineRadius(box:) (nought for anything without corners), plus Viewport.documentToView so a whole path can be handed to the camera. CanvasDisplay draws both the picked-layer outline and every multi-selection outline through it; inkCorners became inkTransform. 9 new tests written first (SelectionOutlineShapeTests), full suite green at 4840."
+    },
+    {
+      "t": "2026-09-08T12:48:00.000Z",
+      "note": "Walked on the probe with a new Scripts/playtest/selection-outline-rounds-walk.json, Screen Recording granted so every picture is a real capture. Verified: rounded box traces its curve at 100% and 156%; square rectangle unchanged; oval and arrow unchanged; the curve travels with a move; multi-selection rounds too. Audit: queue/audits/2026-09-08-selection-outline-rounds.json with three captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T12:37:58.761Z"
 }

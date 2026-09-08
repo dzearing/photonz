@@ -679,11 +679,13 @@ extension CanvasNSView {
         for id in captured.sorted(by: { $0.uuidString < $1.uuidString }) {
             guard let layer = document.canvasLayer(id: id) else { continue }
             let shift = travelling.contains(id) ? delta : .zero
-            let corners = inkCorners(of: layer).map {
-                viewport.viewPoint(fromDocument: CGPoint(x: $0.x + shift.x, y: $0.y + shift.y))
-            }
-            outlines.addLines(between: corners)
-            outlines.closeSubpath()
+            let box = inkBox(of: layer)
+            outlines.addPath(SelectionOutlineShape.path(
+                box: box,
+                cornerRadius: layer.selectionOutlineRadius(box: box),
+                transform: inkTransform(of: layer)
+                    .concatenating(CGAffineTransform(translationX: shift.x, y: shift.y))
+                    .concatenating(viewport.documentToView)))
         }
         multiSelectOutlineLayer.path = outlines
         multiSelectOutlineLayer.isHidden = outlines.isEmpty
@@ -704,17 +706,13 @@ extension CanvasNSView {
             captionPillSize: CaptionMetrics.pillSize(for: a.caption ?? "", in: a))
     }
 
-    /// `inkBox` as the polygon a rotated or skewed layer's outline draws, the
-    /// same way `Layer.transformedCorners` turns its frame: about the centre of
-    /// the STORED box, which is the point the renderer turns the layer about.
-    private func inkCorners(of layer: Layer) -> [CGPoint] {
-        let box = inkBox(of: layer)
-        let corners = [CGPoint(x: box.minX, y: box.minY), CGPoint(x: box.maxX, y: box.minY),
-                       CGPoint(x: box.maxX, y: box.maxY), CGPoint(x: box.minX, y: box.maxY)]
-        guard !layer.transform.isIdentity else { return corners }
-        let t = layer.transform.affineTransform(
+    /// The turn a rotated or skewed layer's outline takes, the same way
+    /// `Layer.transformedCorners` turns its frame: about the centre of the
+    /// STORED box, which is the point the renderer turns the layer about.
+    private func inkTransform(of layer: Layer) -> CGAffineTransform {
+        guard !layer.transform.isIdentity else { return .identity }
+        return layer.transform.affineTransform(
             around: CGPoint(x: layer.frame.midX, y: layer.frame.midY))
-        return corners.map { $0.applying(t) }
     }
 
     private func refreshLayerSelectionDisplay() {
@@ -864,15 +862,14 @@ extension CanvasNSView {
                 box = box.offsetBy(dx: frame.minX - selectedLayer.frame.minX,
                                    dy: frame.minY - selectedLayer.frame.minY)
             }
-            let outline = CGMutablePath()
-            outline.addLines(between: [
-                chromePoint(CGPoint(x: box.minX, y: box.minY)),
-                chromePoint(CGPoint(x: box.maxX, y: box.minY)),
-                chromePoint(CGPoint(x: box.maxX, y: box.maxY)),
-                chromePoint(CGPoint(x: box.minX, y: box.maxY)),
-            ])
-            outline.closeSubpath()
-            layerOutlineLayer.path = outline
+            // Round a rounded shape: the outline hugs what the layer draws,
+            // and on a rounded box four straight lines cut every corner off
+            // (seen on the probe, 2026-09-08). The handles below stay on the
+            // square frame corners, which is where a drag grabs.
+            layerOutlineLayer.path = SelectionOutlineShape.path(
+                box: box,
+                cornerRadius: selectedLayer.selectionOutlineRadius(box: box),
+                transform: docToHandle.concatenating(viewport.documentToView))
             layerOutlineLayer.isHidden = false
         }
 

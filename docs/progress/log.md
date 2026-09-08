@@ -12662,3 +12662,18 @@ under a pill that still reads "Cannot fill a piece". ⌫ has the same gap, so it
 belongs to the family rather than to this task.
 
 Next: the queue's own order.
+
+## 2026-09-08 — The selection outline follows a rounded shape
+
+Picking a rounded rectangle drew a hard dashed box that cut across all four
+corners; it now traces the same curve the shape has. `SelectionOutlineShape`
+and `Layer.selectionOutlineRadius(box:)` in PhotonzCore give the path, and
+`Viewport.documentToView` lets the canvas hand a whole path to the camera
+rather than a point at a time. Both the picked-layer outline and the
+multi-selection outlines go through it. An ellipse, a line and an arrow are
+untouched, and the eight handles stay on the square frame corners because that
+is where a resize drag grabs.
+
+Next: the audit (`queue/audits/2026-09-08-selection-outline-rounds.json`) asks
+whether the corner handles sitting off the curve reads right, and whether an
+oval's square box now looks inconsistent beside a curved rectangle.
