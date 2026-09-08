@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1770,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T18:49:49.979Z",
-  "updated": "2026-09-08T07:06:22.325536Z",
+  "updated": "2026-09-08T07:06:52.503Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the paste task (pasting-hands-you-the-pointer-with-the-new-layer, 2026-09-07). The paste path already does this in EditorState+Clipboard.swift via handOverPointer(pasted:held:carrying:), gated on the next-paste-hands-you-the-pointer flag; pasteImage already returns the layer id it landed. The drop callers pass a point or a landing, which is the branch handOverPointer is deliberately not reached from today. Decide whether it needs its own flag or shares the paste one.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-08T07:06:22.325536Z",
       "note": "Audit: queue/audits/2026-09-08-drop-hands-you-the-pointer.json, with two real screen captures (the probe holds Screen Recording)."
+    },
+    {
+      "t": "2026-09-08T07:06:52.502Z",
+      "note": "A drop hands you the pointer with the dropped picture picked, on the canvas, on a layers row and off the Library shelf, sharing the paste's hand-over, switch and tool memory (EditorState.swift + EditorState+Clipboard.swift). Verified on the probe with the new Scripts/playtest/drop-hands-you-the-pointer-walk.json and Scripts/test.sh green at 4757. Audit: queue/audits/2026-09-08-drop-hands-you-the-pointer.json. Commit 66f9dfbc, pushed."
     }
   ],
-  "started": "2026-09-08T06:58:45.179Z"
+  "started": "2026-09-08T06:58:45.179Z",
+  "completed": "2026-09-08T07:06:52.503Z"
 }
