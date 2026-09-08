@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1750,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T18:37:47.800Z",
-  "updated": "2026-09-08T02:31:53.319Z",
+  "updated": "2026-09-08T02:55:33.403Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found writing the audit for arrow-keys-move-a-marquee-selection on 2026-09-07. The nudge branch lives in Sources/Photonz/CanvasKeys.swift and the precedence rule is Nudge.target in PhotonzCore/Nudge.swift; the panel would read the same rule to decide whose numbers to show. EditorState.selection is the region; it is editor state and not in History, so a typed number is not an undo step either.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-08T02:51:12.956Z",
       "note": "Second adversarial pass, on the built thing. Fixed: the caption read as a fragment after a full stop, so it is now one sentence. Left as rough in the audit: the numbers jump on mouse up rather than following a region drag, because the selection has no preview channel and building one is more than this task."
+    },
+    {
+      "t": "2026-09-08T02:55:33.403Z",
+      "note": "The Position and Size section reads the selection box while a selection tool has the arrow keys: header says Selection, all four numbers are the marquee's and all four take typing. PhotonzCore RegionGeometry + SelectionRegion.resized(to:), EditorState.regionGeometry picking the subject with Nudge.target, a marquee branch in GeometryInspector, and the section now available on a live region alone. Verified on the probe with Scripts/playtest/panel-reads-the-marquee-walk.json (69 steps, every acceptance item an expect step) and Scripts/test.sh 4677 green. Audit at queue/audits/2026-09-08-panel-reads-the-marquee.json with two real window captures. Pushed as 652cbe22."
     }
   ],
-  "started": "2026-09-08T02:31:53.318Z"
+  "started": "2026-09-08T02:31:53.318Z",
+  "completed": "2026-09-08T02:55:33.403Z"
 }
