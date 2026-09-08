@@ -65,10 +65,17 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     }
 
     /// Whether the row carries a colour well of its own.
-    public var paintsAColor: Bool {
+    public var paintsAColor: Bool { colorSlot != nil }
+
+    /// Which kind of colour this effect paints, so that its colour can be
+    /// named, offered and saved through the same machinery every other colour
+    /// in the app uses (`ColorStyles.swift`). Nil for an effect with no colour
+    /// at all, which brings no colour row rather than a blank one.
+    public var colorSlot: ColorSlot? {
         switch self {
-        case .blur: return false
-        case .shadow, .border: return true
+        case .blur: return nil
+        case .shadow: return .shadow
+        case .border: return .border
         }
     }
 }
@@ -170,6 +177,32 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .blur(var blur): blur.isOn = newValue; self = .blur(blur)
             case .shadow(var shadow): shadow.isOn = newValue; self = .shadow(shadow)
             case .border(var border): border.isOn = newValue; self = .border(border)
+            }
+        }
+    }
+
+    /// Which kind of colour this entry paints, or nil when it paints none.
+    public var colorSlot: ColorSlot? { kind.colorSlot }
+
+    /// What this entry is painted, or nil when it paints no colour at all.
+    ///
+    /// One question for every kind, so the colour row under an effect is one
+    /// row rather than one per kind: a new effect that carries a colour answers
+    /// here and gets the row, the saved colours and the naming for free.
+    public var colorHex: String? {
+        get {
+            switch self {
+            case .blur: return nil
+            case .shadow(let shadow): return shadow.colorHex
+            case .border(let border): return border.colorHex
+            }
+        }
+        set {
+            guard let newValue else { return }
+            switch self {
+            case .blur: return
+            case .shadow(var shadow): shadow.colorHex = newValue; self = .shadow(shadow)
+            case .border(var border): border.colorHex = newValue; self = .border(border)
             }
         }
     }
@@ -488,8 +521,11 @@ extension PhotonzDocument {
             if !addable.kind.isCountable,
                layer.style.effects.contains(where: { $0.kind == addable.kind }) { continue }
             updateLayer(id: id) { target in
-                target.style.effects.insert(addable.newEffect,
-                                            at: target.style.insertionIndex(for: addable.kind))
+                // Through the layer, never through the list: a name worn by an
+                // effect below the new one has to come down a place with it
+                // (`ColorStyles.swift`, `insertEffect`).
+                target.insertEffect(addable.newEffect,
+                                    at: target.style.insertionIndex(for: addable.kind))
             }
             changed += 1
         }
@@ -505,7 +541,7 @@ extension PhotonzDocument {
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked,
                   layer.style.effects.indices.contains(index) else { continue }
-            updateLayer(id: id) { $0.style.effects.remove(at: index) }
+            updateLayer(id: id) { $0.removeEffect(at: index) }
             changed += 1
         }
         return changed
@@ -525,10 +561,7 @@ extension PhotonzDocument {
                   layer.style.effects.indices.contains(to) else { continue }
             let floor = layer.style.pinnedCount
             guard from >= floor, to >= floor else { continue }
-            updateLayer(id: id) { target in
-                let moved = target.style.effects.remove(at: from)
-                target.style.effects.insert(moved, at: to)
-            }
+            updateLayer(id: id) { $0.moveEffect(from: from, to: to) }
             changed += 1
         }
         return changed

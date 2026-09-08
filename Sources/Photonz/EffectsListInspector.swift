@@ -90,11 +90,16 @@ private struct EffectRowView: View {
                 // row in Appearance reads the same way because neither of them
                 // arranges the two itself.
                 PanelRowHead(title: row.title) { effectSwitch }
-                if row.isOn {
-                    colorControl
-                } else if let paint = incoming?.landing?.paint {
+                // The colour is NOT here. It is a setting of the effect, so it
+                // sits with the width and the position under the rule below,
+                // and the header carries only the name, the tick and the two
+                // controls that act on the whole entry (reported by the user on
+                // 2026-09-07: the colour was the one setting in the wrong
+                // place, and the only colour in the app that could not take a
+                // saved name).
+                if !row.isOn, let paint = incoming?.landing?.paint {
                     LandingSwatch(paint: paint)
-                } else if row.isMixed {
+                } else if !row.isOn, row.isMixed {
                     MixedWord()
                         .frame(minWidth: ColorPartLayout.readoutWidth,
                                minHeight: ColorPartLayout.rowHeight, alignment: .leading)
@@ -211,29 +216,13 @@ private struct EffectRowView: View {
                              detail: row.isMixed ? "mixed" : (row.isOn ? "on" : "off"))
     }
 
-    // MARK: The colour
-
-    @ViewBuilder private var colorControl: some View {
-        if row.kind == .border {
-            // A border's colour is not one of the layer's own slots either, so
-            // it gets the well without the saved-styles menu, in the column
-            // every colour in Appearance sits in.
-            BorderEffectColorWell(index: row.index)
-                .frame(minWidth: ColorPartLayout.readoutWidth,
-                       minHeight: ColorPartLayout.rowHeight, alignment: .leading)
-        } else if let shadowIndex = row.shadowIndex {
-            // A shadow's colour is not one of the layer's slots, so it has no
-            // saved-styles menu; the well alone sits where every colour in
-            // Appearance sits.
-            ShadowColorWell(index: shadowIndex)
-                .frame(minWidth: ColorPartLayout.readoutWidth,
-                       minHeight: ColorPartLayout.rowHeight, alignment: .leading)
-        }
-    }
-
     // MARK: The settings
 
     @ViewBuilder private var settings: some View {
+        // The colour first, whatever the effect is, so the list reads one way:
+        // every entry that paints a colour asks for it in the same place, in
+        // the same words, with the same saved colours behind it.
+        EffectColorRow(row: row)
         switch row.kind {
         case .shadow:
             let index = row.shadowIndex ?? 0
@@ -241,8 +230,8 @@ private struct EffectRowView: View {
             // shadow is the same effect drawn somewhere else rather than a
             // different effect with its own row.
             ShadowKindRow(index: index, ids: row.switchIDs)
-            // Everything else about the shadow except the tick and the colour,
-            // which are up on the row.
+            // Everything else about the shadow except the tick, which is up on
+            // the row, and the colour, which is the row above this one.
             ShadowInspector(showsSwitch: false, showsColor: false, inset: false, index: index)
         case .border:
             // Where the ring sits, then how thick it is: which side of the edge
@@ -251,6 +240,44 @@ private struct EffectRowView: View {
             BorderWidthRow(row: row)
         case .blur:
             BlurEffectRow(row: row)
+        }
+    }
+}
+
+/// What ONE effect is painted, as a setting of that effect.
+///
+/// The whole point is that there is nothing special about it. It is the same
+/// well, the same saved-colours menu and the same "Save as Style" field a Fill
+/// or an Outline row carries, addressed by the effect's place in the list
+/// instead of by one of the layer's own slots (`ColorTarget`). So a border can
+/// wear the hairline colour you saved, follow it when you edit it, and let go
+/// of it the moment you pick a colour by hand.
+///
+/// An effect with no colour at all — a blur — brings no row rather than a blank
+/// one.
+private struct EffectColorRow: View {
+    let row: LayerEffectRow
+
+    var body: some View {
+        if let target = ColorTarget(effect: row) {
+            HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
+                Text("Color")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: ColorPartLayout.labelWidth,
+                           height: ColorPartLayout.rowHeight, alignment: .leading)
+                // The KIND's word rather than the row's, so two borders both
+                // offer "Saved border colors" instead of one of them offering
+                // "Saved border 2 colors". Which of the two a walk means is
+                // already settled by the row it is in.
+                ColorStyleRow(target: target, part: row.kind.title)
+                Spacer(minLength: 0)
+            }
+            // Its own row name, INSIDE the effect's, so a walk says
+            // `{"menu": "Color", "in": "Border 2"}`: the effect's row holds two
+            // menus now, the saved colours and the Position, and the row's name
+            // alone could not tell them apart.
+            .playtestField("Color")
         }
     }
 }

@@ -459,21 +459,21 @@ extension EditorState {
         guard let document else { return }
         let ids = row.switchIDs.filter { document.layer(id: $0)?.isLocked == false }
         guard !ids.isEmpty else { return }
-        if row.kind == .border {
-            discardDragPreview()
-            perform { doc in
-                _ = doc.updateBorderEffect(layerIDs: ids, at: row.index) { border in
-                    border.colorHex = landing.paint.hex
-                    border.isOn = true
-                }
-            }
-            rememberStyleDefault(of: ids)
-            return
-        }
-        guard let shadowIndex = row.shadowIndex else { return }
+        guard row.kind.colorSlot != nil else { return }
         discardDragPreview()
+        // Switched on AND painted in one step one undo puts back, which is what
+        // the row promised while the colour was in the air. A colour that
+        // arrived under a NAME lands as that name, exactly as it does on every
+        // other row, so the drag is not a quieter, lossier way to do the move
+        // the menu does properly.
         perform { doc in
-            _ = doc.turnOnPart(.shadow, layerIDs: ids, paint: landing.paint, index: shadowIndex)
+            _ = doc.setEffectEnabled(layerIDs: ids, at: row.index, on: true)
+            if let brings = landing.brings {
+                _ = doc.bindColorStyle(layerIDs: ids, effectAt: row.index, styleID: brings.id)
+            } else {
+                _ = doc.setColorHex(layerIDs: ids, effectAt: row.index,
+                                    hex: landing.paint.hex)
+            }
         }
         rememberStyleDefault(of: ids)
     }
@@ -788,7 +788,7 @@ extension EditorState {
         switch slot {
         case .stroke: break
         case .fill: guard shape == .rectangle || shape == .ellipse else { return .neverWearsNames }
-        case .text, .border: return .neverWearsNames
+        case .text, .border, .shadow: return .neverWearsNames
         }
         return styleWelcome(slot: slot, styleID: styleID)
     }

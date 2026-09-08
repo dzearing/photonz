@@ -789,8 +789,8 @@ private final class Run {
             try writePNG(image, name: name)
             note(number, step.name, "\(name).png \(image.width)x\(image.height) px at \(scale)x")
 
-        case .panelMenu(let menu, let shot, let choose, let clicking):
-            try await openPanelMenu(menu, shot: shot, choose: choose, clicking: clicking,
+        case .panelMenu(let menu, let row, let shot, let choose, let clicking):
+            try await openPanelMenu(menu, in: row, shot: shot, choose: choose, clicking: clicking,
                                     number: number)
 
         case .menuShot(let menu, let name, let ticked, let unticked):
@@ -2306,15 +2306,33 @@ private final class Run {
                                    isEnabled: true, window: match.window)
     }
 
-    private func openPanelMenu(_ name: String, shot: String?, choose: String?,
+    private func openPanelMenu(_ name: String, in row: String?, shot: String?, choose: String?,
                                clicking: String?, number: Int) async throws {
         let host = try requireWindow()
         guard let content = host.contentView else {
             throw Failure(description: "the window has no content view")
         }
-        let buttons = PlaytestPanelMenu.buttons(in: content)
         let fields = Self.findAll(PanelTargetView.self, in: content)
             .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+        var buttons = PlaytestPanelMenu.buttons(in: content)
+        // Narrowed to one row FIRST, the way a press is, so "the Color menu in
+        // Border 2" is one thing to say rather than a search through every menu
+        // in the panel that happens to be called Color.
+        if let row {
+            let inside = buttons.filter { button in
+                PlaytestPanelPress.fields(at: button.convert(button.bounds, to: nil),
+                                          among: fields)
+                    .contains { $0.caseInsensitiveCompare(row) == .orderedSame }
+            }
+            guard !inside.isEmpty else {
+                let seen = buttons.map { Self.menuName(of: $0, among: fields) }
+                    .filter { !$0.isEmpty }
+                throw Failure(description: "no row called \"\(row)\" holds a menu; "
+                    + "the menus in the window are: "
+                    + (seen.isEmpty ? "none" : seen.joined(separator: ", ")))
+            }
+            buttons = inside
+        }
         // A menu is named by the row it sits on, which holds still, or by the
         // words it happens to be showing, which do not. Both work, because a
         // menu on no named row has nothing but its words — and the words win,

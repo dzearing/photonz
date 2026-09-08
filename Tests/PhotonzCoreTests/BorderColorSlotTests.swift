@@ -58,8 +58,13 @@ struct BorderColorSlotTests {
     }
 
     /// Border is the last row, under the colors that say what the layer is.
+    ///
+    /// A shadow's colour comes after even that, and NO layer has one among its
+    /// own slots: it belongs to an entry in the Effects list rather than to
+    /// what the layer is, and it is a slot at all only so that an effect's
+    /// colour can be named and saved like every other colour.
     @Test func theBorderRowComesAfterTheColorsTheLayerItselfHas() {
-        #expect(ColorSlot.allCases == [.fill, .stroke, .text, .border])
+        #expect(ColorSlot.allCases == [.fill, .stroke, .text, .border, .shadow])
     }
 
     /// A border is ink: an outline color saved off one is offered on the next,

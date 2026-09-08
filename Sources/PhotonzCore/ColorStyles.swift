@@ -32,6 +32,14 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     /// Effects section. Last, because it sits over whatever the layer is
     /// rather than saying what the layer is.
     case border
+    /// What a shadow is painted.
+    ///
+    /// The odd one out, and deliberately so: NO layer lists this among its own
+    /// slots, because a shadow is not part of what a layer is — it is an entry
+    /// in the Effects list, and the colour belongs to that entry. It is here so
+    /// that an effect's colour can be named, offered and saved through exactly
+    /// the machinery every other colour uses (`LayerEffects.swift`).
+    case shadow
 
     /// What the inspector calls this slot in a sentence about it.
     public var title: String {
@@ -40,6 +48,7 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         case .stroke: return "Color"
         case .text: return "Color"
         case .border: return "Border"
+        case .shadow: return "Shadow"
         }
     }
 
@@ -54,7 +63,7 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     public var acceptsGradient: Bool {
         switch self {
         case .fill, .stroke: return true
-        case .text, .border: return false
+        case .text, .border, .shadow: return false
         }
     }
 
@@ -64,7 +73,10 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     public var styleRole: ColorStyleRole {
         switch self {
         case .fill: return .surface
-        case .stroke, .text, .border: return .ink
+        // A shadow is drawn OVER the design rather than filling an area of it,
+        // the same as a line and a letter, so it takes the ink shelf: the
+        // near-black somebody keeps for hairlines is the one they reach for.
+        case .stroke, .text, .border, .shadow: return .ink
         }
     }
 }
@@ -168,15 +180,32 @@ public struct ColorStyle: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
-/// One of a layer's slots, pointed at a style. Stored as a small list rather
+/// One of a layer's colours, pointed at a style. Stored as a small list rather
 /// than a dictionary so it writes to disk as plain JSON and reads as plain
 /// English.
+///
+/// Nearly every binding names one of the layer's own slots. A binding with an
+/// `effectIndex` names the colour of ONE ENTRY in the Effects list instead —
+/// the second shadow's colour, this border's colour — which is how an effect's
+/// colour gets to wear a saved name like every other colour in the app. The
+/// slot still rides along, because it is what says which saved colours are
+/// offered there.
 public struct ColorStyleBinding: Hashable, Codable, Sendable {
     public var slot: ColorSlot
+    /// Where in the layer's Effects list this colour lives, when it is an
+    /// effect's rather than one of the layer's own. Nil is every binding that
+    /// existed before effects could wear a name, and it is left out of the file
+    /// entirely, so a document that has never met one reads exactly as it did.
+    ///
+    /// It is a PLACE, so the list moving has to move it: `Layer.insertEffect`,
+    /// `removeEffect` and `moveEffect` are the only ways the list may change
+    /// for exactly that reason.
+    public var effectIndex: Int?
     public var styleID: UUID
 
-    public init(slot: ColorSlot, styleID: UUID) {
+    public init(slot: ColorSlot, effectIndex: Int? = nil, styleID: UUID) {
         self.slot = slot
+        self.effectIndex = effectIndex
         self.styleID = styleID
     }
 }
@@ -215,7 +244,10 @@ extension Layer {
     /// taking the border off for a moment does not quietly lose the name.
     var hasBorderColor: Bool {
         style.borderWidth > 0
-            || (colorStyleBindings ?? []).contains { $0.slot == .border }
+            // An EFFECT's border colour wearing a name is not this ring, and a
+            // Border row appearing in the Color section because somebody named
+            // an added border's colour would be a row painting nothing.
+            || (colorStyleBindings ?? []).contains { $0.slot == .border && $0.effectIndex == nil }
     }
 
     /// The color in a slot right now, or nil when the slot is empty (a box with
@@ -329,7 +361,7 @@ extension Layer {
 
     /// The style painting a slot, or nil when the color there is the layer's own.
     public func colorStyleID(for slot: ColorSlot) -> UUID? {
-        colorStyleBindings?.first { $0.slot == slot }?.styleID
+        colorStyleBindings?.first { $0.slot == slot && $0.effectIndex == nil }?.styleID
     }
 
     /// Whether any of this layer's colors comes from a style.
@@ -338,17 +370,134 @@ extension Layer {
     /// Points a slot at a style. The color itself is written by the document,
     /// which is the only thing that knows what the style is painted.
     mutating func bindColorStyle(_ styleID: UUID, for slot: ColorSlot) {
-        var bindings = (colorStyleBindings ?? []).filter { $0.slot != slot }
+        var bindings = (colorStyleBindings ?? [])
+            .filter { !($0.slot == slot && $0.effectIndex == nil) }
         bindings.append(ColorStyleBinding(slot: slot, styleID: styleID))
-        colorStyleBindings = bindings.sorted { $0.slot.rawValue < $1.slot.rawValue }
+        colorStyleBindings = Layer.sortedBindings(bindings)
     }
 
     /// Lets go of a slot's style, keeping the color it is wearing.
     mutating func unbindColorStyle(for slot: ColorSlot) {
-        let remaining = (colorStyleBindings ?? []).filter { $0.slot != slot }
+        let remaining = (colorStyleBindings ?? [])
+            .filter { !($0.slot == slot && $0.effectIndex == nil) }
         // Back to nothing rather than an empty list, so a layer that never
         // wore a style writes exactly what it always wrote.
         colorStyleBindings = remaining.isEmpty ? nil : remaining
+    }
+
+    /// One fixed order, so the same set of bindings always writes the same
+    /// JSON: the layer's own colours first in slot order, then the effects in
+    /// the order the list holds them.
+    static func sortedBindings(_ bindings: [ColorStyleBinding]) -> [ColorStyleBinding] {
+        bindings.sorted { a, b in
+            switch (a.effectIndex, b.effectIndex) {
+            case (nil, nil): return a.slot.rawValue < b.slot.rawValue
+            case (nil, _): return true
+            case (_, nil): return false
+            case (let x?, let y?): return x < y
+            }
+        }
+    }
+}
+
+// MARK: - An effect's colour
+
+/// An effect's colour is a colour like any other, and this is what makes that
+/// true: it is read, painted, named and let go of through the same calls, the
+/// only difference being that it is addressed by its PLACE in the Effects list
+/// rather than by one of the layer's own slots.
+///
+/// Reported by the user on 2026-09-07: a border's colour sat in the row header
+/// while its width and position sat in the settings, and it was the one colour
+/// in the app that could not take a saved name.
+extension Layer {
+
+    /// What the effect at this place in the list is painted, or nil when there
+    /// is no effect there or it paints no colour at all (a blur).
+    public func colorHex(forEffectAt index: Int) -> String? {
+        style.effect(at: index)?.colorHex
+    }
+
+    /// The whole paint an effect's colour stands for. Flat today, always: no
+    /// effect draws a ramp, so this is the one flat colour dressed as a paint
+    /// for the rows that speak in paints.
+    public func paint(forEffectAt index: Int) -> Paint? {
+        colorHex(forEffectAt: index).map { Paint(hex: $0) }
+    }
+
+    /// Paints the effect at a place in the list. An entry with no colour is
+    /// left alone rather than gaining one.
+    public mutating func setColorHex(_ hex: String, forEffectAt index: Int) {
+        guard style.effect(at: index)?.colorSlot != nil else { return }
+        style.updateEffect(at: index) { $0.colorHex = hex }
+    }
+
+    /// The style painting an effect's colour, or nil when the colour is its own.
+    public func colorStyleID(forEffectAt index: Int) -> UUID? {
+        colorStyleBindings?.first { $0.effectIndex == index }?.styleID
+    }
+
+    /// Points an effect's colour at a style. The colour itself is written by
+    /// the document, which is the only thing that knows what the style paints.
+    mutating func bindColorStyle(_ styleID: UUID, forEffectAt index: Int) {
+        guard let slot = style.effect(at: index)?.colorSlot else { return }
+        var bindings = (colorStyleBindings ?? []).filter { $0.effectIndex != index }
+        bindings.append(ColorStyleBinding(slot: slot, effectIndex: index, styleID: styleID))
+        colorStyleBindings = Layer.sortedBindings(bindings)
+    }
+
+    /// Lets go of an effect's style, keeping the colour it is wearing.
+    mutating func unbindColorStyle(forEffectAt index: Int) {
+        let remaining = (colorStyleBindings ?? []).filter { $0.effectIndex != index }
+        colorStyleBindings = remaining.isEmpty ? nil : remaining
+    }
+
+    /// Puts an effect in the list, carrying every name below it down a place.
+    ///
+    /// The ONLY way an effect may be added, and the same for `removeEffect` and
+    /// `moveEffect` below. A binding names a place in the list, so a list that
+    /// changes behind their back leaves a shadow wearing the border's name.
+    mutating func insertEffect(_ effect: LayerEffect, at index: Int) {
+        let at = min(max(0, index), style.effects.count)
+        style.effects.insert(effect, at: at)
+        remapEffectBindings { $0 >= at ? $0 + 1 : $0 }
+    }
+
+    /// Takes an effect out of the list. Its name goes with it, and everything
+    /// below it comes up a place.
+    mutating func removeEffect(at index: Int) {
+        guard style.effects.indices.contains(index) else { return }
+        style.effects.remove(at: index)
+        remapEffectBindings { $0 == index ? nil : ($0 > index ? $0 - 1 : $0) }
+    }
+
+    /// Drags an effect somewhere else in the list, names and all.
+    mutating func moveEffect(from: Int, to: Int) {
+        guard style.effects.indices.contains(from),
+              style.effects.indices.contains(to), from != to else { return }
+        let moved = style.effects.remove(at: from)
+        style.effects.insert(moved, at: to)
+        remapEffectBindings { place in
+            if place == from { return to }
+            if from < to { return place > from && place <= to ? place - 1 : place }
+            return place >= to && place < from ? place + 1 : place
+        }
+    }
+
+    /// Rewrites every effect binding's place, dropping the ones the change
+    /// answered with nothing.
+    private mutating func remapEffectBindings(_ move: (Int) -> Int?) {
+        guard let bindings = colorStyleBindings,
+              bindings.contains(where: { $0.effectIndex != nil }) else { return }
+        var rebuilt: [ColorStyleBinding] = []
+        for binding in bindings {
+            guard let place = binding.effectIndex else { rebuilt.append(binding); continue }
+            guard let moved = move(place) else { continue }
+            var carried = binding
+            carried.effectIndex = moved
+            rebuilt.append(carried)
+        }
+        colorStyleBindings = rebuilt.isEmpty ? nil : Layer.sortedBindings(rebuilt)
     }
 }
 
@@ -511,7 +660,14 @@ extension PhotonzDocument {
         var repainted = 0
         mapLayers { layer in
             for binding in layer.colorStyleBindings ?? [] where binding.styleID == styleID {
-                layer.setPaint(style.paint(for: binding.slot), for: binding.slot)
+                if let place = binding.effectIndex {
+                    // An effect takes one flat colour, so a saved ramp lands as
+                    // the colour it starts on rather than the border quietly
+                    // dropping the name the day somebody makes it a gradient.
+                    layer.setColorHex(style.paint(for: binding.slot).hex, forEffectAt: place)
+                } else {
+                    layer.setPaint(style.paint(for: binding.slot), for: binding.slot)
+                }
                 repainted += 1
             }
             // A copy that answered a colour knob with this name follows it too.
@@ -540,7 +696,11 @@ extension PhotonzDocument {
         colorStyles.removeAll { $0.id == id }
         mapLayers { layer in
             for binding in layer.colorStyleBindings ?? [] where binding.styleID == id {
-                layer.unbindColorStyle(for: binding.slot)
+                if let place = binding.effectIndex {
+                    layer.unbindColorStyle(forEffectAt: place)
+                } else {
+                    layer.unbindColorStyle(for: binding.slot)
+                }
             }
             // A copy that answered a colour knob with this name keeps the
             // colour and simply owns it again, exactly as a layer does.
@@ -611,9 +771,14 @@ extension PhotonzDocument {
                 // a hex check would let the claim stand over a ramp nobody
                 // saved.
                 let wanted = styles[binding.styleID]?.paint(for: binding.slot)
-                let worn = layer.paint(for: binding.slot)
+                let worn = binding.effectIndex.map { layer.paint(forEffectAt: $0) }
+                    ?? layer.paint(for: binding.slot)
                 guard let wanted, let worn, wanted.draws(sameAs: worn) else {
-                    layer.unbindColorStyle(for: binding.slot)
+                    if let place = binding.effectIndex {
+                        layer.unbindColorStyle(forEffectAt: place)
+                    } else {
+                        layer.unbindColorStyle(for: binding.slot)
+                    }
                     broken += 1
                     continue
                 }

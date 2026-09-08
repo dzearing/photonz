@@ -597,7 +597,7 @@ struct SelectionColorWell: View {
 
     /// The key this well answers to, so only one picker is ever open and a
     /// walk can open this one without a pointer.
-    private var wellKey: String { "selection.\(target.lead.rawValue)" }
+    private var wellKey: String { target.key }
 
     var body: some View {
         let selection = self.selection
@@ -664,7 +664,7 @@ struct SelectionColorWell: View {
                                        paint: openingPaint(selection),
                                        name: part,
                                        slot: target.lead,
-                                       supportsOpacity: true,
+                                       supportsOpacity: target.supportsOpacity,
                                        supportsGradient: target.acceptsGradient,
                                        onClose: { editorState.openColorWell = nil },
                                        // Live while the pointer is down, so the

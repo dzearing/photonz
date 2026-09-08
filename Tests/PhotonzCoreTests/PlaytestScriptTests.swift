@@ -810,7 +810,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add", "shot": "add-menu" } ] }
         """)
-        guard case .panelMenu(let menu, let shot, let choose, _) = script.steps[0] else {
+        guard case .panelMenu(let menu, _, let shot, let choose, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(menu == "Add")
@@ -823,11 +823,35 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add", "choose": "Label" } ] }
         """)
-        guard case .panelMenu(_, let shot, let choose, _) = script.steps[0] else {
+        guard case .panelMenu(_, _, let shot, let choose, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(shot == nil)
         #expect(choose == "Label")
+    }
+
+    @Test func aPanelMenuStepCanSayWhichRowTheMenuIsOn() throws {
+        // An effect in the Effects list carries a Color menu AND a Position
+        // menu, and a shape can carry two borders, so neither the row's name
+        // nor the menu's own says which one on its own.
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Color", "in": "Border 2" } ] }
+        """)
+        guard case .panelMenu(let menu, let row, _, _, _) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(menu == "Color")
+        #expect(row == "Border 2")
+    }
+
+    @Test func aPanelMenuStepWithNoRowSearchesTheWholePanel() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Add" } ] }
+        """)
+        guard case .panelMenu(_, let row, _, _, _) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(row == nil)
     }
 
     @Test func aPanelMenuStepCanOpenItselfWithARealClick() throws {
@@ -837,7 +861,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "100%", "clicking": "Zoom level" } ] }
         """)
-        guard case .panelMenu(_, _, _, let clicking) = script.steps[0] else {
+        guard case .panelMenu(_, _, _, _, let clicking) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(clicking == "Zoom level")
@@ -847,7 +871,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add" } ] }
         """)
-        guard case .panelMenu(_, _, _, let clicking) = script.steps[0] else {
+        guard case .panelMenu(_, _, _, _, let clicking) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(clicking == nil)

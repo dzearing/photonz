@@ -3258,35 +3258,6 @@ struct ShadowColorWell: View {
     }
 }
 
-/// The colour one ADDED ring paints, addressed by its place in the Effects
-/// list rather than by counting borders: that is the number the row already
-/// knows, and it cannot drift out of step with the settings under it.
-struct BorderEffectColorWell: View {
-    @Environment(EditorState.self) private var editorState
-    /// Where in the layer's Effects list this border sits.
-    var index = 0
-
-    var body: some View {
-        let at = index
-        let borders = editorState.layerStyleSelection.borders(at: at)
-        let ids = borders.layerIDs
-        let reading = borders.reading { $0.borderEffect(at: at)?.colorHex ?? "#000000" }
-        // The same picker every other colour row opens. A border has no opacity
-        // of its own, so the picker keeps its alpha: a translucent ring is a
-        // translucent colour rather than a second slider to find.
-        ColorWellButton(hex: reading.value ?? "#000000",
-                        name: "Border",
-                        onPreview: { hex in
-            editorState.previewLayerStyle(ids: ids) { $0.updateBorderEffect(at: at) { $0.colorHex = hex } }
-        }) { hex in
-            editorState.previewLayerStyle(ids: ids) { $0.updateBorderEffect(at: at) { $0.colorHex = hex } }
-            editorState.commitLayerStyle(ids: ids)
-            editorState.recordRecentColor(hex: hex)
-        }
-        .disabled(ids.isEmpty)
-    }
-}
-
 /// How a style row writes a length. One place, so Blur and Size and Distance
 /// cannot drift apart.
 func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }

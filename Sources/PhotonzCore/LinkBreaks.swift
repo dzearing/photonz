@@ -195,8 +195,27 @@ extension LinkBreakReport {
         for layer in edited {
             let bindings = layer.colorStyleBindings ?? []
             guard !bindings.isEmpty, let now = afterByID[layer.id] else { continue }
-            let stillBound = Set((now.colorStyleBindings ?? []).map(\.slot))
-            for binding in bindings where !stillBound.contains(binding.slot) {
+            let after = now.colorStyleBindings ?? []
+            // A slot and an EFFECT'S colour are told apart, because both can
+            // name the same slot: a border ring on the layer and a border in
+            // the Effects list are two colours, and one of them going plain is
+            // not the other one going plain.
+            let stillBound = Set(after.filter { $0.effectIndex == nil }.map(\.slot))
+            // An effect's name is followed by which STYLE it wears rather than
+            // by where it sits: taking a row out of the list moves every row
+            // under it up a place, and a name that simply slid up a row has not
+            // been lost.
+            let stillOnAnEffect = Set(after.filter { $0.effectIndex != nil }.map(\.styleID))
+            let listShrank = now.style.effects.count < layer.style.effects.count
+            for binding in bindings {
+                if binding.effectIndex != nil {
+                    // A shorter list is a row you took out, and its name went
+                    // with it. The app repeating your own delete back at you is
+                    // not news, exactly as Remove Style is not.
+                    guard !listShrank, !stillOnAnEffect.contains(binding.styleID) else { continue }
+                } else {
+                    guard !stillBound.contains(binding.slot) else { continue }
+                }
                 guard names[binding.styleID] != nil else { continue }
                 if lost[binding.styleID] == nil { order.append(binding.styleID) }
                 lost[binding.styleID, default: 0] += 1

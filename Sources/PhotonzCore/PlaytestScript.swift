@@ -929,7 +929,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// menu button in code. It is how a walk proves that a person's click still
     /// opens a menu, on a control that answers a single click and a double
     /// click differently — the zoom percentage is the one that does.
-    case panelMenu(menu: String, shot: String?, choose: String?, clicking: String?)
+    /// `in` names the row the menu sits inside, exactly as a `press` step's
+    /// does. It is what tells two menus on one row apart, and what tells the
+    /// same row arriving twice apart: an effect carries a Color menu AND a
+    /// Position menu, and a shape can carry two borders, so neither the row's
+    /// name nor the menu's own is enough on its own.
+    case panelMenu(menu: String, in: String?, shot: String?, choose: String?, clicking: String?)
     /// Open one of the app's OWN menu-bar menus inside the probe window and
     /// photograph it.
     ///
@@ -1275,6 +1280,7 @@ public enum PlaytestStep: Sendable, Equatable {
                              unticked: try f.optionalStrings("unticked"))
         case "panelMenu":
             self = .panelMenu(menu: try f.string("menu"),
+                              in: try f.optionalString("in"),
                               shot: try f.optionalString("shot"),
                               choose: try f.optionalString("choose"),
                               clicking: try f.optionalString("clicking"))

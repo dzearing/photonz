@@ -29,6 +29,9 @@ extension EditorState {
             return ColorStyleSelection(slot: target.lead, members: [], selectionCount: 0)
         }
         let all = colorStyleTargetIDs
+        if let place = target.effectIndex {
+            return document.colorStyleSelection(layerIDs: reach(target.parts[0]), effectAt: place)
+        }
         var members: [ColorStyleSelection.Member] = []
         var capable = 0
         for part in target.parts {
@@ -60,6 +63,9 @@ extension EditorState {
 
     /// What the row's layers are painted with, when they agree.
     func selectionPaint(_ target: ColorTarget) -> Paint? {
+        if let place = target.effectIndex {
+            return document?.sharedPaint(layerIDs: reach(target.parts[0]), effectAt: place)
+        }
         guard target.isSplit else { return selectionPaint(slot: target.lead) }
         let members = colorStyleSelection(target).members
         guard let first = members.first?.paint else { return nil }
@@ -69,12 +75,19 @@ extension EditorState {
     /// What the row's chip shows: the paint in flight while a drag is
     /// happening, the document's otherwise.
     func previewedPaint(_ target: ColorTarget) -> Paint? {
-        if let preview = paintPreview, preview.slot == target.lead { return preview.paint }
+        if let preview = paintPreview, preview.slot == target.lead,
+           target.effectIndex == nil { return preview.paint }
         return selectionPaint(target)
     }
 
     /// One frame of a colour drag over the row, recording nothing.
     func previewSelectionPaint(_ target: ColorTarget, paint: Paint) {
+        if let place = target.effectIndex {
+            let ids = colorStyleSelection(target).layerIDs
+            guard !ids.isEmpty else { return }
+            previewLayerStyle(ids: ids) { $0.updateEffect(at: place) { $0.colorHex = paint.hex } }
+            return
+        }
         guard target.isSplit else {
             previewSelectionPaint(slot: target.lead, paint: paint)
             return
@@ -100,6 +113,14 @@ extension EditorState {
 
     /// Paints the row across everything it reaches, in one step.
     func setSelectionPaint(_ target: ColorTarget, paint: Paint) {
+        if let place = target.effectIndex {
+            let ids = colorStyleSelection(target).layerIDs
+            guard !ids.isEmpty else { return }
+            discardDragPreview()
+            perform { _ = $0.setColorHex(layerIDs: ids, effectAt: place, hex: paint.hex) }
+            recordRecentColor(hex: paint.hex)
+            return
+        }
         guard target.isSplit else {
             setSelectionPaint(slot: target.lead, paint: paint)
             return
@@ -116,6 +137,13 @@ extension EditorState {
 
     /// Points the row at a saved colour, in one step.
     func useColorStyle(_ target: ColorTarget, styleID: UUID) {
+        if let place = target.effectIndex {
+            let ids = colorStyleSelection(target).layerIDs
+            guard !ids.isEmpty else { return }
+            discardDragPreview()
+            perform { _ = $0.bindColorStyle(layerIDs: ids, effectAt: place, styleID: styleID) }
+            return
+        }
         guard target.isSplit else {
             useColorStyle(slot: target.lead, styleID: styleID)
             return
@@ -126,6 +154,14 @@ extension EditorState {
     /// Every colour on the row stays exactly as it is and becomes its own
     /// layer's again.
     func unlinkColorStyle(_ target: ColorTarget) {
+        if let place = target.effectIndex {
+            let ids = colorStyleSelection(target).layerIDs
+            guard !ids.isEmpty else { return }
+            perform(reportingLinkBreaks: false) {
+                $0.unbindColorStyle(layerIDs: ids, effectAt: place)
+            }
+            return
+        }
         guard target.isSplit else {
             unlinkColorStyle(slot: target.lead)
             return
@@ -138,9 +174,14 @@ extension EditorState {
         styleWelcome(slot: target.lead, styleID: styleID)
     }
 
+    /// The Color row under an effect, or nil for one that paints no colour.
+    func effectColorTarget(_ row: LayerEffectRow) -> ColorTarget? { ColorTarget(effect: row) }
+
     /// The name the Save as Style field opens on.
     func suggestedColorStyleName(_ target: ColorTarget) -> String {
-        guard target.isSplit else { return suggestedColorStyleName(slot: target.lead) }
+        guard target.isSplit || target.effectIndex != nil else {
+            return suggestedColorStyleName(slot: target.lead)
+        }
         let paint = colorStyleSelection(target).savablePaint ?? Paint(hex: "#000000")
         let base = PhotonzDocument.colorStyleNameBase(for: paint)
         return document?.freshColorStyleName(base: base) ?? base
@@ -150,6 +191,20 @@ extension EditorState {
     /// points every one of them at it, whichever colour each one wears.
     @discardableResult
     func saveColorStyle(_ target: ColorTarget, name: String? = nil) -> UUID? {
+        if let place = target.effectIndex {
+            guard colorStylesEnabled else { return nil }
+            // The field closes whether or not a style comes of it, exactly as
+            // it does on every other row: leaving it open under a row that is
+            // already wearing the name it just made is a field asking a
+            // question that has been answered.
+            colorStyleNaming = nil
+            let ids = colorStyleSelection(target).layerIDs
+            guard !ids.isEmpty else { return nil }
+            discardDragPreview()
+            var saved: UUID?
+            perform { saved = $0.saveColorStyle(from: ids, effectAt: place, name: name) }
+            return saved
+        }
         guard target.isSplit else { return saveColorStyle(slot: target.lead, name: name) }
         guard let styleID = saveColorStyle(slot: target.lead, name: name) else { return nil }
         for one in work(target) where one.slot != target.lead {

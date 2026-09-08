@@ -153,20 +153,29 @@ struct OffEffectColorDrop: ViewModifier {
         }
     }
 
-    /// What this row would do with whatever is in the air right now. An effect
-    /// wears no saved colour names of its own — its colour is not one of the
-    /// layer's slots — exactly as its swatch already answers once it is on.
+    /// What this row would do with whatever is in the air right now.
+    ///
+    /// An effect's colour wears saved names like every other colour now, so a
+    /// name let go of here is kept rather than flattened to the colour behind
+    /// it: the row answers through its own `ColorTarget`, which is the same
+    /// value the Color row under it uses once the effect is on.
     private func answer() -> ColorDrop.Answer? {
         guard let payload = ColorDrag.payloadInFlight() else { return nil }
+        let target = ColorTarget(effect: row)
+        var welcome = ColorDrop.StyleWelcome.neverWearsNames
+        if let style = payload.style, let target {
+            welcome = editorState.styleWelcome(target, styleID: style.id)
+        }
         return ColorDrop.answer(
             dropping: payload.paint, bringing: payload.style,
             on: ColorDrop.Target(
                 part: row.title,
-                wearing: Paint(hex: "#000000"),
+                wearing: target.flatMap { editorState.selectionPaint($0) }
+                    ?? Paint(hex: "#000000"),
                 reaches: row.switchIDs.count,
                 isAbsent: true,
                 acceptsGradient: false,
-                welcome: .neverWearsNames))
+                welcome: welcome))
     }
 
     private func apply(_ landing: ColorDrop.Landing) {

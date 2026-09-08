@@ -229,6 +229,7 @@ extension ColorSlot {
         case .stroke: return "Outline"
         case .text: return "Text"
         case .border: return "Border"
+        case .shadow: return "Shadow"
         }
     }
 }
@@ -404,5 +405,97 @@ extension PhotonzDocument {
         let styleID = addColorStyle(name: name, paint: paint, roles: [slot.styleRole])
         bindColorStyle(layerIDs: layerIDs, slot: slot, styleID: styleID)
         return styleID
+    }
+}
+
+// MARK: - The colour under an effect
+
+/// The same colour row, addressed by a PLACE in the Effects list instead of by
+/// one of the layer's own slots.
+///
+/// Every call here is the twin of a slot-shaped one above and does the same
+/// thing for the same reasons: it reaches only the layers that actually have an
+/// effect there, it takes a colour picked by hand off its style, and it hands
+/// back how many layers changed so a caller can tell a no-op from an edit. That
+/// is what "an effect's colour behaves like every other colour" means in
+/// practice.
+extension PhotonzDocument {
+
+    /// What the colour row under one effect shows for a set of picked layers.
+    /// A layer whose list is shorter, or which has a blur there, is simply not
+    /// reached: the row says so in words rather than painting it.
+    public func colorStyleSelection(layerIDs: [UUID], effectAt index: Int) -> ColorStyleSelection {
+        let members = layerIDs.compactMap { id -> ColorStyleSelection.Member? in
+            guard let layer = layer(id: id), !layer.isLocked,
+                  let paint = layer.paint(forEffectAt: index) else { return nil }
+            return ColorStyleSelection.Member(id: id, paint: paint,
+                                              styleID: layer.colorStyleID(forEffectAt: index))
+        }
+        let slot = layerIDs.compactMap { layer(id: $0)?.style.effect(at: index)?.colorSlot }.first
+        let capable = layerIDs.filter {
+            layer(id: $0)?.style.effect(at: index)?.colorSlot != nil
+        }
+        return ColorStyleSelection(slot: slot ?? .border, members: members,
+                                   selectionCount: layerIDs.count,
+                                   capableCount: capable.count)
+    }
+
+    /// Paints one effect's colour across a selection, in one step one undo puts
+    /// back. A colour chosen by hand is the layer's own, so any name on it is
+    /// let go of.
+    @discardableResult
+    public mutating func setColorHex(layerIDs: [UUID], effectAt index: Int, hex: String) -> Int {
+        let targets = colorStyleSelection(layerIDs: layerIDs, effectAt: index).layerIDs
+        for id in targets {
+            updateLayer(id: id) {
+                $0.unbindColorStyle(forEffectAt: index)
+                $0.setColorHex(hex, forEffectAt: index)
+            }
+        }
+        return targets.count
+    }
+
+    /// Points one effect's colour at a saved name across a selection, painting
+    /// every one of them. Returns how many took it.
+    @discardableResult
+    public mutating func bindColorStyle(layerIDs: [UUID], effectAt index: Int,
+                                        styleID: UUID) -> Int {
+        guard let style = colorStyle(id: styleID) else { return 0 }
+        let targets = colorStyleSelection(layerIDs: layerIDs, effectAt: index).layerIDs
+        for id in targets {
+            let slot = layer(id: id)?.style.effect(at: index)?.colorSlot ?? .border
+            updateLayer(id: id) {
+                $0.setColorHex(style.paint(for: slot).hex, forEffectAt: index)
+                $0.bindColorStyle(styleID, forEffectAt: index)
+            }
+        }
+        return targets.count
+    }
+
+    /// Lets one effect's colour go back to being its own. Nothing is repainted.
+    public mutating func unbindColorStyle(layerIDs: [UUID], effectAt index: Int) {
+        for id in layerIDs {
+            updateLayer(id: id) { $0.unbindColorStyle(forEffectAt: index) }
+        }
+    }
+
+    /// Saves the colour an effect already wears as a named style and points it
+    /// there. Nil when the picked layers do not share one colour, because a
+    /// name made from the first one would silently repaint the rest.
+    @discardableResult
+    public mutating func saveColorStyle(from layerIDs: [UUID], effectAt index: Int,
+                                        name: String? = nil) -> UUID? {
+        let row = colorStyleSelection(layerIDs: layerIDs, effectAt: index)
+        guard let paint = row.savablePaint, !row.isEmpty else { return nil }
+        let styleID = addColorStyle(name: name, paint: paint, roles: [row.slot.styleRole])
+        _ = bindColorStyle(layerIDs: layerIDs, effectAt: index, styleID: styleID)
+        return styleID
+    }
+
+    /// What every layer this row speaks for is painted, when they agree.
+    public func sharedPaint(layerIDs: [UUID], effectAt index: Int) -> Paint? {
+        let row = colorStyleSelection(layerIDs: layerIDs, effectAt: index)
+        guard let first = row.members.first?.paint else { return nil }
+        return row.members.dropFirst().allSatisfy { $0.paint.draws(sameAs: first) } ? first : nil
     }
 }

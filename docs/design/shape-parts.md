@@ -564,15 +564,44 @@ caller written before the list existed go on working untouched — which is what
 makes "everything already drawn keeps drawing exactly as it does" true by
 construction rather than by inspection.
 
-| Kind | Count | Colour | Its own settings |
-| --- | --- | --- | --- |
-| Shadow | **many** | the shadow colour | Kind (Drop · Inner) · Blur · Size · Distance · Direction · Opacity |
-| Border | **many** | the border colour | Position (Inside · Center · Outside) · Width |
-| Blur | one, pinned | none | Amount |
-| *Glow (next)* | many | the glow colour | Kind (Outer · Inner) · Blur · Size · Opacity |
+| Kind | Count | Its own settings |
+| --- | --- | --- |
+| Shadow | **many** | Color · Kind (Drop · Inner) · Blur · Size · Distance · Direction · Opacity |
+| Border | **many** | Color · Position (Inside · Center · Outside) · Width |
+| Blur | one, pinned | Amount (no colour: a blur paints none) |
+| *Glow (next)* | many | Color · Kind (Outer · Inner) · Blur · Size · Opacity |
+
+### An effect's colour is one of its settings
+
+Reported by the user on 2026-09-07, and settled on 2026-09-08. The colour used to
+sit in the ROW HEADER beside the tick while the width and the position sat in the
+settings under the rule, so the colour was the only setting of an effect that was
+not with the effect's settings. And it was the one colour in the whole app that
+could not take a saved name: a shadow's and a border's colour are not slots of
+the layer, so neither carried the saved-colours menu every other colour row has.
+
+Both halves are one answer now:
+
+- **The row header carries the name, the tick, the grip and the cross** — the
+  four things that act on the whole entry — and nothing else.
+- **The first setting under the rule is Color**, whatever the effect is, in the
+  same columns and with the same control every other colour row uses: the well,
+  the saved-colours menu, "Save as Style" and the name field it opens. An effect
+  with no colour at all brings no such row rather than a blank one.
+
+Underneath, an effect's colour is addressed by its PLACE in the Effects list
+rather than by one of the layer's slots: `ColorStyleBinding` gained an optional
+`effectIndex`, and `Layer.insertEffect`, `removeEffect` and `moveEffect` are now
+the only ways the list may change, because each has to carry the names on the
+rows it moves. A binding still records a `ColorSlot` — `.border` for a border,
+the new `.shadow` for a shadow — since that is what decides which saved colours
+are offered there. No layer lists `.shadow` among its own `colorSlots`: it exists
+so an effect's colour can be named, offered and saved through exactly the
+machinery every other colour uses.
 
 **Adding a new kind is a new case in `LayerEffect` plus the settings it
-carries.** Nothing about the plus, the tick, the cross, the grip, the reach
+carries.** A kind that answers `EffectKind.colorSlot` gets the colour row, the
+saved colours and the naming for free. Nothing about the plus, the tick, the cross, the grip, the reach
 sentence over a multiple selection or the saved file changes to accept it.
 Border was the first one added that way, on 2026-09-07, and it needed nothing
 else. **Glow** is next: a shadow with no offset and a colour that lights rather

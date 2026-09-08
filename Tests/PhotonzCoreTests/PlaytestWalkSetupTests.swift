@@ -136,7 +136,7 @@ struct PlaytestWalkSetupTests {
             let script = try PlaytestScript.decode(try Data(contentsOf: file))
             var opened: [String] = []
             for step in script.steps {
-                guard case .panelMenu(let menu, _, let choose, _) = step else { continue }
+                guard case .panelMenu(let menu, _, _, let choose, _) = step else { continue }
                 guard !Self.actionMenus.contains(menu) else { continue }
                 #expect(!opened.contains(menu), """
                     \(file.lastPathComponent) opens a menu called "\(menu)" after an \

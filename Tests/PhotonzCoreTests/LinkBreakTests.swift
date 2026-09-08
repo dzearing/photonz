@@ -100,6 +100,65 @@ struct LinkBreakTests {
         #expect(history.current.layer(id: id)?.colorHex(for: .fill) == "#3366FF")
     }
 
+    // MARK: - An effect's colour lets go of its style
+
+    @Test func paintingOverABoundEffectColourSaysWhichStyleItLetGoOf() {
+        var layer = box()
+        layer.style.effects = [.border(BorderEffect(colorHex: "#101010"))]
+        var history = History(document: document([layer]))
+        let id = layer.id
+        history.perform { _ = $0.saveColorStyle(from: [id], effectAt: 0, name: "Edge") }
+        let report = history.perform {
+            _ = $0.setColorHex(layerIDs: [id], effectAt: 0, hex: "#FF0000")
+        }
+        #expect(report.linkBreaks.detail == "1 color no longer follows Edge")
+    }
+
+    @Test func takingTheEffectOutSaysNothing() {
+        // Removing a border is the person saying "no border", and its colour's
+        // name went with it. The app repeating your own delete back at you is
+        // not news, exactly as Remove Style is not.
+        var layer = box()
+        layer.style.effects = [.border(BorderEffect(colorHex: "#101010"))]
+        var history = History(document: document([layer]))
+        let id = layer.id
+        history.perform { _ = $0.saveColorStyle(from: [id], effectAt: 0, name: "Edge") }
+        let report = history.perform { _ = $0.removeEffect(layerIDs: [id], at: 0) }
+        #expect(report.linkBreaks.isEmpty)
+    }
+
+    @Test func aNameThatOnlySlidUpARowHasNotBeenLost() {
+        // Taking the shadow out moves the border up a place, so the border's
+        // binding moves with it. Nothing stopped following anything.
+        var layer = box()
+        layer.style.effects = [.shadow(ShadowStyle(colorHex: "#222222")),
+                               .border(BorderEffect(colorHex: "#101010"))]
+        var history = History(document: document([layer]))
+        let id = layer.id
+        history.perform { _ = $0.saveColorStyle(from: [id], effectAt: 1, name: "Edge") }
+        let report = history.perform { _ = $0.removeEffect(layerIDs: [id], at: 0) }
+        #expect(report.linkBreaks.isEmpty)
+        #expect(history.current.layer(id: id)?.colorStyleID(forEffectAt: 0) != nil)
+    }
+
+    @Test func aBorderRingAndABorderEffectAreTwoColoursNotOne() {
+        // Both name the `.border` slot, so a slot keyed only by its name would
+        // let one of them go plain without a word.
+        var layer = box()
+        layer.style.borderWidth = 3
+        layer.style.borderColorHex = "#101010"
+        layer.style.effects = [.border(BorderEffect(colorHex: "#101010"))]
+        var history = History(document: document([layer]))
+        let id = layer.id
+        history.perform { _ = $0.saveColorStyle(from: id, slot: .border, name: "Edge") }
+        history.perform { _ = $0.bindColorStyle(layerIDs: [id], effectAt: 0,
+                                                styleID: $0.colorStyles[0].id) }
+        let report = history.perform {
+            _ = $0.setColorHex(layerIDs: [id], effectAt: 0, hex: "#FF0000")
+        }
+        #expect(report.linkBreaks.detail == "1 color no longer follows Edge")
+    }
+
     // MARK: - A part of a copy's look stops following
 
     @Test func fadingACopyByHandNamesThePartThatStoppedFollowing() {
