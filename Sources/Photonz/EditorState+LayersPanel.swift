@@ -354,11 +354,40 @@ extension EditorState {
     private func captureStyleDefault(layerID: UUID) {
         guard let layer = document?.layer(id: layerID) else { return }
         if let shape = layer.annotation?.shape {
-            annotationStyles.setLayerStyle(layer.style, forShape: shape)
+            annotationStyles.setLayerStyle(rememberable(layer, shape: shape), forShape: shape)
             saveAnnotationStyles()
         } else if layer.measure != nil {
             updateMeasureStyles { $0.layerStyle = layer.style }
         }
+    }
+
+    /// A shape's style with its EDGE taken out and handed to the tool instead.
+    ///
+    /// A box's edge is a Border in its Effects list, and the tool holds that
+    /// edge as its outline width, colour and position — the same two things it
+    /// has always held (`OutlineRetirement.swift`). Remembering the style with
+    /// the border still in it would hand the next box two rings, one from the
+    /// remembered effects and one the tool put on; and taking the edge off a box
+    /// would leave the tool still armed with one, so the next box would come
+    /// back outlined, which is exactly what the user reported on 2026-09-06.
+    private func rememberable(_ layer: Layer, shape: AnnotationShape) -> LayerStyle {
+        guard shape.arrivesWithABorder else { return layer.style }
+        var style = layer.style
+        guard let index = style.borderEffectIndex, let edge = style.effects[index].border else {
+            // No ring at all: the next one comes out bare.
+            annotationStyles.setStrokeWidth(0, forShape: shape)
+            return style
+        }
+        annotationStyles.setStrokeWidth(edge.isOn ? edge.width : 0, forShape: shape)
+        annotationStyles.setStrokePosition(edge.position, forShape: shape)
+        // The colour only when it really moved: arming a paint is also how the
+        // tool lets go of a saved colour it is holding, and an opacity drag has
+        // no business doing that.
+        if !edge.paint.draws(sameAs: annotationStyles.paint(forShape: shape)) {
+            annotationStyles.setPaint(edge.paint, forShape: shape)
+        }
+        style.effects.remove(at: index)
+        return style
     }
 
     func toggleLayerVisibility(id: UUID) {

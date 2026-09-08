@@ -854,8 +854,10 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         }
     }
 
-    /// Where the ring nearest the eye sits in the list.
-    var borderEffectIndex: Int? { effects.firstIndex { $0.kind == .border } }
+    /// Where the ring nearest the eye sits in the list. This is a layer's EDGE:
+    /// the one a shape arrives with, and the one everything that used to speak
+    /// of "the border" means (`OutlineRetirement.swift`).
+    public var borderEffectIndex: Int? { effects.firstIndex { $0.kind == .border } }
 
     /// Every shadow this layer throws, nearest the eye FIRST.
     ///

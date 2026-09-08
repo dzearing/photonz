@@ -4,14 +4,36 @@
   "summary": "A layer has one line round it and one place to set it. Appearance no longer carries an Outline row: a shape's edge is a Border in the Effects list, arriving already listed on anything you draw, and you can retune it, drag it under another one, or take it off with the cross.",
   "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Old documents convert as they open, so try one you already have.",
   "try": [
-    { "do": "Press R and drag out a box.", "shot": "2026-09-08-outline-retired-1.png" },
-    { "do": "Read Appearance: Opacity, Fill, Corner Radius, and no Outline." },
-    { "do": "Read Effects: a Border row, already there, with Color, Position and Width under it." },
-    { "do": "Pull that Width and watch the box's edge follow it." },
-    { "do": "Press the plus on Effects and choose Border again, then set the new one to Outside.", "shot": "2026-09-08-outline-retired-2.png" },
-    { "do": "Press the cross on the first Border and confirm the shape goes bare." },
-    { "do": "Open a document you drew before today and click a shape in it.", "shot": "2026-09-08-outline-retired-3.png" },
-    { "do": "Press O, drag out an oval, and check its ring follows the oval rather than its box." }
+    {
+      "do": "Press R and drag out a box.",
+      "shot": "2026-09-08-outline-retired-1.png"
+    },
+    {
+      "do": "Read Appearance: Opacity, Fill, Corner Radius, and no Outline."
+    },
+    {
+      "do": "Read Effects: a Border row, already there, with Color, Position and Width under it."
+    },
+    {
+      "do": "Pull that Width and watch the box's edge follow it."
+    },
+    {
+      "do": "Press the plus on Effects and choose Border again, then set the new one to Outside.",
+      "shot": "2026-09-08-outline-retired-2.png"
+    },
+    {
+      "do": "Press the cross on the first Border and confirm the shape goes bare."
+    },
+    {
+      "do": "Press the cross on a box's Border, then draw another box: it comes out bare, and the one after that too."
+    },
+    {
+      "do": "Open a document you drew before today and click a shape in it.",
+      "shot": "2026-09-08-outline-retired-3.png"
+    },
+    {
+      "do": "Press O, drag out an oval, and check its ring follows the oval rather than its box."
+    }
   ],
   "evaluate": [
     "Drawing a box gives you the same box you got yesterday, line and all?",
@@ -25,6 +47,8 @@
     "One thing is not pixel-identical on opening an old document: a ROUNDED box. A stroke used to ride a path half its width inside the frame, so an 8pt corner under a 3pt line drew a 9.5pt curve at the outer edge; the ring hugs the box, so it now curves by the 8 the panel says. The number you typed is left alone rather than rewritten to 9.5, because a Corner Radius that changes itself on open is the worse surprise. Square boxes, ovals and every ring round a picture are pixel-identical, proved in OutlineFoldRenderTests.",
     "A Border on a LABEL outlines the letters rather than drawing a box round it. That is what the old ring did on a label, so no document changes, but it means a box round a label is not available any more. Filed as a follow-up.",
     "A box's edge colour is now called Border everywhere the app names it: in the Effects list, in a component's colour knob, and in the tool notices. The word Outline survives only in the sentence a notice writes.",
-    "A gradient edge survives the move: a border can hold a ramp now, which it could not before, because a shape's outline always could and this is that outline."
+    "A gradient edge survives the move: a border can hold a ramp now, which it could not before, because a shape's outline always could and this is that outline.",
+    "The tool learns from the edge the way it always did: widen a box's Border and the next box is wide, take it off and the next one comes out bare. That runs through the same remembering every other style edit uses, so the edge is handed to the tool rather than left in the remembered effects, or the next box would have come out with two rings. Walked on the probe.",
+    "The current release shares the model, so a rectangle's outline colour is called Border there now rather than Outline. It still works — the Thickness row moves that border and the Color section paints it — but the word changed on a release this task was not meant to touch. Worth a look if you run Current."
   ]
 }
