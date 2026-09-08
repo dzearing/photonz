@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1890,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T23:41:19.454Z",
-  "updated": "2026-09-08T11:15:21.164731Z",
+  "updated": "2026-09-08T11:15:40.917Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing a-marquee-keeps-the-layer-you-picked-and-delete on 2026-09-07. Walk /tmp/region-cases-walk.json stage 2-delete-on-shape: a rectangle picked, region 250,300 200x120, delete pressed, render byte-identical to the start. Before that task landed it silently painted the locked Background instead, which was worse. RegionTarget.id returns nil for a picked layer that fails RegionTarget.canSlice (Sources/PhotonzCore/RegionTarget.swift), and EditorState.deleteRegion returns early on nil. The message could hang off the same channel the measure hint uses, or the copy confirmation toast.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-08T11:15:21.164730Z",
       "note": "One code change: the Experiments switch was titled 'Say when a piece cannot be cut out' while it also governs Backspace, so anyone looking for the delete behaviour would not find it. Now 'Say when a piece cannot be taken out', which is the wording the message itself uses. Flag name unchanged, so nobody's setting moves. Scripts/test.sh green, 4800 tests."
+    },
+    {
+      "t": "2026-09-08T11:15:40.915Z",
+      "note": "Verified on the probe with real captures rather than rebuilt: Backspace over a marquee on a shape already refuses with 'Cannot delete a piece - Only a picture can have a piece taken out. Clear the marquee to delete the whole layer.', landed 2026-09-07 with the cut task. New walk Scripts/playtest/delete-over-a-marquee-walk.json presses the same key on a picture too, which takes the corner out and says nothing (copied 'none', render changed), and on the way out, where Escape then Backspace takes the whole shape. One copy fix: the Experiments switch is now 'Say when a piece cannot be taken out', since it governs Backspace as well. Audit queue/audits/2026-09-08-delete-over-a-marquee.json. Scripts/test.sh green. Pushed as c0b069b7."
     }
   ],
-  "started": "2026-09-08T11:09:15.839Z"
+  "started": "2026-09-08T11:09:15.839Z",
+  "completed": "2026-09-08T11:15:40.916Z"
 }
