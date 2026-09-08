@@ -12858,3 +12858,35 @@ Next: Gap and Alignment have the same blind spot, filed as
 `measure-the-gap-between-two-shapes-you-drew`. Open question for the user, in
 the audit: the pick outline is the measure ink over shapes that are often the
 same red, so it is hard to see.
+
+## 2026-09-08 — Fifteen scripted walks read the shape's edge where it lives now
+
+The Outline row left Appearance on 2026-09-08 (a501ed6a) and a layer's edge
+became a Border in the Effects list. Thirteen walks were still pressing a
+control called Outline and stopping partway, so a red walk had stopped meaning
+anything. All fifteen affected walks now run to the end: 15 PASS, 0 FAIL in one
+sequential probe run, `Scripts/test.sh` green.
+
+Twelve were straight ports. Three lost their premise rather than a name
+(highlight-one-outline, one-outline-two-kinds, effects-say-their-reach) and were
+rewritten to prove the same thing about the model as it stands. Three more
+failed because the walk and the app genuinely disagreed, and each was
+reproduced on its own against the probe before anything was touched:
+
+- **An effect switched off keeps its settings.** The twist on an effect row is
+  the fold, not the switch. `parts-settings-inline` was written when a shadow
+  was an Appearance part with no fold; it now holds Appearance rows to their
+  switch and Effects rows to their twist.
+- **Switching a box's Border off loses the row on the next shape.** A Shadow
+  switched off survives as an off row; a Border does not, and its width and
+  position go with it. `rememberable(_:shape:)` collapses off into
+  `setStrokeWidth(0)`, which `arrivingStyle(forShape:)` guards on. That is
+  shared code, so fixing it would change Current, which a next-release task may
+  not do: `parts-off-is-remembered` and `effects-remembered` record today's
+  behaviour with notes naming the follow-up, filed p2 as
+  `switching-a-shape-border-off-loses-the-row-on-th` with both reproductions and
+  a four-line fix.
+
+Next: the border-off follow-up is the open question, and it needs the user to
+say whether an arrived border switched off should leave its row behind the way
+an added effect does.
