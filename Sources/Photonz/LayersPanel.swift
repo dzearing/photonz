@@ -2214,6 +2214,11 @@ private struct LayersRow: View, Equatable {
             parts.append(outOfView.container.map { "out of view, cut off by \($0)" }
                          ?? "hiding \(outOfView.hiddenInside) out of view")
         }
+        // The same words the row prints under its name, so a walk can check
+        // which version a row is showing instead of squinting at a picture.
+        if componentsEnabled, let version = display.versionName {
+            parts.append("showing the \(version) version")
+        }
         return parts.joined(separator: ", ")
     }
     private var indent: CGFloat { CGFloat(display.row.depth) * 14 }

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1830,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T20:44:48.666Z",
-  "updated": "2026-09-07T20:44:48.666Z",
+  "updated": "2026-09-08T08:31:23.224Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-07 with Scripts/playtest/version-row-name-walk.json: step 34 runs showNextComponentVersion on a placed copy, and the row in version-row-copy-sc.png still reads \"Save button\" with the outline mark and no version. Cause is PhotonzDocument.versionName(of:counts:) in Sources/PhotonzCore/LayerPanelTree.swift, which returns layer.componentVersionName, itself group?.versionName, and that is set on a main only. An instance carries its choice elsewhere (Layer.instanceVersion). The row has room for it now that the version prints under the name (LayersPanel.swift nameBlock).",
@@ -22,6 +22,11 @@
     {
       "t": "2026-09-07T20:44:48.666Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T08:31:23.223Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-08T08:31:23.222Z"
 }

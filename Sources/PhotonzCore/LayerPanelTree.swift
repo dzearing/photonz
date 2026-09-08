@@ -396,10 +396,12 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     public let isSelected: Bool
     public let isMainComponent: Bool
     public let isComponentInstance: Bool
-    /// Which version of its component this drawing is, on a main whose
-    /// component holds more than one (`ComponentVersions`). Every version
-    /// carries the component's name, so without this a button with a Disabled
-    /// version is two rows both called Button.
+    /// Which version of its component this drawing is, while its component
+    /// holds more than one (`ComponentVersions`). Every version carries the
+    /// component's name, so without this a button with a Disabled version is
+    /// two rows both called Button. An original always says which one it is; a
+    /// copy speaks only when it is showing something other than the first, so a
+    /// screen of twelve ordinary buttons is not twelve rows saying "Default".
     public let versionName: String?
     /// Whether the row's menu offers "Rasterize Layer".
     public let isRasterizable: Bool
@@ -429,13 +431,6 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
 
 extension PhotonzDocument {
 
-    /// The version name a row prints: only on a main whose component holds more
-    /// than one drawing of itself.
-    static func versionName(of layer: Layer, counts: [UUID: Int]) -> String? {
-        guard let componentID = layer.componentID, (counts[componentID] ?? 0) > 1 else { return nil }
-        return layer.componentVersionName
-    }
-
     /// Every row the layers panel shows, in the order it shows them, each one
     /// carrying what it draws — from a single walk of the tree.
     ///
@@ -449,15 +444,13 @@ extension PhotonzDocument {
     public func layerRows(expanded: Set<UUID>, selected: Set<UUID>,
                           marksOutOfView: Bool = true) -> [LayerRowDisplay] {
         var rows: [LayerRowDisplay] = []
-        // Which components hold more than one drawing of themselves. A version
-        // name is only worth printing while there is another version to tell it
-        // apart from: a component back down to one is a component again, and a
-        // row still wearing "Default" reads as a state nobody can get out of.
-        var versionCounts: [UUID: Int] = [:]
-        for main in mainComponents {
-            guard let componentID = main.componentID else { continue }
-            versionCounts[componentID, default: 0] += 1
-        }
+        // Which components hold more than one drawing of themselves, and what
+        // those drawings are called. A version name is only worth printing
+        // while there is another version to tell it apart from: a component
+        // back down to one is a component again, and a row still wearing
+        // "Default" reads as a state nobody can get out of. The same answer the
+        // canvas labels itself from, so the list and the picture agree.
+        let versions = multiVersionComponents()
         // Which containers are cutting layers off at this level of the tree,
         // outermost first. Empty for the whole walk of a document that clips
         // nothing, which is nearly every document.
@@ -507,7 +500,7 @@ extension PhotonzDocument {
                     isSelected: selected.contains(layer.id),
                     isMainComponent: layer.isMainComponent,
                     isComponentInstance: layer.isComponentInstance,
-                    versionName: Self.versionName(of: layer, counts: versionCounts),
+                    versionName: Self.versionName(of: layer, in: versions),
                     isRasterizable: layer.isRasterizable,
                     outOfView: outOfView))
                 if open { walk(layer.children, depth: depth + 1, parent: layer.id, clips: inner) }

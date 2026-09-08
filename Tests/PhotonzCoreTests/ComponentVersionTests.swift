@@ -333,6 +333,40 @@ struct ComponentVersionTests {
         #expect(rowNames() == [nil])
     }
 
+    @Test func aCopyShowingAnotherVersionSaysSoInItsRow() {
+        var c = withComponent()
+        let disabled = c.doc.addComponentVersion(componentID: c.componentID)!
+        c.doc.renameComponentVersion(componentID: c.componentID, version: disabled, to: "Disabled")
+        let plain = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 300, y: 300))!
+        let odd = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 500, y: 300))!
+        c.doc.setInstanceVersion(instance: odd, to: disabled)
+        func version(_ id: UUID) -> String? {
+            c.doc.layerRows(expanded: [], selected: []).first { $0.id == id }?.versionName
+        }
+        // The odd one out speaks, exactly as its label on the canvas does, and
+        // the ordinary copy stays quiet so a screen of twelve plain buttons is
+        // not twelve rows all saying Default.
+        #expect(version(odd) == "Disabled")
+        #expect(version(plain) == nil)
+        // ...and switching it again changes what the row says, on the spot.
+        c.doc.setInstanceVersion(instance: odd, to: c.doc.componentVersions(of: c.componentID)[0].id)
+        #expect(version(odd) == nil)
+    }
+
+    @Test func aCopyOfAComponentWithOneVersionSaysNothingInItsRow() {
+        var c = withComponent()
+        let copy = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 300, y: 300))!
+        #expect(c.doc.layerRows(expanded: [], selected: []).allSatisfy { $0.versionName == nil })
+        // ...and a component that drops back to one drawing goes quiet again.
+        let disabled = c.doc.addComponentVersion(componentID: c.componentID)!
+        c.doc.setInstanceVersion(instance: copy, to: disabled)
+        #expect(c.doc.layerRows(expanded: [], selected: []).first { $0.id == copy }?
+            .versionName == "Version 2")
+        let second = c.doc.mainComponent(componentID: c.componentID, version: disabled)!
+        c.doc.removeLayers(ids: [second.id])
+        #expect(c.doc.layerRows(expanded: [], selected: []).allSatisfy { $0.versionName == nil })
+    }
+
     // MARK: - Telling two drawings apart on the canvas
 
     @Test func theCanvasSaysNothingAboutVersionsUntilThereAreSeveral() {

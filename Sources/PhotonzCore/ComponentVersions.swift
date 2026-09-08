@@ -349,6 +349,29 @@ extension PhotonzDocument {
     /// One walk of the tree and one pass over the mains, because the canvas
     /// asks for this again on every pan, zoom and nudge.
     public func canvasVersionNames() -> [UUID: String] {
+        let byComponent = multiVersionComponents()
+        guard !byComponent.isEmpty else { return [:] }
+
+        var names: [UUID: String] = [:]
+        for versions in byComponent.values {
+            for version in versions { names[version.layerID] = version.name }
+        }
+        for layer in allLayers {
+            guard let name = Self.versionName(of: layer, in: byComponent) else { continue }
+            names[layer.id] = name
+        }
+        return names
+    }
+
+    /// Every component holding more than one version, with its versions in the
+    /// order the tree holds them. One pass over the mains, and empty for a
+    /// document nobody has given a second version to — which is every document
+    /// until somebody asks for one.
+    ///
+    /// This is what both the canvas label and the layers row are worked out
+    /// from, so the picture and the list can never disagree about which drawing
+    /// you are looking at.
+    func multiVersionComponents() -> [UUID: [ComponentVersion]] {
         var byComponent: [UUID: [ComponentVersion]] = [:]
         for main in mainComponents {
             guard let componentID = main.componentID else { continue }
@@ -359,27 +382,32 @@ extension PhotonzDocument {
                                              layerID: main.id))
             byComponent[componentID] = versions
         }
-        byComponent = byComponent.filter { $0.value.count > 1 }
-        guard !byComponent.isEmpty else { return [:] }
+        return byComponent.filter { $0.value.count > 1 }
+    }
 
-        var names: [UUID: String] = [:]
-        for versions in byComponent.values {
-            for version in versions { names[version.layerID] = version.name }
+    /// The version one layer should say it is, or nil for a layer with nothing
+    /// to say — which is nearly every layer.
+    ///
+    /// An ORIGINAL speaks whenever its component holds more than one version:
+    /// two boxes both called Button need telling apart. A COPY only speaks when
+    /// it is showing something other than the first version, because a screen
+    /// built out of twelve ordinary buttons would otherwise carry twelve labels
+    /// all saying the same word, and the thing worth spotting is the odd one
+    /// out.
+    static func versionName(of layer: Layer, in byComponent: [UUID: [ComponentVersion]]) -> String? {
+        if let componentID = layer.componentID {
+            return byComponent[componentID]?.first { $0.layerID == layer.id }?.name
         }
-        for layer in allLayers {
-            guard let componentID = layer.instanceOf,
-                  let versions = byComponent[componentID], let first = versions.first
-            else { continue }
-            // A copy pointing at a version that has since been deleted falls
-            // back to the first, exactly as `instanceVersion(of:)` does, so the
-            // label never names a drawing that is no longer there.
-            let shown = layer.instanceVersionID.flatMap { id in
-                versions.first { $0.id == id }
-            } ?? first
-            guard shown.id != first.id else { continue }
-            names[layer.id] = shown.name
-        }
-        return names
+        guard let componentID = layer.instanceOf,
+              let versions = byComponent[componentID], let first = versions.first
+        else { return nil }
+        // A copy pointing at a version that has since been deleted falls back
+        // to the first, exactly as `instanceVersion(of:)` does, so nothing ever
+        // names a drawing that is no longer there.
+        let shown = layer.instanceVersionID.flatMap { id in
+            versions.first { $0.id == id }
+        } ?? first
+        return shown.id == first.id ? nil : shown.name
     }
 }
 

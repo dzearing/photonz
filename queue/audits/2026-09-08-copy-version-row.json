@@ -1,0 +1,26 @@
+{
+  "feature": "A copy says which version it is in the layers list",
+  "epic": "ui-components",
+  "summary": "A placed copy of a component now prints the version it is showing under its name in the layers list, the same word its label on the canvas already showed. A copy left on the first version still says nothing, so a screen full of ordinary buttons stays quiet.",
+  "setup": "Photonz Dev, Experiments window, release Next, Components on. Nothing new to switch on.",
+  "try": [
+    { "do": "Open the Library shelf and drag the Button tile onto the canvas." },
+    { "do": "With it selected, press Return, type \"Save button\", press Return." },
+    { "do": "Add a second version to it and name that one \"Disabled\"." },
+    { "do": "Drag the Save button tile onto the canvas again to place a copy." },
+    { "do": "With the copy selected, switch it to the next version." },
+    { "do": "Look at the copy's row in the Layers list without clicking anything.", "shot": "2026-09-08-copy-version-row.png" },
+    { "do": "Switch the copy back to Default and watch the row go quiet again." }
+  ],
+  "evaluate": [
+    "Can you tell at a glance which of two identical looking copies is the switched one?",
+    "Is a quiet copy the right default, or would you rather every copy always said its version, even twelve rows of \"Default\"?",
+    "Does the version reading under the name crowd the row, or does it sit where you expect?",
+    "Do the row, the canvas label and the Component panel all say the same word at the same time?"
+  ],
+  "rough": [
+    "A copy's row and an original's row now read almost identically: same name, same version underneath. The only things telling them apart are the small mark beside the name and the missing twist arrow. If that is too subtle, the mark is the thing to make louder, not the version.",
+    "A copy showing the first version deliberately says nothing. That matches what the canvas label already did, but it does mean a copy row and a copy row on Default are the same row, and you learn which by selecting it.",
+    "Screenshot is a real screen capture, not an offscreen render."
+  ]
+}
