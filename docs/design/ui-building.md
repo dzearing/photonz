@@ -331,6 +331,14 @@ it. Tokens (the layer beneath styles, where `accent` resolves differently per
 mode) are deferred: the built-in components bind to styles, and styles gain token
 backing when modes arrive.
 
+Two of the three exist. A named paint is `Sources/PhotonzCore/ColorStyles.swift`;
+a named text treatment (font, size, weight and colour kept together) is
+`Sources/PhotonzCore/TextStyleLibrary.swift`, landed 2026-09-08. Both keep the
+value ON the layer as well as in the style, so nothing downstream has to learn
+what a style is, and both let go of the name the moment the value is set some
+other way, which the app says out loud (`LinkBreaks.swift`). A named effect is
+the one still missing.
+
 ## The order of work
 
 Each step is a slice someone can try. Nothing below starts until the step above

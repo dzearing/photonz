@@ -57,6 +57,9 @@ public struct History: Sendable {
         // claimed, BEFORE the copies are refilled, so a copy is never rebuilt
         // from an original whose claim has already gone stale.
         next.reconcileColorStyles()
+        // ...and text that was set some other way lets go of the name it
+        // claimed, for exactly the same reason and at the same moment.
+        next.reconcileTextStyles()
         // Every stack and grid puts its contents back in order inside the same
         // step, BEFORE the copies are refilled, so a copy of a component is
         // rebuilt from an original that has already settled. It happens here

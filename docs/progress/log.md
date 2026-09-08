@@ -13410,3 +13410,43 @@ settings somewhere you have to go looking for. The dock reveal exists; the fold
 control never asks for it.
 
 Next: back to the queue.
+
+## 2026-09-08 — text can wear a name
+
+A colour could be saved under a name and reused everywhere; text could not. Every
+heading carried its own font, size, weight and colour, typed again each time, so
+changing the heading size across a screen meant editing every heading by hand.
+
+`Sources/PhotonzCore/TextStyleLibrary.swift` is the other half of
+`ColorStyles.swift`: `TextTreatment` (the four things), `TextStyle` (one under a
+name), `Layer.textStyleID`, and the document's save, wear, edit, rename, delete
+and reconcile calls. Same rules as the colour half — the treatment is kept ON the
+layer so nothing downstream learns what a style is, the claim is re-checked after
+every edit, and text set some other way quietly lets go and says so, through a
+new `LinkBreakKind.textStyle` ("1 piece of text no longer follows Heading"). A
+document with no text styles writes the same bytes it always wrote. 33 tests,
+written first.
+
+In the app: a Style row at the top of the Text section (save under a name, wear
+one, unlink, edit in the Library), text tiles on the same Styles shelf as the
+saved colours, and the section behind a tile where the style itself is changed.
+The one thing colour never had to think about: editing a style's SIZE has to
+re-measure every box wearing it or a 24pt heading grown to 48 clips, and
+measuring words needs CoreText, so the app measures first and applies the boxes
+inside the same undo step.
+
+Walking the built thing (`Scripts/playtest/text-style-walk.json`, 68 steps, real
+window captures) found two defects, both fixed here. Clicking a text style tile
+did nothing: the colour tile gets away with a tap gesture because it is also
+draggable and the drag brings a real control with it, so the text tile is a
+Button now, which also gives it a keyboard route. And the tile drew its sample
+letters in the style's own colour on the panel's own background, so a near-black
+heading was invisible on the dark dock; the plate opposes the letters now, the
+way the canvas contrast halo does.
+
+Audit: `queue/audits/2026-09-08-text-styles.json`. Three follow-ups filed: effect
+styles (the third kind the spec asks for, still missing), dragging a text style
+off the shelf onto text, and the text tool keeping the NAME so the next block
+typed still follows it.
+
+Next: back to the queue.

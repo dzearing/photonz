@@ -80,7 +80,7 @@ extension EditorState {
         perform { saved = $0.addColorStyle(name: name, paint: paint,
                                            roles: slot.map { [$0.styleRole] }) }
         guard let styleID = saved else { return nil }
-        showColorStyleShelf()
+        showStylesShelf()
         pendingLibraryTileID = styleID.uuidString
         return styleID
     }
@@ -159,7 +159,7 @@ extension EditorState {
         // shelf the FIRST one interrupted, which is the one Escape owes.
         let before = colorStyleShelfNaming?.scopeBefore ?? libraryScope
         colorStyleShelfNaming = DroppedColorNaming(paint: paint, scopeBefore: before)
-        showColorStyleShelf()
+        showStylesShelf()
     }
 
     /// Escape, or the field losing its colour: nothing was made, so there is
@@ -676,7 +676,7 @@ extension EditorState {
         // that draws them comes away holding it: naming a colour and then
         // drawing the next shape in a copy of it would undo the naming.
         armToolsFromSelection(slot: slot, targets: targets, rememberingBorder: false)
-        showColorStyleShelf()
+        showStylesShelf()
         // The saved color is one tile among the ones already kept, so the shelf
         // scrolls to it for the same reason a new component's tile does.
         pendingLibraryTileID = styleID.uuidString
@@ -684,10 +684,11 @@ extension EditorState {
     }
 
     /// Puts the Library on screen with the Styles shelf showing, which is
-    /// where a saved color is renamed, recolored, or told which parts of a
-    /// layer to turn up on. Saving does this, and so does a color row whose
-    /// list is empty because the saved colors are all for other parts.
-    func showColorStyleShelf() {
+    /// where a saved colour or text style is renamed, changed, or told which
+    /// parts of a layer to turn up on. Saving does this, and so does a colour
+    /// row whose list is empty because the saved colours are all for other
+    /// parts.
+    func showStylesShelf() {
         setLibraryVisible(true)
         UserDefaults.standard.set(LibraryScope.styles.rawValue, forKey: LibraryPanel.scopeKey)
     }

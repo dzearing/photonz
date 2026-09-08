@@ -1,0 +1,28 @@
+{
+  "id": "an-effect-can-be-saved-as-a-named-style",
+  "title": "An effect can be saved as a named style",
+  "goal": "A colour can be saved under a name, and now so can the way a piece of text is set. The third kind the spec asks for is missing: a shadow, a glow, a blur or a border somebody has spent time tuning cannot be kept under a name, so putting the same drop shadow on eight cards means setting eight shadows by hand and changing them means changing eight.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T23:24:54.733Z",
+  "updated": "2026-09-08T23:24:54.736Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Third of the three style kinds in docs/design/ui-building.md. Do it the way the other two do it: Sources/PhotonzCore/ColorStyles.swift and Sources/PhotonzCore/TextStyleLibrary.swift are the two working examples, and the text one is the closer model because an effect, like a text treatment, is several values kept together rather than one. Same shelf, same reconcile-on-every-edit rule, same LinkBreaks kind. Flag: next-styles.\n\nThe hard part the other two did not have: an effect lives at a PLACE in the Effects list, and the list moves (Layer.insertEffect/removeEffect/moveEffect already remap colour bindings by index). Decide early whether the binding names the place or the effect.",
+  "acceptance": [
+    "An effect in the Effects list can be saved under a name from its own row",
+    "The saved effect appears on the Library Styles shelf beside the saved colours and text styles",
+    "Adding that name to another layer gives it the same effect, and editing the name changes every layer wearing it in one undo step",
+    "A row wearing an effect style says so and still answers, the way a colour row and a text row already do"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T23:24:54.735Z",
+      "note": "created (manual)"
+    }
+  ]
+}

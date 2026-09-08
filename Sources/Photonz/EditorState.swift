@@ -520,6 +520,7 @@ final class EditorState {
             // A half-typed style name belongs to the row that opened it, and
             // that row is gone (Next, `next-styles`).
             if colorStyleNaming != nil { colorStyleNaming = nil }
+            if isNamingTextStyle { isNamingTextStyle = false }
             // ...and so does a folded effect: the Effects list is about to be
             // some other shape's.
             forgetEffectFolds()
@@ -542,6 +543,7 @@ final class EditorState {
             // (Next, `next-styles`).
             if multiSelectedLayerIDs != oldValue {
                 colorStyleNaming = nil
+                isNamingTextStyle = false
                 forgetEffectFolds()
                 history?.syncSelection(selectionSnapshot)
             }
@@ -1013,6 +1015,13 @@ final class EditorState {
     /// when the selection moves on. It lives here rather than inside the row so
     /// only one field is ever open, and so a walk can open one.
     var colorStyleNaming: ColorStyleNamingRequest?
+
+    /// True while the Style row in the Text section is asking for a name. There
+    /// is only ever one such row on screen — it speaks for whatever text is
+    /// picked — so unlike the colour rows it needs no address, just a flag. It
+    /// lives here for the same two reasons: one field open at a time, and a
+    /// walk can open it.
+    var isNamingTextStyle = false
 
     /// Which effects in the Effects list are folded shut right now, by
     /// `LayerEffectRow.id`.

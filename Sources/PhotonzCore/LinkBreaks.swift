@@ -3,11 +3,11 @@ import Foundation
 
 /// When a link quietly breaks, the app says so, the same way every time.
 ///
-/// Four things in a document follow something else, and all four can stop
+/// Five things in a document follow something else, and all five can stop
 /// following without anybody saying so: a color that came from a named style
-/// is painted over, one part of a copy's look is set by hand, a copy is
-/// ungrouped into loose layers, and an original is deleted out from under its
-/// copies. Each break is silent at the moment it happens and only shows up
+/// is painted over, text that came from a named style is set some other way,
+/// one part of a copy's look is set by hand, a copy is ungrouped into loose
+/// layers, and an original is deleted out from under its copies. Each break is silent at the moment it happens and only shows up
 /// later, when an edit to the original leaves something behind.
 ///
 /// They are one fact with four shapes, so they are found in one place: a diff
@@ -26,6 +26,8 @@ public enum LinkBreakKind: String, Hashable, Sendable, CaseIterable {
     case instanceUngrouped
     /// A color that was wearing a named style was painted some other way.
     case colorStyle
+    /// Text that was wearing a named style was set some other way.
+    case textStyle
     /// One part of a copy's look was set by hand, so it stopped following.
     case instanceStyle
 
@@ -36,7 +38,8 @@ public enum LinkBreakKind: String, Hashable, Sendable, CaseIterable {
         case .originalDeleted: return 0
         case .instanceUngrouped: return 1
         case .colorStyle: return 2
-        case .instanceStyle: return 3
+        case .textStyle: return 3
+        case .instanceStyle: return 4
         }
     }
 }
@@ -70,6 +73,8 @@ public struct LinkBreak: Hashable, Sendable {
         switch kind {
         case .colorStyle:
             return count == 1 ? "1 color" : "\(count) colors"
+        case .textStyle:
+            return count == 1 ? "1 piece of text" : "\(count) pieces of text"
         case .instanceStyle:
             if count == 1, let part { return "\(part) on this copy" }
             let parts = "\(count) parts"
@@ -87,7 +92,7 @@ public struct LinkBreak: Hashable, Sendable {
         switch kind {
         case .instanceUngrouped: return true
         case .instanceStyle: return count != 1
-        case .colorStyle, .originalDeleted: return count != 1
+        case .colorStyle, .textStyle, .originalDeleted: return count != 1
         }
     }
 
@@ -143,7 +148,9 @@ extension LinkBreakReport {
     public static func between(_ before: PhotonzDocument,
                                _ after: PhotonzDocument) -> LinkBreakReport {
         let holdsCopies = before.holdsComponentInstance
-        guard !before.colorStyles.isEmpty || holdsCopies else { return LinkBreakReport() }
+        guard !before.colorStyles.isEmpty || !before.textStyles.isEmpty || holdsCopies else {
+            return LinkBreakReport()
+        }
 
         var afterByID: [UUID: Layer] = [:]
         for layer in after.allLayers { afterByID[layer.id] = layer }
@@ -151,6 +158,7 @@ extension LinkBreakReport {
 
         var breaks: [LinkBreak] = []
         breaks.append(contentsOf: colorBreaks(before, after, edited, afterByID))
+        breaks.append(contentsOf: textBreaks(before, after, edited, afterByID))
         if holdsCopies {
             breaks.append(contentsOf: componentBreaks(before, after, edited, afterByID))
         }
@@ -224,6 +232,30 @@ extension LinkBreakReport {
         return order.map { LinkBreak(kind: .colorStyle, count: lost[$0] ?? 0, source: names[$0]) }
     }
 
+    /// Text that drifted off a style.
+    ///
+    /// The same three exceptions the colours make. Text now pointing at a
+    /// DIFFERENT style is a choice somebody made, not a break, and text whose
+    /// style was taken off the shelf is not one either: Remove already means
+    /// "this text is its own now". What is left is the quiet one, where the
+    /// type was set some other way and the name it claimed stopped being true.
+    private static func textBreaks(_ before: PhotonzDocument, _ after: PhotonzDocument,
+                                   _ edited: [Layer],
+                                   _ afterByID: [UUID: Layer]) -> [LinkBreak] {
+        guard !before.textStyles.isEmpty else { return [] }
+        let names = Dictionary(after.textStyles.map { ($0.id, $0.name) },
+                               uniquingKeysWith: { first, _ in first })
+        var lost: [UUID: Int] = [:]
+        var order: [UUID] = []
+        for layer in edited {
+            guard let styleID = layer.textStyleID, names[styleID] != nil,
+                  let now = afterByID[layer.id], now.textStyleID == nil else { continue }
+            if lost[styleID] == nil { order.append(styleID) }
+            lost[styleID, default: 0] += 1
+        }
+        return order.map { LinkBreak(kind: .textStyle, count: lost[$0] ?? 0, source: names[$0]) }
+    }
+
     /// The three ways a copy stops following its original.
     private static func componentBreaks(_ before: PhotonzDocument, _ after: PhotonzDocument,
                                         _ edited: [Layer],
@@ -291,7 +323,7 @@ extension LinkBreakReport {
             case .originalDeleted:
                 guard let count = stranded[componentID] else { return nil }
                 return LinkBreak(kind: kind, count: count, source: name)
-            case .colorStyle:
+            case .colorStyle, .textStyle:
                 return nil
             }
         }

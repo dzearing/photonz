@@ -15,6 +15,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// (`docs/design/ui-building.md`, step D8). Styles live in the document
     /// they were made in, the same way components do.
     public var colorStyles: [ColorStyle]
+    /// The named text treatments this document's text points at
+    /// (`TextStyleLibrary.swift`). The other half of the same shelf: a style is
+    /// a named colour or a named way of setting text, and both live in the
+    /// document they were made in.
+    public var textStyles: [TextStyle]
     /// The guides pinned onto this picture (`CanvasGuide`). They live here
     /// rather than in the app's settings because a guide marking the left
     /// margin of one screenshot means nothing in another: two windows on two
@@ -36,18 +41,20 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     private var storedGridOrigin: CGPoint
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
-                colorStyles: [ColorStyle] = [], guides: [CanvasGuide] = [],
-                gridOrigin: CGPoint = .zero) {
+                colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
+                guides: [CanvasGuide] = [], gridOrigin: CGPoint = .zero) {
         self.canvasSize = canvasSize
         self.layers = layers
         self.pixelScale = pixelScale
         self.colorStyles = colorStyles
+        self.textStyles = textStyles
         self.guides = guides
         self.storedGridOrigin = gridOrigin.x.isFinite && gridOrigin.y.isFinite ? gridOrigin : .zero
     }
 
     private enum CodingKeys: String, CodingKey {
-        case canvasSize, layers, pixelScale, colorStyles, guides, gridOriginX, gridOriginY
+        case canvasSize, layers, pixelScale, colorStyles, textStyles, guides
+        case gridOriginX, gridOriginY
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -59,6 +66,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         try c.encode(layers, forKey: .layers)
         try c.encode(pixelScale, forKey: .pixelScale)
         if !colorStyles.isEmpty { try c.encode(colorStyles, forKey: .colorStyles) }
+        if !textStyles.isEmpty { try c.encode(textStyles, forKey: .textStyles) }
         if !guides.isEmpty { try c.encode(guides, forKey: .guides) }
         if gridOrigin != .zero {
             try c.encode(gridOrigin.x, forKey: .gridOriginX)
@@ -77,6 +85,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         pixelScale = try c.decodeIfPresent(CGFloat.self, forKey: .pixelScale) ?? 1
         // `colorStyles` postdates it too; a document from before has none.
         colorStyles = try c.decodeIfPresent([ColorStyle].self, forKey: .colorStyles) ?? []
+        // The named text treatments postdate the named colours; a document
+        // written before them has none.
+        textStyles = try c.decodeIfPresent([TextStyle].self, forKey: .textStyles) ?? []
         // ...and so do the guides and the grid's zero point.
         guides = try c.decodeIfPresent([CanvasGuide].self, forKey: .guides) ?? []
         let x = try c.decodeIfPresent(CGFloat.self, forKey: .gridOriginX) ?? 0

@@ -1810,7 +1810,7 @@ private struct InstanceColorKnob: View {
                 // There ARE saved colours, they are just kept for other parts.
                 Section("Your saved colors are for other parts") {
                     Button("Change what one is for in the Library") {
-                        editorState.showColorStyleShelf()
+                        editorState.showStylesShelf()
                     }
                 }
             } else {

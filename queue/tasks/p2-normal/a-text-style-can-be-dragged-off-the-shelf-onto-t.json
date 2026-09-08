@@ -1,0 +1,27 @@
+{
+  "id": "a-text-style-can-be-dragged-off-the-shelf-onto-t",
+  "title": "A text style can be dragged off the shelf onto text",
+  "goal": "A saved colour can be picked up off its Library tile and dropped on any swatch in the app, which is what makes the shelf a place colours come FROM rather than a place they go. A saved text style cannot be picked up at all: the only way to wear one is to select the text and find the name in a menu.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T23:24:54.770Z",
+  "updated": "2026-09-08T23:24:54.773Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mirror Sources/Photonz/ColorStylePanel.swift LibraryStyleTile + LibraryStyleTileDrag and Sources/Photonz/LibraryColorDrop.swift. The text tile is Sources/Photonz/TextStylePanel.swift LibraryTextStyleTile; it is now a Button, so the drag has to sit on the button without stealing the click (the colour tile keeps both on one view). Raised in queue/audits/2026-09-08-text-styles.json.",
+  "acceptance": [
+    "A text style tile can be picked up and carried, showing what is in hand while it moves",
+    "Letting it go on a piece of text on the canvas dresses that text in the style, in one undo step",
+    "Letting it go somewhere that cannot wear it says so before you let go rather than doing nothing"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T23:24:54.772Z",
+      "note": "created (manual)"
+    }
+  ]
+}

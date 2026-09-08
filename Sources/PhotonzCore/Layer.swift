@@ -1219,6 +1219,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// saves a color as a style and points this layer at it, so a layer that
     /// has never met one writes exactly what it always wrote.
     public var colorStyleBindings: [ColorStyleBinding]?
+    /// The named text treatment this layer's words are set in, when they came
+    /// from one rather than being typed here (`TextStyleLibrary.swift`). Nil
+    /// until somebody saves a text style and dresses this layer in it, so a
+    /// layer that has never met one writes exactly what it always wrote.
+    public var textStyleID: UUID?
     /// What this layer does when the group holding it is resized, overriding
     /// that group's default one axis at a time (`docs/design/ui-building.md`,
     /// "Resizing places the pieces"). Nil, or a nil axis, means follow the
@@ -1297,6 +1302,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          flowFill: flowFill)
         copy.wrappedByItsContainer = wrappedByItsContainer
         copy.heightChosenByHand = heightChosenByHand
+        copy.textStyleID = textStyleID
         copy.repointComponentProperties(map)
         return copy
     }
@@ -1323,6 +1329,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          flowFill: flowFill)
         copy.wrappedByItsContainer = wrappedByItsContainer
         copy.heightChosenByHand = heightChosenByHand
+        copy.textStyleID = textStyleID
         map[id] = copy.id
         return copy
     }

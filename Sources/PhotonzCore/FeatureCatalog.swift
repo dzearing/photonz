@@ -391,7 +391,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: stylesFlag,
                     title: "Save a color as a style and reuse it",
-                    description: "Save a fill, an outline or a text color under a name, and any layer can wear it. The Fill and Color rows in the panel grow a small styles button: save what is there as a style, or pick one you already have. Saved styles sit on the Library\u{2019}s Styles shelf, where you rename one, change its color, or take it off the shelf. Changing a style repaints every layer wearing it in one step, which one undo puts back. Needs Keep reusable pieces in a Library. Off means colors are one-offs again and the Styles shelf is empty; styles already in a document keep painting either way.",
+                    description: "Save a fill, an outline or a text color under a name, and any layer can wear it. The Fill and Color rows in the panel grow a small styles button: save what is there as a style, or pick one you already have. Text goes further: the Style row at the top of the Text section saves the font, size, weight and color together under one name, so changing the heading size across a screen is one edit instead of one per heading. Saved styles sit on the Library\u{2019}s Styles shelf, where you rename one, change it, or take it off the shelf. Changing a style re-sets every layer wearing it in one step, which one undo puts back. Needs Keep reusable pieces in a Library. Off means colors and text are one-offs again and the Styles shelf is empty; styles already in a document keep painting either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

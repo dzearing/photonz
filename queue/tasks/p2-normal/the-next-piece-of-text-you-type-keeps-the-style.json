@@ -1,0 +1,27 @@
+{
+  "id": "the-next-piece-of-text-you-type-keeps-the-style",
+  "title": "The next piece of text you type keeps the style name you just used",
+  "goal": "Put a saved colour on a shape and the tool comes away holding the NAME, so the next shape you draw wears it too and still follows it the day the colour is edited. Text does not do that: after using a text style, the next block you type comes out matching it but wearing nothing, so it silently stops following the moment somebody edits the style.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T23:24:54.808Z",
+  "updated": "2026-09-08T23:24:54.811Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The colour half is EditorState.armToolsFromSelection and AnnotationStyles.arm(_:styleID:name:slot:forShape:) — a tool remembers a colour AND the name behind it. TextStyles (the tool settings, Sources/PhotonzCore/TextStyles.swift) has no place to keep a style id yet. Raised in queue/audits/2026-09-08-text-styles.json.",
+  "acceptance": [
+    "After putting a text style on some text, a new block typed with the Text tool wears that style by name",
+    "Editing the style afterwards re-sets that new block too",
+    "Taking the text off the style also lets the tool go, so the next block is type of its own"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T23:24:54.810Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -297,7 +297,9 @@ extension EditorState {
         return styles
     }
 
-    private func saveTextStyles() {
+    /// Not private: the Style row arms these the same way the Font and Size
+    /// menus do, from `EditorState+TextStyles.swift`.
+    func saveTextStyles() {
         if let data = try? JSONEncoder().encode(textStyles) {
             UserDefaults.standard.set(data, forKey: Self.textStylesKey)
         }

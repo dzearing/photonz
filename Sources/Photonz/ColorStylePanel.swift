@@ -128,7 +128,7 @@ struct ColorStyleControl: View {
                     // changes what a color is for.
                     Section("Your saved colors are for other parts") {
                         Button("Change what one is for in the Library") {
-                            editorState.showColorStyleShelf()
+                            editorState.showStylesShelf()
                         }
                     }
                 }

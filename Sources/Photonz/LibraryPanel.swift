@@ -192,16 +192,32 @@ struct LibraryPanel: View {
         }
     }
 
+    /// ...and the named text treatments, on the same shelf and after them
+    /// (Next, `next-styles`). One shelf, because to a person a saved colour and
+    /// a saved way of setting text are the same kind of thing: a name you put
+    /// on things.
+    private var visibleTextStyles: [(entry: LibraryEntry, style: TextStyle)] {
+        guard scope == .styles, let document = editorState.document else { return [] }
+        let hits = LibrarySearch.filter(editorState.textStyleEntries, query: query)
+        return hits.prefix(Self.maxTiles).compactMap { entry in
+            guard let id = UUID(uuidString: entry.id),
+                  let style = document.textStyle(id: id) else { return nil }
+            return (entry, style)
+        }
+    }
+
     /// Whether this scope has anything to show at all, whatever the search
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
         visibleEntries.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
+            && visibleTextStyles.isEmpty
     }
 
     /// How many tiles the shelf is showing right now, whatever scope they came
     /// from — the shelf only ever draws one scope at a time.
     private var tileCount: Int {
         visibleEntries.count + visibleComponents.count + visibleStyles.count
+            + visibleTextStyles.count
     }
 
     /// The height the shelf takes: its tiles, capped at the ceiling the grab
@@ -270,6 +286,9 @@ struct LibraryPanel: View {
             }
             ForEach(visibleStyles, id: \.entry.id) { pair in
                 LibraryStyleTile(entry: pair.entry, style: pair.style)
+            }
+            ForEach(visibleTextStyles, id: \.entry.id) { pair in
+                LibraryTextStyleTile(entry: pair.entry, style: pair.style)
             }
         }
         .padding(.vertical, LibraryShelfLayout.gridVerticalPadding)

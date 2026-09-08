@@ -823,6 +823,8 @@ struct InspectorPanel: View {
                 StarterComponentInspector()
             } else if editorState.selectedColorStyle != nil {
                 LibraryStyleInspector()
+            } else if editorState.selectedTextStyle != nil {
+                LibraryTextStyleInspector()
             } else {
                 LibraryItemInspector()
             }
@@ -3889,6 +3891,10 @@ struct TextInspector: View {
         let ids = selection.layerIDs
         if !selection.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
+                // The Style row first: it sets every row under it at once, and
+                // a control that does that placed below them is a control
+                // nobody finds (Next, `next-styles`).
+                TextStyleRow()
                 SelectionMenu(label: "Font",
                               reading: selection.reading { $0.fontName },
                               options: fontFamilies(selection),
@@ -3926,7 +3932,12 @@ struct TextInspector: View {
                 if Experiments.shared.placementEnabled { alignRow(selection, ids: ids) }
                 SelectionStyleNotes(notes: [selection.note,
                                             Experiments.shared.placementEnabled
-                                                ? selection.downTheBoxNote : nil],
+                                                ? selection.downTheBoxNote : nil,
+                                            // What a pick in Font, Size or
+                                            // Weight would cost text wearing a
+                                            // name: said BEFORE the click.
+                                            editorState.textStylesEnabled
+                                                ? editorState.textStyleSelection.unlinkNote : nil],
                                     caption: selectionCaption(selection.count, "A change here"))
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)

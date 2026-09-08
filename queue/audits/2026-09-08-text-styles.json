@@ -1,0 +1,32 @@
+{
+  "feature": "A text treatment saved as a named style",
+  "epic": "ui-components",
+  "summary": "The font, size, weight and colour a piece of text is set in can be saved under a name, worn by other text, and changed everywhere at once by editing the name. Until now only a colour could carry a name, so changing the heading size across a screen meant editing every heading by hand.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Save a color as a style and reuse it\" is on by default; it now covers text as well as colour.",
+  "try": [
+    { "do": "Type two headings with the Text tool: press T, click, type, press Command Return. Do it twice." },
+    { "do": "Click the first heading and set it up in the Text section: Font Georgia, Size 32 pt, Weight Bold." },
+    { "do": "Open the Style menu at the top of the Text section and choose Save as Style." },
+    { "do": "Type Heading and press Return.", "shot": "2026-09-08-text-styles-saved.png" },
+    { "do": "Click the second heading, open the same Style menu, and choose Heading." },
+    { "do": "Click the Ag tile on the Library's Styles shelf." },
+    { "do": "In the Style section that opens, change Size to 48 pt.", "shot": "2026-09-08-text-styles-both-followed.png" },
+    { "do": "Press Command Z once." }
+  ],
+  "evaluate": [
+    "The Style row sits above Font, at the top of the Text section. Is that where you look for it, or would you reach for it after setting the type rather than before?",
+    "Saving asks for the name in the dock and then opens the Library on the tile. Is landing on the Library welcome, or does it take you away from the text you were working on?",
+    "The tile draws Ag in the style's own face, weight and colour on a plate that opposes it. Can you tell two saved styles apart on the shelf at a glance?",
+    "Changing Font, Size, Weight or the text colour takes that text off its style, and the row says so before you click. Is that the rule you expect, or should changing one of them keep the name and mark it as changed?",
+    "A text style carries the colour too, so wearing one repaints the text. Is that right, or do you want a text style that leaves colour alone?",
+    "\"Text\" is the made-up name a style opens on. Is that a useful starting point, or should it guess something from the text itself?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures here are real window captures taken by a scripted walk (Scripts/playtest/text-style-walk.json), not offscreen renders.",
+    "A text style cannot be dragged off the shelf onto text the way a saved colour can be dragged onto a swatch. Filed as a follow-up.",
+    "The text tool does not come away holding the NAME after you use one, only the font, size, weight and colour behind it, so the next block you type matches but does not follow. A saved colour does carry its name onto the next shape. Filed as a follow-up.",
+    "Effect styles are still missing: the spec says a style is a named paint, effect or text treatment, and only two of the three exist. Filed as a follow-up.",
+    "Two defects were found by walking it and fixed in this task: clicking a text style tile did nothing (it needed to be a real button, not a tap gesture on a plain view), and the tile drew near-black letters on the dark dock, invisible.",
+    "The Style section for a text style has no \"Use it for\" list, because unlike a colour there is only one thing a text style can be put on."
+  ]
+}

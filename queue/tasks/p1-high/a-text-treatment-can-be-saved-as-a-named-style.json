@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:16:45.702Z",
-  "updated": "2026-09-08T22:16:45.705Z",
+  "updated": "2026-09-08T23:25:08.145Z",
   "deps": [],
   "blockedBy": [],
   "notes": "OBJECTIVE GAP, from the spec itself. docs/design/ui-building.md, Styles are named values layers point at: a style is a named paint, EFFECT or TEXT TREATMENT. Only paint exists. Sources/PhotonzCore/ColorStyles.swift is the whole style system and every type in it is about colour (ColorSlot, ColorStyle, ColorStyleBinding, ColorStyleRole). Sources/PhotonzCore/TextStyles.swift is the tool s current text settings, not a named style, and nothing in PhotonzCore mentions a saved or named text style.\n\nThis matters more than an effect style: the epic is create once reuse everywhere, and a design system without a text style is not one. Step D8 of the order of work says the starter components are drawn from styles rather than raw values, and their text cannot be.\n\nDo it the way the colour styles already do it, do not invent a second mechanism: same Library Styles shelf, same binding shape, same link break handling (Sources/PhotonzCore/LinkBreaks.swift), same wearing a style row treatment landed 2026-09-05. Flag: next-styles (FeatureCatalog.stylesFlag), on by default in Next.\n\nScope for one sitting: font family, size, weight and colour, on a text layer. Effect styles are NOT in this slice; if you find yourself building a general style kind, stop and file the effect half as a follow-up.",
@@ -25,6 +25,31 @@
     {
       "t": "2026-09-08T22:16:45.704Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-08T22:53:54.688Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T22:57:35.876Z",
+      "note": "Adversarial review before building. (1) The mock idea 'a text style is like a colour style' mostly holds, but text has a trap colour does not: the colour of text lives in the COLOR section of the panel while font, size and weight live in the TEXT section. A saved text treatment carries all four, so saving from the Text section keeps something the section does not show. Kept anyway, because everyone expects a text style to carry its colour, and the tile on the shelf draws the letters IN that colour so what was kept is visible. (2) A text layer can already point its .text colour at a colour style, so two names could claim one colour. Resolved the way the app already resolves it: wearing a text style takes the colour with it and lets go of any colour style on that text, and painting the text some other way afterwards breaks the text style link and says so, exactly as painting over a colour style does. (3) Cut from the slice: roles/'Use it for' (meaningless for text), dragging a text tile onto text, and arming the text tool with the name so the next block typed wears it. Each is a nice-to-have that adds a second mechanism; noted as follow-ups instead. (4) The one thing the mock understates: editing a style's SIZE has to re-measure every box wearing it, or a 24pt heading grown to 48 stays in a 24pt box and clips. That measurement needs CoreText, so the style edit is driven from the app layer and the core stays pure."
+    },
+    {
+      "t": "2026-09-08T22:57:35.876Z",
+      "note": "Shortest version that delivers the value: core model + document ops + reconcile + link break, one Style row at the top of the Text section (save with a name, wear one, unlink, edit in Library), and text tiles on the Library Styles shelf with an inspector that renames, re-sets font/size/weight/colour, selects what uses it, removes it."
+    },
+    {
+      "t": "2026-09-08T23:25:08.144Z",
+      "note": "Built. Core: Sources/PhotonzCore/TextStyleLibrary.swift holds TextTreatment (font, size, weight, colour), TextStyle, Layer.textStyleID, the document's save/wear/edit/rename/delete/reconcile calls and TextStyleSelection for the row. PhotonzDocument gained textStyles (written only when non-empty, so a document that has never met one saves the same bytes). History.perform reconciles text styles beside colour ones, and LinkBreaks gained a textStyle kind that says '1 piece of text no longer follows Heading'. 33 core tests, written first. App: Sources/Photonz/EditorState+TextStyles.swift and Sources/Photonz/TextStylePanel.swift add the Style row at the top of the Text section, the text tiles on the Library Styles shelf and the section behind a tile. The one thing colour did not need: editing a style's size has to re-measure every box wearing it, which needs CoreText, so the app measures first and applies the boxes inside the same undo step."
+    },
+    {
+      "t": "2026-09-08T23:25:08.144Z",
+      "note": "Adversarial review of the BUILT thing, on the real app (Scripts/playtest/text-style-walk.json, 68 steps, real window captures). Two defects found and fixed. (1) Clicking a text style tile on the shelf did nothing: no selection, no section. Reproduced by putting a colour style and a text style on one shelf and pressing both tiles, where only the colour one answered. The colour tile gets away with a tap gesture because it is also draggable and the drag brings a real control with it; the text tile is a Button now, which also gives it a keyboard route. (2) The tile drew the sample letters in the style's own colour on the panel's own background, so a near-black heading was invisible on the dark dock. The plate now opposes the letters the way the canvas contrast halo does. One non-defect: command Z did nothing in the walk, which is a known harness limit (a synthesized chord does not reach the Edit menu of an app that is not in front, see Scripts/playtest/undo-shortcut-walk.json); the action step undoes for real, and one undo took both headings from 48pt back to 32pt, boxes and all."
+    },
+    {
+      "t": "2026-09-08T23:25:08.145Z",
+      "note": "Audit written: queue/audits/2026-09-08-text-styles.json with two real window captures. Three follow-ups filed: an-effect-can-be-saved-as-a-named-style, a-text-style-can-be-dragged-off-the-shelf-onto-t, the-next-piece-of-text-you-type-keeps-the-style."
     }
-  ]
+  ],
+  "started": "2026-09-08T22:53:54.687Z"
 }
