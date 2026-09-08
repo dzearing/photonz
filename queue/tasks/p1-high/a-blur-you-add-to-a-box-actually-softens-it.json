@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 210,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T04:04:29.971Z",
-  "updated": "2026-09-08T04:48:44.794Z",
+  "updated": "2026-09-08T05:00:42.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-07 while finishing removing-or-switching-off-an-effect-is-remembere. Two walks, each drawing a shape, rendering the document, adding a Blur from the Effects plus, and rendering again:\n\n  Scripts/playtest.sh /tmp/pz/blurcheck.json    (rectangle)\n  Scripts/playtest.sh /tmp/pz/blurcheck2.json   (arrow, then ellipse)\n\nComparing the two renders with PIL:\n  rectangle before -> after diff bbox: None          (nothing changed at all)\n  arrow     before -> after diff bbox: (84, 84, 316, 266)   (paints, and spreads past the drawn line)\n  ellipse   before -> after diff bbox: (350, 100, 500, 250) (exactly the drag box: the halo is cut off)\n\nThe walk also asserted the panel agrees the blur is on (expect control Switch in Blur reads \"Blur, on\"), so this is the renderer and not the model.\n\nDiagnosis: DocumentRenderer.swift:777 does image = blurred(image, radius: layer.style.blurRadius) on the layer raster, and blurred() clamps to the extent before blurring so the edges do not fade to transparent. A rectangle annotation raster is solid edge to edge, so clamp + blur + crop back to the same extent returns the identical image. The layer needs room around it before the blur, the way LayerStyle.padding (Layer.swift:972, blurRadius * 3) already implies, and the crop afterwards has to keep that room.",
@@ -27,6 +27,30 @@
     {
       "t": "2026-09-08T04:48:44.794Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T05:00:42.000Z",
+      "note": "Reproduced first, in a unit test rather than only by eye: a filled rectangle with blurRadius 8 came back with alpha 255 hard against alpha 0 at its edge (no softening whatever), and a blurred ellipse had alpha 0 on all four sides just outside its frame (halo cut off square). Tests/PhotonzRenderTests/BlurSoftensShapeTests.swift."
+    },
+    {
+      "t": "2026-09-08T05:00:42.000Z",
+      "note": "Adversarial pass before building. The renderer clamped the layer to its own box before blurring, so a shape that fills its box solid had nothing to fade into and the halo was cropped back to the box. Two judgment calls fell out of it. (1) Blur was running BEFORE the corner radius and the border, which would have left a razor-sharp ring round a fuzzy fill and put a hard rounded-rect notch through the halo; moved it after both, so a layer softens as one object. (2) A photograph is not a shape: fading a full-canvas capture's edges would leave a pale rim round the whole picture, which is why every photo editor holds the edge instead. Drawn things fade, photos hold. Called it rather than blocking, since the visible consequence is one line in the audit for the user to overrule."
+    },
+    {
+      "t": "2026-09-08T05:00:42.000Z",
+      "note": "Fix: DocumentRenderer.blurred(_:radius:fadesEdges:). Drawn content blurs unclamped and crops to its extent grown by 3 sigma (the same reach LayerStyle.previewPadding already reserves, so drag sprites and dirty rects are already big enough); photos keep the old clamped path. Blur moved after rounded/bordered/borderEffects in both the leaf-layer and group paths."
+    },
+    {
+      "t": "2026-09-08T05:00:42.000Z",
+      "note": "Verified on the probe, not just in tests. Scripts/playtest.sh /tmp/pz/blurfix-rect.json: the rectangle's left edge now ramps from white at x=80 to solid at x=128 around a frame edge at x=100 (it was a one-pixel cut before). /tmp/pz/blurfix-toggle.json on an ellipse: before-vs-after diff bbox (330,80)-(520,270) against a drag box of (350,100)-(500,250), so the halo reaches 20pt past on all four sides, and before-vs-blur-off diff bbox is None, so switching it off restores the render exactly. Screen Recording was granted, so the audit carries real window captures."
+    },
+    {
+      "t": "2026-09-08T05:00:42.000Z",
+      "note": "Scripts/test.sh green: 4700 tests, 393 suites. Perf: the 12MP/10-layer benchmarks are untouched by this change (their blurred layer is a photo, which takes the same clamped path as before) and held at 32.2ms styled-group render, 5.7ms interactive edit, 104ms export at 2x. A blurred DRAWN layer now blurs its box grown by 3 sigma instead of a clamped-to-infinity image cropped back, which is bounded and, without the clamp, no more expensive."
+    },
+    {
+      "t": "2026-09-08T05:00:42.000Z",
+      "note": "Audit: queue/audits/2026-09-07-blur-softens-a-shape.json with two probe window captures."
     }
   ],
   "started": "2026-09-08T04:48:44.793Z"

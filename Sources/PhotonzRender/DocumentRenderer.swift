@@ -522,10 +522,13 @@ public final class DocumentRenderer: @unchecked Sendable {
                                     contentScale: contentScale, magnifyNearest: magnifyNearest)
             .cropped(to: buffer)
 
-        image = blurred(image, radius: layer.style.blurRadius)
         image = rounded(image, box: box, radius: layer.style.cornerRadius)
         image = bordered(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
         image = borderEffects(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
+        // Blurring a group blurs the card it makes — surface, corner and ring
+        // as one — and its halo escapes the group's box the way its shadow
+        // does. A group is always a drawn thing, never a photograph.
+        image = blurred(image, radius: layer.style.blurRadius, fadesEdges: true)
         image = shadowed(image, shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return faded(image, opacity: layer.style.opacity)
     }
@@ -773,9 +776,6 @@ public final class DocumentRenderer: @unchecked Sendable {
             }
         }
 
-        // Style: blur (clamped first so edges don't fade to transparent).
-        image = blurred(image, radius: layer.style.blurRadius)
-
         // Circle-shaped callouts max out the corner radius (capsule on
         // non-square boxes); everything else takes the style's radius. The
         // extent here is already frame-sized, so the radius is in box space.
@@ -806,6 +806,14 @@ public final class DocumentRenderer: @unchecked Sendable {
         // is — including text, whose Appearance outline follows the letters
         // instead. Asking for a box round a label has to be answerable.
         image = borderEffects(image, box: box, radius: cornerRadius, style: layer.style)
+
+        // Style: blur, after the paint rather than before it, so the softness
+        // takes the whole layer — what it draws, its rounded corner and its
+        // ring together — instead of leaving a razor-sharp border round a
+        // fuzzy shape. A photograph keeps its own edge; everything drawn fades
+        // into the clear space around it (`blurred`).
+        let isPhoto: Bool = { if case .image = layer.content { return true } else { return false } }()
+        image = blurred(image, radius: layer.style.blurRadius, fadesEdges: !isPhoto)
 
         // Geometric transform around the layer's center. LayerTransform angles are
         // defined in top-left model space; CI is y-up, so mirror the angular
@@ -839,15 +847,37 @@ public final class DocumentRenderer: @unchecked Sendable {
     //
     // Shared by a leaf layer and a group: a leaf styles its own content in its
     // frame, a group styles the composite of everything inside it, in the box
-    // its contents make. Same order either way — blur, corners, border,
+    // its contents make. Same order either way — corners, border, blur,
     // shadow, opacity.
 
-    /// Blur, clamped first so edges don't fade to transparent.
-    private func blurred(_ image: CIImage, radius: CGFloat) -> CIImage {
+    /// Blur softens what the layer draws, and — like a shadow — the softness
+    /// spreads PAST the layer's box instead of being sliced off at it.
+    ///
+    /// `fadesEdges` is the difference between a drawn thing and a photograph.
+    /// A shape, a label, a group is an object: the clear space around it is
+    /// part of its picture, so the blur fades the edges into it and the halo
+    /// reaches out. Held to its own box instead, a solid rectangle came back
+    /// byte for byte identical (there was nothing to fade into) and a circle's
+    /// halo was cut off square at the drag box.
+    ///
+    /// A photo is the other case: its pixels ARE the picture and they stop
+    /// dead at the frame, so it is blurred with its own edge held, the way
+    /// every photo editor does it. Fading those edges would leave a pale rim
+    /// round a capture somebody only wanted softened.
+    private func blurred(_ image: CIImage, radius: CGFloat, fadesEdges: Bool) -> CIImage {
         guard radius > 0 else { return image }
-        return image.clampedToExtent()
-            .applyingGaussianBlur(sigma: radius)
-            .cropped(to: image.extent)
+        guard fadesEdges, !image.extent.isInfinite, !image.extent.isEmpty else {
+            return image.clampedToExtent()
+                .applyingGaussianBlur(sigma: radius)
+                .cropped(to: image.extent)
+        }
+        // Three sigma covers a gaussian's visible tail: the same room
+        // `LayerStyle.previewPadding` already reserves for a blur everywhere
+        // else, so a drag sprite and a dirty rect are big enough for the halo
+        // this leaves.
+        let reach = (radius * 3).rounded(.up)
+        return image.applyingGaussianBlur(sigma: radius)
+            .cropped(to: image.extent.insetBy(dx: -reach, dy: -reach))
     }
 
     /// Clips to a rounded rect, which is also what makes a group with rounded

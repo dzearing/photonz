@@ -1,0 +1,29 @@
+{
+  "feature": "Blur actually softens a shape",
+  "epic": "ui-building",
+  "summary": "Adding a Blur to a rectangle used to change nothing at all, and on a circle the soft halo was sliced off square at the drag box. Blur now softens the whole shape, edges and all, and the softness spreads past its edge the way a shadow does.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on: Blur is the third row of the Effects plus.",
+  "try": [
+    { "do": "Draw a rectangle on a blank canvas." },
+    { "do": "With it selected, click the + on the Effects section and choose Blur.", "shot": "2026-09-07-blur-softens-a-shape-1.png" },
+    { "do": "Drag the Amount slider from 0 up to about 20 and watch the edges give way." },
+    { "do": "Untick the Blur checkbox, then tick it again." },
+    { "do": "Draw an ellipse, add a Blur, and look at the top, bottom, left and right of it.", "shot": "2026-09-07-blur-softens-a-shape-2.png" },
+    { "do": "Give the same shape a Corner Radius and an Outline, and see them go soft with it." },
+    { "do": "Drop in a screenshot, select it, and add a Blur to that instead." }
+  ],
+  "evaluate": [
+    "At the default 8 pt, is the softening obvious enough that you can tell the effect landed?",
+    "The halo now spills outside the selection handles. Does the shape read as smaller than its box, or does that feel like a shadow does?",
+    "The blur softens the outline and the rounded corner along with the fill. Is that what you wanted, or should a border stay crisp over a blurred fill?",
+    "Blurring a screenshot softens the picture but holds its edge, so there is no pale rim at the canvas edge. Is holding the edge right for a photo, or should a photo fade out like a shape does?",
+    "Does the slider range of 0 to 50 pt cover what you would reach for, or is the useful part squeezed into the first third?"
+  ],
+  "rough": [
+    "Photos are deliberately treated differently from drawn things. A shape, a label or a group fades into the clear space around it; a screenshot is blurred with its own edge held, the way a photo editor does it, because fading a full-canvas capture would leave a pale rim round the whole picture. If you would rather have one rule for everything, say so and it becomes one line.",
+    "Blur now runs after the corner radius and the border rather than before them, so a bordered box softens as one object instead of keeping a razor-sharp ring round a fuzzy fill. That is a change to how an existing blurred-and-bordered layer looks.",
+    "The shadow of a blurred layer is now cast from the blurred silhouette, so it is softer and wider than it used to be. That looks right to me, but it is a change worth an eye.",
+    "The selection handles still hug the crisp box, not the halo. That is on purpose: you resize the shape, not its glow.",
+    "The screenshots here are real window captures from the probe app, not offscreen renders."
+  ]
+}
