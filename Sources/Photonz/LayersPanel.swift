@@ -4400,6 +4400,7 @@ struct CanvasInspector: View {
             Text("Drag the canvas edges to add or trim space; content stays put on the side you didn't move. Fields grow to the right/bottom.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
+            newSpaceRow
             if Experiments.shared.canvasGridEnabled {
                 Divider().padding(.vertical, 2)
                 gridSection
@@ -4409,6 +4410,26 @@ struct CanvasInspector: View {
         .padding(.vertical, 8)
         .onAppear { syncFields() }
         .onChange(of: canvasSize) { syncFields() }
+    }
+
+    /// Which colour the space a canvas grows into arrives in.
+    ///
+    /// It is the background fill, the same colour ⌫ clears a locked background
+    /// to, and its only other home on screen is the paint bucket's swatches.
+    /// Adding space is the one place that colour lands on the picture without
+    /// anyone typing a shortcut, so it belongs beside the sentence that
+    /// explains how to add it: what happens next is stated where the doing is,
+    /// and it can be changed there rather than by picking up a tool you did not
+    /// want. The canvas paints the same colour into the proposed space while an
+    /// edge is being dragged, so this row and the picture agree.
+    @ViewBuilder private var newSpaceRow: some View {
+        HStack(spacing: 8) {
+            Text("New space").font(.caption).foregroundStyle(.secondary)
+            ColorWellButton(hex: editorState.backgroundFillHex, name: "Background fill",
+                            wellKey: "canvas.background") { editorState.backgroundFillHex = $0 }
+            Spacer()
+        }
+        .padding(.top, 2)
     }
 
     // MARK: The grid you build against (Next, `next-canvas-grid`)

@@ -70,7 +70,9 @@ extension CanvasNSView {
         // foreground color (Photoshop). EditorState routes region vs layer.
         if event.keyCode == 51 || event.keyCode == 117,
            event.modifierFlags.contains(.option),
-           selectedLayerID != nil || (selectionTargetsPixels && selection != nil) {
+           FillColors.canFill(hasPickedLayer: selectedLayerID != nil,
+                              targetsPixels: selectionTargetsPixels,
+                              hasRegion: selection != nil) {
             onFillSelected(false)
             return
         }

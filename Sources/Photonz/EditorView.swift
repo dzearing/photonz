@@ -283,6 +283,7 @@ struct EditorView: View {
                        cropRect: editorState.cropRect,
                        cropAspect: editorState.cropAspect,
                        cropBounds: editorState.cropBounds,
+                       backgroundFillHex: editorState.backgroundFillHex,
                        selectedLayerID: editorState.selectedLayerID,
                        selectedLayerFrame: editorState.selectedLayerFrame,
                        groupContext: editorState.groupContextID,
@@ -600,8 +601,26 @@ struct EditorView: View {
                     compactToolsBar(visibleCount: toolbarVisibleCount)
                 }
                 sideCapsules
+                    .background { fillColorShortcuts }
             }
         }
+    }
+
+    /// X swaps the foreground and background fills, whatever tool is in hand.
+    ///
+    /// It sits on an invisible stand-in rather than on the swap button, the
+    /// same idiom the tool letters use (`ToolGroupShortcuts`), because the
+    /// button only exists for the bucket now that the colour capsule appears
+    /// only for the tools that paint. X went with it, while ⌥⌫ and a canvas
+    /// grown outward carried on painting from the pair: the key a person
+    /// presses without looking stopped answering, under exactly the tools where
+    /// there was nothing on screen to say so.
+    private var fillColorShortcuts: some View {
+        Button("") { editorState.swapFillColors() }
+            .keyboardShortcut("x", modifiers: [])
+            .opacity(0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     /// The bar that replaces the tools while the grid is being adjusted: the
@@ -1471,7 +1490,9 @@ struct EditorView: View {
                     .font(.system(size: 10, weight: .semibold))
                     .frame(width: 16, height: 16)
             }
-            .keyboardShortcut("x", modifiers: [])
+            // No shortcut here: X lives on `fillColorShortcuts`, which is in the
+            // bar whatever tool is in hand. On this button it went away with
+            // the capsule.
             .toolTip("Swap Fill Colors", key: "X")
         }
     }

@@ -45,6 +45,67 @@ struct EditorCommands: Commands {
         NSApp.keyWindow?.firstResponder as? NSTextView
     }
 
+    /// The Edit menu's home for the foreground and background fills.
+    ///
+    /// The colour capsule appears only for the tools that paint
+    /// (`Tool.colorControl`), so with Select, crop, a marquee or the wand in
+    /// hand there are no swatches on the bar. The pair goes on painting all the
+    /// same: ⌥⌫ fills what you picked with the foreground, ⌫ clears a locked
+    /// background to the background colour, and growing the canvas outward
+    /// paints the new space with it. These three rows are where you can see
+    /// which two colours that is, and swap them, without picking up the bucket
+    /// first. Each row wears the colour it would use, so the menu ANSWERS the
+    /// question rather than naming a setting you then have to go and read.
+    ///
+    /// Swap carries no key equivalent even though X does it. Not for safety:
+    /// an earlier note here said a plain letter in the menu bar would swallow
+    /// an X typed into a text field, and that is simply not how AppKit
+    /// dispatches. A key equivalent is offered to the key window's views
+    /// before the main menu, and the field editor claims both a plain letter
+    /// and ⌥⌫ for itself, so a focused field keeps them either way (measured
+    /// both ways on 2026-09-08 against a control case that fired the menu).
+    /// The reason is plainer: an unmodified letter in the menu bar is not a
+    /// Mac idiom, and X is already taught on the bucket's swap button, which
+    /// wears it as a tooltip. X itself lives on an invisible stand-in in the
+    /// tool bar, the same idiom the tool letters use, so it answers under
+    /// every tool rather than only the one with the swatches.
+    @ViewBuilder private var fillRows: some View {
+        Button {
+            editor?.fillSelectedLayer(useBackground: false)
+        } label: {
+            Label { Text("Fill with Foreground") } icon: { Self.swatch(editor?.foregroundFillHex) }
+        }
+        .keyboardShortcut(.delete, modifiers: .option)
+        .disabled(!(editor?.canFillWithFillColors ?? false))
+        Button {
+            editor?.fillSelectedLayer(useBackground: true)
+        } label: {
+            Label { Text("Fill with Background") } icon: { Self.swatch(editor?.backgroundFillHex) }
+        }
+        .disabled(!(editor?.canFillWithFillColors ?? false))
+        Button("Swap Fill Colors") { editor?.swapFillColors() }
+            .disabled(editor == nil)
+    }
+
+    /// A menu row's colour chip. Drawn rather than tinted from a symbol because
+    /// a menu row's image is a template by default, which would paint every
+    /// colour the same grey.
+    private static func swatch(_ hex: String?) -> Image {
+        let side: CGFloat = 12
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            let path = NSBezierPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5),
+                                    xRadius: 2.5, yRadius: 2.5)
+            NSColor(Color(hex: hex ?? "#000000")).setFill()
+            path.fill()
+            path.lineWidth = 1
+            NSColor.separatorColor.setStroke()
+            path.stroke()
+            return true
+        }
+        image.isTemplate = false
+        return Image(nsImage: image)
+    }
+
     /// The design-tool key for each align command: the letters sit where the
     /// edge does, W and S for top and bottom, A and D for left and right, and
     /// H and V for the two middles.
@@ -281,6 +342,8 @@ struct EditorCommands: Commands {
             Button("Invert Selection") { editor?.invertSelection() }
                 .keyboardShortcut("i", modifiers: [.command, .shift])
                 .disabled(editor?.selection == nil)
+            Divider()
+            fillRows
         }
 
         // Must REPLACE, not append: SwiftUI's built-in .undoRedo items carry the

@@ -1,0 +1,29 @@
+{
+  "feature": "The fill keys say which colours they will use",
+  "epic": "ui-building",
+  "summary": "With Select or crop in hand the tool bar shows no colour swatches, but the two fill keys still paint from a foreground and background pair. The Edit menu now carries that pair on three rows wearing the actual colours, X swaps it under every tool, and dragging the canvas edge outward paints the space it is about to add in the colour it will arrive in.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open any screenshot and press V for Select." },
+    { "do": "Open the Edit menu and look at the bottom group: Fill with Foreground, Fill with Background, Swap Fill Colors, each wearing its colour.", "shot": "2026-09-08-fill-colours-2-edit-menu.png" },
+    { "do": "Press X, then open the Edit menu again: the two swatches have traded places." },
+    { "do": "Press C for crop, press X again, and confirm it still swaps." },
+    { "do": "Click Canvas in the layers list and find the New space row in the Canvas section; set it to something bright." },
+    { "do": "Drag the right edge of the canvas outward and hold before letting go: the space being added is already painted in that colour.", "shot": "2026-09-08-fill-colours-1-growing.png" },
+    { "do": "Let go, and check the strip that landed is the colour the drag promised." }
+  ],
+  "evaluate": [
+    "Is the Edit menu somewhere you would actually look for these two colours, or would you keep reaching for the paint bucket?",
+    "Do the colour chips on the menu rows read clearly enough to tell the pair apart at a glance, including when one of them is white?",
+    "Does the painted preview while dragging the canvas edge tell you what you needed, or is the dashed outline alone enough?",
+    "The menu lets you see and swap the pair but not pick a new foreground colour without the bucket. Does that stop you?",
+    "Is New space the right name for that row, sitting under the sentence about dragging the canvas edges?"
+  ],
+  "rough": [
+    "You can SEE the pair from the menu and SWAP it, and you can SET the background from the Canvas section's New space row, but there is still nowhere to set the FOREGROUND colour without picking up the bucket. The obvious home for that is a swatch pair on the tool bar, which is the thing the previous task deliberately took away and which this task's own checklist forbids re-widening, so it was left alone rather than decided unilaterally.",
+    "The preview of the space a canvas drag is adding is a solid fill, so on a dark backdrop a black background colour is only just distinguishable from the empty area around it. The dashed canvas boundary is what actually marks the extent in that case.",
+    "The crop TOOL cannot crop outward at all: its rect is clamped to the canvas. Growing the picture is the canvas-edge drag and the Canvas size fields, so that is where the preview and the New space row went. The checklist item about cropping outward is met there, not in the crop bar.",
+    "The colour on each Edit menu row could not be photographed live. A scripted run can never make the app the active one, so its menu bar is frozen at the state it was built in before any document existed, and both chips come out black in the picture. The rows, their order and the option-delete shortcut ARE exact in that shot.",
+    "Pressing X while a canvas size field has the keyboard swaps the pair instead of going into the field. The tool letters behave identically (T switched tools from the same field), so this is the shared shortcut idiom rather than anything new here, and it could not be told apart from an artefact of a scripted run that is never the active app. Filed as its own question rather than guessed at."
+  ]
+}

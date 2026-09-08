@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1740,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T18:25:47.166Z",
-  "updated": "2026-09-07T18:25:47.167Z",
+  "updated": "2026-09-08T02:12:32.970Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Fell out of the-colour-swatches-appear-only-for-tools-that-p on 2026-09-07. The paths are EditorState+Regions.fillSelectedLayer (option-delete, foreground), deleteRegion / clearBackgroundLayer (delete, background) and EditorState+Crop backgroundExtended. The pair lives on EditorState.foregroundFillHex / backgroundFillHex, persisted in defaults, and its only home on screen is now Tool.fill via Tool.colorControl == .foregroundBackground. Options worth weighing before building: leave it as is and rely on G plus the existing tooltips, which may well be the right answer; put the pair in a menu (an Edit > Fill row that names the colour); or show it inside the crop bar only while cropping. This may be a decision card rather than a build.",
+  "notes": "Fell out of the-colour-swatches-appear-only-for-tools-that-p on 2026-09-07. The paths are EditorState+Regions.fillSelectedLayer (option-delete, foreground), deleteRegion / clearBackgroundLayer (delete, background) and EditorState+Crop backgroundExtended. The pair lives on EditorState.foregroundFillHex / backgroundFillHex, persisted in defaults, and its only home on screen is now Tool.fill via Tool.colorControl == .foregroundBackground. Options worth weighing before building: leave it as is and rely on G plus the existing tooltips, which may well be the right answer; put the pair in a menu (an Edit > Fill row that names the colour); or show it inside the crop bar only while cropping. This may be a decision card rather than a build. RESOLVED as a build rather than a decision card: the two homes are the Edit menu's three fill rows (EditorCommands.fillRows, each row drawing its own colour chip because a menu image is a template by default) and the Canvas inspector's New space well (LayersPanel.CanvasInspector.newSpaceRow). X moved off the bucket's swap button onto an invisible stand-in in the tool bar background (EditorView.fillColorShortcuts), the ToolGroupShortcuts idiom, so it answers under every tool. FillColors in PhotonzCore holds both rules (canFill, newSpace) so the menu row and the key press cannot drift.",
   "acceptance": [
     "With Select or crop in hand there is a way to see the foreground and background colours the fill keys will use, without switching tools",
     "Swapping the two, which X does today, works from wherever that way is",
@@ -23,6 +23,53 @@
     {
       "t": "2026-09-07T18:25:47.167Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T01:41:13.457Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T02:12:00.804Z",
+      "note": "runner failed (exit 1, attempt 1): API Error: Connection refused \u2014 a firewall or proxy may be blocking it (ConnectionRefused)"
+    },
+    {
+      "t": "2026-09-08T02:12:32.970Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T02:40:00.000Z",
+      "note": "Resumed after the API drop killed attempt 1 mid-flight; the tree already held the build (FillColors + tests, the Edit menu rows, the X stand-in, the growth preview, the New space row). Reviewed and verified it rather than restarting."
+    },
+    {
+      "t": "2026-09-08T02:41:00.000Z",
+      "note": "Adversarial pass before accepting: the worry was that the new Edit menu row's option-delete key equivalent would steal delete-word-back from every text field, the way a menu-bar chord does. Reproduced the dispatch directly in a standalone AppKit binary (a control case with a plain view focused fired the menu, proving the harness reached it): with a field editor focused the TEXT SYSTEM takes option-delete and the menu does not fire. Same result for a plain letter. So no regression, and the code comment claiming the opposite was corrected with the measurement."
+    },
+    {
+      "t": "2026-09-08T02:42:00.000Z",
+      "note": "Verified in the probe with Scripts/playtest/fill-colours-say-themselves-walk.json (Screen Recording granted, real -sc.png captures). X swaps under Select (#000000/#FFFFFF -> #FFFFFF/#000000) and under crop; the Edit menu reads Fill with Foreground (option-delete), Fill with Background, Swap Fill Colors; the Canvas section carries the New space well; dragging the canvas right edge from 1440 to 2000 painted the added strip in the background colour mid-drag and committed to 2000x960."
+    },
+    {
+      "t": "2026-09-08T02:43:00.000Z",
+      "note": "Tool bar width measured on BOTH builds rather than argued: stashed the change, rebuilt the probe, ran the same toolBar step. Before and after are identical (Tools 514pt, Grid 52pt, Zoom 199pt), so the invisible X stand-in in the bar's background costs no width."
+    },
+    {
+      "t": "2026-09-08T02:44:00.000Z",
+      "note": "Cropping outward: the crop TOOL clamps its rect to the canvas and cannot go outside it, so the outward gesture in this app is the canvas-edge drag and the Canvas size fields. The preview and the New space row went there, which is where the checklist item is met."
+    },
+    {
+      "t": "2026-09-08T02:45:00.000Z",
+      "note": "Left undone on purpose: the menu shows and swaps the pair but cannot SET the foreground without the bucket. The natural home is a swatch pair on the bar, which the previous task removed and which acceptance item 3 forbids re-widening, so it is named in the audit for the user to weigh instead of decided here."
+    },
+    {
+      "t": "2026-09-08T02:46:00.000Z",
+      "note": "Scripts/test.sh green (4660 tests, 389 suites) with the new walk in place. Audit at queue/audits/2026-09-08-fill-colours.json with two real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T02:12:32.969Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-08T02:12:00.803Z",
+    "exit": 1,
+    "message": "API Error: Connection refused \u2014 a firewall or proxy may be blocking it (ConnectionRefused)"
+  }
 }

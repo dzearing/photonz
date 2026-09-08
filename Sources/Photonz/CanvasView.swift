@@ -40,6 +40,8 @@ struct CanvasView: NSViewRepresentable {
     let cropAspect: CropAspect
     /// What the crop rect is confined to (canvas, or a layer's frame).
     let cropBounds: CGRect?
+    /// The background fill, for the preview of space a canvas drag is adding.
+    let backgroundFillHex: String
     let selectedLayerID: UUID?
     let selectedLayerFrame: CGRect?
     /// The group the pointer is inside, echoed from EditorState. Nil = the
@@ -234,7 +236,8 @@ struct CanvasView: NSViewRepresentable {
         view.apply(image: image, viewport: viewport, document: document,
                    selection: selection, selectionTargetsPixels: selectionTargetsPixels,
                    cropRect: cropRect, cropAspect: cropAspect,
-                   cropBounds: cropBounds, selectedLayerID: selectedLayerID,
+                   cropBounds: cropBounds, backgroundFillHex: backgroundFillHex,
+                   selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame, groupContext: groupContext,
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
                    tool: tool, captionCloseRequest: captionCloseRequest,
@@ -520,6 +523,14 @@ final class CanvasNSView: NSView {
     let selectionAntsLayer = CAShapeLayer()
     /// Accent outline around the selected layer.
     let layerOutlineLayer = CAShapeLayer()
+    /// The space a canvas-boundary drag is about to ADD, painted in the colour
+    /// it will be painted in. Solid, not a wash: the point is to show the
+    /// actual colour, since with Select in hand the tool bar carries no
+    /// swatches to say what it is.
+    let canvasGrowthLayer = CAShapeLayer()
+    /// The background fill, echoed from `EditorState`. Read only by the growth
+    /// preview above.
+    var backgroundFillHex = "#FFFFFF"
     /// Outlines around every layer the marquee fully contains (rubber-band
     /// multi-selection) — live during the drag, standing once committed, so
     /// it's obvious what ⌫ will delete.
@@ -1461,7 +1472,7 @@ final class CanvasNSView: NSView {
             layer?.addSublayer(flightLayer)
         }
 
-        for shape in [collageWellsLayer, slotHighlightLayer,
+        for shape in [canvasGrowthLayer, collageWellsLayer, slotHighlightLayer,
                       dropLandingLayer, dropHostFrameLayer,
                       selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
                       multiSelectOutlineLayer, gridSnapLayer, pinnedGuideLayer,
@@ -1516,6 +1527,10 @@ final class CanvasNSView: NSView {
         crawl.repeatCount = .infinity
         selectionAntsLayer.add(crawl, forKey: "marchingAnts")
 
+        // The new space a canvas drag is adding: filled, never stroked. The
+        // dashed boundary on top is the outline; this is the paint.
+        canvasGrowthLayer.strokeColor = nil
+        canvasGrowthLayer.lineWidth = 0
         // Selection outline: bright blue, dotted, 2px, 60% opaque.
         layerOutlineLayer.strokeColor = NSColor.systemBlue.withAlphaComponent(0.6).cgColor
         layerOutlineLayer.lineWidth = 2

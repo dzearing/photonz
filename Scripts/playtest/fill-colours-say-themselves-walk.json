@@ -1,0 +1,197 @@
+{
+  "out": "/tmp/photonz-playtest/fill-colours-say-themselves",
+  "setup": {
+    "forget": [
+      "color",
+      "tools",
+      "panel",
+      "grid"
+    ]
+  },
+  "steps": [
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "0-start",
+      "note": "Select is in hand and the bar carries no swatches: the pair reads #000000 over #FFFFFF"
+    },
+    {
+      "do": "toolBar",
+      "stage": "0-select"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-select"
+    },
+    {
+      "do": "menus",
+      "stage": "1-edit-menu",
+      "menu": "Edit",
+      "note": "the Edit menu must carry Fill with Foreground on option-delete, Fill with Background, and Swap Fill Colors"
+    },
+    {
+      "do": "menuShot",
+      "menu": "Edit",
+      "name": "1-edit-menu"
+    },
+    {
+      "do": "key",
+      "key": "x"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-after-x",
+      "note": "X with Select in hand: the pair must have swapped to #FFFFFF over #000000"
+    },
+    {
+      "do": "tool",
+      "tool": "crop"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "x"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-after-x-under-crop",
+      "note": "X with crop in hand: back to #000000 over #FFFFFF"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panel",
+      "stage": "4-canvas"
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "4-canvas-new-space"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "x"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-x-while-typing",
+      "note": "a field has the keyboard: X must NOT swap, the pair stays #000000 over #FFFFFF"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "zoomOut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-zoomed-out"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-before-grow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1440,
+        480
+      ],
+      "to": [
+        2000,
+        480
+      ],
+      "steps": 10,
+      "hold": "7-growing"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "7-grown",
+      "note": "the canvas is wider and the new strip is the background fill"
+    },
+    {
+      "do": "render",
+      "name": "7-grown-doc"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-grown"
+    }
+  ]
+}

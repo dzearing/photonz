@@ -21,7 +21,8 @@ extension CanvasNSView {
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
                selection: SelectionRegion?, selectionTargetsPixels: Bool,
                cropRect: CGRect?, cropAspect: CropAspect,
-               cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
+               cropBounds: CGRect?, backgroundFillHex: String,
+               selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                groupContext: UUID?,
                multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int,
@@ -92,6 +93,7 @@ extension CanvasNSView {
         self.lumaField = lumaField
         self.cropAspect = cropAspect
         self.cropBounds = cropBounds
+        self.backgroundFillHex = backgroundFillHex
         if tool != self.tool {
             self.tool = tool
             // A tool switch mid-drag abandons the draft annotation/endpoint edit
@@ -643,6 +645,9 @@ extension CanvasNSView {
     }
 
     private func refreshLayerSelectionDisplay() {
+        // Only the canvas-boundary drag below ever paints the space it is about
+        // to add, so every other path through this method leaves it off.
+        canvasGrowthLayer.isHidden = true
         refreshGroupContextOutline()
         refreshColumnChrome()
         refreshFrameChrome()
@@ -669,6 +674,23 @@ extension CanvasNSView {
             rotateKnobLayer.isHidden = true
             snapGuideLayer.isHidden = true
             let docRect = canvasResizeDrag?.rect ?? CGRect(origin: .zero, size: viewport.documentSize)
+            // Space the drag is ADDING, painted in the colour it is about to be
+            // painted in. Growing the canvas fills the new space with the
+            // background fill, and with Select in hand there are no swatches on
+            // the bar to say what that is — so the picture says it, while there
+            // is still time to let go somewhere else. Only what is being added:
+            // a side being trimmed contributes nothing (`FillColors.newSpace`).
+            let added = FillColors.newSpace(canvas: CGRect(origin: .zero, size: viewport.documentSize),
+                                            proposed: docRect)
+            if added.isEmpty {
+                canvasGrowthLayer.isHidden = true
+            } else {
+                let growth = CGMutablePath()
+                for strip in added { growth.addRect(viewRect(forDocRect: strip, in: viewport)) }
+                canvasGrowthLayer.path = growth
+                canvasGrowthLayer.fillColor = NSColor(Color(hex: backgroundFillHex)).cgColor
+                canvasGrowthLayer.isHidden = false
+            }
             let rect = viewRect(forDocRect: docRect, in: viewport).insetBy(dx: 0.5, dy: 0.5)
             layerOutlineLayer.path = CGPath(rect: rect, transform: nil)
             layerOutlineLayer.isHidden = false

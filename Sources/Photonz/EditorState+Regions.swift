@@ -16,6 +16,16 @@ extension EditorState {
     static let foregroundFillKey = "fill.foreground"
     static let backgroundFillKey = "fill.background"
 
+    /// Whether the two fill commands have anything to paint. The Edit menu
+    /// reads it to dim its rows, and the canvas presses ⌥⌫ under the same rule
+    /// (`FillColors.canFill`), so a row that says yes and a key that does
+    /// nothing cannot happen.
+    var canFillWithFillColors: Bool {
+        FillColors.canFill(hasPickedLayer: selectedLayerID != nil,
+                           targetsPixels: selectionTargetsPixels,
+                           hasRegion: selection != nil)
+    }
+
     /// X — swap foreground and background, like Photoshop.
     func swapFillColors() {
         (foregroundFillHex, backgroundFillHex) = (backgroundFillHex, foregroundFillHex)
