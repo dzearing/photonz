@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/marquee-answers-to-m",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "describe", "stage": "1-arrow", "note": "another tool in hand, so M has to travel" },
+
+    { "do": "key", "key": "m" },
+    { "do": "waitFor", "condition": "tool", "value": "rectSelect" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-m", "note": "M picks the rectangular marquee" },
+    { "do": "snapshot", "name": "m-rectangle" },
+
+    { "do": "key", "key": "m" },
+    { "do": "waitFor", "condition": "tool", "value": "ellipseSelect" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-m-again", "note": "M again swaps to the ellipse, and the slot wears the dashed circle" },
+    { "do": "snapshot", "name": "m-ellipse" },
+
+    { "do": "key", "key": "m" },
+    { "do": "waitFor", "condition": "tool", "value": "rectSelect" },
+    { "do": "describe", "stage": "4-m-back", "note": "and again back to the box" },
+
+    { "do": "hover", "label": "Rectangle Select" },
+    { "do": "snapshot", "name": "m-tooltip" },
+    { "do": "describe", "stage": "5-tooltip", "note": "the slot's tooltip prints the letter the way every other tool does" },
+
+    { "do": "key", "key": "w" },
+    { "do": "waitFor", "condition": "tool", "value": "wand" },
+    { "do": "key", "key": "m" },
+    { "do": "waitFor", "condition": "tool", "value": "rectSelect" },
+    { "do": "describe", "stage": "6-not-the-wand", "note": "M means marquee: from the wand it hands over a marquee rather than the wand again" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "describe", "stage": "7-end", "note": "back on Select" }
+  ]
+}

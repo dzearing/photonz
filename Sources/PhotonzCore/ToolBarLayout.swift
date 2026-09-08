@@ -5,8 +5,9 @@ import Foundation
 ///
 /// The slot shows the member you used last, a click picks that member up, and
 /// press-and-hold lists the family. Each member keeps whatever letter it has,
-/// and shift plus any member's letter walks the family so a keyboard user
-/// never needs the list.
+/// a letter pressed again walks the members it owns, and shift plus any
+/// member's letter walks the whole family, so a keyboard user never needs the
+/// list.
 public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
     /// The region selectors: rectangle, ellipse, magic wand (Photoshop's M
     /// and W).
@@ -31,9 +32,10 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
         }
     }
 
-    /// A letter that belongs to the family rather than to any member: it
-    /// picks the remembered member up. The marquee pair has no letters of its
-    /// own, so M stands for the pair; the shapes each keep their own.
+    /// A letter that belongs to the family rather than to any member: it picks
+    /// up the members that have no letter of their own, and walks them when
+    /// pressed again. The marquee pair has no letters of its own, so M stands
+    /// for the pair; the shapes each keep their own.
     public var groupKey: Character? {
         switch self {
         case .selection: "m"
@@ -50,6 +52,38 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
             if let key = tool.shortcutKey, !keys.contains(key) { keys.append(key) }
         }
         return keys
+    }
+
+    /// The members a PLAIN press of `key` walks, in the order it walks them.
+    ///
+    /// A member's own letter owns that member alone, so O is Ellipse however
+    /// often you press it. The family's letter owns every member that has no
+    /// letter of its own, which today is exactly Photoshop's marquee pair: M
+    /// picks a marquee and pressing it again swaps the box for the ellipse.
+    /// The wand has W of its own, so it is never what M hands you.
+    public func tools(answeringTo key: Character) -> [Tool] {
+        if key == groupKey { return tools.filter { $0.shortcutKey == nil } }
+        return tools.filter { $0.shortcutKey == key }
+    }
+
+    /// The tool a plain press of `key` picks up, given the tool in hand and
+    /// the member this family remembers. Nil for a letter the family does not
+    /// answer to.
+    ///
+    /// Already holding one of the letter's tools means the press moves on to
+    /// the next one; otherwise you get the remembered member when the letter
+    /// owns it, and the letter's first tool when it does not.
+    public func tool(forKey key: Character, active: Tool, remembered: Tool) -> Tool? {
+        let ring = tools(answeringTo: key)
+        guard !ring.isEmpty else { return nil }
+        if let index = ring.firstIndex(of: active) { return ring[(index + 1) % ring.count] }
+        return ring.contains(remembered) ? remembered : ring[0]
+    }
+
+    /// The letters that hand you a DIFFERENT tool when you press them again,
+    /// so a tooltip can teach that without the bar guessing which ones do.
+    public var swapKeys: [Character] {
+        cycleKeys.filter { tools(answeringTo: $0).count > 1 }
     }
 
     /// The member after `tool`, wrapping. A tool from outside the family

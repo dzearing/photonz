@@ -87,6 +87,10 @@ struct ToolGroupButton: View {
     /// read back, because a shortcut's action is registered once and can
     /// outlive the snapshot it was built from; the caller reads live state.
     let pickRemembered: () -> Void
+    /// Answers a plain press of one of the family's letters, live: which tool
+    /// that is depends on what is in hand at the moment of the press, so the
+    /// caller resolves it rather than this view baking one in.
+    let pick: (Character) -> Void
     /// Moves to the next member, from live state for the same reason.
     let cycle: () -> Void
 
@@ -102,12 +106,25 @@ struct ToolGroupButton: View {
         return letters.count == 1 ? "⇧\(first) cycles" : "⇧ plus a letter cycles"
     }
 
+    /// What a SECOND press of a letter does, for the one letter that owns more
+    /// than one tool. Named in full ("M swaps Rectangle Select and Ellipse
+    /// Select") because a person reading a tooltip is learning the letter, not
+    /// being reminded of it. Empty for a family where every letter stands for
+    /// one tool, which is where a "press again" line would be a lie.
+    private var swapLines: [String] {
+        group.swapKeys.map { key in
+            let names = group.tools(answeringTo: key).map(\.barTitle)
+            return "\(String(key).uppercased()) swaps \(names.joined(separator: " and "))"
+        }
+    }
+
     private var tooltip: String {
         let members = group.tools.map { tool -> String in
             let key = tool.shortcutHint ?? keyLabel
             return key.map { "\(tool.barTitle) (\($0))" } ?? tool.barTitle
         }
         var text = "\(group.title): \(members.joined(separator: ", ")). \(cycleLine)."
+        for line in swapLines { text += " \(line)." }
         if let hint { text += "\n\(hint)" }
         return text
     }
@@ -127,6 +144,7 @@ struct ToolGroupButton: View {
             }
             Divider()
             Text(cycleLine)
+            ForEach(swapLines, id: \.self) { Text($0) }
         } label: {
             glyph
         } primaryAction: {
@@ -148,8 +166,7 @@ struct ToolGroupButton: View {
         .toolTip(remembered.barTitle, key: remembered.shortcutHint ?? keyLabel, fallback: tooltip)
         .accessibilityLabel("\(group.title): \(remembered.barTitle)")
         .background {
-            ToolGroupShortcuts(group: group, activate: activate,
-                               pickRemembered: pickRemembered, cycle: cycle)
+            ToolGroupShortcuts(group: group, pick: pick, cycle: cycle)
         }
     }
 
@@ -162,11 +179,17 @@ struct ToolGroupButton: View {
     }
 }
 
-/// A family's key vocabulary on invisible stand-ins: the family key picks the
-/// remembered member up, each member's own letter picks that member, and
-/// shift plus any of those letters walks the family. Used behind the group's
-/// button, and again for a group that has slid into the overflow menu, so the
-/// keys work at every window width.
+/// A family's key vocabulary on invisible stand-ins: a plain letter picks a
+/// tool up, and shift plus any of those letters walks the family. Used behind
+/// the group's button, and again for a group that has slid into the overflow
+/// menu, so the keys work at every window width.
+///
+/// What a plain letter picks is decided at the moment of the press, by
+/// `ToolGroup.tool(forKey:active:remembered:)` reading live state: a letter
+/// that owns one tool always hands that one back, and M, which owns the
+/// marquee pair, swaps the box for the ellipse when a marquee is already in
+/// hand. That is why the row calls `pick` with its letter instead of carrying
+/// a tool it decided on when the view was built.
 ///
 /// Each letter is registered twice, plain and shifted, because that is how
 /// SwiftUI tells the two presses apart: a letter shortcut is matched against
@@ -177,31 +200,17 @@ struct ToolGroupButton: View {
 /// Corrected 2026-09-03 along with the playtest harness that told the fib.)
 struct ToolGroupShortcuts: View {
     let group: ToolGroup
-    let activate: (Tool) -> Void
-    let pickRemembered: () -> Void
+    /// Answers a plain press of one of the family's letters.
+    let pick: (Character) -> Void
     let cycle: () -> Void
-
-    /// One row per distinct letter: what a plain press does. Shift always
-    /// cycles.
-    private var letters: [(key: Character, plain: () -> Void)] {
-        var rows: [(key: Character, plain: () -> Void)] = []
-        if let key = group.groupKey {
-            rows.append((key, pickRemembered))
-        }
-        for tool in group.tools {
-            guard let key = tool.shortcutKey, !rows.contains(where: { $0.key == key }) else { continue }
-            rows.append((key, { activate(tool) }))
-        }
-        return rows
-    }
 
     var body: some View {
         ZStack {
-            ForEach(letters, id: \.key) { row in
-                Button("") { row.plain() }
-                    .keyboardShortcut(KeyEquivalent(row.key), modifiers: [])
+            ForEach(group.cycleKeys, id: \.self) { key in
+                Button("") { pick(key) }
+                    .keyboardShortcut(KeyEquivalent(key), modifiers: [])
                 Button("") { cycle() }
-                    .keyboardShortcut(KeyEquivalent(row.key), modifiers: .shift)
+                    .keyboardShortcut(KeyEquivalent(key), modifiers: .shift)
             }
         }
         .opacity(0)

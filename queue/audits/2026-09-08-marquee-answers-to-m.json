@@ -1,0 +1,30 @@
+{
+  "feature": "The marquee answers to M",
+  "epic": "ui-building",
+  "summary": "M now means marquee and nothing else: it hands you the rectangular marquee from any tool, and pressing it again swaps the box for the ellipse and back, so the tool the copy and fill commands are built around never needs the mouse. The magic wand keeps W and is no longer what M gives you, however you last left the slot.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: the grouped tool bar flag is on by default in Next.",
+  "try": [
+    { "do": "Open a screenshot and press A for the arrow tool." },
+    { "do": "Press M. The selection slot lights up wearing the dashed box." },
+    { "do": "Press M again.", "shot": "2026-09-08-marquee-answers-to-m-1.png" },
+    { "do": "Press M a third time to come back to the box." },
+    { "do": "Rest the pointer on the selection slot and read its tooltip.", "shot": "2026-09-08-marquee-answers-to-m-2.png" },
+    { "do": "Press and hold the selection slot to read the family list at the foot." },
+    { "do": "Press W for the wand, then press M." },
+    { "do": "Press Shift M twice to walk the whole slot, wand included." }
+  ],
+  "evaluate": [
+    "Is a second press of M the swap you expect, or did you tap it twice out of habit and end up on the ellipse you did not want?",
+    "Is it right that M never hands you the wand any more, even when the wand is the selector you used last?",
+    "Does the slot changing its glyph tell you loudly enough which marquee you now have?",
+    "Now that plain M swaps the pair, is Shift M walking all three still worth keeping, or is it one shortcut too many?",
+    "Does the tooltip teach the letter well enough on its own, or would you only find this by pressing it?"
+  ],
+  "rough": [
+    "The task said the marquee had no letter at all. It already had one: M picked the marquee and Shift M cycled it, and a probe run proved that before any code changed. What was missing was only the second press, so that is what this is.",
+    "M no longer hands back the magic wand. That is a real change to what the letter did: use the wand, press M, and you now get a marquee rather than the wand again. It reads as the fix for a letter that meant two different things, and W still picks the wand from anywhere, but it is the line in here most worth disagreeing with.",
+    "The pair has one memory, not two. Use the ellipse, press W for the wand, then press M, and you get the rectangle rather than the ellipse you left. Remembering the last marquee separately from the last selector would fix it and costs another remembered setting, so I left it.",
+    "Photoshop itself needs Shift for this swap unless you turn its shift preference off. We now do it without Shift and keep Shift M as the walk of the whole slot, which is a deliberate departure from strict parity.",
+    "Screen Recording was granted, so both pictures here are real window captures rather than offscreen renders."
+  ]
+}

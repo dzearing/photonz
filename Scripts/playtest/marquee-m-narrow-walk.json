@@ -1,0 +1,76 @@
+{
+  "out": "/tmp/photonz-playtest/marquee-m-narrow",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel",
+      "grid"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 760,
+      "height": 700
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "arrow"
+    },
+    {
+      "do": "toolBar",
+      "stage": "1-narrow",
+      "note": "the window is narrow enough that the bar has gone compact and grown a chevron"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-narrow"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectSelect"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipseSelect"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectSelect"
+    },
+    {
+      "do": "describe",
+      "stage": "2-narrow-m",
+      "note": "M swaps the marquee on the compact bar too, where the letters are registered a second way"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-narrow-m"
+    }
+  ]
+}

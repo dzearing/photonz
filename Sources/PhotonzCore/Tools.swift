@@ -43,8 +43,11 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     ///   itself files the Ruler under I.
     ///
     /// Nil for the marquee pair: rectangle and ellipse select share one toolbar
-    /// slot, and M picks whichever you used last while ⇧M cycles them, so the
-    /// key belongs to the group rather than to either tool.
+    /// slot and one letter, so the key belongs to the group rather than to
+    /// either tool. M hands you a marquee and swaps the box for the ellipse
+    /// when you press it again (`ToolGroup.tool(forKey:active:remembered:)`),
+    /// which is Photoshop's M with its shift preference turned off; ⇧M walks
+    /// the whole slot, wand included.
     public var shortcutKey: Character? {
         switch self {
         case .select: "v"

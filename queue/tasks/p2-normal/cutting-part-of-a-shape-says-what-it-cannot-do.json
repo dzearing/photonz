@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1720,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T17:19:09.579Z",
-  "updated": "2026-09-08T01:08:45.311Z",
+  "updated": "2026-09-08T01:20:07.073Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing plain copy on 2026-09-07. cutSelectedLayer (Sources/Photonz/EditorState+Clipboard.swift) only takes the region path when canSliceRegion(from:) is true, which needs an untransformed uncropped image layer, because deleteRegion bakes into a bitmap. Everything else falls back to the whole-layer cut. The same hole exists for the delete key, which erases from the locked Background when the picked layer cannot be sliced.",
@@ -43,7 +43,12 @@
     {
       "t": "2026-09-08T01:19:50.812916Z",
       "note": "Adversarial review of the built thing. The pill lands just above the toolbar, in the eye's path, and reads at a glance. Two things I did not fix and put in the audit's rough instead: the line describes the way out ('Clear the marquee') without naming the key that does it, which I left as a judgment for the user rather than making the pill wider; and Option Backspace, the third member of this family, still fills nothing and says nothing over a shape. I reproduced that one in the same walk (stage 4a-fill-region: layers unchanged, no message of its own) and filed it rather than widening this task. Also filed the other half the goal offered, turning a shape into a picture so the cut can happen, as its own task: it is destructive, it ends the shape's editability, and it needs a name and a home, so it is not something to smuggle in behind Command X."
+    },
+    {
+      "t": "2026-09-08T01:20:07.072Z",
+      "note": "Command X and Backspace over a marquee on a shape or a piece of text now refuse and say why, in one line on the canvas notice pill, instead of silently taking the whole shape or silently doing nothing. New pure RegionSliceRefusal in PhotonzCore decides off RegionTarget.canSlice, so the sentence cannot disagree with the keys; a cropped or turned picture gets its own reason. Next only, behind next-cut-says-what-it-cannot-do (on by default). 11 new core tests, full suite green at 4639. Verified live on the probe with Scripts/playtest/cut-says-what-it-cannot-do-walk.json (real window captures, Screen Recording granted): all four acceptance items checked off the log, including the two controls. Audit at queue/audits/2026-09-08-cut-says-what-it-cannot-do.json. Two follow-ups filed: turning a shape into a picture so the cut can really happen, and the same silence on Option Backspace (reproduced in the same walk). Commit c6c8b74e, pushed."
     }
   ],
-  "started": "2026-09-08T01:08:45.310Z"
+  "started": "2026-09-08T01:08:45.310Z",
+  "completed": "2026-09-08T01:20:07.073Z"
 }

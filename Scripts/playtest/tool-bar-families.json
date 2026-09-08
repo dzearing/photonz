@@ -191,7 +191,30 @@
     {
       "do": "waitFor",
       "condition": "tool",
-      "value": "wand"
+      "value": "rectSelect"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipseSelect"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectSelect"
+    },
+    {
+      "do": "describe",
+      "stage": "3-selection",
+      "note": "M from the wand hands over a marquee, and each press after that swaps the box for the ellipse and back"
     },
     {
       "do": "key",
@@ -209,12 +232,51 @@
     {
       "do": "waitFor",
       "condition": "tool",
-      "value": "wand"
+      "value": "rectSelect"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipseSelect"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "arrow"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipseSelect"
     },
     {
       "do": "describe",
       "stage": "3-selection",
-      "note": "M picks the remembered selector (wand) from Select; a cycle would have given Rectangle Select"
+      "note": "M from another tool picks the marquee you left, not the next one: a swap needs a marquee already in hand"
+    },
+    {
+      "do": "key",
+      "key": "m",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "wand"
     },
     {
       "do": "key",
@@ -230,7 +292,7 @@
     },
     {
       "do": "key",
-      "key": "m",
+      "key": "w",
       "modifiers": [
         "shift"
       ]
@@ -253,30 +315,9 @@
       "value": "wand"
     },
     {
-      "do": "key",
-      "key": "w",
-      "modifiers": [
-        "shift"
-      ]
-    },
-    {
-      "do": "waitFor",
-      "condition": "tool",
-      "value": "rectSelect"
-    },
-    {
       "do": "describe",
       "stage": "3-selection",
-      "note": "shift M, shift M, shift W, shift W walked wand, rectangle, ellipse, wand, rectangle"
-    },
-    {
-      "do": "key",
-      "key": "a"
-    },
-    {
-      "do": "waitFor",
-      "condition": "tool",
-      "value": "arrow"
+      "note": "shift M and shift W still walk the whole slot, wand included"
     },
     {
       "do": "key",
@@ -290,7 +331,7 @@
     {
       "do": "describe",
       "stage": "3-selection",
-      "note": "M from Arrow picked the remembered selector (rectangle)"
+      "note": "M never hands over the wand, however the slot was left"
     },
     {
       "do": "key",

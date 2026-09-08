@@ -1155,18 +1155,18 @@ struct EditorView: View {
     private func overflowShortcuts(_ slots: [ToolbarSlot]) -> some View {
         ZStack {
             ForEach(slots, id: \.self) { slot in
-                if let key = slot.keyEquivalent {
+                // A family slot stands for several tools, so it carries the
+                // whole family's vocabulary and NOT its own letter as well:
+                // the marquee slot's M is the selection family's M, and
+                // registering it twice left one of the two answering, which
+                // is how a second press of M could go nowhere.
+                if let group = slot.group {
+                    ToolGroupShortcuts(group: group,
+                                       pick: { pickWithKey($0, in: group) },
+                                       cycle: { cycleGroup(group) })
+                } else if let key = slot.keyEquivalent {
                     Button("") { activateSlot(slot) }
                         .keyboardShortcut(key, modifiers: [])
-                }
-                // A family slot stands for several tools, so it carries the
-                // whole family's vocabulary, not just its own letter.
-                if let group = slot.group {
-                    ToolGroupShortcuts(
-                        group: group,
-                        activate: { editorState.setTool($0) },
-                        pickRemembered: { editorState.setTool(editorState.lastTool(in: group)) },
-                        cycle: { cycleGroup(group) })
                 }
             }
         }
@@ -1199,7 +1199,18 @@ struct EditorView: View {
             hint: hint,
             activate: { editorState.setTool($0) },
             pickRemembered: { editorState.setTool(editorState.lastTool(in: group)) },
+            pick: { pickWithKey($0, in: group) },
             cycle: { cycleGroup(group) })
+    }
+
+    /// A plain family letter: whichever member that letter hands over now.
+    /// Read live, never from a rendered snapshot, because the answer depends
+    /// on the tool in hand — M with a marquee already up swaps it for the
+    /// other one.
+    private func pickWithKey(_ key: Character, in group: ToolGroup) {
+        guard let tool = group.tool(forKey: key, active: editorState.activeTool,
+                                    remembered: editorState.lastTool(in: group)) else { return }
+        editorState.setTool(tool)
     }
 
     /// Shift plus a family letter: the member after the one the family's

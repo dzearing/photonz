@@ -316,6 +316,67 @@ struct ToolGroupTests {
         #expect(ToolGroup.selection.member(from: "garbage") == .rectSelect)
     }
 
+    // MARK: A plain letter, pressed again
+    //
+    // A letter that stands for ONE tool hands that tool back however often you
+    // press it (O is always Ellipse, never a walk to Line). M is the only
+    // letter that owns two tools, Photoshop's marquee pair, so it is the only
+    // one where pressing again means something: it swaps the box for the
+    // ellipse. The wand keeps W, and M never hands it over.
+
+    @Test func aLetterOwnsTheMembersThatHaveNoLetterOfTheirOwn() {
+        #expect(ToolGroup.selection.tools(answeringTo: "m") == [.rectSelect, .ellipseSelect])
+        #expect(ToolGroup.selection.tools(answeringTo: "w") == [.wand])
+        #expect(ToolGroup.shapes.tools(answeringTo: "l") == [.line])
+        #expect(ToolGroup.shapes.tools(answeringTo: "o") == [.ellipse])
+        // A letter this family never answers to owns nothing.
+        #expect(ToolGroup.shapes.tools(answeringTo: "m").isEmpty)
+        #expect(ToolGroup.selection.tools(answeringTo: "l").isEmpty)
+    }
+
+    @Test func mPicksTheMarqueeAndPressingItAgainSwapsIt() {
+        let selection = ToolGroup.selection
+        // From another tool: the marquee you used last.
+        #expect(selection.tool(forKey: "m", active: .arrow, remembered: .rectSelect) == .rectSelect)
+        #expect(selection.tool(forKey: "m", active: .arrow, remembered: .ellipseSelect) == .ellipseSelect)
+        // Again, and again: box, ellipse, box.
+        #expect(selection.tool(forKey: "m", active: .rectSelect, remembered: .rectSelect) == .ellipseSelect)
+        #expect(selection.tool(forKey: "m", active: .ellipseSelect, remembered: .ellipseSelect) == .rectSelect)
+    }
+
+    @Test func mAlwaysHandsYouAMarqueeAndNeverTheWand() {
+        let selection = ToolGroup.selection
+        // The wand is the family's remembered member, and M still means marquee.
+        #expect(selection.tool(forKey: "m", active: .wand, remembered: .wand) == .rectSelect)
+        #expect(selection.tool(forKey: "m", active: .select, remembered: .wand) == .rectSelect)
+        // W is the wand's, from anywhere, and pressing it again keeps it.
+        #expect(selection.tool(forKey: "w", active: .rectSelect, remembered: .rectSelect) == .wand)
+        #expect(selection.tool(forKey: "w", active: .wand, remembered: .wand) == .wand)
+    }
+
+    @Test func aShapeLetterKeepsHandingBackItsOwnShape() {
+        let shapes = ToolGroup.shapes
+        #expect(shapes.tool(forKey: "o", active: .line, remembered: .ellipse) == .ellipse)
+        // Pressing it again is not a walk: O is Ellipse, always.
+        #expect(shapes.tool(forKey: "o", active: .ellipse, remembered: .ellipse) == .ellipse)
+        #expect(shapes.tool(forKey: "r", active: .ellipse, remembered: .ellipse) == .rectangle)
+        #expect(shapes.tool(forKey: "l", active: .rectangle, remembered: .rectangle) == .line)
+    }
+
+    @Test func aLetterThisFamilyDoesNotAnswerToPicksNothing() {
+        #expect(ToolGroup.shapes.tool(forKey: "m", active: .line, remembered: .line) == nil)
+        #expect(ToolGroup.selection.tool(forKey: "z", active: .wand, remembered: .wand) == nil)
+    }
+
+    @Test func onlyMSwapsOnASecondPress() {
+        #expect(ToolGroup.selection.swapKeys == ["m"])
+        #expect(ToolGroup.shapes.swapKeys.isEmpty)
+        // Every swap key is a key the family answers to at all.
+        for group in ToolGroup.allCases {
+            for key in group.swapKeys { #expect(group.cycleKeys.contains(key)) }
+        }
+    }
+
     @Test func groupsHaveNamesForTheirMenus() {
         #expect(ToolGroup.selection.title == "Selection")
         #expect(ToolGroup.shapes.title == "Shapes")

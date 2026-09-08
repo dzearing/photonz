@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1730,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T17:19:09.616Z",
-  "updated": "2026-09-07T17:19:09.616Z",
+  "updated": "2026-09-08T01:20:37.265Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Tool.shortcutKey in Sources/PhotonzCore/Tools.swift returns nil for rectSelect and ellipseSelect although the comment on isMarqueeSelectTool already calls them Photoshop's M group. Tool groups already cycle on a repeated press elsewhere (toolGroupsFlag).",
+  "notes": "Tool.shortcutKey in Sources/PhotonzCore/Tools.swift returns nil for rectSelect and ellipseSelect although the comment on isMarqueeSelectTool already calls them Photoshop's M group. Tool groups already cycle on a repeated press elsewhere (toolGroupsFlag). RESOLVED: the marquee already answered to M (the letter lives on ToolGroup.selection.groupKey, not on Tool.shortcutKey, which is why the source read as if it had none). The work was the second press, plus stopping M from handing over the wand.",
   "acceptance": [
     "Pressing M picks the rectangular marquee",
     "Pressing M again swaps to the ellipse marquee, and again back",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-07T17:19:09.616Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T01:20:37.265Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T01:39:34.000Z",
+      "note": "Adversarial review before building, on the running probe rather than on the source. The task's premise was half wrong: M already picked the marquee. A probe walk from the arrow tool gave rectSelect on the first press and rectSelect again on the second and third, so only the swap was missing. The tooltip already printed M as well."
+    },
+    {
+      "t": "2026-09-08T01:39:34.000Z",
+      "note": "Also found: M could hand you the MAGIC WAND. The selection slot's letter picked the remembered member, and the wand is a member, so W then M gave the wand back. M is Photoshop's marquee and the wand has W of its own, so M now always hands over a marquee."
+    },
+    {
+      "t": "2026-09-08T01:39:34.000Z",
+      "note": "Model, in PhotonzCore (TDD, 6 new tests): ToolGroup.tools(answeringTo:) gives the members a plain letter owns (its own letter owns one tool; the family letter owns the members with no letter, which is exactly the marquee pair), and tool(forKey:active:remembered:) resolves a press: already holding one of the letter's tools moves on to the next, otherwise the remembered member when the letter owns it, else the letter's first. So O is still always Ellipse and only M swaps."
+    },
+    {
+      "t": "2026-09-08T01:39:34.000Z",
+      "note": "App: ToolGroupShortcuts now asks for the tool at the moment of the press (pick(key)) instead of baking one in at build time; ToolGroupButton teaches the swap in its tooltip and at the foot of its flyout; the overflow stand-ins no longer register the marquee slot's own M on top of the family's, which would have left one of the two answering."
+    },
+    {
+      "t": "2026-09-08T01:39:34.000Z",
+      "note": "Verified on the probe: new walks marquee-answers-to-m-walk.json (M, M, M walks box, ellipse, box; tooltip capture reads \"Rectangle Select M\"; W then M gives a marquee) and marquee-m-narrow-walk.json (the same on the compact bar). tool-bar-families.json rewritten for the new selection rules and green. current-selection-slot, tool-bar-feedback, shift-letter-shortcut and frame-name-rename walks all still pass. Scripts/test.sh: 4645 tests green."
+    },
+    {
+      "t": "2026-09-08T01:39:34.000Z",
+      "note": "Acceptance: (1) M picks the rectangular marquee, verified live. (2) M again swaps to the ellipse and again back, verified live and in the model tests. (3) The tooltip reads \"Rectangle Select M\", verified on a real screen capture. (4) Nothing displaced: no new key was registered at all, and no menu item anywhere in the bar carries a plain M."
+    },
+    {
+      "t": "2026-09-08T01:39:34.000Z",
+      "note": "Audit: queue/audits/2026-09-08-marquee-answers-to-m.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T01:20:37.264Z"
 }
