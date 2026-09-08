@@ -1234,7 +1234,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expect", "field": "Padding", "reads": "40" } ] }
         """)
-        guard case .expect(let thing, let named, let reads, let present) = script.steps[0] else {
+        guard case .expect(let thing, let named, _, let reads, let present) = script.steps[0] else {
             Issue.record("expect"); return
         }
         #expect(thing == .field)
@@ -1249,7 +1249,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expect", "menu": "Version", "reads": "Disabled" } ] }
         """)
-        guard case .expect(let thing, let named, let reads, _) = script.steps[0] else {
+        guard case .expect(let thing, let named, _, let reads, _) = script.steps[0] else {
             Issue.record("expect"); return
         }
         #expect(thing == .menu)
@@ -1268,9 +1268,9 @@ struct PlaytestScriptTests {
             { "do": "expect", "tile": "Card", "present": true }
         ] }
         """)
-        guard case .expect(let first, let firstName, _, let firstPresent) = script.steps[0],
-              case .expect(let second, _, _, let secondPresent) = script.steps[1],
-              case .expect(let third, _, _, _) = script.steps[2] else {
+        guard case .expect(let first, let firstName, _, _, let firstPresent) = script.steps[0],
+              case .expect(let second, _, _, _, let secondPresent) = script.steps[1],
+              case .expect(let third, _, _, _, _) = script.steps[2] else {
             Issue.record("expect"); return
         }
         #expect(first == .control)
@@ -1279,6 +1279,36 @@ struct PlaytestScriptTests {
         #expect(second == .row)
         #expect(secondPresent == false)
         #expect(third == .tile)
+    }
+
+    // The same word can be on a dozen rows at once: every effect in the list
+    // carries a Switch, and so do Fill and Outline above them. `in` narrows the
+    // claim to one row, exactly as it does on a press, so a walk can say the
+    // BLUR's switch reads off rather than whichever switch comes first.
+    @Test("An expect step can narrow a control to the row it sits on")
+    func expectStepNarrowsToARow() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "control": "Switch", "in": "Blur", "reads": "Blur, off" } ] }
+        """)
+        guard case .expect(let thing, let named, let inRow, let reads, _) = script.steps[0] else {
+            Issue.record("expect"); return
+        }
+        #expect(thing == .control)
+        #expect(named == "Switch")
+        #expect(inRow == "Blur")
+        #expect(reads == "Blur, off")
+    }
+
+    // Only a control is looked up by the row it is on. A field, a row and a
+    // tile are found by their own names, so an `in` on one of those would be a
+    // narrowing the step silently ignores, which is worse than a refusal.
+    @Test("An expect step refuses in on anything but a control")
+    func expectStepRefusesRowOnAField() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expect", "field": "W", "in": "Blur", "reads": "40" } ] }
+            """)
+        }
     }
 
     @Test("An expect step has to name exactly one thing")
@@ -1313,7 +1343,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expect", "control": "Outline", "reads": "off" } ] }
         """)
-        guard case .expect(let thing, _, let reads, _) = script.steps[0] else {
+        guard case .expect(let thing, _, _, let reads, _) = script.steps[0] else {
             Issue.record("expect"); return
         }
         #expect(thing == .control)

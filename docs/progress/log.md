@@ -11998,3 +11998,57 @@ the layer fields do; and a typed number is not an undo step, matching the arrow
 nudge, since the selection has never entered History.
 
 Next: back to the queue.
+
+## 2026-09-07 — Everything you do to a shape's effects sticks
+
+Reported by the user on 2026-09-07: a rectangle arrived with a blur, they took
+the blur off, drew another, and the blur was back. The same gap
+`switching-a-part-off-is-remembered-for-the-next` closed for the outline on
+2026-09-06, reappearing in the Effects list, which arrived later.
+
+Every path that can change the list was read, not guessed. `addEffect`,
+`setShadowKind`, `setBorderEffectPosition`, `dropColorOnOffEffect` and every
+slider (through `commitLayerStyle`) already armed the tool. `removeEffect`,
+`moveEffect` and `setEffectEnabled` performed the document change and returned,
+so the tool kept whatever it captured the last time something did teach it, and
+the behaviour read as random rather than missing. There is no fourth path: the
+only other writers of `style.effects` in the app are the two blur sliders, and
+both go through preview/commit. The three now call
+`rememberStyleDefault(of: layerStyleSelection.layerIDs)` — the SELECTION, not
+the row's own layers, so a row speaking for one layer out of three still teaches
+nothing.
+
+The question the report opened has an answer: a new rectangle carried a blur
+because that was a CAPTURED default, not the standard style. The dev app's own
+prefs hold `rectangle.layerStyle.effects = [blur radius 8]`, and a walk on a
+machine that has never styled a rectangle shows an empty Effects list. So the
+starting point was right all along.
+
+Verified on the probe with Screen Recording granted:
+`Scripts/playtest/effects-remembered-walk.json`, 91 steps, green — a fresh box
+has nothing, adding is inherited, removing is inherited, an ellipse keeps its
+own and a rectangle does not take it, a border switched off rides across still
+Inside, and an inner shadow carried above a drop shadow is still on top on the
+next box. Survival across a quit is the `AnnotationStyles` round trip, so two
+PhotonzCore tests cover it: an empty effects list comes back empty (it writes no
+list at all, so it could have fallen into the old blur-and-shadow reading), and
+a switched-off border keeps its width, its colour and its place in the order.
+`Scripts/test.sh`: 4695 green.
+
+The harness gained two things it needed to prove any of this. `expect` takes an
+`in`, so a walk can claim what the BLUR's tick reads rather than whichever tick
+comes first; and `rightClick` finds a row of the Effects list by name, which is
+the only way a walk can reorder at all, since a synthesized press cannot start
+the grip's SwiftUI drag. Both are tested, and the row-narrowing a press already
+did is now one shared function.
+
+Found while finishing and filed rather than fixed: **a blur added to a rectangle
+paints nothing at all.** The softening is clamped and cropped back to the
+layer's own frame, and a rectangle fills its frame edge to edge, so the render
+is byte for byte what it was; on an ellipse the blur paints but its halo is cut
+off square at the box. Renders in the task. `a-blur-you-add-to-a-box-actually-softens-it`, p1.
+
+Audit: `queue/audits/2026-09-07-effects-remembered.json`, three real window
+captures. No renderer change, so no perf note.
+
+Next: back to the queue.

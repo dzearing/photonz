@@ -145,6 +145,47 @@ struct AnnotationStylesTests {
         #expect(decoded == styles)
     }
 
+    // Taking every effect off a shape has to survive a quit as surely as
+    // adding one does. A style with an EMPTY list writes no list at all, so
+    // this is the round trip that proves the tool comes back holding nothing
+    // rather than falling into the old blur-and-shadow reading.
+    @Test func aShapeArmedWithNoEffectsComesBackWithNone() throws {
+        var styles = AnnotationStyles()
+        var boxed = LayerStyle()
+        boxed.effects = [.blur(BlurEffect(radius: 8))]
+        styles.setLayerStyle(boxed, forShape: .rectangle)
+        var stripped = styles.layerStyle(forShape: .rectangle)
+        stripped.effects.removeAll()
+        styles.setLayerStyle(stripped, forShape: .rectangle)
+
+        let data = try JSONEncoder().encode(styles)
+        let decoded = try JSONDecoder().decode(AnnotationStyles.self, from: data)
+        #expect(decoded.layerStyle(forShape: .rectangle).effects.isEmpty)
+        #expect(decoded.layerStyle(forShape: .rectangle).blurRadius == 0)
+    }
+
+    // Switching one off keeps every number on it, and the order they are in is
+    // part of the look, so both have to come back off the disk untouched.
+    @Test func aSwitchedOffEffectAndItsOrderSurviveARelaunch() throws {
+        var styles = AnnotationStyles()
+        var boxed = LayerStyle()
+        boxed.effects = [
+            .border(BorderEffect(width: 3, colorHex: "#123456", position: .outside)),
+            .shadow(ShadowStyle(radius: 9, offset: CGSize(width: 2, height: 3), spread: 4)),
+        ]
+        boxed.effects[0].isOn = false
+        styles.setLayerStyle(boxed, forShape: .rectangle)
+
+        let data = try JSONEncoder().encode(styles)
+        let decoded = try JSONDecoder().decode(AnnotationStyles.self, from: data)
+        let back = decoded.layerStyle(forShape: .rectangle)
+        #expect(back.effects.map(\.kind) == [.border, .shadow])
+        #expect(back.effects[0].isOn == false)
+        #expect(back.borderEffect(at: 0)?.width == 3)
+        #expect(back.borderEffect(at: 0)?.colorHex == "#123456")
+        #expect(back.effects[1].isOn == true)
+    }
+
     // Old single-bucket prefs migrate: the shared stroke color/width seed every
     // stroke shape; the highlight color seeds highlight.
     @Test func migratesLegacySharedFormat() throws {

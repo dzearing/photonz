@@ -847,9 +847,9 @@ private final class Run {
             write(json: inventory, to: "panel-\(stage).json")
             note(number, step.name, Self.outlinePanel(inventory), state: inventory)
 
-        case .expect(let thing, let named, let reads, let present):
+        case .expect(let thing, let named, let inRow, let reads, let present):
             note(number, step.name,
-                 try checkPanel(thing, named: named, reads: reads, present: present),
+                 try checkPanel(thing, named: named, inRow: inRow, reads: reads, present: present),
                  state: describe())
 
         case .scrollPanel(let row, let by):
@@ -1612,28 +1612,33 @@ private final class Run {
     /// The one thing in the panel called this, or a refusal that says what IS
     /// there. Two things wearing the same name is refused rather than guessed
     /// at: a walk that pressed the wrong one would pass and prove nothing.
-    private func pressTarget(_ name: String, in row: String?) throws -> PlaytestPressTarget {
-        let everything = try pressTargets()
-        // "in" narrows to one row of the panel — Width's Fixed, not Height's.
-        //
-        // A detail is a list of words separated by commas, and a row's name is
-        // one whole item in it, so a whole item wins over a longer name that
-        // merely contains the asked-for one: `in: "Rectangle"` means the layer
-        // called Rectangle and not Rectangle 2 as well, which is otherwise how
-        // the second shape you draw makes the first one unpressable. Anything
-        // that matches nothing whole falls back to reading the detail as plain
-        // text, so half a row's name still finds it.
-        let all = row.map { wanted in
-            let whole = everything.filter { target in
-                target.detail.split(separator: ",").contains {
-                    $0.trimmingCharacters(in: .whitespaces)
-                        .caseInsensitiveCompare(wanted) == .orderedSame
-                }
+    /// The controls that sit on one named row of the panel — Width's Fixed, not
+    /// Height's; the blur's Switch, not the fill's.
+    ///
+    /// A detail is a list of words separated by commas, and a row's name is one
+    /// whole item in it, so a whole item wins over a longer name that merely
+    /// contains the asked-for one: `in: "Rectangle"` means the layer called
+    /// Rectangle and not Rectangle 2 as well, which is otherwise how the second
+    /// shape you draw makes the first one unpressable. Anything that matches
+    /// nothing whole falls back to reading the detail as plain text, so half a
+    /// row's name still finds it.
+    ///
+    /// A press and an `expect` narrow the same way, so a walk that can press a
+    /// row's control can claim what that same control reads.
+    static func narrow(_ targets: [PlaytestPressTarget], to row: String?) -> [PlaytestPressTarget] {
+        guard let wanted = row else { return targets }
+        let whole = targets.filter { target in
+            target.detail.split(separator: ",").contains {
+                $0.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(wanted) == .orderedSame
             }
-            return whole.isEmpty
-                ? everything.filter { $0.detail.range(of: wanted, options: .caseInsensitive) != nil }
-                : whole
-        } ?? everything
+        }
+        return whole.isEmpty
+            ? targets.filter { $0.detail.range(of: wanted, options: .caseInsensitive) != nil }
+            : whole
+    }
+
+    private func pressTarget(_ name: String, in row: String?) throws -> PlaytestPressTarget {
+        let all = Self.narrow(try pressTargets(), to: row)
         let inRow = row.map { " in \"\($0)\"" } ?? ""
         let exact = all.filter { $0.name == name }
         if exact.count == 1 { return exact[0] }
@@ -1756,8 +1761,8 @@ private final class Run {
     /// control says what it is saying right now ("Outline, off"). A row and a
     /// tile say their own names, which is why `expect` will not let a walk ask
     /// those two what they read.
-    private func panelReading(_ thing: PlaytestPanelThing,
-                              named: String) throws -> (found: Bool, reads: String, others: [String]) {
+    private func panelReading(_ thing: PlaytestPanelThing, named: String,
+                              inRow: String?) throws -> (found: Bool, reads: String, others: [String]) {
         func matches(_ candidate: String) -> Bool {
             candidate.caseInsensitiveCompare(named) == .orderedSame
         }
@@ -1790,7 +1795,7 @@ private final class Run {
             }
             return (true, match.1, [])
         case .control:
-            let controls = try pressTargets()
+            let controls = Self.narrow(try pressTargets(), to: inRow)
             guard let match = controls.first(where: { matches($0.name) }) else {
                 return (false, "", controls.map(\.name))
             }
@@ -1803,40 +1808,41 @@ private final class Run {
     }
 
     /// Hold the panel to what the walk says it is showing.
-    private func checkPanel(_ thing: PlaytestPanelThing, named: String,
+    private func checkPanel(_ thing: PlaytestPanelThing, named: String, inRow: String?,
                             reads: String?, present: Bool?) throws -> String {
-        let reading = try panelReading(thing, named: named)
+        let reading = try panelReading(thing, named: named, inRow: inRow)
         func list(_ names: [String]) -> String {
             names.isEmpty ? "none" : names.joined(separator: ", ")
         }
+        let onRow = inRow.map { " in \"\($0)\"" } ?? ""
         if let present {
             if present, !reading.found {
-                throw Failure(description: "no \(thing.rawValue) called \"\(named)\" is in the panel; "
+                throw Failure(description: "no \(thing.rawValue) called \"\(named)\"\(onRow) is in the panel; "
                     + "the ones that are: \(list(reading.others))")
             }
             if !present, reading.found {
-                throw Failure(description: "the \(thing.rawValue) called \"\(named)\" is in the panel, "
+                throw Failure(description: "the \(thing.rawValue) called \"\(named)\"\(onRow) is in the panel, "
                     + "and this step says it should not be")
             }
         }
         if let reads {
             guard reading.found else {
-                throw Failure(description: "no \(thing.rawValue) called \"\(named)\" is in the panel to read; "
+                throw Failure(description: "no \(thing.rawValue) called \"\(named)\"\(onRow) is in the panel to read; "
                     + "the ones that are: \(list(reading.others))")
             }
             let showing = reading.reads.trimmingCharacters(in: .whitespaces)
             guard showing.caseInsensitiveCompare(reads.trimmingCharacters(in: .whitespaces))
                     == .orderedSame else {
-                throw Failure(description: "the \(thing.rawValue) called \"\(named)\" reads "
+                throw Failure(description: "the \(thing.rawValue) called \"\(named)\"\(onRow) reads "
                     + "\"\(showing)\", not \"\(reads)\"")
             }
         }
         if let reads {
-            return "the \(thing.rawValue) \"\(named)\" reads \"\(reads)\", as claimed"
+            return "the \(thing.rawValue) \"\(named)\"\(onRow) reads \"\(reads)\", as claimed"
         }
         return present == true
-            ? "the \(thing.rawValue) \"\(named)\" is in the panel, as claimed"
-            : "no \(thing.rawValue) \"\(named)\" in the panel, as claimed"
+            ? "the \(thing.rawValue) \"\(named)\"\(onRow) is in the panel, as claimed"
+            : "no \(thing.rawValue) \"\(named)\"\(onRow) in the panel, as claimed"
     }
 
     /// Every glass group along the bottom of the canvas, left to right, with
@@ -2261,12 +2267,32 @@ private final class Run {
     /// that carry a menu, then anything else the panel named for itself, so
     /// the day a tile or a control grows one it is reachable without a change
     /// here.
+    /// Which control on a row a right click should land on when the row itself
+    /// has no name of its own.
+    ///
+    /// The menu being opened belongs to the whole row, so any control on it
+    /// would do — except one that would answer for itself. A popup opens its
+    /// own list, a slider takes the press, and a grip is waiting for a drag, so
+    /// the click goes to the plain buttons: the colour well, or the cross.
+    static func rightClickable(in targets: [PlaytestPressTarget]) -> PlaytestPressTarget? {
+        let speaksForItself: Set<String> = ["Slider", "Kind", "Position", "Reorder", "Switch"]
+        return targets.first { !speaksForItself.contains($0.name) }
+    }
+
     private func rightClickTarget(_ name: String) throws -> PlaytestPressTarget {
         let all = try panelTargets().filter { $0.kind != .field }
         guard let match = all.first(where: { $0.kind == .row && $0.name == name })
                 ?? all.first(where: { $0.name == name })
                 ?? all.first(where: { $0.detail == name })
                 ?? all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
+            // A row of the Effects list is not a row of the layers list: it
+            // names itself only to the press targets, which carry the row a
+            // control sits on. "Shadow 2" is a name only there, and its menu is
+            // the only way a walk can reorder the list at all, since a
+            // synthesized press cannot start a SwiftUI drag.
+            if let inRow = Self.rightClickable(in: Self.narrow(try pressTargets(), to: name)) {
+                return inRow
+            }
             let seen = all.map { $0.detail.isEmpty ? $0.name : "\($0.name) / \($0.detail)" }
                 .joined(separator: ", ")
             throw Failure(description: "nothing called \"\(name)\" is in the panel to right click; the ones "

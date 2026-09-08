@@ -1,0 +1,48 @@
+{
+  "feature": "Everything you do to a shape's effects sticks for the next shape",
+  "epic": "ui-building",
+  "summary": "Take an effect off a shape, switch one off, or change the order they paint in, and the next shape of that kind starts the way you left the last one. Before this, only ADDING an effect reached the tool, so a blur you had just got rid of came straight back on the next rectangle.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Note your rectangle tool is still holding the blur from before this fix, so the first thing to do is take it off once.",
+  "try": [
+    {
+      "do": "Draw a rectangle. If it arrives with a blur, press the cross on the Blur row in Effects."
+    },
+    {
+      "do": "Draw a second rectangle. It should have an empty Effects list.",
+      "shot": "2026-09-07-effects-remembered-blur-gone.png"
+    },
+    {
+      "do": "Press the plus on the Effects header and add a Border, then set its Position to Inside."
+    },
+    {
+      "do": "Press the Border row's tick to switch it off, and draw another rectangle.",
+      "shot": "2026-09-07-effects-remembered-border-off.png"
+    },
+    {
+      "do": "Press that box's Border tick back on: it comes back Inside, the way you set it."
+    },
+    {
+      "do": "Add two shadows, set the second one's Kind to Inner, then right click its row and choose Move Up."
+    },
+    {
+      "do": "Draw one more rectangle: the inner shadow is the top row on it too.",
+      "shot": "2026-09-07-effects-remembered-order.png"
+    },
+    {
+      "do": "Draw an ellipse. It has its own effects and never takes the rectangle's."
+    }
+  ],
+  "evaluate": [
+    "When you take an effect off one shape, do you expect the NEXT shape to lose it, or did you mean to change only the shape in front of you?",
+    "Switching an effect off hands the next shape that effect, switched off, with its settings kept. Is a new shape carrying a row that is doing nothing helpful, or is it clutter?",
+    "Should a rectangle out of the box start with no effects at all, as it does now, or is there a starting look worth having?",
+    "Is reordering behind a right click discoverable enough, or does the grip need to be easier to grab?"
+  ],
+  "rough": [
+    "A blur added to a RECTANGLE paints nothing at all: the softening is clipped to the shape's own box, and a rectangle fills its box edge to edge, so there is nothing left to see. On an ellipse the blur paints but its halo is cut off square at the box. Filed as its own task with the renders that show it. Everything in this audit is about what the tool remembers, which is right either way, but the blur is the effect the original report was about and it does not look like anything on a box.",
+    "The order of the list is changed by dragging the grip or by the row's right click menu. A scripted walk can only use the right click menu, so the grip drag is the one thing here checked by hand rather than by the walk.",
+    "Screen Recording was granted, so every picture here is a real capture of the window, not an offscreen render.",
+    "Arming still only happens when exactly ONE layer is being edited, which is the rule the outline fix set: over a selection there is no single style to hand the tool.",
+    "Undo puts the shape back but does not un-teach the tool: remove a blur, press Command Z, and the shape has its blur again while the next one you draw does not. Every arming path in the app behaves this way, including the outline switch from 2026-09-06, so it was left consistent rather than fixed here alone."
+  ]
+}

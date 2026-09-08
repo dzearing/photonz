@@ -1,0 +1,27 @@
+{
+  "id": "bring-the-scripted-walks-back-in-line-with-the-s",
+  "title": "Bring the scripted walks back in line with the split panel",
+  "goal": "Fourteen of the app's 281 scripted walks now fail, all of them because the Shadow moved out of Appearance and into the Effects list on 2026-09-07 and the walks still look for it where it used to be. Until they are green again the walk suite cannot tell a real regression from this one, so nobody can trust it to catch a mistake.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1950,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T04:45:33.779Z",
+  "updated": "2026-09-08T04:45:33.779Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Baselined on 2026-09-07 by stashing an unrelated change and re-running: all five sampled walks fail identically without it, so none of this is new work. Full run: Scripts/playtest-all.sh, 281 walks in 46m36s, 267 passed, 14 failed.\n\nThe fourteen and why:\n\n  press Switch in \"Shadow\" -> the ones that are: none\n    parts-off-is-remembered-walk (step 45), parts-settings-inline-walk (step 10), switch-says-mixed-walk (step 13)\n  dragColor onto \"Shadow\" -> no colour swatch for \"Shadow\"\n    colour-onto-an-off-part-walk (step 23)\n  dragColor onto \"Library\" -> stayed dark\n    colour-off-the-shelf-walk (step 13), colour-onto-the-library-walk (step 15)\n  press \"Limits\" / \"Stack\" -> not where a person could click it (dock got taller, control fell below the fold)\n    clip-contents-walk (step 12), out-of-view-mark-walk (step 8), size-limits-walk (step 14), contents-for-several-walk (step 58)\n  expect \"Apply to Other Versions\" reads \"Shadow, there is something to carry\", not \"there is something to carry\"\n    component-whole-path-walk (step 167) -- the new Shadow row lends its word to the detail, so the claim needs the row name in it\n  waitFor sectionInView(\"Text\") timed out\n    dock-picked-first-walk (step 47)\n  selectRow \"Photonz drop probe 2\" -> only Background in the list\n    region-keeps-your-layer-walk (step 78)\n  hover tooltip starting \"Inspector\" -> not on screen (it is \"Hide Panel\" now)\n    tool-tips (step 13)\n\nThe last four are not obviously the split and may each be their own thing; check them before assuming.",
+  "acceptance": [
+    "Scripts/playtest-all.sh reports 281 passed, 0 failed",
+    "Each walk was updated to press the control where it lives now, not deleted or skipped",
+    "Any walk that fails for a reason that is NOT the panel split is filed as its own bug with the output that shows it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T04:45:33.779Z",
+      "note": "created (manual)"
+    }
+  ]
+}

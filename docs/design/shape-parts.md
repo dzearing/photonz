@@ -120,6 +120,20 @@ A ring round a picture, a label or a highlight is styling laid over the layer
 rather than part of the shape, so it is remembered with the rest of that layer's
 look, the way pulling its width under Effects already is.
 
+**Everything you do in the Effects list is remembered the same way.** Adding an
+entry, taking one out, switching one off and changing the order all arm the
+tool, so the next shape of that kind starts wearing what you left the last one
+in. Only adding did until 2026-09-07, which is how a blur somebody had just
+taken off came straight back on the next rectangle: the tool was still holding
+the look it captured the last time something DID teach it. The whole style rides
+across, so a border switched off arrives switched off with its width, its colour
+and its place in the order kept, and a list left inner-shadow-over-drop paints
+that way on the next box.
+
+The single-layer rule still holds: over a selection there is no one style to
+hand the tool, so nothing is armed at all. `Scripts/playtest/effects-remembered-walk.json`
+is the walk that holds it to this.
+
 ### What is NOT a part
 
 - **Opacity and Blur** are laid over the whole finished layer, whatever parts it

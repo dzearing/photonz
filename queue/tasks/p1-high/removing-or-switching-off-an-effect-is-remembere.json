@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 6,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T03:31:55.154Z",
-  "updated": "2026-09-08T03:31:55.192Z",
+  "updated": "2026-09-08T04:04:58.966398Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07, and it is the same gap that switching-a-part-off-is-remembered-for-the-next closed for the outline, reappearing in the effects list which arrived later. Confirmed by reading Sources/Photonz/EditorState+ColorStyles.swift: addEffect (line 395) ends with rememberStyleDefault, so adding is remembered, while removeEffect (line 407), moveEffect (line 429) and setEffectEnabled (line 437) all perform the document change and return, arming nothing. So the tool default keeps whatever effects it captured the last time something DID arm it. Add the same call to the three that lack it, and check there is no fourth path. Also answer the question the user's report opens: a fresh rectangle should probably not carry a blur at all, so find out whether that comes from a captured default or from the shape's standard style and say which in the audit. Same rule to preserve as the outline fix: rememberStyleDefault only teaches the tool from a single layer edit.",
@@ -31,6 +31,43 @@
     {
       "t": "2026-09-08T03:31:55.191Z",
       "note": "seq 210 -> 6"
+    },
+    {
+      "t": "2026-09-08T03:33:14.917Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T04:04:58.966398Z",
+      "note": "Adversarial review before building: the ask is right and the shortest version is the right one. Every other thing the panel does to a shape already arms the tool, and three of the four moves in the Effects list did not, so the behaviour read as random rather than missing. The one thing worth arguing about is switching an effect OFF: the next shape then arrives carrying a row that draws nothing, which could read as clutter. Kept it, because it is exactly the bargain the Outline switch already struck on 2026-09-06 and because compare-with-and-without is the gesture the list is built around. Put it in the audit as a question instead of guessing."
+    },
+    {
+      "t": "2026-09-08T04:04:58.966398Z",
+      "note": "Read every path that can change the list: addEffect, setShadowKind, setBorderEffectPosition, dropColorOnOffEffect and every slider (through commitLayerStyle) already armed the tool; removeEffect, moveEffect and setEffectEnabled did not. No fourth path: the only other writers of style.effects in the app are the two blur sliders, and both go through previewLayerStyle/commitLayerStyle."
+    },
+    {
+      "t": "2026-09-08T04:04:58.966398Z",
+      "note": "Fix: those three now call rememberStyleDefault(of: layerStyleSelection.layerIDs) after the document change, the same call addEffect makes. Passing the SELECTION rather than the row's own layers keeps the single-layer rule honest: a row that speaks for one layer out of three must not arm the tool."
+    },
+    {
+      "t": "2026-09-08T04:04:58.966398Z",
+      "note": "Why a new rectangle carried a blur: it was a captured default, not the standard style. The dev app's own prefs hold rectangle.layerStyle.effects = [blur radius 8] (plutil -extract annotationStyles from com.dzearing.photonz.dev.plist), and a walk on a machine that has never styled a rectangle shows an empty Effects list. So the starting point is right and the bug was only that removing never taught the tool."
+    },
+    {
+      "t": "2026-09-08T04:04:58.966398Z",
+      "note": "Verified on the probe with Screen Recording granted. New walk Scripts/playtest/effects-remembered-walk.json, 91 steps, green: a fresh box has no effects, adding is inherited, removing is inherited, an ellipse keeps its own and a rectangle does not take it, a switched-off border rides across still Inside, and an inner shadow carried above a drop shadow is still on top on the next box."
+    },
+    {
+      "t": "2026-09-08T04:04:58.966398Z",
+      "note": "Survival across a quit is the AnnotationStyles round trip, so it is covered in PhotonzCore instead: two new tests in AnnotationStylesTests prove an empty effects list comes back empty (it writes no list at all, so it could have fallen into the old blur-and-shadow reading) and that a switched-off border keeps its width, its colour and its place in the order."
+    },
+    {
+      "t": "2026-09-08T04:04:58.966398Z",
+      "note": "Harness: expect gained an \"in\" so a walk can claim what the BLUR's tick reads rather than whichever tick comes first, and rightClick now finds a row of the Effects list by name (its context menu is the only way a walk can reorder, since a synthesized press cannot start a SwiftUI drag). Both are covered by tests."
+    },
+    {
+      "t": "2026-09-08T04:04:58.966398Z",
+      "note": "Found while finishing: a blur added to a rectangle paints nothing at all, and on an ellipse the halo is cut off square at the box. Reproduced with renders and filed as a-blur-you-add-to-a-box-actually-softens-it (p1). Not fixed here."
     }
-  ]
+  ],
+  "started": "2026-09-08T03:33:14.917Z"
 }

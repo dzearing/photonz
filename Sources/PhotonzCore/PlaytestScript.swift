@@ -1040,7 +1040,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `present: false` is as much of the point as `present: true`: a revert
     /// arrow that appears before anything has been answered is a bug no
     /// screenshot in a passing walk would have caught.
-    case expect(thing: PlaytestPanelThing, named: String, reads: String?, present: Bool?)
+    ///
+    /// `inRow` narrows a control to the row it sits on, the way a press does.
+    /// One word can be on a dozen rows at once — every effect in the list wears
+    /// a Switch, and so do Fill and Outline above them — so without it a claim
+    /// about the blur's tick would be answered by the fill's.
+    case expect(thing: PlaytestPanelThing, named: String, inRow: String?,
+                reads: String?, present: Bool?)
     /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
     /// down the list). A list that builds only the rows you can see has to be
     /// scrolled to prove the rest arrive, and that is not something a click can
@@ -1351,8 +1357,15 @@ public enum PlaytestStep: Sendable, Equatable {
             if reads != nil, thing == .row || thing == .tile {
                 throw f.invalid("reads", "only a field, a menu or a control can be asked what it reads; a \(thing.rawValue) shows its own name, so claim \"present\" instead")
             }
+            // Only a control is looked up by the row it is on; everything else
+            // is found by its own name, so an `in` there would be a narrowing
+            // the step quietly ignored.
+            let inRow = try f.optionalString("in")
+            if inRow != nil, thing != .control {
+                throw f.invalid("in", "only a control is found by the row it sits on; a \(thing.rawValue) is found by its own name, so leave \"in\" off")
+            }
             self = .expect(thing: thing, named: try f.string(thing.rawValue),
-                           reads: reads, present: present)
+                           inRow: inRow, reads: reads, present: present)
         case "scrollPanel":
             self = .scrollPanel(row: fields["row"] as? String, by: try f.number("by"))
         case "describe":

@@ -404,11 +404,17 @@ extension EditorState {
     /// The cross on a row: takes that entry out of the list. Different from the
     /// tick beside it, which keeps everything about the effect and stops it
     /// drawing.
+    ///
+    /// Taking one away arms the tool exactly as adding one does, so the next
+    /// box comes out without it. Adding already reached the tool and removing
+    /// did not, which is why a blur you had just got rid of came straight back
+    /// on the next rectangle (reported by the user on 2026-09-07).
     func removeEffect(row: LayerEffectRow) {
         guard !row.switchIDs.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
         perform { _ = $0.removeEffect(layerIDs: row.switchIDs, at: row.index) }
+        rememberStyleDefault(of: layerStyleSelection.layerIDs)
     }
 
     /// Whether a row could land in that place: inside the list, and not above a
@@ -422,19 +428,28 @@ extension EditorState {
 
     /// A row dragged into a different place, which is a change to what paints
     /// over what: the top of the list is nearest the eye.
+    ///
+    /// The order is part of the look, so it arms the tool too: leave a ring
+    /// over a shadow and the next box paints them the same way round.
     func moveEffect(row: LayerEffectRow, to target: Int) {
         guard canMoveEffect(row: row, to: target) else { return }
         stylePreview = nil
         discardDragPreview()
         perform { _ = $0.moveEffect(layerIDs: row.switchIDs, from: row.index, to: target) }
+        rememberStyleDefault(of: layerStyleSelection.layerIDs)
     }
 
     /// The tick on one entry in the list.
+    ///
+    /// Switching one off arms the tool as well, and because the entry keeps
+    /// every number on it the next box starts with the same effect, off and
+    /// ready — the same bargain the Outline switch already struck.
     func setEffectEnabled(row: LayerEffectRow, on: Bool) {
         guard !row.switchIDs.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
         perform { _ = $0.setEffectEnabled(layerIDs: row.switchIDs, at: row.index, on: on) }
+        rememberStyleDefault(of: layerStyleSelection.layerIDs)
     }
 
     /// Letting a colour go on an effect whose tick is OFF: it comes back on
