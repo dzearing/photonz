@@ -1,0 +1,35 @@
+{
+  "id": "corner-radius-rounds-the-shape-you-are-looking-a",
+  "title": "Corner radius rounds the shape you are looking at",
+  "goal": "Draw a rectangle, add a border, then pull the corner radius slider and nothing changes: not the rectangle, not the border. A slider that does nothing is worse than no slider. Rounding a rectangle should round the rectangle, and any border on it should follow that rounding.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T05:08:20.575Z",
+  "updated": "2026-09-08T05:08:20.648Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07: added a border, adjusted corner radius, nothing happened to the rectangle or the border. There are two corner radii in the app and this is almost certainly which one the slider writes. A rectangle annotation carries its own cornerRadius (Sources/PhotonzCore/Layer.swift line 120, in the annotation's coding keys at line 186) and draws its path with it, while LayerStyle carries a separate cornerRadius that rounds the layer's rendered box. The panel row reads through displayedCornerRadius, which calls layer.roundedCornerRadius(style:) (CornerRadiusSelection.swift lines 150 and 151), so check which of the two that returns and which setCornerRadius writes; if the row is writing the layer style radius on a shape that draws its own path, nothing will move. The renderer does pass the style radius to the border painting (DocumentRenderer.swift lines 526 and 527), so once the right radius is being written the border should follow, but confirm rather than assume. Whatever the answer, the app should not offer two numbers for one visible thing: say in the audit which one survives.",
+  "acceptance": [
+    "Reproduce it first and record in the log exactly what the slider changes and why nothing appears on screen",
+    "Pulling the corner radius on a rectangle visibly rounds it, at every zoom, and the shape's own settings and the panel agree on one number rather than each showing its own",
+    "Any border added to that shape follows the rounding, inside, centred or outside",
+    "The same holds for a shape that has been resized and for one inside a group",
+    "An ellipse still brings no corner radius row, as it does now",
+    "A test in PhotonzCore covers a rounded rectangle with a border, written before the change",
+    "Audit written under queue/audits/ with a rectangle at two radii with a border on it, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T05:08:20.576Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-08T05:08:20.647Z",
+      "note": "seq 230 -> 9"
+    }
+  ]
+}

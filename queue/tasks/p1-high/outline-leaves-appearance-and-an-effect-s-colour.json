@@ -1,0 +1,35 @@
+{
+  "id": "outline-leaves-appearance-and-an-effect-s-colour",
+  "title": "Outline leaves Appearance, and an effect's colour lives in its settings",
+  "goal": "Border is now something you add in Effects, but the old Outline row is still sitting in Appearance, so there are two ways to draw a line round a shape and no way to tell which one you are looking at. Take Outline out. And an effect's colour should be a setting under that effect, alongside its width and position, set the way every other colour in the app is set, with saved colours available. Today the border's colour sits up in the row header, which is neither where its own settings are nor how colours work anywhere else.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T05:08:20.535Z",
+  "updated": "2026-09-08T05:08:20.612Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07 after border-is-an-effect-you-can-add-and-shadow-is-on shipped. That task added BorderEffect (Sources/PhotonzCore/LayerEffects.swift) with a colour, width and position, but left LayerPart.outline in place, which is exactly the duplication its own acceptance asked to settle in user words; it was not settled, so settle it now by retiring the outline. The migration is the careful part, since the outline is the only edge older documents have: convert it on open rather than dropping it, and prove with a test that the picture is unchanged. On the colour: the row header currently carries the effect's colour swatch beside the tick (EffectsListInspector.swift around line 98), while its width and position sit in the settings below, so the colour is the only setting in the wrong place. Move it into the settings and use the same colour control the rest of the panel uses so saved colours work, since a colour that cannot take a style is the odd one out.",
+  "acceptance": [
+    "Appearance no longer carries an Outline row, and a shape's edge is drawn only by borders added in Effects",
+    "A document saved with an outline opens with the same picture: it arrives as a border in the Effects list, and the audit says how that conversion was done",
+    "An effect's colour is a row under that effect with its own settings, not a swatch in the row header, and the row header carries only the name, the tick and the controls that act on the whole effect",
+    "The colour row behaves exactly like every other colour in the app, including using and saving named colours",
+    "Every effect that has a colour follows this, not only the border, so the list reads one way",
+    "Core logic covered by tests in PhotonzCore written before the change, including a document with an old outline opening unchanged",
+    "Audit written under queue/audits/ with a shape whose outline became a border, and an effect with its colour row open, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T05:08:20.535Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-08T05:08:20.611Z",
+      "note": "seq 220 -> 8"
+    }
+  ]
+}
