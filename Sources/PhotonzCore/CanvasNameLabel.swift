@@ -131,6 +131,47 @@ public enum CanvasNameLabels {
                fitting: label.fitsWholeText ? label.textWidth : 0)
     }
 
+    // MARK: What a name says
+
+    /// The words above one drawing: its name, or which version it is, never
+    /// both.
+    public struct Caption: Hashable, Sendable {
+        /// The name of the thing, when the thing is worth naming here.
+        public let name: String?
+        /// Which version of its component this drawing is.
+        public let version: String?
+
+        public init(name: String?, version: String?) {
+            self.name = name
+            self.version = version
+        }
+    }
+
+    /// What the label above a drawing should say.
+    ///
+    /// **A drawing that says which version it is says only that.** Every
+    /// version of a component carries the component's name, so four versions
+    /// of a button side by side wearing "Button \u{00B7} Default", "Button
+    /// \u{00B7} Disabled" and so on repeat the one word that tells you nothing
+    /// four times, and push the one word that tells you everything to the far
+    /// right, furthest from the drawing it belongs to. Worse, the repeated
+    /// name makes each label roughly two and a half times the width of the
+    /// drawing under it, so no two of them fit on a line and the row can only
+    /// be untangled by climbing, one drawing per line, into a staircase.
+    ///
+    /// The name has not gone anywhere: a component with one drawing on the
+    /// canvas has no version to say and wears its name exactly as before, and
+    /// the name is in the layers list, the Component panel and the Library
+    /// tile either way.
+    ///
+    /// A copy never carries a name, version or no version: a screen built out
+    /// of twelve buttons would otherwise wear twelve labels all saying the
+    /// same word.
+    public static func caption(name: String, version: String?, isCopy: Bool) -> Caption {
+        if let version, !version.isEmpty { return Caption(name: nil, version: version) }
+        return Caption(name: isCopy ? nil : name, version: nil)
+    }
+
     // MARK: Two names that want the same spot
 
     /// The daylight left between one name and the one it climbed over.

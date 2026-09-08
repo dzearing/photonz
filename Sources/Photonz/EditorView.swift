@@ -320,6 +320,9 @@ struct EditorView: View {
                        onAddSweptLayers: { editorState.addSweptLayersToSelection(in: $0, inside: $1) },
                        onRenameLayer: { editorState.renameLayer(id: $0, to: $1) },
                        onRenameComponent: { editorState.renameComponent(componentID: $0, to: $1) },
+                       onRenameComponentVersion: {
+                           editorState.renameComponentVersion(componentID: $0, version: $1, to: $2)
+                       },
                        onExitGroup: { editorState.exitGroupContext() },
                        onClickedNothing: { editorState.clearLibraryPick() },
                        onDragBegin: { editorState.beginLayerDrag(id: $0) },

@@ -120,6 +120,11 @@ struct CanvasView: NSViewRepresentable {
     /// called. Separate from `onRenameLayer` because renaming a component is
     /// its own act, the one the Library tile and every copy read from.
     var onRenameComponent: (UUID, String) -> Void = { _, _ in }
+    /// A version's name typed on the canvas: the component, the version, and
+    /// what it is now called. A drawing that is one of several versions wears
+    /// the version above it rather than the component's name, and the word on
+    /// the canvas is always the word a double click opens.
+    var onRenameComponentVersion: (UUID, UUID, String) -> Void = { _, _, _ in }
     /// Escape while inside a group: step out one level, leaving that group
     /// selected. Returns false at the top level, where Escape means what it
     /// always meant.
@@ -272,6 +277,7 @@ struct CanvasView: NSViewRepresentable {
         view.onAddSweptLayers = onAddSweptLayers
         view.onRenameLayer = onRenameLayer
         view.onRenameComponent = onRenameComponent
+        view.onRenameComponentVersion = onRenameComponentVersion
         view.onClickedNothing = onClickedNothing
         view.onExitGroup = onExitGroup
         view.onDragBegin = onDragBegin
@@ -370,6 +376,7 @@ final class CanvasNSView: NSView {
     var onAddSweptLayers: ((SelectionRegion, UUID?) -> Void) = { _, _ in }
     var onRenameLayer: ((UUID, String) -> Void) = { _, _ in }
     var onRenameComponent: ((UUID, String) -> Void) = { _, _ in }
+    var onRenameComponentVersion: ((UUID, UUID, String) -> Void) = { _, _, _ in }
     var onClickedNothing: (() -> Void) = {}
     var onExitGroup: (() -> Bool) = { false }
     var onDragBegin: ((UUID) -> Void) = { _ in }

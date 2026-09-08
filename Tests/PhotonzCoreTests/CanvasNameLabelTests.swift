@@ -345,3 +345,85 @@ struct CanvasNameLabelTests {
         #expect(second.maxY == first.minY - CanvasNameLabels.verticalGap)
     }
 }
+
+/// What the words above a drawing on the canvas actually say.
+@Suite("Canvas name captions")
+struct CanvasNameCaptionTests {
+
+    @Test("An ordinary drawing says its name")
+    func plainDrawingSaysItsName() {
+        let caption = CanvasNameLabels.caption(name: "Home", version: nil, isCopy: false)
+        #expect(caption.name == "Home")
+        #expect(caption.version == nil)
+    }
+
+    @Test("A drawing that is one version of a component says the version, not the name")
+    func versionReplacesTheName() {
+        // Four drawings of one button all carry the name "Button", so the name
+        // is the word that says nothing and the version is the word that says
+        // everything. Printing both makes every label two and a half times the
+        // width of the drawing it names.
+        let caption = CanvasNameLabels.caption(name: "Button", version: "Disabled", isCopy: false)
+        #expect(caption.name == nil)
+        #expect(caption.version == "Disabled")
+    }
+
+    @Test("A copy says its version and never a name")
+    func copySaysOnlyItsVersion() {
+        #expect(CanvasNameLabels.caption(name: "Button", version: "Loading", isCopy: true)
+            == CanvasNameLabels.Caption(name: nil, version: "Loading"))
+        #expect(CanvasNameLabels.caption(name: "Button", version: nil, isCopy: true)
+            == CanvasNameLabels.Caption(name: nil, version: nil))
+    }
+
+    @Test("An empty version is no version, so the name still prints")
+    func emptyVersionIsNoVersion() {
+        let caption = CanvasNameLabels.caption(name: "Button", version: "", isCopy: false)
+        #expect(caption.name == "Button")
+        #expect(caption.version == nil)
+    }
+}
+
+/// Four versions of one component in a row: the case the whole caption rule
+/// exists for. Widths here are what the 10 point label font measures out to,
+/// with a 14 point mark in front of the letters.
+@Suite("A row of versions")
+struct CanvasVersionRowTests {
+
+    /// Four 78 point buttons at 50% zoom: 39 points wide, 51 points apart.
+    private func row(textWidths: [CGFloat]) -> [CanvasNameLabel] {
+        textWidths.enumerated().map { index, width in
+            CanvasNameLabel(id: UUID(),
+                            frameRect: CGRect(x: CGFloat(index) * 51, y: 400, width: 39, height: 18),
+                            textWidth: width, leadingInset: 14, fitsWholeText: true)
+        }
+    }
+
+    @Test("Version-only labels leave every drawing in the row with a readable label")
+    func versionOnlyLabelsStayReadable() {
+        // "Default", "Disabled", "Loading", "Pressed".
+        let stacked = CanvasNameLabels.stacked(row(textWidths: [42, 48, 45, 46]))
+        let chips = stacked.map(CanvasNameLabels.chipBox(for:))
+        for (a, b) in chips.enumerated().flatMap({ i, c in chips.dropFirst(i + 1).map { (c, $0) } }) {
+            #expect(!a.intersects(b), "two version labels must never print on top of each other")
+        }
+        // ...and none of them climbs far enough to stop belonging to its own
+        // drawing: one line up is a caption, four is a kite.
+        for label in stacked {
+            let lift = 400 - label.frameRect.minY
+            #expect(lift <= CanvasNameLabels.rowStep,
+                    "a version label should never climb more than one line")
+        }
+    }
+
+    @Test("The same row with the component name repeated on every label climbs four lines")
+    func repeatingTheNameBuildsAStaircase() {
+        // "Button \u{00B7} Default" and friends: about 92 points of letters over a
+        // 39 point drawing. This is the shape the caption rule exists to stop,
+        // kept here so it cannot come back unnoticed.
+        let stacked = CanvasNameLabels.stacked(row(textWidths: [92, 98, 95, 96]))
+        let deepest = stacked.map { 400 - $0.frameRect.minY }.max() ?? 0
+        #expect(deepest >= CanvasNameLabels.rowStep * 2,
+                "repeating the name forces the row into a staircase")
+    }
+}

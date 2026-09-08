@@ -1,0 +1,28 @@
+{
+  "feature": "Version labels on the canvas",
+  "epic": "ui-components",
+  "summary": "A drawing that is one of several versions of a component now says which version it is, and nothing else. Four versions of a button standing side by side read as Default, Disabled, Loading and Pressed instead of four labels all starting with the word Button.",
+  "setup": "Photonz Dev, Experiments window, release Next, Components on. Put a Button on the canvas from the Library.",
+  "try": [
+    { "do": "Drag a Button from the Library shelf onto an empty canvas." },
+    { "do": "Look at the word above it: it says Button, the way it always did." },
+    { "do": "In the Component section press Add beside Versions, type Disabled, press Return." },
+    { "do": "Pick the Default version in the Versions list, press Add again, type Loading, press Return." },
+    { "do": "Do it once more for Pressed, so four drawings stand in a row.", "shot": "2026-09-08-version-labels-row-sc.png" },
+    { "do": "Zoom to 50% and look at the row again.", "shot": "2026-09-08-version-labels-fifty-sc.png" },
+    { "do": "Double click the word Disabled above the second drawing and type a new name.", "shot": "2026-09-08-version-labels-renaming-sc.png" }
+  ],
+  "evaluate": [
+    "With four of them in a row, can you tell at a glance which drawing is which?",
+    "Losing the component's name from the canvas once it has two drawings: does that ever leave you unsure what you are looking at?",
+    "At 50% the labels cannot all fit on one line and every other one steps up a line. Does the zigzag read, or would you rather they shortened and stayed on one line?",
+    "Double clicking a version renames the VERSION now, not the component. Is that the rename you expected from that word?",
+    "The mark in front of every label is the same four diamonds four times over. Is it earning its space, or is it the next thing to thin out?"
+  ],
+  "rough": [
+    "The task was filed saying the labels print on top of each other. They do not: names that collide already climb onto a clear line, and that was working. The real fault was width, so the fix is that a drawing which says its version says only that.",
+    "At 50% zoom the four labels still cannot share one line, so they alternate between two lines. Each one starts at its own drawing's left edge so it is traceable, but it is a zigzag rather than a row.",
+    "A component with two or more drawings no longer shows its name anywhere on the canvas. It is still in the layers list, the Component section and the Library tile. This is the deliberate trade and it is the first thing to argue with.",
+    "Screenshots here are real screen captures: the probe held the Screen Recording grant for this run."
+  ]
+}

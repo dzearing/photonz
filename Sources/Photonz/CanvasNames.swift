@@ -36,25 +36,22 @@ extension CanvasNSView {
         let layer: Layer
         let label: CanvasNameLabel
         let kind: Kind
-        /// Which version of its component this drawing is, when the component
-        /// holds more than one (`PhotonzDocument.canvasVersionNames`). Nil on
-        /// everything else, which is nearly every chip.
-        let version: String?
+        /// What this chip says: the layer's name, or which version of its
+        /// component the drawing is, never both
+        /// (`CanvasNameLabels.caption`).
+        let caption: CanvasNameLabels.Caption
+
+        /// The one word printed above the drawing, nil for a copy of the first
+        /// version, which wears its mark and nothing else.
+        var word: String? { caption.name ?? caption.version }
     }
 
-    /// The gap between a name and the version printed after it.
-    static let versionGap: CGFloat = 5
-
-    /// How wide `version` prints in the name font, zero for no version.
-    static func versionWidth(_ version: String?) -> CGFloat {
-        guard let version, !version.isEmpty else { return 0 }
-        return ((versionSeparator + version) as NSString)
+    /// How wide `word` prints in the name font, zero for nothing to print.
+    static func captionWidth(_ word: String?) -> CGFloat {
+        guard let word, !word.isEmpty else { return 0 }
+        return (word as NSString)
             .size(withAttributes: [.font: nameLabelFont]).width.rounded(.up)
     }
-
-    /// The middle dot that keeps "Button" and "Disabled" from reading as one
-    /// long name. A copy has no name in front of it, so it prints none.
-    static let versionSeparator = "\u{00B7} "
 
     /// Everything drawn in that strip, in the order it draws, back to front:
     /// screens, then components, then the marks on copies. That order is what
@@ -79,22 +76,19 @@ extension CanvasNSView {
             guard layer.isVisible, let bounds = document.canvasBounds(of: layer.id),
                   bounds.width > 0, bounds.height > 0 else { return }
             let rect = viewRect(forDocRect: bounds, in: viewport)
-            let version = kind == .screen ? nil : versions[layer.id]
-            // A copy has no name of its own, so its ink is the version alone.
-            let name = kind == .copyMark ? 0 : (layer.name as NSString)
-                .size(withAttributes: [.font: Self.nameLabelFont]).width.rounded(.up)
-            let width = name + (name > 0 && version != nil ? Self.versionGap : 0)
-                + Self.versionWidth(version)
+            let caption = CanvasNameLabels.caption(name: layer.name,
+                                                   version: kind == .screen ? nil : versions[layer.id],
+                                                   isCopy: kind == .copyMark)
             chips.append(CanvasNameChip(layer: layer,
                                         label: CanvasNameLabel(id: layer.id, frameRect: rect,
-                                                               textWidth: width,
+                                                               textWidth: Self.captionWidth(caption.name ?? caption.version),
                                                                leadingInset: inset,
                                                                // A version is the word that tells
                                                                // two drawings apart, so a small box
                                                                // widens its caption rather than
-                                                               // cutting the name off in front of it.
-                                                               fitsWholeText: version != nil),
-                                        kind: kind, version: version))
+                                                               // cutting it off.
+                                                               fitsWholeText: caption.version != nil),
+                                        kind: kind, caption: caption))
         }
         if framesEnabled, document.hasFrames {
             for frame in document.frames {
@@ -114,7 +108,7 @@ extension CanvasNSView {
         }
         let stacked = CanvasNameLabels.stacked(chips.map(\.label))
         return zip(chips, stacked).map {
-            CanvasNameChip(layer: $0.layer, label: $1, kind: $0.kind, version: $0.version)
+            CanvasNameChip(layer: $0.layer, label: $1, kind: $0.kind, caption: $0.caption)
         }
     }
 
@@ -153,6 +147,25 @@ extension CanvasNSView {
         id == selectedLayerID || multiSelectedLayerIDs.contains(id) || id == hoveredNameLabelID
     }
 
+    /// Which version this drawing is, when the word above it says the version
+    /// rather than the component's name.
+    ///
+    /// The word on the canvas is a handle, so it has to be the word that gets
+    /// typed over: a label reading "Disabled" that opened a field saying
+    /// "Button" would be a rename nobody asked for. So where the label shows a
+    /// version, double clicking it renames the VERSION, through the same call
+    /// the Versions list in the Component panel makes.
+    func canvasRenameVersion(of id: UUID) -> (component: UUID, version: ComponentVersion)? {
+        guard componentsEnabled, let document,
+              let chip = canvasNameChips().first(where: { $0.layer.id == id }),
+              chip.kind == .component, chip.caption.version != nil,
+              let componentID = chip.layer.componentID,
+              let version = document.componentVersions(of: componentID)
+                  .first(where: { $0.layerID == id })
+        else { return nil }
+        return (componentID, version)
+    }
+
     // MARK: Typing a name
 
     /// Opens a name for typing, right where it is drawn, with the whole name
@@ -168,7 +181,9 @@ extension CanvasNSView {
             refreshOverlays()
         }
         let field = CanvasNameFieldView(frame: .zero)
-        field.string = entry.layer.name
+        // The word on screen, not the layer's name: on a drawing labelled with
+        // its version those are two different words.
+        field.string = canvasRenameVersion(of: id)?.version.name ?? entry.layer.name
         field.font = Self.nameLabelFont
         field.textColor = .labelColor
         field.insertionPointColor = .labelColor
@@ -227,19 +242,23 @@ extension CanvasNSView {
     /// Return, or a click anywhere else: the typed name lands as one undo step.
     /// An empty name is no name at all, so it leaves the box as it was.
     ///
-    /// A component is renamed as a component rather than as a layer. The name
-    /// lives in one place either way, but the component call is the one that
-    /// keeps the Library tile and every copy reading from it.
+    /// Whatever word was on the canvas is the word that changes. A drawing
+    /// labelled with its version renames the version; a component renames as a
+    /// component rather than as a layer, because that is the call the Library
+    /// tile and every copy read from; anything else renames the layer.
     func commitCanvasRename() {
         guard let field = canvasNameField, let id = canvasRenameID else { return }
         let typed = field.string.trimmingCharacters(in: .whitespacesAndNewlines)
         let layer = document?.layer(id: id)
-        let previous = layer?.name
+        let renaming = canvasRenameVersion(of: id)
+        let previous = renaming?.version.name ?? layer?.name
         let componentID = (layer?.isMainComponent == true && componentsEnabled)
             ? layer?.componentID : nil
         teardownCanvasRename()
         guard !typed.isEmpty, typed != previous else { return }
-        if let componentID {
+        if let renaming {
+            onRenameComponentVersion(renaming.component, renaming.version.id, typed)
+        } else if let componentID {
             onRenameComponent(componentID, typed)
         } else {
             onRenameLayer(id, typed)

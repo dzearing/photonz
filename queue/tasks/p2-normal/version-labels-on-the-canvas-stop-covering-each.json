@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1850,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:03:39.748Z",
-  "updated": "2026-09-07T21:03:39.749Z",
+  "updated": "2026-09-08T09:01:08.291Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-07 with Scripts/playtest.sh Scripts/playtest/version-lands-in-room-walk.json, stage all-four: /tmp/photonz-playtest/version-lands-in-room/version-room-4-all-sc.png shows Button . Default, Button . Disabled, Button . Loading and Button . Pressed stacked into each other above four 78pt-wide drawings. The labels are drawn per layer above its box with no collision handling.",
@@ -22,6 +22,47 @@
     {
       "t": "2026-09-07T21:03:39.749Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T08:42:27.626Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T08:47:17.515Z",
+      "note": "Reproduced on current HEAD: Scripts/probe-app.sh (Grants: probe Screen Recording granted) then Scripts/playtest.sh Scripts/playtest/version-lands-in-room-walk.json, stage all-four, /tmp/photonz-playtest/version-lands-in-room/version-room-4-all-sc.png."
+    },
+    {
+      "t": "2026-09-08T08:47:17.515Z",
+      "note": "The filed diagnosis is wrong and the finding is worse. The labels do NOT print on top of each other: CanvasNameLabels.stacked lifts a crowded name onto a clear line and it works. What actually breaks is that all four labels read \"Button . <version>\", so each is about 2.4x the width of the 39pt drawing it names at 50% zoom, and four of them can only be separated by climbing four rows. The result is a diagonal staircase where \"Button . Pressed\" floats three lines up and to the right of the drawing it belongs to, and \"Button . Loading\" runs across its neighbour. The acceptance criteria still stand; the cause is width, not collision handling."
+    },
+    {
+      "t": "2026-09-08T08:47:17.515Z",
+      "note": "Adversarial review of the idea. Repeating the component name on every drawing of that component is the decorative part: the word is identical on all four and the eye reads a wall of \"Button Button Button Button\", while the one word that tells them apart is pushed to the far right, furthest from the drawing, and drawn DIMMER than the redundant word. The shortest version that delivers the value is to drop the repeated name and print the version alone, full strength, behind the mark. A component still shows its name on canvas whenever it has one drawing there, which is the ordinary case, and the name is still in the layers list, the Component panel and the Library tile."
+    },
+    {
+      "t": "2026-09-08T08:47:17.515Z",
+      "note": "Rejected: shortening only when crowded. The label would reword itself as you pinch, which is flicker. Rejected: keeping the name on the leftmost drawing only. That chip is the widest and it is the one that covers its neighbours, so the staircase comes straight back at 50% zoom."
+    },
+    {
+      "t": "2026-09-08T08:47:17.515Z",
+      "note": "Consequence that must be handled: a name on the canvas is a rename handle, so a label reading \"Disabled\" that opened a field prefilled with \"Button\" would be broken. Double clicking a version label renames the VERSION instead, through the renameComponentVersion path the Component panel already uses, so the word you see is the word you edit."
+    },
+    {
+      "t": "2026-09-08T09:01:08.291Z",
+      "note": "Built. CanvasNameLabels.caption (PhotonzCore, tested first) decides the one word above a drawing: the version when there is one, the name otherwise, never both. CanvasNames builds the chip from it and CanvasComponents draws one text run instead of a name plus a dimmed version. The versionSeparator and versionGap are gone with the two-word label."
+    },
+    {
+      "t": "2026-09-08T09:01:08.291Z",
+      "note": "Rename follows the word. CanvasNSView.canvasRenameVersion routes a double click on a version label to renameComponentVersion, wired through CanvasView.onRenameComponentVersion to EditorState. A lone component still renames as a component."
+    },
+    {
+      "t": "2026-09-08T09:01:08.291Z",
+      "note": "Verified with a new walk, Scripts/playtest/version-labels-row-walk.json (58 steps, status ok, probe held Screen Recording). At 100% the four labels sit on one line, each above its own drawing. At 50% they alternate between two lines with none overlapping. A lone original still says Button and double clicking it renamed the component to Primary, asserted with an expect on the layers row. Double clicking Disabled opened a field holding the word Disabled and renaming it to Off changed the version, leaving the component named Button."
+    },
+    {
+      "t": "2026-09-08T09:01:08.291Z",
+      "note": "Adversarial review of the built thing. What is still rough: at 50% the labels cannot share one line so the row zigzags, and a component with two or more drawings no longer shows its name anywhere on the canvas. Both are in the audit as things to argue with. The four-diamond mark now repeats four times where the name used to, which is the next candidate to thin out, but it is the only thing saying original rather than copy so it stays for now."
     }
-  ]
+  ],
+  "started": "2026-09-08T08:42:27.625Z"
 }
