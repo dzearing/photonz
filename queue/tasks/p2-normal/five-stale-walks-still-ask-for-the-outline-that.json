@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2060,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T18:06:02.560Z",
-  "updated": "2026-09-08T18:25:16.029739Z",
+  "updated": "2026-09-08T18:25:44.127Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08 on the pre-change code (git stash of the border-row work), so these are stale rather than caused by it. Command:\n\n  Scripts/playtest-all.sh border-color corner-radius-rounds effect-colour ellipse-border outline-position\n\nOutput:\n  border-color-walk           7s  FAILED  step 26 (type): no text field has the keyboard (first responder is CanvasNSView)\n  corner-radius-rounds-walk   3s  FAILED  step 8 (press): no control called \"Slider\" in \"Border\" is in the panel; the ones that are: Color (Border 1, Color, Border), Color (Border 2, Color, Border)\n  effect-colour-walk          4s  FAILED  step 8 (press): same as above\n  ellipse-border-walk         3s  FAILED  step 10 (press): same as above\n  outline-position-walk       4s  FAILED  step 14 (panelMenu): no menu called \"Position\" is in the window; the ones that are: 100%, Add Effect, Color, Border (Inside)\n\nThree of them share one cause: a shape now ARRIVES holding a Border, so the walk step Add Effect > Border makes a SECOND one and the rows become Border 1 and Border 2, which no step names. Either drop the Add Effect step and tune the row the shape came with, or name Border 1. outline-position-walk looks for a Position menu that is now on the Border row itself. border-color-walk is a different fault: a type step lands with the canvas holding the keyboard.\n\nThe same run reported 43 other walks passing, so the harness itself is fine.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-08T18:25:16.029739Z",
       "note": "No audit written: this repairs the test harness, it ships no feature a person can try. Matches how the earlier walk-repair tasks were closed."
+    },
+    {
+      "t": "2026-09-08T18:25:44.125Z",
+      "note": "All five walks pass. Each now reaches the Border the shape arrives with rather than adding a second one, outline-position opens the Border row's own menu, and border-color saves its style through that row's colour menu instead of a probe shortcut that had been silently broken. Verified by three consecutive runs of Scripts/playtest-all.sh border-color corner-radius-rounds effect-colour ellipse-border outline-position (5 passed, 0 failed each time), Scripts/test.sh green at 4906 tests, and every stage note checked by eye against its render and screen capture. Committed as deb5d9d2."
     }
   ],
-  "started": "2026-09-08T18:08:34.926Z"
+  "started": "2026-09-08T18:08:34.926Z",
+  "completed": "2026-09-08T18:25:44.126Z"
 }

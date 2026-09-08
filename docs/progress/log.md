@@ -12969,3 +12969,39 @@ ellipse-border, outline-position) were already failing before this work and fail
 identically with it stashed, so they are stale rather than broken; filed as its
 own task. Three of them share one cause, a shape that now arrives holding a
 Border while the walk adds a second one.
+
+## 2026-09-08 — Five stale border walks
+
+Five scripted walks had stopped partway through since a shape's edge became a
+Border effect: `border-color`, `corner-radius-rounds`, `effect-colour`,
+`ellipse-border`, `outline-position`. Reproduced first, unchanged, at 0 passed
+5 failed.
+
+Three shared one cause. A drawn shape now ARRIVES holding a Border row, so the
+step `Add Effect > Border` made a second one, the rows became Border 1 and
+Border 2, and no step named either. The plus step is gone from all three and
+they tune the border the shape came with. `outline-position` looked for a
+Position menu that is now the Border row's own menu, named "Border".
+`border-color` drove `saveBorderColorStyle`, a probe action that asks for a
+name field under the Appearance Border row, which OutlineRetirement removed on
+2026-09-07: the field opened where nothing could see it and the typing landed
+on the canvas. It now uses the row's real colour menu, which says "Save as
+Style for All 2" over two frames, so the walk's claim is made by the app's own
+words. `saveBorderColorStyle` is removed, unused and silently broken.
+
+Worth remembering: the first repair passed while photographing nothing. A
+shape's border arrives painted the same colour as its fill, so an 11 pt outside
+ring is invisible and the box merely looks bigger. `corner-radius-rounds` and
+`ellipse-border` now darken the ring before judging its shape. The product
+problem behind that is filed as
+`a-shape-s-border-arrives-the-same-colour-as-its`, with pixel evidence: fill
+centre and outside-border pixel both (255, 59, 48).
+
+Verified with three consecutive runs of the acceptance command (5 passed, 0
+failed each time) and `Scripts/test.sh` green at 4906 tests. Committed as
+deb5d9d2.
+
+Next: the invisible-border task is the open follow-up. Open question for the
+user there is what colour a first border should be, since "a darker shade of
+the fill", "a fixed ink" and "the last border colour you used" are all
+defensible and only one of them is what they want.
