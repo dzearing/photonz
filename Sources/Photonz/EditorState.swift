@@ -860,6 +860,9 @@ final class EditorState {
     /// one on screen, so two pills never stack.
     var copyConfirmation: CopyConfirmation?
     var copyConfirmationTimer: Task<Void, Never>?
+    /// The pointer is resting on a pill that carries a button, so its clock is
+    /// stopped (`holdCanvasNotice`). Nothing but a pill with a button holds.
+    var canvasNoticeHeld = false
 
     /// The saved colours this window has already said could not come along
     /// (`announceArmedColorStyleLeftBehind`). One line the first time you draw

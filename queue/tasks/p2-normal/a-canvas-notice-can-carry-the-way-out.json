@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T12:08:14.615Z",
-  "updated": "2026-09-08T12:09:06.793Z",
+  "updated": "2026-09-08T13:42:06.362524Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-08. The runner who built Turn Into Picture asked for this in queue/audits/2026-09-08-turn-into-a-picture.json: \"The pill still cannot be clicked. Offering the command as a button inside the refusal itself would be one step instead of three, but no notice pill in the app has an action in it yet, and adding the first one is a bigger change than this task. Say the word and it becomes its own task.\" This is that task.\n\nIt is a foundation change, so it needs the doc changed with it: docs/design/mocks/shared/UX-PATTERNS.md section 3 defines Canvas notice as a surface that \"takes no input, has no close control\". That sentence is what made the runner stop, and it was right to stop. Either the rule gains a narrow exception for a refusal offering its own way out, or this task answers that a notice must stay inert and the way out belongs somewhere else. Decide that first, in the audit, before building.",
@@ -29,6 +29,19 @@
     {
       "t": "2026-09-08T12:09:06.792Z",
       "note": "seq 2040 -> 40"
+    },
+    {
+      "t": "2026-09-08T13:14:23.391Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T13:17:13.859029Z",
+      "note": "Adversarial review before building (2026-09-08). 1. The rule. UX-PATTERNS section 3 says the canvas notice 'takes no input, has no close control'. The rule earns a narrow exception, not a repeal: the vocabulary ALREADY has a transient that carries an action, the capture toast with its Edit row, so an action on a transient is not a new idea in this product. The exception is written as one clause: a notice may carry exactly one action, and only when it is a refusal offering the very thing the person just asked for. No close control still, no second action, no input field. That keeps every other notice inert. 2. A button that vanishes in 3 seconds is worse than no button. breakLifetime is 3.0s. Read the title, read the line, decide, travel to the pill, and it is gone, and now you have learned the app takes things away while you reach for them. So an action notice gets a longer clock (6s) AND the clock stops while the pointer is over it. Without both, the button is a taunt. 3. Keyboard reach: a key that only works while a pill is up is modal state nobody can see. Return is also already taken on the canvas three ways, and one of them (open the text editor) fires on exactly the layer kind this refusal is about, so Return is out. The honest answer is a REAL shortcut on the command itself: Turn Into Picture gets Shift-Command-R in the Layer menu, and the pill's button shows it. It works while the pill is up, after it fades, and with no pill at all, which is what keyboard reach means. 4. The pill must not eat canvas clicks. Today it is allowsHitTesting(false) for its whole life. Only a notice that HAS an action takes the pointer, and only for its own few seconds. 5. The action has to remember which layer. Selection can change between the refusal and the press, so the action carries the layer id captured at the moment of the refusal. A pill that rasterizes whatever happens to be selected now is a data-loss bug. 6. Only .canBecomeAPicture gets a button. .notPixels (a measurement, a group) has no way out to offer, and .adjustedPicture is already a picture. Offering a button that cannot help is worse than offering nothing. 7. Copy: with a button present the line must stop saying 'from the Layer menu', which also fixes the previous audit's complaint that the line was too long for one pill. 8. Shortest version: one action case, not an action framework. No dismiss control, no stacking, no second button."
+    },
+    {
+      "t": "2026-09-08T13:42:06.362524Z",
+      "note": "Built and reviewed on the running probe. The rule question came out as an EXCEPTION, not a repeal: shared/UX-PATTERNS.md section 3 now says a canvas notice takes no input except that a REFUSAL may carry the way out of that refusal, one action, no close control, and it must show the same command's keyboard shortcut. Core: CanvasNoticeAction (one case, .turnIntoPicture carrying the layer id captured at the refusal), CopyConfirmation.action + actionLifetime 6s + heldLifetime 12s, RegionSliceRefusal.detail(offeringItsOwnWayOut:) which drops the 'from the Layer menu' clause when the button is there, and .offersTurnIntoPicture so only .canBecomeAPicture gets one. App: raiseRegionSliceRefusal is now the one door every refusal goes through, holdCanvasNotice stops the clock under the pointer up to the ceiling, performCanvasNoticeAction runs the same call the menu row runs, and the pill takes the pointer only when it has a button. Turn Into Picture got \u21e7\u2318R in the Layer menu and the button wears it, which is the keyboard answer: a key that only worked while a pill was up would be modal state nobody can see, and Return is taken three ways on the canvas already. Post-build review on the probe found two things and both are fixed: the button first rendered as plain text (now a capsule button inside the pill), and the hover hold pinned the pill forever whenever the pointer never moved again, which is why heldLifetime exists. Two HARNESS bugs also turned up and are fixed, both of which had let a walk lie: a key step could not reach an attached sheet (it went to the editor and vanished), and no walk could press a sheet's buttons at all, so a question raised under a synthesized click in a background app could be photographed and never answered while the steps after it reported passes. PlaytestHarness.keyTarget and PlaytestPanelPress.sheetButtons. Verified: Scripts/test.sh 4869 tests green; Scripts/playtest/notice-carries-the-way-out-walk.json ok, pressing the pill's button raises the same question, answering it makes the layer a picture (arrows []) and the very same Delete then takes the piece out (notice-7-piece-out-doc.png), two undos put the editable rectangle back; the Layer menu listing carries \u21e7\u2318R on the row; the Measure hint pill is unchanged with no button. turn-into-a-picture, cut-says-what-it-cannot-do and fill-says-what-it-cannot-do walks all still ok. Audit: queue/audits/2026-09-08-notice-carries-the-way-out.json."
     }
-  ]
+  ],
+  "started": "2026-09-08T13:14:23.390Z"
 }

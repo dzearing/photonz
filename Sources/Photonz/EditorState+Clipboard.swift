@@ -177,7 +177,7 @@ extension EditorState {
            Experiments.shared.cutSaysWhatItCannotDoEnabled, hasPixelRegion,
            let id = pickedLayerID, let layer = document?.layer(id: id),
            let refusal = RegionSliceRefusal.refusal(for: layer, action: .cut) {
-            raiseCanvasNotice(.regionSliceRefused(refusal))
+            raiseRegionSliceRefusal(refusal, layer: id)
             return
         }
         guard let id = selectedLayerID, let layer = document?.layer(id: id),

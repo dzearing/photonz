@@ -227,7 +227,14 @@ private final class Run {
             note(number, step.name, "\(said); \(MainThreadMeter.shared.report)")
 
         case .key(let key, let modifiers):
-            let window = try requireWindow()
+            // A sheet is a window of its own sitting on the editor's, and it is
+            // the one holding the keyboard while it is up: a person answering
+            // "Turn this shape into a picture?" with ⏎ is pressing the sheet's
+            // default button, not typing at the canvas. Sending the press to
+            // the editor instead did nothing at all, so a walk could raise a
+            // question, "answer" it, and carry on reporting passes over a
+            // document that never changed. Found on 2026-09-08.
+            let window = try keyTarget()
             // Look the item up BEFORE the press: after it, an item that has
             // just been ticked or unticked reports its new state and the log
             // describes the wrong thing.
@@ -1693,6 +1700,7 @@ private final class Run {
     /// so the colour picker can be used and not only photographed.
     private func pressTargets() throws -> [PlaytestPressTarget] {
         try panelWindows().flatMap { pressTargets(in: $0) }
+            + PlaytestPanelPress.sheetButtons(on: try requireWindow())
     }
 
     /// The same, for one surface. Rows and controls are matched up WITHIN a
@@ -3464,6 +3472,13 @@ private final class Run {
     private func requireWindow() throws -> NSWindow {
         guard let window else { throw Failure(description: "no editor window is open; add an \"open\" step first") }
         return window
+    }
+
+    /// The window a plain key press belongs to: the sheet on the editor when
+    /// one is up, the editor itself otherwise. See the `.key` case for why.
+    private func keyTarget() throws -> NSWindow {
+        let editor = try requireWindow()
+        return editor.attachedSheet ?? editor
     }
 
     /// One of the app's own windows, by title. Exact first, then a prefix, so

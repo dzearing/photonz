@@ -244,9 +244,31 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   rule: **bottom centre of the canvas, just above the floating tool bar, never
   behind it; one notice at a time**, never a stack, with a confirmation winning
   over a hint while it is up. **While the Measure tool is in hand the slot is reserved for its mode
-  hint**, so nothing else may park there. It takes no input, has no close
-  control, and fades with whatever put it up. Not a tooltip (D12): it is on
-  screen unprompted and never anchored to a control.
+  hint**, so nothing else may park there. It has no close control and fades
+  with whatever put it up. Not a tooltip (D12): it is on screen unprompted and
+  never anchored to a control.
+  - **It takes no input**, with one narrow exception added 2026-09-08 (audit
+    `2026-09-08-notice-carries-the-way-out`): **a notice that REFUSES something
+    may carry the way out of that refusal, as a single button**. Nothing else
+    may. The test is strict: the person just asked for a thing, the app knows
+    the one command that would let it through, and without the button they
+    would have to go and find that command themselves. "Cannot delete a piece
+    — Only a picture can have a piece taken out. **Turn Into Picture ⇧⌘R**" is
+    the case it was written for.
+  - Everything else about a notice survives the exception. **One action, never
+    two.** No close control, no field, no menu inside the pill. It still fades
+    on its own, it still never takes the keyboard off the canvas, and the
+    button is never the only door to that command: it is a shortcut to a row
+    that already has a permanent home in a menu, and the button **shows that
+    row's keyboard shortcut**, so somebody who never touches a pointer has the
+    same way out and keeps it after the pill has gone.
+  - Two things a notice with a button must do that an inert one does not.
+    **It stays up longer** (6s rather than 3s): three seconds is enough to read
+    a refusal and not enough to read it, decide, and travel to a control.
+    **Resting the pointer on it stops its clock**, so it cannot leave while
+    somebody is reaching for it. And **only a notice with a button takes the
+    pointer at all** — an inert one stays click-through, so it can never
+    swallow a click meant for the canvas underneath it.
 - **Modal + toast** — rare document-scoped dialogs (export, new document), and
   transient confirmations ("Saved", "42 instances updated"). The **capture
   toast** is the global one: it belongs to the menu-bar agent, sits bottom

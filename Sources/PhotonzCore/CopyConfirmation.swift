@@ -96,17 +96,43 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// decide whether to press Command Z.
     public static let breakLifetime: TimeInterval = 3.0
 
+    /// How long a notice that carries a BUTTON stays up (`CanvasNoticeAction`).
+    /// Longest of the three, because it is the only one you are asked to reach
+    /// for: three seconds is enough to read a refusal and not enough to read
+    /// it, decide, and travel to a control. A button that leaves while you are
+    /// reaching for it teaches you that the app takes things away.
+    public static let actionLifetime: TimeInterval = 6.0
+
+    /// The longest a notice can be held on screen by a pointer resting on it,
+    /// counted from the moment it went up.
+    ///
+    /// Resting on a pill stops its clock so it cannot leave while somebody is
+    /// reaching for it, but "the pointer is over it" and "the pointer happens
+    /// to be parked where it appeared" look identical from the inside, and a
+    /// notice has no close control. Without a ceiling, a pill that turns up
+    /// under a hand that never moves again stays up for good — which a walk
+    /// caught doing exactly that on 2026-09-08. Twice the action clock is more
+    /// than enough for anyone actually reading it.
+    public static let heldLifetime: TimeInterval = 12.0
+
     public var subject: Subject
     public var shownAt: Date
+    /// The one thing this notice offers you to press, when it has one. Nil for
+    /// every notice but a refusal that knows its own way out, so the pill stays
+    /// inert and click-through in every other case.
+    public var action: CanvasNoticeAction?
 
-    public init(subject: Subject, shownAt: Date) {
+    public init(subject: Subject, shownAt: Date, action: CanvasNoticeAction? = nil) {
         self.subject = subject
         self.shownAt = shownAt
+        self.action = action
     }
 
     /// How long THIS pill stays up, which depends on how much it is asking of
     /// the person reading it.
     public var lifetime: TimeInterval {
+        // A pill you are meant to press outranks both: see `actionLifetime`.
+        if action != nil { return Self.actionLifetime }
         switch subject {
         // These are the ones you might want to ACT on, and 1.6 seconds is
         // under the time it takes to read a sentence naming two things and
@@ -127,8 +153,11 @@ public struct CopyConfirmation: Hashable, Sendable {
 
     /// The same pill, re-shown for a new copy with its clock restarted. Two
     /// quick copies keep one pill up that fades from the last one.
-    public func reshown(as subject: Subject, at now: Date) -> CopyConfirmation {
-        CopyConfirmation(subject: subject, shownAt: now)
+    /// The new notice's own action is what it carries: a plain notice landing
+    /// on top of a refusal must take the button away rather than inherit it.
+    public func reshown(as subject: Subject, at now: Date,
+                        action: CanvasNoticeAction? = nil) -> CopyConfirmation {
+        CopyConfirmation(subject: subject, shownAt: now, action: action)
     }
 
     /// The verdict, set in its own weight at the head of the pill.
@@ -193,7 +222,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .toolColorStyle(let notice):
             return notice.detail
         case .regionSliceRefused(let refusal):
-            return refusal.detail
+            // With a button in the pill the line must stop naming the menu:
+            // two ways out in one sentence is one too many to read, and the
+            // button IS the way out.
+            return refusal.detail(offeringItsOwnWayOut: action != nil)
         }
     }
 

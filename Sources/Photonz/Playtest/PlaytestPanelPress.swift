@@ -63,6 +63,43 @@ struct PlaytestPressTarget {
 }
 
 enum PlaytestPanelPress {
+    /// The buttons on a question the app has put up as a sheet, named by the
+    /// words on them: "Turn Into Picture", "Cancel", "Don't ask again".
+    ///
+    /// A walk used to answer a sheet only by pressing ⏎ at it, which reaches
+    /// the DEFAULT button and nothing else — and reaches even that only while
+    /// the sheet's window is key, which it is not when the sheet came up under
+    /// a synthesized click in a background app. On 2026-09-08 that put a walk
+    /// in front of a question it could see, could photograph, and could not
+    /// answer, so the steps after it ran against a document that had never
+    /// changed. Naming the buttons makes a question something a walk can
+    /// answer either way, and Cancel was never reachable at all before.
+    ///
+    /// Sheets only. Every other NSButton in the app stays anonymous, because a
+    /// window full of buttons pressable by their titles is a walk that lands on
+    /// whichever one AppKit happened to build first.
+    @MainActor static func sheetButtons(on host: NSWindow) -> [PlaytestPressTarget] {
+        guard let sheet = host.attachedSheet, let content = sheet.contentView else { return [] }
+        return buttons(in: content).map { button in
+            let box = button.convert(button.bounds, to: nil)
+            return PlaytestPressTarget(name: button.title,
+                                       detail: "Sheet",
+                                       point: CGPoint(x: box.midX, y: box.midY),
+                                       box: box,
+                                       isEnabled: button.isEnabled,
+                                       window: sheet)
+        }
+    }
+
+    @MainActor private static func buttons(in view: NSView) -> [NSButton] {
+        var found: [NSButton] = []
+        if let button = view as? NSButton, !button.title.isEmpty, !button.isHiddenOrHasHiddenAncestor {
+            found.append(button)
+        }
+        for child in view.subviews { found += buttons(in: child) }
+        return found
+    }
+
     /// Every segmented picker in the window, segment by segment. SwiftUI draws
     /// `.pickerStyle(.segmented)` as an `NSSegmentedControl`, so the words on
     /// each segment are readable without the panel having to name them.

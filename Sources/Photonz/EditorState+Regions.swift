@@ -122,7 +122,7 @@ extension EditorState {
             // where the key explains itself. A click OUTSIDE the marquee is
             // still silent: that one is not a refusal, it is a miss.
             if let refusal = regionSliceRefusal(action: .fill) {
-                raiseCanvasNotice(.regionSliceRefused(refusal))
+                raiseRegionSliceRefusal(refusal, layer: pickedLayerID)
                 return
             }
             guard let target = regionTargetID(preferring: hit) else { return }
@@ -148,7 +148,7 @@ extension EditorState {
         let hex = useBackground ? backgroundFillHex : foregroundFillHex
         if selectionTargetsPixels, selection != nil {
             if let refusal = regionSliceRefusal(action: .fill) {
-                raiseCanvasNotice(.regionSliceRefused(refusal))
+                raiseRegionSliceRefusal(refusal, layer: pickedLayerID)
                 return
             }
             if let target = regionTargetID() { fillRegion(hex: hex, into: target) }
@@ -230,7 +230,7 @@ extension EditorState {
         // else (`RegionTarget`), so this used to be a key that did nothing and
         // said nothing. Say which it was instead (`RegionSliceRefusal`).
         if let refusal = regionSliceRefusal(action: .erase) {
-            raiseCanvasNotice(.regionSliceRefused(refusal))
+            raiseRegionSliceRefusal(refusal, layer: pickedLayerID)
             return
         }
         guard let id = regionTargetID(),

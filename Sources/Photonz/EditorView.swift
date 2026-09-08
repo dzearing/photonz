@@ -408,7 +408,8 @@ struct EditorView: View {
                     // One slot: the "Copied" notice and the Measure mode hint
                     // never stack. The notice wins while it is up.
                     if let notice = editorState.copyConfirmation {
-                        canvasNoticeChip(title: notice.title, detail: notice.detail)
+                        canvasNoticeChip(title: notice.title, detail: notice.detail,
+                                         action: notice.action)
                     } else if editorState.showsMeasureHint {
                         measureHintChip
                     }
@@ -497,13 +498,51 @@ struct EditorView: View {
 
     /// The canvas-bottom glass pill every transient notice uses (the Measure
     /// mode hint, the "Copied" confirmation): an optional lead in its own
-    /// weight, then one line. Never takes input, and fades with its owner.
-    private func canvasNoticeChip(title: String?, detail: String) -> some View {
+    /// weight, then one line.
+    ///
+    /// Inert by default, as the vocabulary says it must be
+    /// (`shared/UX-PATTERNS.md` §3): it turns up unprompted, so it never takes
+    /// the keyboard and never swallows a click meant for the canvas underneath
+    /// it. The one exception is a refusal that knows its own way out
+    /// (`CanvasNoticeAction`), which carries that way out as a single button.
+    /// Only then does the pill take the pointer, and only for its own few
+    /// seconds. It still fades on its own and still has no close control.
+    private func canvasNoticeChip(title: String?, detail: String,
+                                  action: CanvasNoticeAction? = nil) -> some View {
         HStack(spacing: 8) {
             if let title {
                 Text(title).fontWeight(.semibold)
             }
             Text(detail)
+            if let action {
+                // A hairline between the sentence and the answer, so the words
+                // do not read as running into the button.
+                Divider().frame(height: 16)
+                Button {
+                    editorState.performCanvasNoticeAction()
+                } label: {
+                    HStack(spacing: 5) {
+                        Text(action.label)
+                        // The key that does the same thing, so the pill is also
+                        // where you learn it. It keeps working after the pill
+                        // has gone, which the button cannot.
+                        Text(action.shortcutHint)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                // A real button, not a coloured word: the whole point of the
+                // pill carrying the way out is that it can be PRESSED, and a
+                // person has a few seconds to notice that. A capsule inside a
+                // capsule, on the pill's own shape.
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
+                .controlSize(.small)
+                // The pill appears unprompted, so it must never pull the
+                // keyboard off the canvas mid-gesture.
+                .focusable(false)
+                .accessibilityLabel(action.label)
+                .playtestControl(action.label, detail: "Canvas notice")
+            }
         }
             .font(.callout)
             .padding(.horizontal, 14)
@@ -516,7 +555,12 @@ struct EditorView: View {
             // — the tool that owns this hint — it always is.
             .padding(.bottom, EditorChromeLayout.aboveToolBar(
                 toolSettingsHeight: editorState.toolSettingsSize.height))
-            .allowsHitTesting(false)
+            .allowsHitTesting(action != nil)
+            // Resting on the button stops its clock. Three seconds is enough to
+            // read a refusal and not enough to read it, decide and reach for
+            // the answer, and a control that leaves while you are travelling to
+            // it is worse than no control at all.
+            .onHover { editorState.holdCanvasNotice($0) }
             .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 

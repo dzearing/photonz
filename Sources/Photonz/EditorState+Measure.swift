@@ -254,19 +254,99 @@ extension EditorState {
     /// Puts a notice in the canvas-bottom slot. The flag each caller lives
     /// under is checked by the caller, so one pill can answer more than one
     /// feature without either knowing about the other's switch.
-    func raiseCanvasNotice(_ subject: CopyConfirmation.Subject) {
+    func raiseCanvasNotice(_ subject: CopyConfirmation.Subject,
+                           action: CanvasNoticeAction? = nil) {
         measureModeHintTimer?.cancel()
         measureModeHint = nil
+        // A new pill is a new thing to read: whatever the pointer was resting
+        // on is gone, so the hold goes with it.
+        canvasNoticeHeld = false
         let now = Date()
-        let notice = copyConfirmation?.reshown(as: subject, at: now)
-            ?? CopyConfirmation(subject: subject, shownAt: now)
+        let notice = copyConfirmation?.reshown(as: subject, at: now, action: action)
+            ?? CopyConfirmation(subject: subject, shownAt: now, action: action)
         copyConfirmation = notice
+        scheduleCanvasNoticeFade()
+    }
+
+    /// Start (or restart) the clock that takes the pill off screen. Split out
+    /// so a pill the pointer is resting on can have its clock stopped and
+    /// started again without going through a re-raise.
+    func scheduleCanvasNoticeFade(at seconds: TimeInterval? = nil) {
         copyConfirmationTimer?.cancel()
+        guard let notice = copyConfirmation else { copyConfirmationTimer = nil; return }
+        let wait = seconds ?? notice.lifetime
         copyConfirmationTimer = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(notice.lifetime))
+            try? await Task.sleep(for: .seconds(wait))
             guard !Task.isCancelled, let self, self.copyConfirmation == notice else { return }
             self.copyConfirmation = nil
         }
+    }
+
+    /// The pointer came to rest on a pill that carries a button, or left it.
+    ///
+    /// Only a pill with a button holds: an inert notice is something you glance
+    /// at, and pinning one up because the pointer happened to be parked over
+    /// the bottom of the canvas would leave it sitting there. Letting go gives
+    /// the whole window back rather than the remainder of it, because a person
+    /// who just looked away and looked back is starting to read again.
+    func holdCanvasNotice(_ held: Bool) {
+        guard let notice = copyConfirmation, notice.action != nil else {
+            canvasNoticeHeld = false
+            return
+        }
+        guard canvasNoticeHeld != held else { return }
+        canvasNoticeHeld = held
+        if held {
+            // Not "stay up forever": a pill that simply APPEARED under a hand
+            // that never moves again looks exactly like one being read, and
+            // there is no close control to get rid of it
+            // (`CopyConfirmation.heldLifetime`). So the hold pushes the fade
+            // out to a ceiling rather than taking the clock away.
+            let ceiling = notice.shownAt.addingTimeInterval(CopyConfirmation.heldLifetime)
+            scheduleCanvasNoticeFade(at: max(ceiling.timeIntervalSinceNow, 0))
+        } else {
+            copyConfirmation = notice.reshown(as: notice.subject, at: Date(),
+                                              action: notice.action)
+            scheduleCanvasNoticeFade()
+        }
+    }
+
+    /// Press the one thing the pill is offering (`CanvasNoticeAction`).
+    ///
+    /// The pill goes first, so the question the command asks is not competing
+    /// with the refusal that led to it. Nothing here decides anything the menu
+    /// row does not: it is the same call, question and all, which is the whole
+    /// point of the button being a shortcut rather than a second path.
+    func performCanvasNoticeAction() {
+        guard let action = copyConfirmation?.action else { return }
+        // Off the click that started it. Pressing the button takes the pill off
+        // screen, so the command would otherwise be raising a sheet from inside
+        // the tracking loop of a button that has just been destroyed, and a
+        // sheet raised that way comes up and then answers no key at all: a walk
+        // on 2026-09-08 pressed Return at it twice and nothing happened. One
+        // turn of the main actor is the whole fix.
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.copyConfirmationTimer?.cancel()
+            self.copyConfirmationTimer = nil
+            self.copyConfirmation = nil
+            self.canvasNoticeHeld = false
+            switch action {
+            case .turnIntoPicture(let id): self.rasterizeLayer(id: id)
+            }
+        }
+    }
+
+    /// Raise a refusal the marquee keys ran into, carrying its own way out when
+    /// it has one (`RegionSliceRefusal.offersTurnIntoPicture`). Every refusal
+    /// goes through here so the pill and the button can never disagree about
+    /// which layer the refusal was about.
+    func raiseRegionSliceRefusal(_ refusal: RegionSliceRefusal, layer id: UUID?) {
+        var action: CanvasNoticeAction?
+        if refusal.offersTurnIntoPicture, let id, canRasterizeLayer(id: id) {
+            action = .turnIntoPicture(layer: id)
+        }
+        raiseCanvasNotice(.regionSliceRefused(refusal), action: action)
     }
 
     /// Raise (or re-raise) the mode hint. Re-raising restarts the clock, so

@@ -85,10 +85,23 @@ public struct RegionSliceRefusal: Hashable, Sendable {
         }
     }
 
+    /// Whether this refusal knows a single command that would let the very
+    /// thing the person asked for through, which is the only case a canvas
+    /// notice is allowed to carry a button (`CanvasNoticeAction`). A
+    /// measurement or a group can never become a picture, and a cropped
+    /// picture already is one: offering a button that cannot help is worse
+    /// than offering nothing.
+    public var offersTurnIntoPicture: Bool { reason == .canBecomeAPicture }
+
     /// One line: why, then the thing to do instead. The way out is always the
     /// same one, because the whole layer is what all three keys fall back to
     /// once the marquee is gone.
-    public var detail: String {
+    public var detail: String { detail(offeringItsOwnWayOut: false) }
+
+    /// The same line, told to a pill that is ALSO showing the way out as a
+    /// button. Then the sentence stops pointing at the menu and just says why,
+    /// because the button underneath it is the answer.
+    public func detail(offeringItsOwnWayOut: Bool) -> String {
         let wayOut: String
         switch action {
         case .cut: wayOut = "Clear the marquee to cut the whole layer."
@@ -103,6 +116,9 @@ public struct RegionSliceRefusal: Hashable, Sendable {
             // for, so it is the only one printed: clearing the marquee is on
             // the other two lines, and it takes the WHOLE layer, which is not
             // what someone who drew a marquee over half of something wants.
+            guard !offeringItsOwnWayOut else {
+                return "Only a picture can have \(pieceClause)."
+            }
             return "Only a picture can have \(pieceClause). "
                 + "Turn it into a picture from the Layer menu, then try again."
         case .adjustedPicture:

@@ -401,6 +401,12 @@ struct EditorCommands: Commands {
             Button(RasterizePrompt.menuItem) {
                 if let selectedID { editor?.rasterizeLayer(id: selectedID) }
             }
+            // Its own key, so the refusal's way out is reachable by somebody
+            // who never touches a pointer, and stays reachable after the pill
+            // that offers it has faded. Photoshop leaves Rasterize unbound, so
+            // nothing is being displaced; ⇧⌘R is free here and R is the letter
+            // the other name for this command starts with.
+            .keyboardShortcut("r", modifiers: [.command, .shift])
             .disabled(!(selectedID.map { editor?.canRasterizeLayer(id: $0) ?? false } ?? false))
             Button("Arrange in Collage") { editor?.arrangeSelectionAsCollage() }
                 .disabled(!(editor?.canArrangeCollage ?? false))

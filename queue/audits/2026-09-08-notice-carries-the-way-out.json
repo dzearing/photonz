@@ -1,0 +1,30 @@
+{
+  "feature": "A refusal that carries its own way out",
+  "epic": "ui-building",
+  "summary": "When the canvas refuses a key press, the line at the bottom now carries the fix as a button you can press instead of a menu you have to go and find. Turn Into Picture also has a key of its own now, ⇧⌘R, and the button wears it.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Draw a rectangle on a blank canvas, press V, and click it." },
+    { "do": "Press M and drag a marquee over its left half, then press Delete." },
+    { "do": "Read the line at the bottom of the canvas: the way out is now a button on the end of it.", "shot": "2026-09-08-notice-carries-the-way-out-1.png" },
+    { "do": "Rest the pointer on the pill and count to eight: it should wait for you, not leave." },
+    { "do": "Click Turn Into Picture on the pill and read the question it asks.", "shot": "2026-09-08-notice-carries-the-way-out-2.png" },
+    { "do": "Answer it, then press Delete again with the marquee still up: the piece comes out." },
+    { "do": "Undo twice, then do the whole thing again pressing ⇧⌘R instead of the button." },
+    { "do": "Press M then I and look at the Measure hint pill: no button, unchanged.", "shot": "2026-09-08-notice-carries-the-way-out-3.png" }
+  ],
+  "evaluate": [
+    "The button asks the question before it turns anything, same as the menu row. Is that right, or should the pill's button just do it and leave undo to sort it out?",
+    "After the turn you still have to press Delete a second time. Should pressing the button finish the job you asked for instead, marquee and all?",
+    "Does the button read as pressable at a glance, or does it look like more words on the end of the sentence?",
+    "Is ⇧⌘R a key you would remember, or would you rather this command had none?",
+    "The pill now takes clicks for the few seconds it is up. Did it ever swallow a click you meant for the picture?"
+  ],
+  "rough": [
+    "The line no longer says \"then try again\", because the button replaced that sentence, and nothing on screen tells you the marquee is still up and Delete is still waiting. That is the second press this feature did not remove.",
+    "Resting the pointer on the pill stops its clock, but only up to twelve seconds. A pill that simply appears under a hand that never moves looks identical to one being read, and there is no close control, so an unbounded hold would pin it up for good. A walk caught exactly that before the ceiling went in.",
+    "The rule in the panels and surfaces vocabulary said a canvas notice takes no input. It now carries one narrow exception, written out in shared/UX-PATTERNS.md section 3: a refusal may offer the way out of that refusal, one action, no close control, and it must show the keyboard shortcut for the same command.",
+    "Two bugs in the walking harness turned up doing this and are fixed: a key press could not reach a sheet at all, and no walk could press a sheet's buttons, so a walk could raise a question, photograph it, fail to answer it, and carry on reporting passes over a document that had never changed.",
+    "Screen Recording was granted, so every picture here is a real screen capture of the probe app, not an offscreen render."
+  ]
+}

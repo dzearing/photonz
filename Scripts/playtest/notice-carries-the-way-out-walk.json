@@ -1,0 +1,235 @@
+{
+  "out": "/tmp/photonz-playtest/notice-carries-the-way-out",
+  "seed": "A marquee over half a rectangle refuses, because a shape is not pixels. The refusal used to name the way out and leave you to go and find it in a menu. This walk presses the way out inside the refusal itself: one press turns the shape into a picture, and the same key that was refused a moment ago takes the piece out.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        160
+      ],
+      "to": [
+        560,
+        380
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        380,
+        270
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-rectangle-picked",
+      "note": "a rectangle drawn and picked; layers should be 2 (Background + Rectangle)"
+    },
+    {
+      "do": "menus",
+      "stage": "2-the-key-is-on-the-row",
+      "menu": "Layer"
+    },
+    {
+      "do": "describe",
+      "stage": "2b-keyboard-reach",
+      "note": "KEYBOARD REACH: the Layer menu listing above must show 'Turn Into Picture\u2026' carrying shift+command+R. A walk cannot PRESS a window-scoped shortcut in the probe at all: macOS keeps a background app's menu bar frozen, so every window command reads as dimmed and empty (PlaytestHarness.frozenMenuBar). The listing is what proves the key is bound to the row, and the pill's button shows the same key on its face."
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        160
+      ],
+      "to": [
+        380,
+        380
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-refused-carrying-its-own-way-out",
+      "note": "THE NEW PILL: copied reads 'Cannot delete a piece - Only a picture can have a piece taken out.' with NO mention of the Layer menu, because the button underneath is the way out. layers stays 2"
+    },
+    {
+      "do": "snapshot",
+      "name": "notice-4-refusal-with-a-button"
+    },
+    {
+      "do": "press",
+      "control": "Turn Into Picture"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "5-the-button-asks-the-same-question",
+      "note": "pressing the pill's button must raise the SAME question the menu row raises, and nothing has changed yet"
+    },
+    {
+      "do": "snapshot",
+      "name": "notice-5-question"
+    },
+    {
+      "do": "press",
+      "control": "Turn Into Picture"
+    },
+    {
+      "do": "describe",
+      "stage": "5b-answered",
+      "note": "the question was answered on the sheet's own button, the way a person clicks it. A walk cannot answer a sheet with Return here: the probe is a background app, so its sheet never becomes key and its default button never goes blue"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "6-turned",
+      "note": "the answer was yes: the layer is now a picture, layers stays 2, canUndo true, and the canvas looks exactly as it did"
+    },
+    {
+      "do": "render",
+      "name": "notice-6-turned-doc"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-the-piece-comes-out",
+      "note": "THE POINT: the marquee never moved, and the same key that was refused two steps ago now takes the piece out. layers stays 2 and the left half of the rectangle is gone"
+    },
+    {
+      "do": "render",
+      "name": "notice-7-piece-out-doc"
+    },
+    {
+      "do": "snapshot",
+      "name": "notice-7-piece-out"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-two-undos-put-the-shape-back",
+      "note": "one undo puts the piece back, a second takes the picture back to an editable rectangle: the button did exactly one undoable thing, the same as the menu row"
+    },
+    {
+      "do": "render",
+      "name": "notice-8-shape-back"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "measure"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "9-a-notice-with-no-action-is-untouched",
+      "note": "A NOTICE WITH NO ACTION: the Measure mode hint is the same pill with nothing to press. It must be one line with no button and no divider, and it must still let a click through to the picture underneath it"
+    },
+    {
+      "do": "snapshot",
+      "name": "notice-9-plain-pill"
+    }
+  ]
+}
