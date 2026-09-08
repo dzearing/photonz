@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T06:41:47.388Z",
-  "updated": "2026-09-08T12:37:58.763Z",
+  "updated": "2026-09-08T12:48:19.329Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while auditing corner radius on 2026-09-08: queue/audits/2026-09-08-corner-radius-4-zoomed-sc.png shows the dashed rect cutting across the corners of a 49pt rounded box at 156%. Reproduce with Scripts/playtest.sh Scripts/playtest/corner-radius-rounds-walk.json and look at 6-zoomed-sc.png. The outline is drawn in Sources/Photonz/CanvasDisplay.swift (inkCorners / the selection frame path). Layer.boxCornerRadius(boxSize:) in PhotonzCore/CornerRadiusSelection.swift is the curve to follow, and it is what the renderer rings with. It is a judgement call whether the outline marks the FRAME (as now) or the INK, so it may want the user asked rather than just changed.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-08T12:48:00.000Z",
       "note": "Walked on the probe with a new Scripts/playtest/selection-outline-rounds-walk.json, Screen Recording granted so every picture is a real capture. Verified: rounded box traces its curve at 100% and 156%; square rectangle unchanged; oval and arrow unchanged; the curve travels with a move; multi-selection rounds too. Audit: queue/audits/2026-09-08-selection-outline-rounds.json with three captures."
+    },
+    {
+      "t": "2026-09-08T12:48:19.327Z",
+      "note": "The blue outline round a picked layer now follows the shape's own curve. New SelectionOutlineShape + Layer.selectionOutlineRadius(box:) + Viewport.documentToView in PhotonzCore; CanvasDisplay draws the picked-layer outline and every multi-selection outline through them. Ellipse, line and arrow untouched; handles stay on the square frame corners. 9 tests written first, full suite 4840 green. Walked on the probe (Scripts/playtest/selection-outline-rounds-walk.json) with Screen Recording granted; audit queue/audits/2026-09-08-selection-outline-rounds.json carries three real captures. Commit 48448db5, pushed."
     }
   ],
-  "started": "2026-09-08T12:37:58.761Z"
+  "started": "2026-09-08T12:37:58.761Z",
+  "completed": "2026-09-08T12:48:19.328Z"
 }
