@@ -2533,7 +2533,7 @@ private final class Run {
         note(number, "dragOver",
              "\"\(carry)\" carrying \(types) held over \(short(at.point)) \(at.space.rawValue): "
                 + (operation == [] ? "nothing takes it" : "\(answered) would take it")
-                + ", \(promise)\(held)\(after)",
+                + ", \(promise)\(held)\(after), \(rowInHand())",
              state: describe())
     }
 
@@ -2592,7 +2592,7 @@ private final class Run {
         await sleep(0.4)
         note(number, "dragRow",
              "\"\(name)\" let go \(zone.rawValue) \"\(onto)\": the list \(answered)"
-                + ", drop \(landed ? "landed" : "did not land")\(held)",
+                + ", drop \(landed ? "landed" : "did not land")\(held), \(rowInHand())",
              state: describe())
     }
 
@@ -3685,6 +3685,18 @@ private final class Run {
             case .inside: "the panel will put it inside \"\(name)\""
             }
         }
+    }
+
+    /// What the layers list is holding right now. Nothing on screen says this
+    /// once the drop line has gone, so a walk that abandons a row drag reads it
+    /// to prove the row was actually put down rather than merely stopped being
+    /// drawn.
+    private func rowInHand() -> String {
+        guard let editor, let id = editor.layerRowInHand else {
+            return "the list is holding no row"
+        }
+        let name = editor.document?.layer(id: id)?.name ?? "a layer"
+        return "the list is STILL HOLDING \"\(name)\""
     }
 
     /// `extra` is whatever the step itself watched while it ran and nothing

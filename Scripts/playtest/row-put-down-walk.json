@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/row-put-down",
+  "seed": "A layer row picked up and let go somewhere it cannot land used to stay in the layers list's hand. Nothing looked wrong until the next drag: a colour carried over a row was read as that row coming back, and the list drew a reorder line for a colour. This walk abandons a row drag three ways - over another row, over the picture, and off in the panel with nothing under it - and after each one asks the list what it is holding and carries a colour over a row to see whether a line appears. A walk cannot press escape during a real drag, because it cannot start a real drag session at all; what it can do is leave the drag exactly as escape, a release over the picture and a release outside the window all leave it, which is with nothing ever told that it ended.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 760, "canvasHeight": 520, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 430], "to": [520, 570], "steps": 10 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 120], "to": [260, 220], "steps": 10 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.9 },
+
+    { "do": "describe", "stage": "1-control", "note": "CONTROL. Nothing has been picked up. A colour carried over a layer row is refused and no line is drawn." },
+    { "do": "dragOver", "carry": "Fill", "at": [1148, 89], "space": "window", "hold": "1-colour-over-a-row-clean" },
+
+    { "do": "describe", "stage": "2-abandoned-over-another-row", "note": "Pick the \"Rectangle\" row up, carry it over the \"Background\" row, and walk away without a word." },
+    { "do": "dragOver", "carry": "Rectangle", "at": [1148, 169], "space": "window", "leave": true },
+    { "do": "dragOver", "carry": "Fill", "at": [1148, 89], "space": "window", "hold": "2-colour-after-a-row-left-on-a-row" },
+
+    { "do": "describe", "stage": "3-abandoned-over-the-picture", "note": "Pick the same row up and let go of it out over the picture, where a layer row cannot land." },
+    { "do": "dragOver", "carry": "Rectangle", "at": [600, 500], "space": "window", "leave": true },
+    { "do": "dragOver", "carry": "Fill", "at": [1148, 89], "space": "window", "hold": "3-colour-after-a-row-left-on-the-picture" },
+
+    { "do": "describe", "stage": "4-abandoned-in-the-panel", "note": "And picked up and dropped in the panel below the list, which is what a release outside the window looks like from in here: nothing under it ever hears that the drag ended." },
+    { "do": "dragOver", "carry": "Rectangle 2", "at": [1148, 500], "space": "window", "leave": true },
+    { "do": "dragOver", "carry": "Fill", "at": [1148, 89], "space": "window", "hold": "4-colour-after-a-row-left-in-the-panel" },
+
+    { "do": "describe", "stage": "5-a-real-reorder-still-works", "note": "And the drag this is all for still does its job: a row carried onto another row and let go moves, and the list is empty handed afterwards." },
+    { "do": "dragRow", "row": "Rectangle 2", "onto": "Rectangle", "zone": "below", "hold": "5-a-real-reorder" },
+    { "do": "snapshot", "name": "6-after-the-reorder" }
+  ]
+}

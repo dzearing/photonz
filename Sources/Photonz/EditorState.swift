@@ -890,8 +890,30 @@ final class EditorState {
     /// telling anyone. See `PanelDropMarking`.
     var panelDropMarking = PanelDropMarking()
 
-    /// The tick that keeps `panelDropMarking` honest, running only while there
-    /// is a mark to take away. See `startPanelDropWatch`.
+    /// The row the layers list is holding while one is being carried up or
+    /// down it, and the deadline that puts it down when the drag ends without
+    /// telling anyone. It sits beside the panel's mark rather than inside the
+    /// list because the two go stale for exactly the same reasons and one
+    /// watch settles both. See `LayerRowInHand`.
+    ///
+    /// Not watched: the deadline in it is pushed out on every frame of a drag.
+    /// The list reads the two published values under it instead, which change
+    /// only when the picture does. See `publishRowInHand`.
+    @ObservationIgnored var panelRowInHand = LayerRowInHand()
+
+    /// The row being carried up or down the layers list right now, nil when the
+    /// list is holding nothing. What decides whether a drag over a row is a
+    /// reorder or something arriving from outside. Written only by
+    /// `publishRowInHand`.
+    var layerRowInHand: UUID?
+
+    /// Where the carried row would land, which is what the reorder line in the
+    /// list draws. Written only by `publishRowInHand`.
+    var layerRowLanding: LayerDrop?
+
+    /// The tick that keeps `panelDropMarking` and `panelRowInHand` honest,
+    /// running only while there is a mark to take away or a row to put down.
+    /// See `startPanelDropWatch`.
     @ObservationIgnored var panelDropWatch: Task<Void, Never>?
 
     /// The group the pointer is currently INSIDE, or nil for the canvas.

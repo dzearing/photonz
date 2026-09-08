@@ -1,0 +1,26 @@
+{
+  "feature": "A layer row is put down when the drag ends, however it ended",
+  "epic": "ui-building",
+  "summary": "The layers list now lets go of a row whenever its drag ends, including the ways that never announce themselves: escape, letting go over the picture, letting go outside the window. Before this the list kept holding that row, and the next colour you carried over a layer row was read as the row coming back, so the list drew a reorder line for a colour.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Any document with two or more layers.",
+  "try": [
+    { "do": "Start a blank canvas and draw two rectangles, so the layers list has two rows above Background." },
+    { "do": "Press and hold on the top row and start dragging it down the list. The blue reorder line follows you.", "shot": "2026-09-07-row-put-down-1-real-reorder-sc.png" },
+    { "do": "With the row still held, press Escape, then release the mouse." },
+    { "do": "Now press and hold the Fill swatch in Appearance and carry the colour up over a layer row. No blue line appears.", "shot": "2026-09-07-row-put-down-2-colour-after-abandon-sc.png" },
+    { "do": "Repeat it the other two ways: pick a row up and let go out over the picture, then pick one up and let go outside the window. Carry the colour over a row after each." },
+    { "do": "Finally do a real reorder: drag a row onto another row and let go. It still moves, in one undo step." }
+  ],
+  "evaluate": [
+    "After escape, does the list feel like it has forgotten the row, or does anything still look armed?",
+    "A colour carried over a layer row does nothing at all and shows the no-entry sign. Is doing nothing the right answer, or would you expect a colour dropped on a row to paint that layer?",
+    "Dropping a row out on the picture does nothing and the row stays where it was. Should it instead snap back with some sign that it was refused?",
+    "The blue reorder line is the only thing that says where a dragged row will land. Is it strong enough to read at a glance while you are dragging?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real capture of the window, not an offscreen render.",
+    "The row is put down a beat after the drag really ends rather than the instant it does: up to about a second and a quarter after you let the mouse button go. Nothing can happen in that gap, because you cannot start another drag without releasing first, but it is a deadline and not an event.",
+    "Escape while the button is still down is the one case where the row stays held for a moment longer, until you release. There is nothing on screen during that moment and no way to act, so it is invisible, but it is honest to say the trigger is the button coming up rather than the escape key.",
+    "The third bullet in the picture above is the same bug photographed BEFORE the fix, kept as 2026-09-07-row-put-down-0-the-bug-sc.png: a blue reorder line drawn under a row while a colour is in the air."
+  ]
+}

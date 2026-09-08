@@ -1308,10 +1308,15 @@ private struct LayerCanvasRowHeightKey: PreferenceKey {
 /// layer keeps its place on the canvas.
 private struct LayerRowDropDelegate: DropDelegate {
     let row: LayerPanelRow
-    @Binding var dragging: UUID?
-    @Binding var target: LayerDrop?
     let rowHeight: CGFloat
     let editorState: EditorState
+
+    /// The row the list is holding, if any. It lives on the editor rather than
+    /// in the list so that a drag which ends without reporting itself — escape,
+    /// let go over the picture, let go outside the window — is still put down,
+    /// by the same watch that settles the panel's own mark. See
+    /// `LayerRowInHand`.
+    private var dragging: UUID? { editorState.layerRowInHand }
 
     /// What the drag is carrying: the whole selection when the row you picked
     /// up is part of it (the way Delete and Duplicate already work), else just
@@ -1346,7 +1351,7 @@ private struct LayerRowDropDelegate: DropDelegate {
             offerFile(info)
             return
         }
-        target = proposal(info)
+        editorState.sayLayerRowLanding(proposal(info))
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
@@ -1356,7 +1361,10 @@ private struct LayerRowDropDelegate: DropDelegate {
         // anything else shows the no-entry sign.
         guard carriesARow(info) else { return DropProposal(operation: offerFile(info)) }
         let proposed = proposal(info)
-        if target != proposed { target = proposed }
+        // Said on every frame even when it has not changed, because each answer
+        // is also what pushes the put-it-down deadline out: a pointer resting
+        // still over one row must not be read as a drag that ended.
+        editorState.sayLayerRowLanding(proposed)
         return DropProposal(operation: proposed == nil ? .forbidden : .move)
     }
 
@@ -1365,7 +1373,9 @@ private struct LayerRowDropDelegate: DropDelegate {
             editorState.endPanelDrop(from: row.id)
             return
         }
-        if target?.targetID == row.id { target = nil }
+        // The row is still in the hand — the drag is only off THIS row — so
+        // this takes the line away and nothing more.
+        if editorState.layerRowLanding?.targetID == row.id { editorState.sayLayerRowLanding(nil) }
     }
 
     func performDrop(info: DropInfo) -> Bool {
@@ -1374,7 +1384,7 @@ private struct LayerRowDropDelegate: DropDelegate {
             editorState.endPanelDrop(from: row.id)
             return FileDrop.accept(info, into: editorState, landingAt: landing)
         }
-        defer { dragging = nil; target = nil }
+        defer { editorState.letGoOfLayerRow() }
         guard let drop = proposal(info) else { return false }
         editorState.dropRows(ids: carried, drop)
         return true
@@ -1728,10 +1738,6 @@ struct LayersListView: View {
     @Environment(EditorState.self) private var editorState
     @State private var renamingLayerID: UUID?
     @State private var renameText = ""
-    @State private var draggingLayerID: UUID?
-    /// Where the drag under the pointer would land, so the drop line can say
-    /// which of "inside this group" and "next to it" is about to happen.
-    @State private var dropTarget: LayerDrop?
     @State private var rowHeight: CGFloat = 38
     /// The row at the top of the visible area. Only the rows around it get a
     /// picture made for them, so opening a document with a hundred layers
@@ -1911,7 +1917,10 @@ struct LayersListView: View {
         // the list, and a picture arriving from outside it. They never happen
         // at once, and drawing them the same way is the point — the promise a
         // file gets is the promise the list already made to its own rows.
-        let target = dropTarget ?? editorState.panelDropLanding
+        // The row being carried and where it would land are the editor's, not
+        // this view's: a drag that ends without reporting itself must still be
+        // put down, and only something outside the list can notice that.
+        let target = editorState.layerRowLanding ?? editorState.panelDropLanding
         return LazyVStack(spacing: LayerListMetrics.spacing) {
             ForEach(displays) { display in
                 LayersRow(display: display,
@@ -1925,8 +1934,6 @@ struct LayersListView: View {
                           rowHeight: rowHeight,
                           editorState: editorState,
                           renameText: $renameText,
-                          draggingLayerID: $draggingLayerID,
-                          dropTarget: $dropTarget,
                           renameFieldFocused: $renameFieldFocused,
                           beginRename: beginRename(id:name:),
                           commitRename: commitRename(id:),
@@ -2167,8 +2174,6 @@ private struct LayersRow: View, Equatable {
     // holding last draw's copy behaves exactly like one holding this draw's.
     let editorState: EditorState
     @Binding var renameText: String
-    @Binding var draggingLayerID: UUID?
-    @Binding var dropTarget: LayerDrop?
     @FocusState.Binding var renameFieldFocused: Bool
     let beginRename: (UUID, String) -> Void
     let commitRename: (UUID) -> Void
@@ -2207,8 +2212,7 @@ private struct LayersRow: View, Equatable {
     /// start the very same drag.
     private var pickUp: @MainActor () -> NSItemProvider {
         {
-            draggingLayerID = id
-            dropTarget = nil
+            editorState.pickUpLayerRow(id)
             return NSItemProvider(object: id.uuidString as NSString)
         }
     }
@@ -2222,8 +2226,7 @@ private struct LayersRow: View, Equatable {
         content
             .onDrag(pickUp)
             .onDrop(of: [.text] + FileDrop.types, delegate: LayerRowDropDelegate(
-                row: panelRow, dragging: $draggingLayerID, target: $dropTarget,
-                rowHeight: rowHeight, editorState: editorState))
+                row: panelRow, rowHeight: rowHeight, editorState: editorState))
             .playtestTarget(display.name, kind: .row,
                             detail: rowDetail,
                             payload: pickUp)

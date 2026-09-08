@@ -173,27 +173,71 @@ extension EditorState {
         panelDropMarking.end(from: String(describing: owner))
     }
 
-    /// The mark's own way out, for every drag that ends without saying so:
-    /// cancelled with escape, let go outside the window, or over a row that was
-    /// rebuilt out from under it. It runs only while there is a mark to take
-    /// away, and stops the moment there is not.
+    /// The mark's own way out, and the held row's, for every drag that ends
+    /// without saying so: cancelled with escape, let go over the picture or
+    /// outside the window, or over a row that was rebuilt out from under it. It
+    /// runs only while there is a mark to take away or a row to put down, and
+    /// stops the moment there is neither.
     ///
     /// "Nothing in the air" is the mouse button being up: a drag holds it down
     /// for its whole life, from any app, so this can never fire under a real
     /// drag. A scripted walk carries a drag with no button down at all, which
-    /// is why the mark also gets a grace period rather than going the instant
-    /// the button reads up.
+    /// is why both also get a grace period rather than going the instant the
+    /// button reads up.
     private func startPanelDropWatch() {
         guard panelDropWatch == nil else { return }
         panelDropWatch = Task { @MainActor [weak self] in
-            while let self, self.panelDropMarking.offer != nil {
+            while let self, self.panelDropMarking.offer != nil || self.panelRowInHand.isHolding {
                 try? await Task.sleep(for: .milliseconds(250))
                 guard !Task.isCancelled else { break }
-                self.panelDropMarking.settle(dragInTheAir: NSEvent.pressedMouseButtons != 0,
-                                             at: CACurrentMediaTime())
+                let inTheAir = NSEvent.pressedMouseButtons != 0
+                let now = CACurrentMediaTime()
+                self.panelDropMarking.settle(dragInTheAir: inTheAir, at: now)
+                if self.panelRowInHand.settle(dragInTheAir: inTheAir, at: now) {
+                    self.publishRowInHand()
+                }
             }
             self?.panelDropWatch = nil
         }
+    }
+
+    // MARK: - The row the layers list is holding
+
+    /// A row was picked up in the layers list. Starts the watch that puts it
+    /// back down if the drag ends without ever saying so.
+    func pickUpLayerRow(_ id: UUID) {
+        panelRowInHand.pickUp(id, at: CACurrentMediaTime())
+        publishRowInHand()
+        startPanelDropWatch()
+    }
+
+    /// The row under the pointer says where the carried row would land, nil for
+    /// a place it cannot. Ignored unless a row really is being carried, so a
+    /// file or a colour can never put one in the list's hand.
+    func sayLayerRowLanding(_ landing: LayerDrop?) {
+        guard panelRowInHand.isHolding else { return }
+        panelRowInHand.say(landing: landing, at: CACurrentMediaTime())
+        publishRowInHand()
+    }
+
+    /// The row was let go somewhere that reported it.
+    func letGoOfLayerRow() {
+        panelRowInHand.letGo()
+        publishRowInHand()
+    }
+
+    /// Copies out the two things the list actually draws, and ONLY when they
+    /// have changed.
+    ///
+    /// The hand itself is not watched by the list because it also carries the
+    /// put-it-down deadline, and that is pushed out on every frame of a drag:
+    /// watching it would redraw the whole list sixty times a second to record
+    /// what time it is. These two change when you cross a row edge and at no
+    /// other moment, which is exactly as often as the list used to redraw when
+    /// it kept this to itself.
+    func publishRowInHand() {
+        if layerRowInHand != panelRowInHand.rowID { layerRowInHand = panelRowInHand.rowID }
+        if layerRowLanding != panelRowInHand.landing { layerRowLanding = panelRowInHand.landing }
     }
 
     /// The landing the panel is currently promising, which is what the drop

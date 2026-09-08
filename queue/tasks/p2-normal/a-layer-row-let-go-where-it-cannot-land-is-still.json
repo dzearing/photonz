@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1700,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T16:54:50.832Z",
-  "updated": "2026-09-07T16:54:50.833Z",
+  "updated": "2026-09-08T00:38:50.871Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing the-red-dashed-outline-around-the-panel-always-c on 2026-09-07. draggingLayerID and dropTarget are @State on LayersListView (Sources/Photonz/LayersPanel.swift ~1663), set by the row LayerRowView.pickUp and cleared ONLY in LayerRowDropDelegate.performDrop. Any drag that ends without a drop strands them. That fix already stopped a stranded row from hijacking a FILE drag: LayerRowDropDelegate.carriesARow now branches on what is in the air rather than on the flag alone, so a file always gets the file answer. What is left is a text-carrying drag, a colour or a saved colour off the shelf, which is indistinguishable from a row drag on the pasteboard. Two ways out, pick one: (a) move the row-in-the-air state onto EditorState and let the same watch that settles PanelDropMarking put it down when nothing is in the air (PanelDropMarking.idleGrace, NSEvent.pressedMouseButtons), which is the pattern already in EditorState+LayersPanel.startPanelDropWatch; or (b) give a row drag its own carried type instead of a bare NSString, declared in UTExportedTypeDeclarations in Scripts/build-app.sh the way com.photonz.component is, and register the row target for that instead of .text - note ColorDrags warning that an undeclared identifier carries zero bytes, so a bare swift build with no Info.plist needs a fallback.",
@@ -24,6 +24,31 @@
     {
       "t": "2026-09-07T16:54:50.833Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T00:38:50.871Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T01:05:00.000Z",
+      "note": "Reproduced on the probe (/tmp/stranded-row-walk.json, Scripts/playtest.sh). Control step 13, nothing picked up: colour over the \"Rectangle 2\" row = 'nothing takes it'. Step 15 picks the \"Rectangle\" row up and walks away without a word (leave:true, which is what escape and a release outside the window look like). Step 18, the SAME colour over the SAME row = '_PlatformDraggingDestinationView would take it', and the screen capture 4-colour-after-a-stranded-row-sc.png shows a blue reorder line under \"Rectangle 2\" while a colour is in the air. So the bug is real and visible, not just readable in the source."
+    },
+    {
+      "t": "2026-09-08T01:06:00.000Z",
+      "note": "Adversarial review of the two ways out named in the notes. Option (b), a private carried type for a row drag, only stops OTHER drags being misread; it never puts the row down, so after escape the list is still holding a row and the next real row drag starts from a lie. It also needs an Info.plist declaration, and a bare swift build has none. Option (a) is both smaller and the actual fix: the state moves next to the mark that already solved this exact problem for files, and the watch that settles that mark settles this too. Shortest version: one small pure value in the core with the same shape as PanelDropMarking, one watch, no new timer."
+    },
+    {
+      "t": "2026-09-08T01:40:00.000Z",
+      "note": "Built option (a). New pure value LayerRowInHand in PhotonzCore (rowID, landing, and the same idleGrace deadline PanelDropMarking uses), covered by Tests/PhotonzCoreTests/LayerRowInHandTests.swift written before it existed and red for the right reason first. EditorState holds it beside panelDropMarking and the ONE watch, startPanelDropWatch, now settles both. LayersListView and LayerRowDropDelegate lost their @State/@Binding pair and read the editor instead. Note the split: the hand itself is @ObservationIgnored because its deadline is pushed out on every frame of a drag, and the list watches two published values (layerRowInHand, layerRowLanding) that change only when the picture does, so the drag costs the same redraws it used to."
+    },
+    {
+      "t": "2026-09-08T01:41:00.000Z",
+      "note": "Verified on the probe with Scripts/playtest/row-put-down-walk.json. Three abandonments - over another row, over the picture, in the panel with nothing under it - each end 'the list is holding no row', and the colour carried over a row after each one is answered 'nothing takes it' with no line in the capture. A real reorder still lands and empties the hand. Screen Recording was granted so all of these are real captures. Regression: Scripts/playtest/panel-mark-walk.json still passes, so a file arriving after a row drag still gets the file answer. Full suite 4622 tests green. The harness gained a rowInHand() readout, printed by dragOver and dragRow, because nothing on screen says what the list is holding once the line has gone."
+    },
+    {
+      "t": "2026-09-08T01:42:00.000Z",
+      "note": "Release: LayersPanel.swift is shared, not forked into Releases/Next, so this reaches Current as well as Next. That is right for a bug of this shape and there is nothing to port."
     }
-  ]
+  ],
+  "started": "2026-09-08T00:38:50.871Z"
 }
