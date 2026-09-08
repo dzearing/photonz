@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1730,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T17:19:09.616Z",
-  "updated": "2026-09-08T01:20:37.265Z",
+  "updated": "2026-09-08T01:40:39.372Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Tool.shortcutKey in Sources/PhotonzCore/Tools.swift returns nil for rectSelect and ellipseSelect although the comment on isMarqueeSelectTool already calls them Photoshop's M group. Tool groups already cycle on a repeated press elsewhere (toolGroupsFlag). RESOLVED: the marquee already answered to M (the letter lives on ToolGroup.selection.groupKey, not on Tool.shortcutKey, which is why the source read as if it had none). The work was the second press, plus stopping M from handing over the wand.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-08T01:39:34.000Z",
       "note": "Audit: queue/audits/2026-09-08-marquee-answers-to-m.json with two real window captures."
+    },
+    {
+      "t": "2026-09-08T01:40:39.372Z",
+      "note": "M swaps the marquee: pressing it hands over the rectangular marquee from any tool and pressing it again swaps the box for the ellipse and back, and M no longer hands over the magic wand (which keeps W). Model in PhotonzCore (ToolGroup.tools(answeringTo:) and tool(forKey:active:remembered:), tests first); the bar's key stand-ins now resolve a press live, and the tooltip and flyout teach the swap. Next only. Verified on the probe with marquee-answers-to-m-walk, marquee-m-narrow-walk and the rewritten tool-bar-families walk, plus Scripts/test.sh (4645 green). Audit: queue/audits/2026-09-08-marquee-answers-to-m.json"
     }
   ],
-  "started": "2026-09-08T01:20:37.264Z"
+  "started": "2026-09-08T01:20:37.264Z",
+  "completed": "2026-09-08T01:40:39.372Z"
 }
