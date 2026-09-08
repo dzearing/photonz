@@ -1,0 +1,28 @@
+{
+  "id": "measure-the-gap-between-two-shapes-you-drew",
+  "title": "Measure the gap between two shapes you drew",
+  "goal": "The ruler can now measure a shape you drew, but only its width and height. Switch it to Gap and point at the space between two rectangles you made and nothing lights up: the whitespace reader still only sees the pixels of a screenshot, so the space between things you are building cannot be measured. Alignment checking has the same blind spot.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2040,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T16:16:40.033Z",
+  "updated": "2026-09-08T16:16:40.036Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Size mode was fixed on 2026-09-08 by adding PhotonzCore/LayerElements.swift (the document's own boxes as an element ladder) and merging it with ElementBounds in CanvasMeasure.refreshMeasureHoverReadout. Gap goes through ElementBounds.gap(at:in:) and alignment through AlignmentScan.items, both edge-map only, so both need the same treatment: a drawn-box source merged with the pixel one. Reuse LayerElements.candidates / .neighbors rather than adding a second walk of the layer tree.",
+  "acceptance": [
+    "Pointing between two shapes you drew on a blank canvas shows the gap between them and clicking leaves that measurement",
+    "Gap over a screenshot still reads exactly as it does today",
+    "An alignment check drawn across shapes you drew counts them as items rather than reporting none",
+    "One walk under Scripts/playtest proves the drawn case and the screenshot case in the same run"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T16:16:40.035Z",
+      "note": "created (manual)"
+    }
+  ]
+}

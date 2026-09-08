@@ -1,0 +1,28 @@
+{
+  "feature": "Size mode measures the shapes you drew",
+  "epic": "measure-redline",
+  "summary": "Point the ruler's Size mode at a rectangle you drew and it lights up and offers its width and height, the same way it already did for a button in a screenshot. The numbers come from the box the app drew, so they are exact rather than read off pixels.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Make a new blank canvas, any size." },
+    { "do": "Press R and drag out a rectangle in the middle of it." },
+    { "do": "Press Escape, then press I for the ruler, and set Mode to Size." },
+    { "do": "Rest the pointer in the middle of your rectangle.", "shot": "2026-09-08-size-measures-a-drawn-shape.png" },
+    { "do": "Click once: a width and a height land on the picture and two rows land under Measurements." },
+    { "do": "Now open a screenshot, draw a rectangle around a button in it, and rest the pointer inside that rectangle: the BUTTON is what lights up." },
+    { "do": "Press ] once to climb out of the button and onto the rectangle you drew.", "shot": "2026-09-08-size-climbs-to-the-drawn-box.png" }
+  ],
+  "evaluate": [
+    "Does the shape light up the instant the pointer is inside it, or is there a beat where nothing happens?",
+    "When you point inside a box you drew around a button, is the button the right first answer, or did you want your own box first?",
+    "Is the thin outline over your shape easy to see when the shape is the same red the ruler draws in?",
+    "Does ] climbing from a shape to the group holding it match the order you expect?",
+    "Is measuring your own shape this way faster than reading W and H off the panel, or is it the long way round?"
+  ],
+  "rough": [
+    "The outline drawn over the picked element is the measure ink at 70 percent, so over a shape filled in the same red it is nearly invisible. The first screenshot shows exactly that. Changing the ink is a look decision, so nothing was changed here.",
+    "A rotated or slanted shape is deliberately skipped: its box is stored unturned, so highlighting it would outline a rectangle that is not the shape you can see. It reads as a miss rather than as a wrong answer.",
+    "Gap mode and Alignment mode still read only the picture, so the whitespace between two shapes you drew is not measurable yet. Filed as its own task.",
+    "Both screenshots are real screen captures from the walk (Scripts/playtest/size-measures-a-drawn-shape-walk.json); the probe held the Screen Recording grant."
+  ]
+}

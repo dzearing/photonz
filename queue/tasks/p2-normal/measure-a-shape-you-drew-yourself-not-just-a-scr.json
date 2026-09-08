@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T07:17:37.059Z",
-  "updated": "2026-09-08T12:09:06.938Z",
+  "updated": "2026-09-08T16:16:53.777Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08 in the probe build. Walk: blank 900x600, key r, drag (300,240)->(560,420), key v, escape, measureMode size, waitFor edgeMap, move to (430,330), wait, click (430,330). Log at /tmp/photonz-playtest/repro-size/log.json: every step after the click reports measures=[] and cue=none. The screen capture size-sc.png shows the pointer dot dead centre on the red rectangle with no highlight and the hint pill still reading \"Size  Click an element for its width and height\". Contrast: Scripts/playtest/distance-lands-on-release.json step 13 drags in Size mode over settings-pane-2x.png and lands two measurements (Width = 624 px, Height = 44 px), so the element ladder works on picture pixels but not on drawn layers. Distance mode DOES snap to drawn shapes (Scripts/playtest/caliper-catches-a-drawn-edge-walk.json reads 64 px off a drawn box), so the edge map sees them; the gap is in the Size mode element preview. Start at CanvasMeasure.refreshMeasureHoverReadout / drawElementPreview and ElementBounds.",
@@ -27,6 +27,27 @@
     {
       "t": "2026-09-08T12:09:06.937Z",
       "note": "seq 1970 -> 80"
+    },
+    {
+      "t": "2026-09-08T15:59:41.142Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T16:16:53.777Z",
+      "note": "Reproduced first: Scripts/playtest/size-measures-a-drawn-shape-walk.json on the pre-fix build, blank 900x600 with a 260x180 rectangle, Size mode, hover and click at (430,330) -> measures=[] and the hint unchanged. Cause: snappingEdgeMap and measureLumaField both key off document.layers.compactMap(\\.imageRef).first, so Size mode only ever read the backdrop picture. Drawn layers are not in the edge map at all; Distance mode reaches them through MeasureSnapping.layerLines instead, which is why it snapped and Size did not."
+    },
+    {
+      "t": "2026-09-08T16:16:53.777Z",
+      "note": "Adversarial review before building: the shortest fix is not a better pixel reader but the document itself. The app knows every box it drew, exactly. Two things must NOT become elements: a caliper bounding box (nobody aims at one) and a layer covering the whole canvas (that is the backdrop Size mode reads pixels from, and offering it would turn every miss into a hit on everything)."
+    },
+    {
+      "t": "2026-09-08T16:16:53.777Z",
+      "note": "Adversarial review of the first cut caught a regression for the primary use: drawn rungs were put ahead of every picture rung, so a highlight box drawn around a button hid the button and [ could not reach it. Reworked into ONE ladder nested by size, so the button comes first and ] climbs onto the drawn box. Proven as claims 4 and 5 in the walk."
+    },
+    {
+      "t": "2026-09-08T16:16:53.777Z",
+      "note": "Shipped: Sources/PhotonzCore/LayerElements.swift (candidates / merged / neighbors, 18 tests written first) wired into CanvasMeasure.refreshMeasureHoverReadout and CanvasMeasure.neighbors. Rotated and slanted layers are skipped on purpose: contentBounds is stored unturned. Walk green at 66 steps: drawn 260x180 and 180 measured exactly, screenshot button unchanged at 124x30 with identical feet, ] climbs to 144x50. Scripts/test.sh green (4862 tests). Audit at queue/audits/2026-09-08-size-measures-a-drawn-shape.json with two real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T15:59:41.141Z"
 }

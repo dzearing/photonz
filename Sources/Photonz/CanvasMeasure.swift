@@ -439,13 +439,19 @@ extension CanvasNSView {
         let style = measureContent ?? MeasureContent()
         switch measureToolMode {
         case .size:
-            let ladder = ElementBounds.candidates(
-                at: probe, in: edgeMap, luma: lumaField,
-                // Ten logical points is the smallest thing worth calling an
-                // element, whatever the capture's scale; a line of text ends
-                // at the same visible gap the alignment scan splits items on.
-                minElement: max(10, 10 * document.pixelScale),
-                textGap: AlignmentScan.visibleGap * max(1, document.pixelScale))
+            // What the app DREW comes first and exactly (`LayerElements`): a
+            // rectangle you made a moment ago is the easiest thing in the
+            // document to measure, not something to guess from gradients. The
+            // picture reader then carries the ladder on out past it.
+            let ladder = LayerElements.merged(
+                drawn: LayerElements.candidates(at: probe, in: document),
+                picture: ElementBounds.candidates(
+                    at: probe, in: edgeMap, luma: lumaField,
+                    // Ten logical points is the smallest thing worth calling an
+                    // element, whatever the capture's scale; a line of text ends
+                    // at the same visible gap the alignment scan splits items on.
+                    minElement: max(10, 10 * document.pixelScale),
+                    textGap: AlignmentScan.visibleGap * max(1, document.pixelScale)))
             guard let rect = ladder.isEmpty
                     ? nil : ladder[min(max(measureCandidateLevel, 0), ladder.count - 1)] else {
                 hideMeasureHoverReadout()
@@ -478,11 +484,17 @@ extension CanvasNSView {
             return cached.neighbors
         }
         let scale = max(1, document?.pixelScale ?? 1)
-        let found = ElementBounds.neighbors(of: rect, in: edgeMap, luma: lumaField,
+        var found = ElementBounds.neighbors(of: rect, in: edgeMap, luma: lumaField,
                                             minElement: max(10, 10 * scale),
                                             textGap: AlignmentScan.visibleGap * scale,
                                             reaches: [ElementBounds.neighborProbeReach,
                                                       Double(reach)])
+        // The shapes beside this one are known, not guessed, so a number never
+        // parks on the rectangle next door on a canvas with no picture in it.
+        if let document {
+            let drawn = LayerElements.neighbors(of: rect, in: document, reach: reach)
+            found += drawn.filter { box in !found.contains { $0.intersects(box) } }
+        }
         measureNeighborCache = (rect, reach, found)
         return found
     }
