@@ -1,0 +1,30 @@
+{
+  "feature": "One way to make a piece the surface behind the rest",
+  "epic": "ui-layout",
+  "summary": "A piece inside a stack or a grid can be made the surface the others sit on in one pick, from a Role row in Layout or from the Layer menu, and both name what you are about to get before you take it. Inside a stack there was no way to do it from the panel at all before this.",
+  "setup": "Photonz Dev, release Next. Groups that arrange their own contents is on by default, so nothing to switch on.",
+  "try": [
+    { "do": "Draw a big rectangle, then two small ones on top of it." },
+    { "do": "Select all three and press Control Command G to stack them." },
+    { "do": "Double click the big rectangle to pick it inside the stack." },
+    { "do": "Open the Role menu at the top of the Layout section and read the two answers.", "shot": "2026-09-08-surface-role-menu.png" },
+    { "do": "Pick Surface behind the rest, and watch the big rectangle take the group's own box with the other two on top of it.", "shot": "2026-09-08-surface-role-surface.png" },
+    { "do": "Press Command Z once." },
+    { "do": "Do it again from the Layer menu: Layer, Surface Behind the Rest, which carries a tick while it is on." },
+    { "do": "Set Vertical to Stretch on an ordinary piece and read Role again: it says Spans the group, not One of the pieces." }
+  ],
+  "evaluate": [
+    "Is Role the right word for that row, or would Acts as, Part or something else read plainer?",
+    "Are One of the pieces and Surface behind the rest clear enough to pick between without trying one?",
+    "Does the row belong above Horizontal and Vertical, or below them?",
+    "Turning the surface off hands both directions back to the group. Is that what you expect, or should the piece go back to the rule it had before it became the surface?",
+    "The Layout section is the tallest thing in the panel. Is one more row inside an arranged group worth it here?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures are real captures of the window, not offscreen renders.",
+    "The Layer menu row is verified by its shared reading in tests and by being present in the right place in a menu dump. Its live and dim states could not be photographed: window-scoped menu rows read dimmed and frozen in the probe, which is true of Fill the Row and every other row too.",
+    "Picking several pieces and choosing Surface behind the rest makes every one of them a surface, stacked on each other. It is allowed because the panel already allowed setting Stretch on several at once, but it is not a thing anybody wants.",
+    "The mock never drew this row. The mock only drew four placement buttons, which cannot say the surface at all.",
+    "In the picture the three rectangles are all the same red, so the surface behind the other two reads as one blob. That is the test drawing, not the feature."
+  ]
+}

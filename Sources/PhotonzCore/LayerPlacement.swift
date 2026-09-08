@@ -161,6 +161,20 @@ extension ResolvedPlacement {
     /// one place so it cannot drift apart.
     public static let surfaceTitle = "Surface behind the rest"
 
+    /// The other answer to the same question: this piece takes its turn in the
+    /// arrangement like everything else. The word "pieces" rather than "layers"
+    /// because it is the word the surface's own name already uses about them —
+    /// the surface is behind the REST, and this is one of the rest.
+    public static let arrangedTitle = "One of the pieces"
+
+    /// The third thing a piece can be doing, which is not a choice on offer but
+    /// is a state to read back: stretched along the way its stack runs, so it
+    /// is painted right across the group without being the surface behind
+    /// everything. A hairline along a bar, a rail down a panel. Saying "one of
+    /// the pieces" about one of those would contradict the line under the rows
+    /// that already explains it.
+    public static let spanningTitle = "Spans the group"
+
     /// Whether picking `choice` across would leave this piece stretched both
     /// ways, and so the surface behind everything the group arranges.
     public func becomesSurface(horizontal choice: HorizontalPlacement) -> Bool {

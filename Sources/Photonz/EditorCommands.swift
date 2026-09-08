@@ -464,6 +464,24 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("f", modifiers: .option)
                 .disabled(!fill.isEnabled)
                 .help(fill.help)
+                // The other thing a piece inside an arrangement can be, and
+                // the one that could not be said in a single act anywhere
+                // until now: a surface is stretched BOTH ways, and a stack
+                // owns the direction it runs, so the panel could only ever
+                // offer one of the two Stretches it takes. It sits beside
+                // Fill because the two are the same question — what is this
+                // piece doing in this group — with opposite answers, and a
+                // piece cannot be both. A tick rather than a button, so the
+                // row also answers "is this the surface?". No key: it is set
+                // once while a component is being built, not reached for
+                // while working, and every free Photoshop-safe combination
+                // is worth more to something pressed often.
+                let surface = editor?.surfaceCommand ?? .none
+                Toggle(SurfaceCommand.menuTitle,
+                       isOn: Binding(get: { surface.isOn },
+                                     set: { _ in editor?.toggleSurface() }))
+                .disabled(!surface.isEnabled)
+                .help(surface.help)
             }
             // Frames sit with the structure commands, because a frame IS a
             // group with a size. Neither row takes a key: F already picks the

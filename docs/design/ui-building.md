@@ -3217,3 +3217,55 @@ So the whole thing was played again from a blank canvas, in one sitting.
   out, a second version arrives on the canvas with no warning and no say in
   where, and more room on a hand-drawn button moves it instead of making it
   roomier. The audit is `queue/audits/2026-09-07-component-whole-path.json`.
+
+## Landed: one way to make a piece the surface (Next, `next-auto-layout`, 2026-09-08)
+
+Being the surface behind the rest is stretching both ways, and stretching both
+ways was reached one direction at a time. That was two picks where the first
+said nothing about what it was starting, and only the second read
+"Stretch (Surface behind the rest)" — you learned what you were doing on the
+way out of doing it.
+
+**Inside a stack it could not be done from the panel at all.** A stack owns the
+direction it runs, so that direction's row is not a menu: it says "Set by the
+stack" and offers Fill. The second Stretch a surface needs was never on offer,
+so the only way a piece in a stack ever became one was by carrying a rule set
+before the group became a stack, or by the group telling everything inside it
+to stretch. The one thing every card, every button and every bar is built out
+of was the one thing the panel could not make.
+
+**So it is one named row.** The Layout section's child rows open with **Role**,
+above Horizontal and Vertical because it decides whether those two are still
+questions about this piece at all:
+
+- **One of the pieces** — arranged like everything else.
+- **Surface behind the rest** — painted to the group's own edges, with the rest
+  laid out on top of it.
+
+Both names are on screen before either is picked, which is the whole point. One
+pick sets both directions in one step, and one undo puts it back. Layer ▸
+**Surface Behind the Rest** is the same act with a tick on it, sitting directly
+under Fill the Row because the two are the same question with opposite answers
+and a piece cannot be both. A piece that was taking the room its stack had left
+over stops when it becomes the surface and is handed back the size it had, so
+nothing is left stranded.
+
+**The row reads three states and offers two.** A piece stretched along the way
+its stack runs — a hairline across a bar, a rail down a panel — is not the
+surface and is not being arranged either, so Role reads **Spans the group**
+rather than calling it one of the pieces, which is what the line under the rows
+had been saying about it all along. Picking either answer takes it out of that.
+
+**Where the row is not.** Only inside a group that arranges its contents: off
+an arrangement there is nothing to step out of, and Stretch already means
+exactly what it says. Where the GROUP tells everything inside it to stretch both
+ways, the row reads on and is dim, with the reason pointing at the group, since
+taking one piece's own rule off could not change an answer set somewhere else.
+
+**The surface caption lost two lines.** It used to explain that stretching both
+ways is what makes a surface; the row above it now says so, and the caption says
+only the thing the name does not: what being it looks like.
+
+Read by `SurfaceCommand` in the core, so the panel row and the menu row cannot
+drift apart. Tested in `SurfaceCommandTests`, walked by
+`Scripts/playtest/surface-role-walk.json`.

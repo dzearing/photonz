@@ -117,6 +117,12 @@ struct PlacementInspector: View {
             Text(heading(container))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            // The one question above the two directions, because it decides
+            // whether they are still questions about this piece at all: a
+            // surface is not being arranged, so it is not being placed either.
+            // It is only here where something IS arranging, since off an
+            // arrangement there is nothing to step out of.
+            if arranges { surfaceRow() }
             if flow.canSetHorizontal {
                 row("Horizontal") {
                     Menu {
@@ -175,6 +181,49 @@ struct PlacementInspector: View {
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// The one row that says whether this piece is being arranged at all.
+    ///
+    /// Two answers, each named before it is picked, in the words the list at
+    /// the foot of the section already uses about a piece that is one. And it
+    /// is ONE step: being the surface is stretching both ways, so setting the
+    /// two directions in turn was two undo steps and a moment spent being
+    /// something else — and inside a stack it could not be done from here at
+    /// all, because the stack owns the direction it runs and so never offered
+    /// the second Stretch.
+    @ViewBuilder
+    private func surfaceRow() -> some View {
+        let command = editorState.surfaceCommand
+        if !command.layers.isEmpty {
+            row("Role") {
+                Menu {
+                    Button(ResolvedPlacement.arrangedTitle) {
+                        editorState.setSurface(ids: command.layers, false)
+                    }
+                    Button(ResolvedPlacement.surfaceTitle) {
+                        editorState.setSurface(ids: command.layers, true)
+                    }
+                } label: {
+                    menuLabel(surfaceTitle(command), following: !command.isOn,
+                              isMixed: command.isMixed)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .disabled(!command.isEnabled)
+                .playtestControl("Role", detail: "Layout")
+            }
+            .panelHelp(command.help)
+        }
+    }
+
+    /// What the Role row reads now: one of the two answers, or the one word for
+    /// a selection where some are the surface and some are not.
+    private func surfaceTitle(_ command: SurfaceCommand) -> String {
+        if command.isMixed { return PlacementSelection.mixedText }
+        if command.isOn { return ResolvedPlacement.surfaceTitle }
+        return command.isSpanning ? ResolvedPlacement.spanningTitle
+                                  : ResolvedPlacement.arrangedTitle
     }
 
     /// Who these rows are about, in the words of what is holding them.
@@ -262,9 +311,10 @@ struct PlacementInspector: View {
         // something else entirely, and the Stretch that puts it there looks
         // like a leftover worth clearing.
         if arranges, resolved.isSurface {
-            return "Stretch both ways makes this the surface behind the rest, painted to the "
-                + "group's own edges instead of being lined up with the others. Change either "
-                + "one and it becomes one of them again."
+            // The Role row right above names it, so this says the one thing the
+            // name does not: what being it looks like.
+            return "Painted to the group's own edges instead of being lined up with the "
+                + "others, with the rest arranged on top of it."
         }
         // The same thing said about one direction: a hairline across a bar, a
         // rail down a panel. Stretch is the size of the box, which is the one

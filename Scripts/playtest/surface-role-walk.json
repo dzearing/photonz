@@ -1,0 +1,195 @@
+{
+  "out": "/tmp/photonz-playtest/surface-role",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        60
+      ],
+      "to": [
+        340,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        90
+      ],
+      "to": [
+        300,
+        120
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        150
+      ],
+      "to": [
+        300,
+        190
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        210
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        105
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        170
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-an-ordinary-piece",
+      "note": "the bottom-most piece of a column stack, picked. Layout must show a Role row reading One of the pieces above Horizontal and Vertical, and the Vertical row must still be Set by the stack"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "One of the pieces",
+      "in": "Role",
+      "shot": "surface-role-1b-menu"
+    },
+    {
+      "do": "snapshot",
+      "name": "surface-role-1-piece"
+    },
+    {
+      "do": "menus",
+      "stage": "layer-menu-ordinary",
+      "menu": "Layer"
+    },
+    {
+      "do": "action",
+      "action": "makeSelectionTheSurface"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-surface",
+      "note": "one step later: the piece is painted to the group's own edges with the other two on top of it, Role reads Surface behind the rest, and both direction rows are live menus reading Stretch"
+    },
+    {
+      "do": "snapshot",
+      "name": "surface-role-2-surface"
+    },
+    {
+      "do": "menus",
+      "stage": "layer-menu-surface",
+      "menu": "Layer"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-one-undo",
+      "note": "one undo puts it back: the piece is a row in the stack again and Role reads One of the pieces"
+    },
+    {
+      "do": "snapshot",
+      "name": "surface-role-3-undone"
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionDown"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-spanning",
+      "note": "stretched the way the stack runs without being the surface: Role must read Spans the group rather than One of the pieces, which is what the line under the rows already says"
+    },
+    {
+      "do": "snapshot",
+      "name": "surface-role-4-spanning"
+    }
+  ]
+}

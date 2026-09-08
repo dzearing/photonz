@@ -730,6 +730,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// with the pointer, so this is how a walk photographs a bar with a search
     /// field taking whatever the logo and the buttons leave.
     case fillSelectionInTheFlow
+    /// Make the selected piece the surface behind the rest, or hand it back to
+    /// the arrangement where it already is one (Next, `next-auto-layout`),
+    /// which is what Layer ▸ Surface Behind the Rest does and what the
+    /// Layout section's Role row does. Both are out of a walk's reach with the
+    /// pointer, so this is how a walk photographs a card whose background is
+    /// painted to its own edges.
+    case makeSelectionTheSurface
     /// Set the selected GROUP's rule for everything inside it to Stretch
     /// across (Next, `next-placement`), which is what picking Stretch in the
     /// Layout section's Horizontal menu under "Contents of" does. Same reason

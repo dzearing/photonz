@@ -1329,6 +1329,8 @@ private final class Run {
                 }
             case .fillSelectionInTheFlow:
                 editor.toggleFillsTheFlow()
+            case .makeSelectionTheSurface:
+                editor.toggleSurface()
             case .alignWordsLeft:
                 if let id = editor.selectedLayerID {
                     editor.setTextAlignment(layerID: id, TextAlign.left)

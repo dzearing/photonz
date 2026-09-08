@@ -468,6 +468,34 @@ extension EditorState {
         setFillsTheFlow(ids: command.layers, !command.isOn)
     }
 
+    /// What the surface row reads for what is picked: its tick, whether it is
+    /// live, and what it says on hover. The Layout section and the Layer menu
+    /// go by this one reading, so they are one control in two places rather
+    /// than two that can disagree.
+    var surfaceCommand: SurfaceCommand {
+        guard Experiments.shared.autoLayoutEnabled, let document else { return .none }
+        return document.surfaceCommand(layerIDs: orderedSelectedLayerIDs)
+    }
+
+    /// Make every picked piece the surface behind the rest, or hand it back to
+    /// the arrangement, in ONE undo step however many it reached.
+    func setSurface(ids: [UUID], _ isSurface: Bool) {
+        guard !ids.isEmpty else { return }
+        discardDragPreview()
+        perform { $0.setSurface(ids: ids, isSurface) }
+    }
+
+    /// Layer ▸ Surface Behind the Rest: the same act from the menu.
+    ///
+    /// A selection where some are the surface and some are not turns them all
+    /// ON: the tick is only there when every one of them is it, so the first
+    /// press always makes the selection agree.
+    func toggleSurface() {
+        let command = surfaceCommand
+        guard command.isEnabled, !command.layers.isEmpty else { return }
+        setSurface(ids: command.layers, !command.isOn)
+    }
+
     /// The same three edits over EVERY picked group, in ONE undo step however
     /// many they reached. Two cards are told to stack their contents once
     /// rather than twice over, and one undo puts both back.

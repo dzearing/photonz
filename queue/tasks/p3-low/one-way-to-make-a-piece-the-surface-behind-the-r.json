@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T08:41:01.561Z",
-  "updated": "2026-09-08T12:09:07.297Z",
+  "updated": "2026-09-08T21:01:29.834518Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left rough by the-stretch-menu-says-what-stretching-both-ways (2026-09-07). That task could only reword the existing menus, which meant the hint appears on the SECOND pick only: ResolvedPlacement.choiceTitle(horizontal:arranged:) says Surface behind the rest when the other axis already resolves to stretch. A piece with neither axis stretched sees plain Stretch on both menus. Candidate shapes: a single row or menu item in Layout, or a Layer menu command beside Stack Selection. Core naming is ResolvedPlacement.surfaceTitle and becomesSurface(horizontal:)/(vertical:) in Sources/PhotonzCore/LayerPlacement.swift; the panel is Sources/Photonz/PlacementInspector.swift. Behind next-auto-layout.",
@@ -33,6 +33,27 @@
     {
       "t": "2026-09-08T12:09:07.296Z",
       "note": "seq 100 -> 90"
+    },
+    {
+      "t": "2026-09-08T20:44:58.490Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T21:01:29.834518Z",
+      "note": "Adversarial review before building: the panel could not make a surface inside a STACK at all. PlacementEditing gives a column stack canSetVertical == false, so the second Stretch a surface needs was never on the menu; the only ways in were a rule set before the group became a stack, or the group telling everything to stretch. Guarded by a test now."
+    },
+    {
+      "t": "2026-09-08T21:01:29.834518Z",
+      "note": "Built: SurfaceCommand in PhotonzCore (one reading for both places, like FlowFillCommand), PhotonzDocument.setSurface(ids:_:) setting both axes in one step and stopping any Fill first, a Role row at the top of the Layout section's child rows with two named answers, and Layer > Surface Behind the Rest under Fill the Row. 21 new tests, 4973 green."
+    },
+    {
+      "t": "2026-09-08T21:01:29.834518Z",
+      "note": "Review of the built thing found one lie: a piece stretched the way its stack runs read One of the pieces while the caption under it said it spans the group. Role now reads a third state, Spans the group, and offers the same two answers."
+    },
+    {
+      "t": "2026-09-08T21:01:29.834518Z",
+      "note": "Verified live on the probe with Scripts/playtest/surface-role-walk.json, Screen Recording granted: menu open showing both answers, one pick makes the surface, one undo puts it back, spanning reads as itself. Audit queue/audits/2026-09-08-surface-role.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T20:44:58.489Z"
 }
