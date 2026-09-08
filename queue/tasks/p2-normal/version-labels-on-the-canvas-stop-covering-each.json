@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1850,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:03:39.748Z",
-  "updated": "2026-09-08T09:01:08.291Z",
+  "updated": "2026-09-08T09:01:25.568Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-07 with Scripts/playtest.sh Scripts/playtest/version-lands-in-room-walk.json, stage all-four: /tmp/photonz-playtest/version-lands-in-room/version-room-4-all-sc.png shows Button . Default, Button . Disabled, Button . Loading and Button . Pressed stacked into each other above four 78pt-wide drawings. The labels are drawn per layer above its box with no collision handling.",
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-08T09:01:08.291Z",
       "note": "Adversarial review of the built thing. What is still rough: at 50% the labels cannot share one line so the row zigzags, and a component with two or more drawings no longer shows its name anywhere on the canvas. Both are in the audit as things to argue with. The four-diamond mark now repeats four times where the name used to, which is the next candidate to thin out, but it is the only thing saying original rather than copy so it stays for now."
+    },
+    {
+      "t": "2026-09-08T09:01:25.566Z",
+      "note": "A drawing that is one of several versions of a component now says only which version it is, so four side by side read as four named drawings. Core rule CanvasNameLabels.caption is tested first; double clicking a version label renames the version. Verified with the new Scripts/playtest/version-labels-row-walk.json (58 steps, ok, real screen captures) at 100% and 50%, plus both rename paths. Audit: queue/audits/2026-09-08-version-labels.json. Shipped in 2273dd98."
     }
   ],
-  "started": "2026-09-08T08:42:27.625Z"
+  "started": "2026-09-08T08:42:27.625Z",
+  "completed": "2026-09-08T09:01:25.567Z"
 }
