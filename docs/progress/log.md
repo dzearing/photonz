@@ -13078,3 +13078,24 @@ Next: the answer decides whether `textWrapped(inRoom:)` lands the box on the
 wrap's longest line (and whether a hugging container re-measures after the wrap),
 or whether the change is a labelled line under W and H instead. Tests first
 either way, in `GroupTextWrapTests`. Task is blocked on the answer.
+
+## 2026-09-08 — Caption reservation pinned to the drawn pill
+
+The p3 task "A caption reserves the room its pill really needs" turned out to
+be already fixed: `AnnotationContent.estimatedCaptionSize` has taken its height
+from `captionPillHeight(forLines:)` since f095dc89 (the multi-line caption
+work), which landed a few hours after the task was filed. What was actually
+missing was a test saying so for a one line caption; that only held through a
+chain of two assertions in two different suites.
+
+Added `CaptionPillShapeTests.theReservedBoxHoldsTheDrawnPillAtEverySliderSize`,
+sweeping every whole point of `MeasureContent.labelSizeRangePx` (8...64) over
+five captions and comparing `estimatedCaptionSize` against the drawn
+`CaptionMetrics.pillSize` in both axes. Verified it catches the defect by
+restoring the old 1.3 em line box: 120 failures. No production code changed,
+so nothing on the canvas moved.
+
+`Scripts/test.sh` green at 4907 tests; all eleven caption playtest walks re-run
+ok on the probe build. Commits 62ebe63c and 18796427.
+
+Next: back to the queue.
