@@ -105,6 +105,8 @@ public enum FeatureCatalog {
 
     public static let pasteHandsYouThePointerFlag = "next-paste-hands-you-the-pointer"
 
+    public static let cutSaysWhatItCannotDoFlag = "next-cut-says-what-it-cannot-do"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -481,6 +483,15 @@ public enum FeatureCatalog {
                     name: copyPicksYourLayerFlag,
                     title: "Copy takes the layer you picked",
                     description: "Copy takes the layer you picked, and a marquee crops it. Pick a layer, drag a marquee over part of it and press Command C: what lands on the clipboard is that layer’s pixels inside the marquee and nothing from the layers around it, trimmed to what is actually drawn there, so pasting it back gives you the piece rather than a big transparent box. A marquee that misses the layer copies nothing and beeps instead of handing back an invisible rectangle. Everything flattened together is still one keystroke away as Edit ▸ Copy Merged on Command Shift C, of the marquee when there is one and of the whole picture when there is not, which is where Photoshop keeps it. Command X follows copy: with a marquee up it takes that layer’s pixels out of the marquee instead of deleting the whole layer. Command J, New Layer via Copy, agrees with it too: with a layer picked and a marquee drawn it makes a new layer out of that layer’s pixels inside the marquee, named after the layer it came from, so the same marquee gives you the same pixels whichever way you take them, and a marquee that misses the layer beeps instead of making an empty layer. With no layer picked, both keys copy everything inside the marquee, since there is nothing to prefer. Off means a marquee beats the layer you picked, Command C hands back every layer flattened together, and Command Shift C is File ▸ Copy Image.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: cutSaysWhatItCannotDoFlag,
+                    title: "Say when a piece cannot be cut out",
+                    description: "A marquee only takes a piece out of a picture. Drag one over half a rectangle or a piece of text and press Command X and, before this, the whole shape vanished onto the clipboard with nothing on screen to say why; Backspace did nothing at all, just as quietly. On, both keys refuse and the canvas says so in one line at the bottom: what did not happen, why, and that clearing the marquee cuts or deletes the whole layer instead. A picture that has been cropped or turned gets its own line, since it is pixels and the crop is what is in the way. Cutting a piece out of a plain picture is untouched, and so is cutting with no marquee up, which still takes the whole layer. Off means cut silently takes the lot and Backspace silently does nothing.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

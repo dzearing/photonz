@@ -158,6 +158,12 @@ extension EditorState {
     /// ⌘X: cut follows copy. With a marquee up it takes the picked layer's
     /// pixels OUT of the marquee and leaves the rest of the layer standing
     /// (Photoshop); with no marquee it takes the whole unlocked layer.
+    ///
+    /// A marquee over something no piece can be taken out of — a shape, a piece
+    /// of text, a picture that has been cropped or turned — is REFUSED, out
+    /// loud (`RegionSliceRefusal`). It used to fall through to the whole-layer
+    /// cut below, so drawing a box over half a rectangle and pressing ⌘X made
+    /// the whole rectangle disappear with nothing on screen to say why.
     func cutSelectedLayer() {
         if Experiments.shared.copyPicksYourLayerEnabled, hasPixelRegion,
            let id = pickedLayerID, canSliceRegion(from: id) {
@@ -165,6 +171,13 @@ extension EditorState {
             // layer, and it already beeped.
             guard copyLayerRegion(id) else { return }
             deleteRegion() // slices the same layer the copy came off
+            return
+        }
+        if Experiments.shared.copyPicksYourLayerEnabled,
+           Experiments.shared.cutSaysWhatItCannotDoEnabled, hasPixelRegion,
+           let id = pickedLayerID, let layer = document?.layer(id: id),
+           let refusal = RegionSliceRefusal.refusal(for: layer, action: .cut) {
+            raiseCanvasNotice(.regionSliceRefused(refusal))
             return
         }
         guard let id = selectedLayerID, let layer = document?.layer(id: id),

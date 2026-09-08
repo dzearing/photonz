@@ -1,0 +1,28 @@
+{
+  "id": "turn-a-shape-into-a-picture-so-a-piece-can-be-cu",
+  "title": "Turn a shape into a picture so a piece can be cut out of it",
+  "goal": "Right now a marquee only takes a piece out of a picture. Draw one over half a rectangle or a piece of text and Photonz tells you it cannot cut that. Give the person the other half of the answer: a way to turn the shape into a picture, so the piece really can come out.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1910,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T01:19:25.700Z",
+  "updated": "2026-09-08T01:19:25.701Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The other half of cutting-part-of-a-shape-says-what-it-cannot-do (2026-09-08). RegionTarget.canSlice gates every region op on an untransformed uncropped image layer. PreviewRenderer already has layerRegion(of:in:store:path:) and rasterize(region:of:store:), which render one layer alone, so the pixels are reachable; what is missing is a command that replaces the layer content with .image(ref) over the layer frame and a name for it. Photoshop calls it Rasterize Layer. Worth checking with the user first whether it belongs on a menu at all or should be offered inside the refusal pill.",
+  "acceptance": [
+    "A shape or a piece of text can be turned into a picture from the layer menu and from the layer row menu",
+    "Turning one is a single undo step and the picture looks identical the instant after",
+    "Once turned, a marquee over part of it cuts and deletes the piece exactly as it does on any other picture",
+    "The person is told, before it happens, that the shape stops being editable"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T01:19:25.701Z",
+      "note": "created (manual)"
+    }
+  ]
+}

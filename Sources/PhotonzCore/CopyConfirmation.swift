@@ -78,6 +78,12 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// changes anything you can see at the moment it happens, and both
         /// change what the NEXT shape comes out.
         case toolColorStyle(ToolColorStyleNotice)
+        /// A marquee could not take a piece out of the layer you picked
+        /// (`RegionSliceRefusal`), because that layer is a shape, a piece of
+        /// text, or a picture that has been cropped or turned. Both keys used
+        /// to answer this by lying: cut took the whole layer, and delete did
+        /// nothing at all. This is the line that says which it was.
+        case regionSliceRefused(RegionSliceRefusal)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -107,7 +113,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         // decide what to do about it.
         case .linksBroken, .componentPieceRefused, .toolColorStyle,
              .componentVersionGone, .componentVersionsMatched,
-             .componentVersionAdded: return Self.breakLifetime
+             .componentVersionAdded, .regionSliceRefused: return Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -139,6 +145,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentPieceRefused(let refusal): return refusal.title
         case .linksBroken(let report): return report.title
         case .toolColorStyle(let notice): return notice.title
+        case .regionSliceRefused(let refusal): return refusal.title
         }
     }
 
@@ -185,6 +192,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return report.detail ?? ""
         case .toolColorStyle(let notice):
             return notice.detail
+        case .regionSliceRefused(let refusal):
+            return refusal.detail
         }
     }
 

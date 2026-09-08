@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1720,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T17:19:09.579Z",
-  "updated": "2026-09-07T17:19:09.580Z",
+  "updated": "2026-09-08T01:08:45.311Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing plain copy on 2026-09-07. cutSelectedLayer (Sources/Photonz/EditorState+Clipboard.swift) only takes the region path when canSliceRegion(from:) is true, which needs an untransformed uncropped image layer, because deleteRegion bakes into a bitmap. Everything else falls back to the whole-layer cut. The same hole exists for the delete key, which erases from the locked Background when the picked layer cannot be sliced.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-07T17:19:09.580Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T01:08:45.311Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T01:11:45.182099Z",
+      "note": "Adversarial review before building. (1) Walked it: pick a rectangle, drag a marquee over half of it, press Command X. The whole rectangle vanishes onto the clipboard. Nothing on screen says why, and the only clue is that the marquee is still up over nothing. A first-time user reads that as the app having deleted their shape. (2) The delete key is worse, not better: RegionTarget.id already returns nil for a picked layer that cannot be sliced, so Backspace with a marquee over a shape does absolutely nothing, silently. The note on this task said it falls through to the locked Background; that is not what the code does today. Same silent nothing for Option-Backspace (fill region). (3) Copy already works: Command C over half a shape renders the layer alone and hands back a picture of the piece, because copyLayerRegion goes through the renderer instead of the bitmap. So copy can do it and cut cannot, which is the asymmetry that makes cut feel broken rather than limited. (4) Shortest version that delivers the value: refuse, and say why in the canvas notice pill the app already uses for component and link messages. Photoshop refuses the same way (target layer must be a pixel layer), which matches the Photoshop parity rule. (5) Cut: rasterize-on-demand. Turning the shape into pixels so the cut can happen is a real feature with its own UX (destructive, loses editability, needs a menu item and a name), and this task's acceptance asks for the one short line, not the conversion. Filing it separately."
+    },
+    {
+      "t": "2026-09-08T01:19:50.812916Z",
+      "note": "Built. New pure type RegionSliceRefusal in PhotonzCore decides, off RegionTarget.canSlice and nothing else, whether a layer refuses and what the canvas says: 'Cannot cut a piece out' / 'Cannot delete a piece', then one line of why plus the way out. A cropped or turned picture gets its own reason, since it IS pixels and telling that person to go and find a picture would be a lie. It rides CopyConfirmation to the notice pill at the bottom of the canvas, the surface the app already uses for component and link messages, with the longer break lifetime because it is a sentence you may want to act on. Wired into cutSelectedLayer and deleteRegion behind a new next-only flag, next-cut-says-what-it-cannot-do, on by default in Next. 11 new tests in Tests/PhotonzCoreTests/RegionSliceRefusalTests.swift, written first; full suite 4639 tests green."
+    },
+    {
+      "t": "2026-09-08T01:19:50.812916Z",
+      "note": "Verified live on the probe, not by reading code: Scripts/playtest/cut-says-what-it-cannot-do-walk.json. Screen Recording was granted so the shots are real window captures. Stage 3-cut-refused: layers stays 2 and the pill reads 'Cannot cut a piece out / Only a picture can have a piece taken out. Clear the marquee to cut the whole layer.' Stage 4-delete-refused: 'Cannot delete a piece', layers still 2. Stage 5: Escape then Command X drops layers 2 to 1, so cutting with no marquee still takes the whole layer. Stage 7: a marquee over a dropped screenshot's corner still cuts a real bite out of it, no refusal, layers unchanged at 3. All four acceptance items checked off against that log, not assumed."
+    },
+    {
+      "t": "2026-09-08T01:19:50.812916Z",
+      "note": "Adversarial review of the built thing. The pill lands just above the toolbar, in the eye's path, and reads at a glance. Two things I did not fix and put in the audit's rough instead: the line describes the way out ('Clear the marquee') without naming the key that does it, which I left as a judgment for the user rather than making the pill wider; and Option Backspace, the third member of this family, still fills nothing and says nothing over a shape. I reproduced that one in the same walk (stage 4a-fill-region: layers unchanged, no message of its own) and filed it rather than widening this task. Also filed the other half the goal offered, turning a shape into a picture so the cut can happen, as its own task: it is destructive, it ends the shape's editability, and it needs a name and a home, so it is not something to smuggle in behind Command X."
     }
-  ]
+  ],
+  "started": "2026-09-08T01:08:45.310Z"
 }

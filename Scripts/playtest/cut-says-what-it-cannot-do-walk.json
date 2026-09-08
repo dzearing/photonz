@@ -1,0 +1,68 @@
+{
+  "out": "/tmp/photonz-playtest/cut-says-what-it-cannot-do",
+  "seed": "A marquee only takes a piece out of a picture. Drawn over half a rectangle or a piece of text, Command X used to take the WHOLE shape onto the clipboard and Backspace used to do nothing at all, both without a word. Now both refuse and the canvas says which, in one line at the bottom. Cutting a piece out of a real picture is untouched, and so is cutting with no marquee.",
+  "setup": { "forget": ["shapes", "color", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 160], "to": [560, 380] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [380, 270] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-rectangle-picked", "note": "a rectangle drawn and picked; layers should be 2 (Background + Rectangle)" },
+    { "do": "render", "name": "cut-1-rectangle" },
+
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "drag", "from": [200, 160], "to": [380, 380] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-marquee-over-half", "note": "a marquee over the LEFT HALF of the rectangle, rectangle still picked" },
+    { "do": "snapshot", "name": "cut-2-marquee" },
+
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "cut" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-cut-refused", "note": "THE TEST: Command X must NOT take the rectangle. layers stays 2, canUndo stays false, and copied reads 'Cannot cut a piece out · Only a picture can have a piece taken out. Clear the marquee to cut the whole layer.'" },
+    { "do": "snapshot", "name": "cut-3-refused" },
+    { "do": "render", "name": "cut-3-refused-doc" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-delete-refused", "note": "THE TEST: Backspace over the same marquee says 'Cannot delete a piece' instead of doing nothing at all. layers stays 2" },
+    { "do": "snapshot", "name": "cut-4-delete-refused" },
+
+    { "do": "key", "key": "delete", "modifiers": ["option"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4a-fill-region", "note": "NOT FIXED HERE: Option Backspace (fill the marquee) over the same shape. Recorded so the audit can say honestly whether the rest of the family still goes quiet" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4b-marquee-cleared", "note": "escape takes the ants down and leaves the rectangle picked" },
+    { "do": "action", "action": "cut" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-no-marquee-cuts-the-lot", "note": "THE CONTROL: with the marquee cleared, Command X takes the whole rectangle as it always did. layers drops to 1" },
+    { "do": "render", "name": "cut-5-whole-shape-gone" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [880, 500] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [880, 500] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "drag", "from": [760, 420] , "to": [900, 560] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-picture-picked", "note": "a real picture picked with a marquee over its corner" },
+    { "do": "action", "action": "cut" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "7-picture-cut", "note": "THE CONTROL: a piece really does come out of a picture. copied must NOT be a refusal, canUndo true" },
+    { "do": "render", "name": "cut-7-piece-out-of-picture" }
+  ]
+}

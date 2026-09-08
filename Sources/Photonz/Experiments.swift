@@ -402,6 +402,14 @@ extension Experiments {
     /// every layer flattened together (`CopyRoute`).
     var copyPicksYourLayerEnabled: Bool { isEnabled(FeatureCatalog.copyPicksYourLayerFlag) }
 
+    /// `next-cut-says-what-it-cannot-do`: whether ⌘X and ⌫ refuse, out loud,
+    /// when the marquee is over a layer no piece can be taken out of
+    /// (`RegionSliceRefusal`). Off, cut silently takes the whole layer and ⌫
+    /// silently does nothing.
+    var cutSaysWhatItCannotDoEnabled: Bool {
+        isEnabled(FeatureCatalog.cutSaysWhatItCannotDoFlag)
+    }
+
     /// `next-paste-hands-you-the-pointer`: whether a paste leaves the pointer
     /// in hand with the pasted layer picked, and whether undoing that paste
     /// gives the tool you were using back (`PasteToolReturn`).

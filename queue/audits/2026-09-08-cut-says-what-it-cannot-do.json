@@ -1,0 +1,29 @@
+{
+  "feature": "Cutting part of a shape says what it cannot do",
+  "epic": "ui-building",
+  "summary": "Draw a marquee over half a rectangle or a piece of text and press Command X and the shape stays where it is, with one line at the bottom of the canvas saying a piece can only be taken out of a picture and that clearing the marquee cuts the whole layer. Backspace over the same marquee says the same thing instead of doing nothing at all.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Say when a piece cannot be cut out\" is on by default; \"Copy takes the layer you picked\" must also be on, which it is by default.",
+  "try": [
+    { "do": "Open a new document and draw a rectangle with R." },
+    { "do": "Press V and click the rectangle to pick it." },
+    { "do": "Press M and drag a marquee over the left half of it." },
+    { "do": "Press Command X.", "shot": "2026-09-08-cut-says-what-it-cannot-do-1.png" },
+    { "do": "Press Backspace over the same marquee.", "shot": "2026-09-08-cut-says-what-it-cannot-do-2.png" },
+    { "do": "Press Escape to clear the marquee, then Command X again." },
+    { "do": "Undo, then paste a screenshot in, pick it, marquee its corner and press Command X." }
+  ],
+  "evaluate": [
+    "Does the line at the bottom land where your eye already is, or did you miss it and think the key did nothing?",
+    "Is refusing the right answer, or would you rather Photonz turned the shape into a picture and cut the piece out for you?",
+    "Does \"Clear the marquee to cut the whole layer\" tell you enough, or should it name the key that clears it?",
+    "Is \"Only a picture can have a piece taken out\" true enough to your ears, given a rectangle looks like a picture on screen?",
+    "Does the line stay up long enough to read without hanging around?"
+  ],
+  "rough": [
+    "Option Backspace, which fills the marquee, still does nothing and says nothing over a shape. I left it alone because this task was about cut and delete, and a fill that does not happen destroys nothing, but the family now disagrees with itself. Filed as its own task.",
+    "The way out is described (\"Clear the marquee\") but the key is not named. Escape does it. Naming it would make the line longer and the pill wider, so I left it as a judgment for you.",
+    "A picture that has been cropped or turned gets its own wording (\"This picture is cropped or turned\") and I could not reach that case in the walk, so it is covered by tests rather than by a screenshot.",
+    "The task offered turning the shape into pixels as the other answer. That is a real feature with its own decisions (it is destructive, the shape stops being editable, it needs a menu item and a name), so it is filed separately rather than smuggled in behind Command X.",
+    "Screen Recording was granted, so both screenshots here are real window captures, not offscreen renders."
+  ]
+}

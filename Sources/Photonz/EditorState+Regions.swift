@@ -123,7 +123,17 @@ extension EditorState {
     /// Background instead fills with the background color and keeps its
     /// size (it must stay canvas-sized).
     func deleteRegion() {
-        guard selectionTargetsPixels, let region = selection, let id = regionTargetID(),
+        guard selectionTargetsPixels, let region = selection else { return }
+        // A picked layer no piece can be taken out of takes the op nowhere
+        // else (`RegionTarget`), so this used to be a key that did nothing and
+        // said nothing. Say which it was instead (`RegionSliceRefusal`).
+        if Experiments.shared.cutSaysWhatItCannotDoEnabled,
+           let picked = pickedLayerID, let layer = document?.layer(id: picked),
+           let refusal = RegionSliceRefusal.refusal(for: layer, action: .erase) {
+            raiseCanvasNotice(.regionSliceRefused(refusal))
+            return
+        }
+        guard let id = regionTargetID(),
               let document, let layer = document.layer(id: id) else { return }
         if layer.isLocked {
             fillRegion(hex: backgroundFillHex, into: id)
