@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1810,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T20:07:53.632Z",
-  "updated": "2026-09-08T07:39:59.635Z",
+  "updated": "2026-09-08T07:59:15.569Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The Effects list was built on 2026-09-07 to make exactly this a one-case change: add a case to LayerEffect in Sources/PhotonzCore/LayerEffects.swift with its settings, and an entry to AddableEffect. Nothing about the plus, the tick, the cross, the grip, the multi-selection sentence or the saved file should need touching; if it does, the extension point is wrong and that is worth reporting. The renderer is the real work: an outer glow reaches past the layer edge, so it has the same problem as an outside border (see a-border-can-sit-outside-the-edge-not-only-insid) and should probably follow it. An INNER glow is cheap and could ship first, since inner shadows already clip to the silhouette in DocumentRenderer.innerShadowed.",
@@ -48,7 +48,12 @@
     {
       "t": "2026-09-08T07:58:42.283Z",
       "note": "Acceptance line 1 rewritten to match what was built and why: one Glow on the plus, not Glow and Inner Glow. See the review note above."
+    },
+    {
+      "t": "2026-09-08T07:59:15.567Z",
+      "note": "Glow shipped in Next. GlowEffect + GlowKind in PhotonzCore/LayerEffects.swift, ColorSlot.glow, rendered as an unoffset shadow in DocumentRenderer.shadowed, glow rows in EffectsListInspector. The plus reads Shadow | Glow | Border | Blur and offers Glow once, with Outer/Inner as a Kind on the row. Verified on the probe with real screen captures (Scripts/playtest/glow-effect-walk.json); Scripts/test.sh green, 4776 tests. Audit: queue/audits/2026-09-08-glow.json."
     }
   ],
-  "started": "2026-09-08T07:39:59.633Z"
+  "started": "2026-09-08T07:39:59.633Z",
+  "completed": "2026-09-08T07:59:15.568Z"
 }
