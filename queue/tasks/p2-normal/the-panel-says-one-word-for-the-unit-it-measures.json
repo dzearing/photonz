@@ -1,0 +1,29 @@
+{
+  "id": "the-panel-says-one-word-for-the-unit-it-measures",
+  "title": "The panel says one word for the unit it measures in",
+  "goal": "The right hand panel measures everything in the same thing but calls it two different names. Position and Size says the numbers are px from the top left, and two rows above it Corner Radius says 18 pt and a border says 4 pt. In the shape settings, Thickness is in pt and Label size is in px, one under the other. A person redlining a screenshot reads px and pt as different units and has to work out which one their number is in. Pick one word and say it everywhere.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T22:17:48.199Z",
+  "updated": "2026-09-08T22:17:48.202Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "FOUND 2026-09-08 in a real window capture: queue/manager/shots/2026-09-08-2215-versions.png. Corner Radius 18 pt and border Width 4 pt sit above Position and Size, whose foot line reads px from the top left.\n\nIn code, one file spells it both ways within thirty lines: Sources/Photonz/LayersPanel.swift:3481 formats Thickness as pt and :3498 formats Label size as px, in the same ShapeSettingRow switch. LayersPanel.swift:3304 has a points() helper that writes pt; the export dialog, the new canvas dialog and the Library all write px.\n\nDecide the word rather than papering over it. The document is measured in one space and a screenshot is 2x, so if px and pt genuinely mean different things here the fix is to SAY which is which, not to unify blindly. Read Sources/PhotonzCore/ElementBounds.swift and CanvasMeasure.swift for what the canvas readouts already say, and follow them, because the measure readout is the number a redliner copies into a spec.\n\nThis is a copy and consistency change, not a new control, so no decision card. Flag: next-geometry-fields (FeatureCatalog.geometryFieldsFlag) covers Position and Size; the shape rows ride next-shape-parts.",
+  "acceptance": [
+    "Every number in the right hand panel that measures the same space carries the same unit word, or says plainly why it is different",
+    "The words in the panel agree with the words the canvas readouts use, so a measurement of 24 and a corner radius of 24 do not read as two different units",
+    "A playtest walk reads the panel back and fails if two rows in the same section spell the unit differently",
+    "Try it: Experiments window, Next release. Draw a rectangle with a border, look at Corner Radius, the border Width and the line under Position and Size, then pick a label and look at Thickness and Label size",
+    "An audit is written under queue/audits/ with a real window capture, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T22:17:48.201Z",
+      "note": "created (manager)"
+    }
+  ]
+}

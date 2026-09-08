@@ -1,0 +1,30 @@
+{
+  "id": "a-text-treatment-can-be-saved-as-a-named-style",
+  "title": "A text treatment can be saved as a named style",
+  "goal": "A colour can be saved under a name and reused everywhere, and repainting the name repaints everything wearing it. Text cannot do any of that: every heading and every label carries its own font, size, weight and colour, typed again each time, and changing the heading size across a screen means editing every one by hand. Let a person save the text they have set up as a named style, wear it on other text, and change every piece of text wearing it by editing the name once.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T22:16:45.702Z",
+  "updated": "2026-09-08T22:16:45.705Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "OBJECTIVE GAP, from the spec itself. docs/design/ui-building.md, Styles are named values layers point at: a style is a named paint, EFFECT or TEXT TREATMENT. Only paint exists. Sources/PhotonzCore/ColorStyles.swift is the whole style system and every type in it is about colour (ColorSlot, ColorStyle, ColorStyleBinding, ColorStyleRole). Sources/PhotonzCore/TextStyles.swift is the tool s current text settings, not a named style, and nothing in PhotonzCore mentions a saved or named text style.\n\nThis matters more than an effect style: the epic is create once reuse everywhere, and a design system without a text style is not one. Step D8 of the order of work says the starter components are drawn from styles rather than raw values, and their text cannot be.\n\nDo it the way the colour styles already do it, do not invent a second mechanism: same Library Styles shelf, same binding shape, same link break handling (Sources/PhotonzCore/LinkBreaks.swift), same wearing a style row treatment landed 2026-09-05. Flag: next-styles (FeatureCatalog.stylesFlag), on by default in Next.\n\nScope for one sitting: font family, size, weight and colour, on a text layer. Effect styles are NOT in this slice; if you find yourself building a general style kind, stop and file the effect half as a follow-up.",
+  "acceptance": [
+    "Text set to a font, size, weight and colour can be saved under a name from the panel, without being asked for a name twice",
+    "The saved text style appears on the Library Styles shelf beside the saved colours and can be put on another piece of text",
+    "Editing the style once changes every piece of text wearing it, and one undo takes that back",
+    "A row wearing a text style says so and still answers, the same way a colour row wearing a style already does",
+    "Try it: Experiments window, Next release, Save a color as a style and reuse it is on by default. Type two headings, set one up, save it, wear it on the other, then change the size on the style",
+    "An audit is written under queue/audits/ with a real window capture, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T22:16:45.704Z",
+      "note": "created (manager)"
+    }
+  ]
+}

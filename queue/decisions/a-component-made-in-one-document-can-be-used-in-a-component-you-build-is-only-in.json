@@ -1,0 +1,55 @@
+{
+  "id": "a-component-made-in-one-document-can-be-used-in-a-component-you-build-is-only-in",
+  "taskId": "a-component-made-in-one-document-can-be-used-in",
+  "question": "A component you build is only in the document you built it in. Should it be reusable across documents, and where should the shared shelf live?",
+  "context": "Photonz today: a component belongs to one document. The starter components (button, input, card, nav bar, badge) are the one exception, provided by the app and available everywhere, copied into your document on drop. The objective for this epic is Component design: create once, reuse everywhere.",
+  "options": [
+    {
+      "id": "app-shelf",
+      "label": "One shelf the whole app shares",
+      "summary": "The Library grows a shared shelf. Anything you put on it is there in every document you open, on this Mac. Drop one into a document and it stays linked, so editing the original updates every document that uses it.",
+      "pros": [
+        "Build your kit once and it is there in every file from then on",
+        "Matches how the starter components already work, so there is one idea, not two",
+        "Editing a button in one place fixes it everywhere"
+      ],
+      "cons": [
+        "Something stored outside your documents can be edited by one file and surprise another",
+        "A document sent to somebody else arrives without the originals behind its copies"
+      ],
+      "mitigation": "A copy whose original is missing keeps its drawing and says the link is broken, exactly as a broken style link already does."
+    },
+    {
+      "id": "pull-from-a-file",
+      "label": "Pull from another document",
+      "summary": "No shared store at all. When you want a component you built elsewhere, you point at that document and pull the component in. It comes in as a copy that follows the file you pulled it from, until you move or delete that file.",
+      "pros": [
+        "Nothing lives outside your documents, so a folder of files is still the whole truth",
+        "No new place to manage or clean out"
+      ],
+      "cons": [
+        "Reuse is a chore you repeat per document rather than something that is just there",
+        "Following another file breaks the moment somebody moves it"
+      ],
+      "mitigation": "The pull remembers the document by name as well as by place, so a moved file can be pointed at again rather than lost."
+    },
+    {
+      "id": "leave-it",
+      "label": "Leave it in one document",
+      "summary": "Components stay in the file they were made in, and the built-in starter set stays the only thing shared across documents. Copy and paste between windows is the way to move one.",
+      "pros": [
+        "No new storage, no linking across files, nothing to go stale",
+        "Every document stays a complete thing on its own"
+      ],
+      "cons": [
+        "Create once, reuse everywhere stops at the edge of one file",
+        "Two copies of the same button in two files drift apart with nothing saying so"
+      ],
+      "declines": true,
+      "mitigation": "Nothing to mitigate: this is the app as it is today."
+    }
+  ],
+  "recommended": "app-shelf",
+  "status": "pending",
+  "created": "2026-09-08T22:18:36.545Z"
+}

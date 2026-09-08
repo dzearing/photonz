@@ -1,0 +1,29 @@
+{
+  "id": "each-corner-of-a-shape-can-be-rounded-on-its-own",
+  "title": "Each corner of a shape can be rounded on its own",
+  "goal": "Corner Radius rounds all four corners of a shape by the same amount, and there is no way to round only some of them. A card with a rounded top and a square bottom, a segmented control whose two ends are round and whose middle is square, a speech bubble: none of them can be drawn without faking it with a second shape on top. Let a person open the one number into four and set each corner.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T22:17:33.994Z",
+  "updated": "2026-09-08T22:17:33.997Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CAPABILITY GAP. Sources/PhotonzCore/CornerRadiusSelection.swift carries one radius per layer, and the panel draws it as a single slider (visible in queue/manager/shots/2026-09-08-2215-versions.png, Appearance, Corner Radius 18 pt). Nothing in PhotonzCore models a per corner radius.\n\nThis finishes a control the user already uses rather than adding a new surface, so it needs no decision card. What DOES need care is that it must not cost the common case: the single number stays the default face and opening it into four is a deliberate act, the same shape as GroupPadding in Sources/PhotonzCore/GroupLayout.swift, which is one number that opens into four sides. Copy that model, its Codable behaviour and its panel treatment rather than inventing a second idiom.\n\nEverything that reads the radius has to follow: the fill, the ring (Sources/PhotonzCore/RingShape.swift), the selection outline (SelectionOutlineShape.swift, which learned to follow a rounded shape on 2026-09-08), and clipping. Sources/PhotonzCore/CornerRadiusSelection.swift already knows which layers have corners at all, so the row keeps hiding itself where there are none.\n\nFlag: next-shape-parts (FeatureCatalog.shapePartsFlag), on by default in Next.",
+  "acceptance": [
+    "A shape with corners can be given a different radius on each of its four corners, and the one number is still the way in: nobody who wants all four the same has to type four numbers",
+    "The shape, its border, its selection outline and anything it clips all follow the four numbers, not just the fill",
+    "A document saved with four different corners opens with them, and a document saved before this opens unchanged",
+    "Try it: Experiments window, Next release, Appearance is what it is Effects is what you add is on by default. Draw a rectangle, open Corner Radius into its four corners, and round the top two only",
+    "An audit is written under queue/audits/ with a real window capture, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T22:17:33.996Z",
+      "note": "created (manager)"
+    }
+  ]
+}

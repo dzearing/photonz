@@ -1,0 +1,29 @@
+{
+  "id": "a-row-that-runs-out-of-room-wraps-onto-the-next",
+  "title": "A row that runs out of room wraps onto the next line",
+  "goal": "A row of things laid out by the app runs off its own edge when there are too many of them: a strip of tags, a toolbar of buttons, a set of filter chips. Today the only way to get a second line is a grid with a fixed number of columns, which is the wrong shape for pieces that are different widths. Let a row wrap: when the next piece will not fit in the width the row has, it starts a new line, with its own space between the lines.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T22:17:00.438Z",
+  "updated": "2026-09-08T22:17:00.441Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CAPABILITY GAP in auto layout, which the user promoted to now on 2026-09-03. Sources/PhotonzCore/GroupLayout.swift: GroupLayoutKind is stack | grid and nothing else, and a stack has direction, columns, gap, spreadsGap, rowGap, padding, width, height and the four min/max numbers. There is no wrap anywhere in PhotonzCore. A grid wraps at a fixed column count with equal cells, which is not the same shape: chips are different widths.\n\nThis was an open thread in the 2026-09-04 manager report (Wrapping as a third stack behaviour) and nothing has been filed for it since.\n\nWhere it goes: GroupFlow.stacked() in Sources/PhotonzCore/GroupFlow.swift is the one place that walks the flow axis. Three landed features already share that seam (spread, fill the room left over, smallest and largest), so read what is there rather than re-deciding how leftover room is worked out. rowGap already exists on GroupLayout for the grid and is the right number to reuse for the gap between wrapped lines.\n\nA wrapped row needs a width to wrap against, so on a row that hugs its contents the choice does nothing: say so on the row rather than letting it silently do nothing, the way couldSpread already gates the spread choice. Flag: next-auto-layout (FeatureCatalog.autoLayoutFlag), on by default in Next.",
+  "acceptance": [
+    "A row that has been given a width wraps its contents onto a second line instead of running past its edge, with a separate gap between the lines",
+    "The wrapped row is as tall as the lines it ended up with, so a container that closes around its contents closes around all of them",
+    "Turning wrapping off puts the row back on one line, and one undo takes the change back",
+    "Try it: Experiments window, Next release, Groups that arrange their own contents is on by default. Draw six labels of different lengths, group them, make the group a Row, give it a width of 300, and turn wrapping on",
+    "An audit is written under queue/audits/ with a real window capture, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T22:17:00.440Z",
+      "note": "created (manager)"
+    }
+  ]
+}

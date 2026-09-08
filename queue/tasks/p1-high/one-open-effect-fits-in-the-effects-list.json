@@ -1,0 +1,29 @@
+{
+  "id": "one-open-effect-fits-in-the-effects-list",
+  "title": "One open effect fits in the Effects list",
+  "goal": "Draw a shape, add a border, and open it: the Width slider is sliced through the middle by the section underneath, with no scroll bar and nothing saying there is more below. It reads as a half drawn control rather than as a list with more in it. The Effects list is the change the user was most invited to argue with this week, and this is the first thing they will see. Give the list room for one open effect, and where it truly cannot fit, make the cut edge say there is more.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T22:16:29.781Z",
+  "updated": "2026-09-08T22:16:29.784Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-08 on clean main with the probe build, running Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json. Picture: queue/manager/shots/2026-09-08-2215-versions.png (the Border row, bottom right of the panel).\n\nThe dock geometry read out of that walk (dockSections in log.json, viewport 996pt):\n  Layers 6-169, Appearance 169-334, Effects 334-479, Component 479-625, Position & Size 625-760, Layout 760-902, Library 902-1047\n\nSo the Effects list is given 145pt. One open Border is a row head plus Color, Position and Width, which needs about 165pt, and the last 20pt is what gets sliced. The Width label is faded but the slider under it is cut clean through with no fade and no scroll bar.\n\nThis is the height budget landed on 2026-09-07 (forms drawn whole and paid for first, lists share what is left), not the section ORDER question, which is the separate blocked task picking-a-text-layer-leaves-its-settings-below-t. Do not solve that one here.\n\nFlag: next-shape-parts (FeatureCatalog.shapePartsFlag), on by default in Next. Files: Sources/Photonz/LayersPanel.swift for the budget, and the Effects list section within it. The dock rules being scrubbed by the-dock-rules-say-plainly-that-they-govern-the are the rules this has to end up obeying; read them first if that task has landed.",
+  "acceptance": [
+    "With one shape picked and one border open, every setting the border has is drawn whole: nothing is cut across the middle of a control",
+    "With three effects open the list scrolls inside itself and its cut edge reads as more content below, not as a rendering fault",
+    "A playtest walk reads the dock section extents and fails if the Effects section is shorter than one open effect",
+    "Try it: Experiments window, Next release, Appearance is what it is Effects is what you add is on by default. Draw a rectangle, press the plus on Effects, add Border, open it, and look at Width",
+    "An audit is written under queue/audits/ with a real window capture, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T22:16:29.783Z",
+      "note": "created (manager)"
+    }
+  ]
+}

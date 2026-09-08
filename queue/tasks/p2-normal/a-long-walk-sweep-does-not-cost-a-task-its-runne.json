@@ -3,13 +3,13 @@
   "title": "A long walk sweep does not cost a task its runner",
   "goal": "Two of the five runner failures in the last day were the same thing: a task kicked off the full walk sweep, which takes about forty minutes, and the runner was killed waiting for it at ten. Each one cost a task in the focus a whole cycle before it was picked up again and finished. Give a runner a way to run the sweep that survives, or a rule not to start one it cannot wait for.",
   "epic": "unmanned-loop",
-  "priority": "p3-low",
-  "seq": 140,
+  "priority": "p2-normal",
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-08T12:08:42.818Z",
-  "updated": "2026-09-08T12:09:07.475Z",
+  "updated": "2026-09-08T22:19:25.073Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-08, from queue/history.jsonl. Two runner_failed entries in 24 hours are this: with-the-grid-off-only-the-grid-switch-is-on-the at 2026-09-07T16:22, whose note begins \"The full walk sweep is still running (it re-runs all 253 walks)\", and a-marquee-keeps-the-layer-you-picked-and-delete at 2026-09-08T00:03 with \"Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely.\" Both tasks completed later, so this costs time rather than work. The other three failures in the same window were network errors and are not this.\n\nIt is filed at p3 because the loop is a next epic, not the focus, but it protects focus throughput directly: both tasks it cost were ui-building work. a-full-walk-run-finishes-in-an-hour-not-four already cut the sweep from about 60 to 40 minutes, which is still four times the ceiling, so the answer is how it is run, not how fast it is.",
@@ -27,6 +27,14 @@
     {
       "t": "2026-09-08T12:09:07.474Z",
       "note": "seq 1310 -> 140"
+    },
+    {
+      "t": "2026-09-08T22:19:25.034Z",
+      "note": "priority p3-low -> p2-normal"
+    },
+    {
+      "t": "2026-09-08T22:19:25.072Z",
+      "note": "seq 140 -> 60"
     }
   ]
 }
