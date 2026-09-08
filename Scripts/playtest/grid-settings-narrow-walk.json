@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/grid-settings-narrow",
+  "seed": "The grid's settings have somewhere to open at every width. On a canvas too narrow for the grid's chip the View menu's Grid Settings row used to raise a flag no surface was reading: nothing opened, and the flag stayed up, so widening the window later could present the settings unbidden. Here the settings open off the tool bar instead, carry the same controls, close on escape, and widening afterwards leaves the canvas alone.",
+  "setup": { "forget": ["grid", "tools", "panel"] },
+  "steps": [
+    { "do": "appearance", "value": "dark" },
+    { "do": "blank", "canvasWidth": 400, "canvasHeight": 400, "width": 860, "height": 760 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Grid Settings", "present": false },
+    { "do": "panel", "stage": "1-narrow-canvas", "note": "the panel has taken the canvas under the grid chip's width: no Grid Settings on the bar" },
+    { "do": "snapshot", "name": "1-narrow-canvas" },
+
+    { "do": "action", "action": "showGridSettings" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expect", "control": "Show grid", "present": true },
+    { "do": "panel", "stage": "2-open-off-the-bar", "note": "View > Grid Settings opened them off the tool bar" },
+    { "do": "snapshot", "name": "2-open-off-the-bar" },
+
+    { "do": "press", "control": "Show grid" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Snap to grid", "present": true },
+    { "do": "expect", "control": "Columns and rows", "present": true },
+    { "do": "panel", "stage": "3-same-controls", "note": "switched on from in here: the same rows a wide window shows" },
+    { "do": "snapshot", "name": "3-same-controls" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "expect", "control": "Show grid", "present": false },
+    { "do": "panel", "stage": "4-closed" },
+
+    { "do": "action", "action": "hideInspector" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expect", "control": "Grid Settings", "present": true },
+    { "do": "expect", "control": "Show grid", "present": false },
+    { "do": "panel", "stage": "5-widened", "note": "widening gives the bar its grid chip back and opens nothing by itself" },
+    { "do": "snapshot", "name": "5-widened" },
+
+    { "do": "press", "control": "Grid Settings" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Show grid", "present": true },
+    { "do": "panel", "stage": "6-off-the-chip", "note": "and the chip still opens the same settings on a wide canvas" },
+    { "do": "snapshot", "name": "6-off-the-chip" }
+  ]
+}

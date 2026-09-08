@@ -537,6 +537,43 @@ struct GridToolBarCapsuleTests {
                 .contains(.settings))
         }
     }
+
+    // MARK: The settings always have somewhere to open
+
+    /// On a canvas with the capsule, the settings come out of the grid's own
+    /// icon, which is what they point at.
+    @Test func aRoomyCanvasOpensThemOffTheGridsIcon() {
+        #expect(EditorChromeLayout.gridSettingsAnchor(canvasWidth: 1135) == .gridChip)
+    }
+
+    /// And on one without it they come out of the tool bar itself, rather than
+    /// out of nothing: the View menu's row used to set a flag that no surface
+    /// was reading, so choosing Grid Settings on a narrow window did nothing at
+    /// all.
+    @Test func aCrampedCanvasOpensThemOffTheToolBar() {
+        #expect(EditorChromeLayout.gridSettingsAnchor(canvasWidth: 435) == .toolBar)
+    }
+
+    /// There is ALWAYS an answer, and only ever one. The app builds one popover
+    /// per anchor and reads this to decide which, so a width that answered
+    /// neither would be the original bug back, and a width that answered both
+    /// would be two popovers on one flag.
+    @Test func everyWidthHasExactlyOneAnchor() {
+        for width in stride(from: CGFloat(0), through: 2000, by: 5) {
+            let anchor = EditorChromeLayout.gridSettingsAnchor(canvasWidth: width)
+            #expect(anchor == (EditorChromeLayout.showsGridChip(canvasWidth: width)
+                               ? .gridChip : .toolBar))
+        }
+    }
+
+    /// The anchor turns over at exactly the width the capsule does, so there is
+    /// no band where the icon is on the bar and the settings open somewhere
+    /// else.
+    @Test func theAnchorTurnsOverWhereTheCapsuleDoes() {
+        let t = EditorChromeLayout.gridChipMinCanvasWidth
+        #expect(EditorChromeLayout.gridSettingsAnchor(canvasWidth: t) == .gridChip)
+        #expect(EditorChromeLayout.gridSettingsAnchor(canvasWidth: t - 1) == .toolBar)
+    }
 }
 
 /// The column down the right of the inspector panel: the eyes on the layer

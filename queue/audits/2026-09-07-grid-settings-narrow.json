@@ -1,0 +1,27 @@
+{
+  "feature": "The grid settings open on a narrow window too",
+  "epic": "ui-building",
+  "summary": "On a window too narrow for the grid's icon to fit on the floating tool bar, View then Grid Settings now opens the settings out of the tool bar itself, with the same rows a wide window shows. Before this it did nothing at all: the menu row raised a flag that no surface in the app was reading.",
+  "setup": "Photonz Dev, release Next. The grid is on by default in Next; nothing to switch on.",
+  "try": [
+    { "do": "Start a blank canvas, then narrow the window (or open the right hand panel) until the tool bar has no # icon beside the zoom.", "shot": "2026-09-07-grid-settings-narrow-1-no-chip-sc.png" },
+    { "do": "Choose View then Grid Settings. The settings open above the tool bar.", "shot": "2026-09-07-grid-settings-narrow-2-open-sc.png" },
+    { "do": "Tick Show grid. The lines appear and the rest of the settings unfold under it.", "shot": "2026-09-07-grid-settings-narrow-3-all-controls-sc.png" },
+    { "do": "Type 16 into Spacing and watch the lines change behind the popover." },
+    { "do": "Press Escape to put the settings away." },
+    { "do": "Widen the window (or close the right hand panel) until the # icon is back on the bar. Nothing opens by itself." },
+    { "do": "Press the # icon. The same settings open, this time pointing at the icon." }
+  ],
+  "evaluate": [
+    "The settings rise out of the middle of the tool bar rather than out of a button. Does that read as coming from the bar, or as floating with no source?",
+    "You reached these from a menu at the top of the screen and they opened at the bottom. Is that far enough away to feel wrong?",
+    "With the grid on, the popover is tall enough to cover most of a short window's picture. Is that a problem while you are typing a spacing and watching the lines?",
+    "On a narrow window the grid has no icon on the bar at all, so nothing says the grid exists until you go looking in the View menu. Should the icon stay on the bar at every width instead, at the cost of one tool moving into the overflow?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real capture of the window rather than an offscreen render.",
+    "The checkboxes read as unticked in these captures even where the state says they are on. That is how an inactive offscreen probe window photographs and is not what the app looks like in your hands; the walk checks the state, not the picture.",
+    "Widening the window with the settings still open moves them from the bar to the icon, so the popover closes and reopens in a new spot. Rare, and better than the old behaviour of nothing at all, but it is a jump.",
+    "The last evaluate question is the real open one. This makes the menu row work, but it does not answer whether a narrow window should have a grid icon on the bar in the first place. That was decided the other way with measured arithmetic in EditorChromeLayout, so it is a change worth asking for rather than making."
+  ]
+}

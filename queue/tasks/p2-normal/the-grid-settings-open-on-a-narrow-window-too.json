@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1690,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T16:09:05.539Z",
-  "updated": "2026-09-07T16:09:05.540Z",
+  "updated": "2026-09-08T00:22:55.422Z",
   "deps": [],
   "blockedBy": [],
   "notes": "EditorState.isGridSettingsPresented is a flag read by a .popover attached to EditorView.gridChip. Below EditorChromeLayout.gridChipMinCanvasWidth (620pt canvas) that chip is not built at all, so the flag goes true and nothing presents, and the flag stays true: widening past the threshold can then present it unbidden. Options: anchor the popover to the window (a sheet or a popover on the canvas), or open it as a small window. Found while doing with-the-grid-off-only-the-grid-switch-is-on-the on 2026-09-07.",
@@ -22,6 +22,43 @@
     {
       "t": "2026-09-07T16:09:05.540Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T00:22:55.422Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T00:37:44.905443Z",
+      "note": "Adversarial review before building. The mock has no say here: this is the app disagreeing with itself. Three options were on the table (a popover anchored elsewhere, a sheet, a window of its own). A SHEET is wrong: the whole point of these settings is watching the lines change on the picture as you type a spacing, and a sheet sits over the picture and takes the window hostage. A WINDOW of its own is worse: window management for four rows. Making the grid's icon stay on the bar at every width would also fix it, but it overturns a threshold that was set with measured arithmetic and costs the bar a tool, so it is a change to ASK for rather than to make: it is the last question in the audit."
+    },
+    {
+      "t": "2026-09-08T00:37:44.905443Z",
+      "note": "Reproduced first, on the probe. 560pt window (canvas under the 620pt threshold), View > Grid Settings: nothing opened, and the panel listing had no grid control anywhere. /tmp/grid-narrow-repro. So the report is real and not a misreading of the code."
+    },
+    {
+      "t": "2026-09-08T00:37:44.905443Z",
+      "note": "Rule pushed into PhotonzCore, test first: EditorChromeLayout.gridSettingsAnchor(canvasWidth:) answers .gridChip or .toolBar, exactly one per width, turning over at gridChipMinCanvasWidth. 4 new tests in GridToolBarCapsuleTests, red before the code. The app builds the settings popover once per anchor and reads this to decide which, so the two can never both be up on the one flag."
+    },
+    {
+      "t": "2026-09-08T00:37:44.905443Z",
+      "note": "App side: EditorView.gridSettingsBinding(at:) hands editorState.isGridSettingsPresented to whichever surface is carrying it at this width and reads false everywhere else. The chip keeps its popover; a second one hangs off the GlassEffectContainer holding the tool bar for the narrow case. No flag is cleared on resize (the wand and crop chips do that): with an anchor at every width there is nothing left to get stuck, and clearing would close settings the user has open while they drag the window."
+    },
+    {
+      "t": "2026-09-08T00:37:44.905443Z",
+      "note": "Regression walk: Scripts/playtest/grid-settings-narrow-walk.json, 860x760 with the panel open so the canvas is 595pt. Seven expect steps: no Grid Settings on the bar, the settings open anyway, Snap to grid and the Lines picker are there, Escape closes it, widening brings the chip back and opens nothing by itself, and the chip still opens the same settings. FAILS on main without the EditorView change (step 11, no \"Show grid\" control) and passes with it."
+    },
+    {
+      "t": "2026-09-08T00:37:44.905443Z",
+      "note": "First cut of that walk was 900pt wide, which left the canvas at 635pt and still had the chip: it passed without the fix. Caught by stashing the fix and re-running rather than by reading it. The walk now asserts the chip's ABSENCE at stage 1 so it can never silently test the wrong width again."
+    },
+    {
+      "t": "2026-09-08T00:37:44.905443Z",
+      "note": "Scripts/test.sh green: 4608 tests, 385 suites. Current release untouched: every path is behind Experiments.shared.canvasGridEnabled, and next-canvas-grid is releases: [.next]. EditorView.swift is shared and Next has no fork of it, so Next has the change."
+    },
+    {
+      "t": "2026-09-08T00:37:44.905443Z",
+      "note": "Audit: queue/audits/2026-09-07-grid-settings-narrow.json, with three real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T00:22:55.421Z"
 }

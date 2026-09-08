@@ -364,6 +364,33 @@ public enum EditorChromeLayout {
         return isGridVisible ? [.settings, .cell, .adjust] : [.settings]
     }
 
+    /// What the grid's settings come out of on a canvas this wide.
+    public enum GridSettingsAnchor: String, Sendable, Equatable, CaseIterable {
+        /// The grid's own icon in the tool bar, which is where the settings
+        /// belong: they point at the thing that opened them.
+        case gridChip
+        /// The floating tool bar itself. On a canvas too narrow for the grid to
+        /// have a chip there is no icon to point at, so the settings rise out
+        /// of the bar as a whole instead.
+        case toolBar
+    }
+
+    /// Where the grid's settings open from, whichever door was used.
+    ///
+    /// They used to open from the chip and from nowhere else, so on a canvas
+    /// that had shed the chip the View menu's Grid Settings row raised a flag
+    /// that no surface in the app was reading: the row did nothing, and the
+    /// flag stayed up, so widening the window later could present the settings
+    /// unbidden. Below the threshold they come out of the bar itself now — the
+    /// same popover, the same controls, out of the same strip of the window,
+    /// just without an icon under the arrow.
+    ///
+    /// One width, one answer: the app builds the settings once, at the anchor
+    /// this names, so the two can never both be up on the one flag.
+    public static func gridSettingsAnchor(canvasWidth: CGFloat) -> GridSettingsAnchor {
+        showsGridChip(canvasWidth: canvasWidth) ? .gridChip : .toolBar
+    }
+
     /// The narrowest canvas on which the CROP tool's options still lay
     /// themselves out along the tool bar.
     ///

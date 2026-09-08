@@ -11811,3 +11811,43 @@ from a box that picks pixels, and delete over a box with a shape picked now does
 nothing without saying why.
 
 Next: the queue picks the next task.
+
+## 2026-09-07 — The grid settings open on a narrow window too
+
+On a canvas narrower than 620pt the tool bar sheds the grid's capsule, and the
+View menu's Grid Settings row went with it in the worst way: it raised
+`EditorState.isGridSettingsPresented`, which only the chip's popover was reading,
+so the row did nothing and the flag stayed up. Widening the window later could
+then present the settings unbidden.
+
+Reproduced on the probe before anything was written: a 560pt window, View ▸ Grid
+Settings, and the panel listing came back with no grid control anywhere.
+
+The rule is now in `PhotonzCore`, tested first:
+`EditorChromeLayout.gridSettingsAnchor(canvasWidth:)` answers `.gridChip` or
+`.toolBar`, exactly one per width, turning over at `gridChipMinCanvasWidth`.
+`EditorView.gridSettingsBinding(at:)` hands the flag to whichever surface is
+carrying it and reads false everywhere else, so the two popovers can never both
+be up on the one flag. Below the threshold the settings rise out of the floating
+tool bar itself: same popover, same rows, arrow pointing at the bar rather than
+at an icon on it. Nothing is cleared on resize, unlike the wand and crop chips —
+with an anchor at every width there is nothing left to get stuck, and clearing
+would close settings you have open while you drag the window edge.
+
+A sheet and a window of its own were both considered and dropped: these settings
+exist to be used while you watch the lines change on the picture. Keeping the
+grid's icon on the bar at every width would also have fixed it, but that
+overturns a threshold set with measured arithmetic and costs the bar a tool, so
+it is the last question in the audit rather than a change made here.
+
+Verified with `Scripts/playtest/grid-settings-narrow-walk.json`: 860x760 with the
+panel open, so the canvas is 595pt. Seven `expect` steps, and the walk FAILS on
+the code as it was and passes with the fix. The first cut of it was 900pt wide,
+left the canvas at 635pt, still had the chip, and passed without the fix — caught
+by stashing the change and re-running, and the walk now asserts the chip's
+absence at stage 1 so it cannot test the wrong width again.
+
+Audit: `queue/audits/2026-09-07-grid-settings-narrow.json`, three real window
+captures.
+
+Next: the queue picks the next task.

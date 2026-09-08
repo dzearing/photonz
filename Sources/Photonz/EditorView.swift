@@ -105,6 +105,16 @@ struct EditorView: View {
                             GlassEffectContainer {
                                 toolbar
                             }
+                            // The grid's settings when the bar has no grid icon
+                            // to hang them off. Same popover, same controls,
+                            // rising out of the same strip of the window: the
+                            // arrow just points at the bar rather than at one
+                            // button on it. Without this, View ▸ Grid
+                            // Settings on a narrow window did nothing at all.
+                            .popover(isPresented: gridSettingsBinding(at: .toolBar),
+                                     arrowEdge: .top) {
+                                CanvasGridSettingsPopover()
+                            }
                             // Measure the BAR, inside the insets. Measuring
                             // outside them counted the 32pt of inset twice (the
                             // budget already subtracts it) and cost the bar a
@@ -649,6 +659,27 @@ struct EditorView: View {
         if fitted != toolbarVisibleCount { toolbarVisibleCount = fitted }
     }
 
+    /// The one flag the grid's settings run off, handed to whichever surface is
+    /// carrying them at this width and to no other.
+    ///
+    /// `EditorChromeLayout.gridSettingsAnchor` picks the surface; everything
+    /// else reads false and never presents. Reading false rather than being
+    /// absent matters on the way down: a window shrinking past the threshold
+    /// with the settings open takes the chip away, and the popover has to close
+    /// with it rather than be torn out from under itself.
+    private func gridSettingsBinding(
+        at anchor: EditorChromeLayout.GridSettingsAnchor) -> Binding<Bool> {
+        Binding(
+            get: {
+                editorState.isGridSettingsPresented
+                    && Experiments.shared.canvasGridEnabled
+                    && editorState.document != nil
+                    && EditorChromeLayout.gridSettingsAnchor(
+                        canvasWidth: canvasContentWidth) == anchor
+            },
+            set: { editorState.isGridSettingsPresented = $0 })
+    }
+
     /// The grid's own capsule: a glass bar beside the zoom carrying the whole
     /// of working the grid, and carrying NOTHING while the grid is off but the
     /// icon that opens it. With the grid drawn that is the icon, a button
@@ -696,7 +727,11 @@ struct EditorView: View {
                 .help(CanvasGridCopy.settingsHelp)
                 .playtestControl(CanvasGridCopy.settingsControl,
                                  detail: "Tool bar, grid \(showing ? "on" : "off")")
-                .popover(isPresented: $state.isGridSettingsPresented, arrowEdge: .top) {
+                // Only ever ONE of these in the tree: on a canvas too narrow
+                // for this capsule the same popover hangs off the whole bar
+                // instead (`gridSettingsPopoverAnchor`). Two of them on the one
+                // flag is two popovers fighting over who opens.
+                .popover(isPresented: gridSettingsBinding(at: .gridChip), arrowEdge: .top) {
                     CanvasGridSettingsPopover()
                 }
                 if parts.contains(.cell) {
