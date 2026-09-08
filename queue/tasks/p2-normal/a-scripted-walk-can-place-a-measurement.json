@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1780,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T19:18:28.635Z",
-  "updated": "2026-09-08T07:18:09.113715Z",
+  "updated": "2026-09-08T07:18:35.330Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-07 while measuring the panel edge column. Tried, in the probe build: tool measure + waitFor edgeMap + measureMode distance + two click steps (with and without move steps in between), and a drag step with 12 steps, on a 900x600 blank canvas with two rectangles. In every case the log state came back measures=[] and no Measurements section arrived in the dock. Scripts/playtest/caliper-catches-a-drawn-edge-walk.json uses three click steps over an opened screenshot and appears to work, so the difference may be the blank canvas, the edge map, or a change to how the caliper takes clicks. Start by re-running that walk and seeing whether it still makes a caliper.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-08T07:18:09.113715Z",
       "note": "Filed with reproductions: measure-a-shape-you-drew-yourself-not-just-a-scr (Size mode measures nothing over a shape you drew, works over a screenshot) and decide-whether-letting-go-of-a-drag-should-land (distance-lands-on-release.json claims a caliper landed in a stage where its own log shows none)."
+    },
+    {
+      "t": "2026-09-08T07:18:35.329Z",
+      "note": "The reported bug did not exist: a distance caliper takes three clicks, not two, and the walk behind the report used two. Shipped what was actually missing: every walk state now carries a measuring line saying what a half placed caliper is waiting for, and the harness open step no longer adopts the previous window when a document is already open. Scripts/playtest/measure-lands-in-the-list-walk.json proves a measurement lands on a blank canvas (Width = 200 px) and on an opened screenshot (Width = 120 px on Save Changes), with a Measurements row and real screen captures. Scripts/test.sh green, 4757 tests. Audit at queue/audits/2026-09-08-scripted-measure.json. Two follow-ups filed with reproductions."
     }
   ],
-  "started": "2026-09-08T07:07:22.879Z"
+  "started": "2026-09-08T07:07:22.879Z",
+  "completed": "2026-09-08T07:18:35.330Z"
 }

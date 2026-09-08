@@ -12263,3 +12263,31 @@ the drop and none after. Audit:
 **Next.** Redo puts a pasted or dropped picture back and takes the pointer up
 but does not re-pick the layer; that is how paste already behaved and it is
 written into the audit rather than changed under this task.
+
+## 2026-09-08 — A scripted walk can place a measurement
+
+Reproduced before believing the report, and the report was wrong. A walk
+CAN place a measurement, on a blank canvas and on an opened screenshot;
+a distance caliper just takes three clicks (each end, then one more to
+park the number) and the walk behind the report used two. Re-running
+`caliper-catches-a-drawn-edge-walk.json` in the probe made four calipers,
+which was the tell.
+
+What was genuinely missing was the explanation. A half placed caliper
+showed up in a walk's log as an empty `measures` list, indistinguishable
+from a broken feature. Every walk state now carries a `measuring` line
+(`CanvasMeasure.playtestMeasuringReport`) that names what the caliper is
+waiting for. Also fixed: the harness `open` step adopted the OLD window
+whenever a document was already open, because its poll fell back to
+`readyEditors.last` on the first pass; it now waits for a genuinely new
+editor. `Scripts/playtest/measure-lands-in-the-list-walk.json` proves all
+of it and stops after two clicks on purpose so the log explains itself.
+
+Filed with reproductions: Size mode measures nothing over a shape you
+drew yourself (works over a screenshot), and
+`distance-lands-on-release.json` claims a caliper landed in a stage where
+its own log shows none.
+
+Next: the queue. Open question for the user, in the audit — is three
+clicks the right number for a distance measurement, or should letting go
+of a drag be enough?
