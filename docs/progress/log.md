@@ -12455,3 +12455,41 @@ panel control scrolled out of reach, and the colour drag onto the Library
 shelf.
 
 **Open question.** None.
+
+## 2026-09-08 — the thirteen red walks
+
+Twelve of the thirteen are green again. They were four separate problems
+wearing one colour, each reproduced by running the walk rather than reading it.
+
+- **The harness was lying about the app, twice.** `PlaytestPanelDrag.destination`
+  picked the smallest drop area under the point; SwiftUI lays drop areas out as
+  flat siblings, and four of them cover the Library, so a colour dragged onto
+  the shelf was offered to an unrelated view and the shelf's delegate was never
+  asked. It now prefers the drop area whose frame matches the marker the walk
+  named. An effect's colour swatch ("Shadow, Color") also could not be named at
+  all; it now reads its words one at a time.
+- **A scroll distance had gone stale.** The dock grew Effects and Component
+  sections, Layout went below the fold, and a press on Limits was refused. New
+  `reveal` step: scroll until a named control is pressable, however far that
+  turns out to be. Four walks use it. `scrollPanel` stays for the walk that
+  wants a particular distance.
+- **The app had moved.** A shadow left Appearance for the Effects list on
+  2026-09-07 and the panel toggle's tip reads Hide Panel. Five walks updated in
+  place.
+- **One is a real regression** and is filed, not papered over: picking a text
+  layer leaves the Text section at 602-778 in a 688pt viewport, so its settings
+  are below the fold again. The 2026-09-06 decision put that right and the
+  2026-09-07 section move undid it; the two user asks are in tension, so it
+  wants a decision card rather than a runner's judgement.
+
+Also filed, both with reproductions: undo not bringing back pictures deleted
+with a marquee band (found in the full sweep, p1), and the Effects list showing
+a shadow as simply on when only one of the picked shapes has one (p2, a
+question rather than a bug).
+
+`Scripts/test.sh` green, 4795 tests. Full `playtest-all`: 279 passed, the two
+filed failures left. Nine walks in that sweep came back "no done.json" in zero
+seconds while a test run was loading the machine and all pass cleanly on their
+own, so nobody needs to chase them.
+
+Next: the two p1 bugs above are the top of the queue.
