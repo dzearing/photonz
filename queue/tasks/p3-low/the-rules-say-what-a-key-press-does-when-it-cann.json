@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "docs",
   "created": "2026-09-08T12:08:29.871Z",
-  "updated": "2026-09-08T21:51:09.423312Z",
+  "updated": "2026-09-08T21:51:48.477Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-08. Evidence for the key press half: queue/audits/2026-09-08-cut-says-what-it-cannot-do.json says the family already disagrees with itself, \"Option Backspace, which fills the marquee, still does nothing and says nothing over a shape... the family now disagrees with itself. Filed as its own task\" (that task is filling-part-of-a-shape-says-what-it-cannot-do-t). queue/audits/2026-09-08-delete-over-a-marquee.json is the third instance. The existing ladder is docs/design/mocks/shared/UX-PATTERNS.md section 4, \"A control that cannot act\", whose table has rows for a command, a chooser, a field and a bare affordance, and no row for a key.\n\nEvidence for the silenced question half: Sources/PhotonzCore/RasterizePrompt.swift and EditorState+LayerOps.swift shipped the first one on 2026-09-08 (audit 2026-09-08-turn-into-a-picture.json), with the wording and the suppression key chosen locally. Section 3 of UX-PATTERNS covers Modal and toast as \"rare document-scoped dialogs\" and says nothing about suppressing one.",
@@ -64,7 +64,12 @@
     {
       "t": "2026-09-08T21:51:09.423312Z",
       "note": "Also proved, so the rule's case 1 is not a guess: with a locked rectangle picked, Backspace and two arrow presses both left the document untouched (layers 2, frame 200,160,360,220) and said nothing (copied: none), while the Position and Size section on screen read 'This layer is locked. Unlock it in the Layers list to change its position or size.' Screen Recording was granted, so that is a real window capture (the walk Scripts/playtest/locked-layer-key-press-walk.json, stage locked-4-after-arrows-sc.png), not an offscreen render."
+    },
+    {
+      "t": "2026-09-08T21:51:48.475Z",
+      "note": "UX-PATTERNS v1.7 (da1e9e59). Section 4 gains a key press row plus 'What a key press says when it cannot act', with the test that decides whether a key speaks or stays quiet, and naming the way out written as required with the evidence for why. Section 3 gains 'The question you can silence': when a command may ask, the wording, the sheet, when a Don't ask again box is allowed, where the answer is kept, and that it must be recoverable. Two audit gates in section 9, every claim cited to its commit and audit. Two non-conformances filed rather than fixed: Delete Layer removes a locked layer (reproduced on the probe, walk checked in) and no way to un-silence a question."
     }
   ],
-  "started": "2026-09-08T21:43:17.070Z"
+  "started": "2026-09-08T21:43:17.070Z",
+  "completed": "2026-09-08T21:51:48.476Z"
 }

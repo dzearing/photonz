@@ -13335,3 +13335,48 @@ were brought in line. `Scripts/test.sh` green at 4992, and nothing under
 `Sources/` was touched.
 
 Next: back to the queue.
+
+## 2026-09-08 — the rules say what a key press does when it cannot act
+
+UX-PATTERNS v1.7, docs only, nothing under `Sources/` touched. Two things the
+app built this week had no rule behind them and each had already been answered
+locally.
+
+§4's ladder ("A control that cannot act") had four rows, and every one of them
+answers by changing how something looks: dim the command, replace the chooser
+with its answer, keep the field's number, take the handle away. A key press has
+nothing to change. It gains its own row and a section, **What a key press says
+when it cannot act**, written from ⌘X, ⌫ and ⌥⌫ meeting the same wall in two
+days (`c6c8b74e`, `14e2372f`, `23f14863`). The disagreement the task was filed
+for had already closed itself when ⌥⌫ stopped being silent, so the rule records
+what the three agreed on rather than picking a winner.
+
+The rule is a test, not a preference. If the whole COMMAND cannot act, its menu
+row is dimmed per the first row of the table and the key may stay quiet, because
+the reason is already on screen. If the command can act and it is what the press
+was AIMED at that cannot be honoured, a marquee over a rectangle, then nothing
+is dimmed, nothing changed, and the canvas notice must say so: verdict first
+("Cannot delete a piece"), then who owns it and the one thing to do. Naming the
+way out is written as REQUIRED, with the evidence for why it is not taste: the
+first refusal shipped without one, its own audit called it a dead end, and two
+follow-ups put it in the sentence and then in the pill as a button.
+
+§3's Modal and toast entry gains **The question you can silence**, from the one
+the app shipped on 2026-09-08 (`RasterizePrompt`, `3c59faa6`). The important
+half is the gate: a command may stop and ask only when what it takes away is
+invisible the instant after. Being destructive is not the test, since undo
+covers that; deleting a layer asks nothing. Then the four fixed parts of the
+wording, the sheet, when a "Don't ask again" box is allowed (nearly always yes,
+and undo can put the cost back) and when it is forbidden (a question the app
+cannot undo, or one that forks two outcomes), where the answer is kept (app
+settings, per bundle, never the document), and that a person must be able to get
+the question back.
+
+Two shipped things the new rules name as wrong, filed rather than quietly fixed.
+**Delete Layer removes a locked layer**, reproduced on the probe (layers 2 → 1)
+while plain ⌫ on the canvas honours the lock, so the two ways to delete
+disagree; both walks are checked in under `Scripts/playtest/`. And **nothing can
+bring back a question you silenced**, so ticking the box gives up a warning for
+good. Both p2-normal.
+
+Next: back to the queue.
