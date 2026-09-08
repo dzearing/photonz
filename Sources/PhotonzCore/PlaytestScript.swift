@@ -453,6 +453,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Layer ▸ Duplicate Layer. ⌘J is a menu chord, so a walk that checks what
     /// a duplicate keeps asks for it here.
     case duplicateLayer
+    /// Layer ▸ New Layer via Copy (⌘J). Another window-scoped menu chord, and
+    /// the one that decides whether the marquee takes the layer you picked or
+    /// every layer flattened together.
+    case newLayerViaCopy
     /// Expose the first piece of the selected original that could take a
     /// wording knob (Next, `next-components`, step C6). The Add menu is in the
     /// dock, which a walk cannot reach with the pointer, so this is how a knob

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1710,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T17:18:57.094Z",
-  "updated": "2026-09-07T17:18:57.095Z",
+  "updated": "2026-09-08T01:07:44.792668Z",
   "deps": [],
   "blockedBy": [],
   "notes": "promoteSelectionToLayer in Sources/Photonz/EditorState+LayerOps.swift rasterizes the composite. The copy fix added DocumentRenderer.render(_:store:only:) which draws one layer alone in place, and CopyRoute in PhotonzCore which decides picked-vs-merged; reuse both. Same next-scoped flag: FeatureCatalog.copyPicksYourLayerFlag.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-07T17:18:57.095Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T00:53:46.973Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T01:07:44.792668Z",
+      "note": "Adversarial review before building: the mock-free ask is right, but three things needed deciding. (1) Should ⌘J trim to the pixels that are really there, the way ⌘C does? Yes — the goal is that the same marquee gives the same pixels either way, and a tight layer's handles hug what you took instead of a transparent box. (2) Should a marquee that misses the picked layer make an empty layer? No — ⌘C beeps, so ⌘J beeps; a layer you cannot see is worse than a refusal. (3) Should the new layer sit directly above its source, as Photoshop does? Left at the top of the stack: a piece taken off a low layer would otherwise land under everything and read as nothing having happened. Recorded in the audit's rough as a deliberate difference."
+    },
+    {
+      "t": "2026-09-08T01:07:44.792668Z",
+      "note": "Shortest version that delivers the value: rather than a second copy of the render/clip/trim pipeline, the whole piece moved into PhotonzRender as DocumentRenderer.layerRegion(of:in:store:path:) (Sources/PhotonzRender/LayerRegion.swift, 6 tests in Tests/PhotonzRenderTests/LayerRegionTests.swift, written first). copyLayerRegion and the new promote both call it, so 'same marquee, same pixels' holds by construction instead of by two paths agreeing."
+    },
+    {
+      "t": "2026-09-08T01:07:44.792668Z",
+      "note": "⌘J's routing now lives in one place: EditorState.newLayerViaCopy() switches on CopyRoute.copy, the same decision ⌘C makes. EditorCommands.swift's Layer ▸ New Layer via Copy calls it instead of branching inline. hasPixelRegion and pickedLayerID went from private to internal so both files read the same two properties. Flag off (Current) keeps the old branch verbatim."
+    },
+    {
+      "t": "2026-09-08T01:07:44.792668Z",
+      "note": "Promoted layers are now named the way duplicating that layer names them (LayerNaming.copyName): 'Rectangle 2' over 'Rectangle', 'Button copy' over a name a person typed, instead of 'Promoted Layer'. The merged path still says 'Promoted Layer'."
+    },
+    {
+      "t": "2026-09-08T01:07:44.792668Z",
+      "note": "Verified in the probe: Scripts/playtest/new-layer-takes-your-layer-walk.json (new) walks all four cases and passes — picked layer + marquee gives a 200x150 piece of the rectangle alone (asserted on W/H and the row name), carried away it is a piece of the rectangle with no photo in it, a marquee that misses beeps and makes nothing, nothing picked still promotes the flattened region, no marquee still duplicates. Needed a new PlaytestAction case, newLayerViaCopy, since ⌘J is a window-scoped menu chord. copy-takes-your-layer-walk.json re-run after the refactor: ok. Scripts/test.sh: 4628 tests pass."
+    },
+    {
+      "t": "2026-09-08T01:07:44.792668Z",
+      "note": "Adversarial review of the built thing found one claim I had wrong and corrected it before the audit shipped: a box drawn with the POINTER over bare canvas is a pixel region here, so ⌘J beeps rather than duplicating. Checked in the probe with a throwaway walk rather than asserted from the code."
+    },
+    {
+      "t": "2026-09-08T01:07:44.792668Z",
+      "note": "Audit: queue/audits/2026-09-07-new-layer-takes-your-layer.json with three real screen captures (Screen Recording granted)."
     }
-  ]
+  ],
+  "started": "2026-09-08T00:53:46.972Z"
 }

@@ -313,11 +313,11 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("n", modifiers: .command)
                 .disabled(editor?.document == nil)
             // Photoshop ⌘J: copy the marquee selection to a new layer, or —
-            // with no marquee — duplicate the selected layer.
-            Button("New Layer via Copy") {
-                if editor?.selection != nil { editor?.promoteSelectionToLayer() }
-                else { editor?.duplicateSelectedLayers() }
-            }
+            // with no marquee — duplicate the selected layer. Which pixels the
+            // marquee takes follows the copy rule (`newLayerViaCopy`): the
+            // layer you picked when you picked one, everything flattened
+            // together when you did not.
+            Button("New Layer via Copy") { editor?.newLayerViaCopy() }
             .keyboardShortcut("j", modifiers: .command)
             .disabled(editor?.selection == nil && !hasLayerSelection)
             Button("Blur Behind Selection") { editor?.blurBehindSelection() }

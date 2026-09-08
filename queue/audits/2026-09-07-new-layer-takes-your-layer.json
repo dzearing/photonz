@@ -1,0 +1,29 @@
+{
+  "feature": "New Layer via Copy takes the layer you picked",
+  "epic": "ui-building",
+  "summary": "With a layer picked and a box drawn over part of it, ⌘J now makes a new layer out of that layer's pixels alone, trimmed to what is actually drawn there and named the way duplicating that layer names it. It used to bake in every layer flattened together, so a piece of a button came out with a slab of the photo behind it. Copy and ⌘J now follow one rule, so the same box gives you the same pixels whichever way you take them.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Start a blank canvas and drop a screenshot onto it." },
+    { "do": "Take the rectangle tool and drag a filled rectangle over the middle of it." },
+    { "do": "Take the marquee tool (M) and drag a box across the rectangle's bottom right corner, carrying on over bare photo.", "shot": "2026-09-07-new-layer-takes-your-layer-1-marquee-sc.png" },
+    { "do": "Press ⌘J. A new row appears at the top of the layers list, named after the rectangle, and its W and H read the size of the corner the box covered, not the size of the box.", "shot": "2026-09-07-new-layer-takes-your-layer-2-new-row-sc.png" },
+    { "do": "Take the pointer and drag that new layer clear of where it came from. It is a piece of the rectangle and nothing else.", "shot": "2026-09-07-new-layer-takes-your-layer-3-carried-away-sc.png" },
+    { "do": "Pick the rectangle again, draw a box that lands entirely off it, and press ⌘J. Nothing is made and it beeps." },
+    { "do": "Click the canvas row so nothing is picked, draw a box over both, and press ⌘J. Now you get everything inside the box, photo and all." },
+    { "do": "Pick the rectangle with no box up and press ⌘J. It duplicates the rectangle, as it always did." }
+  ],
+  "evaluate": [
+    "⌘J leaves the new layer exactly over the spot it came from, so nothing visibly happens until you look at the layers list or drag it. Is the new row enough of an answer, or did you press ⌘J twice?",
+    "The new layer is trimmed to the pixels that are really there rather than the box you drew. Is a tight layer what you wanted, or did you expect it to be the size of your box?",
+    "It is named Rectangle 2, the same way Duplicate Layer names things. Does that read better than the old Promoted Layer?",
+    "A box that misses the picked layer beeps and makes nothing. Is that clear enough, or do you want it to say why?",
+    "⌘J with nothing picked still flattens everything inside the box. Does picking the canvas row feel like an obvious way to ask for that?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so all three pictures here are real captures of the window, not offscreen renders.",
+    "The new layer goes to the TOP of the layers list, not directly above the layer it came out of, which is where Photoshop puts it. Top is easier to find and is always visible, but it means a piece taken off a layer near the bottom jumps over everything above it. Left as it was rather than changed as a side effect of this fix.",
+    "There is still no hint text on the beep. It matches what ⌘C does with the same box, so at least the two agree, but neither says the box missed.",
+    "A box drawn with the POINTER counts as a box here too, which is worth knowing: pick a layer, drag a box over bare canvas away from it, press ⌘J, and you get the beep rather than a duplicate. Before this it handed you a flattened slab of whatever was under that empty box, so the refusal is the better answer, but it is a place the beep has to carry the whole explanation."
+  ]
+}

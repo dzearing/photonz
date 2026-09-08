@@ -288,9 +288,68 @@ extension EditorState {
 
     // MARK: - Promote selection
 
-    /// ⌘J: rasterizes the marquee selection from the current composite and
-    /// stacks it as a new image layer (one undo step). The new layer is
-    /// selected; the marquee clears — it has done its job.
+    /// ⌘J, "New Layer via Copy": **it takes the layer you picked, and a
+    /// marquee crops it** — the same rule ⌘C follows (`CopyRoute`), so the
+    /// same marquee gives you the same pixels whichever way you take them.
+    ///
+    /// With a layer picked and a marquee up, the new layer holds that layer's
+    /// pixels inside the marquee and nothing from the layers around it. With a
+    /// layer picked and no marquee, ⌘J duplicates it, as it always has. With
+    /// nothing picked there is nothing to prefer, so the marquee's worth of
+    /// every layer flattened together is promoted, also as before.
+    func newLayerViaCopy() {
+        // Off, the old rule stands: a marquee supersedes the layer, so ⌘J
+        // promotes the flattened region and the layer you picked is baked into
+        // it along with everything behind it.
+        guard Experiments.shared.copyPicksYourLayerEnabled else {
+            if selection != nil { promoteSelectionToLayer() } else { duplicateSelectedLayers() }
+            return
+        }
+        switch CopyRoute.copy(picked: pickedLayerID, pixelRegion: hasPixelRegion,
+                              hasDocument: document != nil) {
+        case .nothing, .mergedImage: return
+        case .layer: duplicateSelectedLayers()
+        case .layerRegion(let id): promotePickedLayerRegion(id)
+        case .mergedRegion:
+            if selection != nil { promoteSelectionToLayer() } else { duplicateSelectedLayers() }
+        }
+    }
+
+    /// The picked layer's pixels inside the marquee, stacked as a new layer of
+    /// their own (one undo step) and left selected with the marquee cleared,
+    /// exactly like the merged promote below.
+    ///
+    /// The piece comes from the same place ⌘C's does (`layerRegion`), so it is
+    /// trimmed to what is actually drawn there: a marquee flung round a small
+    /// drawing makes a layer the size of the drawing, whose handles hug it,
+    /// rather than a big transparent box. A marquee that misses the layer makes
+    /// NOTHING and beeps — an invisible new layer is worse than an honest
+    /// refusal, and it is what ⌘C does with the same marquee.
+    private func promotePickedLayerRegion(_ id: UUID) {
+        guard let document, let selection, let source = document.layer(id: id) else { return }
+        guard let piece = previewRenderer.layerRegion(of: id, in: document, store: store,
+                                                      path: selection.path) else {
+            NSSound.beep() // nothing of that layer is inside the marquee
+            return
+        }
+        // Named the way duplicating that layer names it — an app-written name
+        // takes the next number, a name a person typed gains "copy" — so the
+        // panel reads "Rectangle 2" over "Rectangle" rather than filing it as
+        // an anonymous "Promoted Layer".
+        let name = LayerNaming.copyName(of: source.name,
+                                        taken: Set(document.allLayers.map(\.name)))
+        let ref = store.register(piece.image)
+        var newID: UUID?
+        perform { newID = $0.promoteRegionToLayer(region: piece.frame, rasterized: ref, name: name).id }
+        self.selection = nil // like Photoshop's Layer via Copy, ⌘J consumes the selection
+        selectedLayerID = newID
+    }
+
+    /// Every layer flattened together inside the marquee, rasterized from the
+    /// current composite and stacked as a new image layer (one undo step). The
+    /// new layer is selected; the marquee clears — it has done its job.
+    ///
+    /// This is the nothing-picked half of ⌘J (`newLayerViaCopy`).
     func promoteSelectionToLayer() {
         guard let document, let selection else { return }
         let canvas = CGRect(origin: .zero, size: document.canvasSize)

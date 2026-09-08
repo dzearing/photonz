@@ -15,10 +15,13 @@ extension EditorState {
     /// Whether a marquee that means PIXELS is up. A rubber band thrown round
     /// a few layers is a way of picking layers, not a hole cut in the picture,
     /// so it never crops a copy.
-    private var hasPixelRegion: Bool { selectionTargetsPixels && selection != nil }
+    ///
+    /// ⌘J reads the same two properties, so New Layer via Copy and ⌘C agree
+    /// about what you picked and what the marquee means.
+    var hasPixelRegion: Bool { selectionTargetsPixels && selection != nil }
 
     /// The picked layer, when there really is one in this document.
-    private var pickedLayerID: UUID? {
+    var pickedLayerID: UUID? {
         guard let id = selectedLayerID, document?.layer(id: id) != nil else { return nil }
         return id
     }
@@ -105,24 +108,16 @@ extension EditorState {
     /// an invisible rectangle on the clipboard is worse than an honest refusal.
     private func copyLayerRegion(_ id: UUID) -> Bool {
         guard let document, let selection, let layer = document.layer(id: id) else { return false }
-        let canvas = CGRect(origin: .zero, size: document.canvasSize)
-        let frame = selection.path.boundingBoxOfPath.integral.intersection(canvas)
-        guard !frame.isNull, frame.width >= 1, frame.height >= 1,
-              let alone = previewRenderer.render(document, store: store, only: id),
-              let clipped = RegionOps.extracted(alone, path: selection.path),
-              let trimmed = RegionOps.trimmed(clipped) else {
+        guard let piece = previewRenderer.layerRegion(of: id, in: document, store: store,
+                                                      path: selection.path) else {
             NSSound.beep() // nothing of that layer is inside the marquee
             return false
         }
-        // `trimmed.rect` is in the cropped picture's pixels, which run one to
-        // one with document points from the marquee's top left corner.
-        let tight = CGRect(x: frame.minX + trimmed.rect.minX, y: frame.minY + trimmed.rect.minY,
-                           width: trimmed.rect.width, height: trimmed.rect.height)
         // Named after the layer it came out of, so pasting it reads as "Button
         // copy" rather than an anonymous scrap.
-        return put(Layer(name: layer.name, content: .image(ImageRef(pixelSize: tight.size)),
-                         frame: tight),
-                   picture: trimmed.image)
+        return put(Layer(name: layer.name, content: .image(ImageRef(pixelSize: piece.frame.size)),
+                         frame: piece.frame),
+                   picture: piece.image)
     }
 
     /// Every layer flattened together inside the marquee — or the whole canvas

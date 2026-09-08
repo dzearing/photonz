@@ -1247,6 +1247,7 @@ private final class Run {
             case .showGridSettings: editor.showGridSettings()
             case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
+            case .newLayerViaCopy: editor.newLayerViaCopy()
             case .renameSelectedLayer:
                 if let id = editor.selectedLayerID {
                     editor.renameLayer(id: id, to: "Renamed Layer")
