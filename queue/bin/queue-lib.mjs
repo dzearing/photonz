@@ -23,7 +23,20 @@ const MANAGER = join(QUEUE, 'manager');
 const HISTORY = join(QUEUE, 'history.jsonl');
 const STATUS = join(QUEUE, 'status.json');
 
-const now = () => new Date().toISOString();
+// Two writes in the same millisecond used to carry the same ISO stamp, and every
+// ordering built on these timestamps then fell back to whatever order the files
+// happened to be read in. That is how "the history quotes the answer that came
+// last" picked the earlier answer roughly half the time (2026-09-07). Clock
+// resolution is not an ordering, so this hands out a strictly increasing one:
+// same-millisecond calls step forward 1ms each. Drift is bounded by the number
+// of calls made inside one millisecond, so it stays a few ms at worst, and it
+// never sleeps.
+let lastNow = 0;
+const now = () => {
+  const t = Math.max(Date.now(), lastNow + 1);
+  lastNow = t;
+  return new Date(t).toISOString();
+};
 const day = (iso) => (iso || now()).slice(0, 10);
 
 function ensureDirs() {
@@ -374,9 +387,20 @@ function settleAnsweredBlock(t, note = '', reason = 'answered while this was sti
     appendEvent('task_dropped', { id: t.id, from: prev, decision: declined.id, note: `declined: ${labelOf(declined)}` });
     return t;
   }
-  // readDecisions sorts by when a card was written; what matters here is which
-  // answer came last.
-  const answered = [...mine].sort((a, b) => ((a.answer || {}).resolved || '').localeCompare((b.answer || {}).resolved || '')).pop();
+  // readDecisions sorts newest card first; what matters here is which ANSWER came
+  // last. Sorting on the resolved stamp alone left that to chance: two answers
+  // landing in the same millisecond compared equal, the stable sort kept
+  // readDecisions' newest-first order, and .pop() then quoted the OLDER answer.
+  // Within one process the monotonic `now` above already rules a tie out, and
+  // that is what actually fixes this. The fallbacks are for the one case it
+  // cannot cover, two separate writers sharing a clock tick: card-opened order
+  // is the best remaining signal, and the id after it only guarantees the answer
+  // is the SAME on every run rather than a coin flip on file read order.
+  const lastAnswerFirst = (a, b) =>
+    ((a.answer || {}).resolved || '').localeCompare((b.answer || {}).resolved || '')
+    || (a.created || '').localeCompare(b.created || '')
+    || String(a.id).localeCompare(String(b.id));
+  const answered = [...mine].sort(lastAnswerFirst).pop();
   t.status = 'pending';
   appendLog(t, `${reason}: the answer was "${labelOf(answered)}", so this goes back in the queue with it rather than waiting on a question that is settled.`);
   saveTask(t);
