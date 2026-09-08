@@ -79,8 +79,11 @@ async function handleApi(req, res, url) {
   const lib = await queueLib();
   const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
   if (!lib) return send(503, { error: 'queue unavailable' });
+  const query = new URL(req.url, 'http://127.0.0.1').searchParams;
   try {
-    if (req.method === 'GET' && url === '/api/state') return send(200, lib.aggregateState());
+    // The four-second poll. `tasks=1` adds the task list, which only the Tasks
+    // tab draws; without it the payload is a fifth of the size.
+    if (req.method === 'GET' && url === '/api/state') return send(200, lib.aggregateState({ tasks: query.get('tasks') === '1' }));
     if (req.method === 'GET' && url === '/api/counts') {
       const tasks = lib.readAllTasks();
       const open = tasks.filter((t) => ['pending', 'in_progress', 'blocked'].includes(t.status)).length;
@@ -135,6 +138,19 @@ async function handleApi(req, res, url) {
     if (req.method === 'POST' && url === '/api/decide') {
       const { id, choice, note } = await readBody(req);
       return send(200, lib.resolveDecision(id, choice, note || ''));
+    }
+    // Everything the queue knows about ONE task: goal, checklist, working
+    // detail and the whole log. The dashboard's detail dialog fetches this when
+    // it opens, so the poll can leave all of it out.
+    if (req.method === 'GET' && url.startsWith('/api/task/')) {
+      const id = decodeURIComponent(url.slice('/api/task/'.length));
+      const t = lib.readTaskDetail(id);
+      return t ? send(200, t) : send(404, { error: 'not found' });
+    }
+    // Search reads the fields the poll no longer carries, so it runs here.
+    if (req.method === 'GET' && url === '/api/task-search') {
+      const q = query.get('q') || '';
+      return send(200, { q: q.trim().toLowerCase(), ids: lib.searchTasks(q) });
     }
     if (req.method === 'POST' && url === '/api/task') {
       const { title, priority, notes } = await readBody(req);

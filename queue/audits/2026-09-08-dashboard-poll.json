@@ -1,0 +1,28 @@
+{
+  "feature": "The dashboard stops downloading the whole queue every four seconds",
+  "epic": "unmanned-loop",
+  "summary": "The design dashboard used to re-download every task it has ever filed, whole history and all, fifteen times a minute. It now asks for a list of rows, and only while you are on the Tasks tab: 3.2MB a poll became 62KB on every tab but Tasks and 279KB on Tasks. Searching tasks got better on the way, because it now reads the goal, the checklist and the activity log rather than just the title and the working detail.",
+  "setup": "The design dashboard at http://127.0.0.1:8791. The server was restarted to pick this up, so it is already live. Nothing to turn on.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791 and read the Summary tab. Up next and Completed, last 24 hours should read exactly as they did." },
+    { "do": "Click Tasks. The table should be there the instant you arrive, not after a beat." },
+    { "do": "Click any row. The dialog opens with the goal, the checklist, the working detail and the whole activity log.", "shot": "2026-09-08-dashboard-poll-detail.png" },
+    { "do": "Close it and type DocumentRenderer in the Filter tasks box. That word is in no title: it is in one task's working detail, and the search finds it.", "shot": "2026-09-08-dashboard-poll-search.png" },
+    { "do": "Type ellipse and watch the rows: matches on the title appear as you type, and any extra ones hiding in a goal or a log join them a moment later." },
+    { "do": "Switch the filter to All and sort by a few columns. Every column still sorts." },
+    { "do": "Walk Objectives, Ready to try, Data and Digest. Nothing on any of them should have changed." }
+  ],
+  "evaluate": [
+    "Does opening a task still feel instant, or is there a beat before the goal and the log appear?",
+    "When you type in the search box, does the second wave of results arriving a moment later read as helpful, or as the list twitching?",
+    "Arriving on the Tasks tab shows the rows from the last poll for a fraction of a second before the fresh ones land. Did you ever notice that?",
+    "Is there anything you used to be able to see on a tab that you cannot see now?"
+  ],
+  "rough": [
+    "The screenshots here are browser captures of the live dashboard at 127.0.0.1:8791, not playtest renders of the Mac app: this change is entirely in the dashboard, so the app has nothing to photograph.",
+    "The server still reads all 509 task files on every poll, about 20ms. That is unchanged and it is now the largest part of the cost; it was worth leaving alone because 20ms every four seconds is not something anyone can feel. If the queue reaches thousands of tasks it will be worth caching by file timestamp.",
+    "Search results arrive in two waves, so a query whose only matches are in a log or a goal shows an empty list for about 150ms first. Measured: rows only ever get added, never taken back, because the server matches everything the page matches and more.",
+    "For one frame after you click a row the dialog body says Reading the task. Measured at 12ms, replaced on the next frame while the dialog is still animating open, so it should not be visible; say so if you catch it.",
+    "The node process serving the dashboard was averaging 52% of a CPU. It now averages about 3%."
+  ]
+}

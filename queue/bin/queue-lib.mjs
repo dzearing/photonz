@@ -130,6 +130,59 @@ export function readAllTasks() {
 export function findTask(id) {
   return readAllTasks().find((t) => t.id === id) || null;
 }
+
+// A task's file is named after its id, so one task is four stat attempts rather
+// than a read of the whole queue. The dashboard's detail dialog calls this on
+// every open, and readAllTasks() there was 500 file reads for one task.
+export function readTaskDetail(id) {
+  if (!/^[a-z0-9][a-z0-9._-]*$/i.test(String(id || ''))) return null;
+  ensureDirs();
+  for (const p of PRIORITIES) {
+    const file = join(TASKS, p, id + '.json');
+    const t = readJSON(file);
+    if (t) return { ...t, priority: p };
+  }
+  return null;
+}
+
+// ---- the list row -----------------------------------------------------------
+// The dashboard polls for state every four seconds, so a task on that poll
+// carries only what a LIST draws: the row, the Up next card, the Completed
+// card. The heavy fields (log, notes, goal, acceptance) are four fifths of the
+// queue on disk and are read on demand from readTaskDetail instead.
+export function taskRow(t) {
+  const log = Array.isArray(t.log) ? t.log : [];
+  const last = log.length ? log[log.length - 1] : null;
+  const row = { id: t.id, title: t.title || '', status: t.status, priority: t.priority };
+  if (t.seq != null) row.seq = t.seq;
+  if (t.created) row.created = t.created;
+  if (t.updated) row.updated = t.updated;
+  if (t.completed) row.completed = t.completed;
+  if (t.parked) row.parked = true;
+  // the dialog header names the release, and it opens from the row, so this
+  // rides along rather than arriving a beat later and changing under the eye
+  if (t.release) row.release = t.release;
+  // one line of history under the title. Capped, because a runner that wrote a
+  // paragraph must not put a paragraph on every row of a four-second poll.
+  if (last && last.note) row.lastNote = String(last.note).slice(0, 120);
+  return row;
+}
+
+// Search runs here rather than in the page, because the fields worth searching
+// (the working detail, the goal, the checklist, the whole activity log) are
+// exactly the ones the poll no longer ships. This looks at more than the old
+// client-side filter did: it reads the log too.
+export function searchTasks(q) {
+  const needle = String(q || '').trim().toLowerCase();
+  if (!needle) return [];
+  return readAllTasks().filter((t) => {
+    const hay = [t.title, t.id, t.status, t.goal, t.notes, t.epic, t.area]
+      .concat(t.acceptance || [])
+      .concat((t.log || []).map((e) => e && e.note))
+      .filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(needle);
+  }).map((t) => t.id);
+}
 export function saveTask(task) {
   const { file, ...body } = task;
   body.updated = now();
@@ -823,8 +876,12 @@ export function readManagerReport(name) {
 }
 
 // ---- aggregate state for the dashboard --------------------------------------
-export function aggregateState() {
-  const tasks = readAllTasks().map(({ file, ...t }) => t);
+// `tasks` is the only large thing left in here and only ONE tab draws it, so
+// the dashboard asks for it (/api/state?tasks=1) while it is on the Tasks tab
+// and leaves it out everywhere else. It defaults to on, so `queue.mjs state`
+// and anything else calling this directly still gets the whole picture.
+export function aggregateState({ tasks: includeTasks = true } = {}) {
+  const tasks = readAllTasks().map(taskRow);
   const decisions = readDecisions();
   const history = readHistory();
   const status = readStatus();
@@ -857,23 +914,36 @@ export function aggregateState() {
       consecutiveFailures: status.consecutiveFailures || 0,
       lastError: status.lastError || null,
     },
-    tasks,
+    // list rows only, see taskRow: the poll used to carry every task's whole
+    // log and was three megabytes fifteen times a minute
+    ...(includeTasks ? { tasks } : {}),
     counts: {
       byPriority: Object.fromEntries(PRIORITIES.map((p) => [p, tasks.filter((t) => t.priority === p && t.status !== 'done' && t.status !== 'dropped').length])),
       byStatus: ['pending', 'in_progress', 'blocked', 'done', 'dropped'].reduce((m, s) => ({ ...m, [s]: tasks.filter((t) => t.status === s).length }), {}),
       total: tasks.length,
     },
-    decisions: { pending: decisions.filter((d) => d.status === 'pending'), resolved: decisions.filter((d) => d.status === 'resolved').slice(0, 10) },
+    // Pending questions are read in full; answered ones are headers only. The
+    // ten most recent answered decisions carry their whole option set with all
+    // its prose, which nothing on the page reads.
+    decisions: {
+      pending: decisions.filter((d) => d.status === 'pending'),
+      resolved: decisions.filter((d) => d.status === 'resolved').slice(0, 10)
+        .map((d) => ({ id: d.id, taskId: d.taskId, question: d.question, status: d.status, created: d.created, answer: d.answer })),
+    },
     completed24h: tasks.filter((t) => t.status === 'done' && (t.completed || '') >= cutoff24),
     next: tasks.filter((t) => t.status === 'pending').sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || '')).slice(0, 8),
     series,
-    history: history.slice(-80).reverse(),
+    // headers only: some events (a decision opening, for one) carry their whole
+    // payload, and the feed shows a verb, a title and a time
+    history: history.slice(-80).reverse().map((e) => ({ t: e.t, ev: e.ev, id: e.id, title: e.title, priority: e.priority })),
     // Names only. The body used to ride along on every poll, which put the
     // whole of today's digest (7KB of markdown) into a payload the dashboard
     // fetches every 4 seconds and re-parses. The page fetches the one digest it
     // is showing from /api/digest/<name> instead.
     digests: { list: digestNames, latest: digestNames[0] || null },
     manager: { list: managerNames, latest: managerNames[0] || null },
-    audits: listAudits(),
+    // a count, not the names: the page uses this to know when a new report
+    // arrived, and reads the reports themselves from /api/audit-index
+    audits: listAudits().length,
   };
 }

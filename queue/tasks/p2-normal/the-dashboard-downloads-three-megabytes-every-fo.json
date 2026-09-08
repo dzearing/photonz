@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 1790,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T19:36:17.248Z",
-  "updated": "2026-09-07T19:36:17.249Z",
+  "updated": "2026-09-08T07:32:36.136Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured on 2026-09-07 while rebuilding Ready to try: /api/state is 3,043,595 bytes, of which tasks is 2,556,307 and completed24h is 379,339. aggregateState() in queue/bin/queue-lib.mjs returns every task with its whole log array. The Ready to try tab already shows the shape of the fix: a slim list payload plus a detail endpoint fetched on demand (/api/audit-index and /api/audit/<name>). Same move here: strip log/notes/acceptance out of the state tasks array, keep them behind a /api/task/<id> the detail dialog fetches when it opens. The Tasks tab search matches against notes today, so either keep a short notes excerpt in the list or move that search server-side.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-07T19:36:17.249Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T07:19:10.612Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T07:32:36.136Z",
+      "note": "Reproduced first: /api/state built in 23ms and serialised to 3,210,969 bytes, of which tasks was 2,736,868 across 509 tasks. Per field across all tasks: log 1,723,330, notes 418,485, acceptance 220,545, goal 151,619. The node process serving it was averaging 52.4% of a CPU."
+    },
+    {
+      "t": "2026-09-08T07:32:36.136Z",
+      "note": "Adversarial review before building. The mock is not the issue here, the shape of the API is. Three things the task notes proposed were worth doing and one was not: strip log/notes/goal/acceptance to a list row (yes), a /api/task/<id> for the dialog (yes), a short notes excerpt for search (no, an excerpt silently fails on a word further in, so search moved to the server where it can read more than it used to). Two things the notes did not mention turned out to matter more: decisions.resolved (37KB) and history (28KB) were on every poll and NOTHING on the page reads either in full, and the task list itself is drawn by exactly ONE tab, so it now rides along only for that tab. Shortest version that delivers the value: no pagination, no deltas, no caching layer."
+    },
+    {
+      "t": "2026-09-08T07:32:36.136Z",
+      "note": "Shipped. queue-lib: taskRow (list row: id, title, status, priority, seq, dates, release, and the last log line capped at 120 chars), readTaskDetail (reads the one file by id rather than all 509, rejects a traversal id), searchTasks (title, id, status, goal, notes, epic, area, checklist and every log note). aggregateState takes {tasks:false} to leave the list out, answered decisions are headers only, history is headers only, audits is a count. dev-server: GET /api/state?tasks=1, GET /api/task/<id>, GET /api/task-search?q=. dashboard.html: asks for the list only on the Tasks tab and keeps the last one so arriving is instant, the detail dialog opens from the row and fills its body from the task record, search filters locally as you type and widens when the server answers."
+    },
+    {
+      "t": "2026-09-08T07:32:36.136Z",
+      "note": "Measured on the wire against the real queue: 3,210,969 bytes -> 61,791 on every tab but Tasks and 278,551 on Tasks. The server process went from 52.4% CPU to 3.1%."
+    },
+    {
+      "t": "2026-09-08T07:32:36.136Z",
+      "note": "Adversarial review of the built thing, in Chrome against the live queue at 8791. Walked all six tabs, every one renders as before, no console errors. The detail dialog carries goal, 6 checklist items, working detail, facts and 9 log rows. Search for DocumentRenderer (in no title, only in a working detail) returns the one task. Timed the dialog fill frame by frame: the placeholder shows for one frame at 12ms and the body is at full height at 20ms, while the open animation is still running. Left alone rather than adding a hover prefetch, which would have bought a sub-perceptual frame at the cost of a stale cache."
+    },
+    {
+      "t": "2026-09-08T07:32:36.136Z",
+      "note": "Verified: 26 checks in the new queue/bin/state-poll-drill.mjs, and audit-index-drill, churn-drill and decision-drill all still pass."
     }
-  ]
+  ],
+  "started": "2026-09-08T07:19:10.612Z"
 }

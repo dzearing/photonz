@@ -30,6 +30,7 @@ a task says otherwise.
 | `bin/churn-drill.mjs` | Replays a claim/reset storm against a throwaway queue and asserts the task log, the task file, and `history.jsonl` all stay bounded. Run it after touching logs, history, or the guard. |
 | `bin/audit-index-drill.mjs` | Asserts the Ready to try index: the day comes from the file name, newest first, an unreadable report is skipped rather than taking the page down, a report with nothing in it still draws a card, and the cache notices a report arriving. Run it after touching audits in `queue-lib.mjs`. |
 | `bin/decision-drill.mjs` | Answers decision cards in a throwaway queue and asserts that a declined answer retires its task, an approving one requeues it, and an answer that lands while the runner is still working is applied rather than overwritten by a late `blocked`. Run it after touching decisions. |
+| `bin/state-poll-drill.mjs` | Holds the dashboard's four-second poll small: a task on the poll is a LIST row and never carries its log, notes, goal or checklist; the list itself only rides along for the Tasks tab; one task's whole record and search both come from their own endpoints. Run it after touching `aggregateState`, `taskRow`, `readTaskDetail` or `searchTasks`. |
 
 ## Task lifecycle
 

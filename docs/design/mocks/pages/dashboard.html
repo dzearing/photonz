@@ -399,7 +399,7 @@
 <script>
 (function () {
   'use strict';
-  var S = null, lastJSON = '', tab = 'summary', digestSel = null, digestCache = {}, detailId = null;
+  var S = null, lastJSON = '', tab = 'summary', digestSel = null, digestCache = {}, detailId = null, detailData = null;
   var body = document.getElementById('db-body');
   var PRIOS = ['p0-critical', 'p1-high', 'p2-normal', 'p3-low'];
   var PRIO_LABEL = { 'p0-critical': 'P0 critical', 'p1-high': 'P1 high', 'p2-normal': 'P2 normal', 'p3-low': 'P3 low' };
@@ -420,11 +420,19 @@
     return Math.round(s / 86400) + 'd ago';
   }
   function dayLabel(d) { return new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
-  function lastNote(t) { var l = t.log || []; return l.length ? l[l.length - 1].note : ''; }
+  // The poll carries one line of a task's history, not the history. The whole
+  // log is in the detail dialog, which fetches the task itself.
+  function lastNote(t) { return t.lastNote || ''; }
 
   // ---- data ----
+  // Only the Tasks tab draws the task list, so only the Tasks tab asks for it.
+  // Everywhere else the poll is a fifth of the size, and the list we last saw
+  // is kept so switching to Tasks paints instantly from it while a fresh one
+  // is on its way.
   function load() {
-    fetch('/api/state', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
+    var wantTasks = tab === 'tasks';
+    fetch('/api/state' + (wantTasks ? '?tasks=1' : ''), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data.tasks && S && S.tasks) data.tasks = S.tasks;
       S = data;
       // `generated` is stamped fresh on every response, so comparing the raw
       // payload made every poll look like a change and re-rendered the whole
@@ -498,14 +506,14 @@
     // animates it in and calls back when any of the dismiss gestures closes it
     var scrim = document.getElementById('db-detail-dlg');
     if (scrim && detailId && !scrim.classList.contains('on')) {
-      PZ.dialog.open(scrim, { onClose: function () { detailId = null; render(); } });
+      PZ.dialog.open(scrim, { onClose: function () { detailId = null; detailData = null; render(); } });
     }
   }
   // close through the component so the exit animation runs, THEN do the work
   function closeDetail(after) {
     var scrim = document.getElementById('db-detail-dlg');
     if (!scrim || !detailId) { if (after) after(); return; }
-    detailId = null;                       // stop the poll guard blocking updates
+    detailId = null; detailData = null;    // stop the poll guard blocking updates
     PZ.dialog.close(scrim, function () { if (after) after(); else render(); });
   }
 
@@ -822,6 +830,29 @@
   // ---- tasks: a details view. One column template shared by header and rows,
   // sortable headers, filter for open/done/all, text search, inline seq edit. ----
   var tSort = { key: 'order', dir: 1 }, tFilter = 'open', tQuery = '';
+  // Search covers the working detail, the goal, the checklist and the whole
+  // activity log, and none of those ride on the poll any more, so the server
+  // does that half. Typing filters on the row's own words immediately; the
+  // server's wider set of ids lands a moment later and only ADDS rows, so the
+  // list never takes anything back while you type.
+  var tHits = null, tHitsFor = '', tHitTimer = null;
+  function tSearch(q) {
+    q = q.trim().toLowerCase();
+    if (!q) { tHits = null; tHitsFor = ''; return; }
+    if (tHitsFor === q) return;
+    clearTimeout(tHitTimer);
+    tHitTimer = setTimeout(function () {
+      fetch('/api/task-search?q=' + encodeURIComponent(q), { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if ((d.q || '') !== tQuery.trim().toLowerCase()) return;   // you kept typing
+          var m = {};
+          (d.ids || []).forEach(function (id) { m[id] = 1; });
+          tHits = m; tHitsFor = d.q;
+          refreshRows();
+        }).catch(function () {});
+    }, 140);
+  }
   var OPEN_STATUSES = ['pending', 'in_progress', 'blocked'];
   function renderTasks() {
     var h = '<div class="db-card"><div class="db-card-h"><i class="ic ic-plus"></i><h3>Queue a task</h3><span class="k">lands as pending, the loop picks it up by priority, then sequence</span></div><div class="db-card-b">';
@@ -877,7 +908,11 @@
     });
     if (tQuery.trim()) {
       var q = tQuery.trim().toLowerCase();
-      list = list.filter(function (t) { return (t.title + ' ' + t.id + ' ' + (t.notes || '') + ' ' + t.status).toLowerCase().indexOf(q) >= 0; });
+      var hits = tHitsFor === q ? tHits : null;
+      list = list.filter(function (t) {
+        if (hits && hits[t.id]) return true;
+        return (t.title + ' ' + t.id + ' ' + (t.lastNote || '') + ' ' + t.status).toLowerCase().indexOf(q) >= 0;
+      });
     }
     var key = tSort.key, dir = tSort.dir;
     list.sort(function (a, b) {
@@ -928,6 +963,24 @@
   function linkify(text) {
     return esc(text).replace(/(https?:\/\/[^\s<)"']+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   }
+  // The dialog opens the instant you click, drawn from the row you clicked, and
+  // fills its body in when the task's own record arrives. Everything below the
+  // header (the goal, the checklist, the working detail, the whole activity
+  // log) is four fifths of the queue on disk, so it is fetched for the one task
+  // you opened rather than carried for all five hundred on every poll.
+  function openDetail(id) {
+    detailId = id; detailData = null;
+    render();
+    fetch('/api/task/' + encodeURIComponent(id), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : { unavailable: true }; })
+      .catch(function () { return { unavailable: true }; })
+      .then(function (d) {
+        if (detailId !== id) return;                 // you closed it, or opened another
+        detailData = d;
+        var b = document.querySelector('#db-detail-dlg .dlg-b');
+        if (b) b.innerHTML = detailBody(d); else render();
+      });
+  }
   function renderDetail() {
     if (!detailId) return '';
     var t = (S.tasks || []).find(function (x) { return x.id === detailId; });
@@ -945,7 +998,30 @@
       '<span class="db-meta">' + esc(t.release || 'next') + ' release</span></div>';
     h += '</div><button class="btn icon sm ghost db-x" data-dialog-close title="Close"><i class="ic ic-close"></i></button></div>';
 
-    h += '<div class="dlg-b">';
+    h += '<div class="dlg-b">' + detailBody(detailData) + '</div>';
+
+    // the row controls live here now
+    h += '<div class="dlg-f">';
+    if (t.parked) h += '<button class="btn sm secondary" data-act="unpark" data-id="' + esc(t.id) + '"><i class="ic ic-refresh"></i>Requeue</button>';
+    else if (t.status === 'pending') h += '<button class="btn sm danger" data-act="drop" data-id="' + esc(t.id) + '"><i class="ic ic-trash"></i>Drop</button>';
+    h += '<span style="flex:1"></span>';
+    h += '<label class="input sm mono" style="width:86px" title="Sequence within its priority"><span class="k">Seq</span>' +
+      '<input name="dseq-' + esc(t.id) + '" data-act="seq" data-id="' + esc(t.id) + '" value="' + (t.seq != null ? t.seq : '') + '"></label>';
+    h += '<select class="select sm" name="dprio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '" title="Priority">' +
+      PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === t.priority ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
+    h += '<button class="btn sm primary" data-dialog-close>Done</button>';
+    h += '</div>';
+
+    h += '</div></div>';
+    return h;
+  }
+  // Everything the queue knows about one task, from the task's own record.
+  // `t` is null while it is in flight and carries `unavailable` if the queue
+  // API did not answer.
+  function detailBody(t) {
+    if (!t) return '<div class="db-dsec"><p class="db-goal db-nogoal">Reading the task…</p></div>';
+    if (t.unavailable) return '<div class="db-dsec"><p class="db-goal db-nogoal">Could not read this task. Is the dev server still running?</p></div>';
+    var h = '';
 
     // Goal first, in plain language. The old version printed `notes` here, which
     // is the runner's working detail: a wall of file names and class names that
@@ -1009,22 +1085,6 @@
             linkify(e.note || '') + (e.count > 1 ? ' <b>×' + e.count + '</b>' : '') + '</span></div>';
         }).join('') + '</div></div>';
     }
-
-    h += '</div>';
-
-    // the row controls live here now
-    h += '<div class="dlg-f">';
-    if (t.parked) h += '<button class="btn sm secondary" data-act="unpark" data-id="' + esc(t.id) + '"><i class="ic ic-refresh"></i>Requeue</button>';
-    else if (t.status === 'pending') h += '<button class="btn sm danger" data-act="drop" data-id="' + esc(t.id) + '"><i class="ic ic-trash"></i>Drop</button>';
-    h += '<span style="flex:1"></span>';
-    h += '<label class="input sm mono" style="width:86px" title="Sequence within its priority"><span class="k">Seq</span>' +
-      '<input name="dseq-' + esc(t.id) + '" data-act="seq" data-id="' + esc(t.id) + '" value="' + (t.seq != null ? t.seq : '') + '"></label>';
-    h += '<select class="select sm" name="dprio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '" title="Priority">' +
-      PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === t.priority ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
-    h += '<button class="btn sm primary" data-dialog-close>Done</button>';
-    h += '</div>';
-
-    h += '</div></div>';
     return h;
   }
   // every row change goes through the shared choreography (D11): exits fade,
@@ -1442,15 +1502,15 @@
   }
 
   function renderAudits() {
-    var names = (S.audits) || [];
-    if (!names.length) {
+    var nAudits = S.audits || 0;
+    if (!nAudits) {
       return '<div class="db-card"><div class="db-card-b"><div class="db-empty">' +
         'Nothing to try yet. When the loop finishes a feature it leaves a short report here: what it is, ' +
         'a handful of steps to try it, and what to judge. You can comment on any line and it becomes a task.' +
         '</div></div></div>';
     }
     // the index is fetched once, and again only when the report count moves
-    if (aIndex === null || aIndexFor !== names.length) {
+    if (aIndex === null || aIndexFor !== nAudits) {
       setTimeout(loadAuditIndex, 0);
       if (aIndex === null) return '<div class="db-card"><div class="db-card-b"><div class="db-empty">Loading the reports…</div></div></div>';
     }
@@ -1699,7 +1759,7 @@
       closeDetail(function () { post('/api/task/update', { id: uid, status: 'pending', note: 'put back in the queue from the dashboard' }); });
       return;
     }
-    if (b.dataset.act === 'detail') { detailId = b.dataset.id; render(); return; }
+    if (b.dataset.act === 'detail') { openDetail(b.dataset.id); return; }
     if (b.dataset.act === 'audit-open') { toggleAudit(b.dataset.name); return; }
     if (b.dataset.act === 'audit-showall') { aShowAll = true; refreshAuditList(); return; }
     if (b.dataset.act === 'audit-clear') {
@@ -1750,7 +1810,7 @@
   });
   // the search box filters the table body in place, so typing never loses focus
   document.getElementById('dashboard').addEventListener('input', function (e) {
-    if (e.target.id === 'db-tquery') { tQuery = e.target.value; refreshRows(); }
+    if (e.target.id === 'db-tquery') { tQuery = e.target.value; tSearch(tQuery); refreshRows(); }
     if (e.target.id === 'db-aquery') { aQuery = e.target.value; aShowAll = false; auditSel = null; commentOn = null; refreshAuditList(); }
   });
 
@@ -1762,8 +1822,12 @@
   }
 
   function setTab(t, push) {
+    var was = tab;
     tab = t;
     render();
+    // the list is not on the poll unless you are here, so ask for a fresh one
+    // the moment you arrive; the cached rows are already on screen meanwhile
+    if (t === 'tasks' && was !== 'tasks') { lastJSON = ''; load(); }
     if (push) {
       var url = t === 'digest' && digestSel ? digestURL(digestSel) : '?tab=' + t;
       try { history.replaceState(null, '', url); } catch (err) {}
