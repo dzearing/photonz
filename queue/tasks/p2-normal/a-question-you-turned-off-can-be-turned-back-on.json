@@ -1,0 +1,28 @@
+{
+  "id": "a-question-you-turned-off-can-be-turned-back-on",
+  "title": "A question you turned off can be turned back on",
+  "goal": "One command in Photonz stops and asks before it does something you cannot see undone, and the question carries a Do not ask again box. Tick it and the question is gone for good: there is nowhere in the app to bring it back. Somebody who ticks it on their first day, or by accident, has silently given up a warning forever. Give the app one place that lists the questions you have silenced and turns any of them back on.",
+  "epic": "design-system",
+  "priority": "p2-normal",
+  "seq": 2090,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T21:50:13.465Z",
+  "updated": "2026-09-08T21:50:13.468Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed 2026-09-08 by the pass that wrote the rule this breaks: UX-PATTERNS section 3, Panels and surfaces, \"The question you can silence\", which requires a way back and records that nothing ships one.\n\nThe only silenceable question today is Turn Into Picture: Sources/PhotonzCore/RasterizePrompt.swift holds the words, Sources/Photonz/EditorState+LayerOps.swift:217 holds the answer at UserDefaults key photonz.turnIntoPicture.dontAsk (per app bundle, so dev, probe and release each keep their own). Not reproduced as a defect because there is nothing to reproduce: the code has one setter and no reader anywhere else and no UI reaches it. Verified by grep, not by a walk.\n\nOPEN UX QUESTION for whoever takes this, worth a decision card rather than a guess: where the list lives. Photonz has no Settings window today; the candidates are a new Settings pane, a section in the Experiments window (which is a developer surface, so probably wrong for a normal person), or offering it back inline the next time the command runs. Also worth deciding whether the list names one question or is written to hold the ten it will have in a year.",
+  "acceptance": [
+    "There is one place in the app that lists every question the user has silenced, by the plain name of the command that asks it",
+    "Turning one back on makes that command ask again the very next time it is used",
+    "A question nobody has silenced is either absent from the list or plainly shown as still asking, so the list never reads as a set of switches to go and flip",
+    "Ticking Do not ask again and then turning it back on is proven end to end in the running app"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T21:50:13.467Z",
+      "note": "created (manual)"
+    }
+  ]
+}

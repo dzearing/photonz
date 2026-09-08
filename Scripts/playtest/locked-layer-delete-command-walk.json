@@ -1,0 +1,26 @@
+{
+  "out": "/tmp/photonz-playtest/locked-delete-command",
+  "seed": "Lock a rectangle, then issue the Delete Layer command the menu row issues. Does the lock hold?",
+  "setup": { "forget": ["shapes", "color", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 160], "to": [560, 380] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [380, 270] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Lock", "in": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-locked-picked", "note": "layers 2, the rectangle locked and picked" },
+    { "do": "action", "action": "deleteLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-after-delete-command", "note": "DOES THE LOCK HOLD? layers must still be 2 if it does" },
+    { "do": "snapshot", "name": "locked-delete-command" }
+  ]
+}

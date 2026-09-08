@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "docs",
   "created": "2026-09-08T12:08:29.871Z",
-  "updated": "2026-09-08T12:09:07.439Z",
+  "updated": "2026-09-08T21:51:09.423312Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-08. Evidence for the key press half: queue/audits/2026-09-08-cut-says-what-it-cannot-do.json says the family already disagrees with itself, \"Option Backspace, which fills the marquee, still does nothing and says nothing over a shape... the family now disagrees with itself. Filed as its own task\" (that task is filling-part-of-a-shape-says-what-it-cannot-do-t). queue/audits/2026-09-08-delete-over-a-marquee.json is the third instance. The existing ladder is docs/design/mocks/shared/UX-PATTERNS.md section 4, \"A control that cannot act\", whose table has rows for a command, a chooser, a field and a bare affordance, and no row for a key.\n\nEvidence for the silenced question half: Sources/PhotonzCore/RasterizePrompt.swift and EditorState+LayerOps.swift shipped the first one on 2026-09-08 (audit 2026-09-08-turn-into-a-picture.json), with the wording and the suppression key chosen locally. Section 3 of UX-PATTERNS covers Modal and toast as \"rare document-scoped dialogs\" and says nothing about suppressing one.",
@@ -28,6 +28,43 @@
     {
       "t": "2026-09-08T12:09:07.438Z",
       "note": "seq 1300 -> 130"
+    },
+    {
+      "t": "2026-09-08T21:43:17.071Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T21:51:09.423312Z",
+      "note": "Adversarial review of the task itself, before writing anything. A docs task earns its slot only if it stops the next person inventing, so the risk to beat is writing a rule from one instance and calling it a law. The key-press half has three shipped instances and a real disagreement to settle, so it is safe to generalise. The silenced-question half has exactly ONE instance, so it is written as a GATE (when a command has earned the right to ask at all) rather than as a framework, and it says out loud that the app has one of these and should grow them one at a time."
+    },
+    {
+      "t": "2026-09-08T21:51:09.423312Z",
+      "note": "Checked the disagreement the task was filed for and it has already closed itself: Option Backspace stopped being silent on 2026-09-08 (14e2372f, task filling-part-of-a-shape-says-what-it-cannot-do-t, audit 2026-09-08-fill-over-a-marquee). So all three keys now agree and the rule is written from what shipped rather than picking a winner between them."
+    },
+    {
+      "t": "2026-09-08T21:51:09.423312Z",
+      "note": "The rule that came out of reading the three refusals is a TEST, not a preference, and it is what makes the family and the locked layer consistent. A key cannot be dimmed, so: (1) if the whole COMMAND cannot act, its menu row is dimmed per the ladder's first row and the key may stay quiet, since the reason is already on screen; (2) if the command can act and it is what this press was AIMED at (a marquee, a region) that cannot be honoured, nothing is dimmed and nothing changed, so the key must speak on the canvas notice. Every silent key in this family turned out to be case 2."
+    },
+    {
+      "t": "2026-09-08T21:51:09.423312Z",
+      "note": "Naming the way out is written as REQUIRED, and the evidence is that it was learned rather than chosen: the first refusal shipped saying only what could not happen (c6c8b74e), its own audit called that a dead end, 3c59faa6 added the way out to the sentence and 23f14863 put it in the pill as a button."
+    },
+    {
+      "t": "2026-09-08T21:51:09.423312Z",
+      "note": "Shipped, doc only, no behaviour changed: UX-PATTERNS bumped to v1.7. Section 4's ladder gains a fifth table row for a key press plus 'What a key press says when it cannot act'. Section 3's Modal and toast entry gains 'The question you can silence' (when a command may ask, the four fixed parts of the wording, the sheet, when the silence box is allowed, where the answer is kept, and that a person must be able to get it back). Two matching audit gates in section 9. Every claim cites its commit and audit."
+    },
+    {
+      "t": "2026-09-08T21:51:09.423312Z",
+      "note": "Non-conformance 1, REPRODUCED on the probe rather than read off the code: the Delete Layer command removes a LOCKED layer. Walk Scripts/playtest/locked-layer-delete-command-walk.json printed '1-locked-picked | layers: 2' then '2-after-delete-command | layers: 1'. Plain Backspace on the canvas honours the lock (CanvasKeys.swift:99 checks !isLocked) so the two ways to delete disagree. Filed as a-locked-layer-stays-put-when-the-delete-layer-c (p2-normal), not fixed here."
+    },
+    {
+      "t": "2026-09-08T21:51:09.423312Z",
+      "note": "Non-conformance 2: nothing in the app can bring back a question you silenced. photonz.turnIntoPicture.dontAsk has one setter and no way in the UI to clear it, so ticking the box gives up a warning for good. Not a reproduction, a grep, and the rule as written names it. Filed as a-question-you-turned-off-can-be-turned-back-on (p2-normal) with the open UX question about where such a list lives."
+    },
+    {
+      "t": "2026-09-08T21:51:09.423312Z",
+      "note": "Also proved, so the rule's case 1 is not a guess: with a locked rectangle picked, Backspace and two arrow presses both left the document untouched (layers 2, frame 200,160,360,220) and said nothing (copied: none), while the Position and Size section on screen read 'This layer is locked. Unlock it in the Layers list to change its position or size.' Screen Recording was granted, so that is a real window capture (the walk Scripts/playtest/locked-layer-key-press-walk.json, stage locked-4-after-arrows-sc.png), not an offscreen render."
     }
-  ]
+  ],
+  "started": "2026-09-08T21:43:17.070Z"
 }

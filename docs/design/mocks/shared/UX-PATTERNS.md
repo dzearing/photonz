@@ -1,6 +1,17 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.6. §0, §3 and D9 say out loud what was always meant: these rules
+**Status: v1.7. §4 gains "What a key press says when it cannot act", the row
+the ladder never had: a key has nothing to dim, so either the canvas notice says
+what it could not do and names the way out, or something already on screen does
+and the key stays quiet, and there is a test for which. §3's Modal and toast
+entry gains "the question you can silence": when a command has earned the right
+to stop and ask, how the question is worded, where the answer is remembered, and
+that a person must be able to get it back. Both are written from what shipped in
+the two days before, three keys and one question that each decided for
+themselves, and both cite the commits and audits they were taken from. Two audit
+gates in §9 to match. Written 2026-09-08. No behaviour changed, and one thing
+already shipped that the new rules name as wrong was filed rather than quietly
+fixed. v1.6: §0, §3 and D9 say out loud what was always meant: these rules
 govern the shipping app as well as the mock pages. §3's panel-group height rule
 is rewritten to lead with the behaviour in plain words (a group holds itself to
 its own height; lists give up room and forms do not; when it still does not fit
@@ -321,6 +332,55 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   toast** is the global one: it belongs to the menu-bar agent, sits bottom
   right of the screen, and carries its own Edit row (AGENTS.md, GLOBAL
   surfaces).
+  - **The question you can silence** (added 2026-09-08, from the first one the
+    app shipped: `RasterizePrompt` and `EditorState+LayerOps`, commit
+    `3c59faa6`, audit `2026-09-08-turn-into-a-picture`). A command that stops
+    and asks before it acts is a tax on every use of that command forever, so
+    the bar to ask is high and there is one bar, not one per feature.
+  - **When a command may ask.** Only when what it takes away is invisible the
+    instant after. Turn Into Picture is the case it was written for: the moment
+    it is done the picture is identical, same shape, same colour, same place,
+    and what is gone is that the shape or the words could be edited at all. A
+    person finds out a week later, reaching for words that are no longer there.
+    **Being destructive is not the test, and neither is being big.** Undo
+    covers destructive: deleting a layer is as destructive as it gets and asks
+    nothing, because you can see it go and ⌘Z brings it back. Ask only when a
+    person could not have noticed. If in doubt, do not ask: the app has one of
+    these questions and should grow them one at a time, each with its reason
+    written down.
+  - **How it is worded.** Four fixed parts. **The title is the question**, and
+    it names the thing by the name it wears on screen: "Turn “Card” into a
+    picture?", falling back to the kind of thing it is when it has no name.
+    **The body is gain, then cost, then the way back, in that order**: what you
+    get is what they came for, the cost is the part they cannot see, and "Undo
+    puts it back" is the sentence that lets somebody say yes. **The buttons
+    carry the verb**, so reading only the buttons still says which one does the
+    thing: Turn Into Picture / Cancel, never OK / Cancel. **The menu row that
+    raises it ends in an ellipsis**, the macOS promise that a question comes
+    next; the button inside a canvas notice drops the ellipsis, since on a
+    button three dots read as "more options".
+  - **It rides the window as a sheet**, never a free floating box that stops
+    the whole app, so a question about one document leaves the others alone.
+  - **The silence box is standard macOS "Don't ask again"**, and it is only
+    allowed on a question whose answer is nearly always yes and whose cost undo
+    can put back. **A question the app cannot undo keeps asking, every single
+    time**: "Clear capture history?" moves files to the Trash and must never
+    grow a box. **A question that forks** (Save to Capture History offers
+    Override Original and Save as New) may never be silenced either, because
+    silencing it would pick one of two different outcomes on the person's
+    behalf.
+  - **Where the answer is remembered.** In the app's own settings, under a key
+    named for the command (`photonz.turnIntoPicture.dontAsk`), per app bundle,
+    so dev, probe and the shipping app each keep their own answer and neither
+    can turn a question off for the other. **Never in the document**: a file you
+    send someone must not carry your answer, and a question silenced on one
+    machine is not silenced on the next.
+  - **A person must be able to get the question back**, in one place that lists
+    every question they have silenced and turns any of them back on. Nothing
+    ships this yet, and the first silenceable question was allowed through
+    without it, which is why the rule says it here rather than after the second
+    one. Until that place exists, an answer of "don't ask again" is a door that
+    locks behind you.
 
 ### What a surface looks like while something is held over it
 
@@ -692,6 +752,7 @@ what decides:
 | **A chooser whose value is decided elsewhere** | a menu, a segmented row, a toggle, where something above has already answered the question | **Replaced by the answer, in the same row.** Show the value in plain words and name who owns it. Keep the row in its place and its column so the section still reads as a set of settings. |
 | **A field that still has a number to report** | a width, a height, a position the layer really has, that you cannot type | **Keeps the number, read only.** A number you can read is worth more than an empty box, even when it is not yours to set. It must not look like something the keyboard will accept. A field with nothing true to report is the one that stays blank: a line or a caliper has no width of its own, so a number there would be about nothing you drew. |
 | **A bare affordance** | a resize handle, a rotate knob, a drag target: something with no label, grabbed rather than read | **Removed.** There is nowhere on a handle to say why it refuses, and a handle you can see but not drag teaches the wrong thing about the state that froze it. Take it away and make sure the state itself is visible somewhere with words, such as the padlock on the layer's row. Only the grabs go: the frame that says what is selected stays, because that answers a different question. |
+| **A key press** | a shortcut with nothing on screen to dim: ⌥⌫, an arrow key, ⌘X aimed at a marquee | **Either the canvas notice says so, or something already on screen does and the key stays quiet.** Which one it is has a test, below, and it is not a judgment call. A key cannot be dimmed, so the answer that works for a button is not available to it, and a key that changes nothing and says nothing reads as an app that has stopped listening. |
 
 #### What a number you cannot type looks like
 
@@ -802,6 +863,92 @@ decided is broken is a reason nobody reads.
   the first half, and the tip carries the rest.
 - **A chooser replaced by its answer**: the words in the row are the first half,
   already on screen, and the tip adds what to do.
+
+#### What a key press says when it cannot act
+
+Written 2026-09-08 from what three keys shipped in two days, not invented. ⌘X,
+⌫ and ⌥⌫ each met the same wall, a marquee over a rectangle, and each answered
+it on its own before the third one made the pattern plain (`c6c8b74e`,
+`14e2372f`, `23f14863`; audits `2026-09-08-cut-says-what-it-cannot-do`,
+`2026-09-08-delete-over-a-marquee`, `2026-09-08-fill-over-a-marquee`,
+`2026-09-08-notice-carries-the-way-out`). The words and the yes/no live in
+`RegionSliceRefusal` (PhotonzCore).
+
+**A key is not a control, and that is the whole difficulty.** Every other row
+of the table above answers by changing how something looks: dim it, replace it,
+take it away. A key press has nothing on screen to change. It has already
+happened by the time anybody could have been warned, and the only thing a person
+sees is whether the picture moved.
+
+**The test: what refused, the command or the aim?**
+
+1. **The whole command cannot act.** There is nothing to act on, or the thing
+   picked is not the kind this command takes. Then the command's own row in the
+   menu is dimmed, per the first row of the table, and the key inherits that
+   answer: it stays quiet and lets macOS beep. The reason is already on screen,
+   in a menu a person can open, and repeating it on the canvas every time a
+   thumb brushes a key would be noise. Nudging a locked layer is this case: the
+   Position & Size section is already saying, in words, that the layer is locked
+   and where to unlock it.
+2. **The command can act, and it is what this press was AIMED at that it cannot
+   honour.** Cut works. Cut with a marquee over a shape does not, because a
+   marquee takes a piece out of pixels and a rectangle is a description of a
+   drawing. Nothing is dimmed, because at the command level nothing is wrong,
+   and nothing on screen changed. **This is the case that must speak**, and it
+   is the one every silent key in this family turned out to be.
+
+The tell for case 2 is that the aim is something the person made a moment ago
+and can see: a marquee, a region, a part they picked. They are looking straight
+at it. Silence there does not read as a refusal, it reads as a key that missed.
+
+**Where it says it, and for how long.** The canvas notice (§3), bottom centre,
+the same pill the Copied confirmation uses. Never a dialog: a refusal is not
+worth a click to dismiss. Never a beep alone. Never only in the menu, since the
+person is on the canvas with a key under their finger. Three seconds when it is
+words only, six when it carries a button, and the pointer resting on it stops
+its clock (§3).
+
+**The sentence, in two parts.** The verdict first, in its own weight, saying
+what the key you just pressed did not do: "Cannot delete a piece", "Cannot fill
+a piece". Then the ordinary §4 sentence, who owns this and the one thing to do.
+The verdict is what a key press adds to the wording rule above, and it is there
+because the person does not yet know which of the things they just did was the
+problem.
+
+**Naming the way out is required, and it is the difference between a refusal
+that helps and one that dead-ends.** This is not a style preference; it was
+learned. The first refusal shipped saying only "Only a picture can have a piece
+taken out", which is true and leaves somebody holding a marquee over a rectangle
+with nowhere to go. Its own audit said so, a follow-up added the way out
+(`3c59faa6`), and a second added it as a button inside the pill
+(`23f14863`).
+
+- **Name the way out that gets them what they asked for**, when one exists.
+  "Turn it into a picture from the Layer menu, then try again" leads to the
+  piece coming out. "Clear the marquee to delete the whole layer" is the
+  fallback, and it deletes something bigger than they aimed at.
+- **When the app already knows the single command that would let it through,
+  the pill carries it as a button** (§3, the one exception to a notice taking
+  no input), and then the sentence stops pointing at the menu, because the
+  button is the answer.
+- **When there is genuinely no way out**, say what the layer is instead, and
+  point at the coarser thing that does work: a measurement can never become a
+  picture, so its refusal names clearing the marquee and nothing else.
+
+**One family, one sentence, one place.** Three keys asking the same question of
+the same layer must get the same answer, differing only by the verb: "a piece
+taken out" for ⌘X and ⌫, "a piece filled in" for ⌥⌫, because ⌥⌫ puts colour in
+rather than taking anything out. Write it once in PhotonzCore next to the state
+that causes it, the way the wording rule above requires, and have the yes/no
+come from the same predicate the command itself uses
+(`RegionTarget.canSlice`), so the sentence on screen can never disagree with
+what the key actually does. A key that works says nothing at all: deleting a
+corner out of a real picture is silent, and should be.
+
+**A key with no menu row of its own is the one to watch.** An arrow nudge has no
+row anywhere, so case 1's dimmed row does not exist for it and the state that
+froze it must be visible in words somewhere else on screen. If it is not, the
+key has to speak.
 
 #### The six from 2026-09-04, scored against this
 
@@ -955,6 +1102,15 @@ Every editor/scenario page must satisfy:
 - [ ] **Nothing inert without an answer** (§4): every control that cannot act
       is dimmed, replaced by its answer, or gone per its kind, and the "who owns
       this" half of its reason is on screen rather than only on hover.
+- [ ] **No key press refuses in silence** (§4): a key that cannot do what it was
+      aimed at, while the command behind it is perfectly able to act, says so on
+      the canvas notice, verdict first, and names the way out. A key whose whole
+      command is dimmed may stay quiet.
+- [ ] **A question earns the right to ask** (§3): a command only stops and asks
+      when what it takes away is invisible the instant after; it is worded gain,
+      cost, way back, with the verb on the button; and it may only carry "Don't
+      ask again" when the answer is nearly always yes and undo can put the cost
+      back.
 - [ ] Copy: plain, no em dashes, "agent" not "Claude".
 
 ---

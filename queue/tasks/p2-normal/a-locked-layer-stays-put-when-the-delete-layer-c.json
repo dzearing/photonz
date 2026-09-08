@@ -1,0 +1,28 @@
+{
+  "id": "a-locked-layer-stays-put-when-the-delete-layer-c",
+  "title": "A locked layer stays put when the Delete Layer command is used on it",
+  "goal": "You can lock a layer so it cannot be changed by accident. The lock works when you press Backspace on the canvas, but the Delete Layer command in the Layer menu ignores it and removes the layer anyway. A lock that only holds against one of the two ways to delete is not a lock. Make it hold both ways, and dim the menu row while the only thing picked is locked, so the app says no before you press it rather than after.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T21:49:59.668Z",
+  "updated": "2026-09-08T21:49:59.671Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-08 while writing the key-press half of UX-PATTERNS section 4. REPRODUCED on the probe, not read off the code. Walk: lock a rectangle from its Layers row, pick it with selectRow, then the deleteLayer action (the same call the menu row makes).\n\n  $ Scripts/playtest.sh Scripts/playtest/locked-layer-delete-command-walk.json\n  1-locked-picked | layers: 2 | copied: none | arrows: [rectangle frame (200,160,360,220)]\n  2-after-delete-command | layers: 1 | copied: none | arrows: []\n\nCause: EditorCommands.swift:604 dims Delete Layer on !hasLayerSelection only, and EditorState+Layout.deleteLayers -> Document.removeLayers (Document.swift:438) prunes by id with no isLocked check. The canvas key path in CanvasKeys.swift:99 DOES check !layer.isLocked, which is why plain Backspace already honours the lock and the two disagree.\n\nAlso note for whoever takes this: once the command honours the lock, plain Backspace on a locked layer is UX-PATTERNS section 4 case 1 (the whole command is dimmed, the key may stay quiet) and needs nothing further, because the Position and Size caption already says on screen that the layer is locked and where to unlock it.\n\nBoth walks are checked in: Scripts/playtest/locked-layer-delete-command-walk.json (the command deleting a locked layer) and Scripts/playtest/locked-layer-key-press-walk.json (Backspace and the arrows on the same locked layer, which DO honour the lock and say nothing).",
+  "acceptance": [
+    "With a locked layer picked, choosing Layer > Delete Layer leaves the document with the same number of layers",
+    "The Layer > Delete Layer row is dimmed while everything picked is locked, and live again as soon as anything unlocked is picked",
+    "A selection holding both a locked and an unlocked layer deletes the unlocked one and keeps the locked one",
+    "A playtest walk proves it in the running app, not only a unit test"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T21:49:59.670Z",
+      "note": "created (manual)"
+    }
+  ]
+}
