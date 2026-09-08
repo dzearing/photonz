@@ -13294,3 +13294,44 @@ picked container reading 171 and the undo back to 120. Audit
 which one before you press it".
 
 Next: back to the queue.
+
+---
+
+## 2026-09-08 — The dock rules say plainly that they govern the app
+
+A documentation pass, no behaviour changed. The panel-group height rule in
+`docs/design/mocks/shared/UX-PATTERNS.md` §3 already answered the question the
+app kept getting wrong, but it was written in mock-page vocabulary, class names
+and stylesheet variables, so it read as a note about the design study rather
+than as a law the app has to obey. Between 2026-09-06 and 2026-09-07 four tasks
+in a row each took a slice off one panel section instead of adopting it: three
+shipped, and the fourth was dropped once `the-properties-panel-fits-on-the-
+screen-it-has` found the real rule and built `DockHeightBudget`.
+
+§3 now leads with the behaviour in plain words, in four numbered rules: a group
+holds itself to its own height and scrolls inside itself; lists give up room and
+forms do not; **when it still does not fit the DOCK scrolls and no section is cut
+down to make the arithmetic work**; a body that has been shortened fades at its
+cut edge. The third of those is the case that kept being met and was the one
+thing never written down. It says out loud that it governs the shipping app, and
+names the app's own spelling of it (`DockHeightBudget` in PhotonzCore, the
+bounded group bodies in `LayersPanel`) beside the mock page's.
+
+D9 had the same defect and got the same treatment. It was an account of what
+`dock.js` does across fourteen pages with the rule buried inside; it now opens
+with the rule (every dock can be pushed away from a control on itself, leaves a
+visible way back the whole time it is away, comes back to the size it had, and
+there is one collapse idiom, not two), then the page spelling, then the app. The
+app satisfies it differently and that is recorded rather than papered over: the
+side dock slides away entirely rather than leaving a rail, with Show Panel
+(⌥⌘L) and the fixed title-bar glyph as the way back, and there is no bottom dock
+yet, so the summary-row half is not owed until Next grows a timeline. Judged
+fine, not filed as a gap: a rail earns its keep when there are several groups to
+jump back into.
+
+§0 now states the general form of it, that these rules bind the shipping app and
+not only the mock pages, and the two §9 audit gates that repeated the old wording
+were brought in line. `Scripts/test.sh` green at 4992, and nothing under
+`Sources/` was touched.
+
+Next: back to the queue.

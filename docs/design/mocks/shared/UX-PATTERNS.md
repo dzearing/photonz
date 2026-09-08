@@ -1,6 +1,15 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.5. §4 gains "The line under a section", one rule for the line under
+**Status: v1.6. §0, §3 and D9 say out loud what was always meant: these rules
+govern the shipping app as well as the mock pages. §3's panel-group height rule
+is rewritten to lead with the behaviour in plain words (a group holds itself to
+its own height; lists give up room and forms do not; when it still does not fit
+the DOCK scrolls and no section is cut down to make it fit), with the class
+names second as one way of spelling it. D9 is rewritten the same way and now
+records how the app satisfies it. Written 2026-09-08 after four fixes in two
+days each took a slice off one panel section instead of adopting the rule,
+which was readable as a note about the design study. No behaviour changed. v1.5: §4
+gains "The line under a section", one rule for the line under
 a panel section that was quietly doing three jobs: what it may say, which
 message wins when two want it at once, and how long each stays. Written
 2026-09-08 with `a-number-that-springs-back-says-why-it-did`, which was about to
@@ -36,6 +45,13 @@ it lives, and how you get back*.
 
 ## 0. How to use this doc
 
+- **These rules bind the shipping app, not only the mock pages.** A rule here
+  describes how the PRODUCT behaves; the class names and stylesheet variables
+  are how a mock page happens to spell it, and the app spells the same rule in
+  Swift. So "that is a note about the design study" is never a reason for the
+  app to do something else, and when a page and a build disagree, this doc says
+  which one is wrong. Where the app is the thing that is wrong, the rule stands
+  as written and a task is filed against the app.
 - Read this BEFORE authoring or auditing any page.
 - Every claim here should become either a shared DS class/pattern or an audit
   rule. If a page needs something not covered, add the pattern here first, then
@@ -176,30 +192,57 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   groups. Resizable by a `.splitter.v`, collapsible to a `.drail`. There is no
   left dock: Layers, Properties, Effects, and **Library** are all groups in this
   one dock (see D1/D2, amended).
-- **Panel group** (`.dgrp` > `.dgrp-h` + `.dgrp-b`) — the unit of panel scope.
-  Header = chevron + title + optional count + optional buttons; clicking it
-  collapses the group to its header (`.dgrp.collapsed`). The body has its **own
-  bounded max-height (`--gh`) and its own scroller**, so a 60-layer stack scrolls
-  inside Layers and never pushes Effects or Library off screen. Exactly one group
-  per dock may be `.grow` and take the leftover space. **New capability is a new
-  group.**
-  **Lists give up room, forms do not** (added 2026-09-07, from building this in
-  the app: commit for `the-properties-panel-fits-on-the-screen-it-has`, audit
-  `2026-09-07-dock-fits-the-window`). The rule above says "every group", and
-  applied to every group it makes the dock worse, not better: six groups sharing
-  996 points get about 138 each, which puts Corner Radius inside a scroller in
-  Effects — the same hunt one level deeper. The distinction that decides it is
-  what the body IS. A **list** (Layers, the parts of what you picked,
-  Measurements, the Library shelf) is as long as the document happens to make
-  it, so nobody designed its height and shortening it costs a scroll you were
-  going to do anyway. A **form** (Text, Position & Size, Effects, Arrange) is a
-  set of controls somebody chose, and shortening it compresses nothing — it
-  hides controls. So forms are drawn whole and paid for first; the lists share
-  what is left, tallest first, each down to its own floor of about three rows.
-  If that is still not enough, the DOCK scrolls, because a dock that scrolls a
-  little beats six peepholes. A body that has been shortened must SAY so: its
-  cut edge fades out, since macOS hides its scrollers at rest and a control
-  clipped in half with no cue reads as a rendering fault.
+- **Panel group** (`.dgrp` > `.dgrp-h` + `.dgrp-b`) — the unit of panel scope:
+  one titled section of the dock. Header = chevron + title + optional count +
+  optional buttons; clicking it collapses the group to its header
+  (`.dgrp.collapsed`). **New capability is a new group.**
+
+  **The height rule, and it governs the app, not only the mock pages.**
+  Everything under this heading is a law about how the product behaves. The
+  class names and stylesheet variables are only how a mock page happens to
+  spell it; the shipping app spells the same law in `DockHeightBudget`
+  (PhotonzCore) and the bounded group bodies in `LayersPanel`. Where a page and
+  a build disagree, one of them is wrong, and this is what decides which.
+
+  1. **Every group holds itself to its own height and scrolls inside itself.**
+     A 60-layer stack scrolls inside Layers and never pushes Effects or Library
+     off the bottom of the dock. A group is never stretched to fill room it
+     does not need: three layers draw three rows and the glass under them stays
+     empty. At most one group in a dock may be the one that takes the leftover
+     space (`.grow`).
+  2. **Lists give up room, forms do not** (added 2026-09-07, from building this
+     in the app: `the-properties-panel-fits-on-the-screen-it-has`, audit
+     `2026-09-07-dock-fits-the-window`). Holding every group to an equal share
+     makes the dock worse, not better: six groups sharing 996 points get about
+     138 each, which puts Corner Radius inside a scroller in Effects, the same
+     hunt one level deeper. What decides it is what the body IS. A **list**
+     (Layers, the parts of what you picked, Measurements, the Library shelf) is
+     as long as the document happens to make it, so nobody designed its height
+     and shortening it costs a scroll you were going to do anyway. A **form**
+     (Text, Position & Size, Effects, Arrange) is a set of controls somebody
+     chose, and shortening it compresses nothing, it hides controls. So forms
+     are drawn whole and paid for first, and the lists share what is left,
+     tallest first, each down to its own floor of about three rows.
+  3. **When it still does not fit, the dock scrolls and nothing is thrown
+     away.** This is the case that keeps being met, so it is written down here
+     rather than re-decided each time. A dock can simply be asked for more than
+     it has: every list at its floor, every form drawn whole, and the total
+     still taller than the window. Then the DOCK scrolls, because a dock that
+     scrolls a little beats six peepholes. **What must not happen is a section
+     losing content to make the arithmetic work.** Cutting one panel's rows,
+     deleting a caption or hiding a control because the dock is full fixes one
+     screenshot and leaves the law unimplemented everywhere else: on 2026-09-06
+     and 2026-09-07 four tasks in a row each took a slice off one section
+     (three shipped, the fourth was dropped once the real rule was found) and
+     the dock still did not fit. If a dock overflows, the answer is the budget
+     above, or a group the user can collapse, or one fewer group. It is not
+     fewer words. The one exception is a wording change a person actually asked
+     for: on 2026-09-07 the user was asked about the multi-selection caption
+     repeated in six sections and answered leave the words alone.
+  4. **A body that has been shortened says so.** Its cut edge fades out. macOS
+     hides its scrollers at rest, so a control clipped in half with no cue
+     reads as a rendering fault rather than as something to scroll.
+
   **Reveal** (added 2026-09-04 to describe shipped behavior: commit `4a6aac7`,
   audit `2026-09-03-library-reveal`): when the app brings a group into view for
   you it scrolls the DOCK, by the shortest move that puts the whole group on
@@ -889,8 +932,10 @@ Every editor/scenario page must satisfy:
       draws the frame — declared with `data-sel-frame`, never hand-written.
 - [ ] **Responsive**: the `.win` carries `.cq`, and the page renders sensibly
       narrowed (dock rails or overlays, tool bar overflows).
-- [ ] **Bounded panels**: every long list is inside a `.dgrp-b` with its own
-      max-height and scroller; no list stretches the window.
+- [ ] **Bounded panels** (§3, the height rule, which binds the app too): every
+      long list is bounded and scrolls inside its own group, forms are drawn
+      whole, and no list stretches the window. When the whole thing still does
+      not fit, the dock scrolls; no section is cut down to make it fit.
 - [ ] Layers use flat-vs-group consistently; rows have identical affordances.
 - [ ] Every glyph is an `.ic-*` from the one library; zero ascii/emoji/mixed
       styles.
@@ -899,8 +944,10 @@ Every editor/scenario page must satisfy:
       skip, play/pause, loop, the two timecodes and the scrubber shares that row.
 - [ ] **Every animatable property shows how to animate it** (D10): property
       rows list the whole catalogue, not only the keyed ones.
-- [ ] **Both docks collapse** (D9): the side dock to a rail, the bottom dock to
-      one row that names the selection.
+- [ ] **Every dock can be pushed away** (D9): from a control on the dock
+      itself, with a visible way back the whole time it is away, and it comes
+      back to the size it had. A bottom dock collapsed to a row names what is
+      still selected.
 - [ ] **Guides draw over the work** (D16): a grid, a screen's columns or a
       pinned guide sits above the artwork as a wash or hairline you can read
       straight through, never behind it, and never inside whatever the page
@@ -1218,16 +1265,28 @@ control that also reads as state. Canonical page: `pages/video.html`.
 
 ---
 
-### D9 — Every dock collapses, and the bottom one collapses to a row
+### D9 — Every dock can be pushed away, and it always says how to get back
 
-The panel dock could be dismissed to a rail. The timeline could not, which made
-the two inconsistent in the one way that matters: whether you can get your canvas
-back. On a laptop the timeline is the single biggest thing between you and a
-full-height preview, so it is the one people most want to push away — and it was
-the one with no handle to do it.
+**The rule, in plain words, and it governs the app as well as the mock pages.**
+You can always get your canvas back. Every dock — the side dock of panel groups,
+and the bottom dock a document with time gets — can be pushed out of the way
+from a control on the dock itself, comes back to exactly the size it had, and
+leaves a visible way back on screen the whole time it is away. A collapse that
+reclaims no room is theatre, and a collapse with no visible way back is a trap.
+There is ONE collapse idiom for this: a second one is worse than none.
 
-It now follows the side dock exactly, because a second collapse idiom is worse
-than none:
+**A dock collapsed to a row states the selection, not just the panel's name.**
+The reason you pushed the timeline away was to look at the canvas, so the
+question you then have is "what am I still editing", not "is there a timeline".
+The row answers that: on `video.html` it reads `Lower-third · 0:04 / 0:15`.
+
+The rest of this entry is how each half of the product spells that rule today.
+
+**In the mock pages.** The panel dock could be dismissed to a rail and the
+timeline could not, which made the two inconsistent in the one way that matters.
+On a laptop the timeline is the single biggest thing between you and a
+full-height preview, so it is the one people most want to push away, and it was
+the one with no handle to do it. It now follows the side dock exactly:
 
 | | expanded | collapsed |
 | --- | --- | --- |
@@ -1235,17 +1294,14 @@ than none:
 | bottom dock | `.tl-close` (×) at the end of `.tlbar` | `.tlrail` — ONE row |
 
 Both are injected by `dock.js`, not authored per page, so all fourteen timeline
-pages get the control without editing fourteen files.
+pages get the control without editing fourteen files. Pages keep the row current
+by writing `data-tl-summary` on the `.timeline`; `dock.js` observes the attribute
+so the page never has to know a rail exists. Verified: 14/14 dock timelines
+collapse to a 30px row and restore to their exact original height, and on
+`video.html` collapsing takes the canvas from 460px to 697px.
 
-**The collapsed row states the selection, not just the panel's name.** The reason
-you collapsed the timeline was to look at the canvas, so the question you then
-have is "what am I still editing" — not "is there a timeline". Pages keep it
-current by writing `data-tl-summary` on the `.timeline`; `dock.js` observes the
-attribute so the page never has to know a rail exists. On `video.html` that reads
-`Lower-third · 0:04 / 0:15`, and collapsing takes the canvas from 460px to 697px.
-
-Two traps, both of which produce the same symptom — contents correctly hidden
-inside a dock that never shrank:
+Two page traps, both of which produce the same symptom, contents correctly
+hidden inside a dock that never shrank:
 
 1. `.timeline` carries `min-height:172px` for the expanded case, so the collapsed
    rule must release it (`min-height:0`).
@@ -1255,8 +1311,17 @@ inside a dock that never shrank:
    the way up, rather than escalating to `!important` — the page keeps ownership
    of its own expanded size, and it comes back to the pixel.
 
-A collapse that reclaims nothing is theatre. Verified: 14/14 dock timelines
-collapse to a 30px row and restore to their exact original height.
+**In the app** (checked 2026-09-08 against `Sources/Photonz`). The side dock
+slides away entirely rather than leaving a rail: Show Panel in the View menu
+(⌥⌘L) and the toggle in the window's own title bar are the same one state, so
+the way back is on screen the whole time the dock is away, and the dock returns
+at the width it had. That satisfies the rule — a way out, a visible way back,
+and real room reclaimed — by a different spelling from the pages, and it is fine
+as long as the dock is one column: a rail earns its keep when there are several
+groups you want to jump straight back into, not when there is one thing to
+re-open. The app has no bottom dock yet, so the row half of this rule is not yet
+owed; the day Next grows a timeline, this is what it has to do, including the
+summary, and it does not get a second collapse idiom to do it with.
 
 ---
 

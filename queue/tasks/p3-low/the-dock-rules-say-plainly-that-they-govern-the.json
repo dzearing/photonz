@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "docs",
   "created": "2026-09-07T12:58:03.854Z",
-  "updated": "2026-09-08T12:09:07.402Z",
+  "updated": "2026-09-08T21:42:06.122248Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-07 digest design review. The rule: docs/design/mocks/shared/UX-PATTERNS.md section 3, panel group, 'The body has its own bounded max-height (--gh) and its own scroller, so a 60-layer stack scrolls inside Layers and never pushes Effects or Library off screen. Exactly one group per dock may be .grow and take the leftover space.' In the app, only the Layers list works this way (Sources/Photonz/LayersPanel.swift lines 1493 to 1526, added by opening-a-group-in-the-layers-list-pushes-the-cont on 2026-09-07). Everything else is in the single outer ScrollView at LayersPanel.swift line 99, which is why sections push each other off the bottom. Tasks that treated the symptom one section at a time: layout-stops-lecturing-and-starts-fitting, a-measurement-fits-in-the-panel, the-panel-says-what-you-picked-before-it-explain, the-look-controls-come-back-above-the-fold (dropped), the-properties-panel-fits-on-the-screen-it-has (now p1-high and pointed at this rule). Do this after the app task lands, so the wording can name what the app actually does.",
@@ -32,6 +32,31 @@
     {
       "t": "2026-09-08T12:09:07.401Z",
       "note": "seq 160 -> 120"
+    },
+    {
+      "t": "2026-09-08T21:37:37.469Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T21:42:06.122248Z",
+      "note": "Adversarial review of the task itself, before writing. (1) A doc rewrite that only adds prose changes nothing, so the test for this pass was: could an agent who reads only this rule get the last four fixes right? The gap that let them go wrong was not tone, it was a missing case: the rule said what a group does when it fits and said nothing about a dock that is asked for more than it has, so each fix invented the same wrong answer, trim a section. That case is now written down explicitly, with 'no section is cut down to make it fit' as the prohibition. (2) Shortest version that delivers the same value: leave the taxonomy bullets' class-name openers alone (every bullet in section 3 names its class, that is the section's format) and put the plain-language law in a heading under the bullet, so the change is readable as a law rather than as a style note. (3) Cut as decorative: no rewrite of the doc's whole vocabulary, and no new audit section."
+    },
+    {
+      "t": "2026-09-08T21:42:06.122248Z",
+      "note": "Verified against what the app actually does rather than repeating the task's framing. The task said one group in six follows the rule; that was true when it was filed on 2026-09-07 and is not now: the-properties-panel-fits-on-the-screen-it-has landed later the same day with DockHeightBudget (PhotonzCore) plus bounded bodies in LayersPanel, so the wording names the app's own spelling of the rule. Also checked the count: three trim/reorder tasks shipped 2026-09-06 (layout-stops-lecturing-and-starts-fitting, a-measurement-fits-in-the-panel, the-panel-says-what-you-picked-before-it-explain) and one was dropped 2026-09-07 (the-look-controls-come-back-above-the-fold), so the doc says four, not five."
+    },
+    {
+      "t": "2026-09-08T21:42:06.122248Z",
+      "note": "D9 checked and rewritten, not waved through. Same defect: the whole entry was an account of what dock.js does across fourteen mock pages, with the rule buried. It now leads with the rule in plain words (every dock can be pushed away from a control on itself, leaves a visible way back the whole time, comes back to the size it had, one collapse idiom only), then the page spelling, then the app. The app satisfies it differently and that is recorded rather than papered over: the side dock slides away entirely instead of leaving a rail, with Show Panel (View menu, Opt-Cmd-L) and the fixed title-bar glyph as the always-visible way back (EditorCommands.swift:653, TitlebarPanelToggle.swift:118, EditorView.swift:161). The app has no bottom dock, so the summary-row half is not yet owed. Judged fine rather than filed as a gap: a rail earns its keep when there are several groups to jump back into, not when there is one thing to re-open."
+    },
+    {
+      "t": "2026-09-08T21:42:06.122248Z",
+      "note": "Also changed, same pass: section 0 now states that these rules bind the shipping app and not only the mock pages (the root of the misreading is that the doc lives in the mock-authoring folder), and the two section 9 audit gates that repeated the old wording were brought in line (Bounded panels now names the overflow case, Both docks collapse became Every dock can be pushed away). Not done, and noted rather than filed: moving this doc out of docs/design/mocks/shared/ would fix the misreading at its root, but it touches many references and is a call for the user."
+    },
+    {
+      "t": "2026-09-08T21:42:06.122248Z",
+      "note": "No behaviour changed: git diff is docs/design/mocks/shared/UX-PATTERNS.md only. Scripts/test.sh run anyway before commit."
     }
-  ]
+  ],
+  "started": "2026-09-08T21:37:37.468Z"
 }
