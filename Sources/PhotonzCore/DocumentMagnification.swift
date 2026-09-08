@@ -131,6 +131,10 @@ extension LayerEffect {
         case .border(var border):
             border.width *= scale
             return .border(border)
+        case .glow(var glow):
+            glow.radius *= scale
+            glow.size *= scale
+            return .glow(glow)
         }
     }
 }

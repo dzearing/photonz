@@ -970,12 +970,14 @@ extension LayerStyle {
     /// and blur aren't clipped. 3σ covers a gaussian's visible tail.
     public var previewPadding: CGFloat {
         var padding = blurRadius * 3
-        // The furthest-reaching shadow decides, not the sum of them: two
-        // shadows overlap rather than stacking end to end. An inner shadow
-        // never leaves the layer, so it asks for nothing.
-        let reach = shadows.filter { $0.paints && $0.kind == .drop }.map {
+        // The furthest-reaching halo decides, not the sum of them: two shadows
+        // and a glow round the same box overlap rather than stacking end to
+        // end. An inner shadow and an inner glow never leave the layer, so
+        // they ask for nothing.
+        var reach = shadows.filter { $0.paints && $0.kind == .drop }.map {
             $0.radius * 3 + max(abs($0.offset.width), abs($0.offset.height)) + max($0.spread, 0)
         }
+        reach.append(contentsOf: paintedGlows.map(\.outset))
         padding += reach.max() ?? 0
         // A ring that sits on or past the edge draws outside the box, so the
         // room it needs is part of how far this style reaches. The layer's own
@@ -992,7 +994,7 @@ extension LayerStyle {
     /// so a resize of a layer with any of it must re-render the frame instead.
     var hasNoFixedSizeDecoration: Bool {
         borderWidth == 0 && cornerRadius == 0 && blurRadius == 0
-            && paintedShadows.isEmpty && paintedBorders.isEmpty
+            && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
     }
 
     /// True when this style draws nothing of its own: no fade, no blur, no
@@ -1001,7 +1003,8 @@ extension LayerStyle {
     /// straight onto the canvas and grouping changes no pixels.
     public var isPlain: Bool {
         opacity >= 1 && blurRadius <= 0 && cornerRadius <= 0 && borderWidth <= 0
-            && paintedShadows.isEmpty && paintedBorders.isEmpty && blendMode == .normal
+            && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
+            && blendMode == .normal
     }
 }
 

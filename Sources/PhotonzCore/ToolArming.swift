@@ -105,10 +105,11 @@ public extension AnnotationStyles {
         case .fill:
             guard shape == .rectangle || shape == .ellipse else { return }
             setFillPaint(paint, forShape: shape)
-        // Neither is a colour a tool draws with: a letter takes the foreground
-        // colour, and a ring and a shadow are things you ADD to a layer after
-        // it exists rather than things the next shape is armed with.
-        case .text, .border, .shadow:
+        // None of these is a colour a tool draws with: a letter takes the
+        // foreground colour, and a ring, a shadow and a glow are things you ADD
+        // to a layer after it exists rather than things the next shape is
+        // armed with.
+        case .text, .border, .shadow, .glow:
             return
         }
         // After the paint, never before: painting a slot is exactly how a tool

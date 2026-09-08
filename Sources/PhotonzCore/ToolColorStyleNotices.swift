@@ -87,6 +87,7 @@ public struct ToolColorStyleNotice: Hashable, Sendable {
         case .text: return "text"
         case .border: return "borders"
         case .shadow: return "shadows"
+        case .glow: return "glows"
         }
     }
 

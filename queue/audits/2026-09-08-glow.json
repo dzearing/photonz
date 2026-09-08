@@ -1,0 +1,30 @@
+{
+  "feature": "An effect can glow",
+  "epic": "ui-building",
+  "summary": "A shape can now carry a glow as well as a shadow: a soft coloured halo outside its edge, or a lit edge inside it. You can put more than one on the same shape, in different colours, and the order they sit in decides which is on top.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Effects list is on by default there. Draw a rectangle, turn its Outline off so nothing else is on the edge, then work in the Effects section.",
+  "try": [
+    { "do": "Press the plus on the Effects header. The menu now reads Shadow, Glow, Border, Blur." },
+    { "do": "Choose Glow. A blue halo should appear round the shape straight away, with no tuning.", "shot": "2026-09-08-glow-1.png" },
+    { "do": "Drag the glow's Size, then its Softness, and watch which one changes how far the light gets and which changes how gently it stops." },
+    { "do": "Press the plus and add a second Glow, then set its Kind popup to Inner." },
+    { "do": "Give the inner one a different colour from the Color row under it.", "shot": "2026-09-08-glow-2.png" },
+    { "do": "Drag the second glow's grip above the first and watch which halo paints over the other." },
+    { "do": "Untick Glow 1, then tick it back on, and check every number on it survived." },
+    { "do": "Add a Shadow underneath and check the halo still sits in front of it.", "shot": "2026-09-08-glow-3.png" }
+  ],
+  "evaluate": [
+    "The moment you choose Glow, is what appears obviously a glow, or does it read as nothing happening?",
+    "Is the starting blue the right colour to hand somebody, or should a new glow take the colour you last used?",
+    "Do Size and Softness feel like two different questions, or like two names for one?",
+    "One menu item called Glow with a Kind popup on the row, rather than Glow and Inner Glow as two items: does that read the way it does for the shadow?",
+    "Is a glow the thing you would reach for to draw a focus ring on a button, or is something still missing for that?"
+  ],
+  "rough": [
+    "The task asked for Glow and Inner Glow as two items on the plus. I built one Glow item with a Kind popup instead, because splitting a kind across two menu items is exactly what was reported as wrong about the shadow on 2026-09-07, and the task's own second acceptance line asks for a Kind popup, which only makes sense with one item.",
+    "The first defaults were too polite. On the probe against a white canvas the halo read as a smudge, so the starting size went up and the softness down. Judge the new default hard: a glow you cannot see is the whole failure mode here.",
+    "A glow composites normally rather than screening, so it tints rather than adds light. That is predictable on a white background, where a screened glow would vanish, but it means a glow over a bright photo looks flatter than one in Photoshop would.",
+    "Two glows push the Effects section past the height the dock gives it, so Position and Size scrolls out of view. That is the dock's height budget rather than anything about the glow, but you meet it here first.",
+    "Underneath, a glow is drawn as a shadow with no offset down the same tested path. If you find a case where a glow behaves like a shadow in a way it should not, that is why."
+  ]
+}

@@ -40,6 +40,12 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     /// that an effect's colour can be named, offered and saved through exactly
     /// the machinery every other colour uses (`LayerEffects.swift`).
     case shadow
+    /// What a glow is painted.
+    ///
+    /// The odd one out for the same reason the shadow is: no layer lists it
+    /// among its own slots, because a glow is an entry in the Effects list and
+    /// the colour belongs to that entry (`LayerEffects.swift`).
+    case glow
 
     /// What the inspector calls this slot in a sentence about it.
     public var title: String {
@@ -49,6 +55,7 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         case .text: return "Color"
         case .border: return "Border"
         case .shadow: return "Shadow"
+        case .glow: return "Glow"
         }
     }
 
@@ -63,7 +70,7 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     public var acceptsGradient: Bool {
         switch self {
         case .fill, .stroke: return true
-        case .text, .border, .shadow: return false
+        case .text, .border, .shadow, .glow: return false
         }
     }
 
@@ -76,7 +83,7 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         // A shadow is drawn OVER the design rather than filling an area of it,
         // the same as a line and a letter, so it takes the ink shelf: the
         // near-black somebody keeps for hairlines is the one they reach for.
-        case .stroke, .text, .border, .shadow: return .ink
+        case .stroke, .text, .border, .shadow, .glow: return .ink
         }
     }
 }

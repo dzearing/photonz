@@ -543,7 +543,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         // as one — and its halo escapes the group's box the way its shadow
         // does. A group is always a drawn thing, never a photograph.
         image = blurred(image, radius: layer.style.blurRadius, fadesEdges: true)
-        image = shadowed(image, shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
+        image = shadowed(image, glows: layer.style.paintedGlows,
+                         shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return faded(image, opacity: layer.style.opacity)
     }
 
@@ -874,7 +875,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         // Style: shadow, then opacity last so it fades content, border and
         // shadow together. Text on a designed surface leaves its contrast halo
         // undrawn: a label on a control is not a caption over a screenshot.
-        image = shadowed(image, shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
+        image = shadowed(image, glows: layer.style.paintedGlows,
+                         shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return faded(image, opacity: layer.style.opacity)
     }
 
@@ -1137,18 +1139,40 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// a tight contact shadow AND a wide soft lift, and a field wants one cast
     /// into it (`docs/design/shape-parts.md`, "How the list grows"). A list of
     /// one drop shadow paints exactly what one shadow always painted.
-    private func shadowed(_ image: CIImage, shadows: [ShadowStyle]) -> CIImage {
+    private func shadowed(_ image: CIImage, glows: [GlowEffect] = [],
+                          shadows: [ShadowStyle]) -> CIImage {
+        // A glow IS a shadow with nowhere to fall, so it is drawn down this
+        // same path rather than through a second halo engine that would have
+        // to be kept in step with the first (`GlowEffect.asShadow`).
+        let lit = glows.filter(\.paints).map(\.asShadow)
         let painted = shadows.filter(\.paints)
-        guard !painted.isEmpty else { return image }
+        guard !painted.isEmpty || !lit.isEmpty else { return image }
         var result = image
         // Inside first, so what is cast INTO the layer is part of the layer by
         // the time anything is thrown behind it. Reversed, so the entry nearest
         // the top of the list ends up on top of the others.
+        //
+        // Every one of these reads its silhouette off `result`, whose alpha is
+        // the layer's own throughout: an inner cast is clipped back to the
+        // silhouette, so it changes what the layer is COLOURED and never what
+        // it covers.
+        for glow in lit.filter({ $0.kind == .inner }).reversed() {
+            result = innerShadowed(result, shadow: glow)
+        }
         for shadow in painted.filter({ $0.kind == .inner }).reversed() {
             result = innerShadowed(result, shadow: shadow)
         }
         // Then behind, nearest the eye first: each one goes UNDER what is
         // already there, so the last entry in the list ends up furthest back.
+        // Every one of these casts from `image`, the layer as it was drawn, so
+        // one halo is never a blurred copy of the halo before it.
+        //
+        // The glows go down before the shadows, which puts a halo in FRONT of
+        // the shadow the same shape throws: a shadow is the thing furthest
+        // back, and a glow buried under one is a glow you cannot see.
+        for glow in lit where glow.kind == .drop {
+            result = result.composited(over: cast(image, shadow: glow))
+        }
         for shadow in painted where shadow.kind == .drop {
             result = result.composited(over: cast(image, shadow: shadow))
         }

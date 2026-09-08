@@ -89,10 +89,10 @@ struct ColorTarget: Hashable {
         return "selection.effect.\(effectIndex).\(lead.rawValue)"
     }
 
-    /// Whether the picker offers an alpha slider. A shadow carries an Opacity
-    /// of its own in its settings, so a second see-through control in the
-    /// picker would be two answers to one question.
-    var supportsOpacity: Bool { lead != .shadow }
+    /// Whether the picker offers an alpha slider. A shadow and a glow each
+    /// carry an Opacity of their own in their settings, so a second
+    /// see-through control in the picker would be two answers to one question.
+    var supportsOpacity: Bool { lead != .shadow && lead != .glow }
 
     /// Whether the picker offers a gradient. Only when EVERY colour the row
     /// paints can hold one: a ring round a picture takes a flat colour, so a

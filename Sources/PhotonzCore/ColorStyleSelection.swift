@@ -230,6 +230,7 @@ extension ColorSlot {
         case .text: return "Text"
         case .border: return "Border"
         case .shadow: return "Shadow"
+        case .glow: return "Glow"
         }
     }
 }

@@ -26,6 +26,13 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// A shape already HAS one line — its Outline, in Appearance — so every
     /// border in this list is an EXTRA one, which is why there can be several.
     case border
+    /// A soft coloured halo outside the layer, or a lit edge inside it.
+    ///
+    /// Underneath it is a shadow with nowhere to fall (`GlowEffect.asShadow`),
+    /// and that is exactly why it is its own kind rather than advice about how
+    /// to set a shadow up: nobody finds "shadow, coloured, offset nought", and
+    /// a glow has no Distance and no Direction to answer for.
+    case glow
 
     /// What the row is called on screen.
     public var title: String {
@@ -33,6 +40,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         case .blur: return "Blur"
         case .shadow: return "Shadow"
         case .border: return "Border"
+        case .glow: return "Glow"
         }
     }
 
@@ -45,8 +53,9 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         switch self {
         case .blur: return false
         // A card wants a dark hairline tight to its edge AND a pale halo
-        // outside it, so a border is countable too.
-        case .shadow, .border: return true
+        // outside it, so a border is countable too. A glow likewise: a tight
+        // bright core and a wide soft bloom are two of them.
+        case .shadow, .border, .glow: return true
         }
     }
 
@@ -60,7 +69,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     public var isPinned: Bool {
         switch self {
         case .blur: return true
-        case .shadow, .border: return false
+        case .shadow, .border, .glow: return false
         }
     }
 
@@ -76,6 +85,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         case .blur: return nil
         case .shadow: return .shadow
         case .border: return .border
+        case .glow: return .glow
         }
     }
 }
@@ -143,6 +153,111 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     public var outset: CGFloat { position.outset(width: width) }
 }
 
+/// Which way a glow is thrown: out past the layer's edge, or in from it.
+///
+/// The same effect in two places rather than two effects, exactly as a shadow's
+/// Kind is. Splitting a kind across two entries on the plus is the thing the
+/// user reported on 2026-09-07: it reads as if inner and outer were unrelated
+/// ideas when one control turns either into the other in place.
+public enum GlowKind: String, CaseIterable, Hashable, Codable, Sendable {
+    /// A halo round the outside of the layer, painted behind it.
+    case outer
+    /// A lit band inside the layer's edge, clipped to its silhouette.
+    case inner
+
+    /// What the Kind popup calls it.
+    public var title: String {
+        switch self {
+        case .outer: return "Outer"
+        case .inner: return "Inner"
+        }
+    }
+}
+
+/// A coloured halo somebody ADDED: a soft glow outside the layer's edge, or a
+/// lit edge inside it.
+///
+/// Four things and no more — a colour, how far it reaches, how soft it is, and
+/// how strong. There is no Distance and no Direction, because a glow does not
+/// fall anywhere: that is the whole difference between it and a shadow, and it
+/// is why a glow's settings are shorter than a shadow's rather than the same
+/// six controls with two of them set to nought.
+public struct GlowEffect: Hashable, Codable, Sendable {
+    public var colorHex: String
+    /// Softness — gaussian sigma of the halo's falloff, in document points.
+    public var radius: CGFloat
+    /// Size — how far the halo's SHAPE grows from the layer's edge before it is
+    /// blurred. Distinct from softness: size decides how far the light reaches,
+    /// softness decides how gently it stops.
+    public var size: CGFloat
+    public var opacity: Double
+    /// Outside the edge, or inside it.
+    public var kind: GlowKind
+    /// Whether it paints at all. Off keeps every number on it, exactly as a
+    /// shadow's tick does.
+    public var isOn: Bool
+
+    /// What a glow looks like the moment it is added.
+    ///
+    /// A clear blue rather than a tasteful near-nothing, because the failure a
+    /// first-time user actually hits is adding a Glow and seeing no difference.
+    /// It has to be obvious on a white canvas and on a dark one, and it must
+    /// never be black: a black halo is a shadow, and the point of this effect
+    /// is that it does not only darken.
+    ///
+    /// The size and the softness were raised on 2026-09-08 after watching it on
+    /// the probe: a big softness over a small size spreads what little alpha
+    /// there is over thirty-odd points, and the halo came out so pale on a
+    /// white canvas that it read as nothing happening. A band with a solid core
+    /// and a soft edge is the thing a person recognises as a glow.
+    public static let startingColorHex = "#4DA3FF"
+    public static let startingRadius: CGFloat = 10
+    public static let startingSize: CGFloat = 6
+    public static let startingOpacity: Double = 0.9
+    /// How far the Softness slider goes, matching the shadow's own softness so
+    /// one halo cannot be softer than the other can ever be.
+    public static let softnessRange: ClosedRange<CGFloat> = 0...40
+    /// How far the Size slider goes.
+    public static let sizeRange: ClosedRange<CGFloat> = 0...40
+
+    public init(colorHex: String = GlowEffect.startingColorHex,
+                radius: CGFloat = GlowEffect.startingRadius,
+                size: CGFloat = GlowEffect.startingSize,
+                opacity: Double = GlowEffect.startingOpacity,
+                kind: GlowKind = .outer,
+                isOn: Bool = true) {
+        self.colorHex = colorHex
+        self.radius = radius
+        self.size = size
+        self.opacity = opacity
+        self.kind = kind
+        self.isOn = isOn
+    }
+
+    /// Whether this entry puts anything on the canvas. A glow with no softness
+    /// and no size has nowhere to be: it would land exactly under the layer.
+    public var paints: Bool { isOn && opacity > 0 && (radius > 0 || size > 0) }
+
+    /// How far it reaches PAST the layer's edge. Nought for an inner glow,
+    /// which is why one never makes a layer take up more room. 3σ covers a
+    /// gaussian's visible tail, the same reckoning a shadow's reach uses.
+    public var outset: CGFloat {
+        guard paints, kind == .outer else { return 0 }
+        return radius * 3 + max(size, 0)
+    }
+
+    /// The same halo said in the language the renderer already speaks: a
+    /// shadow with nowhere to fall.
+    ///
+    /// A glow IS an unoffset shadow, so it is drawn down the tested path that
+    /// casts one behind a layer or into it rather than through a second halo
+    /// engine that would have to be kept in step with the first.
+    public var asShadow: ShadowStyle {
+        ShadowStyle(radius: radius, offset: .zero, spread: size, colorHex: colorHex,
+                    opacity: opacity, kind: kind == .inner ? .inner : .drop, isOn: isOn)
+    }
+}
+
 /// One entry in the Effects list.
 ///
 /// This is the extension point the panel is built on: **a new effect is a new
@@ -153,12 +268,14 @@ public enum LayerEffect: Hashable, Codable, Sendable {
     case blur(BlurEffect)
     case shadow(ShadowStyle)
     case border(BorderEffect)
+    case glow(GlowEffect)
 
     public var kind: EffectKind {
         switch self {
         case .blur: return .blur
         case .shadow: return .shadow
         case .border: return .border
+        case .glow: return .glow
         }
     }
 
@@ -170,6 +287,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .blur(let blur): return blur.isOn
             case .shadow(let shadow): return shadow.isOn
             case .border(let border): return border.isOn
+            case .glow(let glow): return glow.isOn
             }
         }
         set {
@@ -177,6 +295,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .blur(var blur): blur.isOn = newValue; self = .blur(blur)
             case .shadow(var shadow): shadow.isOn = newValue; self = .shadow(shadow)
             case .border(var border): border.isOn = newValue; self = .border(border)
+            case .glow(var glow): glow.isOn = newValue; self = .glow(glow)
             }
         }
     }
@@ -195,6 +314,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .blur: return nil
             case .shadow(let shadow): return shadow.colorHex
             case .border(let border): return border.colorHex
+            case .glow(let glow): return glow.colorHex
             }
         }
         set {
@@ -203,6 +323,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .blur: return
             case .shadow(var shadow): shadow.colorHex = newValue; self = .shadow(shadow)
             case .border(var border): border.colorHex = newValue; self = .border(border)
+            case .glow(var glow): glow.colorHex = newValue; self = .glow(glow)
             }
         }
     }
@@ -225,10 +346,16 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         set { if let newValue, case .border = self { self = .border(newValue) } }
     }
 
+    /// The glow this entry holds, or nil when it is not a glow.
+    public var glow: GlowEffect? {
+        get { if case .glow(let glow) = self { return glow } else { return nil } }
+        set { if let newValue, case .glow = self { self = .glow(newValue) } }
+    }
+
     // Written by hand rather than synthesized, so the saved file reads
     // `{"kind":"shadow","shadow":{…}}` instead of Swift's `{"shadow":{"_0":…}}`.
     // A file is a thing people open, and a new kind should be legible in it.
-    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border }
+    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border, glow }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -237,6 +364,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .blur: self = .blur(try c.decode(BlurEffect.self, forKey: .blur))
         case .shadow: self = .shadow(try c.decode(ShadowStyle.self, forKey: .shadow))
         case .border: self = .border(try c.decode(BorderEffect.self, forKey: .border))
+        case .glow: self = .glow(try c.decode(GlowEffect.self, forKey: .glow))
         }
     }
 
@@ -247,6 +375,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .blur(let blur): try c.encode(blur, forKey: .blur)
         case .shadow(let shadow): try c.encode(shadow, forKey: .shadow)
         case .border(let border): try c.encode(border, forKey: .border)
+        case .glow(let glow): try c.encode(glow, forKey: .glow)
         }
     }
 }
@@ -264,6 +393,10 @@ extension EffectKind: Codable {}
 /// were unrelated ideas, and it still left no way to add a border at all.
 public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiable {
     case shadow
+    /// Beside the shadow rather than at the end, because they are the two
+    /// halos: one darkens and one lights, and somebody reaching for a glow is
+    /// looking where the shadow is.
+    case glow
     case border
     case blur
 
@@ -277,6 +410,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
     public var kind: EffectKind {
         switch self {
         case .shadow: return .shadow
+        case .glow: return .glow
         case .border: return .border
         case .blur: return .blur
         }
@@ -286,6 +420,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
     public var summary: String {
         switch self {
         case .shadow: return "Thrown behind the layer, or cast into it"
+        case .glow: return "A coloured halo outside the layer, or a lit edge inside it"
         case .border: return "An extra ring, inside the layer's edge or outside it"
         case .blur: return "Softens the whole layer"
         }
@@ -299,6 +434,10 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         // edge: a border landing in the same place would look like nothing
         // happened.
         case .border: return .border(BorderEffect())
+        // Outer, because the layer's own edge is where a person is looking:
+        // an inner glow on a shape that is already bright reads as nothing
+        // happening, and the Kind on the row turns it inside in one press.
+        case .glow: return .glow(GlowEffect())
         case .blur: return .blur(BlurEffect())
         }
     }
@@ -369,6 +508,33 @@ extension LayerStyle {
         guard var border = borderEffect(at: index) else { return }
         mutate(&border)
         effects[index] = .border(border)
+    }
+
+    /// Every glow somebody added, in the order the list holds them: the first
+    /// is nearest the eye, so it paints over the ones below it.
+    public var glowEffects: [GlowEffect] { effects.compactMap(\.glow) }
+
+    /// The glows that actually paint: switched on, visible, and with somewhere
+    /// to be.
+    public var paintedGlows: [GlowEffect] { glowEffects.filter(\.paints) }
+
+    /// How far the furthest glow reaches past the layer's edge.
+    ///
+    /// The furthest one decides rather than the sum of them: two halos round
+    /// the same box overlap, they do not stack end to end.
+    public var glowOutset: CGFloat { paintedGlows.map(\.outset).max() ?? 0 }
+
+    /// The glow at a place in the LIST — not a place among the glows — because
+    /// that is the number a row in the panel already knows.
+    public func glowEffect(at index: Int) -> GlowEffect? { effect(at: index)?.glow }
+
+    /// Changes one glow in place, and does nothing at all when the entry there
+    /// is not a glow.
+    public mutating func updateGlowEffect(at index: Int,
+                                          _ mutate: (inout GlowEffect) -> Void) {
+        guard var glow = glowEffect(at: index) else { return }
+        mutate(&glow)
+        effects[index] = .glow(glow)
     }
 }
 
@@ -593,6 +759,22 @@ extension PhotonzDocument {
             guard let layer = layer(id: id), !layer.isLocked,
                   layer.style.borderEffect(at: index) != nil else { continue }
             updateLayer(id: id) { $0.style.updateBorderEffect(at: index, mutate) }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// One glow's settings, on every picked layer whose list holds a glow at
+    /// that place. A layer with a shadow there is left alone rather than
+    /// having its shadow quietly turned into a halo.
+    @discardableResult
+    public mutating func updateGlowEffect(layerIDs: [UUID], at index: Int,
+                                          _ mutate: (inout GlowEffect) -> Void) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  layer.style.glowEffect(at: index) != nil else { continue }
+            updateLayer(id: id) { $0.style.updateGlowEffect(at: index, mutate) }
             changed += 1
         }
         return changed

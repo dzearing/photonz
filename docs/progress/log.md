@@ -12323,3 +12323,42 @@ Next: the queue. Left alone deliberately — `aggregateState` still reads
 all 509 task files per poll, about 20ms, which is now the largest part
 of the cost and not something anyone can feel. Worth caching by file
 timestamp only if the queue reaches thousands of tasks.
+
+## 2026-09-08 — An effect can glow, not only darken
+
+A shape could throw a shadow and could not glow. Now the Effects plus
+reads **Shadow | Glow | Border | Blur**, and a Glow is a coloured halo
+outside the layer's edge or a lit edge inside it, with its own colour, a
+Kind, a Size, a Softness and an Opacity. Several fit on one shape and the
+order in the list decides which paints over which.
+
+The plus offers Glow ONCE, not a Glow and an Inner Glow. The task asked
+for two items, but splitting a kind across two menu items is exactly what
+the user reported as wrong about the shadow on 2026-09-07, and the task's
+own second acceptance line asks for a Kind popup, which only makes sense
+with one item. The row carries Outer · Inner, the way a shadow's row
+carries Drop · Inner.
+
+Underneath, a glow is honestly a shadow with nowhere to fall, so it is
+cast down the same tested path (`GlowEffect.asShadow`): inner glows clip
+to the silhouette, outer ones go behind the layer but in FRONT of any
+drop shadow, since a shadow is the thing furthest back. An outer glow's
+reach is folded into `previewPadding`, so group buffers, drag sprites and
+dirty rects all make room for it; an inner one asks for nothing.
+
+The extension point the Effects list was built for held exactly as
+promised: one new case in `LayerEffect` plus its settings, one entry on
+`AddableEffect`, one `ColorSlot`. The plus, the tick, the cross, the
+grip, the multi-selection sentence, the saved colours, the naming and the
+saved file all needed no change at all.
+
+Verified on the probe with real screen captures
+(`Scripts/playtest/glow-effect-walk.json`), and the first defaults were
+changed because of what they showed: size 2 with softness 12 came out as
+a pale smudge on a white canvas, so a new glow now starts at size 6,
+softness 10, 90%. `Scripts/test.sh` green, 4776 tests. Audit:
+`queue/audits/2026-09-08-glow.json`.
+
+Next: the audit's open questions, above all whether a glow should screen
+rather than composite normally, and whether a new glow should take the
+colour you last used instead of the starting blue.

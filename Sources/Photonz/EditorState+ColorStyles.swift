@@ -506,6 +506,17 @@ extension EditorState {
         rememberStyleDefault(of: ids)
     }
 
+    /// Turns one glow outside the layer's edge or inside it, over every picked
+    /// layer with a glow at that place. The same move the shadow's Kind makes:
+    /// one effect drawn somewhere else, never a second row.
+    func setGlowKind(at index: Int, ids: [UUID], to kind: GlowKind) {
+        guard !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.updateGlowEffect(layerIDs: ids, at: index) { $0.kind = kind } }
+        rememberStyleDefault(of: ids)
+    }
+
     // MARK: - The parts a layer is made of (`next-shape-parts`)
 
     /// The rows the parts list shows: Fill, Outline, Text, Shadow, each one
@@ -788,7 +799,7 @@ extension EditorState {
         switch slot {
         case .stroke: break
         case .fill: guard shape == .rectangle || shape == .ellipse else { return .neverWearsNames }
-        case .text, .border, .shadow: return .neverWearsNames
+        case .text, .border, .shadow, .glow: return .neverWearsNames
         }
         return styleWelcome(slot: slot, styleID: styleID)
     }

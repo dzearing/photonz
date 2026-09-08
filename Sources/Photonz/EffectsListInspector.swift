@@ -6,7 +6,7 @@ import SwiftUI
 /// The other half of the split the user chose on 2026-09-07. Appearance above
 /// holds what a shape simply has; this holds what somebody put on it. It starts
 /// EMPTY on a new shape and gains a row only when you press the plus on its
-/// header: a shadow, a border, a blur, and later a glow or a filter.
+/// header: a shadow, a glow, a border, a blur, and later a filter.
 ///
 /// Three things follow from it being a list rather than a set of fixed rows:
 ///
@@ -47,7 +47,7 @@ struct EffectsListInspector: View {
     /// broken, and the plus on the header is small enough to be missed the first
     /// time.
     private var empty: some View {
-        Text("Nothing added yet. Use the plus above for a shadow, a border or a blur.")
+        Text("Nothing added yet. Use the plus above for a shadow, a glow, a border or a blur.")
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
@@ -238,6 +238,12 @@ private struct EffectRowView: View {
             // you are on changes what a width even means, so it is asked first.
             BorderPositionRow(row: row)
             BorderWidthRow(row: row)
+        case .glow:
+            // Which side of the edge the light is on, then how far it reaches,
+            // how gently it stops, and how strong it is. Four things and no
+            // Distance or Direction: a glow does not fall anywhere.
+            GlowKindRow(row: row)
+            GlowSlidersRow(row: row)
         case .blur:
             BlurEffectRow(row: row)
         }
@@ -351,6 +357,95 @@ private struct BorderWidthRow: View {
     }
 }
 
+/// Which side of the layer's edge one glow lights: outside it, or inside it.
+///
+/// The same shape of control the shadow's Kind is, because it is the same kind
+/// of question. An outer glow and an inner glow are two entries in the list
+/// that differ by nothing but this, so the plus offers Glow once and this is
+/// what turns one into the other in place.
+private struct GlowKindRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    var body: some View {
+        let glows = editorState.layerStyleSelection.glows(at: row.index)
+        let ids = glows.layerIDs
+        let reading = glows.reading { $0.glowEffect(at: row.index)?.kind ?? .outer }
+        HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
+            Text("Kind")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+            Picker("Kind", selection: Binding(
+                get: { reading.isMixed ? nil : reading.value },
+                set: { new in
+                    guard let new else { return }
+                    editorState.setGlowKind(at: row.index, ids: ids, to: new)
+                })) {
+                    if reading.isMixed {
+                        Text(LayerStyleSelection.mixedText).tag(GlowKind?.none)
+                    }
+                    ForEach(GlowKind.allCases, id: \.self) { kind in
+                        Text(kind.title).tag(GlowKind?.some(kind))
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .controlSize(.small)
+                // A width rather than `fixedSize`, for the reason the shadow's
+                // Kind popup carries one: an ideal-width menu inside the dock's
+                // column pushed the whole pane wider than the window.
+                .frame(width: 92, alignment: .leading)
+                .disabled(ids.isEmpty)
+                .help("Outer throws the halo past the layer's edge. "
+                      + "Inner lights the edge from inside.")
+                .playtestControl("Kind", detail: reading.isMixed ? "mixed"
+                                    : (reading.value ?? .outer).title)
+            Spacer(minLength: 0)
+        }
+        // No field name of its own: it belongs to the glow row above it, so a
+        // walk names it `{"control": "Kind", "in": "Glow 2"}` and two glows
+        // never answer to the same words.
+    }
+}
+
+/// How far one glow reaches, how gently it stops, and how strong it is.
+///
+/// Size and Softness are not two names for one thing: size decides how far the
+/// light gets, softness decides how abruptly it ends. A tight bright ring is a
+/// big size with little softness; a bloom is the other way round.
+private struct GlowSlidersRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    var body: some View {
+        let glows = editorState.layerStyleSelection.glows(at: row.index)
+        let ids = glows.layerIDs
+        let index = row.index
+        let sizes = Double(GlowEffect.sizeRange.lowerBound)...Double(GlowEffect.sizeRange.upperBound)
+        let softness = Double(GlowEffect.softnessRange.lowerBound)
+            ... Double(GlowEffect.softnessRange.upperBound)
+        LayerStyleSlider(layerIDs: ids, label: "Size",
+                         reading: glows.number { $0.glowEffect(at: index)?.size ?? 0 },
+                         range: sizes,
+                         format: points) { style, v in
+            style.updateGlowEffect(at: index) { $0.size = CGFloat(v) }
+        }
+        LayerStyleSlider(layerIDs: ids, label: "Softness",
+                         reading: glows.number { $0.glowEffect(at: index)?.radius ?? 0 },
+                         range: softness,
+                         format: points) { style, v in
+            style.updateGlowEffect(at: index) { $0.radius = CGFloat(v) }
+        }
+        LayerStyleSlider(layerIDs: ids, label: "Opacity",
+                         reading: glows.reading { $0.glowEffect(at: index)?.opacity ?? 0 },
+                         range: 0...1,
+                         format: { "\(Int(($0 * 100).rounded()))%" }) { style, v in
+            style.updateGlowEffect(at: index) { $0.opacity = v }
+        }
+    }
+}
+
 /// How soft the layer is. One number, because a layer has one softness: adding
 /// a second blur would be two answers to one question, so the plus offers it
 /// once and then stops.
@@ -424,12 +519,13 @@ private struct ShadowKindRow: View {
 /// that already look like something, so the next thing you do is tune it rather
 /// than build it.
 ///
-/// The menu is ONE ITEM PER KIND — Shadow, Border, Blur. It used to split the
-/// shadow in two, a Shadow and an Inner Shadow, which read as if they were
+/// The menu is ONE ITEM PER KIND — Shadow, Glow, Border, Blur. It used to split
+/// the shadow in two, a Shadow and an Inner Shadow, which read as if they were
 /// unrelated ideas when they are one effect with a Kind on it; the row you get
-/// carries that Kind, and switching it turns the shadow inner in place. A
-/// border works the same way: its Position is what makes an inner one and an
-/// outer one two entries in the list.
+/// carries that Kind, and switching it turns the shadow inner in place. A glow
+/// is offered once for the same reason, and a border works the same way: its
+/// Position is what makes an inner one and an outer one two entries in the
+/// list.
 ///
 /// It rides the HEADER rather than the foot of the list: the dock caps a
 /// section's height and scrolls the rest inside it, and one shadow is already
@@ -455,7 +551,7 @@ struct AddEffectButton: View {
         // The plus says nothing out loud, so this is both what a screen reader
         // announces and the name a scripted walk opens it by.
         .accessibilityLabel("Add Effect")
-        .help("Add an effect: a shadow, a border or a blur")
+        .help("Add an effect: a shadow, a glow, a border or a blur")
         .playtestControl("Add Effect", detail: "the plus on the Effects header")
     }
 }

@@ -5,16 +5,16 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1810,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T20:07:53.632Z",
-  "updated": "2026-09-07T20:07:53.632Z",
+  "updated": "2026-09-08T07:39:59.635Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The Effects list was built on 2026-09-07 to make exactly this a one-case change: add a case to LayerEffect in Sources/PhotonzCore/LayerEffects.swift with its settings, and an entry to AddableEffect. Nothing about the plus, the tick, the cross, the grip, the multi-selection sentence or the saved file should need touching; if it does, the extension point is wrong and that is worth reporting. The renderer is the real work: an outer glow reaches past the layer edge, so it has the same problem as an outside border (see a-border-can-sit-outside-the-edge-not-only-insid) and should probably follow it. An INNER glow is cheap and could ship first, since inner shadows already clip to the silhouette in DocumentRenderer.innerShadowed.",
   "acceptance": [
-    "The plus on the Effects header offers Glow and Inner Glow, and each adds one row",
+    "The plus on the Effects header offers Glow, and it adds one row whose Kind popup turns it inner in place",
     "A glow row carries a colour, a Kind popup, and its own softness, size and opacity",
     "Two glows of different colours can sit on one shape and the order they are dragged into changes which is on top",
     "A glow switched off keeps its settings, and the cross takes the row out",
@@ -24,6 +24,31 @@
     {
       "t": "2026-09-07T20:07:53.632Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T07:39:59.634Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T07:44:31.939Z",
+      "note": "Adversarial review before building. (1) Acceptance item 1 asks the plus to offer \"Glow\" AND \"Inner Glow\" as two menu items. That is exactly what the user reported as wrong on 2026-09-07 for the shadow (Shadow / Inner Shadow read as two unrelated ideas), and acceptance item 2 asks for a Kind popup on the row, which only makes sense with ONE menu item. Building one Glow item whose row carries Kind: Outer / Inner. (2) A glow is honestly a shadow with no offset, so the renderer reuses the tested cast/innerShadowed paths rather than growing a second halo engine; what earns the new kind is discoverability and a settings row with four things on it instead of six. (3) A first-time user’s failure mode is adding a Glow and seeing nothing, so it arrives saturated blue at 80% with real softness and a little size rather than a tasteful nothing. (4) No Technique/Range/Jitter: colour, Kind, Softness, Size, Opacity and no more."
+    },
+    {
+      "t": "2026-09-08T07:58:42.282Z",
+      "note": "Built. Model: GlowEffect + GlowKind + EffectKind.glow + AddableEffect.glow in LayerEffects.swift, ColorSlot.glow so the colour row, saved colours and naming come for free. Renderer: shadowed() takes glows and casts them as unoffset shadows, inner ones clipped to the silhouette and outer ones behind the layer but IN FRONT of the drop shadows. Reach: outer glow outset folded into previewPadding, isPlain and hasNoFixedSizeDecoration. The extension point held: the plus, tick, cross, grip, reach sentence and saved file needed no change at all."
+    },
+    {
+      "t": "2026-09-08T07:58:42.283Z",
+      "note": "Verified on the probe (Screen Recording granted, real captures). Scripts/playtest/glow-effect-walk.json: the plus reads Shadow | Glow | Border | Blur, one Glow adds one row with Color, Kind, Size, Softness and Opacity, a second glow set to Inner lights the edge in another colour, the tick keeps its numbers, and a shadow added underneath stays behind the halo. Full suite 4776 tests green."
+    },
+    {
+      "t": "2026-09-08T07:58:42.283Z",
+      "note": "Adversarial review of the BUILT thing. The first defaults (size 2, softness 12, opacity 0.8) came out as a pale smudge on a white canvas, which is the exact failure I said I wanted to avoid, so the starting size went to 6 and the softness to 10 at 90%. Left rough and said so in the audit: the glow composites normally rather than screening, so it tints instead of adding light; and two glows overflow the height the dock gives the Effects section."
+    },
+    {
+      "t": "2026-09-08T07:58:42.283Z",
+      "note": "Acceptance line 1 rewritten to match what was built and why: one Glow on the plus, not Glow and Inner Glow. See the review note above."
     }
-  ]
+  ],
+  "started": "2026-09-08T07:39:59.633Z"
 }

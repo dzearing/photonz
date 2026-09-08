@@ -604,16 +604,18 @@ carries.** A kind that answers `EffectKind.colorSlot` gets the colour row, the
 saved colours and the naming for free. Nothing about the plus, the tick, the cross, the grip, the reach
 sentence over a multiple selection or the saved file changes to accept it.
 Border was the first one added that way, on 2026-09-07, and it needed nothing
-else. **Glow** is next: a shadow with no offset and a colour that lights rather
-than darkens, one new case and one row of settings.
+else. **Glow** was the second, on 2026-09-08, and it needed nothing else either:
+a shadow with no offset and a colour that lights rather than darkens.
 
 ### The plus offers one item per KIND
 
 Settled on 2026-09-07 from the user's report. The menu used to say Shadow, Inner
 Shadow, Blur: two entries for one effect, which read as if inner and outer were
-unrelated ideas rather than one switch. It says **Shadow, Border, Blur** now, and
-what makes a shadow inner is the Kind on the row it becomes, exactly as what
-makes a border inner is that border's Position. Nothing about an existing
+unrelated ideas rather than one switch. It says **Shadow, Glow, Border, Blur**
+now, and what makes a shadow inner is the Kind on the row it becomes, exactly as
+what makes a glow inner is the Kind on ITS row and what makes a border inner is
+that border's Position. The glow was written to that rule from the first day:
+the plus offers Glow once, never a Glow and an Inner Glow. Nothing about an existing
 document changes: the Kind has always been a field on the shadow, so a file
 saved with an inner shadow opens with an inner shadow and its popup already set.
 
@@ -638,6 +640,46 @@ outline, and the shadows are cast from the layer wearing both.
 Outside popup the Outline row carries, and no number for how far off the edge to
 float. Two outside borders of different widths already stack into a real
 two-colour double ring, so nothing needs a distance to be worth adding twice.
+
+### Glow: the halo that lights instead of darkening
+
+Added on 2026-09-08. A glow is a **coloured halo outside the layer's edge, or a
+lit edge inside it**, and there can be several: a tight bright core and a wide
+soft bloom are two rows with their own colours, and the one at the top of the
+list paints over the one below it.
+
+Underneath it is honestly **a shadow with nowhere to fall**: the renderer casts
+it down the same tested path a shadow uses, with the offset set to nothing. That
+is precisely why it earns its own kind rather than being advice about how to set
+a shadow up. Nobody finds "shadow, coloured, distance nought", and a glow has no
+Distance and no Direction to answer for, so its row is shorter than a shadow's
+rather than being the same six controls with two of them left at zero.
+
+Its settings, in the order they are asked:
+
+- **Color**, the ordinary colour row every effect that paints one carries, with
+  the same saved colours and the same naming behind it.
+- **Kind**: Outer or Inner. One control, one row, the shadow's own rule.
+- **Size**: how far the light gets, by growing the halo's shape before it is
+  blurred.
+- **Softness**: how gently it stops.
+- **Opacity**: how strong it is.
+
+Size and Softness are not two names for one thing. A tight bright ring is a big
+size with little softness; a bloom is the other way round.
+
+**It arrives visible.** A new glow is a clear blue at 80%, with real softness and
+a little size. The failure a first-time user actually hits is adding a Glow and
+seeing no difference, so the default is chosen to be obvious on a white canvas
+and on a dark one, and never black: a black halo is a shadow, and the point of
+this effect is that it does not only darken.
+
+**A glow sits in front of a shadow the same layer throws.** The shadow is the
+thing furthest back, so a halo buried under one would be a halo you cannot see.
+
+**An outer glow makes room for itself.** Its reach is part of `previewPadding`,
+so drag sprites, group buffers and dirty rects all grow for it. An inner glow
+never puts a pixel outside its layer and asks for no room at all.
 
 **Order is real within a kind.** Borders paint over the layer's own edge in list
 order, top of the list nearest the eye, and the shadows are then cast from the

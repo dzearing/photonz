@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/glow-effect",
+  "setup": { "forget": ["shapes", "color", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [340, 300], "to": [560, 460] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Switch", "in": "Outline" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-plain", "note": "a plain filled box with an empty Effects list" },
+    { "do": "snapshot", "name": "1-plain" },
+
+    { "do": "panelMenu", "menu": "Add Effect", "shot": "2-add-menu" },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Glow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-glow-added", "note": "one Glow row; the halo should be visible on the canvas the moment it lands, with no tuning" },
+    { "do": "panel", "stage": "3-glow-added" },
+    { "do": "snapshot", "name": "3-glow-added" },
+    { "do": "render", "name": "3-canvas-glow-added" },
+
+    { "do": "press", "control": "Slider", "in": "Size", "across": 0.35 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Slider", "in": "Softness", "across": 0.5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-tuned", "note": "a wider, softer halo" },
+    { "do": "panel", "stage": "4-tuned" },
+    { "do": "snapshot", "name": "4-tuned" },
+    { "do": "render", "name": "4-canvas-tuned" },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Glow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelMenu", "menu": "Glow 2", "choose": "Inner" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Color", "in": "Glow 2" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "Shades 3" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-inner", "note": "two glows on one shape: an outer halo and an inner lit edge in another colour" },
+    { "do": "panel", "stage": "5-inner" },
+    { "do": "snapshot", "name": "5-inner" },
+    { "do": "render", "name": "5-canvas-inner" },
+
+    { "do": "press", "control": "Switch", "in": "Glow 1" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-off", "note": "the tick stops the outer halo drawing and keeps every number on it" },
+    { "do": "panel", "stage": "6-off" },
+    { "do": "snapshot", "name": "6-off" },
+
+    { "do": "press", "control": "Switch", "in": "Glow 1" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-with-shadow", "note": "a shadow under the same shape: the halo should sit in front of it, not be buried under it" },
+    { "do": "panel", "stage": "7-with-shadow" },
+    { "do": "snapshot", "name": "7-with-shadow" },
+    { "do": "render", "name": "7-canvas-with-shadow" }
+  ]
+}
