@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1710,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T17:18:57.094Z",
-  "updated": "2026-09-08T01:07:44.792668Z",
+  "updated": "2026-09-08T01:08:04.334Z",
   "deps": [],
   "blockedBy": [],
   "notes": "promoteSelectionToLayer in Sources/Photonz/EditorState+LayerOps.swift rasterizes the composite. The copy fix added DocumentRenderer.render(_:store:only:) which draws one layer alone in place, and CopyRoute in PhotonzCore which decides picked-vs-merged; reuse both. Same next-scoped flag: FeatureCatalog.copyPicksYourLayerFlag.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-08T01:07:44.792668Z",
       "note": "Audit: queue/audits/2026-09-07-new-layer-takes-your-layer.json with three real screen captures (Screen Recording granted)."
+    },
+    {
+      "t": "2026-09-08T01:08:04.334Z",
+      "note": "Command J now takes the layer you picked: the piece comes from one shared DocumentRenderer.layerRegion (PhotonzRender, tested first) that Command C uses too, and EditorState.newLayerViaCopy routes on CopyRoute so both keys agree. Nothing picked still promotes the flattened region, no marquee still duplicates, a marquee that misses beeps. Next only, behind next-copy-picks-your-layer. Verified with Scripts/test.sh (4628 pass) and a new probe walk, new-layer-takes-your-layer-walk.json; audit at queue/audits/2026-09-07-new-layer-takes-your-layer.json with three real screen captures."
     }
   ],
-  "started": "2026-09-08T00:53:46.972Z"
+  "started": "2026-09-08T00:53:46.972Z",
+  "completed": "2026-09-08T01:08:04.334Z"
 }

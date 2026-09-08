@@ -11883,3 +11883,37 @@ The harness gained a `rowInHand()` readout, printed by `dragOver` and `dragRow`,
 because nothing on screen says what the list is holding once the line has gone.
 
 Next: back to the queue.
+
+## 2026-09-07 — New Layer via Copy takes the layer you picked
+
+⌘J made its new layer out of every layer flattened together the moment a
+marquee was up, even with a layer picked, so a piece of a button came out with
+a slab of the photo behind it baked in. Copy was fixed earlier the same day to
+prefer the picked layer; ⌘J now follows the same rule.
+
+The render/clip/trim pipeline both commands need became one place,
+`DocumentRenderer.layerRegion(of:in:store:path:)` in PhotonzRender
+(`Sources/PhotonzRender/LayerRegion.swift`, tests written first in
+`Tests/PhotonzRenderTests/LayerRegionTests.swift`): the layer drawn alone and
+in place, clipped to the marquee's path, trimmed to what is actually drawn
+there, plus the frame it sits at on the canvas. ⌘C and ⌘J both take their
+piece from it, so "the same marquee gives you the same pixels whichever way you
+take them" holds by construction rather than by two paths agreeing.
+
+⌘J's routing is now one switch on `CopyRoute` in
+`EditorState.newLayerViaCopy()`, and the Layer menu calls that instead of
+branching inline. A marquee that misses the picked layer beeps and makes
+nothing, as ⌘C does. Promoted pieces are named the way duplicating that layer
+names them ("Rectangle 2"), not "Promoted Layer". Next only, behind
+`next-copy-picks-your-layer`; with the flag off the old branch runs verbatim.
+
+Verified with `Scripts/test.sh` (4628 pass) and a new probe walk,
+`Scripts/playtest/new-layer-takes-your-layer-walk.json`, which needed a new
+`newLayerViaCopy` playtest action since ⌘J is a window-scoped menu chord.
+`copy-takes-your-layer-walk.json` re-run after the refactor: ok. Audit and
+three real screen captures at
+`queue/audits/2026-09-07-new-layer-takes-your-layer.json`.
+
+Open question for the user, in the audit: the new layer goes to the TOP of the
+layers list rather than directly above the layer it came out of, which is where
+Photoshop puts it. Left as it was rather than changed as a side effect.
