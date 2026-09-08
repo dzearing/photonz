@@ -1,0 +1,31 @@
+{
+  "feature": "Delete over a marquee says why it did nothing",
+  "epic": "ui-building",
+  "summary": "Backspace with a marquee up still takes the piece out of a picture and says nothing about it, because nothing needs saying. Over a shape or a piece of text there is no bitmap for the hole to go in, so instead of the key going quiet, one line at the bottom of the canvas says a piece can only be taken out of a picture and that clearing the marquee deletes the whole layer.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Say when a piece cannot be taken out\" is on by default, and so is \"Copy takes the layer you picked\", which decides that a marquee keeps the layer you picked.",
+  "try": [
+    { "do": "Open a new document and drag a screenshot in from the Finder." },
+    { "do": "Press V and click the picture to pick it." },
+    { "do": "Press M and drag a marquee over one corner of it." },
+    { "do": "Press Backspace.", "shot": "2026-09-08-delete-over-a-marquee-1-picture-sc.png" },
+    { "do": "Press Command Z, then Escape, then draw a rectangle with R." },
+    { "do": "Press V, click the rectangle, press M and drag a marquee over its left half." },
+    { "do": "Press Backspace.", "shot": "2026-09-08-delete-over-a-marquee-2-refused-sc.png" },
+    { "do": "Press Escape to clear the marquee, then Backspace again." }
+  ],
+  "evaluate": [
+    "Is a refusal what you want here, or would you rather Backspace deleted the whole shape and let undo sort it out?",
+    "Does the line reach you at the bottom of the canvas, or were you still looking at the marquee?",
+    "Does \"Only a picture can have a piece taken out\" say enough, given a rectangle on screen looks like a picture?",
+    "The line stays up after Escape clears the marquee, so it is still there while you do what it says. Right, or should it go with the marquee?",
+    "Deleting a corner out of a picture says nothing at all. Is that the right amount of nothing?"
+  ],
+  "rough": [
+    "Nothing new was built for this. The refusal landed on 2026-09-07 with the cut task, which covered Backspace as well as Command X, so this run reproduced it on the probe and covered the half that walk never pressed: Backspace over a marquee on a real picture, which must stay silent.",
+    "The Experiments switch was called \"Say when a piece cannot be cut out\" and now reads \"Say when a piece cannot be taken out\", since it governs Backspace too and the old name sent you looking for the wrong key.",
+    "Option Backspace, which fills the marquee, is still silent over a shape. It has its own task and was left alone here.",
+    "A picture that has been cropped or turned gets a different line (\"This picture is cropped or turned\"). No walk can reach that state yet, so it is covered by tests rather than by a screenshot.",
+    "How long the line hangs around is three seconds, decided and tested in the model. A walk cannot time it, because a walk's wait ends as soon as the app goes quiet.",
+    "Screen Recording was granted, so both screenshots here are real window captures."
+  ]
+}

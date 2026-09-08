@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1890,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T23:41:19.454Z",
-  "updated": "2026-09-07T23:41:19.455Z",
+  "updated": "2026-09-08T11:15:21.164731Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing a-marquee-keeps-the-layer-you-picked-and-delete on 2026-09-07. Walk /tmp/region-cases-walk.json stage 2-delete-on-shape: a rectangle picked, region 250,300 200x120, delete pressed, render byte-identical to the start. Before that task landed it silently painted the locked Background instead, which was worse. RegionTarget.id returns nil for a picked layer that fails RegionTarget.canSlice (Sources/PhotonzCore/RegionTarget.swift), and EditorState.deleteRegion returns early on nil. The message could hang off the same channel the measure hint uses, or the copy confirmation toast.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-07T23:41:19.455Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T11:09:15.840Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T11:10:22.172035Z",
+      "note": "Read the code first: the refusal this task asks for already landed on 2026-09-07 with the sibling task 'Cutting part of a shape says what it cannot do' (c6c8b74e), which covered Backspace as well as Command X through RegionSliceRefusal(action: .erase). So the job here is to REPRODUCE it rather than build it again, and to close the coverage gap that task left: its walk proves the refusal but never presses Backspace over a marquee on a real picture, which is acceptance item 3 of this task."
+    },
+    {
+      "t": "2026-09-08T11:15:21.164621Z",
+      "note": "Adversarial review before touching anything. Walked it as a first-time user: with a rectangle picked and a marquee over half of it, Backspace is the most natural key in the world to press, and the shortest honest answer is not to do something clever with it but to say in one line what it would take. Turning the shape into pixels first is the other answer, and it is a real feature with its own decisions (destructive, the shape stops being editable, needs a name and a menu item), so it stays filed separately rather than smuggled in behind a key press. Nothing here needed a new surface: the canvas notice pill already carries this family of one-line answers."
+    },
+    {
+      "t": "2026-09-08T11:15:21.164728Z",
+      "note": "Reproduced on the probe rather than read off the page. New walk Scripts/playtest/delete-over-a-marquee-walk.json presses the SAME key in both places, picture first so no leftover pill can be mistaken for one. Screen Recording was granted, so the shots are real window captures. Stage 3-picture-piece-gone: layers 2, copied 'none', and the render differs from the one before it, so the corner really came out and nothing was said about it. Stage 6-delete-refused: layers stays 3 and copied reads 'Cannot delete a piece - Only a picture can have a piece taken out. Clear the marquee to delete the whole layer.' Stage 8: with the marquee cleared, Backspace takes the whole rectangle, which is the way out the line names, and the document goes back byte-for-byte to what stage 3 rendered."
+    },
+    {
+      "t": "2026-09-08T11:15:21.164729Z",
+      "note": "One thing I got wrong first time and fixed: a stage claimed the line fades after a few seconds. It does, on a three second clock tested in CopyConfirmation, but a walk cannot show it: the harness's wait ends as soon as the app goes quiet, so a 3.4s wait returned in 0.2s and the log said the pill was still up. The stage now records what it can actually see, that the line outlives the marquee, which is the behaviour that matters anyway since the line is telling you what to do next."
+    },
+    {
+      "t": "2026-09-08T11:15:21.164730Z",
+      "note": "One code change: the Experiments switch was titled 'Say when a piece cannot be cut out' while it also governs Backspace, so anyone looking for the delete behaviour would not find it. Now 'Say when a piece cannot be taken out', which is the wording the message itself uses. Flag name unchanged, so nobody's setting moves. Scripts/test.sh green, 4800 tests."
     }
-  ]
+  ],
+  "started": "2026-09-08T11:09:15.839Z"
 }

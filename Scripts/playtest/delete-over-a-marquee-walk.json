@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/delete-over-a-marquee",
+  "seed": "Backspace with a marquee up takes a piece out of a PICTURE and says nothing, because nothing needs saying. Over a shape or a piece of text there is no bitmap for the hole to go in, so it refuses and the canvas says why in one line. This walk presses the same key in both places, in that order, so the silence and the sentence are read off the same log.",
+  "setup": { "forget": ["shapes", "color", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [880, 500] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [880, 500] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-picture-picked", "note": "a real picture dropped and picked; layers should be 2 (Background + the picture), copied 'none'" },
+    { "do": "render", "name": "delete-1-picture" },
+
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "drag", "from": [760, 420], "to": [900, 560] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-marquee-on-picture", "note": "a marquee over the picture's top left corner, picture still picked" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-picture-piece-gone", "note": "THE CONTROL: Backspace really does take the piece out. canUndo true, layers stays 2, and copied must be 'none' - no message at all for the case that works" },
+    { "do": "snapshot", "name": "delete-3-picture-piece-gone" },
+    { "do": "render", "name": "delete-3-picture-piece-gone-doc" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 160], "to": [560, 380] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [380, 270] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-rectangle-picked", "note": "a rectangle drawn and picked; layers should be 3 (Background + picture + Rectangle)" },
+
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "drag", "from": [200, 160], "to": [380, 380] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-marquee-on-shape", "note": "a marquee over the LEFT HALF of the rectangle, rectangle still picked" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-delete-refused", "note": "THE TEST: Backspace over a marquee on a shape must NOT go quiet. layers stays 3, canRedo stays false, and copied reads 'Cannot delete a piece - Only a picture can have a piece taken out. Clear the marquee to delete the whole layer.'" },
+    { "do": "snapshot", "name": "delete-6-refused" },
+    { "do": "render", "name": "delete-6-refused-doc" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-line-outlives-the-marquee", "note": "escape takes the ants down and the line STAYS up, which is the point: it is telling you what to do next, so it must not go with the thing it was about. How long it then hangs around is a clock, timed in CopyConfirmation's tests rather than here, since a walk's wait ends as soon as the app goes quiet" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-no-marquee-deletes-the-lot", "note": "THE WAY OUT the line names: with the marquee cleared, Backspace deletes the whole rectangle. layers drops to 2" },
+    { "do": "render", "name": "delete-8-whole-shape-gone" }
+  ]
+}
