@@ -78,7 +78,7 @@ enum PlaytestPanelPress {
             let box = control.convert(control.bounds, to: nil)
             let shown = control.convert(control.visibleRect, to: nil)
             let chosen = control.selectedSegment
-            let row = field(at: box, among: fields)
+            let row = field(of: control, among: fields)
             let anchors = hintAnchors(in: content)
             return (0..<control.segmentCount).compactMap { index in
                 guard let label = name(ofSegment: index, in: control) else { return nil }
@@ -117,11 +117,10 @@ enum PlaytestPanelPress {
         return nil
     }
 
-    /// The row a thing at this point sits on: the smallest labelled row it
-    /// falls inside, so a picker takes its own row's word and not the one
-    /// below it.
-    @MainActor static func field(at box: CGRect, among fields: [PanelTargetView]) -> String? {
-        Self.fields(at: box, among: fields).last
+    /// The row a thing sits on: the smallest labelled row it falls inside, so
+    /// a picker takes its own row's word and not the one below it.
+    @MainActor static func field(of view: NSView, among fields: [PanelTargetView]) -> String? {
+        Self.fields(of: view, among: fields).last
     }
 
     /// EVERY labelled row this sits inside, widest first, so a control says who
@@ -133,12 +132,44 @@ enum PlaytestPanelPress {
     /// answer to it and stops. With the owner in front, `in: "Border 2"` picks
     /// one out, exactly as `in: "Width"` picks Layout's Fixed out from
     /// Height's.
-    @MainActor static func fields(at box: CGRect, among fields: [PanelTargetView]) -> [String] {
-        fields
-            .map { ($0, $0.convert($0.bounds, to: nil)) }
-            .filter { $0.1.contains(box) }
-            .sorted { $0.1.width * $0.1.height > $1.1.width * $1.1.height }
-            .map(\.0.name)
+    ///
+    /// A frame alone is not enough to say a row holds something, because the
+    /// panel does not scroll as one piece. The Effects list scrolls INSIDE the
+    /// dock, so an expanded Shadow taller than that little window keeps its
+    /// whole height as a frame while only a strip of it is on screen, and the
+    /// part scrolled away lies across whatever the dock shows underneath --
+    /// which is how the Component section's one button came to answer as
+    /// "Shadow, there is something to carry" and stopped a walk on 2026-09-07.
+    /// So a row may only lend its name to something its OWN scrolling area
+    /// holds too: the same area, or the row sits in one further out.
+    @MainActor static func fields(of view: NSView, among fields: [PanelTargetView]) -> [String] {
+        let box: CGRect = view.convert(view.bounds, to: nil)
+        let holding: Set<ObjectIdentifier> = Set(scrollAreas(of: view))
+        var around: [(name: String, frame: CGRect)] = []
+        for field in fields {
+            let frame: CGRect = field.convert(field.bounds, to: nil)
+            guard frame.contains(box) else { continue }
+            // The row's own scrolling area has to hold this too. A row that
+            // sits outside every scroller cuts nothing off, so it keeps its say.
+            if let nearest = scrollAreas(of: field).first, !holding.contains(nearest) { continue }
+            around.append((field.name, frame))
+        }
+        around.sort { first, second in
+            first.frame.width * first.frame.height > second.frame.width * second.frame.height
+        }
+        return around.map(\.name)
+    }
+
+    /// The scrolling areas that cut this view off, nearest first. Empty for
+    /// something the panel never scrolls.
+    @MainActor static func scrollAreas(of view: NSView) -> [ObjectIdentifier] {
+        var found: [ObjectIdentifier] = []
+        var above = view.superview
+        while let here = above {
+            if let clip = here as? NSClipView { found.append(ObjectIdentifier(clip)) }
+            above = here.superview
+        }
+        return found
     }
 
     /// Every tooltip anchor in the window: the invisible tracking views the

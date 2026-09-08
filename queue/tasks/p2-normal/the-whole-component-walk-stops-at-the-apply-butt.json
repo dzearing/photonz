@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1820,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T20:29:32.071Z",
-  "updated": "2026-09-07T20:29:32.072Z",
+  "updated": "2026-09-08T07:59:54.532Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced twice on the probe today, before and after an unrelated Add menu change, so it is not caused by that work.\n\nCommand: Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json\nOutput: {\"error\": \"step 173 (expect): the control called \\\"Apply to Other Versions\\\" reads \\\"Shadow, there is something to carry\\\", not \\\"there is something to carry\\\"\", \"status\": \"failed\", \"steps\": 172}\n\nWhat is going on, as far as it was chased: PlaytestHarness.pressTargets(in:) builds a control detail as \"<the field it sits inside>, <its own detail>\", using PlaytestPanelPress.field(at:among:), which picks the SMALLEST playtestField whose frame CONTAINS the control. Sources/Photonz/ComponentPanel.swift:1067 sets the button detail to \"there is something to carry\". Something named Shadow is being found to contain it: EffectsListInspector.swift:127 puts .playtestField(row.title) on each effect row, and the step before is addShadow, so the reading only goes wrong once the Shadow row is on and expanded. Whether the Shadow row really does enclose the Component section geometrically, or whether one of those frames is stale or unbounded, was not established. Steps 167 and 172 of Scripts/playtest/component-whole-path-walk.json are where it shows.\n\nIt is a walk-only symptom as far as anyone has seen: a person reads the button, not its detail. Fix the reading rather than the expectation, unless the enclosure turns out to be real, in which case the walk should say the row it means.",
@@ -22,6 +22,39 @@
     {
       "t": "2026-09-07T20:29:32.072Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T07:59:54.531Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T08:29:09.656Z",
+      "note": "Adversarial review of the report before fixing it: the notes allowed that the Shadow row might really enclose the Component section, in which case the walk should be reworded instead. Walked it as a person: nobody can see a row of the Effects list sitting around a button two sections further down, so if the app believes that, the app is wrong and the walk is right. Held the walk as written."
+    },
+    {
+      "t": "2026-09-08T08:29:09.656Z",
+      "note": "Reproduced: Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json printed {\"error\": \"step 167 (expect): the control called \\\"Apply to Other Versions\\\" reads \\\"Shadow, there is something to carry\\\", not \\\"there is something to carry\\\"\", \"status\": \"failed\", \"steps\": 166}."
+    },
+    {
+      "t": "2026-09-08T08:29:09.656Z",
+      "note": "Root cause, measured on the probe with a temporary dump of every row frame and the scrolling area each one hangs in: the dock does not scroll as one piece. The Effects list has a scroller of its own about 112pt tall (window y 421..533). An expanded Shadow is 255pt tall, so its frame runs y 270..525 while only its top strip is on screen. The 150pt that is scrolled away lies straight across the Component section below, which sits in the dock's OUTER scroller, and the Apply button (y 328..348) fell inside it. Frame containment alone therefore said Shadow held the button. The enclosure was not real: nothing was stale or unbounded, the row is simply longer than the little window it is being shown through."
+    },
+    {
+      "t": "2026-09-08T08:29:09.656Z",
+      "note": "Fix: PlaytestPanelPress.fields(...) now takes the view rather than a bare rectangle, and a row may only lend its name to something its own scrolling area holds too (the same NSClipView, or the row sits in one further out). Sources/Photonz/Playtest/PlaytestPanelPress.swift, with the three callers in PlaytestHarness.swift and PlaytestPanelMenu.swift moved to the new shape. Scripts/playtest/component-whole-path-walk.json was not touched."
+    },
+    {
+      "t": "2026-09-08T08:29:09.656Z",
+      "note": "Verified: the walk finishes 181/181, status ok. A second check with TWO effect rows open (Border added through the Add Effect menu, then Shadow) also reads \"there is something to carry\" alone; that same variant run against the unfixed binary still failed with \"Shadow, there is something to carry\", so it is the fix doing it and not the rearrangement. Scripts/test.sh: 4776 tests in 401 suites passed."
+    },
+    {
+      "t": "2026-09-08T08:29:09.656Z",
+      "note": "No regressions: ran all 52 walks that use row narrowing (an \"in\" step) plus the component walk. 43 pass. 9 fail, and every one of them fails with a byte-identical message on unmodified main (checked by stashing the fix and rebuilding the probe), so none is caused by this change. Filed as follow-ups."
+    },
+    {
+      "t": "2026-09-08T08:29:09.656Z",
+      "note": "No audit written: nothing here reaches a person using the app. The change is inside the probe-only walk harness (#if PHOTONZ_PLAYTEST), so there is nothing for the user to try or judge."
     }
-  ]
+  ],
+  "started": "2026-09-08T07:59:54.530Z"
 }

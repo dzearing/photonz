@@ -1,0 +1,29 @@
+{
+  "id": "four-walks-stop-on-a-panel-control-that-has-scro",
+  "title": "Four walks stop on a panel control that has scrolled out of reach",
+  "goal": "Four scripted runs stop because a control they need has been pushed below the visible part of the right hand panel and cannot be clicked. Either the panel now shows less than it used to and a person hits the same wall, or the runs need to scroll first. Nobody can prove clipping, size limits or stacking still work until it is settled.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2000,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T08:29:45.076Z",
+  "updated": "2026-09-08T08:29:45.079Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-08 on unmodified main (checked by stashing an unrelated harness change and rebuilding the probe; the messages are byte-identical either way). Pre-existing, not caused by the whole-component-walk fix that landed the same day.\n\nScripts/playtest.sh Scripts/playtest/clip-contents-walk.json\n  {\"error\": \"step 12 (press): the control \\\"Limits\\\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on. Scroll to it with a scrollPanel step first.\", \"status\": \"failed\"}\n\nScripts/playtest.sh Scripts/playtest/size-limits-walk.json — same message at step 14, control \"Limits\".\nScripts/playtest.sh Scripts/playtest/out-of-view-mark-walk.json — same message at step 8, control \"Limits\".\nScripts/playtest.sh Scripts/playtest/contents-for-several-walk.json — same message at step 58, control \"Stack\".\n\nThe reach rule is PlaytestHarness.isInReach: the whole control has to be inside the window AND inside its scrolling area. Three of the four want the same control (Limits), so a section that moved or grew is the likely cause. Answer the product question first (does a person have to scroll for Limits now, and should they) before adding scrollPanel steps.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/clip-contents-walk.json finishes with status passed",
+    "Scripts/playtest.sh Scripts/playtest/size-limits-walk.json finishes with status passed",
+    "Scripts/playtest.sh Scripts/playtest/contents-for-several-walk.json finishes with status passed",
+    "Scripts/playtest.sh Scripts/playtest/out-of-view-mark-walk.json finishes with status passed",
+    "The task says which it was: the panel got shorter for a person too, or the runs simply needed a scroll step"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T08:29:45.078Z",
+      "note": "created (manual)"
+    }
+  ]
+}

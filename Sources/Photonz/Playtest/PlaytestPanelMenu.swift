@@ -94,8 +94,7 @@ enum PlaytestPanelMenu {
     @MainActor static func naming(of button: NSPopUpButton,
                                   among fields: [PanelTargetView]) -> (name: String, detail: String) {
         let showing = title(of: button)
-        let box = button.convert(button.bounds, to: nil)
-        guard let row = PlaytestPanelPress.field(at: box, among: fields), row != showing else {
+        guard let row = PlaytestPanelPress.field(of: button, among: fields), row != showing else {
             return (showing, "")
         }
         return (row, showing)

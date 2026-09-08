@@ -1715,7 +1715,7 @@ private final class Run {
             // control that names its own row keeps the one copy. Naming every
             // enclosing row rather than the innermost is what lets a walk say
             // which of two Borders' Width it means.
-            var pieces = PlaytestPanelPress.fields(at: frame, among: fields)
+            var pieces = PlaytestPanelPress.fields(of: target, among: fields)
             if !target.detail.isEmpty, !pieces.contains(target.detail) {
                 pieces.append(target.detail)
             }
@@ -2320,8 +2320,7 @@ private final class Run {
         // in the panel that happens to be called Color.
         if let row {
             let inside = buttons.filter { button in
-                PlaytestPanelPress.fields(at: button.convert(button.bounds, to: nil),
-                                          among: fields)
+                PlaytestPanelPress.fields(of: button, among: fields)
                     .contains { $0.caseInsensitiveCompare(row) == .orderedSame }
             }
             guard !inside.isEmpty else {

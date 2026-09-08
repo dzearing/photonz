@@ -1,0 +1,27 @@
+{
+  "id": "dropping-a-colour-on-the-library-shelf-does-not",
+  "title": "Dropping a colour on the Library shelf does not light it up",
+  "goal": "A scripted run drags a colour off a shape and onto the Library shelf to save it, and the shelf never lights up to say it would take it. Saving a colour by dragging it to the shelf is one of the ways a person builds a palette, so if the shelf really has gone dark the feature is broken for them too.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2010,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T08:29:45.113Z",
+  "updated": "2026-09-08T08:29:45.116Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-08 on unmodified main (checked by stashing an unrelated harness change and rebuilding the probe; identical either way). Pre-existing.\n\nScripts/playtest.sh Scripts/playtest/colour-off-the-shelf-walk.json\n  {\"error\": \"step 13 (dragColor): \\\"Library\\\" stayed dark for the colour off \\\"Fill\\\", and the walk expected it to takes\", \"status\": \"failed\"}\n\nStart by watching it happen: Scripts/probe-app.sh, draw a shape, drag the Fill swatch onto the Library shelf, and see whether the shelf highlights. If it does, the walk drag is landing in the wrong place; if it does not, it is a real drop target regression. (The error text also reads oddly, \"expected it to takes\" — worth fixing while in there.)",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/colour-off-the-shelf-walk.json finishes with status passed",
+    "Dragging a colour from a shape onto the Library shelf lights the shelf up and saves the colour when dropped, checked by hand in the probe",
+    "No walk step was weakened to make it pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T08:29:45.115Z",
+      "note": "created (manual)"
+    }
+  ]
+}

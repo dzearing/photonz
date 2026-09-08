@@ -1,0 +1,29 @@
+{
+  "id": "four-walks-cannot-find-the-shadow-entry-in-the-e",
+  "title": "Four walks cannot find the Shadow entry in the Effects list",
+  "goal": "Four scripted runs stop because they cannot reach the tick, or the colour, on the Shadow entry of the Effects list: the app answers that no such thing is there. Until that is sorted nobody can prove by machine that turning an effect off and on, or dropping a colour on one, still works.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1990,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T08:29:25.223Z",
+  "updated": "2026-09-08T08:29:25.226Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-08 on unmodified main (checked by stashing an unrelated harness change and rebuilding the probe; the messages are byte-identical either way). These are pre-existing, not caused by the whole-component-walk fix that landed the same day.\n\nScripts/playtest.sh Scripts/playtest/parts-settings-inline-walk.json\n  {\"error\": \"step 10 (press): no control called \\\"Switch\\\" in \\\"Shadow\\\" is in the panel; the ones that are: none. A `panel` step lists everything.\", \"status\": \"failed\"}\n\nScripts/playtest.sh Scripts/playtest/switch-says-mixed-walk.json\n  {\"error\": \"step 13 (press): no control called \\\"Switch\\\" in \\\"Shadow\\\" is in the panel; the ones that are: none.\", \"status\": \"failed\"}\n\nScripts/playtest.sh Scripts/playtest/parts-off-is-remembered-walk.json\n  {\"error\": \"step 45 (press): no control called \\\"Switch\\\" in \\\"Shadow\\\" is in the panel; the ones that are: none.\", \"status\": \"failed\"}\n\nScripts/playtest.sh Scripts/playtest/colour-onto-an-off-part-walk.json\n  {\"error\": \"step 23 (dragColor): no colour swatch for \\\"Shadow\\\" is in the panel; the ones that are: Fill\", \"status\": \"failed\"}\n\nAll four say the panel holds nothing at all under the name Shadow, which is the shape of a list that has not got a Shadow entry in it at that point rather than of a naming problem: worth checking first whether these walks still add the effect the way the Effects list expects (EffectsListInspector.swift, .playtestField(row.title) at line 132), or whether they were written against the older four-slider Effects section. Start with a `panel` step where each one stops.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/parts-settings-inline-walk.json finishes with status passed",
+    "Scripts/playtest.sh Scripts/playtest/switch-says-mixed-walk.json finishes with status passed",
+    "Scripts/playtest.sh Scripts/playtest/parts-off-is-remembered-walk.json finishes with status passed",
+    "Scripts/playtest.sh Scripts/playtest/colour-onto-an-off-part-walk.json finishes with status passed",
+    "Whatever the cause turns out to be, no walk step was weakened or deleted to make it pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T08:29:25.225Z",
+      "note": "created (manual)"
+    }
+  ]
+}
