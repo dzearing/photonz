@@ -1,0 +1,71 @@
+{
+  "id": "a-shape-s-border-arrives-the-same-colour-as-its-when-you-draw-a-shape-what-shoul",
+  "taskId": "a-shape-s-border-arrives-the-same-colour-as-its",
+  "question": "When you draw a shape, what should its border look like before you have picked a colour for it?",
+  "context": "Every shape you draw arrives with a Border row already in its Effects list, and that border is painted the exact colour the fill is. On a filled shape you cannot see it: the panel says Border, 4 pt, Inside, and the picture has no line. Drag the width up and on an inside border nothing happens, on an outside border the box just gets bigger. The only way to a visible edge today is to open the Border colour well and pick something else. This is not an accident: a box's edge and its inside have always been the one shape colour, so turning the fill off leaves you a red outline box. The question is what a shape should look like the first time, before you have chosen anything.",
+  "options": [
+    {
+      "id": "a",
+      "label": "A deeper shade of the fill",
+      "summary": "Draw a box and it comes out red with a deeper red edge round it. The edge is visible from the moment the shape lands, so dragging Border Width thickens a line you can already see, and the shape still reads as one colour.",
+      "pros": [
+        "The Border row in the panel matches the picture: it says 4 pt and there is a 4 pt line",
+        "Dragging Width does something visible on the first try, with no trip to the colour well",
+        "The shape keeps its identity: a red box is still a red box, just with an edge"
+      ],
+      "cons": [
+        "Every new box looks slightly different from today, so work in progress will not match a shape drawn last week",
+        "On a very dark fill there is not much room left to go darker"
+      ],
+      "mitigation": "The edge is one click from gone (the cross on the Border row), and on a dark fill the edge goes lighter instead of darker so it still reads."
+    },
+    {
+      "id": "b",
+      "label": "A near-black edge, whatever the fill",
+      "summary": "Draw a box and it comes out red with a near-black edge, the way an outlined shape looks in most drawing tools. The edge colour does not follow the fill, so every fresh shape has the same ink round it.",
+      "pros": [
+        "Always legible, on any fill colour, light or dark",
+        "One predictable starting point rather than a colour that changes with the fill",
+        "Reads as a deliberate outline rather than a shading effect"
+      ],
+      "cons": [
+        "A strong second colour appears in your picture without you asking for it",
+        "On a dark canvas or a dark fill a black edge can look like a gap rather than a line"
+      ],
+      "mitigation": "The ink is a soft graphite rather than pure black, and one pick on the Border colour changes it for every shape you draw after."
+    },
+    {
+      "id": "c",
+      "label": "No edge until you ask for one",
+      "summary": "Draw a box and you get just the fill, with an empty Effects list. Adding a border is one press of the plus, and when it arrives it comes in a colour that stands out from the fill.",
+      "pros": [
+        "Nothing in the panel is claiming to draw something you cannot see",
+        "A fresh shape is as simple as it looks, and the Effects list really is the things you added",
+        "The border you do add is visible the moment it appears"
+      ],
+      "cons": [
+        "This undoes the answer you gave earlier today, when you chose to have shapes keep arriving with their edge already listed",
+        "Outlined shapes become two moves instead of one"
+      ],
+      "mitigation": "The plus sits on the Effects header and the border arrives fully formed, so it is one click and no dialog."
+    },
+    {
+      "id": "d",
+      "label": "Leave it as it is",
+      "summary": "A fresh shape keeps arriving with an edge painted the same colour as its fill. It shows only when you turn the fill off, and turning the width up on a filled shape goes on doing nothing you can see.",
+      "declines": true,
+      "pros": [
+        "Nothing anyone has drawn changes",
+        "Turning the fill off still gives you an outline-only box in the shape's colour, which is where this behaviour came from"
+      ],
+      "cons": [
+        "The panel says Border 4 pt while the picture has no line, which is the app telling you something untrue",
+        "Dragging Border Width looks broken: on an outside border the box just grows"
+      ],
+      "mitigation": "None worth the name. The width control stays a dead end until you find the colour well yourself."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-08T18:34:31.891Z"
+}
