@@ -86,7 +86,12 @@ public enum LayerElements {
 
     /// Every box a person can see, in document space: visible, with a size,
     /// not a measurement, and not the backdrop.
-    private static func boxes(in document: PhotonzDocument) -> [CGRect] {
+    ///
+    /// Public because the readers that aim at a POINT or a LINE rather than at
+    /// a box do their own aiming: Gap mode wants whichever edge is nearest the
+    /// pointer on each of the four sides, and the alignment scan wants the
+    /// edges a guide line runs along. Both take the list and pick from it.
+    public static func boxes(in document: PhotonzDocument) -> [CGRect] {
         let canvas = CGRect(origin: .zero, size: document.canvasSize)
         var found: [CGRect] = []
         func walk(_ layers: [Layer], origin: CGPoint) {

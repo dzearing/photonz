@@ -860,3 +860,104 @@ struct AlignmentCountHonestyTests {
     }
 }
 
+
+/// Checking the alignment of the boxes the app DREW. The scan reads the picture
+/// and a blank canvas has no picture in it, so a guide dragged across two
+/// rectangles somebody made a moment ago counted nothing at all. Their edges are
+/// known to the pixel, so they are handed to the scan rather than guessed at.
+@Suite("Alignment across the boxes the app drew")
+struct AlignmentDrawnItemsTests {
+
+    @Test func aGuideDownTwoDrawnLeftEdgesCountsBoth() {
+        let a = CGRect(x: 200, y: 240, width: 180, height: 180)
+        let b = CGRect(x: 200, y: 460, width: 120, height: 80)
+        let items = AlignmentScan.drawnItems(axis: .vertical, position: 202,
+                                             span: 200...600, boxes: [a, b])
+        #expect(items.count == 2)
+        #expect(items.map(\.edge) == [200, 200])
+        #expect(items.map(\.elementSide) == [.after, .after])
+        #expect(items[0].spanStart == 240)
+        #expect(items[0].spanEnd == 420)
+        #expect(items[1].spanStart == 460)
+        #expect(items[1].spanEnd == 540)
+    }
+
+    @Test func aGuideAcrossTwoDrawnTopsNamesThemTops() {
+        let a = CGRect(x: 200, y: 240, width: 180, height: 180)
+        let b = CGRect(x: 460, y: 240, width: 180, height: 180)
+        let items = AlignmentScan.drawnItems(axis: .horizontal, position: 242,
+                                             span: 150...700, boxes: [a, b])
+        #expect(items.map(\.edge) == [240, 240])
+        // Ink below the edge is what makes it a top, and a drawn box KNOWS which
+        // side its ink is on rather than reading it out of the gradients.
+        #expect(items.map(\.elementSide) == [.after, .after])
+        #expect(AlignmentCheck(items: items, tolerance: 1).verdict?.isAligned == true)
+    }
+
+    @Test func aGuideAlongTheRightHandEdgesNamesThemRights() {
+        let a = CGRect(x: 100, y: 100, width: 180, height: 60)
+        let b = CGRect(x: 160, y: 200, width: 120, height: 60)
+        let items = AlignmentScan.drawnItems(axis: .vertical, position: 280,
+                                             span: 80...300, boxes: [a, b])
+        #expect(items.map(\.edge) == [280, 280])
+        #expect(items.map(\.elementSide) == [.before, .before])
+    }
+
+    @Test func aBoxTheGuideNeverReachesIsNotAnItem() {
+        let near = CGRect(x: 200, y: 240, width: 180, height: 180)
+        let below = CGRect(x: 200, y: 700, width: 180, height: 80)
+        let items = AlignmentScan.drawnItems(axis: .vertical, position: 200,
+                                             span: 200...500, boxes: [near, below])
+        #expect(items.count == 1)
+        #expect(items[0].spanStart == 240)
+    }
+
+    @Test func aBoxTooFarSidewaysIsNotAnItem() {
+        let far = CGRect(x: 400, y: 240, width: 180, height: 180)
+        #expect(AlignmentScan.drawnItems(axis: .vertical, position: 200,
+                                         span: 200...500, boxes: [far]).isEmpty)
+    }
+
+    @Test func aBoxOffersWhicheverOfItsEdgesTheGuideIsNearer() {
+        // A narrow box crossed near its right edge is one item, not two: a box
+        // is one thing a person counts however many edges it has.
+        let narrow = CGRect(x: 190, y: 240, width: 16, height: 180)
+        let items = AlignmentScan.drawnItems(axis: .vertical, position: 204,
+                                             span: 200...500, boxes: [narrow])
+        #expect(items.count == 1)
+        #expect(items[0].edge == 206)
+        #expect(items[0].elementSide == .before)
+    }
+
+    @Test func theItemsSpanIsClippedToTheGuide() {
+        let tall = CGRect(x: 200, y: 100, width: 100, height: 600)
+        let items = AlignmentScan.drawnItems(axis: .vertical, position: 200,
+                                             span: 300...500, boxes: [tall])
+        #expect(items[0].spanStart == 300)
+        #expect(items[0].spanEnd == 500)
+    }
+
+    // MARK: Merging with what the picture found
+
+    @Test func aBoxDrawnOverAPictureElementIsCountedOnce() {
+        let drawn = [AlignmentItem(edge: 200, spanStart: 100, spanEnd: 160, elementSide: .after)]
+        let picture = [AlignmentItem(edge: 201, spanStart: 104, spanEnd: 158, elementSide: .after),
+                       AlignmentItem(edge: 200, spanStart: 300, spanEnd: 360, elementSide: .after)]
+        let merged = AlignmentScan.merged(drawn: drawn, picture: picture)
+        #expect(merged.count == 2)
+        #expect(merged[0] == drawn[0])
+        #expect(merged[1] == picture[1])
+    }
+
+    @Test func withNothingDrawnThePictureIsUntouched() {
+        let picture = [AlignmentItem(edge: 200, spanStart: 100, spanEnd: 160),
+                       AlignmentItem(edge: 204, spanStart: 300, spanEnd: 360)]
+        #expect(AlignmentScan.merged(drawn: [], picture: picture) == picture)
+    }
+
+    @Test func theMergedItemsReadInGuideOrder() {
+        let drawn = [AlignmentItem(edge: 200, spanStart: 400, spanEnd: 460)]
+        let picture = [AlignmentItem(edge: 202, spanStart: 100, spanEnd: 160)]
+        #expect(AlignmentScan.merged(drawn: drawn, picture: picture).map(\.spanStart) == [100, 400])
+    }
+}

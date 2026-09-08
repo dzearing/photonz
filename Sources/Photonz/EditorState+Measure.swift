@@ -211,8 +211,17 @@ extension EditorState {
         // runs; empty only in the moment before the analysis lands, and then
         // the check says its items are not counted.
         let luma = measureLumaField
-        let items = AlignmentScan.items(axis: axis, position: position, span: span,
-                                        in: snappingEdgeMap, luma: luma, pixelScale: pixelScale)
+        // The boxes the app drew are known to the pixel, so they are handed to
+        // the check rather than guessed at: a guide across two rectangles you
+        // made counts them even on a canvas with no picture in it.
+        let drawn = document.map {
+            AlignmentScan.drawnItems(axis: axis, position: position, span: span,
+                                     boxes: LayerElements.boxes(in: $0))
+        } ?? []
+        let items = AlignmentScan.merged(
+            drawn: drawn,
+            picture: AlignmentScan.items(axis: axis, position: position, span: span,
+                                         in: snappingEdgeMap, luma: luma, pixelScale: pixelScale))
         var content = measureStyle
         content.mode = axis
         content.headOffset = 0
@@ -222,7 +231,10 @@ extension EditorState {
             items: items,
             tolerance: AlignmentCheck.deviceTolerance(logical: Experiments.shared.measureAlignTolerance,
                                                       pixelScale: pixelScale),
-            itemsAreElements: !luma.isEmpty)
+            // Counted only when the count means something: the picture was read,
+            // or every item on the list is a box the app drew, which is exactly
+            // one element each.
+            itemsAreElements: !luma.isEmpty || items.count == drawn.count)
         let reference = content.alignment?.verdict?.reference ?? items.first?.edge ?? position
         let start: CGPoint, end: CGPoint
         switch axis {

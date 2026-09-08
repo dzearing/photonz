@@ -12890,3 +12890,38 @@ reproduced on its own against the probe before anything was touched:
 Next: the border-off follow-up is the open question, and it needs the user to
 say whether an arrived border switched off should leave its row behind the way
 an added effect does.
+
+## 2026-09-08 — Gap and alignment read the shapes you drew
+
+The ruler learned to measure a shape you drew earlier today, but only its width
+and height. Gap and Alignment still read the picture and nothing else, so the
+space between two rectangles you had just made could not be measured and a guide
+dragged across them counted no items. On a canvas you are building UI on there is
+no picture at all, which made both modes silent exactly where they should be
+easiest.
+
+Reproduced before anything was touched: the new walk run against the unchanged
+build failed at "0 measurements on the canvas, not 1", with the pointer dead
+centre in the space between two drawn rectangles and the hint chip up saying
+"Click the space between two elements".
+
+One rule fixes both. `LayerElements.boxes(in:)` is now public — the document's
+own boxes as a plain list, for the readers that aim at a point or a line rather
+than at a box. `ElementBounds.gap` takes them and, on each of the four sides of
+the probe, keeps whichever boundary is NEARER, drawn or read. `AlignmentScan`
+gained `drawnItems` and `merged`, where a box offers one edge however many of
+its edges the guide passes (a box is one thing a person counts) and knows which
+side its ink is on rather than reading it out of gradients.
+
+What that buys, all from the one rule: the gap between two rectangles on a blank
+canvas, the gap between a box you drew and a button in a screenshot, and a
+screenshot nobody has drawn on reading byte-for-byte as before, since the
+backdrop is not one of the boxes. `Scripts/playtest/gap-between-drawn-shapes-walk.json`
+walks all of it in one run; `gap-then-size` and `alignment-counts` still pass.
+
+Deliberately left as it is: Gap does not go quiet when the pointer is inside a
+shape, it reads the room inside it, which is what it already did inside a card in
+a screenshot. The audit asks the user whether that is the answer they want.
+
+Next: the queue. The border-off follow-up from the walk-suite session is still
+the open question waiting on the user.

@@ -158,6 +158,26 @@ struct LayerElementsTests {
                 <= ElementBounds.candidateLimit)
     }
 
+    // MARK: The whole list, for the readers that take a point of their own
+
+    @Test func everyDrawnBoxIsOfferedToTheReadersThatTakeAList() {
+        // Gap and the alignment scan aim at a point or a line rather than at a
+        // box, so they take the whole list and do their own aiming.
+        let a = CGRect(x: 200, y: 240, width: 180, height: 180)
+        let b = CGRect(x: 460, y: 240, width: 180, height: 180)
+        let doc = document([picture(CGRect(origin: .zero, size: canvas)), shape(a), shape(b)])
+        #expect(Set(LayerElements.boxes(in: doc)) == [a, b])
+    }
+
+    @Test func aMeasurementIsNotOneOfTheBoxes() {
+        // Same rule the ladder follows: nobody points at a caliper to measure
+        // the space beside it.
+        let caliper = MeasureBuilder.layer(content: MeasureContent(headOffset: -40, mode: .horizontal),
+                                           from: CGPoint(x: 100, y: 100), to: CGPoint(x: 300, y: 100))
+        let doc = document([caliper, shape(CGRect(x: 400, y: 100, width: 100, height: 40))])
+        #expect(LayerElements.boxes(in: doc) == [CGRect(x: 400, y: 100, width: 100, height: 40)])
+    }
+
     // MARK: Neighbours, so a readout steers around the other shapes
 
     @Test func theShapeNextDoorIsANeighbour() {

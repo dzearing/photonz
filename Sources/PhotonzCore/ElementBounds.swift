@@ -437,19 +437,33 @@ public enum ElementBounds {
     /// measured to the PROBE-SIDE landing of each edge — the clean background
     /// hugging each element — since what is being measured is the whitespace,
     /// not the elements.
+    /// `drawn` is the document's own boxes (`LayerElements.boxes`), whose edges
+    /// are KNOWN rather than read out of gradients. On each of the four sides
+    /// the nearer boundary wins, whichever it came from, which is what a person
+    /// means by "the gap": the space between two rectangles you drew reads on a
+    /// canvas with no picture in it at all, the space between a drawn box and a
+    /// button in the screenshot reads across both, and a highlight box drawn
+    /// around a row never takes the place of the two buttons inside it.
     public static func gap(at point: CGPoint, in edges: EdgeMap,
+                           drawn: [CGRect] = [],
                            maxRadius: Double = defaultMaxRadius,
                            spanRadius: Double = defaultSpanRadius) -> GapMeasurement? {
         let px = Double(point.x), py = Double(point.y)
-        let sides = sides(at: point, in: edges, maxRadius: maxRadius, spanRadius: spanRadius)
+        let read = sides(at: point, in: edges, maxRadius: maxRadius, spanRadius: spanRadius)
+        let made = drawnLandings(at: point, in: drawn, maxRadius: maxRadius)
+        // The fixed side order everywhere here: minY, maxY, minX, maxX.
+        let sides = (0..<4).map { i in
+            nearest(read[i].first?.landing, made[i],
+                    probe: i < 2 ? py : px, lowerSide: i % 2 == 0)
+        }
         var best: GapMeasurement?
-        if let minY = sides[0].first?.landing, let maxY = sides[1].first?.landing,
+        if let minY = sides[0], let maxY = sides[1],
            maxY > minY, minY <= py, py <= maxY {
             best = GapMeasurement(axis: .vertical,
                                   start: CGPoint(x: point.x, y: minY),
                                   end: CGPoint(x: point.x, y: maxY))
         }
-        if let minX = sides[2].first?.landing, let maxX = sides[3].first?.landing,
+        if let minX = sides[2], let maxX = sides[3],
            maxX > minX, minX <= px, px <= maxX {
             let horizontal = GapMeasurement(axis: .horizontal,
                                             start: CGPoint(x: minX, y: point.y),
@@ -457,6 +471,49 @@ public enum ElementBounds {
             if best.map({ horizontal.length <= $0.length }) ?? true { best = horizontal }
         }
         return best
+    }
+
+    /// Whichever of the two boundaries sits closer to the probe. Either may be
+    /// missing: a blank canvas offers only drawn edges, a screenshot nobody has
+    /// drawn on only read ones.
+    private static func nearest(_ read: Double?, _ made: Double?,
+                                probe: Double, lowerSide: Bool) -> Double? {
+        guard let read else { return made }
+        guard let made else { return read }
+        return lowerSide ? max(read, made) : min(read, made)
+    }
+
+    /// The nearest DRAWN edge on each of the four sides of the probe, in the
+    /// order minY, maxY, minX, maxX.
+    ///
+    /// A box's horizontal edges count only where the box actually passes over
+    /// or under the pointer, and its vertical edges only where it passes beside
+    /// it — the drawn equivalent of the picture's query window, and stricter,
+    /// because a box the app placed itself needs no slack. A box the pointer is
+    /// INSIDE offers its own two edges, so pointing into a rectangle in Gap mode
+    /// measures the room inside it, exactly as it already does over a card in a
+    /// screenshot.
+    private static func drawnLandings(at point: CGPoint, in drawn: [CGRect],
+                                      maxRadius: Double) -> [Double?] {
+        guard !drawn.isEmpty else { return [nil, nil, nil, nil] }
+        let px = Double(point.x), py = Double(point.y)
+        var sides: [Double?] = [nil, nil, nil, nil]
+        func offer(_ edge: Double, probe: Double, lower: Int, upper: Int) {
+            guard abs(edge - probe) <= maxRadius else { return }
+            let side = edge <= probe ? lower : upper
+            sides[side] = nearest(sides[side], edge, probe: probe, lowerSide: side == lower)
+        }
+        for box in drawn.map({ $0.standardized }) {
+            if px >= Double(box.minX), px <= Double(box.maxX) {
+                offer(Double(box.minY), probe: py, lower: 0, upper: 1)
+                offer(Double(box.maxY), probe: py, lower: 0, upper: 1)
+            }
+            if py >= Double(box.minY), py <= Double(box.maxY) {
+                offer(Double(box.minX), probe: px, lower: 2, upper: 3)
+                offer(Double(box.maxX), probe: px, lower: 2, upper: 3)
+            }
+        }
+        return sides
     }
 
     /// Whether a rung belongs on the ladder after `previous`: it has to CONTAIN

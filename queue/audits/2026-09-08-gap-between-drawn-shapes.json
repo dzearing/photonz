@@ -1,0 +1,28 @@
+{
+  "feature": "Gap and alignment read the shapes you drew",
+  "epic": "measure-redline",
+  "summary": "Point the ruler's Gap mode at the space between two rectangles you drew and it measures it, on a blank canvas with no screenshot anywhere. Drag an alignment guide across shapes you drew and it counts them instead of finding nothing. Reading a screenshot is unchanged, and a gap can now run from a box you drew to a button in the picture.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Make a new blank canvas, then press R and drag out two rectangles side by side with a clear space between them." },
+    { "do": "Press Escape, press I for the ruler, set Mode to Gap, and rest the pointer in the space between them.", "shot": "2026-09-08-gap-between-drawn-shapes.png" },
+    { "do": "Click once: the gap lands as a measurement and a Gap row appears under Measurements." },
+    { "do": "Set Mode to Alignment and drag a guide sideways across the tops of both rectangles.", "shot": "2026-09-08-alignment-across-drawn-shapes.png" },
+    { "do": "Read the row it left: it should say Top edges, 2 items, and aligned." },
+    { "do": "Open a screenshot, draw a rectangle just to the right of a button in it, then switch back to Gap and click the space between the button and your rectangle.", "shot": "2026-09-08-gap-from-a-drawn-box-to-the-picture.png" },
+    { "do": "Point Gap at a space between two things in the screenshot itself and check the number reads the way it always did." }
+  ],
+  "evaluate": [
+    "Does the gap light up the moment the pointer is in the space, or do you have to hunt for the spot that works?",
+    "In an 80 px gap the number pill nearly fills the space it is measuring. Is that still readable, or does the caliper disappear behind its own label?",
+    "Pointing Gap INSIDE a shape measures the room inside it rather than staying quiet. Is that useful or is it a wrong answer?",
+    "When a box you drew sits over a screenshot, does the gap pick the edge you meant, or does it reach past it to something in the picture?",
+    "Is Top edges, 2 items the wording you want for a check across your own shapes, or does it need to name the shapes?"
+  ],
+  "rough": [
+    "Gap does not stay quiet when the pointer is inside a shape: it reads that shape's inner width or height, whichever is tighter. That is exactly what it already did inside a card in a screenshot, so it was left consistent rather than special-cased for drawn boxes.",
+    "The number pill sits over the two shapes when the gap is narrow, because the readout steers around the shapes beside it and a small gap leaves nowhere else to go. Nothing was changed about placement here.",
+    "A gap needs an edge running through the pointer's own row or column, so pointing at the corner diagonal from two shapes reads nothing. That is the same rule the picture reader follows.",
+    "All three screenshots are real screen captures from the walk (Scripts/playtest/gap-between-drawn-shapes-walk.json); the probe held the Screen Recording grant."
+  ]
+}

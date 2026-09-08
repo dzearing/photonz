@@ -404,6 +404,70 @@ struct ElementGapTests {
         #expect(ElementBounds.gap(at: CGPoint(x: 200, y: 150), in: s.map) == nil)
     }
 
+    /// A box the app DREW is not in the picture at all, so a gap that only ever
+    /// read pixels could not measure the space between two rectangles somebody
+    /// made a moment ago — the most ordinary gap there is on a canvas you are
+    /// building UI on.
+    @Test func gapBetweenTwoDrawnBoxesNeedsNoPictureAtAll() {
+        let left = CGRect(x: 200, y: 240, width: 180, height: 180)
+        let right = CGRect(x: 460, y: 240, width: 180, height: 180)
+        let gap = ElementBounds.gap(at: CGPoint(x: 420, y: 330), in: .empty,
+                                    drawn: [left, right])
+        #expect(gap?.axis == .horizontal)
+        #expect(gap?.length == 80)
+        #expect(gap?.start == CGPoint(x: 380, y: 330))
+        #expect(gap?.end == CGPoint(x: 460, y: 330))
+    }
+
+    @Test func gapReadsADrawnStackTheSameWay() {
+        let top = CGRect(x: 100, y: 100, width: 400, height: 60)
+        let bottom = CGRect(x: 100, y: 184, width: 400, height: 60)
+        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 172), in: .empty,
+                                    drawn: [top, bottom])
+        #expect(gap?.axis == .vertical)
+        #expect(gap?.length == 24)
+        #expect(gap?.start == CGPoint(x: 300, y: 160))
+        #expect(gap?.end == CGPoint(x: 300, y: 184))
+    }
+
+    @Test func aDrawnBoxNowhereNearThePointerIsNotAGap() {
+        // Both boxes sit well above the probe, and the probe is in the channel
+        // between them, so neither box has an edge running through it.
+        let left = CGRect(x: 200, y: 40, width: 180, height: 100)
+        let right = CGRect(x: 460, y: 40, width: 180, height: 100)
+        #expect(ElementBounds.gap(at: CGPoint(x: 420, y: 500), in: .empty,
+                                  drawn: [left, right]) == nil)
+    }
+
+    @Test func aDrawnBoxStandsInForAnElementTheresNoPictureOf() {
+        // The same two-buttons-in-a-card scene as above, except the right-hand
+        // button was drawn rather than photographed: the reading is identical.
+        var s = GapScene(w: 600, h: 500)
+        s.addBox(CGRect(x: 20, y: 20, width: 560, height: 440))
+        s.addBox(CGRect(x: 100, y: 150, width: 120, height: 60))
+        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), in: s.map,
+                                    drawn: [CGRect(x: 260, y: 150, width: 120, height: 60)])
+        #expect(gap?.axis == .horizontal)
+        #expect(gap?.length == 40)
+        #expect(gap?.start == CGPoint(x: 220, y: 180))
+        #expect(gap?.end == CGPoint(x: 260, y: 180))
+    }
+
+    @Test func aHighlightBoxDrawnAroundThingsDoesNotSwallowTheGapInsideIt() {
+        // Whichever boundary is NEARER wins, so a box drawn around a whole row
+        // never takes the place of the two buttons inside it.
+        var s = GapScene(w: 600, h: 500)
+        s.addBox(CGRect(x: 20, y: 20, width: 560, height: 440))
+        s.addBox(CGRect(x: 100, y: 150, width: 120, height: 60))
+        s.addBox(CGRect(x: 260, y: 150, width: 120, height: 60))
+        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), in: s.map,
+                                    drawn: [CGRect(x: 60, y: 100, width: 460, height: 200)])
+        #expect(gap?.axis == .horizontal)
+        #expect(gap?.length == 40)
+        #expect(gap?.start == CGPoint(x: 220, y: 180))
+        #expect(gap?.end == CGPoint(x: 260, y: 180))
+    }
+
     @Test func gapNeedsOnlyTheAxisItMeasures() {
         // Two stacked cards with nothing to their left or right: the space
         // between them has a top and a bottom and no sides at all. Refusing to

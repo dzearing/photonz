@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 2040,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T16:16:40.033Z",
-  "updated": "2026-09-08T16:16:40.036Z",
+  "updated": "2026-09-08T17:29:47.886Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Size mode was fixed on 2026-09-08 by adding PhotonzCore/LayerElements.swift (the document's own boxes as an element ladder) and merging it with ElementBounds in CanvasMeasure.refreshMeasureHoverReadout. Gap goes through ElementBounds.gap(at:in:) and alignment through AlignmentScan.items, both edge-map only, so both need the same treatment: a drawn-box source merged with the pixel one. Reuse LayerElements.candidates / .neighbors rather than adding a second walk of the layer tree.",
+  "notes": "Size mode was fixed on 2026-09-08 by adding PhotonzCore/LayerElements.swift (the document's own boxes as an element ladder) and merging it with ElementBounds in CanvasMeasure.refreshMeasureHoverReadout. Gap goes through ElementBounds.gap(at:in:) and alignment through AlignmentScan.items, both edge-map only, so both need the same treatment: a drawn-box source merged with the pixel one. Reuse LayerElements.candidates / .neighbors rather than adding a second walk of the layer tree.\n\nDone 2026-09-08. LayerElements.boxes(in:) is now public (the whole list, for readers that aim at a point or a line rather than at a box). ElementBounds.gap gained `drawn: [CGRect] = []`: on each of the four sides the nearer landing wins, picture or drawn, so a blank canvas reads drawn-only, a screenshot nobody drew on is byte-for-byte unchanged (the backdrop is excluded from boxes, so drawn is empty there), and a highlight box around a row never swallows the gap inside it. AlignmentScan gained drawnItems(axis:position:span:boxes:) + merged(drawn:picture:); a box offers ONE edge (the nearer of its two) so it counts once, and its elementSide is a fact rather than a gradient reading. EditorState.addAlignmentCheck merges them and sets itemsAreElements when the picture was read OR every item is drawn. Walk: Scripts/playtest/gap-between-drawn-shapes-walk.json.",
   "acceptance": [
     "Pointing between two shapes you drew on a blank canvas shows the gap between them and clicking leaves that measurement",
     "Gap over a screenshot still reads exactly as it does today",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-08T16:16:40.035Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T17:29:47.885Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T17:35:00.000Z",
+      "note": "Adversarial review before building. The hint chip in Gap mode literally reads \"Click the space between two elements\", and two rectangles you drew ARE elements to anybody looking at the canvas, so this is a broken promise rather than a missing feature. Shortest version that delivers it: no new mode, no new chrome, no second walk of the layer tree. Per side of the probe, take whichever boundary is nearer, drawn or read. That gets the blank-canvas case, the mixed case (a box you drew against a button in the screenshot) and leaves the screenshot case untouched, all from one rule."
+    },
+    {
+      "t": "2026-09-08T17:40:00.000Z",
+      "note": "Reproduced first: ran the new walk against the unchanged build. Step 24 failed, \"0 measurements on the canvas, not 1; the caliper is nothing in flight\" \u2014 pointer dead centre in the space between two drawn rectangles, hint chip up, click leaves nothing."
+    },
+    {
+      "t": "2026-09-08T18:05:00.000Z",
+      "note": "Tests first, then the change. New core tests: five in ElementGapTests (drawn-only gap, drawn stack, a drawn box standing in for an element the picture has none of, a highlight box not swallowing the gap inside it, a quiet miss), two in LayerElementsTests, eleven in a new AlignmentDrawnItemsTests suite. Scripts/test.sh green: 4897 tests in 415 suites."
+    },
+    {
+      "t": "2026-09-08T18:20:00.000Z",
+      "note": "Walk green, 9 stages: gap between two drawn rectangles reads 80 px and copies as \"- Gap: 80 px (spacing)\"; a guide across their tops lands \"Top edges, 2 items\" with the verdict aligned; on the screenshot the same gap point still reads 16 px and the six-label guide still counts 6; and a box drawn beside Save Changes measures 16 px to the button's edge across both readers. Regression: gap-then-size.json and alignment-counts.json both still ok."
+    },
+    {
+      "t": "2026-09-08T18:25:00.000Z",
+      "note": "Second review, on the built app. Gap does not stay quiet inside a shape (it reads the room inside it) \u2014 kept, because that is exactly what it already does inside a card in a screenshot, and noted in the audit's rough for the user to judge. The number pill nearly fills an 80 px gap; that is the readout planner and was left alone. Audit: queue/audits/2026-09-08-gap-between-drawn-shapes.json with three real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T17:29:47.884Z"
 }

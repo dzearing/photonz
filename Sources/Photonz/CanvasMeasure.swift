@@ -451,7 +451,12 @@ extension CanvasNSView {
             drawElementPreview(rect, style: style, viewport: viewport,
                                pixelScale: document.pixelScale, canvas: document.canvasSize)
         case .gap:
-            guard let gap = ElementBounds.gap(at: probe, in: edgeMap) else {
+            // The document's own boxes go in beside the picture's edges, so the
+            // space between two rectangles you drew reads on a blank canvas and
+            // the space between a drawn box and a button in the screenshot reads
+            // across both. Whichever boundary is nearer wins on each side.
+            guard let gap = ElementBounds.gap(at: probe, in: edgeMap,
+                                              drawn: LayerElements.boxes(in: document)) else {
                 hideMeasureHoverReadout()
                 return
             }

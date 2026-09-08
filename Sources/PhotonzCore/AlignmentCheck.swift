@@ -367,6 +367,58 @@ public enum AlignmentScan {
         }
     }
 
+    /// How far a drawn box's edge may sit from an edge the picture found before
+    /// the two are one element counted twice — a rectangle drawn to trace
+    /// something in the screenshot. As tight as the ladder's own rule, for the
+    /// same reason: a box drawn ten points around a button is not that button.
+    public static let sameEdge: CGFloat = 2
+
+    /// The edges a guide crosses among the boxes the DOCUMENT drew
+    /// (`LayerElements.boxes`), in guide order.
+    ///
+    /// The scan above reads a picture, and a canvas you are building UI on has
+    /// no picture in it, so a guide dragged across two rectangles you made a
+    /// moment ago counted nothing at all. These edges are known to the pixel
+    /// instead of guessed: which side the ink is on is a fact about the box
+    /// rather than a reading of the gradients beside it, and a box offers ONE
+    /// edge however many of its edges are near the guide, because a box is one
+    /// thing a person counts.
+    public static func drawnItems(axis: MeasureMode, position: CGFloat,
+                                  span: ClosedRange<CGFloat>, boxes: [CGRect],
+                                  captureRadius: CGFloat = defaultCaptureRadius) -> [AlignmentItem] {
+        var items: [AlignmentItem] = []
+        for box in boxes.map({ $0.standardized }) {
+            let across = axis == .vertical ? (box.minY, box.maxY) : (box.minX, box.maxX)
+            let start = max(span.lowerBound, across.0), end = min(span.upperBound, across.1)
+            guard end > start else { continue }
+            let edges: [(CGFloat, EdgeSide)] = axis == .vertical
+                ? [(box.minX, .after), (box.maxX, .before)]
+                : [(box.minY, .after), (box.maxY, .before)]
+            guard let near = edges.min(by: { abs($0.0 - position) < abs($1.0 - position) }),
+                  abs(near.0 - position) <= captureRadius else { continue }
+            items.append(AlignmentItem(edge: near.0, spanStart: start, spanEnd: end,
+                                       elementSide: near.1))
+        }
+        return items.sorted { $0.spanStart < $1.spanStart }
+    }
+
+    /// The drawn edges and the picture's as ONE list, in guide order. Where both
+    /// describe the same element the drawn one is kept, since it is known rather
+    /// than read. With nothing drawn this is the picture's list, untouched.
+    public static func merged(drawn: [AlignmentItem],
+                              picture: [AlignmentItem]) -> [AlignmentItem] {
+        guard !drawn.isEmpty else { return picture }
+        let read = picture.filter { item in
+            !drawn.contains { abs($0.edge - item.edge) <= sameEdge && overlaps($0, item) }
+        }
+        return (drawn + read).sorted { $0.spanStart < $1.spanStart }
+    }
+
+    /// Whether two items cover any of the same stretch of the guide.
+    private static func overlaps(_ a: AlignmentItem, _ b: AlignmentItem) -> Bool {
+        min(a.spanEnd, b.spanEnd) > max(a.spanStart, b.spanStart)
+    }
+
     /// One stretch of samples that kept seeing the same edge.
     struct Run: Equatable {
         var edge: CGFloat
