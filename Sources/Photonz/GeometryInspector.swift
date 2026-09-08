@@ -30,9 +30,16 @@ import SwiftUI
 /// straight away in the line under the fields, rather than leaving the click
 /// unanswered until a hover tip catches up.
 ///
-/// The line under the fields is `LayerGeometrySelection.caption`, so what the
-/// panel says is decided and tested next to what it does. A locked layer says
-/// it is locked there rather than describing arrow keys that step nothing.
+/// The line under the fields has ONE voice and two registers. At rest it is
+/// `LayerGeometrySelection.caption`, so what the panel says is decided and
+/// tested next to what it does: a locked layer says it is locked there, and a
+/// section whose X and Y a stack decided promises the arrow key on W and H
+/// only, rather than describing keys that step nothing. When you do something
+/// the section has to explain it carries an ANSWER for six seconds — a click on
+/// a number you cannot type, or a number the picked layers would not take — and
+/// then the caption comes back. One answer at a time, the newest wins, and no
+/// toast. The whole rule is in `docs/design/mocks/shared/UX-PATTERNS.md` §4,
+/// "The line under a section".
 ///
 /// The section has a second subject: the MARQUEE. While a selection tool has
 /// the arrow keys they walk the selection outline rather than the picked
@@ -46,26 +53,38 @@ import SwiftUI
 struct GeometryInspector: View {
     @Environment(EditorState.self) private var editorState
 
-    /// Which number a click just asked about, standing in for the caption until
-    /// the answer has been read.
+    /// What the line under the fields is answering, when it is answering
+    /// something rather than saying what the section says at rest.
     ///
-    /// A click on one of these used to do nothing at all: the reason was in a
-    /// hover tip, which arrives a second later and only if you keep still, so
-    /// the first thing a person learns is that the panel ignored them. The
-    /// answer goes in the line under the fields because that is where the eye
-    /// already is, and because it is the line that already explains the
-    /// section.
+    /// One answer at a time and the newest wins, because there is one line and
+    /// a queue of sentences under a panel is not a thing anybody reads. The
+    /// whole rule for this line is written down in
+    /// `docs/design/mocks/shared/UX-PATTERNS.md` §4, "The line under a section".
     ///
-    /// The FIELD is kept rather than the sentence, so the answer is worked out
-    /// afresh every time the panel draws. Setting a piece's Stretch back hands
-    /// it its width again, and a sentence held in a box would go on explaining
-    /// a rule that had just been taken off, for the rest of its six seconds.
-    @State private var explaining: LayerGeometryField?
+    /// What is kept is WHAT YOU DID, never the sentence, so the words are
+    /// worked out afresh every time the panel draws. Setting a piece's Stretch
+    /// back hands it its width again, and a sentence held in a box would go on
+    /// explaining a rule that had just been taken off, for the rest of its six
+    /// seconds.
+    private enum Answer: Hashable {
+        /// A click on a number that takes no typing. A click on one of these
+        /// used to do nothing at all: the reason was in a hover tip, which
+        /// arrives a second later and only if you keep still, so the first
+        /// thing a person learned was that the panel ignored them.
+        case explaining(LayerGeometryField)
+        /// A number that was typed and the picked layers would not take: the
+        /// field, what was asked for, and what they came back reading. A value
+        /// springing back with nothing said reads as a control that is broken
+        /// rather than a selection that refused.
+        case refused(LayerGeometryField, CGFloat, LayerGeometryReading)
+    }
 
-    /// How long the answer holds before the caption comes back. Long enough to
+    @State private var answer: Answer?
+
+    /// How long an answer holds before the caption comes back. Long enough to
     /// read a sentence twice, short enough that the panel goes back to saying
     /// what it says at rest.
-    private static let explanationSeconds: Double = 6
+    private static let answerSeconds: Double = 6
 
     private var selection: LayerGeometrySelection { editorState.geometrySelection }
 
@@ -126,9 +145,9 @@ struct GeometryInspector: View {
 
     private func layerBody() -> some View {
         let selection = selection
-        // Nil as soon as the number takes typing again, so the panel never
-        // holds a sentence about a rule that is no longer there.
-        let answer = explaining.flatMap { selection.explanation(for: $0) }
+        // Nil as soon as the rule it was about is gone, so the panel never
+        // holds a sentence about something that is no longer there.
+        let said = answer.flatMap { sentence(for: $0, in: selection) }
         return VStack(alignment: .leading, spacing: 6) {
             // Two pairs, position over size, each field taking half the panel:
             // the numbers are the point of the section, so they get the room
@@ -141,26 +160,38 @@ struct GeometryInspector: View {
                 field(.width, selection)
                 field(.height, selection)
             }
-            Text(answer ?? selection.caption)
+            Text(said ?? selection.caption)
                 .font(.caption2)
-                .foregroundStyle(answer == nil ? AnyShapeStyle(.tertiary)
-                                               : AnyShapeStyle(.secondary))
+                .foregroundStyle(said == nil ? AnyShapeStyle(.tertiary)
+                                             : AnyShapeStyle(.secondary))
                 .fixedSize(horizontal: false, vertical: true)
-                .animation(.easeOut(duration: 0.12), value: answer)
+                .animation(.easeOut(duration: 0.12), value: said)
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
         // A new set of layers is a new set of numbers, so the sentence about
         // the old one goes rather than sitting over the new caption.
-        .onChange(of: selection.members.map(\.id)) { explaining = nil }
-        .task(id: explaining) { await fadeExplanation() }
+        .onChange(of: selection.members.map(\.id)) { answer = nil }
+        .task(id: answer) { await fadeAnswer() }
     }
 
-    private func fadeExplanation() async {
-        guard explaining != nil else { return }
-        try? await Task.sleep(for: .seconds(Self.explanationSeconds))
+    /// The words for what you just did, read off the selection as it stands
+    /// right now. Nil means the line goes back to the caption at once.
+    private func sentence(for answer: Answer,
+                          in selection: LayerGeometrySelection) -> String? {
+        switch answer {
+        case .explaining(let field):
+            return selection.explanation(for: field)
+        case .refused(let field, let value, let landed):
+            return selection.refusal(asking: value, for: field, landedOn: landed)
+        }
+    }
+
+    private func fadeAnswer() async {
+        guard answer != nil else { return }
+        try? await Task.sleep(for: .seconds(Self.answerSeconds))
         guard !Task.isCancelled else { return }
-        explaining = nil
+        answer = nil
     }
 
     /// One of the four. A number you can type is a field; a number worked out
@@ -174,7 +205,7 @@ struct GeometryInspector: View {
                 field: field,
                 reading: selection.reading(field),
                 help: help(field, selection),
-                explain: { explaining = field })
+                explain: { answer = .explaining(field) })
         } else {
             GeometryNumberField(
                 field: field,
@@ -186,7 +217,15 @@ struct GeometryInspector: View {
                 // in once the change has been made.
                 set: { value in
                     editorState.setLayerGeometry(field: field, to: value)
-                    return editorState.geometrySelection.reading(field)
+                    let after = editorState.geometrySelection
+                    let landed = after.reading(field)
+                    // A number they would not take says why, where the eye
+                    // already is. Nothing at all when they took it: silence IS
+                    // the answer to a number that landed, and the line goes
+                    // back to the caption rather than congratulating anybody.
+                    answer = after.refusal(asking: value, for: field, landedOn: landed) == nil
+                        ? nil : .refused(field, value, landed)
+                    return landed
                 },
                 stepAll: { direction, coarse in
                     editorState.stepLayerGeometry(field: field, direction: direction, coarse: coarse)

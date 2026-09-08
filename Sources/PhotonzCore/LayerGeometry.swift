@@ -33,6 +33,15 @@ public enum LayerGeometryField: String, CaseIterable, Hashable, Sendable {
 
     /// Whether this field changes the layer's size (rather than its position).
     public var isSize: Bool { self == .width || self == .height }
+
+    /// The noun a sentence about this size uses, so "Smallest width" in a
+    /// reason is spelled the way the Layout section's row spells it.
+    var sizeNoun: String { self == .height ? "height" : "width" }
+
+    /// The direction words a sentence about a floor and a ceiling needs: a
+    /// width goes narrower and wider, a height shorter and taller.
+    var smallerWord: String { self == .height ? "shorter" : "narrower" }
+    var largerWord: String { self == .height ? "taller" : "wider" }
 }
 
 /// Reading and writing a layer's frame as four typed numbers.
@@ -94,16 +103,20 @@ public enum LayerGeometry {
     /// `notBelow` is the layer's own floor, for the layers that stop before
     /// one point: pass `LayerGeometryEditing.minimum(for:)` and a typed width
     /// stops exactly where dragging that layer's edge stops. Nil means the
-    /// ordinary floor.
+    /// ordinary floor. `notAbove` is the other end, for a group told the
+    /// largest it may get: pass `LayerGeometryEditing.maximum(for:)` and a
+    /// typed width stops where the group's own flow would have stopped it, so
+    /// the panel lands the number the layer was going to keep anyway.
     public static func applying(_ value: CGFloat, to field: LayerGeometryField,
-                                of frame: CGRect, notBelow floor: CGFloat? = nil) -> CGRect {
+                                of frame: CGRect, notBelow floor: CGFloat? = nil,
+                                notAbove ceiling: CGFloat? = nil) -> CGRect {
         guard value.isFinite else { return frame }
         var result = frame
         switch field {
         case .x: result.origin.x = value
         case .y: result.origin.y = value
-        case .width: result.size.width = clampedSide(value, notBelow: floor)
-        case .height: result.size.height = clampedSide(value, notBelow: floor)
+        case .width: result.size.width = clampedSide(value, notBelow: floor, notAbove: ceiling)
+        case .height: result.size.height = clampedSide(value, notBelow: floor, notAbove: ceiling)
         }
         return result
     }
@@ -146,8 +159,39 @@ public enum LayerGeometry {
         return CGFloat(value)
     }
 
-    private static func clampedSide(_ value: CGFloat, notBelow floor: CGFloat? = nil) -> CGFloat {
-        min(max(value, max(floor ?? minimumSide, minimumSide)), maximumSide)
+    private static func clampedSide(_ value: CGFloat, notBelow floor: CGFloat? = nil,
+                                    notAbove ceiling: CGFloat? = nil) -> CGFloat {
+        // The floor wins where the two cross, the same way `GroupLayout.held`
+        // settles it, because somebody typing 96 over a 9 passes through that
+        // state on the way and it has to mean something sensible.
+        let most = min(ceiling ?? maximumSide, maximumSide)
+        return max(min(value, most), max(floor ?? minimumSide, minimumSide))
+    }
+}
+
+/// What decides how far a typed size may go, when something with a name does.
+///
+/// Two answers, because there are two: a group's own Smallest and Largest rows
+/// in the Layout section, and a text layer's own words. A floor nobody set —
+/// the one point every layer has — is not one of these, so a sentence is never
+/// written about it.
+public enum LayerSizeRule: Hashable, Sendable {
+    /// The Smallest and Largest rows in the Layout section.
+    case layoutSection
+    /// The words in a text layer, which no box may be smaller than.
+    case words
+}
+
+/// How far a size may go, and what holds it there. A limit with a name, so the
+/// panel can say WHY a typed number sprang back instead of only showing the
+/// number it kept.
+public struct LayerSizeHold: Hashable, Sendable {
+    public let limit: CGFloat
+    public let rule: LayerSizeRule
+
+    public init(limit: CGFloat, rule: LayerSizeRule) {
+        self.limit = limit
+        self.rule = rule
     }
 }
 
@@ -186,6 +230,39 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         return "This layer is locked, and the \(noun) it is in decides where it sits. "
             + "Unlocking it in the Layers list gives back its size, not its position."
     }
+
+    /// Why a typed size sprang back to the smallest this group is allowed to
+    /// be. The Layout section's own row is the owner, named the way that row
+    /// names itself, and changing it there is the one thing to do.
+    public static func smallestReason(for field: LayerGeometryField,
+                                      _ limit: CGFloat) -> String {
+        "Smallest \(field.sizeNoun) in the Layout section holds this at "
+            + "\(whole(limit)) \(LayerGeometry.unitSuffix). "
+            + "Change Smallest there to go \(field.smallerWord)."
+    }
+
+    /// The same at the other end.
+    public static func largestReason(for field: LayerGeometryField,
+                                     _ limit: CGFloat) -> String {
+        "Largest \(field.sizeNoun) in the Layout section holds this at "
+            + "\(whole(limit)) \(LayerGeometry.unitSuffix). "
+            + "Change Largest there to go \(field.largerWord)."
+    }
+
+    /// Why a typed size sprang back to what the words themselves need. Not a
+    /// rule anybody set: it is the text, so the Text section is where to go.
+    public static func wordsReason(for field: LayerGeometryField,
+                                   _ limit: CGFloat) -> String {
+        let unit = LayerGeometry.unitSuffix
+        return field == .height
+            ? "The words need \(whole(limit)) \(unit) to sit in, so the box stops there. "
+                + "Change the width to re-wrap them, or the font size in the Text section."
+            : "The words need \(whole(limit)) \(unit) to stay readable, so the box stops "
+                + "there. Change the font size in the Text section to go narrower."
+    }
+
+    /// Whole points, the spelling every number in a reason uses.
+    private static func whole(_ value: CGFloat) -> String { String(Int(value.rounded())) }
 
     /// Why a shape drawn end to end has no typeable size.
     public static let endpointReason = "Drag this shape's ends on the canvas to change its size."
@@ -253,9 +330,22 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// The narrowest a typed width may make this layer, and the shortest a
     /// typed height may. A text box stops at the width its drag stops at, so
     /// the two ways of setting a width land in the same place; everything else
-    /// stops at one point, which is where its drag stops.
+    /// stops at one point, which is where its drag stops. A group told a
+    /// Smallest in the Layout section stops there too.
     public let minimumWidth: CGFloat
     public let minimumHeight: CGFloat
+
+    /// The limits that have a NAME, kept apart from the numbers above because
+    /// only a named one may be turned into a sentence. Every layer has a floor
+    /// of one point and nobody set it, so "Smallest width holds this at 1 px"
+    /// would be inventing a rule that is not in the Layout section.
+    ///
+    /// The ceilings are only here: nothing holds a size from above unless a
+    /// group was told a Largest.
+    private let widthFloor: LayerSizeHold?
+    private let widthCeiling: LayerSizeHold?
+    private let heightFloor: LayerSizeHold?
+    private let heightCeiling: LayerSizeHold?
 
     private let widthReason: String?
     private let heightReason: String?
@@ -271,24 +361,43 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// placement experiment. Without that row the field reads the height the
     /// words came out to and takes nothing, as it always did.
     public init(layer: Layer, in container: Layer? = nil, textTakesAHeight: Bool = false) {
+        // A group told the smallest and the largest it may get keeps those
+        // limits in its OWN flow, applied inside `LayerScaling.rearranging`
+        // long after the panel has handed a number over. The panel has to know
+        // them too, or the only way to find out a group will not go below 160
+        // is to type 50 and watch the box spring back. Only the groups that
+        // actually take that path: a copy is sized by its original and a screen
+        // is its own frame, so neither is held here.
+        let ownLimits: GroupLayout? = {
+            guard let group = layer.group, group.instanceOf == nil, !group.isFrame,
+                  let layout = group.layout, layout.limitsSize else { return nil }
+            return layout
+        }()
         // Text is the one content with a floor of its own: below it a caption
         // is an unreadable sliver, so the canvas refuses to drag one narrower
         // and the field refuses to type one.
         // Counted on the words, because the words are what the field shows.
-        minimumWidth = layer.resizeWidthOnly ? TextMeasurement.minimumContentWidth
-                                             : LayerGeometry.minimumSide
+        let textWidthFloor = layer.resizeWidthOnly ? TextMeasurement.minimumContentWidth : nil
+        widthFloor = ownLimits?.usedMinWidth.map { LayerSizeHold(limit: $0, rule: .layoutSection) }
+            ?? textWidthFloor.map { LayerSizeHold(limit: $0, rule: .words) }
+        widthCeiling = ownLimits?.usedMaxWidth.map { LayerSizeHold(limit: $0, rule: .layoutSection) }
+        minimumWidth = max(widthFloor?.limit ?? 0, LayerGeometry.minimumSide)
         // And a floor down the box for the same reason: a height typed here is
         // ROOM the words then sit in, so the shortest it can be is the words
         // themselves. Counted without the room the renderer draws them in,
         // because the field speaks the box a person sees.
-        if case .text(let content) = layer.content {
-            minimumHeight = max(LayerGeometry.minimumSide,
-                                TextMeasurement.size(of: content,
-                                                     wrappingAt: layer.frame.standardized.width)
-                                    .height - layer.boxSlack.height)
+        let textHeightFloor: CGFloat? = if case .text(let content) = layer.content {
+            max(LayerGeometry.minimumSide,
+                TextMeasurement.size(of: content, wrappingAt: layer.frame.standardized.width)
+                    .height - layer.boxSlack.height)
         } else {
-            minimumHeight = LayerGeometry.minimumSide
+            nil
         }
+        heightFloor = ownLimits?.usedMinHeight.map { LayerSizeHold(limit: $0, rule: .layoutSection) }
+            ?? textHeightFloor.map { LayerSizeHold(limit: $0, rule: .words) }
+        heightCeiling = ownLimits?.usedMaxHeight
+            .map { LayerSizeHold(limit: $0, rule: .layoutSection) }
+        minimumHeight = max(heightFloor?.limit ?? 0, LayerGeometry.minimumSide)
         frameIsTheShape = !layer.hasEndpointHandles
         isLocked = layer.isLocked
         // A container that arranges its contents, or that closes around them,
@@ -397,6 +506,42 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         case .width: minimumWidth
         case .height: minimumHeight
         }
+    }
+
+    /// The ceiling this field stops at, or nil where nothing holds it from
+    /// above — which is nearly everything. Only a group told a Largest in the
+    /// Layout section has one.
+    public func maximum(for field: LayerGeometryField) -> CGFloat? {
+        switch field {
+        case .x, .y: nil
+        case .width: widthCeiling?.limit
+        case .height: heightCeiling?.limit
+        }
+    }
+
+    /// Why a number typed into this field would not be taken, in the wording
+    /// law's two halves. Nil when the number is one this layer will take, and
+    /// nil when the thing holding it has no name: the one point every layer
+    /// has is nobody's rule, and a sentence about it would send a person
+    /// looking for a control that does not exist.
+    ///
+    /// Worked out from the limits as they stand right now rather than from
+    /// anything remembered, so taking the rule off takes the sentence with it
+    /// instead of leaving it explaining a rule that is gone.
+    public func limitReason(for field: LayerGeometryField, asking value: CGFloat) -> String? {
+        guard field.isSize, value.isFinite else { return nil }
+        let floor = field == .height ? heightFloor : widthFloor
+        if let floor, value < floor.limit {
+            return switch floor.rule {
+            case .layoutSection: Self.smallestReason(for: field, floor.limit)
+            case .words: Self.wordsReason(for: field, floor.limit)
+            }
+        }
+        let ceiling = field == .height ? heightCeiling : widthCeiling
+        if let ceiling, value > ceiling.limit, ceiling.rule == .layoutSection {
+            return Self.largestReason(for: field, ceiling.limit)
+        }
+        return nil
     }
 
     /// A plain sentence explaining why a field does not take a number, for the

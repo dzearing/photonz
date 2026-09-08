@@ -1,0 +1,237 @@
+{
+  "out": "/tmp/photonz-playtest/refused-width-says-why",
+  "seed": "A button is told it may never be narrower than 160 points, then a width of 50 is typed into W. The flow refuses it and the button keeps 160. The claim here is about the LINE UNDER Position & Size: it has to stop saying what it says at rest and carry the reason instead, naming Smallest in the Layout section. Then a width the button accepts is typed, and the line has to go back to its caption with nothing said at all.",
+  "setup": {
+    "forget": [
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1200,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        400,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -200,
+      "row": "Layout section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Limits",
+      "in": "Width"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Smallest width"
+    },
+    {
+      "do": "type",
+      "text": "160"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-smallest-set",
+      "note": "the button may never go below 160 now"
+    },
+    {
+      "do": "scrollPanel",
+      "by": 400,
+      "row": "Layout section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "refused-width-0-at-rest"
+    },
+    {
+      "do": "describe",
+      "stage": "2-at-rest",
+      "note": "the line under Position & Size is on its caption"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "50"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "160"
+    },
+    {
+      "do": "snapshot",
+      "name": "refused-width-1-says-why"
+    },
+    {
+      "do": "describe",
+      "stage": "3-refused",
+      "note": "THE CLAIM: W reads 160, and the line under the section now names Smallest in the Layout section instead of describing arrow keys"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "240"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "240"
+    },
+    {
+      "do": "snapshot",
+      "name": "refused-width-2-quiet-again"
+    },
+    {
+      "do": "describe",
+      "stage": "4-accepted",
+      "note": "THE SECOND CLAIM: a width the button takes says nothing at all, so the line is back on its caption"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "160"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "160"
+    },
+    {
+      "do": "snapshot",
+      "name": "refused-width-3-arrow-at-the-floor"
+    },
+    {
+      "do": "describe",
+      "stage": "5-arrow-refused",
+      "note": "THE THIRD CLAIM: an arrow key that has nowhere to go is a refusal too, so it says the same thing rather than looking like a key that did nothing"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        300
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "snapshot",
+      "name": "refused-width-4-caption-names-the-keys"
+    },
+    {
+      "do": "describe",
+      "stage": "6-inside-the-button",
+      "note": "THE FOURTH CLAIM: the label inside the button has its X and Y decided for it, so the line under the section names only the numbers an arrow key really steps instead of promising all four"
+    }
+  ]
+}

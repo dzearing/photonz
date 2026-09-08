@@ -454,7 +454,7 @@ struct LayerGeometrySelectionTests {
         #expect(sel.caption.hasPrefix("2 layers, all at once."))
     }
 
-    @Test("A layer a stack owns is not locked, so its caption is the ordinary one")
+    @Test("A layer a stack owns is not locked, and its caption promises only the keys that work")
     func aStackedLayerIsNotLocked() {
         let frame = CGRect(x: 0, y: 0, width: 40, height: 20)
         let child = rectangle(frame)
@@ -466,7 +466,13 @@ struct LayerGeometrySelectionTests {
             LayerGeometrySelection.Member(id: child.id, frame: frame, editing: editing)])
         #expect(!editing.allows(.x))
         #expect(!sel.isLocked)
-        #expect(sel.caption == selection([frame]).caption)
+        // Not the lock's sentence: nothing here is locked. But not the free
+        // layer's either — the stack decides X and Y, so an arrow key steps
+        // only W and H and the caption says exactly that.
+        #expect(sel.caption != LayerGeometryEditing.lockedReason)
+        #expect(sel.caption == "\(LayerGeometry.unitSuffix) from the top left. "
+                + "Up or down arrow steps W and H by 1, Shift by 10.")
+        #expect(sel.caption != selection([frame]).caption)
     }
 
     @Test("Nothing selected reads as nothing, and the caption stays the plain one")

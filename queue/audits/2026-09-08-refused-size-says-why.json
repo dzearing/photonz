@@ -1,0 +1,32 @@
+{
+  "feature": "A size that springs back says why it did",
+  "epic": "ui-components",
+  "summary": "Type a width a layer will not take and the box no longer just snaps back in silence: the line under Position & Size names the rule that refused it, points at the row that would change it, and goes quiet again on its own. The same line also stopped promising arrow keys for numbers that are plain text.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Drag a Button off the Library shelf onto a blank canvas and click it once." },
+    { "do": "In the Layout section, open Limits on the Width row and type 160 into Smallest." },
+    { "do": "Scroll back up to Position & Size and read the line under the four numbers. It is the ordinary caption." },
+    { "do": "Type 50 into W and press Return.", "shot": "2026-09-08-refused-size-says-why-1.png" },
+    { "do": "Wait about six seconds without touching anything and watch the line go back to its caption." },
+    { "do": "Type 240 into W and press Return. Nothing is said at all.", "shot": "2026-09-08-refused-size-says-why-2.png" },
+    { "do": "Type 160 into W, press Return, then press the down arrow in W." },
+    { "do": "Double-click into the button and pick the Background inside it. Read the line under Position & Size.", "shot": "2026-09-08-refused-size-says-why-3.png" }
+  ],
+  "evaluate": [
+    "Reading the sentence, do you know where to go next without hunting for it?",
+    "Six seconds: long enough to notice and read, or does it vanish before you look down?",
+    "Is a line that changes strength from quiet grey to ordinary grey enough of a signal, or did you want the number itself to react?",
+    "A width the layers take says nothing at all. Is silence the right answer there, or did you want a beat of confirmation?",
+    "The down arrow at the floor now says the same sentence as typing. Is that welcome, or noisy when you are holding the key down?",
+    "The caption on the Background inside the button reads \"Up or down arrow steps X and Y by 1\". Does naming the letters help, or would you rather it just said nothing about keys?"
+  ],
+  "rough": [
+    "Screen Recording was granted for the probe, so all three pictures here are real window captures, not offscreen renders.",
+    "A rule only speaks if it can say its own name. Smallest and Largest in the Layout section, and a text layer's own words, all can. Every layer also has a floor of one point that nobody set, and where a size is refused by something with no name the line stays quiet rather than writing a vaguer sentence. I could not produce that case on purpose after plumbing the limits in, but it exists in principle and the fix would be to give the new rule a name.",
+    "The sentence says \"holds this at 160 px\" even with several layers picked, where \"these\" would read better. Left as one sentence rather than two spellings of it.",
+    "A one-line caption becoming a two-line answer nudges the Layout section down a line for six seconds and back. That is how the existing click-a-plain-number answer has always behaved, so this did not make it worse, but it is a shift nobody asked for.",
+    "The line is a plain Text, so no playtest step can read its words. The walk proves it with pictures and the sentences themselves are pinned by unit tests; a walk cannot assert on the line yet.",
+    "Plumbing the group's Smallest and Largest into the panel had a side effect worth knowing about: the hover tip on W now warns before you type (\"Will not go below 160 px. Will not go past 260 px.\"), and a typed number is clamped to those limits on the way out instead of being handed to the flow to bounce back."
+  ]
+}

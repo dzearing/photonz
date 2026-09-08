@@ -149,12 +149,45 @@ public struct LayerGeometrySelection: Hashable, Sendable {
             return "\(count) locked layers. Unlock them in the Layers list to "
                 + "change their position or size."
         }
+        // Only the numbers that actually take typing are described. A section
+        // whose W and H are plain text because a stack decided them has no
+        // arrow key to promise, and a caption that promises one anyway is the
+        // panel describing a control that is not there.
+        let typeable = LayerGeometryField.allCases.filter { allows($0) }
         guard count > 1 else {
-            return "\(LayerGeometry.unitSuffix) from the top left. "
-                + "Up or down arrow steps by 1, Shift by 10."
+            let where_ = "\(LayerGeometry.unitSuffix) from the top left."
+            // Nothing picked is not a panel full of numbers somebody else
+            // decided, it is an empty panel, so it keeps the plain caption.
+            guard !typeable.isEmpty || isEmpty else { return "\(where_) \(Self.workedOutForYou)" }
+            guard !typeable.isEmpty,
+                  typeable.count < LayerGeometryField.allCases.count else {
+                return "\(where_) Up or down arrow steps by 1, Shift by 10."
+            }
+            return "\(where_) Up or down arrow steps \(Self.letters(typeable)) by 1, Shift by 10."
         }
-        return "\(count) layers, all at once. X sets every left edge, Y every top edge, "
-            + "W and H each layer's own size. Arrow steps them all by 1, Shift by 10."
+        let head = "\(count) layers, all at once."
+        guard !typeable.isEmpty else { return "\(head) \(Self.workedOutForThem)" }
+        guard typeable.count < LayerGeometryField.allCases.count else {
+            return "\(head) X sets every left edge, Y every top edge, "
+                + "W and H each layer's own size. Arrow steps them all by 1, Shift by 10."
+        }
+        return "\(head) \(Self.letters(typeable)) land on every one of them. "
+            + "Arrow steps them by 1, Shift by 10."
+    }
+
+    /// What the line says when NONE of the four takes a number and no lock is
+    /// the reason. There is no keyboard to describe, so it points at the thing
+    /// that does answer: clicking one of them.
+    static let workedOutForYou = "These numbers are worked out for you. Click one to see what decides it."
+    static let workedOutForThem = "These numbers are worked out for them. Click one to see what decides it."
+
+    /// The field letters as a person would read them out: "W", "W and H",
+    /// "X, Y and W".
+    private static func letters(_ fields: [LayerGeometryField]) -> String {
+        let labels = fields.map(\.label)
+        guard let last = labels.last else { return "" }
+        guard labels.count > 1 else { return last }
+        return labels.dropLast().joined(separator: ", ") + " and " + last
     }
 
     /// The layers a given field actually changes.
@@ -230,6 +263,42 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         return fixedReason(for: field) ?? field.title
     }
 
+    /// What to say after a number was typed into `field` and the picked layers
+    /// would not take it.
+    ///
+    /// The read-back half of this landed first: the box comes back to the size
+    /// they kept rather than showing what was asked for. On its own that reads
+    /// as a box that ignored you, so the line under the section carries the
+    /// reason. `landed` is what the field read once the change had been made.
+    ///
+    /// Nil in every case where there is nothing to say, and that is most of
+    /// them: they took the number, the number was the one they already had, a
+    /// position (nothing clamps where a layer sits), or the report is about a
+    /// moment that has passed because the numbers have moved on since.
+    ///
+    /// Nil too when nothing with a NAME refused it. Every layer has a floor of
+    /// one point that nobody set, and a sentence about it would send a person
+    /// looking for a control that does not exist. A rule that refuses a typed
+    /// number owes the panel its own name (`LayerGeometryEditing.limitReason`);
+    /// where a new rule cannot give one, the fix is to give it one rather than
+    /// to write a vaguer sentence here.
+    ///
+    /// Worked out afresh from the pair every time rather than held as words,
+    /// so taking the rule off takes the sentence with it instead of leaving it
+    /// explaining a rule that is gone.
+    public func refusal(asking value: CGFloat, for field: LayerGeometryField,
+                        landedOn landed: LayerGeometryReading) -> String? {
+        guard !isEmpty, field.isSize, value.isFinite else { return nil }
+        guard landed != .agreed(value.rounded()) else { return nil }
+        guard reading(field) == landed else { return nil }
+        // With several picked the first reason stands for all of them, the same
+        // way `fixedReason` settles it: they are all being held by something,
+        // and a stack of sentences in one line is not more useful than one.
+        return members(taking: field)
+            .compactMap { $0.editing.limitReason(for: field, asking: value) }
+            .first
+    }
+
     /// A plain sentence explaining why a field takes nothing, for the hover
     /// tip. Nil when it takes something. With several layers picked the first
     /// reason in the selection stands for all of them: they are all sitting
@@ -255,6 +324,9 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         if let floor = floor(for: field) {
             parts.append("Will not go below \(Int(floor)) \(LayerGeometry.unitSuffix).")
         }
+        if let ceiling = ceiling(for: field) {
+            parts.append("Will not go past \(Int(ceiling)) \(LayerGeometry.unitSuffix).")
+        }
         return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
 
@@ -269,13 +341,21 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         return highest
     }
 
+    /// The other end, said the same way. The LOWEST ceiling among the layers
+    /// the field reaches stands for them, because that is the first place a
+    /// number typed into the box stops changing anything on the way up.
+    private func ceiling(for field: LayerGeometryField) -> CGFloat? {
+        members(taking: field).compactMap { $0.editing.maximum(for: field) }.min()
+    }
+
     /// Every layer's new frame after `value` is typed into `field`. Layers the
     /// field does not act on, and layers already at that number, are left out,
     /// so an edit that changes nothing produces no moves at all.
     public func applying(_ value: CGFloat, to field: LayerGeometryField) -> [UUID: CGRect] {
         moves(for: field) { frame, member in
             LayerGeometry.applying(value, to: field, of: frame,
-                                   notBelow: member.editing.minimum(for: field))
+                                   notBelow: member.editing.minimum(for: field),
+                                   notAbove: member.editing.maximum(for: field))
         }
     }
 
@@ -295,7 +375,8 @@ public struct LayerGeometrySelection: Hashable, Sendable {
             let stepped = LayerGeometry.stepped(LayerGeometry.value(field, of: frame),
                                                 direction: direction, coarse: coarse)
             return LayerGeometry.applying(stepped, to: field, of: frame,
-                                          notBelow: member.editing.minimum(for: field))
+                                          notBelow: member.editing.minimum(for: field),
+                                          notAbove: member.editing.maximum(for: field))
         }
     }
 

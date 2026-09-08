@@ -1,7 +1,11 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.4. §3 gains the canvas guide as a named surface and D16 states the
-rule it follows: a guide drawn on the canvas goes OVER your work, reads as a
+**Status: v1.5. §4 gains "The line under a section", one rule for the line under
+a panel section that was quietly doing three jobs: what it may say, which
+message wins when two want it at once, and how long each stays. Written
+2026-09-08 with `a-number-that-springs-back-says-why-it-did`, which was about to
+give it a fourth. v1.4: §3 gains the canvas guide as a named surface and D16
+states the rule it follows: a guide drawn on the canvas goes OVER your work, reads as a
 wash or a hairline rather than as something you drew, and never reaches an
 export. Written 2026-09-07, after the canvas grid and a screen's columns each
 worked the same answer out from scratch a day apart, with an audit gate in §9.
@@ -508,8 +512,62 @@ Everything below is a consequence of that table.
 again, and `LayerGeometrySelection` no longer offers a landing worked out in
 advance at all. It could not have been right: a group held to a smallest width
 by its own flow refused a typed 50 and kept 160, and the box went on showing a
-50 that nothing on the canvas had. What it still does NOT do is say WHY when
-nothing moved; the line under the section stays on its caption.)*
+50 that nothing on the canvas had. The saying-why half landed 2026-09-08,
+`a-number-that-springs-back-says-why-it-did`: `LayerGeometrySelection.refusal`
+is the sentence and `LayerSizeRule` is where it comes from. See **The line under
+a section** below for the rule the line follows.)*
+
+- **A rule that refuses a typed number owes the panel its own name.** The
+  sentence is written from a limit that KNOWS what it is — the Layout section's
+  Smallest and Largest, a text layer's own words — not guessed from the
+  before-and-after pair. Every layer also has a floor of one point that nobody
+  set, and "Smallest width holds this at 1 px" would send a person looking for a
+  control that is not there, so a limit with no name says nothing at all.
+  *(`LayerSizeRule` and `LayerGeometryEditing.limitReason`. Where a new rule
+  cannot name itself, the fix is to give it a name, not to write a vaguer
+  sentence.)*
+- **A limit the panel can say afterwards is a limit it can say BEFORE.** The
+  same numbers went into the field's hover tip ("Will not go below 160 px. Will
+  not go past 260 px.") and into what a typed number clamps to, so the panel
+  stops handing the flow a number it already knows will come back.
+
+#### The line under a section
+
+One line, one voice, and it was doing three jobs with no shared rule before
+2026-09-08. Settled here so the fourth use of it does not invent a fourth
+answer.
+
+- **At rest it is the section's CAPTION**: what these controls mean, how many of
+  the picked things they reach, and how to work them. `caption`,
+  `shadowReachNote`, `borderReachNote`,
+  `ComponentKnobSelection.differentComponentsNote` are all this register.
+- **The caption describes only controls that are actually there.** It promised
+  "Up or down arrow steps by 1, Shift by 10" while three of the four numbers
+  were plain text and only one of them stepped (audit
+  `2026-09-06-a-decided-number-looks-decided`, rough 4). Now it names them: "Up
+  or down arrow steps W and H by 1, Shift by 10", and where NOTHING takes a
+  number it stops promising a keyboard at all and points at the thing that does
+  answer, "These numbers are worked out for you. Click one to see what decides
+  it."
+- **An ANSWER takes the line when you do something the section has to explain**:
+  a click on a number you cannot type, a number the picked things refused. It
+  goes one step less quiet than the caption (tertiary becomes secondary) so the
+  change is visible without a flash, and it is never a toast.
+- **One answer at a time, and the newest wins.** There is no queue. A queue of
+  sentences under a panel is not a thing anybody reads.
+- **Six seconds, then the caption comes back**, and sooner if what it explained
+  is gone: a different selection clears it at once, and so does the rule itself
+  being taken off.
+- **An answer is never HELD as a sentence.** What is kept is what you DID, and
+  the words are worked out afresh every draw. Hold the string and it outlives
+  its rule for the rest of its six seconds, which is exactly the bug the same
+  audit recorded.
+- **Silence is the answer to a number that landed.** Nothing is said when the
+  picked things took what was typed. The line does not congratulate anybody.
+
+*(`GeometryInspector.Answer` is the shape of this: two cases, one `@State`, one
+`.task(id:)` that fades it. `LayerGeometrySelection.refusal(asking:for:landedOn:)`
+and `.explanation(for:)` are the two sentences, both worked out live.)*
 
 #### What a switch does, since a Mac switch has no third position
 
