@@ -776,16 +776,31 @@ public final class DocumentRenderer: @unchecked Sendable {
             }
         }
 
-        // Circle-shaped callouts max out the corner radius (capsule on
-        // non-square boxes); everything else takes the style's radius. The
-        // extent here is already frame-sized, so the radius is in box space.
-        let cornerRadius: CGFloat
+        // What a MASK cuts out of this layer's box. Circle-shaped callouts max
+        // it out (capsule on non-square boxes); everything else takes the
+        // style's radius. The extent here is already frame-sized, so the radius
+        // is in box space.
+        let maskRadius: CGFloat
         if case .zoomCallout(let callout) = layer.content {
-            cornerRadius = callout.effectiveCornerRadius(boxSize: image.extent.size,
-                                                         styleRadius: layer.style.cornerRadius)
+            maskRadius = callout.effectiveCornerRadius(boxSize: image.extent.size,
+                                                       styleRadius: layer.style.cornerRadius)
         } else {
-            cornerRadius = layer.style.cornerRadius
+            maskRadius = layer.style.cornerRadius
         }
+        // ...and what a RING round the box follows, which is not the same
+        // question. A rectangle rounds by curving the outline it draws rather
+        // than by being masked, so the style's radius is nought on one and a
+        // border added to a rounded box came out a hard square frame with the
+        // corners showing through (reported by the user, 2026-09-07). Its own
+        // curve answers instead, and nothing is cut.
+        //
+        // The shape's numbers are stated in DOCUMENT POINTS — the rasterizer
+        // draws from them into a box in points and the picture is magnified
+        // after — so like `contentOutset` above they are restated in output
+        // pixels here. The style's radius already is, having been magnified
+        // with the frame it sits on.
+        let shapeRadius = (layer.annotation?.boxCornerRadius(in: boxInPoints) ?? 0) * contentScale
+        let ringRadius = shapeRadius > 0 ? shapeRadius : maskRadius
 
         // Style: corner radius, then border — both follow the layer's box, and
         // both happen before the geometric transform so they rotate with it.
@@ -797,15 +812,15 @@ public final class DocumentRenderer: @unchecked Sendable {
         let box = contentOutset > 0
             ? image.extent.insetBy(dx: contentOutset, dy: contentOutset)
             : image.extent
-        image = rounded(image, box: box, radius: cornerRadius, keepingOutside: contentOutset > 0)
+        image = rounded(image, box: box, radius: maskRadius, keepingOutside: contentOutset > 0)
         let isTextLayer: Bool = { if case .text = layer.content { return true } else { return false } }()
         if !isTextLayer {
-            image = bordered(image, box: box, radius: cornerRadius, style: layer.style)
+            image = bordered(image, box: box, radius: ringRadius, style: layer.style)
         }
         // A border you ADDED is a ring round the layer's box, whatever the layer
         // is — including text, whose Appearance outline follows the letters
         // instead. Asking for a box round a label has to be answerable.
-        image = borderEffects(image, box: box, radius: cornerRadius, style: layer.style)
+        image = borderEffects(image, box: box, radius: ringRadius, style: layer.style)
 
         // Style: blur, after the paint rather than before it, so the softness
         // takes the whole layer — what it draws, its rounded corner and its

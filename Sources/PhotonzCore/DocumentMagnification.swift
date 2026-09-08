@@ -97,18 +97,41 @@ extension LayerStyle {
     public func magnified(by scale: CGFloat) -> LayerStyle {
         guard scale > 0, scale != 1, scale.isFinite else { return self }
         var style = self
-        style.blurRadius = blurRadius * scale
         style.cornerRadius = cornerRadius * scale
         style.borderWidth = borderWidth * scale
-        style.shadows = style.shadows.map { shadow in
-            var scaled = shadow
-            scaled.radius *= scale
-            scaled.spread *= scale
-            scaled.offset = CGSize(width: shadow.offset.width * scale,
-                                   height: shadow.offset.height * scale)
-            return scaled
-        }
+        // Every entry in the list, through the list itself rather than through
+        // `blurRadius` and `shadows`. Those two reach a blur and a shadow and
+        // nothing else, so a border somebody ADDED was never restated at all
+        // and drew half as thick on a 2x render; and reading a switched-off
+        // blur gives nought, so writing that back wiped the radius it was
+        // holding.
+        style.effects = effects.map { $0.magnified(by: scale) }
         return style
+    }
+}
+
+extension LayerEffect {
+    /// This entry with every length multiplied by `scale`. A colour, a switch
+    /// and a kind have no size, so they stay exactly as they are.
+    ///
+    /// A new effect scales here and nowhere else, the same way it paints in one
+    /// place and shows one row (`LayerEffects.swift`).
+    public func magnified(by scale: CGFloat) -> LayerEffect {
+        guard scale > 0, scale != 1, scale.isFinite else { return self }
+        switch self {
+        case .blur(var blur):
+            blur.radius *= scale
+            return .blur(blur)
+        case .shadow(var shadow):
+            shadow.radius *= scale
+            shadow.spread *= scale
+            shadow.offset = CGSize(width: shadow.offset.width * scale,
+                                   height: shadow.offset.height * scale)
+            return .shadow(shadow)
+        case .border(var border):
+            border.width *= scale
+            return .border(border)
+        }
     }
 }
 

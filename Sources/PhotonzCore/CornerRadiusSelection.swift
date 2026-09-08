@@ -171,3 +171,57 @@ extension PhotonzDocument {
         return changed
     }
 }
+
+// MARK: - The curve everything round a layer's box follows
+
+extension AnnotationContent {
+
+    /// How round the shape's SILHOUETTE is where it meets the shape's own
+    /// frame: the line a ring round the box, or a mask cut out of it, has to
+    /// follow. Zero for anything that is not a rectangle, and for a rectangle
+    /// that is not rounded.
+    ///
+    /// `cornerRadius` is the radius of the path the stroke rides, and that
+    /// path is not the frame: it is inset by half a width for an inside
+    /// outline, sits on the frame for a centred one, and is pushed half a width
+    /// out for an outside one (`AnnotationRasterizer`). The silhouette is that
+    /// path grown by half a width, so the curve at the frame is half a width
+    /// wider than the path's, less however far the whole thing was pushed past
+    /// the frame.
+    ///
+    /// `size` is the shape's box in the same unit its numbers are stated in,
+    /// which is document points.
+    public func boxCornerRadius(in size: CGSize) -> CGFloat {
+        guard shape == .rectangle, cornerRadius > 0 else { return 0 }
+        let outset = strokeOutset
+        let inset = strokeWidth / 2 - outset
+        let path = CGSize(width: size.width - 2 * inset, height: size.height - 2 * inset)
+        guard path.width > 0, path.height > 0 else { return 0 }
+        // Rounding past fully round is fully round, exactly as the rasterizer
+        // clamps it, so a shape pulled thin does not grow a curve wider than it
+        // is.
+        let radius = min(cornerRadius, min(path.width, path.height) / 2)
+        return max(0, radius + strokeWidth / 2 - outset)
+    }
+}
+
+extension Layer {
+
+    /// How round this layer's own box is: the one curve every ring round it,
+    /// and every mask cut out of it, follows.
+    ///
+    /// A rectangle curves the outline it draws, so its own curve answers here
+    /// — the layer style's radius is deliberately nought on one, which is why
+    /// a border added to a rounded box used to come out a hard square frame
+    /// (reported by the user, 2026-09-07). Everything else is rounded by the
+    /// mask its look carries, and so is a rectangle rounded by nothing but that
+    /// old mask, so a document written before the one Corner Radius row paints
+    /// what it always painted (`roundedCornerRadius`).
+    ///
+    /// `boxSize` is the layer's box in the unit the shape's own numbers are
+    /// stated in, which is document points.
+    public func boxCornerRadius(boxSize: CGSize) -> CGFloat {
+        let own = annotation?.boxCornerRadius(in: boxSize) ?? 0
+        return own > 0 ? own : style.cornerRadius
+    }
+}

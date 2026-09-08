@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T05:08:20.575Z",
-  "updated": "2026-09-08T05:08:20.648Z",
+  "updated": "2026-09-08T06:42:08.930849Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07: added a border, adjusted corner radius, nothing happened to the rectangle or the border. There are two corner radii in the app and this is almost certainly which one the slider writes. A rectangle annotation carries its own cornerRadius (Sources/PhotonzCore/Layer.swift line 120, in the annotation's coding keys at line 186) and draws its path with it, while LayerStyle carries a separate cornerRadius that rounds the layer's rendered box. The panel row reads through displayedCornerRadius, which calls layer.roundedCornerRadius(style:) (CornerRadiusSelection.swift lines 150 and 151), so check which of the two that returns and which setCornerRadius writes; if the row is writing the layer style radius on a shape that draws its own path, nothing will move. The renderer does pass the style radius to the border painting (DocumentRenderer.swift lines 526 and 527), so once the right radius is being written the border should follow, but confirm rather than assume. Whatever the answer, the app should not offer two numbers for one visible thing: say in the audit which one survives.",
@@ -30,6 +30,27 @@
     {
       "t": "2026-09-08T05:08:20.647Z",
       "note": "seq 230 -> 9"
+    },
+    {
+      "t": "2026-09-08T06:28:16.301Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T06:34:36.927082Z",
+      "note": "Reproduced. Playtest walk /tmp/corner-repro-walk.json on the probe: draw a rectangle, Add Effect > Border, pull Corner Radius. The SHAPE rounds (annotation.cornerRadius is written and AnnotationRasterizer curves the path), but the added Border stays a hard square frame with white gaps at the corners, so at a glance nothing looks rounded. Headless render confirms: setCornerRadius writes annotation.cornerRadius=30 and style.cornerRadius=0, then DocumentRenderer.swift:787 sets the ring radius from layer.style.cornerRadius alone, which is 0 on a shape, so bordered()/borderEffects() ring it square. Two follow-ons found while reading: LayerStyle.magnified scales style.borderWidth but not the widths of borders in the effects list, so an added border draws at half thickness on a 2x render; and it writes blurRadius through the computed property, which reads 0 for a switched-off blur and so wipes its radius."
+    },
+    {
+      "t": "2026-09-08T06:42:08.930849Z",
+      "note": "Adversarial review before building: nothing to decide here, one visible thing wants one number and it already has one row. The only real choice was whether the ring should trace the raw slider number or the shape's actual silhouette. Traced the silhouette: on a box with a thick Outline the two differ by half a line width, and a ring a few points off its own corner is exactly the kind of works-but-feels-wrong a redlining tool cannot afford."
+    },
+    {
+      "t": "2026-09-08T06:42:08.930849Z",
+      "note": "Fixed. New AnnotationContent.boxCornerRadius(in:) and Layer.boxCornerRadius(boxSize:) in PhotonzCore/CornerRadiusSelection.swift give the one curve every ring follows: a rectangle's own silhouette at its frame (path radius + half a line, less however far the line was pushed past the frame, clamped to fully round), falling back to the style radius so a legacy masked rectangle still paints what it painted. DocumentRenderer.layerImage now separates maskRadius (what rounded() cuts) from ringRadius (what bordered()/borderEffects() follow), restating the shape's points in output pixels the way contentOutset already did. Also fixed LayerStyle.magnified: it now maps the effects list through a new LayerEffect.magnified(by:), so an added border is as thick at 2x as at 1x and a switched-off blur keeps its radius."
+    },
+    {
+      "t": "2026-09-08T06:42:08.930849Z",
+      "note": "Verified. 23 new tests (BoxCornerRadiusTests, EffectMagnificationTests, RoundedBorderRenderTests) written before the change; 6 of the 9 render tests fail on the old renderer and all pass on the new one. Full suite green: 4747 tests in 397 suites. On the probe, Scripts/playtest/corner-radius-rounds-walk.json walks square -> rounded -> border inside/centre/outside -> resized -> zoomed to 156% -> grouped, and the ring follows the corner in every one. Screen Recording was granted, so the audit carries real window captures. Perf: the composite path gained a handful of arithmetic ops per layer, no new image passes."
     }
-  ]
+  ],
+  "started": "2026-09-08T06:28:16.301Z"
 }

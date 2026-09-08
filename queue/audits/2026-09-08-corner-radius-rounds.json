@@ -1,0 +1,30 @@
+{
+  "feature": "Corner radius rounds the shape you are looking at",
+  "epic": "ui-building",
+  "summary": "Pull Corner Radius on a rectangle and every ring on it rounds with the shape instead of staying a hard square frame. It holds for a border inside, centred or outside the edge, for a shape that has been resized, for one inside a group, and at any zoom, where an added border also keeps the thickness it says it is.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Press R and drag out a rectangle." },
+    { "do": "Press the plus on the Effects header and choose Border, then pull its Width up to about a third." },
+    { "do": "Look at the box: shape and ring both square.", "shot": "2026-09-08-corner-radius-1-square-sc.png" },
+    { "do": "Pull the Corner Radius slider in Appearance up to about two thirds.", "shot": "2026-09-08-corner-radius-2-rounded-sc.png" },
+    { "do": "Set the Border's Position to Inside, then Center, then back to Outside.", "shot": "2026-09-08-corner-radius-3-inside-sc.png" },
+    { "do": "Drag the shape's bottom-right handle out to make it bigger." },
+    { "do": "Press Command Plus twice to zoom in.", "shot": "2026-09-08-corner-radius-4-zoomed-sc.png" },
+    { "do": "Press Command G to group it, and check nothing about the corner or the ring moved." }
+  ],
+  "evaluate": [
+    "Pulling the slider now moves something on every frame of the drag. Does it feel like you are rounding the box, or like you are rounding a picture of it?",
+    "There is one Corner Radius number, in Appearance. Is that where you look for it?",
+    "A ring set to Inside eats into the shape and follows the curve on its inner edge too. Does an inner border read as part of the shape, or as something sitting on top of it?",
+    "The ring hugs the shape's real edge, so on a box with a thick Outline the ring sits a little wider than the number in the slider says. Does that look right, or do you expect the ring to trace the number?",
+    "Zoomed to 156% the border is still 11 pt thick. Does anything else on the canvas look like it is measured in the wrong unit when you zoom?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window rather than an offscreen render.",
+    "This was never a slider writing to the wrong place. The shape was rounding all along; the ring round it was reading the layer style's radius, which the one Corner Radius row deliberately leaves at nought on a shape. With a black border over it the square frame was all you could see, which is why it read as a slider that does nothing.",
+    "Fixed on the way past, because it sits next to the same corner: an added border was never restated in output pixels on a magnified render, so it drew at half thickness when you zoomed to 2x, and a switched-off blur had its radius wiped whenever a document was magnified.",
+    "The selection outline round a rounded shape is still a plain rectangle. It marks the frame rather than the ink, so this is arguably right, but it looks loose against a well rounded box. Not changed here.",
+    "A border added to an ELLIPSE still draws a rounded rectangle round its box. That is a different shape's problem and is already filed as \"A border you add to an ellipse follows the ellipse\"."
+  ]
+}
