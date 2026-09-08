@@ -1,0 +1,29 @@
+{
+  "feature": "A row that runs out of room wraps onto the next line",
+  "epic": "ui-layout",
+  "summary": "A row can now carry on underneath instead of running out past its own edge, so a strip of tags or a set of filter chips finally has a shape that is not a grid of equal cells.",
+  "setup": "Photonz Dev, Experiments window, release Next. Groups that arrange their own contents is on by default.",
+  "try": [
+    { "do": "Draw six rounded rectangles of six different widths, side by side." },
+    { "do": "Sweep all six and press Shift-Command-S to make them one Row." },
+    { "do": "Type 10 into Gap in the Layout section." },
+    { "do": "Press Fixed on the Width row and type 300 into W.", "shot": "2026-09-08-row-wrap-2.png" },
+    { "do": "Tick Wrap onto more lines, under Gap.", "shot": "2026-09-08-row-wrap-3.png" },
+    { "do": "Type 24 into the Line gap field that appeared under it." },
+    { "do": "Type 560 into W and watch the lines refill.", "shot": "2026-09-08-row-wrap-5.png" },
+    { "do": "Untick Wrap onto more lines, then press Command-Z once." }
+  ],
+  "evaluate": [
+    "Is Wrap onto more lines where you would look for it, under Gap, or were you hunting near Direction?",
+    "Does Line gap appearing only once wrapping is on feel helpful, or does a field arriving under your pointer feel jumpy?",
+    "When the row is the size of its contents the switch is gone and the section says \"Nothing to spread or wrap until Width is Fixed.\" Is that enough to tell you what to do next?",
+    "Widening the row refills its lines. Does that read as the row doing its job, or as your arrangement being taken away from you?",
+    "A row wrapping at a Largest width closes around its widest line rather than out to the ceiling. Is that the box you expected, or should it hold the full 300?"
+  ],
+  "rough": [
+    "The wrapped lines pack from the top. On a row that has been given a height as well, the lines sit at the top and the leftover height stays empty at the bottom rather than being shared between them. That is the flex-start answer, not the CSS align-content default, and it was picked because a second line drifting halfway down the box reads as broken.",
+    "Wrapping is offered on a row only, never on a column. A column that wrapped into columns would need its own reading-order rule and nobody has asked for it.",
+    "Nothing on the canvas hints that a row is overflowing before you go looking in the Layout section. Finding the switch still means knowing the section exists.",
+    "The Gap field keeps the name Gap while wrapping is on, beside Line gap. A grid renames its two to Column gap and Row gap; a wrapping row does not, because Gap is still the space between pieces whichever line they are on."
+  ]
+}

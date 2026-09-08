@@ -3293,3 +3293,67 @@ only the thing the name does not: what being it looks like.
 Read by `SurfaceCommand` in the core, so the panel row and the menu row cannot
 drift apart. Tested in `SurfaceCommandTests`, walked by
 `Scripts/playtest/surface-role-walk.json`.
+
+## Landed: a row that runs out of room wraps onto the next line (Next, `next-auto-layout`, 2026-09-08)
+
+A strip of tags, a toolbar of buttons, a set of filter chips. Every one of them
+is pieces of DIFFERENT widths that have to keep going below once the first line
+fills up, and until now the only thing here that started a second line was a
+grid, which puts everything in equal cells. Build a row of chips as a grid and
+you get a pegboard; build it as a row and it runs straight out past its own
+edge. A row can now carry on underneath instead.
+
+**One switch and one number, under the Gap row.** **Wrap onto more lines** is a
+checkbox, the same shape as Clip contents two rows above it. Tick it and a
+**Line gap** field appears under it: the space between one line and the next,
+its own number, because a strip of tags wants more air above than beside in
+exactly the way a card grid does. It is `rowGap`, the number a grid already
+holds, so flipping a group between Grid and a wrapping Row keeps it.
+
+**A row that has not actually wrapped is still just a row.** While everything
+fits on one line the layout is byte for byte the one it always had, including a
+piece told to Stretch filling the whole height the row was given. Once it wraps,
+each line is as tall as the tallest thing ON it and the lines sit one under the
+other from the top, so a short chip beside a tall one answers Vertical inside
+its own line rather than against the whole box.
+
+**It is only offered where it could do something.** There has to be a width to
+wrap against: a row that is the size of its contents can never run out of room.
+A fixed width counts, a floor counts, and so does a CEILING — "never wider than
+300" is exactly the width a strip of tags in a panel has, and it is the one
+place this differs from spreading, which needs real room left over and gets none
+from a box already pressed against its ceiling. Where there is no width the
+switch is not there and the section's one line says so: "Nothing to spread or
+wrap until Width is Fixed." Both missing is still one sentence, because two
+naming the same row would read as the section stammering.
+
+**Only a row.** "Onto the next line" is a row-shaped idea. A column that wrapped
+into a second column is a rarity nobody has asked for, and it would cost the
+reading order its one clear answer, so the switch is not offered on one and the
+choice is kept if you flip a wrapping row to a column and back.
+
+**Each line settles on its own.** Spreading pushes each line to its own two
+ends, and a piece told to Fill takes what ITS line has left. Lines break on the
+size each piece was drawn at, before a filler has grown, since otherwise a
+filler would decide where its own line breaks. A piece wider than the whole row
+gets a line to itself and hangs out of it rather than being squashed, which is
+what everything else in the app does with something too big.
+
+**Reading a wrapped row back.** The flow re-derives its order from where the
+pieces ARE, so dragging one past another reorders the row. A wrapped row reads
+line by line (`GroupFlow.lines(of:)`), clustering by real vertical OVERLAP
+rather than the half-the-tallest tolerance `rows(of:)` uses for grids: with a
+tolerance, a short chip hanging at the bottom of a tall line reads as a line of
+its own, sorts ahead of a wider neighbour, and the row shuffles itself on the
+next pass. Dropping a piece into a wrapped row picks its line the same way.
+
+Not in this slice: wrapping a column into columns, sharing leftover height
+between the lines (they pack from the top), and wrapping a grid, which already
+wraps at its column count.
+
+Model in `GroupLayout` (`wraps`, `wrapsContents`, `couldWrap`), maths in
+`GroupFlow.lines` and `GroupFlow.stacked`, the rows in
+`ArrangementInspector.wrapRow`. A row that does not wrap writes nothing at all
+about wrapping, so every document saved before this is byte for byte the file it
+always was. Tested in `GroupWrapTests`, walked by
+`Scripts/playtest/wrap-onto-more-lines-walk.json`.

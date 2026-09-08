@@ -76,8 +76,22 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// it offers the choice. The gap itself is KEPT while this is on, so
     /// turning it back off restores the number that was there.
     public var spreadsGap: Bool = false
-    /// The space between a grid's rows. Kept apart from `gap` because a card
-    /// grid usually wants more air above than beside.
+    /// Whether a row that runs out of room carries on onto the next line
+    /// instead of running past its own edge. A strip of tags, a toolbar of
+    /// buttons, a set of filter chips: pieces of DIFFERENT widths that have to
+    /// keep going below, which is the one shape a grid of equal cells cannot
+    /// make.
+    ///
+    /// Only a row does this. "Onto the next line" is a row-shaped idea, and a
+    /// column that wrapped into a second column is a rarity nobody asked for,
+    /// so the switch is not offered on one. There also has to be a width to
+    /// wrap AGAINST, since a row that is the size of its contents can never
+    /// run out of room; `couldWrap` is what the inspector asks before it
+    /// offers the choice, the same way `couldSpread` gates spreading.
+    public var wraps: Bool = false
+    /// The space between a grid's rows, and between the lines of a row that
+    /// wraps. Kept apart from `gap` because a card grid usually wants more air
+    /// above than beside, and a wrapped strip of tags wants the same.
     public var rowGap: CGFloat
     /// The room kept clear inside the edges, on each of the four sides. A group
     /// that arranges itself has edges of its own — whether it was given a size
@@ -125,6 +139,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
                 columns: Int = GroupLayout.defaultColumns,
                 gap: CGFloat = GroupLayout.defaultGap,
                 spreadsGap: Bool = false,
+                wraps: Bool = false,
                 rowGap: CGFloat = GroupLayout.defaultGap,
                 padding: GroupPadding = .none,
                 width: CGFloat? = nil,
@@ -138,6 +153,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         self.columns = columns
         self.gap = gap
         self.spreadsGap = spreadsGap
+        self.wraps = wraps
         self.rowGap = rowGap
         self.padding = padding
         self.width = width
@@ -181,6 +197,24 @@ public struct GroupLayout: Hashable, Codable, Sendable {
 
     /// The same question, in the words the Gap row asks it in.
     public var couldSpread: Bool { hasRoomAlongTheFlow }
+
+    /// Whether this row has a width to wrap AGAINST, which is the one thing
+    /// wrapping needs to mean anything: a row that is the size of its contents
+    /// can never run out of room.
+    ///
+    /// A ceiling counts, and it is the width a strip of tags in a panel
+    /// actually has: "never wider than 300" is exactly where the tags should
+    /// start a second line. That is the one place this differs from
+    /// `couldSpread`, which needs real room LEFT OVER and so gets none from a
+    /// ceiling a box is already pressed against.
+    public var couldWrap: Bool {
+        flowsHorizontally && (usedWidth != nil || usedMinWidth != nil || usedMaxWidth != nil)
+    }
+
+    /// Whether this layout actually wraps its contents. Only a row does: a
+    /// column runs down the page, a grid already wraps at its column count,
+    /// and a group that arranges nothing has no line to run out of.
+    public var wrapsContents: Bool { flowsHorizontally && wraps }
     public var usedPadding: GroupPadding { padding.used }
 
     /// The size actually used on each axis: the number given, never negative,
@@ -300,7 +334,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public var decidesWidth: Bool { kind != .stack || !direction.isHorizontal }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, direction, columns, gap, spreadsGap, rowGap, padding, width, height
+        case kind, direction, columns, gap, spreadsGap, wraps, rowGap, padding, width, height
         case minWidth, maxWidth, minHeight, maxHeight
     }
 
@@ -318,6 +352,9 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         // A stack saved before a row could push its contents to its two ends
         // opens holding the one gap it always held, which is what it was.
         spreadsGap = try c.decodeIfPresent(Bool.self, forKey: .spreadsGap) ?? false
+        // A row saved before rows could wrap opens on the one line it was
+        // always on, which is what it was.
+        wraps = try c.decodeIfPresent(Bool.self, forKey: .wraps) ?? false
         rowGap = try c.decodeIfPresent(CGFloat.self, forKey: .rowGap) ?? GroupLayout.defaultGap
         // Either shape of room: the single number older documents hold, or the
         // four sides a card with uneven room needs.
@@ -348,6 +385,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         try c.encode(columns, forKey: .columns)
         try c.encode(gap, forKey: .gap)
         if spreadsGap { try c.encode(true, forKey: .spreadsGap) }
+        if wraps { try c.encode(true, forKey: .wraps) }
         try c.encode(rowGap, forKey: .rowGap)
         try c.encode(padding, forKey: .padding)
         try c.encodeIfPresent(width, forKey: .width)

@@ -1,0 +1,27 @@
+{
+  "id": "a-group-says-when-its-contents-run-past-its-edge",
+  "title": "A group says when its contents run past its edge",
+  "goal": "When a group has been given a size and the things inside it do not fit, nothing on the canvas or in the panel says so: the pieces just hang out over the edge and it is on you to notice. Say it once, plainly, where the person is already looking, so the fix (wrap the row, clip it, or make it bigger) is one step away instead of a hunt.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 2140,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T23:42:38.071Z",
+  "updated": "2026-09-08T23:42:38.074Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Came out of the second adversarial pass on the row-wrapping task (queue/audits/2026-09-08-row-wrap.json, rough item 3). Today the only hint is visual. Related surfaces: ArrangementInspector.sentence() already carries at most one line under the section (spreadSentence, fillSentence) and is the natural home; GroupFlow.size vs the contents far edge is the test for overflow. Applies to any group with a size of its own, not only a wrapping row, so it should not be scoped to wrapping.",
+  "acceptance": [
+    "A group whose contents run past its own edge says so in the Layout section, in one line",
+    "The line names what to do about it and does not appear on a group that fits",
+    "A row that wraps stops saying it the moment the wrapping makes everything fit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T23:42:38.073Z",
+      "note": "created (manual)"
+    }
+  ]
+}

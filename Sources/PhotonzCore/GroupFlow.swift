@@ -290,7 +290,12 @@ enum GroupFlow {
             let cell = max(0, (inner - layout.usedGap * (columns - 1)) / columns)
             return outgrowing { _ in cell }
         }
-        guard layout.direction.isHorizontal else { return outgrowing { _ in inner } }
+        // A row that WRAPS gives a label too wide for it the whole room across
+        // and lets it take a line of its own, exactly as a piece of any other
+        // kind that will not fit does.
+        guard layout.direction.isHorizontal, !layout.wrapsContents else {
+            return outgrowing { _ in inner }
+        }
         // A row stack: across IS the way it runs, so a label's room is
         // whatever the other pieces and the gaps between them leave. Two
         // labels that both outgrow the row have no single answer — each would
@@ -681,31 +686,97 @@ enum GroupFlow {
         let crossExtent = room(horizontal ? bounds.height : bounds.width,
                                between: horizontal ? padding.vertical : padding.horizontal)
             ?? (items.map { horizontal ? $0.box.height : $0.box.width }.max() ?? 0)
-        // How much room each piece takes along the flow: the size it was drawn
-        // at, and for a piece told to fill, whatever the stack has left.
-        let lengths = alongTheFlow(items, layout: layout, bounds: bounds, horizontal: horizontal)
-        // The room left over, shared out between the rows, or nil where the
-        // stack holds one typed gap instead.
-        let share = spread(items, layout: layout, bounds: bounds, horizontal: horizontal)
-        var cursor = horizontal ? padding.left : padding.top
-        var out: [CGRect] = []
-        for (index, item) in items.enumerated() {
-            let along = lengths[index]
-            let cross = span(size: horizontal ? item.box.height : item.box.width,
-                             start: crossStart, extent: crossExtent,
-                             rule: horizontal ? item.vertical : item.horizontal)
-            // Every row is pushed on by its own share of the leftover room,
-            // measured from the START rather than added up gap by gap, so the
-            // last one lands exactly on the far edge however the rounding
-            // falls. A half point is the thing typed geometry exists to avoid.
-            let start = cursor + (share.map { ($0 * CGFloat(index)).rounded() } ?? 0)
-            out.append(horizontal
-                ? CGRect(x: start, y: cross.low, width: along, height: cross.length)
-                : CGRect(x: cross.low, y: start, width: cross.length, height: along))
-            cursor += along + (share == nil ? layout.usedGap : 0)
+        // The lines this stack ended up with. A stack that is not wrapping has
+        // exactly one, holding everything, which is every stack that existed
+        // before a row could wrap.
+        let lines = self.lines(items, layout: layout, bounds: bounds)
+        var out = [CGRect](repeating: .zero, count: items.count)
+        var lineStart = crossStart
+        for line in lines {
+            let those = line.map { items[$0] }
+            // A row that has NOT wrapped is still just a row, so its one line
+            // takes the whole cross extent and a piece told to stretch fills
+            // the box, exactly as it always did. Once there are lines, each is
+            // as tall as the tallest thing on it and they sit one under the
+            // other, so a piece stretches down its own line.
+            let lineCross = lines.count == 1
+                ? crossExtent
+                : (those.map { horizontal ? $0.box.height : $0.box.width }.max() ?? 0)
+            // How much room each piece takes along the flow: the size it was
+            // drawn at, and for a piece told to fill, whatever its own line has
+            // left.
+            let lengths = alongTheFlow(those, layout: layout, bounds: bounds,
+                                       horizontal: horizontal)
+            // The room left over, shared out between the pieces on this line,
+            // or nil where the stack holds one typed gap instead.
+            let share = spread(those, layout: layout, bounds: bounds, horizontal: horizontal)
+            var cursor = horizontal ? padding.left : padding.top
+            for (slot, index) in line.enumerated() {
+                let item = items[index]
+                let along = lengths[slot]
+                let cross = span(size: horizontal ? item.box.height : item.box.width,
+                                 start: lineStart, extent: lineCross,
+                                 rule: horizontal ? item.vertical : item.horizontal)
+                // Every row is pushed on by its own share of the leftover room,
+                // measured from the START rather than added up gap by gap, so
+                // the last one lands exactly on the far edge however the
+                // rounding falls. A half point is the thing typed geometry
+                // exists to avoid.
+                let start = cursor + (share.map { ($0 * CGFloat(slot)).rounded() } ?? 0)
+                out[index] = horizontal
+                    ? CGRect(x: start, y: cross.low, width: along, height: cross.length)
+                    : CGRect(x: cross.low, y: start, width: cross.length, height: along)
+                cursor += along + (share == nil ? layout.usedGap : 0)
+            }
+            lineStart += lineCross + layout.usedRowGap
         }
         return out
     }
+
+    /// Which pieces end up on which line, in flow order.
+    ///
+    /// One line holding everything for every stack that is not wrapping, which
+    /// is the shape this file had before a row could wrap: everything below
+    /// then works out byte for byte the layout it always did.
+    ///
+    /// A wrapping row fills a line until the next piece will not fit in the
+    /// width the row has, then starts another. A piece WIDER than the whole row
+    /// still gets a line, on its own, and hangs out of it: squashing it would
+    /// be the row deciding a size nobody asked it to, and nothing else in the
+    /// app does that either.
+    ///
+    /// It breaks on the size each piece was DRAWN at, before a piece told to
+    /// fill has taken what its line has left, because a filler that grew to the
+    /// end of its line would otherwise decide where its own line breaks.
+    private static func lines(_ items: [Item], layout: GroupLayout,
+                              bounds: Bounds) -> [[Int]] {
+        let all = Array(items.indices)
+        guard layout.wrapsContents, !all.isEmpty,
+              let extent = room(bounds.width, between: layout.usedPadding.horizontal)
+        else { return [all] }
+        let gap = layout.usedGap
+        var out: [[Int]] = []
+        var line: [Int] = []
+        var used: CGFloat = 0
+        for index in all {
+            let width = items[index].box.width
+            // A hair over is not over: a piece measured at 100.0000001 must not
+            // be what starts a new line in a row of exactly three of them.
+            if !line.isEmpty, used + gap + width > extent + hairline {
+                out.append(line)
+                line = []
+                used = 0
+            }
+            used += (line.isEmpty ? 0 : gap) + width
+            line.append(index)
+        }
+        if !line.isEmpty { out.append(line) }
+        return out
+    }
+
+    /// How much of an overrun is rounding rather than a piece that does not
+    /// fit. Measured text comes back in fractions of a point.
+    private static let hairline: CGFloat = 0.01
 
     /// How much room each piece takes along the way the stack runs.
     ///
@@ -854,16 +925,16 @@ enum GroupFlow {
     static func slot(at local: CGPoint, among items: [(index: Int, box: CGRect)],
                      layout: GroupLayout) -> Int {
         guard !items.isEmpty else { return 0 }
-        guard layout.kind == .grid else {
+        guard layout.kind == .grid || layout.wrapsContents else {
             let horizontal = layout.direction.isHorizontal
             let along = horizontal ? local.x : local.y
             return items.filter { (horizontal ? $0.box.midX : $0.box.midY) < along }.count
         }
-        // A grid reads row by row, so the point picks its row first and its
-        // place along that row second.
+        // A grid reads row by row, and so does a row that wrapped, so the point
+        // picks its line first and its place along that line second.
         var passed = 0
         let boxes = items.map(\.box)
-        for row in rows(of: boxes) {
+        for row in (layout.kind == .grid ? rows(of: boxes) : lines(of: boxes)) {
             let bottom = row.map { boxes[$0].maxY }.max() ?? 0
             if local.y < bottom {
                 return passed + row.filter { boxes[$0].midX < local.x }.count
@@ -878,12 +949,52 @@ enum GroupFlow {
     /// nothing shuffles for no reason.
     static func flowOrder(_ boxes: [CGRect], layout: GroupLayout) -> [Int] {
         guard layout.kind == .stack else { return rows(of: boxes).flatMap { $0 } }
+        // A wrapped row reads the way it looks: line by line, and left to right
+        // inside each line. Reading it along the flow alone would put the first
+        // piece of the second line before the last piece of the first, and the
+        // next pass would lay them out in that order and scramble the row.
+        guard !layout.wrapsContents else { return lines(of: boxes).flatMap { $0 } }
         let horizontal = layout.direction.isHorizontal
         return boxes.indices.sorted { lhs, rhs in
             let a = horizontal ? boxes[lhs].minX : boxes[lhs].minY
             let b = horizontal ? boxes[rhs].minX : boxes[rhs].minY
             return a == b ? lhs < rhs : a < b
         }
+    }
+
+    /// These boxes clustered into the lines a wrapped row put them on, each
+    /// line left to right.
+    ///
+    /// A box joins the line being read while it still OVERLAPS it, and starts a
+    /// new one the moment it clears the bottom of everything on that line. That
+    /// is exact rather than a judgment call, because a wrapped row really does
+    /// put its lines one under the other: the tallest piece on a line spans the
+    /// whole line, so everything beside it overlaps it, and nothing on the next
+    /// line reaches back up into it.
+    ///
+    /// `rows(of:)` cannot answer this. Its half-the-tallest tolerance reads a
+    /// short piece hanging at the BOTTOM of a tall line as a second line, and
+    /// once that piece sorts ahead of a wider neighbour the row shuffles itself
+    /// on the next pass.
+    static func lines(of boxes: [CGRect]) -> [[Int]] {
+        guard !boxes.isEmpty else { return [] }
+        let byTop = boxes.indices.sorted {
+            boxes[$0].minY == boxes[$1].minY ? $0 < $1 : boxes[$0].minY < boxes[$1].minY
+        }
+        var out: [[Int]] = []
+        var line: [Int] = []
+        var bottom: CGFloat = 0
+        for index in byTop {
+            if !line.isEmpty, boxes[index].minY >= bottom {
+                out.append(line)
+                line = []
+            }
+            bottom = line.isEmpty ? boxes[index].maxY : max(bottom, boxes[index].maxY)
+            line.append(index)
+        }
+        if !line.isEmpty { out.append(line) }
+        return out.map { $0.sorted { boxes[$0].minX == boxes[$1].minX
+            ? $0 < $1 : boxes[$0].minX < boxes[$1].minX } }
     }
 
     /// These boxes clustered into the rows they visually make, each row left to

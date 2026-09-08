@@ -74,7 +74,16 @@ extension GroupLayout {
             // would be, exactly as the editable field does. With nothing left
             // over there is nothing to share, so the number is the truth.
             let value = spreadsGap && couldSpread ? "Spread" : Self.whole(usedGap)
-            return [LayoutReadout(title: "Gap", value: value)]
+            var rows = [LayoutReadout(title: "Gap", value: value)]
+            // A row that wraps has a second number, and the two of them
+            // together are the only way to read why its pieces sit where they
+            // do. A row with nothing to wrap against says neither, the same way
+            // the switch is not there on one.
+            if wraps, couldWrap {
+                rows.append(LayoutReadout(title: "Wrap", value: "On"))
+                rows.append(LayoutReadout(title: "Line gap", value: Self.whole(usedRowGap)))
+            }
+            return rows
         case .grid:
             guard usedGap != usedRowGap else {
                 return [LayoutReadout(title: "Gap", value: Self.whole(usedGap))]

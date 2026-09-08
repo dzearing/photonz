@@ -274,6 +274,7 @@ struct ArrangementInspector: View {
             }
         } else if allAre(.stack) {
             gapRow()
+            wrapRow()
         }
         // A group that arranges itself has edges of its own, whether it was
         // given a size or takes the one its contents make, so it can keep room
@@ -379,6 +380,56 @@ struct ArrangementInspector: View {
             }
         }
         .playtestField("Gap")
+    }
+
+    /// Whether a row that runs out of room carries on onto the next line, and
+    /// once it does, how far apart those lines sit.
+    ///
+    /// A strip of tags, a toolbar of buttons, a set of filter chips: pieces of
+    /// different widths that have to keep going below. A grid was the only
+    /// thing here that started a second line, and a grid puts everything in
+    /// equal cells, so a row of chips built as one came out as a pegboard.
+    ///
+    /// Only on a ROW, and only where there is a width to wrap against: a row
+    /// that is the size of its contents can never run out of room, so the
+    /// switch is gone and the sentence under the section says why, exactly as
+    /// spreading does.
+    ///
+    /// The line gap only appears once it is on. Two gap numbers on a row that
+    /// is on one line is a second question nobody has asked yet.
+    @ViewBuilder
+    private func wrapRow() -> some View {
+        if contents.canWrap {
+            let reading = contents.wraps
+            // A switch has on and off and nothing else, so while the picked
+            // rows disagree it wears the Mixed weight and the first press
+            // resolves to on for all of them.
+            let wraps = reading.value == true
+            HStack(spacing: 8) {
+                Toggle(isOn: Binding(get: { wraps },
+                                     set: { on in
+                                         editorState.updateArrangement(ids: ids) { $0.wraps = on }
+                                     })) {
+                    Text("Wrap onto more lines")
+                        .font(.callout)
+                }
+                .toggleStyle(.checkbox)
+                .opacity(reading.isMixed ? MixedLook.controlOpacity : 1)
+                .panelHelp(wraps
+                    ? "Keep everything on one line, running past this \(noun)'s edge if it has to."
+                    : "When the next thing will not fit, carry on underneath instead of "
+                        + "running past this \(noun)'s edge.")
+                .playtestControl("Wrap onto more lines",
+                                 detail: wraps ? "Layout, on" : "Layout, off")
+                if reading.isMixed { MixedWord().fixedSize() }
+            }
+            if wraps {
+                number("Line gap", reading: contents.rowGap,
+                       help: "The space between one line and the next.") { value in
+                    editorState.updateArrangement(ids: ids) { $0.rowGap = value }
+                }
+            }
+        }
     }
 
     /// The room kept clear inside the edges.
@@ -611,16 +662,21 @@ struct ArrangementInspector: View {
         + "say where each one sits, and a piece set to Stretch both ways is the surface behind "
         + "the rest rather than one of the line."
 
-    /// Why a stack is not being offered the choice to spread, in one line.
+    /// Why a stack is not being offered the choice to spread, or to wrap, in
+    /// one line.
     ///
-    /// A stack the size of its contents has no room left over, so the switch
-    /// on the Gap row is not there at all. Saying nothing would leave somebody
-    /// looking for a control they have seen on another stack, so the section
-    /// says which row makes the room instead. One line, and it is one of only
-    /// two the section ever says.
+    /// A stack the size of its contents has no room left over and no edge to
+    /// run out of, so the switch on the Gap row and the Wrap switch under it
+    /// are not there at all. Saying nothing would leave somebody looking for a
+    /// control they have seen on another stack, so the section says which row
+    /// makes the room instead. Both missing is still ONE line: two sentences
+    /// naming the same row would read as the section stammering.
     private func spreadSentence(_ layout: GroupLayout) -> String? {
         guard layout.kind == .stack, !contents.canSpread else { return nil }
-        return "Nothing to spread until "
+        // Every row that can spread can also wrap, so the only row that names
+        // both is one with no width at all.
+        let alsoWrap = layout.flowsHorizontally && !contents.canWrap
+        return "Nothing to \(alsoWrap ? "spread or wrap" : "spread") until "
             + "\(layout.direction.isHorizontal ? "Width" : "Height") is Fixed."
     }
 

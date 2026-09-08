@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:17:00.438Z",
-  "updated": "2026-09-08T22:17:00.441Z",
+  "updated": "2026-09-08T23:42:55.186366Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CAPABILITY GAP in auto layout, which the user promoted to now on 2026-09-03. Sources/PhotonzCore/GroupLayout.swift: GroupLayoutKind is stack | grid and nothing else, and a stack has direction, columns, gap, spreadsGap, rowGap, padding, width, height and the four min/max numbers. There is no wrap anywhere in PhotonzCore. A grid wraps at a fixed column count with equal cells, which is not the same shape: chips are different widths.\n\nThis was an open thread in the 2026-09-04 manager report (Wrapping as a third stack behaviour) and nothing has been filed for it since.\n\nWhere it goes: GroupFlow.stacked() in Sources/PhotonzCore/GroupFlow.swift is the one place that walks the flow axis. Three landed features already share that seam (spread, fill the room left over, smallest and largest), so read what is there rather than re-deciding how leftover room is worked out. rowGap already exists on GroupLayout for the grid and is the right number to reuse for the gap between wrapped lines.\n\nA wrapped row needs a width to wrap against, so on a row that hugs its contents the choice does nothing: say so on the row rather than letting it silently do nothing, the way couldSpread already gates the spread choice. Flag: next-auto-layout (FeatureCatalog.autoLayoutFlag), on by default in Next.",
@@ -24,6 +24,35 @@
     {
       "t": "2026-09-08T22:17:00.440Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-08T23:27:25.652Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T23:42:55.186366Z",
+      "note": "Adversarial pass before building. The mock did not ask for this, the capability gap did, so the review was of the idea. Cut: wrapping a COLUMN into columns (a rarity, and it costs the reading order its one clear answer) and sharing leftover height between lines (a second line drifting halfway down a fixed-height box reads as broken; lines pack from the top instead). Kept from the shortest version: reuse rowGap rather than invent a second number, reuse the couldSpread gating idiom rather than invent a new way to hide a control, and leave the one-line case byte for byte the layout it already had so nothing existing moves."
+    },
+    {
+      "t": "2026-09-08T23:42:55.186366Z",
+      "note": "Found while designing: a wrapped row cannot re-derive its reading order through GroupFlow.rows(of:). Its half-the-tallest tolerance reads a short piece hanging at the BOTTOM of a tall line as a line of its own, and once that piece sorts ahead of a wider neighbour the row shuffles itself on the next flow pass. Added GroupFlow.lines(of:), which clusters by real vertical overlap and is exact for a wrapped row because the tallest piece on a line spans the whole line."
+    },
+    {
+      "t": "2026-09-08T23:42:55.186366Z",
+      "note": "Core landed TDD-first: GroupLayout.wraps/wrapsContents/couldWrap, GroupFlow.lines + stacked restructured to lay out line by line, flowOrder and slot(at:) read a wrapped row line by line, wrapRooms gives a too-wide label the whole width across. 23 new tests in GroupWrapTests; full suite 5072 green."
+    },
+    {
+      "t": "2026-09-08T23:42:55.186366Z",
+      "note": "UI landed: ContentsSelection.canWrap/wraps, ArrangementInspector.wrapRow (a Wrap onto more lines checkbox under Gap, with a Line gap field that appears only once it is on), and the section's one line now reads 'Nothing to spread or wrap until Width is Fixed' rather than two sentences naming the same row."
+    },
+    {
+      "t": "2026-09-08T23:42:55.186366Z",
+      "note": "Verified on the real app, not just in tests: Scripts/playtest/wrap-onto-more-lines-walk.json, 69 steps, status ok. Screen Recording was granted, so every stage has a real window capture. Six pieces of six different widths at W=300 wrap onto three lines and the group closes at H=144; Line gap 24 moves the lines apart; W=560 refills them onto two lines; unticking puts them back on one line and one undo brings the wrap back."
+    },
+    {
+      "t": "2026-09-08T23:42:55.186366Z",
+      "note": "Second adversarial pass, on the built thing. Everything in the acceptance works. Left rough and written into the audit: lines pack from the top on a row that also has a height, nothing warns you a row is overflowing before you go looking in the Layout section (filed as a-group-says-when-its-contents-run-past-its-edge), and Gap keeps its name beside Line gap where a grid would rename both."
     }
-  ]
+  ],
+  "started": "2026-09-08T23:27:25.651Z"
 }

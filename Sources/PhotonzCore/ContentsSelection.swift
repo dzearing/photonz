@@ -146,6 +146,14 @@ public struct ContentsSelection: Hashable, Sendable {
         !groups.isEmpty && groups.allSatisfy { $0.isFrame || $0.layout.couldSpread }
     }
 
+    /// Whether every picked group is a row with a width to wrap against. A
+    /// screen is a box somebody drew, so a row on one always has a width.
+    public var canWrap: Bool {
+        !groups.isEmpty && groups.allSatisfy {
+            $0.layout.flowsHorizontally && ($0.isFrame || $0.layout.couldWrap)
+        }
+    }
+
     /// The choices worth offering across the whole pick: anything one of them
     /// could not honour is off the menu, so no pick here can land on some of
     /// them and not the others.
@@ -175,6 +183,7 @@ public struct ContentsSelection: Hashable, Sendable {
     public var gap: PlacementReading<CGFloat> { .across(groups.map(\.layout.usedGap)) }
     public var rowGap: PlacementReading<CGFloat> { .across(groups.map(\.layout.usedRowGap)) }
     public var spreads: PlacementReading<Bool> { .across(groups.map(\.layout.spreadsGap)) }
+    public var wraps: PlacementReading<Bool> { .across(groups.map(\.layout.wraps)) }
     public var padding: PlacementReading<GroupPadding> { .across(groups.map(\.layout.usedPadding)) }
     public var hugsWidth: PlacementReading<Bool> { .across(groups.map(\.layout.hugsWidth)) }
     public var hugsHeight: PlacementReading<Bool> { .across(groups.map(\.layout.hugsHeight)) }
