@@ -137,7 +137,7 @@ struct ColorStyleControl: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-            .help(help(selection, style))
+            .panelHelp(help(selection, style))
         }
     }
 
@@ -502,7 +502,7 @@ struct ColorStyleRow<Well: View>: View {
             Text(ColorStyleSelection.mixedText)
                 .font(.caption)
                 .foregroundStyle(MixedLook.style)
-                .help("The picked layers do not share one \(part.lowercased()). "
+                .panelHelp("The picked layers do not share one \(part.lowercased()). "
                       + "Choosing a color or a style sets all of them.")
         }
     }
@@ -543,7 +543,7 @@ struct ColorStyleRow<Well: View>: View {
                                revert: { editorState.endNamingColorStyle() })
             Button("Save", action: save)
                 .controlSize(.small)
-                .help("Saves this \(ColorStyleNaming.subject(savedPaint)) under that name")
+                .panelHelp("Saves this \(ColorStyleNaming.subject(savedPaint)) under that name")
                 .playtestControl("Save")
         }
         .padding(.top, 2)
@@ -608,7 +608,7 @@ struct SelectionColorWell: View {
             // clicking, and it is the difference between finding the way out of
             // Mixed and giving up on the row.
             .onHover { isHovering = $0 }
-            .help(help(selection))
+            .panelHelp(help(selection))
             .accessibilityLabel(boundStyle.map { "\(part) color, using the style \($0.name)" }
                                 ?? "\(part) color of \(selection.count) selected layers")
             // The same word every color well in the panel answers to, its row
@@ -709,7 +709,7 @@ struct SelectionColorWell: View {
                     Button("Unlink") { editorState.unlinkColorStyle(target) }
                         .buttonStyle(.link)
                         .font(.callout)
-                        .help("Keeps this color exactly as it is and stops following "
+                        .panelHelp("Keeps this color exactly as it is and stops following "
                               + "\(style.name)")
                         .playtestControl("Unlink", detail: part)
                 }
@@ -933,7 +933,7 @@ struct SelectionColorInspector: View {
             set: { editorState.setColorEnabled(slot: slot, on: $0) }))
             .labelsHidden()
             .controlSize(.small)
-            .help(switchHelp(slot, part))
+            .panelHelp(switchHelp(slot, part))
             // It wears no word of its own, so it takes the row's: a walk says
             // `press "Switch" in "Background"`.
             .playtestControl("Switch",
@@ -1029,7 +1029,7 @@ struct LibraryStyleTile: View {
         // Pulling the tile carries the colour; a plain click still picks the
         // tile, which is what SwiftUI does with the two on one view.
         .modifier(LibraryStyleTileDrag(paint: style.paint, item: item))
-        .help("\(entry.name) • \(ColorStyleNaming.paintText(style.paint)) • \(entry.detail)")
+        .panelHelp("\(entry.name) • \(ColorStyleNaming.paintText(style.paint)) • \(entry.detail)")
         // Named for a walk, carrying the very item the tile's own drag hands
         // over, so a walk can never carry a colour the pointer could not.
         .playtestTarget(entry.name, kind: .tile, detail: "Styles",
@@ -1093,7 +1093,7 @@ struct LibraryStyleInspector: View {
                     Spacer(minLength: 8)
                     Button { isPickerShown = true } label: { swatch(style) }
                         .buttonStyle(.plain)
-                        .help("Changing this repaints every layer using this style")
+                        .panelHelp("Changing this repaints every layer using this style")
                         .popover(isPresented: $isPickerShown, arrowEdge: .top) {
                             // The whole paint, so a saved gradient is edited
                             // where it lives: move a stop here and every shape
@@ -1142,12 +1142,12 @@ struct LibraryStyleInspector: View {
                     }
                     .controlSize(.small)
                     .disabled(editorState.colorStyleUsageCount(styleID: style.id) == 0)
-                    .help("Selects the layers this style paints")
+                    .panelHelp("Selects the layers this style paints")
                     Button("Remove") {
                         editorState.deleteColorStyle(styleID: style.id)
                     }
                     .controlSize(.small)
-                    .help("Takes the style off the shelf. Every layer keeps the color it is wearing")
+                    .panelHelp("Takes the style off the shelf. Every layer keeps the color it is wearing")
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)

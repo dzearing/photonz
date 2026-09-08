@@ -1563,7 +1563,7 @@ private struct CollapsibleSection<Content: View>: View {
         .frame(minHeight: InspectorPanel.headerRowHeight)
         .contentShape(Rectangle())
         .gesture(headerGesture)
-        .help("Drag to reorder • click to collapse")
+        .panelHelp("Drag to reorder • click to collapse")
         // Named for a scripted walk, so one can collapse a section, or pick it
         // up, by the words on it.
         .playtestControl("\(title) section", detail: "a dock section header")
@@ -1709,7 +1709,7 @@ struct PanelAreaResizeHandle: View {
                             .onChanged { carry($0.translation.height) }
                             .onEnded { _ in end() }
                     )
-                    .help(help)
+                    .panelHelp(help)
             } else {
                 // The bar's room, kept, so a list does not shift the sections
                 // under it by twelve points as it crosses the threshold.
@@ -2015,7 +2015,7 @@ struct LayersListView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { editorState.selectCanvas() }
-        .help("Select to resize the canvas by its edges")
+        .panelHelp("Select to resize the canvas by its edges")
         // Measured on its own because it is not shaped like a layer row and
         // the list's height arithmetic counts it separately. In a short list
         // it is on screen, so the measurement is live exactly when hugging
@@ -2107,7 +2107,7 @@ private struct OutOfViewMark: View {
                 glyph.playtestTarget("Out of view", kind: .row, detail: place(state))
             }
         }
-        .help(explanation)
+        .panelHelp(explanation)
     }
 
     /// Whether pressing this would do anything: a layer that can come back, or
@@ -2268,7 +2268,7 @@ private struct LayersRow: View, Equatable {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .monospacedDigit()
-                    .help(panelRow.childCount == 1 ? "1 layer inside" : "\(panelRow.childCount) layers inside")
+                    .panelHelp(panelRow.childCount == 1 ? "1 layer inside" : "\(panelRow.childCount) layers inside")
             }
             Button {
                 editorState.toggleLayerLock(id: id)
@@ -2277,7 +2277,7 @@ private struct LayersRow: View, Equatable {
                     .font(.system(size: 11))
                     .foregroundStyle(display.isLocked ? .primary : .tertiary)
             }
-            .help(display.isLocked ? "Unlock Layer" : "Lock Layer")
+            .panelHelp(display.isLocked ? "Unlock Layer" : "Lock Layer")
             .playtestControl("Lock", detail: place(display.isLocked ? "locked" : "unlocked"))
             // The slot is what keeps the padlock still: shut and open are two
             // drawings of different widths, and without it locking a layer
@@ -2290,7 +2290,7 @@ private struct LayersRow: View, Equatable {
                     .font(.system(size: 11))
                     .foregroundStyle(display.isVisible ? .primary : .tertiary)
             }
-            .help(display.isVisible ? "Hide Layer" : "Show Layer")
+            .panelHelp(display.isVisible ? "Hide Layer" : "Show Layer")
             .playtestControl("Visibility", detail: place(display.isVisible ? "shown" : "hidden"))
             .panelEdgeIcon("eye", of: display.name)
         }
@@ -2381,7 +2381,7 @@ private struct LayersRow: View, Equatable {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .help("This is the \(version) version of \(display.name)")
+                    .panelHelp("This is the \(version) version of \(display.name)")
             }
         }
     }
@@ -2405,7 +2405,7 @@ private struct LayersRow: View, Equatable {
                         editorState.toggleGroupExpanded(id: id)
                     }
                 })
-                .help(panelRow.isExpanded ? "Hide what is inside" : "Show what is inside")
+                .panelHelp(panelRow.isExpanded ? "Hide what is inside" : "Show what is inside")
                 // The only way a walk has of opening a group: every row inside
                 // a shut one is unbuilt, so nothing below it can be named until
                 // this has been pressed.
@@ -2460,7 +2460,7 @@ private struct LayersRow: View, Equatable {
         .highPriorityGesture(
             TapGesture().modifiers(.command).onEnded { editorState.selectLayerPixels(id: id) }
         )
-        .help("Command-click to select the layer's pixels")
+        .panelHelp("Command-click to select the layer's pixels")
     }
 
     /// The line that says a drop will land beside a row rather than inside it.
@@ -2579,7 +2579,7 @@ struct MeasureToolInspector: View {
                         }
                     }
                     .labelsHidden().controlSize(.small)
-                    .help("What a click does. The Measure button holds the same list, "
+                    .panelHelp("What a click does. The Measure button holds the same list, "
                           + "and I cycles it. In Size, [ and ] pick a smaller or larger element.")
                     // The keys the mode answers to, taught here because this
                     // line stays: the canvas hint fades in two seconds and
@@ -2599,7 +2599,7 @@ struct MeasureToolInspector: View {
                         Text("Edges and centers").tag(true)
                     }
                     .labelsHidden().controlSize(.small)
-                    .help("What measure points magnetize to. Hold Command to drag free.")
+                    .panelHelp("What measure points magnetize to. Hold Command to drag free.")
                 }
             }
             if Experiments.shared.measureRolesEnabled {
@@ -2612,7 +2612,7 @@ struct MeasureToolInspector: View {
                         }
                     }
                     .labelsHidden().controlSize(.small)
-                    .help("Which measurements the canvas shows. A view filter only: exports "
+                    .panelHelp("Which measurements the canvas shows. A view filter only: exports "
                           + "always include every visible measurement.")
                 }
             }
@@ -2689,7 +2689,7 @@ struct CropToolInspector: View {
                 }
             }
             .labelsHidden().controlSize(.small)
-            .help("What shape the crop keeps. The Crop button holds the same list.")
+            .panelHelp("What shape the crop keeps. The Crop button holds the same list.")
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
@@ -2731,7 +2731,7 @@ struct CalloutToolInspector: View {
                     .pickerStyle(.segmented)
                     .labelsHidden()
                     .controlSize(.small)
-                    .help("What the next callout is drawn in. The box you drag out previews "
+                    .panelHelp("What the next callout is drawn in. The box you drag out previews "
                           + "in the same shape, and a callout already on the canvas is "
                           + "switched in its own section.")
                 }
@@ -2753,7 +2753,7 @@ struct CalloutToolInspector: View {
                                           set: { state.calloutToolMagnification = $0 }),
                            in: ZoomCalloutBuilder.magnificationRange)
                         .controlSize(.small)
-                        .help("How much bigger the next callout draws the region it points at. "
+                        .panelHelp("How much bigger the next callout draws the region it points at. "
                               + "A callout already on the canvas is resized by the slider in "
                               + "its own section.")
                 }
@@ -2808,7 +2808,7 @@ struct MeasurementsSectionAccessory: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-            .help("Show, hide, copy, or clear every measurement")
+            .panelHelp("Show, hide, copy, or clear every measurement")
         }
     }
 }
@@ -2892,7 +2892,7 @@ struct MeasurementsListView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(layer.isVisible ? .primary : .tertiary)
             }
-            .help(layer.isVisible ? "Hide Measurement" : "Show Measurement")
+            .panelHelp(layer.isVisible ? "Hide Measurement" : "Show Measurement")
             .panelEdgeIcon("eye", of: MeasureSpecList.displayName(for: layer))
         }
         .buttonStyle(.borderless)
@@ -3013,7 +3013,7 @@ struct EffectsInspector: View {
                                  format: points, field: .border) { style, v in
                     style.borderWidth = CGFloat(v)
                 }
-                .help("The color of the border is in the Color section above")
+                .panelHelp("The color of the border is in the Color section above")
                 // Said under the row it is about, the way the Color rows say
                 // it, so it cannot be read as speaking for the whole section:
                 // Opacity and Blur still reach every picked layer.
@@ -3113,7 +3113,7 @@ struct ShadowInspector: View {
                         // Off is a true answer — none of them have one — so a
                         // disagreeing selection may not wear it at full strength.
                         .opacity(isMixed ? MixedLook.controlOpacity : 1)
-                        .help(shadowSwitchHelp(selection, isMixed: isMixed))
+                        .panelHelp(shadowSwitchHelp(selection, isMixed: isMixed))
                         .playtestControl("Enable Shadow",
                                          detail: isMixed ? "Shadow, mixed"
                                              : (selection.hasShadowEverywhere ? "Shadow, on" : "Shadow, off"))
@@ -3407,7 +3407,7 @@ struct AnnotationInspector: View {
                     }
                     .font(.caption)
                     .controlSize(.small)
-                    .help(pinned.count > 1
+                    .panelHelp(pinned.count > 1
                           ? "Put all \(pinned.count) labels back where the app places them"
                           : "Put the label back where the app places it")
                 }
@@ -3453,7 +3453,7 @@ struct AnnotationInspector: View {
                         format: { "\(Int($0.rounded())) pt" },
                         preview: { editorState.previewOutlineWidth(ids: $0, $1) },
                         commit: { editorState.commitOutlineWidth(ids: $0, $1) })
-                .help(Experiments.shared.shapePartsEnabled
+                .panelHelp(Experiments.shared.shapePartsEnabled
                       ? "How thick the line is. Its color is the Color row, in Appearance above"
                       : "How thick the line round the shape is. Its color is Outline, in the Color section above")
         case .caption:
@@ -3478,7 +3478,7 @@ struct AnnotationInspector: View {
                         round: { $0 },
                         preview: { editorState.previewCaptionRoundness(ids: $0, $1) },
                         commit: { editorState.commitCaptionRoundness(ids: $0, $1) })
-                .help("How round the label's corners are, from a square box through a badge to a full pill")
+                .panelHelp("How round the label's corners are, from a square box through a badge to a full pill")
         case .headStyle:
             // The one row in this section that is a picture rather than a
             // number, so it carries its own caption instead of a slider's.
@@ -4025,7 +4025,10 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
         // so a walk that named it by its words would stop working the first
         // time it used it.
         .playtestField(label)
-        .help(MenuTip.text(about: help, showing: shownTitle, isClipped: isClipped))
+        // `panelHelp`, not `.help`, so the sentence a shortened name puts in
+        // front is something a walk can read back. It is the same text either
+        // way; the probe simply keeps a copy of it.
+        .panelHelp(MenuTip.text(about: help, showing: shownTitle, isClipped: isClipped))
     }
 }
 
@@ -4075,7 +4078,7 @@ struct MeasureInspector: View {
                             .onChange(of: nameFocused) { _, focused in
                                 if !focused { commitName() }
                             }
-                            .help("What this measurement is called in the Measurements "
+                            .panelHelp("What this measurement is called in the Measurements "
                                   + "list and the copied spec list")
                     }
                     .id(layer.id)
@@ -4099,7 +4102,7 @@ struct MeasureInspector: View {
                             Text("Spacing").tag(MeasureRole.spacing)
                         }
                         .labelsHidden().pickerStyle(.segmented).controlSize(.small)
-                        .help("What this measurement calls out. Switching applies that "
+                        .panelHelp("What this measurement calls out. Switching applies that "
                               + "role's remembered colors, and new measurements start "
                               + "with the last-used role.")
                     }
@@ -4114,7 +4117,7 @@ struct MeasureInspector: View {
                         Text("Actual").tag(MeasureUnit.pixels)
                     }
                     .labelsHidden().pickerStyle(.segmented).controlSize(.small)
-                    .help("Both read out in px. Logical is the on-screen size (like CSS px, the "
+                    .panelHelp("Both read out in px. Logical is the on-screen size (like CSS px, the "
                           + "default); Actual is raw device pixels, 2× larger on a Retina screenshot.")
                 }
                 row("Thickness") {
@@ -4220,13 +4223,13 @@ struct MeasureInspector: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help("Where this measurement's feet sit, how far apart they are, and the "
+            .panelHelp("Where this measurement's feet sit, how far apart they are, and the "
                   + "exact line Copy Measurement puts on the clipboard")
             .playtestControl("Details", detail: isDetailsOpen ? "open" : "closed")
             Spacer(minLength: 0)
             Button("Copy Measurement") { editorState.copyMeasurement(id: layer.id) }
                 .controlSize(.small)
-                .help("Copies this one measurement's spec line as text, ready to paste into a thread")
+                .panelHelp("Copies this one measurement's spec line as text, ready to paste into a thread")
         }
         .playtestField("Details")
         if isDetailsOpen {
@@ -4389,7 +4392,7 @@ struct CanvasInspector: View {
                 Spacer()
                 Button("Canvas Size…") { editorState.isCanvasSizeDialogPresented = true }
                     .controlSize(.small)
-                    .help("Numeric resize with a content-anchor picker")
+                    .panelHelp("Numeric resize with a content-anchor picker")
             }
             Text("Drag the canvas edges to add or trim space; content stays put on the side you didn't move. Fields grow to the right/bottom.")
                 .font(.caption2)

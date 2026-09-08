@@ -1108,6 +1108,18 @@ private final class Run {
             case .setTextWeightRegular:
                 let ids = editor.textSelection.layerIDs
                 if !ids.isEmpty { editor.setTextStyle(ids: ids, weight: .regular) }
+            case .setTextFontLongName:
+                // The one state the Font menu cannot be put into by hand: the
+                // menu offers a family only once a label already wears it.
+                let ids = editor.textSelection.layerIDs
+                if !ids.isEmpty {
+                    editor.setTextStyle(ids: ids, fontName: TextStyles.longNameForPlaytest)
+                }
+            case .setTextFontShortName:
+                let ids = editor.textSelection.layerIDs
+                if !ids.isEmpty {
+                    editor.setTextStyle(ids: ids, fontName: TextStyles.shortNameForPlaytest)
+                }
             // The line round a shape is ONE row now, so a walk that thickens a
             // box pulls the same slider a walk that thickens an arrow does.
             case .dragThickness:
@@ -1948,6 +1960,41 @@ private final class Run {
             let kind: PanelTargetKind = thing == .row ? .row : .tile
             let targets = try panelTargets().filter { $0.kind == kind }
             return (targets.contains { matches($0.name) }, named, targets.map(\.name))
+        case .tooltip:
+            // Named by the control it belongs to, and read the way a pointer
+            // reads it: at that control's own middle, smallest marker winning.
+            //
+            // Only the things that ACTUALLY say something are in the list, so a
+            // walk whose tooltip has gone is told the menu is right there and
+            // silent while its neighbours still talk, which is the shape the
+            // failure really has. Menus come first because a menu is the thing
+            // whose tooltip changes under a walk.
+            var talking: [(name: String, says: String)] = []
+            for window in try panelWindows() {
+                guard let surface = window.contentView else { continue }
+                let fields = Self.findAll(PanelTargetView.self, in: surface)
+                    .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+                for button in PlaytestPanelMenu.buttons(in: surface) {
+                    if let inRow, !PlaytestPanelPress.fields(of: button, among: fields)
+                        .contains(where: { $0.caseInsensitiveCompare(inRow) == .orderedSame }) { continue }
+                    let box = button.convert(button.bounds, to: nil)
+                    guard let said = PlaytestPanelHelp.tip(at: CGPoint(x: box.midX, y: box.midY),
+                                                           in: surface) else { continue }
+                    talking.append((PlaytestPanelMenu.naming(of: button, among: fields).name, said))
+                }
+            }
+            // Narrowed by the row first, the same way a control is: two Colors
+            // and two Locks are on screen at once on an ordinary selection, and
+            // without "in" a walk would be reading whichever AppKit built first.
+            for control in Self.narrow(try pressTargets(), to: inRow) {
+                guard let surface = control.window?.contentView,
+                      let said = PlaytestPanelHelp.tip(at: control.point, in: surface) else { continue }
+                talking.append((control.name, said))
+            }
+            guard let match = talking.first(where: { matches($0.name) }) else {
+                return (false, "", talking.map(\.name))
+            }
+            return (true, match.says, [])
         }
     }
 
@@ -2138,17 +2185,29 @@ private final class Run {
                 let fields = Self.findAll(PanelTargetView.self, in: surface)
                     .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
                 return PlaytestPanelMenu.buttons(in: surface)
-                    .map { Self.menuName(of: $0, among: fields) }.filter { !$0.isEmpty }
+                    .map { Self.menuName(of: $0, among: fields, in: surface) }.filter { !$0.isEmpty }
             },
         ]
     }
 
-    /// One menu as a list reads it: the name a walk types, then the words it
-    /// is showing, when those are not the same thing.
+    /// One menu as a list reads it: the name a walk types, the words it is
+    /// showing when those are not the same thing, and what resting on it would
+    /// say.
+    ///
+    /// The last part is the only proof there is that a menu explains itself.
+    /// SwiftUI's `.help()` leaves nothing behind for a picture or a readout to
+    /// find, so a menu whose tooltip had been deleted looked exactly like one
+    /// that still had it. A menu built with plain `.help()` rather than
+    /// `panelHelp` reads "says nothing", which is the same answer a menu with
+    /// no tooltip at all gives, and both are worth seeing in the list.
     @MainActor private static func menuName(of button: NSPopUpButton,
-                                            among fields: [PanelTargetView]) -> String {
+                                            among fields: [PanelTargetView],
+                                            in surface: NSView) -> String {
         let naming = PlaytestPanelMenu.naming(of: button, among: fields)
-        return naming.detail.isEmpty ? naming.name : "\(naming.name) (\(naming.detail))"
+        let head = naming.detail.isEmpty ? naming.name : "\(naming.name) (\(naming.detail))"
+        let box = button.convert(button.bounds, to: nil)
+        let said = PlaytestPanelHelp.tip(at: CGPoint(x: box.midX, y: box.midY), in: surface)
+        return head + (said.map { " says \"\($0)\"" } ?? " says nothing")
     }
 
     private static func outlinePanel(_ inventory: [String: Any]) -> String {
@@ -2505,7 +2564,7 @@ private final class Run {
                     .contains { $0.caseInsensitiveCompare(row) == .orderedSame }
             }
             guard !inside.isEmpty else {
-                let seen = buttons.map { Self.menuName(of: $0, among: fields) }
+                let seen = buttons.map { Self.menuName(of: $0, among: fields, in: content) }
                     .filter { !$0.isEmpty }
                 throw Failure(description: "no row called \"\(row)\" holds a menu; "
                     + "the menus in the window are: "
@@ -2527,7 +2586,7 @@ private final class Run {
         }
         guard let button = byWords ?? byRow.first
                 ?? buttons.first(where: { PlaytestPanelMenu.title(of: $0).hasPrefix(name) }) else {
-            let seen = buttons.map { Self.menuName(of: $0, among: fields) }.filter { !$0.isEmpty }
+            let seen = buttons.map { Self.menuName(of: $0, among: fields, in: content) }.filter { !$0.isEmpty }
             throw Failure(description: "no menu called \"\(name)\" is in the window; the ones that are: "
                 + (seen.isEmpty ? "none" : seen.joined(separator: ", ")))
         }

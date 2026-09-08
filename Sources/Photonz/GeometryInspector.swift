@@ -285,7 +285,7 @@ private struct GeometryNumberField: View {
                     revert: { finish { text = display() } },
                     step: { direction, coarse in step(direction: direction, coarse: coarse) })
         }
-        .help(help)
+        .panelHelp(help)
         // Named the same way the readout beside it is, so a `panel` step lists
         // all four numbers whether or not this selection lets you type them,
         // and pressing one puts the keyboard in it.
@@ -413,7 +413,7 @@ private struct GeometryReadout: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .help(help)
+        .panelHelp(help)
         .playtestControl(field.label, detail: "Position & Size")
     }
 

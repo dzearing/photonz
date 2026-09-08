@@ -31,7 +31,7 @@ struct FrameColumnsInspector: View {
                 set: { editorState.setFrameColumnsVisible($0) }))
                 .font(.callout)
                 .toggleStyle(.checkbox)
-                .help(FrameColumnsCopy.showCaption)
+                .panelHelp(FrameColumnsCopy.showCaption)
                 .playtestControl(FrameColumnsCopy.show,
                                  detail: "Columns on \(layer.name), "
                                      + (isShowing ? "shown" : "hidden"))

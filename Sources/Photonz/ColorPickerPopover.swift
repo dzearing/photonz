@@ -82,7 +82,7 @@ struct ColorPickerPopover: View {
                             }
                     }
                     .buttonStyle(.plain)
-                    .help(hex)
+                    .panelHelp(hex)
                 }
             }
         }
@@ -146,7 +146,7 @@ struct ColorPickerPopover: View {
         }
         .buttonStyle(.bordered)
         .disabled(isSampling)
-        .help("Pick a color from anywhere on screen")
+        .panelHelp("Pick a color from anywhere on screen")
     }
 
     // MARK: - HSB → RGB

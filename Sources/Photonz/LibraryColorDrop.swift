@@ -173,7 +173,7 @@ struct LibraryColorNamingField: View {
                                revert: { editorState.endNamingDroppedColor() })
             Button("Save", action: save)
                 .controlSize(.small)
-                .help("Saves this \(ColorStyleNaming.subject(paint)) under that name")
+                .panelHelp("Saves this \(ColorStyleNaming.subject(paint)) under that name")
                 .playtestControl("Save", detail: "Library")
         }
         .playtestField("Style name")
@@ -194,7 +194,7 @@ struct LibraryColorNamingField: View {
             .frame(width: 18, height: 18)
             .overlay(RoundedRectangle(cornerRadius: 4)
                 .strokeBorder(.primary.opacity(0.25), lineWidth: 1))
-            .help(ColorStyleNaming.paintText(paint))
+            .panelHelp(ColorStyleNaming.paintText(paint))
     }
 
     private func save() {

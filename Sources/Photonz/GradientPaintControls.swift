@@ -106,7 +106,7 @@ struct PaintTypeRow: View {
             ForEach(Paint.Kind.allCases, id: \.self) { kind in
                 Button { onPick(kind) } label: { tile(kind) }
                     .buttonStyle(.plain)
-                    .help("\(kind.title) paint")
+                    .panelHelp("\(kind.title) paint")
                     .accessibilityLabel(kind.title)
                     .accessibilityAddTraits(kind == paint.kind ? [.isSelected] : [])
                     // These read as a picker but are four buttons, so they say
@@ -205,7 +205,7 @@ struct GradientGeometryRow: View {
         }
         .buttonStyle(.bordered)
         .controlSize(.mini)
-        .help(tip)
+        .panelHelp(tip)
         .accessibilityLabel(tip)
         // A picture is all these are, so a walk names them by what they do.
         .playtestControl(tip, detail: "Stops")
@@ -263,7 +263,7 @@ private struct GradientAimPad: View {
         )
         .accessibilityLabel("Gradient direction")
         .accessibilityValue(readout)
-        .help(paint.kind == .radial
+        .panelHelp(paint.kind == .radial
               ? "Drag to move where the gradient spreads from"
               : "Drag to aim the gradient. Drag the small handle to move where it starts.")
     }
@@ -413,7 +413,7 @@ private struct GradientRamp: View {
                         onCommit()
                     }
             )
-            .help("\(stop.hex) at \(Int((stop.position * 100).rounded()))%")
+            .panelHelp("\(stop.hex) at \(Int((stop.position * 100).rounded()))%")
             .accessibilityLabel("Stop \(index + 1)")
     }
 

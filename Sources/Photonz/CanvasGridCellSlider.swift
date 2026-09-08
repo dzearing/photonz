@@ -52,7 +52,7 @@ struct CanvasGridSizeButton: View {
         // the button, and a bare number on glass reads as a label.
         .buttonStyle(PillActionButtonStyle(prominent: true))
         .fixedSize()
-        .help(settings.cellButtonHelp(atZoom: editorState.zoom))
+        .panelHelp(settings.cellButtonHelp(atZoom: editorState.zoom))
         .playtestControl(CanvasGridCopy.cell, detail: "Tool bar, \(settings.cellButtonText)")
         .popover(isPresented: isPresented, arrowEdge: .top) {
             CanvasGridCellSlider(cell: settings.minimumCell) {

@@ -36,6 +36,20 @@ public struct TextStyles: Equatable, Codable, Sendable {
         "Baskerville",
     ]
 
+    /// A family whose name is longer than the box the Font menu is held to, so
+    /// the menu has to shorten it and say the whole thing on hover instead.
+    ///
+    /// There is no way through the UI to reach a state like this — the menu
+    /// only offers a family once a label already wears it — so a scripted walk
+    /// checking that behaviour asks for this one directly. It is a stock macOS
+    /// family, and it works even where it is not installed: the menu shows the
+    /// name it was given whether or not anything can draw it.
+    public static let longNameForPlaytest = "Bodoni 72 Smallcaps"
+
+    /// The curated family a walk puts the labels back into: one the box has
+    /// room for, so the menu shows it whole and says only what the row reaches.
+    public static var shortNameForPlaytest: String { fonts[0] }
+
     /// The size picker's options, smallest first.
     public static let fontSizes: [CGFloat] = [14, 18, 24, 32, 48, 64, 96]
 

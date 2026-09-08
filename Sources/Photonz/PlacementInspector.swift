@@ -591,7 +591,7 @@ struct PlacementInspector: View {
         }
         .buttonStyle(.plain)
         .onHover { hoveredContentID = $0 ? exception.id : nil }
-        .help("Select \(exception.name)")
+        .panelHelp("Select \(exception.name)")
         .playtestControl(exception.name, detail: "Layout, a layer with a rule of its own")
     }
 
@@ -605,7 +605,7 @@ struct PlacementInspector: View {
                 .font(.callout)
                 .foregroundStyle(.tertiary)
         }
-        .help(PhotonzDocument.instanceArrangementReason)
+        .panelHelp(PhotonzDocument.instanceArrangementReason)
     }
 
     /// The row for an axis the stack decides. It stays in place, with the same
@@ -647,7 +647,7 @@ struct PlacementInspector: View {
                         }
                         .menuStyle(.borderlessButton)
                         .fixedSize()
-                        .help(PlacementEditing.fillReason(flow.flowNoun ?? "the stack"))
+                        .panelHelp(PlacementEditing.fillReason(flow.flowNoun ?? "the stack"))
                     } else {
                         Text(answer)
                             .font(.callout)
@@ -657,14 +657,14 @@ struct PlacementInspector: View {
                         Button("Clear \(stale)", action: clear)
                             .buttonStyle(.link)
                             .font(.caption)
-                            .help("\(stale) is still set here from before, and does nothing while "
+                            .panelHelp("\(stale) is still set here from before, and does nothing while "
                                   + "\(flow.flowNoun ?? "the flow") decides this direction. Clear "
                                   + "it so changing the direction later does not bring it back.")
                             .playtestControl("Clear \(stale)", detail: "Layout")
                     }
                 }
             }
-            .help(flow.reason ?? "")
+            .panelHelp(flow.reason ?? "")
         }
     }
 

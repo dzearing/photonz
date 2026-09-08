@@ -13130,3 +13130,46 @@ Tests first, four in `ContentsSelectionTests`, including the character budget.
 real window captures.
 
 Next: back to the queue.
+
+## 2026-09-08 — The panel says its tooltips out loud
+
+A menu in the dock held to one width shortens a value too long for its box, and
+the tooltip is supposed to lead with the whole thing. `MenuTip` had unit tests
+for the sentence, and nothing at all could tell you whether the sentence ever
+reached a control: SwiftUI's `.help()` sets neither `toolTip` nor
+`accessibilityHelp` on the backing views, so no picture and no readout could see
+it. The `.help()` line could have been deleted and every check stayed green.
+
+`Sources/Photonz/Playtest/PanelHelpProbe.swift` is the fix, route (a) from the
+task's notes. `panelHelp(_:)` is ONE expression that hands the same text to
+`.help()` and to an invisible probe-only marker, so the two can never disagree,
+and it compiles down to a plain `.help()` outside `PHOTONZ_PLAYTEST` — the
+shipping build carries none of it. Reading goes through
+`PlaytestPanelHelp.tip(at:in:)`, which merges the new marker with the app's own
+`HintAnchorView` and lets the smallest one covering the point win, the same rule
+the alignment rows already read their per-picture names by. So a walk asks one
+question whichever tooltip system drew the words.
+
+Two ways to use it. A `panel` step's `menus` list now ends each line with
+`says "..."`, and `expect` gained a `tooltip` thing that holds one to its exact
+words, narrowed by `in` the way a control is — the panel wears two Colors and
+two Locks at once on an ordinary selection.
+
+Reproduced the failure it exists to catch rather than assuming it: deleting the
+`panelHelp` line from `SelectionMenu` and rerunning `menu-says-its-whole-value-
+walk.json` fails at step 15 naming Font and listing every control that still
+talks. Adversarial review of the built thing found the readout only half honest
+— the Shadow Kind menu had a `.help()` and read "says nothing" — so all 125
+`.help()` sites in the dock files were converted, plus the zoom percentage,
+which is the one menu outside the dock a panel readout lists.
+
+Getting the Font menu shortened at all needs `setTextFontLongName`: the menu
+offers a family only once a label already wears it, so there is no route to that
+state through the UI. `setTextFontShortName` is the way back, because new text
+comes out in whatever family the last one wore.
+
+`Scripts/test.sh` green at 4917. Seven existing panel walks rerun green, so the
+extra markers do not disturb layout. Audit
+`2026-09-08-panel-tooltip-readout` with a real window capture.
+
+Next: back to the queue.

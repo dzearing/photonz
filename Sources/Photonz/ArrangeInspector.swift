@@ -81,7 +81,7 @@ struct ArrangeInspector: View {
         }
         .buttonStyle(IconActionButtonStyle(diameter: 26, squareHitTarget: true))
         .disabled(!editorState.canAlignSelection(alignment))
-        .help(tip(alignment))
+        .panelHelp(tip(alignment))
         .accessibilityLabel(alignment.title)
     }
 
@@ -93,7 +93,7 @@ struct ArrangeInspector: View {
         }
         .buttonStyle(IconActionButtonStyle(diameter: 26, squareHitTarget: true))
         .disabled(!editorState.canDistributeSelection)
-        .help(editorState.canDistributeSelection
+        .panelHelp(editorState.canDistributeSelection
             ? axis.title
             : "\(axis.title). Needs three or more layers, so there is a gap to even out.")
         .accessibilityLabel(axis.title)

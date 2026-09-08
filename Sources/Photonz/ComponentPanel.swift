@@ -85,7 +85,7 @@ struct ComponentMark: View {
         ComponentGlyphShape(isInstance: isInstance)
             .fill(ComponentGlyph.color)
             .frame(width: size, height: size)
-        .help(isInstance
+        .panelHelp(isInstance
               ? "A copy of a component. It follows the original."
               : "A component. Copies of it come from the Library.")
     }
@@ -288,7 +288,7 @@ struct LibraryComponentInspector: View {
                         editorState.insertPickedComponent()
                     }
                     .controlSize(.small)
-                    .help(placeHelp(componentID))
+                    .panelHelp(placeHelp(componentID))
                     .playtestControl("Place a Copy", detail: "Component")
                     Button("Select Original") {
                         // The version the shelf is set to, or the button takes
@@ -298,7 +298,7 @@ struct LibraryComponentInspector: View {
                             version: editorState.shelfComponentVersion(of: componentID)?.id)
                     }
                     .controlSize(.small)
-                    .help("Selects the original on the canvas")
+                    .panelHelp("Selects the original on the canvas")
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -335,7 +335,7 @@ struct LibraryComponentInspector: View {
                 }
                 .labelsHidden()
                 .controlSize(.small)
-                .help("Which drawing of this component a copy off this tile arrives showing. A copy can still be switched afterwards")
+                .panelHelp("Which drawing of this component a copy off this tile arrives showing. A copy can still be switched afterwards")
             }
             .playtestField("Place")
         }
@@ -403,7 +403,7 @@ struct StarterComponentInspector: View {
                     editorState.insertStarterComponent(starter, at: editorState.visibleCanvasCentre)
                 }
                 .controlSize(.small)
-                .help("Puts it in the middle of the canvas. Dragging the tile puts it where you drop it")
+                .panelHelp("Puts it in the middle of the canvas. Dragging the tile puts it where you drop it")
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
@@ -481,7 +481,7 @@ struct LibraryComponentTile: View {
             thumbnail.frame(width: max(wellWidth, LibraryShelfLayout.tileMinimumWidth),
                             height: LibraryShelfLayout.thumbnailHeight)
         })
-        .help(helpText)
+        .panelHelp(helpText)
         // The same closure a walk picks the tile up with, so an unmanned run
         // can never drag something the pointer would not.
         .playtestTarget(entry.name, kind: .tile, detail: "Components", payload: dragItem)
@@ -674,7 +674,7 @@ struct ComponentInstanceInspector: View {
                                                             version: selection.version)
                     }
                     .controlSize(.small)
-                    .help("Selects the drawing this copy shows, which is where a change to every copy of it is made")
+                    .panelHelp("Selects the drawing this copy shows, which is where a change to every copy of it is made")
                     .playtestControl("Edit Original")
                     // Detach is here as well as in the Layer menu, because a
                     // command that lives only in a menu is a command nobody
@@ -684,7 +684,7 @@ struct ComponentInstanceInspector: View {
                         .controlSize(.small)
                         .playtestControl("Detach")
                         .disabled(!editorState.canDetachInstance)
-                        .help(selection.count == 1
+                        .panelHelp(selection.count == 1
                               ? "Turns this copy into ordinary layers that no longer follow the original"
                               : "Turns all \(selection.count) copies into ordinary layers that no longer follow the original")
                 }
@@ -714,7 +714,7 @@ struct ComponentInstanceInspector: View {
             let name = editorState.document?.componentPieceName(of: piece) ?? "that piece"
             Button("Make \(name) Adjustable") { editorState.takeWordingOffer(piece) }
                 .controlSize(.small)
-                .help("Adds a Wording knob for \(name) on the original, so every copy can say something different")
+                .panelHelp("Adds a Wording knob for \(name) on the original, so every copy can say something different")
                 .playtestControl("Make \(name) Adjustable")
         }
     }
@@ -752,7 +752,7 @@ struct ComponentInstanceInspector: View {
                 }
                 .buttonStyle(.borderless)
                 .controlSize(.small)
-                .help("Be the size of the original again")
+                .panelHelp("Be the size of the original again")
                 .playtestControl("Revert Size")
             }
         }
@@ -786,7 +786,7 @@ struct ComponentInstanceInspector: View {
                 }
                 .buttonStyle(.borderless)
                 .controlSize(.small)
-                .help("Follow the original's look again, every part of it")
+                .panelHelp("Follow the original's look again, every part of it")
             }
         }
     }
@@ -832,23 +832,23 @@ struct ComponentPieceInspector: View {
                         editorState.exposePieceWording(of: piece.layer)
                     }
                     .controlSize(.small)
-                    .help("Adds a Wording knob for \(pieceName) on the original, so every copy can say something different")
+                    .panelHelp("Adds a Wording knob for \(pieceName) on the original, so every copy can say something different")
                     .playtestControl("Make Its Wording Adjustable")
                 }
                 HStack(spacing: 6) {
                     Button("Select Copy") { editorState.selectEnclosingCopy(of: piece) }
                         .controlSize(.small)
-                        .help("Picks the whole copy, which is what moves, resizes and detaches")
+                        .panelHelp("Picks the whole copy, which is what moves, resizes and detaches")
                         .playtestControl("Select Copy")
                     Button("Edit Original") {
                         editorState.selectComponentOnCanvas(componentID: piece.componentID)
                     }
                     .controlSize(.small)
-                    .help("Selects the original, which is where a change to every copy is made")
+                    .panelHelp("Selects the original, which is where a change to every copy is made")
                     .playtestControl("Edit Original")
                     Button("Detach") { editorState.detachEnclosingCopy(of: piece) }
                         .controlSize(.small)
-                        .help("Turns this copy into ordinary layers, so every piece of it can be edited directly")
+                        .panelHelp("Turns this copy into ordinary layers, so every piece of it can be edited directly")
                         .playtestControl("Detach")
                 }
             }
@@ -877,7 +877,7 @@ struct InstanceStyleRevert: View {
             }
             .buttonStyle(.borderless)
             .controlSize(.small)
-            .help("This copy's own \(field.label.lowercased()). Follow the original again")
+            .panelHelp("This copy's own \(field.label.lowercased()). Follow the original again")
             // Named for what it puts back, so the three or four that can be on
             // screen at once are told apart by their own words rather than by
             // which row a walk remembered to say.
@@ -936,7 +936,7 @@ struct ComponentVersionList: View {
                 .menuStyle(.borderlessButton)
                 .buttonStyle(.borderless)
                 .fixedSize()
-                .help("Copies this drawing into a second version of the same component, so a copy can show either")
+                .panelHelp("Copies this drawing into a second version of the same component, so a copy can show either")
                 .playtestControl("Add Version")
             }
             if versions.count > 1 {
@@ -999,7 +999,7 @@ private struct ComponentVersionRow: View {
                 .font(.caption)
                 .lineLimit(1)
                 .truncationMode(.middle)
-                .help("Selects this version on the canvas, which is where it is edited")
+                .panelHelp("Selects this version on the canvas, which is where it is edited")
                 .playtestControl(version.name)
                 Spacer(minLength: 0)
             }
@@ -1059,7 +1059,7 @@ struct ComponentVersionApplyRow: View {
                 Button(plan.title) { editorState.applyToOtherComponentVersions() }
                     .controlSize(.small)
                     .disabled(!plan.wouldChangeAnything)
-                    .help(plan.help)
+                    .panelHelp(plan.help)
                     // One name whatever it is saying, and what it is saying in
                     // the detail, the way every other control in the panel
                     // reads: a walk that named it by its title would be naming
@@ -1188,7 +1188,7 @@ struct ComponentPropertyList: View {
         .menuStyle(.borderlessButton)
         .fixedSize()
         .disabled(candidates.isEmpty)
-        .help("Choose a piece of this component and how copies may change it")
+        .panelHelp("Choose a piece of this component and how copies may change it")
     }
 }
 
@@ -1225,7 +1225,7 @@ private struct ComponentPropertyRow: View {
                 Image(systemName: "minus.circle")
             }
             .buttonStyle(.borderless)
-            .help("Stop letting copies change this. Copies go back to showing what the original shows")
+            .panelHelp("Stop letting copies change this. Copies go back to showing what the original shows")
         }
         .onAppear {
             draft = property.name
@@ -1347,7 +1347,7 @@ struct ComponentInstanceProperties: View {
                 }
                 .labelsHidden()
                 .controlSize(.small)
-                .help("Which drawing of this component the copy shows. Everything you have set on the copy comes with it")
+                .panelHelp("Which drawing of this component the copy shows. Everything you have set on the copy comes with it")
             }
             // Named by its row, not by the version it happens to be showing: a
             // walk that called this menu "Default" would be naming the very
@@ -1406,7 +1406,7 @@ struct ComponentInstanceProperties: View {
             }
             .labelsHidden()
             .controlSize(.small)
-            .help("Only the shapes the original holds. A copy can never show something it does not define")
+            .panelHelp("Only the shapes the original holds. A copy can never show something it does not define")
         case .color:
             InstanceColorKnob(instances: instances, property: property)
         case .number where property.numberSlot?.isFourSided == true:
@@ -1500,7 +1500,7 @@ struct ComponentInstanceProperties: View {
         .controlSize(.small)
         .opacity(own ? 1 : 0)
         .disabled(!own)
-        .help(selection.count == 1
+        .panelHelp(selection.count == 1
               ? "Follow the original again for this one"
               : "Every picked copy follows the original again for this one")
         // The arrow only exists for a copy that has answered something, so it
@@ -1633,7 +1633,7 @@ private struct InstanceRoomKnob: View {
                     .contentShape(.rect)
             }
             .buttonStyle(.plain)
-            .help(isOpen
+            .panelHelp(isOpen
                   ? "Hide the four sides and keep the room they were given."
                   : "Give this copy different room on each of its four sides.")
             .playtestControl("\(property.name) sides", detail: "a knob on the copies")
@@ -1705,7 +1705,7 @@ private struct InstanceColorKnob: View {
             Text("No color")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
-                .help("The original has no \(property.name.lowercased()) any more, "
+                .panelHelp("The original has no \(property.name.lowercased()) any more, "
                       + "so there is nothing for this copy to change")
             Spacer(minLength: 0)
         } else {
@@ -1722,7 +1722,7 @@ private struct InstanceColorKnob: View {
             // firms up under the pointer: that is what says this one is worth
             // clicking.
             .onHover { isHovering = $0 }
-            .help(help(selection))
+            .panelHelp(help(selection))
             .accessibilityLabel("\(property.name) color")
             // The same word every colour well in the panel answers to, its own
             // knob saying which one: `press "Color" in "Fill"`.
@@ -1831,7 +1831,7 @@ private struct InstanceColorKnob: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
-        .help(style.map { "This copy uses the saved color \($0.name)" }
+        .panelHelp(style.map { "This copy uses the saved color \($0.name)" }
               ?? "Use a saved color for this, so editing that color moves every copy that points at it")
     }
 

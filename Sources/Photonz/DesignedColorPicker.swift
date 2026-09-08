@@ -150,7 +150,7 @@ struct DesignedColorPicker: View {
             .frame(width: 44, height: 20)
             .clipShape(RoundedRectangle(cornerRadius: 5))
             .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.2), lineWidth: 1))
-            .help("Was \(openedOn.hex), now \(color.hex)")
+            .panelHelp("Was \(openedOn.hex), now \(color.hex)")
 
             Text(headerTitle)
                 .font(.callout.weight(.medium))
@@ -164,7 +164,7 @@ struct DesignedColorPicker: View {
             }
             .buttonStyle(.plain)
             .disabled(isSampling)
-            .help("Sample a color from anywhere on screen")
+            .panelHelp("Sample a color from anywhere on screen")
 
             if let onClose {
                 Button(action: onClose) {
@@ -174,7 +174,7 @@ struct DesignedColorPicker: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
-                .help("Close")
+                .panelHelp("Close")
                 .playtestControl("Close", detail: "the picker")
             }
         }
@@ -196,7 +196,7 @@ struct DesignedColorPicker: View {
         .pickerStyle(.segmented)
         .labelsHidden()
         .controlSize(.small)
-        .help("Which numbers you are sliding. HEX is also where a pasted color goes.")
+        .panelHelp("Which numbers you are sliding. HEX is also where a pasted color goes.")
         // A real segmented control, so HSL, RGB and HEX read straight off it;
         // the marker only lends them the row they are on.
         .playtestField("Color format")
@@ -260,7 +260,7 @@ struct DesignedColorPicker: View {
                 .font(.system(.caption, design: .monospaced))
                 .controlSize(.small)
                 .onSubmit(submitHex)
-                .help("Takes #7C4DFF, rgb(124, 77, 255) or hsl(256 100% 65%)")
+                .panelHelp("Takes #7C4DFF, rgb(124, 77, 255) or hsl(256 100% 65%)")
                 // Not "HEX": that is the tab that opens this row, and two
                 // things a walk can press wearing one word is a walk that
                 // has to guess.
@@ -314,7 +314,7 @@ struct DesignedColorPicker: View {
                                 }
                         }
                         .buttonStyle(.plain)
-                        .help(hex)
+                        .panelHelp(hex)
                         // A swatch has no words on it, and the colour it holds
                         // is worked out from whatever you opened the picker
                         // on, so a walk that named one by its hex would stop
@@ -372,7 +372,7 @@ struct DesignedColorPicker: View {
                             .font(.caption)
                     }
                     .controlSize(.small)
-                    .help("Keeps this \(ColorStyleNaming.subject(paint)) in the Library under a name")
+                    .panelHelp("Keeps this \(ColorStyleNaming.subject(paint)) in the Library under a name")
                     .playtestControl("Save style", detail: "the picker")
                 }
             }
@@ -397,7 +397,7 @@ struct DesignedColorPicker: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
-        .help("\(onWhite.ratioText) on white, \(onBlack.ratioText) on black. "
+        .panelHelp("\(onWhite.ratioText) on white, \(onBlack.ratioText) on black. "
               + "4.5:1 is the bar for body text, 3:1 for large text.")
         .accessibilityLabel("Contrast \(onWhite.ratioText) on white, \(onWhite.grade.title)")
     }
@@ -422,7 +422,7 @@ struct DesignedColorPicker: View {
                 .playtestControl("Style name")
             Button("Save", action: saveStyle)
                 .controlSize(.small)
-                .help("Saves this \(ColorStyleNaming.subject(paint)) under that name")
+                .panelHelp("Saves this \(ColorStyleNaming.subject(paint)) under that name")
                 .playtestControl("Save")
         }
         // The Library has a Save of its own, so this one says which row it is
@@ -704,7 +704,7 @@ private struct ChannelSlider: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(channel.title)
-        .help(channel.title)
+        .panelHelp(channel.title)
         .onAppear { field = text }
         .onChange(of: color) { _, _ in if !fieldFocused { field = text } }
         .onChange(of: fieldFocused) { _, focused in if !focused { field = text } }

@@ -91,7 +91,7 @@ struct LibraryPanel: View {
         .pickerStyle(.segmented)
         .labelsHidden()
         .controlSize(.small)
-        .help("What the shelf is showing")
+        .panelHelp("What the shelf is showing")
     }
 
     private var searchField: some View {
@@ -120,7 +120,7 @@ struct LibraryPanel: View {
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
-                .help("Clear the search")
+                .panelHelp("Clear the search")
             }
         }
         .padding(.horizontal, 6)
@@ -420,7 +420,7 @@ private struct LibraryTile: View {
             thumbnail.frame(width: LibraryShelfLayout.tileMinimumWidth,
                             height: LibraryShelfLayout.thumbnailHeight)
         })
-        .help("\(item.name) • \(item.detail). Double click to place it.")
+        .panelHelp("\(item.name) • \(item.detail). Double click to place it.")
         // The same closure a walk picks the tile up with, so an unmanned run
         // can never drag something the pointer would not.
         // The caption a person reads is "10 hours ago", which is no use to a
@@ -502,12 +502,12 @@ struct LibraryItemInspector: View {
                         editorState.placeLibraryPick()
                     }
                     .controlSize(.small)
-                    .help("Adds this capture to the open picture as a new layer")
+                    .panelHelp("Adds this capture to the open picture as a new layer")
                     Button("Reveal") {
                         NSWorkspace.shared.activateFileViewerSelecting([entry.url])
                     }
                     .controlSize(.small)
-                    .help("Shows the file in the Finder")
+                    .panelHelp("Shows the file in the Finder")
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)

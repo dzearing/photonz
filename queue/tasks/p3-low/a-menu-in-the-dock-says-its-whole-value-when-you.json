@@ -5,14 +5,14 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T02:32:30.325Z",
-  "updated": "2026-09-08T12:09:07.154Z",
+  "updated": "2026-09-08T19:44:48.562Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found while pinning the Font menu width (2026-09-07). SwiftUI .help() is invisible from AppKit: it sets neither NSView.toolTip nor accessibilityHelp on the backing views, and a synthesized mouse move does not raise a help tag, so neither a picture nor a panel readout can prove the tip. Two ways out: (a) a probe-only registry the way InspectorLayoutProbe records section frames, written from the same expression that feeds .help(); (b) move the dock onto the app's own designed tooltip (HintAnchorView, Sources/Photonz/HintTooltip.swift), which a walk can already hover by label and photograph, but that is 30 call sites in LayersPanel.swift and a visible change in Next.",
+  "notes": "Found while pinning the Font menu width (2026-09-07). SwiftUI .help() is invisible from AppKit: it sets neither NSView.toolTip nor accessibilityHelp on the backing views, and a synthesized mouse move does not raise a help tag, so neither a picture nor a panel readout can prove the tip. Two ways out: (a) a probe-only registry the way InspectorLayoutProbe records section frames, written from the same expression that feeds .help(); (b) move the dock onto the app's own designed tooltip (HintAnchorView, Sources/Photonz/HintTooltip.swift), which a walk can already hover by label and photograph, but that is 30 call sites in LayersPanel.swift and a visible change in Next.\n\nDONE 2026-09-08 by route (a). New: Sources/Photonz/Playtest/PanelHelpProbe.swift (HelpAnchorView, View.panelHelp, PlaytestPanelHelp.tip(at:in:)). PlaytestPanelThing gained .tooltip and PlaytestAction gained setTextFontLongName/setTextFontShortName (TextStyles.longNameForPlaytest = \"Bodoni 72 Smallcaps\", shortNameForPlaytest = fonts[0]); the Font menu can only reach a shortened state through those, because it offers a family only once a label wears it. PlaytestHarness.readPanel appends `says \"...\"` to every menu line and panelReading gained the .tooltip case. Walk: Scripts/playtest/menu-says-its-whole-value-walk.json. Audit: queue/audits/2026-09-08-panel-tooltip-readout.json. Watch out: GeometryInspector has a static RegionGeometry.help(_:) that a blind sed rename catches — it is not the View modifier.",
   "acceptance": [
     "A scripted walk can read, in words, what any menu in the panel says when the pointer rests on it",
     "The Font menu carrying a shortened family name is covered by that check",
@@ -30,6 +30,31 @@
     {
       "t": "2026-09-08T12:09:07.153Z",
       "note": "seq 60 -> 50"
+    },
+    {
+      "t": "2026-09-08T19:19:40.555Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T19:22:42.586Z",
+      "note": "Adversarial review before building. (a) A registry fed by a SEPARATE string proves nothing: it would pass while .help() was deleted. So one modifier writes both, and a walk reading \"none\" means the tooltip is really gone. (b) Option (b) from the notes, moving the dock onto HintTooltip, fails acceptance 3: it is a visible change in Next across 30 sites. Rejected. (c) The panel already reads tooltips for segmented pickers via PlaytestPanelPress.tip(at:among:) — reuse that resolver rather than inventing a second one, so a walk asks one question whichever tooltip system draws. (d) Shortest version: the modifier, one call site (SelectionMenu covers Font, Size and Weight), the tooltip in what a panel step already writes, and an expect thing:tooltip so a walk can hold it to words. (e) A walk cannot reach a clipped Font menu through the UI at all — the menu only offers a long family once a layer already wears one — so an action is needed to put one on, the way setTextSizeLarge already exists for exactly that reason."
+    },
+    {
+      "t": "2026-09-08T19:44:48.562Z",
+      "note": "Built route (a). panelHelp is one expression that feeds .help() and an invisible probe-only marker, so the two can never disagree. Reading goes through PlaytestPanelHelp.tip(at:in:), which merges the marker with the app's own HintAnchorView and lets the smallest one win, the same rule the alignment rows already read their per-picture names by. A panel step's menus list now carries what each menu says; expect thing:tooltip holds one to its words, narrowed by row the way a control is."
+    },
+    {
+      "t": "2026-09-08T19:44:48.562Z",
+      "note": "Reproduced the thing the task exists to stop. Deleted the panelHelp line from SelectionMenu, rebuilt the probe, ran the walk: it failed at step 15 with `no tooltip called \"Font\" is in the panel to read; the ones that are: 81%, Text, Add Effect, Color, Shadow, ...`, naming every control that still talks. Restored it and the walk is green. Before this change nothing anywhere would have noticed."
+    },
+    {
+      "t": "2026-09-08T19:44:48.562Z",
+      "note": "Adversarial review of the built thing found the readout only half honest: the Shadow Kind menu carries a .help() and read \"says nothing\". Converted all 125 .help() sites in the dock files plus the zoom percentage, which is the one menu outside the dock a panel readout lists. Every menu the readout names now says its words. Second finding: control names repeat (two Colors, two Locks on an ordinary selection), so expect thing:tooltip takes `in` after all."
+    },
+    {
+      "t": "2026-09-08T19:44:48.562Z",
+      "note": "Verified: Scripts/test.sh 4917 tests green; menu-says-its-whole-value-walk green with a real screen capture; seven existing panel walks (wrapped-label-width, corner-radius-rounds, label-fills-a-row, effects-remembered, parts-settings-inline, switch-says-mixed, border-off-keeps-its-row) still green, so the extra probe-only markers do not disturb panel layout. Nothing a person sees changes: the release build compiles PHOTONZ_PLAYTEST out entirely (Scripts/build-app.sh only passes -DPHOTONZ_PLAYTEST for non-release variants), so the shipping binary carries plain .help()."
     }
-  ]
+  ],
+  "started": "2026-09-08T19:19:40.554Z"
 }

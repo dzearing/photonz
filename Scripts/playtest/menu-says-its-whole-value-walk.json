@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/menu-says-its-whole-value",
+  "seed": "A menu in the right hand panel is held to one width, so a long value gets shortened in the box. Resting on it is supposed to say the whole thing. Until now nothing could read that sentence, so it could have been deleted without a single check going red. The walk makes a label, reads what the Font menu would say while it fits, puts the label into a family too long for the box, and reads it again.",
+  "setup": { "forget": ["text"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [300, 320] },
+    { "do": "type", "text": "Save all the changes" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "selectRow", "row": "Text" },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+
+    { "do": "action", "action": "setTextFontShortName" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-fits", "note": "The Font menu is showing a curated family, which the box has room for. Resting on it says only what the row reaches. (Set on purpose: new text comes out in whatever family the last one wore, so a probe that has run this walk before starts already shortened.)" },
+    { "do": "panel", "stage": "1-fits" },
+    { "do": "expect", "tooltip": "Font", "reads": "The font of this text" },
+    { "do": "expect", "tooltip": "Size", "reads": "The size of this text" },
+    { "do": "expect", "tooltip": "Weight", "present": true },
+
+    { "do": "action", "action": "setTextFontLongName" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "describe", "stage": "2-shortened", "note": "THE TEST: the label is in a family whose name is longer than the box, so the menu shortens it with an ellipsis. Resting on it now leads with the name IN FULL and says what the row reaches afterwards." },
+    { "do": "snapshot", "name": "menu-says-2-shortened" },
+    { "do": "panel", "stage": "2-shortened" },
+    { "do": "expect", "tooltip": "Font", "reads": "Bodoni 72 Smallcaps, the font of this text" },
+
+    { "do": "describe", "stage": "3-neighbours", "note": "The menus beside it were not touched: only the one that had to shorten something leads with a value." },
+    { "do": "expect", "tooltip": "Size", "reads": "The size of this text" },
+
+    { "do": "describe", "stage": "4-two-of-a-kind", "note": "The panel wears the same word on several rows at once, so a claim about one of them says which row it means." },
+    { "do": "expect", "tooltip": "Kind", "in": "Shadow", "present": true }
+  ]
+}

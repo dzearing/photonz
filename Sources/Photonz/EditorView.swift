@@ -1631,7 +1631,9 @@ struct EditorView: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-            .help(Self.zoomMenuHelp)
+            // The one menu outside the dock that a panel readout lists, so it
+            // says its words the same way the dock's do.
+            .panelHelp(Self.zoomMenuHelp)
             // Double clicking the number goes back to a hundred percent, which
             // is what a person reaches for when the picture has wandered off
             // its real size. It has to be a lid over the menu rather than a

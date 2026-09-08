@@ -61,7 +61,7 @@ struct CalloutInspector: View {
                     if !editing { editorState.commitCalloutMagnification() }
                 }
                 .controlSize(.small)
-                .help("How much bigger the callout draws the region it points at. "
+                .panelHelp("How much bigger the callout draws the region it points at. "
                       + "Dragging the callout's corners sets the same number.")
             }
             HStack(spacing: 8) {
@@ -78,7 +78,7 @@ struct CalloutInspector: View {
                 .labelsHidden()
                 .controlSize(.small)
                 .fixedSize()
-                .help("Whether the magnified region is drawn in a box or in a circle.")
+                .panelHelp("Whether the magnified region is drawn in a box or in a circle.")
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)

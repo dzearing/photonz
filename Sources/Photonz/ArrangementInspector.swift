@@ -115,7 +115,7 @@ struct ArrangementInspector: View {
             // step quieter every other Mixed control does, and the word sits
             // beside the caption where there is room for it.
             .opacity(contents.arrangement.isMixed ? MixedLook.controlOpacity : 1)
-            .help(Self.arrangementHelp)
+            .panelHelp(Self.arrangementHelp)
         }
         numbers()
         if let sentence = sentence() {
@@ -173,7 +173,7 @@ struct ArrangementInspector: View {
                 .font(.callout)
                 .foregroundStyle(.tertiary)
         }
-        .help(PhotonzDocument.instanceArrangementReason)
+        .panelHelp(PhotonzDocument.instanceArrangementReason)
         if let one {
             // Whatever the Component section a few rows up already hands over
             // as a knob is left out here: the same word over the same number,
@@ -186,7 +186,7 @@ struct ArrangementInspector: View {
                         .font(.callout)
                         .foregroundStyle(.tertiary)
                 }
-                .help(help(for: readout, of: one))
+                .panelHelp(help(for: readout, of: one))
             }
         } else {
             // Three copies of three different originals have no four numbers
@@ -305,7 +305,7 @@ struct ArrangementInspector: View {
                 }
                 .toggleStyle(.checkbox)
                 .opacity(reading.isMixed ? MixedLook.controlOpacity : 1)
-                .help(clips
+                .panelHelp(clips
                     ? "What sticks out past this \(noun)'s edge is not drawn, not clicked and not exported."
                     : "Cut off whatever sticks out past this \(noun)'s edge, the way a screen does.")
                 .playtestControl("Clip contents", detail: clips ? "Group, on" : "Group, off")
@@ -359,7 +359,7 @@ struct ArrangementInspector: View {
                 }
                 .buttonStyle(.plain)
                 .opacity(contents.spreads.isMixed ? MixedLook.controlOpacity : 1)
-                .help(spreading
+                .panelHelp(spreading
                     ? "Hold one gap between them again, the \(Int(gap.value ?? 0)) that was here before."
                     : "Share the room left over between them, so the first and the last sit at the two ends.")
                 .playtestControl("Spread", detail: "Layout")
@@ -424,7 +424,7 @@ struct ArrangementInspector: View {
                     .contentShape(.rect)
             }
             .buttonStyle(.plain)
-            .help(open
+            .panelHelp(open
                 ? "Hide the four sides and keep the room they were given."
                 : "Give this \(noun) different room on each of its four sides.")
             .playtestControl("Each side", detail: "Layout")
@@ -535,7 +535,7 @@ struct ArrangementInspector: View {
             .labelsHidden()
             .frame(maxWidth: 152)
             .opacity(reading.isMixed ? MixedLook.controlOpacity : 1)
-            .help(hugs
+            .panelHelp(hugs
                 ? "This \(noun) is as \(axis.adjective) as what is inside it. Fixed holds the size it is now, and W and H above set it."
                 : "This \(noun) holds the \(axis.noun) it was given. Type it in \(axis.field) above, or drag a handle.")
         }
@@ -683,7 +683,7 @@ struct ArrangementInspector: View {
                             .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    .help(chevronHelp)
+                    .panelHelp(chevronHelp)
                     .playtestControl("Limits", detail: title)
                 }
                 if mixed {
@@ -812,7 +812,7 @@ struct LayoutNumberField: View {
                                              otherwise: .primary))
             .frame(width: fieldWidth)
             .focused($isFocused)
-            .help(help)
+            .panelHelp(help)
             .accessibilityLabel(title)
             .onAppear { text = display(value) }
             .onChange(of: value) { if !isFocused { text = display(value) } }

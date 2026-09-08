@@ -655,6 +655,17 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The same menus set the other way, so a walk can put the picked labels
     /// into a known state whatever the last walk left the new-text default at.
     case setTextSizeLarge, setTextWeightRegular
+    /// Put the picked labels into a family whose name is too long for the Font
+    /// menu's box (`TextStyles.longNameForPlaytest`). The menu only offers a
+    /// family once a label already wears it, so there is no route to this state
+    /// through the UI at all, and without it a walk can never see the box
+    /// shorten a name or read the tooltip that says it in full.
+    ///
+    /// `setTextFontShortName` is the way back to a curated family that fits,
+    /// and a walk that means to see the box shorten something starts there:
+    /// new text comes out in whatever family the LAST one was set to, which on
+    /// a probe that has run this walk before is already the long one.
+    case setTextFontLongName, setTextFontShortName
     /// The shape rows over the whole selection: one pull on Thickness, and one
     /// on Corner Radius, reaching every picked shape.
     case dragThickness, dragShapeCorners
@@ -761,6 +772,16 @@ public enum PlaytestPanelThing: String, Sendable, Equatable, CaseIterable {
     case row
     /// A tile on the Library shelf.
     case tile
+    /// What a control in the panel would SAY if the pointer rested on it,
+    /// named by the control it belongs to.
+    ///
+    /// Not the same question as what the control reads. A menu too narrow for
+    /// the name it is showing reads "Bodoni 72 Smallc...", and the whole point
+    /// of the tooltip is that it says the name in full instead. Nothing could
+    /// ask for that sentence before, so the only thing holding it up was a test
+    /// of the words on their own, which would have gone on passing with the
+    /// tooltip deleted.
+    case tooltip
 }
 
 /// What a walk expects a colour swatch to answer to a colour held over it.
@@ -1410,11 +1431,14 @@ public enum PlaytestStep: Sendable, Equatable {
             if reads != nil, thing == .row || thing == .tile {
                 throw f.invalid("reads", "only a field, a menu or a control can be asked what it reads; a \(thing.rawValue) shows its own name, so claim \"present\" instead")
             }
-            // Only a control is looked up by the row it is on; everything else
-            // is found by its own name, so an `in` there would be a narrowing
-            // the step quietly ignored.
+            // Only a control and a tooltip are looked up by the row they are
+            // on; everything else is found by its own name, so an `in` there
+            // would be a narrowing the step quietly ignored. A tooltip needs it
+            // for the same reason a control does: the panel is full of rows
+            // wearing the same word, and there are two Colors and two Locks
+            // showing at once on an ordinary selection.
             let inRow = try f.optionalString("in")
-            if inRow != nil, thing != .control {
+            if inRow != nil, thing != .control, thing != .tooltip {
                 throw f.invalid("in", "only a control is found by the row it sits on; a \(thing.rawValue) is found by its own name, so leave \"in\" off")
             }
             self = .expect(thing: thing, named: try f.string(thing.rawValue),

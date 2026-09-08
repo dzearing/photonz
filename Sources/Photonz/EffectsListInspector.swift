@@ -210,7 +210,7 @@ private struct EffectRowView: View {
             .frame(height: ColorPartLayout.rowHeight)
             .panelEdgeIcon("reorder", of: row.title)
             .contentShape(Rectangle())
-            .help("Drag to change what paints over what")
+            .panelHelp("Drag to change what paints over what")
             .gesture(
                 DragGesture(minimumDistance: 3)
                     .onChanged { carry = $0.translation.height }
@@ -236,7 +236,7 @@ private struct EffectRowView: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(.tertiary)
-        .help("Remove this \(row.kind.title.lowercased())")
+        .panelHelp("Remove this \(row.kind.title.lowercased())")
         .playtestControl("Remove", detail: "takes the effect out of the list")
     }
 
@@ -286,7 +286,7 @@ private struct EffectRowView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(isFolded ? "Show this \(row.kind.title.lowercased())'s settings"
+        .panelHelp(isFolded ? "Show this \(row.kind.title.lowercased())'s settings"
               : "Hide this \(row.kind.title.lowercased())'s settings")
         .accessibilityLabel(row.title)
         .accessibilityValue(isFolded ? "settings hidden" : "settings showing")
@@ -319,7 +319,7 @@ private struct EffectRowView: View {
         }
         .buttonStyle(.plain)
         .opacity(row.isMixed ? MixedLook.controlOpacity : 1)
-        .help(row.switchIDs.count > 1
+        .panelHelp(row.switchIDs.count > 1
               ? "Stops it drawing on all \(row.switchIDs.count) of them, and keeps its settings"
               : "Stops it drawing, and keeps its settings")
         .accessibilityLabel(isShowing ? "Hide \(row.title)" : "Show \(row.title)")
@@ -454,7 +454,7 @@ private struct BorderFollowsRow: View {
                     // pushed the whole pane wider than the window.
                     .frame(width: 92, alignment: .leading)
                     .disabled(ids.isEmpty)
-                    .help("Letters draws round each letter, so words stay readable over "
+                    .panelHelp("Letters draws round each letter, so words stay readable over "
                           + "anything. Box draws round the label's frame.")
                     .playtestControl("Follows", detail: reading.isMixed ? "mixed"
                                         : (reading.value ?? .letters).title)
@@ -526,7 +526,7 @@ private struct BorderPositionRow: View {
                 // column pushed the whole pane wider than the window.
                 .frame(width: 92, alignment: .leading)
                 .disabled(ids.isEmpty)
-                .help("Inside keeps the ring within the layer. Outside grows it past the edge.")
+                .panelHelp("Inside keeps the ring within the layer. Outside grows it past the edge.")
                 .playtestControl("Position", detail: reading.isMixed ? "mixed"
                                     : (reading.value ?? .outside).title)
             Spacer(minLength: 0)
@@ -595,7 +595,7 @@ private struct GlowKindRow: View {
                 // column pushed the whole pane wider than the window.
                 .frame(width: 92, alignment: .leading)
                 .disabled(ids.isEmpty)
-                .help("Outer throws the halo past the layer's edge. "
+                .panelHelp("Outer throws the halo past the layer's edge. "
                       + "Inner lights the edge from inside.")
                 .playtestControl("Kind", detail: reading.isMixed ? "mixed"
                                     : (reading.value ?? .outer).title)
@@ -700,7 +700,7 @@ private struct ShadowKindRow: View {
                 // than the window, and the shell answered by auto-collapsing
                 // the dock the moment a SECOND one appeared (2026-09-07).
                 .frame(width: 92, alignment: .leading)
-                .help("Drop throws it behind the layer. Inner casts it into the layer.")
+                .panelHelp("Drop throws it behind the layer. Inner casts it into the layer.")
                 .playtestControl("Kind", detail: reading.isMixed ? "mixed"
                                     : (reading.value ?? .drop).title)
             Spacer(minLength: 0)
@@ -736,7 +736,7 @@ struct AddEffectButton: View {
             ForEach(AddableEffect.allCases) { kind in
                 Button(kind.title) { editorState.addEffect(kind) }
                     .disabled(!editorState.canAddEffect(kind))
-                    .help(kind.summary)
+                    .panelHelp(kind.summary)
             }
         } label: {
             Image(systemName: "plus")
@@ -749,7 +749,7 @@ struct AddEffectButton: View {
         // The plus says nothing out loud, so this is both what a screen reader
         // announces and the name a scripted walk opens it by.
         .accessibilityLabel("Add Effect")
-        .help("Add an effect: a shadow, a glow, a border or a blur")
+        .panelHelp("Add an effect: a shadow, a glow, a border or a blur")
         .playtestControl("Add Effect", detail: "the plus on the Effects header")
     }
 }

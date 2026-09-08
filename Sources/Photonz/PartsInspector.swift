@@ -188,7 +188,7 @@ private struct PartRowView: View {
             .labelsHidden()
             .controlSize(.small)
             .opacity(row.isMixed ? MixedLook.controlOpacity : 1)
-            .help(switchHelp)
+            .panelHelp(switchHelp)
             .playtestControl("Switch",
                              detail: row.isMixed ? "mixed" : (row.isOn ? "on" : "off"))
     }

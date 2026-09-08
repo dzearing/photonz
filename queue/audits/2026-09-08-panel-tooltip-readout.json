@@ -1,0 +1,27 @@
+{
+  "feature": "The panel says its tooltips out loud",
+  "epic": "unmanned-loop",
+  "summary": "Every menu and control in the right hand panel can now be asked, in words, what it would say if you rested the pointer on it. Before this the app's tooltips were invisible to everything except a person's eyes, so the sentence a shortened Font menu leads with could have been deleted and nothing would have gone red.",
+  "setup": "Nothing to install and nothing to turn on. This is loop tooling: the app looks and behaves exactly as it did, because the whole thing compiles out of the shipping build.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/menu-says-its-whole-value-walk.json" },
+    { "do": "Read the last lines it prints: two steps claim the Font menu's exact sentence and pass.", "shot": "2026-09-08-panel-tooltip-readout.png" },
+    { "do": "Open /tmp/photonz-playtest/menu-says-its-whole-value/panel-2-shortened.json and find the menus list." },
+    { "do": "Read the Font line: it names the row, the value the box is showing, and the sentence resting on it says." },
+    { "do": "Open Sources/Photonz/LayersPanel.swift and delete the panelHelp line at the end of SelectionMenu." },
+    { "do": "Run the walk again. It fails, names Font, and lists every control that still talks." },
+    { "do": "Put the line back." }
+  ],
+  "evaluate": [
+    "The Font menu shortens Bodoni 72 Smallcaps to \"Bodoni 72 Smal...\" in the picture. Is leading the tooltip with the full name the right answer, or should the box be wider?",
+    "Every dock tooltip is now written as panelHelp instead of help. Is that a fair price for being able to check them, or does one more house rule in the panel cost more than it is worth?",
+    "The panel readout says \"says nothing\" for a control with no tooltip. Is that the line you would want to see, or should a missing tooltip look louder than a present one?",
+    "A walk can now claim a tooltip's exact words. Is that too brittle to keep green, given every wording change breaks a walk on purpose?"
+  ],
+  "rough": [
+    "Real screen capture, not an offscreen render: the Grants line said the probe's Screen Recording is granted.",
+    "Only the dock was converted, plus the zoom percentage, which is the one menu outside it that a panel readout lists. Tooltips in dialogs, the capture window and the video editor are still invisible to a walk. Nothing claims otherwise, but a future walk asking about one of those will be told there is no tooltip rather than that nobody looked.",
+    "The task's notes offered a second route, moving the dock onto the app's own designed tooltip. That was rejected: it is a visible change to Next across thirty call sites, and the task asks for nothing about what a person sees to change.",
+    "Getting the Font menu into a shortened state needs an action a walk asks for directly, because the menu only offers a long family once a label already wears one. There is no route to that state through the UI at all, which is worth knowing on its own."
+  ]
+}

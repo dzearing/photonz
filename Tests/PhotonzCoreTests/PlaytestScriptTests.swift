@@ -756,6 +756,41 @@ struct PlaytestScriptTests {
         #expect(actions == [.selectCanvas])
     }
 
+    /// The Font menu offers the curated families plus any the picked labels
+    /// already wear, so there is no way through the UI to put a label into a
+    /// family long enough to be shortened: the menu will not offer one until a
+    /// label already has it. A walk that wants to see the box shortened has to
+    /// ask for the family directly, the way `setTextSizeLarge` already asks for
+    /// a size.
+    @Test func aWalkCanPutTheLabelsIntoAFamilyTooLongForTheBox() throws {
+        let script = try decode("""
+        { "steps": [
+            { "do": "action", "action": "setTextFontShortName" },
+            { "do": "action", "action": "setTextFontLongName" }
+        ] }
+        """)
+        let actions: [PlaytestAction] = script.steps.compactMap { step in
+            if case .action(let action) = step { return action } else { return nil }
+        }
+        #expect(actions == [.setTextFontShortName, .setTextFontLongName])
+    }
+
+    /// The way back matters as much as the way in: new text comes out in
+    /// whatever family the last one was set to, so a probe that has already run
+    /// the long-name walk starts the next one already shortened.
+    @Test func theShortFamilyIsOneTheBoxHasRoomFor() {
+        #expect(TextStyles.fonts.contains(TextStyles.shortNameForPlaytest))
+    }
+
+    /// The family the action uses is longer than every curated one, which is
+    /// what makes the box shorten it: the menu is held to exactly the width the
+    /// curated names need.
+    @Test func theLongFamilyIsLongerThanEveryCuratedOne() {
+        let longest = TextStyles.fonts.map(\.count).max() ?? 0
+        #expect(TextStyles.longNameForPlaytest.count > longest)
+        #expect(!TextStyles.fonts.contains(TextStyles.longNameForPlaytest))
+    }
+
     @Test func aDragCanNameAShotTakenWhileTheButtonIsStillDown() throws {
         // The yellow snap guide only exists mid-drag; an audit that has to show
         // it needs the picture taken before the mouse comes up.
@@ -1396,6 +1431,59 @@ struct PlaytestScriptTests {
         #expect(reads == "Disabled")
     }
 
+    /// A menu asked what it READS answers with the words in its box, which is
+    /// "Bodoni 72 Smallc..." once the name is too long for the box. What the
+    /// pointer resting on it would say is a different sentence, and until now
+    /// nothing could ask for it.
+    @Test("An expect step can read the tooltip a control in the panel would show")
+    func expectStepReadsATooltip() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "tooltip": "Font",
+                       "reads": "Bodoni 72 Smallcaps, the font of this text" } ] }
+        """)
+        guard case .expect(let thing, let named, let inRow, let reads, _) = script.steps[0] else {
+            Issue.record("expect"); return
+        }
+        #expect(thing == .tooltip)
+        #expect(named == "Font")
+        #expect(inRow == nil)
+        #expect(reads == "Bodoni 72 Smallcaps, the font of this text")
+    }
+
+    /// The other half of the claim: that a control explains itself at all. A
+    /// walk asking this is what stops the tooltip being quietly deleted.
+    @Test("An expect step can claim a control has a tooltip without saying its words")
+    func expectStepClaimsATooltipIsThere() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "tooltip": "Weight", "present": true } ] }
+        """)
+        guard case .expect(let thing, let named, _, let reads, let present) = script.steps[0] else {
+            Issue.record("expect"); return
+        }
+        #expect(thing == .tooltip)
+        #expect(named == "Weight")
+        #expect(reads == nil)
+        #expect(present == true)
+    }
+
+    /// The panel is full of rows wearing the same word: an ordinary selection
+    /// shows two Colors and two Locks at once. So a tooltip, like a control,
+    /// can say which row it means.
+    @Test("A tooltip can be narrowed by the row it sits on")
+    func aTooltipCanBeNarrowedByTheRowItSitsOn() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expect", "tooltip": "Color", "in": "Shadow",
+                       "reads": "The colour of this shadow" } ] }
+        """)
+        guard case .expect(let thing, let named, let inRow, _, _) = script.steps[0] else {
+            Issue.record("expect"); return
+        }
+        #expect(thing == .tooltip)
+        #expect(named == "Color")
+        #expect(inRow == "Shadow")
+    }
+
+
     // The other half of a claim: that something is there at all, or, just as
     // often, that it is NOT — a revert arrow before anything has been answered.
     @Test("An expect step can claim a control, a row or a tile is there, or is not")
@@ -1438,10 +1526,12 @@ struct PlaytestScriptTests {
         #expect(reads == "Blur, off")
     }
 
-    // Only a control is looked up by the row it is on. A field, a row and a
-    // tile are found by their own names, so an `in` on one of those would be a
-    // narrowing the step silently ignores, which is worse than a refusal.
-    @Test("An expect step refuses in on anything but a control")
+    // Only a control and a tooltip are looked up by the row they are on: both
+    // answer to a word the panel wears a dozen times over. A field, a menu, a
+    // row and a tile are found by their own names, so an `in` on one of those
+    // would be a narrowing the step silently ignores, which is worse than a
+    // refusal.
+    @Test("An expect step refuses in on anything but a control or a tooltip")
     func expectStepRefusesRowOnAField() {
         #expect(throws: PlaytestScriptError.self) {
             _ = try decode("""
