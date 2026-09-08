@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:16:45.702Z",
-  "updated": "2026-09-08T23:25:08.145Z",
+  "updated": "2026-09-08T23:26:49.568Z",
   "deps": [],
   "blockedBy": [],
   "notes": "OBJECTIVE GAP, from the spec itself. docs/design/ui-building.md, Styles are named values layers point at: a style is a named paint, EFFECT or TEXT TREATMENT. Only paint exists. Sources/PhotonzCore/ColorStyles.swift is the whole style system and every type in it is about colour (ColorSlot, ColorStyle, ColorStyleBinding, ColorStyleRole). Sources/PhotonzCore/TextStyles.swift is the tool s current text settings, not a named style, and nothing in PhotonzCore mentions a saved or named text style.\n\nThis matters more than an effect style: the epic is create once reuse everywhere, and a design system without a text style is not one. Step D8 of the order of work says the starter components are drawn from styles rather than raw values, and their text cannot be.\n\nDo it the way the colour styles already do it, do not invent a second mechanism: same Library Styles shelf, same binding shape, same link break handling (Sources/PhotonzCore/LinkBreaks.swift), same wearing a style row treatment landed 2026-09-05. Flag: next-styles (FeatureCatalog.stylesFlag), on by default in Next.\n\nScope for one sitting: font family, size, weight and colour, on a text layer. Effect styles are NOT in this slice; if you find yourself building a general style kind, stop and file the effect half as a follow-up.",
@@ -49,7 +49,12 @@
     {
       "t": "2026-09-08T23:25:08.145Z",
       "note": "Audit written: queue/audits/2026-09-08-text-styles.json with two real window captures. Three follow-ups filed: an-effect-can-be-saved-as-a-named-style, a-text-style-can-be-dragged-off-the-shelf-onto-t, the-next-piece-of-text-you-type-keeps-the-style."
+    },
+    {
+      "t": "2026-09-08T23:26:49.566Z",
+      "note": "Text styles shipped in Next behind next-styles. Core: PhotonzCore/TextStyleLibrary.swift (TextTreatment, TextStyle, Layer.textStyleID, save/wear/edit/rename/delete/reconcile, TextStyleSelection), textStyles on the document written only when non-empty, reconcile in History.perform, new LinkBreakKind.textStyle. App: EditorState+TextStyles.swift and TextStylePanel.swift add the Style row at the top of the Text section, text tiles on the Library Styles shelf and the section behind a tile; editing a style re-measures every box wearing it inside the same undo step. Verified on the real app with Scripts/playtest/text-style-walk.json (68 steps, Screen Recording granted, real window captures): saved a style from a heading with one name prompt, wore it on a second heading, edited the size once and both followed, one undo took both back. Two defects found while walking it and fixed: a text style tile could not be clicked, and its sample letters were invisible on the dark dock. 5049 tests green. Audit: queue/audits/2026-09-08-text-styles.json. Follow-ups filed: effect styles, dragging a text style off the shelf, and the text tool keeping the name."
     }
   ],
-  "started": "2026-09-08T22:53:54.687Z"
+  "started": "2026-09-08T22:53:54.687Z",
+  "completed": "2026-09-08T23:26:49.567Z"
 }
