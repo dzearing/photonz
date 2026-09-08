@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T01:19:35.670Z",
-  "updated": "2026-09-08T12:36:46.955686Z",
+  "updated": "2026-09-08T12:37:26.817Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-08 with Scripts/playtest.sh Scripts/playtest/cut-says-what-it-cannot-do-walk.json, stage 4a-fill-region: a rectangle picked with a marquee over its left half, then Option Backspace. Log reads layers 2 (unchanged), canUndo unchanged, and copied still holding the PREVIOUS message (\"Cannot delete a piece ...\") rather than raising one of its own, i.e. the key did nothing and said nothing. Cause: EditorState.fillSelectedLayer(useBackground:) does `if let target = regionTargetID() { fillRegion(...) }` and RegionTarget.id returns nil for a picked layer that cannot be sliced. Fix is the same shape as the cut one: RegionSliceRefusal needs a third Action case and fillSelectedLayer needs the same early raiseCanvasNotice. The bucket click path (fillLayer(at:hit:useBackground:)) has a pointer and different semantics, so decide separately whether it speaks.",
@@ -34,7 +34,7 @@
     },
     {
       "t": "2026-09-08T12:36:46.955686Z",
-      "note": "Reproduced before touching anything. Scripts/playtest/fill-says-what-it-cannot-do-walk.json, stage 3-fill-refused: rectangle picked, marquee over its left half, Option Backspace. log.json read layers 2 and copied 'none' \u2014 the key did nothing and said nothing. The renders confirm the two controls already worked: with no marquee the whole rectangle went black, and a marquee on a real picture filled the corner."
+      "note": "Reproduced before touching anything. Scripts/playtest/fill-says-what-it-cannot-do-walk.json, stage 3-fill-refused: rectangle picked, marquee over its left half, Option Backspace. log.json read layers 2 and copied 'none' — the key did nothing and said nothing. The renders confirm the two controls already worked: with no marquee the whole rectangle went black, and a marquee on a real picture filled the corner."
     },
     {
       "t": "2026-09-08T12:36:46.955686Z",
@@ -50,7 +50,7 @@
     },
     {
       "t": "2026-09-08T12:36:46.955686Z",
-      "note": "Verified in the real app, not just in tests. Same walk after the change: stage 3-fill-refused and stage 3a-bucket-refused both read 'Cannot fill a piece \u00b7 Only a picture can have a piece filled in. Turn it into a picture from the Layer menu, then try again.', layers still 2. Controls unchanged: stage 5 render shows the whole rectangle black with no marquee, stage 7 shows the corner of a real picture filled. Screen Recording was granted, so the audit carries two real window captures."
+      "note": "Verified in the real app, not just in tests. Same walk after the change: stage 3-fill-refused and stage 3a-bucket-refused both read 'Cannot fill a piece · Only a picture can have a piece filled in. Turn it into a picture from the Layer menu, then try again.', layers still 2. Controls unchanged: stage 5 render shows the whole rectangle black with no marquee, stage 7 shows the corner of a real picture filled. Screen Recording was granted, so the audit carries two real window captures."
     },
     {
       "t": "2026-09-08T12:36:46.955686Z",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-08T12:36:46.955686Z",
       "note": "Audit written: queue/audits/2026-09-08-fill-over-a-marquee.json with two real captures."
+    },
+    {
+      "t": "2026-09-08T12:37:26.815Z",
+      "note": "Option Backspace over a marquee it cannot honour now says 'Cannot fill a piece · Only a picture can have a piece filled in. Turn it into a picture from the Layer menu, then try again.' on the same pill as cut and delete, and the paint bucket clicked inside the same marquee says it too. RegionSliceRefusal.Action gained .fill in PhotonzCore (test-first, 4831 tests green) and the three call sites now share one regionSliceRefusal(action:) helper. Verified in the probe with the new walk Scripts/playtest/fill-says-what-it-cannot-do-walk.json: refusal fires for the key and the bucket, filling a piece of a real picture and filling with no marquee both unchanged. Audit: queue/audits/2026-09-08-fill-over-a-marquee.json with two real window captures. Shipped in 14e2372f."
     }
   ],
-  "started": "2026-09-08T12:28:16.885Z"
+  "started": "2026-09-08T12:28:16.885Z",
+  "completed": "2026-09-08T12:37:26.816Z"
 }
