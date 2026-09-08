@@ -12925,3 +12925,47 @@ a screenshot. The audit asks the user whether that is the answer they want.
 
 Next: the queue. The border-off follow-up from the walk-suite session is still
 the open question waiting on the user.
+
+## 2026-09-08 — A border you switch off is still there on the next shape
+
+The border-off follow-up left open at the end of the walk-suite session is
+closed, and it was not an open question after all: the switch and the cross both
+meant "the next box gets no border", which made one of the two gestures a lie.
+Switching a box's border off and drawing another box left the new box with no
+Border row at all, so the only way back to a line was the plus and a plain new
+one at the standard width on the outside. Every other effect does the opposite.
+
+Now the switch parks the line and the cross is how you are rid of it. A box drawn
+after the border is switched off carries the row, off, holding the width, colour
+and side the last one had, and one press brings back the ring you set. It still
+paints no line, which is what the user asked for on 2026-09-06.
+
+The rule left the app layer for `PhotonzCore`, beside its mirror:
+`AnnotationStyles.remember(_:forShape:)` is the other half of
+`arrivingStyle(forShape:)`, and whatever goes into one comes back out of the
+other. An edge left on is lifted onto the tool so the next box wears one ring
+rather than two; an edge switched off stays in the remembered effects with the
+tool armed at width 0, so nothing is synthesised over it; an edge crossed off is
+gone. `EditorState+LayersPanel.captureStyleDefault` is now one call, and the
+private `rememberable` is gone. Nine tests written first, including the relaunch
+case, since a border parked before quitting must still be parked on reopening.
+
+Shared code, so Current and Next both have it and neither file is forked.
+
+Verified in the app rather than only in tests: the new
+`Scripts/playtest/border-off-keeps-its-row-walk.json` reproduced the fault first
+(step 28, no Switch in Border to read) and now runs 62 steps to the end, with the
+document renders confirming a bare second box and the same 20pt outside ring
+after one press. `parts-off-is-remembered` and `effects-remembered` had recorded
+the old behaviour with notes pointing at this task; both now claim the new one
+and both run green.
+
+Deliberately left as it is: the off row stays twisted open, showing Colour,
+Position and Width greyed out, because that is what every other switched-off
+effect does. The audit asks the user whether it should collapse instead.
+
+Next: the queue. Five walks (border-color, corner-radius-rounds, effect-colour,
+ellipse-border, outline-position) were already failing before this work and fail
+identically with it stashed, so they are stale rather than broken; filed as its
+own task. Three of them share one cause, a shape that now arrives holding a
+Border while the walk adds a second one.

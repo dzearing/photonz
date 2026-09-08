@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2050,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T17:15:20.207Z",
-  "updated": "2026-09-08T17:44:46.052Z",
+  "updated": "2026-09-08T18:06:40.638Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08 with two throwaway walks against the probe.\n\nBorder: draw a rectangle, press Switch in Border, draw a second rectangle, dump the panel. First box: Twist/Reorder/Switch(Border, off)/Remove/Color/Position/Slider all present. Second box: only Fill switch, Fill colour, Effects header and Add Effect. No Border row.\n\nShadow, same shape of test (add Shadow, switch it off, draw a second box): second box dump shows Switch | Shadow, off and Remove | Shadow. The row survives. So this is Border-only.\n\nCause is EditorState+LayersPanel.swift rememberable(_:shape:): annotationStyles.setStrokeWidth(edge.isOn ? edge.width : 0, forShape: shape) collapses off into width 0, and AnnotationStyles.arrivingStyle(forShape:) guards `d.strokeWidth > 0` before synthesising the border, so off means no row and the width is lost with it. Collapsing off to 0 was deliberate (the comment cites the 2026-09-06 report that a box came back outlined); the vanished row is the unchosen side effect.\n\nOne fix that needs no model change: in rememberable, when the edge is OFF leave the border effect IN the remembered style.effects instead of removing it, and still setStrokeWidth(0) so arrivingStyle does not synthesise a second one. On stays as it is today (lifted to the tool, row synthesised). Worth checking the Position memory too: Add Effect > Border makes a plain BorderEffect() (Outside), so LayerEffects.swift:490 ignores annotationStyles.strokePosition(forShape:).\n\nNOTE this is SHARED code (EditorState+LayersPanel.swift, not under Releases/), so it changes Current as well as Next. That is why the walk-repair task on 2026-09-08 did not fix it and recorded todays behaviour instead: parts-off-is-remembered step 18 now expects NO Border row, and effects-remembered step 63 the same, both with notes pointing at this task. Those two walks must be updated when this lands.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-08T18:10:00.000Z",
       "note": "Shared code, so Current and Next both have this; neither file is forked under Releases/, so there is nothing to port by hand. Full suite green at 4906 tests. Audit written to queue/audits/2026-09-08-border-off-keeps-its-row.json with two real screenshots."
+    },
+    {
+      "t": "2026-09-08T18:06:40.636Z",
+      "note": "Switching a box's border off now leaves the row on the next box, off, with its width, colour and position; one press restores the line you had, and the cross is still how you are rid of it. Rule lives in PhotonzCore AnnotationStyles.remember(_:forShape:) with 9 tests written first; EditorState+LayersPanel just calls it. Verified in the app: new walk border-off-keeps-its-row runs 62 steps green, pixels confirm no line on the second box and the same 20pt outside ring after one press; parts-off-is-remembered and effects-remembered updated and green. Full suite 4906 green. Audit at queue/audits/2026-09-08-border-off-keeps-its-row.json. Committed 603e5a08 and pushed."
     }
   ],
-  "started": "2026-09-08T17:44:46.050Z"
+  "started": "2026-09-08T17:44:46.050Z",
+  "completed": "2026-09-08T18:06:40.637Z"
 }
