@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T08:41:01.561Z",
-  "updated": "2026-09-08T21:01:29.834518Z",
+  "updated": "2026-09-08T21:01:46.137Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left rough by the-stretch-menu-says-what-stretching-both-ways (2026-09-07). That task could only reword the existing menus, which meant the hint appears on the SECOND pick only: ResolvedPlacement.choiceTitle(horizontal:arranged:) says Surface behind the rest when the other axis already resolves to stretch. A piece with neither axis stretched sees plain Stretch on both menus. Candidate shapes: a single row or menu item in Layout, or a Layer menu command beside Stack Selection. Core naming is ResolvedPlacement.surfaceTitle and becomesSurface(horizontal:)/(vertical:) in Sources/PhotonzCore/LayerPlacement.swift; the panel is Sources/Photonz/PlacementInspector.swift. Behind next-auto-layout.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-08T21:01:29.834518Z",
       "note": "Verified live on the probe with Scripts/playtest/surface-role-walk.json, Screen Recording granted: menu open showing both answers, one pick makes the surface, one undo puts it back, spanning reads as itself. Audit queue/audits/2026-09-08-surface-role.json with two real captures."
+    },
+    {
+      "t": "2026-09-08T21:01:46.135Z",
+      "note": "Role row at the top of Layout (One of the pieces / Surface behind the rest / Spans the group) plus Layer > Surface Behind the Rest, both driven by SurfaceCommand in PhotonzCore. One pick, one undo. 21 new tests, 4973 green; verified live on the probe with Scripts/playtest/surface-role-walk.json and real captures. Audit queue/audits/2026-09-08-surface-role.json. Commit 14f0cfb6."
     }
   ],
-  "started": "2026-09-08T20:44:58.489Z"
+  "started": "2026-09-08T20:44:58.489Z",
+  "completed": "2026-09-08T21:01:46.136Z"
 }
