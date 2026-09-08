@@ -12291,3 +12291,35 @@ its own log shows none.
 Next: the queue. Open question for the user, in the audit — is three
 clicks the right number for a distance measurement, or should letting go
 of a drag be enough?
+
+## 2026-09-08 — The dashboard asks for a list, not the whole queue
+
+The design dashboard polled `/api/state` every four seconds and got back
+every task ever filed with its whole log attached. Reproduced before
+touching anything: 3,210,969 bytes a poll, of which the tasks array was
+2,736,868 across 509 tasks, and per field across all tasks the logs
+alone were 1,723,330. The node process serving it averaged 52% of a CPU.
+
+A task on the poll is a list row now (`taskRow` in `queue/bin/queue-lib.mjs`):
+id, title, status, priority, seq, dates, release, and the last line of
+its log capped at 120 characters. What a row does not draw is fetched
+when it is wanted: `GET /api/task/<id>` for the detail dialog (read by
+file name, not by scanning all 509), and `GET /api/task-search?q=` for
+searching, which now covers the goal, the working detail, the checklist
+and every log note — more than the page used to search. The list itself
+rides along only for the Tasks tab (`?tasks=1`), and the page keeps the
+last one it saw so arriving there paints at once. Answered decisions,
+the history feed and the audits list were also on every poll carrying
+detail nothing reads; they are headers and a count now.
+
+3,210,969 bytes became 61,791 on every tab but Tasks and 278,551 on
+Tasks. The server went from 52.4% CPU to 3.1%. Verified in Chrome
+against the live dashboard: all six tabs render as before, no console
+errors, the dialog carries the full record, and a word that exists only
+in a working detail still finds its task. `queue/bin/state-poll-drill.mjs`
+(26 checks) holds it there; `Scripts/test.sh` green, 4757 tests.
+
+Next: the queue. Left alone deliberately — `aggregateState` still reads
+all 509 task files per poll, about 20ms, which is now the largest part
+of the cost and not something anyone can feel. Worth caching by file
+timestamp only if the queue reaches thousands of tasks.
