@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 220,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T06:25:25.691Z",
-  "updated": "2026-09-08T06:43:16.547Z",
+  "updated": "2026-09-08T06:57:12.767Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-08 while working the outline task. Command: Scripts/playtest.sh with a walk that draws an ellipse with O, switches its Outline off, adds a Border from the Effects plus and widens it. Output: /tmp/photonz-playtest/outline-repro/3-canvas-ellipse-border.png shows a red ellipse inside a black SQUARE ring. The cause is DocumentRenderer.ringed (Sources/PhotonzRender/DocumentRenderer.swift, around line 1000), which builds every ring out of roundedRectImage over the layer box, so the shape of the layer never enters into it. Sources/PhotonzCore/OutlineWidth.swift already calls this out in words: on an ellipse, a line or an arrow the border draws a RECTANGLE round the bounding box, which is an accident of how it is painted rather than something anyone reaches for. This BLOCKS retiring the Appearance outline (see the task outline-leaves-appearance-and-an-effect-s-colour): a shape edge cannot be drawn only by added borders while an added border cannot follow a shape. A line and an arrow are a separate question and are not in this scope: their stroke IS the layer, and a ring round a stroke is a different idea.",
@@ -45,7 +45,12 @@
     {
       "t": "2026-09-08T06:56:35.984Z",
       "note": "Docs corrected where they now said the wrong thing: OutlineWidth.swift and docs/design/tools.md both stated that a border on an ellipse draws a rectangle. Also: this unblocks outline-leaves-appearance-and-an-effect-s-colour, which was waiting on exactly this."
+    },
+    {
+      "t": "2026-09-08T06:57:12.766Z",
+      "note": "A border added to an ellipse now draws an oval ring at every position, drawn as a stroke so it lands on the same pixels the shape's own outline draws (Sources/PhotonzCore/RingShape.swift, DocumentRenderer.ringed). Rectangles, pictures, labels, frames and groups unchanged. 7 render tests + 3 core tests, written first; full suite green at 4757; walked on the probe with Scripts/playtest/ellipse-border-walk.json with real captures. Audit: queue/audits/2026-09-08-ellipse-border.json. Unblocks outline-leaves-appearance-and-an-effect-s-colour."
     }
   ],
-  "started": "2026-09-08T06:43:16.546Z"
+  "started": "2026-09-08T06:43:16.546Z",
+  "completed": "2026-09-08T06:57:12.767Z"
 }
