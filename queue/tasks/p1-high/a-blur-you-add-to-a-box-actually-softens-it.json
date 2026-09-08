@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 210,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T04:04:29.971Z",
-  "updated": "2026-09-08T04:04:29.971Z",
+  "updated": "2026-09-08T04:48:44.794Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-07 while finishing removing-or-switching-off-an-effect-is-remembere. Two walks, each drawing a shape, rendering the document, adding a Blur from the Effects plus, and rendering again:\n\n  Scripts/playtest.sh /tmp/pz/blurcheck.json    (rectangle)\n  Scripts/playtest.sh /tmp/pz/blurcheck2.json   (arrow, then ellipse)\n\nComparing the two renders with PIL:\n  rectangle before -> after diff bbox: None          (nothing changed at all)\n  arrow     before -> after diff bbox: (84, 84, 316, 266)   (paints, and spreads past the drawn line)\n  ellipse   before -> after diff bbox: (350, 100, 500, 250) (exactly the drag box: the halo is cut off)\n\nThe walk also asserted the panel agrees the blur is on (expect control Switch in Blur reads \"Blur, on\"), so this is the renderer and not the model.\n\nDiagnosis: DocumentRenderer.swift:777 does image = blurred(image, radius: layer.style.blurRadius) on the layer raster, and blurred() clamps to the extent before blurring so the edges do not fade to transparent. A rectangle annotation raster is solid edge to edge, so clamp + blur + crop back to the same extent returns the identical image. The layer needs room around it before the blur, the way LayerStyle.padding (Layer.swift:972, blurRadius * 3) already implies, and the crop afterwards has to keep that room.",
@@ -23,6 +23,11 @@
     {
       "t": "2026-09-08T04:04:29.971Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T04:48:44.794Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-08T04:48:44.793Z"
 }

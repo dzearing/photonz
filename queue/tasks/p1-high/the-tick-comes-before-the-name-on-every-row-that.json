@@ -1,0 +1,35 @@
+{
+  "id": "the-tick-comes-before-the-name-on-every-row-that",
+  "title": "The tick comes before the name on every row that has one",
+  "goal": "On an effect row the tick sits to the right of the name, so you read Blur and then find the switch somewhere after it. The switch is what the row is for, so it belongs first, on the left, with the name beside it. Every row in the panel that has a tick should read that way, in both lists, so the whole panel has one shape.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T04:59:46.419Z",
+  "updated": "2026-09-08T04:59:46.461Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07 with a screenshot, saying they asked for this before. An earlier screenshot the same day did show the tick first, so this reversed during that day's work; the row was touched by four commits between noon and half past four, so find which and say so rather than assuming. Today EffectsListInspector.swift line 89 lays the row out as the title at ColorPartLayout.labelWidth then the switch at switchWidth, so the name comes first. The widths live in ColorStylePanel.swift lines 221 and 225 and are shared with the Appearance list, so put the ORDER there too rather than swapping two views and leaving the next list to guess. Note this interacts with an-effect-s-tick-sits-over-the-rule-that-marks-i, which lines the settings rule up under the tick: once the tick is the left column that alignment becomes simple, so whichever lands second should check the other still holds.",
+  "acceptance": [
+    "On an effect row the tick is the leftmost thing, with the name to its right",
+    "The same holds for every row in Appearance that has a tick, so the two lists read alike",
+    "Rows without a tick keep their names starting on the same line as the names of rows that have one, so nothing looks ragged",
+    "The vertical rule marking a row's settings still sits under its tick, which is now the left column",
+    "The colours, the controls at the end of the row and everything else keep their columns",
+    "The order comes from one shared layout rather than each list arranging its own, so a list added later cannot come out the other way round",
+    "Audit written under queue/audits/ with both lists, and rows with and without a tick, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T04:59:46.420Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-08T04:59:46.460Z",
+      "note": "seq 220 -> 7"
+    }
+  ]
+}
