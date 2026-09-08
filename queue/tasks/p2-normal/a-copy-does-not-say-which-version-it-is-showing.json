@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1830,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T20:44:48.666Z",
-  "updated": "2026-09-08T08:31:23.224Z",
+  "updated": "2026-09-08T08:38:10.858Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-07 with Scripts/playtest/version-row-name-walk.json: step 34 runs showNextComponentVersion on a placed copy, and the row in version-row-copy-sc.png still reads \"Save button\" with the outline mark and no version. Cause is PhotonzDocument.versionName(of:counts:) in Sources/PhotonzCore/LayerPanelTree.swift, which returns layer.componentVersionName, itself group?.versionName, and that is set on a main only. An instance carries its choice elsewhere (Layer.instanceVersion). The row has room for it now that the version prints under the name (LayersPanel.swift nameBlock).",
@@ -26,7 +26,12 @@
     {
       "t": "2026-09-08T08:31:23.223Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T08:38:10.856Z",
+      "note": "A placed copy now prints the version it is showing under its name in the layers list, using the one rule the canvas label already used: originals always speak, a copy speaks only when it is not on the first version. canvasVersionNames() and layerRows() share a single multiVersionComponents() pass so the two cannot disagree (Sources/PhotonzCore/ComponentVersions.swift, LayerPanelTree.swift), and a row carries the version in its playtest detail (Sources/Photonz/LayersPanel.swift). Verified: two new ComponentVersionTests that fail on the old code, Scripts/test.sh green at 4778 tests, and version-row-name-walk.json on the probe reading the copy as \"layer, showing the Disabled version\" with a real screen capture. Audit: queue/audits/2026-09-08-copy-version-row.json"
     }
   ],
-  "started": "2026-09-08T08:31:23.222Z"
+  "started": "2026-09-08T08:31:23.222Z",
+  "completed": "2026-09-08T08:38:10.857Z"
 }

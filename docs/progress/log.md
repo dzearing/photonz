@@ -12394,3 +12394,35 @@ up. The last one may be a real user-facing regression and is worth
 watching by hand first.
 
 **Open question.** None.
+
+## 2026-09-08 — A copy says which version it is in the layers list
+
+Task `a-copy-does-not-say-which-version-it-is-showing` (epic `ui-components`).
+
+A component with two versions printed the version under the name on each of
+its two originals, but a placed copy's row showed the name and the copy mark
+and nothing else, so a copy switched to Disabled looked exactly like one left
+on Default. The canvas label and the Component panel both already said it.
+
+The canvas rule is now the only rule: an original speaks whenever its
+component holds more than one version, a copy speaks only when it is showing
+something other than the first. `canvasVersionNames()` and `layerRows()` are
+both worked out from one shared `multiVersionComponents()` pass in
+`Sources/PhotonzCore/ComponentVersions.swift`, so the picture and the list
+cannot drift apart; `LayerPanelTree.versionName(of:counts:)` is gone in favour
+of `versionName(of:in:)` beside the rule it implements.
+
+A layers row also carries the version in its playtest detail now, so a walk
+can assert "showing the Disabled version" instead of squinting at a picture.
+
+Verified with two new `ComponentVersionTests` that fail on the old code,
+`Scripts/test.sh` green at 4778 tests, and
+`Scripts/playtest/version-row-name-walk.json` on the probe (real screen
+capture, Screen Recording granted). Audit:
+`queue/audits/2026-09-08-copy-version-row.json`.
+
+Next / open: a copy's row and an original's row now read almost identically
+(same name, same version underneath); only the small mark and the missing
+twist arrow tell them apart. If that proves too subtle the mark is the thing
+to make louder, not the version. Raised in the audit's `rough` for the user
+to react to.
