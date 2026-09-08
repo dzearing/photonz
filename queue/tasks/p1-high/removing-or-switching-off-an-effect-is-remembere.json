@@ -1,0 +1,36 @@
+{
+  "id": "removing-or-switching-off-an-effect-is-remembere",
+  "title": "Removing or switching off an effect is remembered for the next shape",
+  "goal": "Draw a rectangle and it arrives with a blur on it. Remove the blur, draw another, and the blur is back. Adding an effect is remembered but taking one away is not, so the tool keeps handing back the thing you just got rid of. Everything you do to a shape's effects should stick: adding one, removing one, switching one off, and changing their order.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T03:31:55.154Z",
+  "updated": "2026-09-08T03:31:55.192Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-07, and it is the same gap that switching-a-part-off-is-remembered-for-the-next closed for the outline, reappearing in the effects list which arrived later. Confirmed by reading Sources/Photonz/EditorState+ColorStyles.swift: addEffect (line 395) ends with rememberStyleDefault, so adding is remembered, while removeEffect (line 407), moveEffect (line 429) and setEffectEnabled (line 437) all perform the document change and return, arming nothing. So the tool default keeps whatever effects it captured the last time something DID arm it. Add the same call to the three that lack it, and check there is no fourth path. Also answer the question the user's report opens: a fresh rectangle should probably not carry a blur at all, so find out whether that comes from a captured default or from the shape's standard style and say which in the audit. Same rule to preserve as the outline fix: rememberStyleDefault only teaches the tool from a single layer edit.",
+  "acceptance": [
+    "Removing an effect from a shape, then drawing another of the same kind, gives a shape without that effect",
+    "Switching an effect off rather than removing it is remembered the same way, so the next shape starts with it off and its settings intact",
+    "Changing the order of effects is remembered, so the next shape paints them in the order you left them",
+    "Adding an effect keeps working as it does now",
+    "The audit says why a new rectangle carries a blur at all, and whether that starting point is right, since a shape arriving with an effect nobody asked for is the reason this was noticed",
+    "This is per kind of shape, so a rectangle's effects do not change what an ellipse or an arrow starts with, and it survives quitting and reopening the app",
+    "The existing rule stands that only a single layer edit teaches the tool, since over a selection there is no one style to hand it",
+    "Audit written under queue/audits/ with a rectangle drawn after each of remove, switch off and reorder, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T03:31:55.154Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-08T03:31:55.191Z",
+      "note": "seq 210 -> 6"
+    }
+  ]
+}
