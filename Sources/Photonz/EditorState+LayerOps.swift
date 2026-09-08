@@ -214,10 +214,12 @@ extension EditorState {
 
     // MARK: - Turn Into Picture (a shape or a piece of text → pixels)
 
-    /// Where the "Don't ask again" answer is remembered. Per app bundle, so the
-    /// dev and probe builds keep their own answer and neither can turn the
+    /// Where the "Don't ask again" answers live: one store for every question
+    /// the app can be told to stop asking, so a person can read the list back
+    /// and turn any of them on again (`SilencedQuestions`). Per app bundle, so
+    /// the dev and probe builds keep their own answers and neither can turn a
     /// question off for the release app.
-    static let turnIntoPictureAskedKey = "photonz.turnIntoPicture.dontAsk"
+    static let silencedQuestions = SilencedQuestions(defaults: UserDefaultsSilenceDefaults())
 
     /// Whether "Turn Into Picture" applies to the given layer (menu enablement).
     func canRasterizeLayer(id: UUID) -> Bool {
@@ -235,7 +237,7 @@ extension EditorState {
     func rasterizeLayer(id: UUID) {
         guard let document, let layer = document.layer(id: id),
               let prompt = RasterizePrompt(layer: layer) else { return }
-        guard !UserDefaults.standard.bool(forKey: Self.turnIntoPictureAskedKey) else {
+        guard !Self.silencedQuestions.isSilenced(.turnIntoPicture) else {
             applyRasterize(id: id)
             return
         }
@@ -249,7 +251,7 @@ extension EditorState {
         alert.suppressionButton?.title = RasterizePrompt.suppression
         let answer: @MainActor (NSApplication.ModalResponse) -> Void = { [weak self] response in
             if alert.suppressionButton?.state == .on {
-                UserDefaults.standard.set(true, forKey: Self.turnIntoPictureAskedKey)
+                Self.silencedQuestions.silence(.turnIntoPicture)
             }
             guard response == .alertFirstButtonReturn else { return }
             self?.applyRasterize(id: id)

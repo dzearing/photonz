@@ -1,0 +1,66 @@
+{
+  "id": "a-question-you-turned-off-can-be-turned-back-on-where-do-you-go-to-turn-a-questi",
+  "taskId": "a-question-you-turned-off-can-be-turned-back-on",
+  "question": "Where do you go to turn a question back on after you told Photonz not to ask it again?",
+  "context": "One command in Photonz stops and asks before it acts: Turn Into Picture, which quietly makes a shape or a piece of text uneditable. Its question carries a Don't ask again box, and today ticking that box is permanent. There is nowhere in the app to bring the question back. The app has no Settings window at all, so this decides where a person goes to look.",
+  "options": [
+    {
+      "id": "settings",
+      "label": "A Settings window",
+      "summary": "Photonz grows a Settings window, opened with Command-, from the app menu or Settings in the menu bar menu. Its first page is Questions: it lists only the questions you have silenced, each by the name of the command that asks it, with a button to start asking again. Silence nothing and the page says so in one sentence, so it never reads as a row of switches to go and flip.",
+      "pros": [
+        "It is where anyone would look. Every Mac app puts this kind of thing behind Command-,",
+        "It works with no document open, and it is findable months later by somebody who does not remember what they clicked",
+        "It has room for the next nine questions, and for the other settings the app will eventually want a home for"
+      ],
+      "cons": [
+        "It puts a new front door on the app, and behind it today is a page with one row"
+      ],
+      "mitigation": "The page opens with a plain sentence when nothing is silenced, so an empty Settings reads as reassurance rather than as an unfinished screen."
+    },
+    {
+      "id": "inline",
+      "label": "Offer it back where it went quiet",
+      "summary": "No new window. The next time you run a command whose question you silenced, the app does the thing and shows a short notice on the canvas: Turned Card into a picture, with a link that reads Ask me next time. Take the link and the question comes back.",
+      "pros": [
+        "No new surface at all, and nothing to go hunting for",
+        "It appears at the exact moment you would notice the question is missing"
+      ],
+      "cons": [
+        "There is no list. If you never run that command again you never get the offer, and somebody who ticked the box by accident on day one has to remember which command it was",
+        "It puts a small notice back on a command you deliberately made quiet, which is most of what silencing was for"
+      ],
+      "mitigation": "Show the notice only for a few uses after silencing, then stop, so the command really does go quiet."
+    },
+    {
+      "id": "experiments",
+      "label": "A section in the Experiments window",
+      "summary": "The existing Experiments window gains a Questions you have silenced section at the bottom, with the same list and the same button to start asking again.",
+      "pros": [
+        "Nothing new to build a home for, and it ships fastest",
+        "Experiments already opens with no document and already reads as a place you go to change how the app behaves"
+      ],
+      "cons": [
+        "Experiments is a workbench for trying unfinished features. A normal person will not look there for a warning they turned off, and the ones who do land among switches that change the app underneath them"
+      ],
+      "mitigation": "The section sits at the very bottom under its own heading, away from the feature switches."
+    },
+    {
+      "id": "skip",
+      "label": "Leave it as it is for now",
+      "summary": "Do not ask again stays a one way door. The app has exactly one question that can be silenced today, so this is a bet that nobody silences it by accident before there is a Settings window for other reasons.",
+      "pros": [
+        "No new surface, no new code, and the queue keeps its slot for the feature work in focus"
+      ],
+      "cons": [
+        "Somebody who ticks the box on their first day has given up a warning forever, with nowhere in the app to undo it",
+        "It leaves the app breaking a rule the project wrote down for itself"
+      ],
+      "mitigation": "Not really mitigable. The nearest thing is to allow no second silenceable question until there is a way back.",
+      "declines": true
+    }
+  ],
+  "recommended": "settings",
+  "status": "pending",
+  "created": "2026-09-08T22:05:20.250Z"
+}

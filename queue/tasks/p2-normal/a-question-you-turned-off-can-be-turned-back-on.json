@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 2090,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T21:50:13.465Z",
-  "updated": "2026-09-08T21:50:13.468Z",
+  "updated": "2026-09-08T22:08:35.686110Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed 2026-09-08 by the pass that wrote the rule this breaks: UX-PATTERNS section 3, Panels and surfaces, \"The question you can silence\", which requires a way back and records that nothing ships one.\n\nThe only silenceable question today is Turn Into Picture: Sources/PhotonzCore/RasterizePrompt.swift holds the words, Sources/Photonz/EditorState+LayerOps.swift:217 holds the answer at UserDefaults key photonz.turnIntoPicture.dontAsk (per app bundle, so dev, probe and release each keep their own). Not reproduced as a defect because there is nothing to reproduce: the code has one setter and no reader anywhere else and no UI reaches it. Verified by grep, not by a walk.\n\nOPEN UX QUESTION for whoever takes this, worth a decision card rather than a guess: where the list lives. Photonz has no Settings window today; the candidates are a new Settings pane, a section in the Experiments window (which is a developer surface, so probably wrong for a normal person), or offering it back inline the next time the command runs. Also worth deciding whether the list names one question or is written to hold the ten it will have in a year.",
@@ -23,6 +23,43 @@
     {
       "t": "2026-09-08T21:50:13.467Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T22:02:53.551Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T22:08:35.686110Z",
+      "note": "Adversarial review before building. Walked it as a first-time user: you tick Don't ask again, nothing on screen changes, and two weeks later you go looking. On a Mac you look under Settings (Command-,). Photonz has none, and the menu-bar menu even carries a note saying Preferences comes back the day there is a settings window behind it. So the honest version of this task is the app's FIRST settings window, with one row behind it. That is scope the user should weigh, not a guess."
+    },
+    {
+      "t": "2026-09-08T22:08:35.686110Z",
+      "note": "Cut from the idea: a page listing every question with a switch each. Acceptance item 3 already forbids it and it is worse than it looks, since a page of unticked switches is an invitation to go and turn warnings off. The list holds only what was actually silenced, and says one plain sentence when that is nothing."
+    },
+    {
+      "t": "2026-09-08T22:08:35.686110Z",
+      "note": "Shortest version considered and rejected as the whole answer: offer the question back inline the next time the silenced command runs. Well timed, no new surface, but it is not a list and it only finds you if you use that command again. Kept as option b on the card."
+    },
+    {
+      "t": "2026-09-08T22:08:35.686110Z",
+      "note": "Decidable half shipped. New pure core: Sources/PhotonzCore/SilencedQuestions.swift. SilenceableQuestion is the roll call of questions the app may ask (one today: Turn Into Picture) carrying the plain command name, one sentence of what it warns about, and its storage key. SilencedQuestions reads and writes them over an injected SilenceDefaults (UserDefaults in the app, in-memory in tests) and exposes silenced / silence / askAgain plus the shared words for whatever surface hosts the list. 10 tests, written first, in Tests/PhotonzCoreTests/SilencedQuestionsTests.swift."
+    },
+    {
+      "t": "2026-09-08T22:08:35.686110Z",
+      "note": "EditorState+LayerOps.swift now reads and writes the answer through that store instead of poking UserDefaults directly. Same key photonz.turnIntoPicture.dontAsk, so anyone already silenced stays silenced; behaviour is byte-for-byte what it was. swift build clean, Scripts/test.sh green at 5006 tests in 423 suites."
+    },
+    {
+      "t": "2026-09-08T22:08:35.686110Z",
+      "note": "Every option on the card needs exactly this store underneath it, so none of it is wasted whichever way the answer goes. What is NOT built is the surface: no list is reachable in the app yet, so the acceptance items are still unmet and the UX-PATTERNS note that nothing ships a way back still stands."
+    },
+    {
+      "t": "2026-09-08T22:08:35.686110Z",
+      "note": "Blocked on decision a-question-you-turned-off-can-be-turned-back-on-where-do-you-go-to-turn-a-questi (brief written alongside it): Settings window / inline offer / Experiments section / leave it. Recommended the Settings window."
+    },
+    {
+      "t": "2026-09-08T22:08:35.686110Z",
+      "note": "Epic note for the manager: this is filed under design-system, staged next rather than now, and it is really an overlays-and-foundations item. It is small and it protects the user from a door that locks behind them, so it was worth the run, but it is not focus work."
     }
-  ]
+  ],
+  "started": "2026-09-08T22:02:53.550Z"
 }
