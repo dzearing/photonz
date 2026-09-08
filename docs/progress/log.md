@@ -12708,3 +12708,27 @@ been left out of it.
 Next: the audit (`queue/audits/2026-09-08-room-says-what-it-will-do.json`) asks
 whether saying which answer you get is enough, or whether the app should pick
 one rule and use it everywhere.
+
+## 2026-09-08 — An effect reads like a small pane
+
+An effect row wore a tick where every other heading in the dock wears a
+chevron, and its title weighed exactly what the settings under it weighed, so
+a Border and its settings ran together into one grey list. Effects in Next now
+have a heading: a chevron that folds the settings away (the name folds it too),
+a lit semibold title one step down from a section title, and the layers list's
+eye at the right of the row beside the cross in place of the tick. A
+switched-off effect goes quiet at the name, shuts its eye and fades its
+settings, and those settings stay open and live so you can change a number
+before you switch it back on. The two sizes of heading share their numbers in
+the new `PanelSectionLook`. Folds live in `EditorState` and clear when the
+picked layers change or the list is restructured, because a `LayerEffect`
+carries no identity of its own.
+
+Verified on the probe with Screen Recording granted; two new walks and three
+real captures in `queue/audits/2026-09-08-effect-row-small-pane.json`.
+
+Next: the audit asks whether the eyes should share one column down the panel
+(an effect's eye is one slot in from the edge, because the cross kept the outer
+place) and whether Appearance should follow Effects or stay on ticks. Also
+filed: thirteen scripted walks still reach for an Outline row that became a
+Border on 2026-09-07, confirmed pre-existing by stashing this change.

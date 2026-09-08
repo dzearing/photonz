@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T13:59:43.121Z",
-  "updated": "2026-09-08T15:22:58.376Z",
+  "updated": "2026-09-08T15:23:24.366Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-08 with two screenshots of a Border row. The treatment to echo is already in the file: a panel section header draws a chevron at 10 point bold and its title with subheadline semibold (Sources/Photonz/LayersPanel.swift, the CollapsibleSection body around line 1500), so an effect header wants the same but one step smaller, and the runner should take the values from there rather than inventing new ones. The row today is built in EffectsListInspector.swift around line 89, with the switch in the ColorPartLayout.switchWidth column; moving it to the right means the row's columns change, so check the alignment work that lines the settings rule up under the left column, since the left column becomes the chevron. The eye to copy is the layer row's visibility button (LayersPanel.swift around line 2240), which uses eye and eye slash at 11 point with a tertiary tint when off. Note this partly reverses the-tick-comes-before-the-name-on-every-row-that, which asked for the tick to lead the row; that request is satisfied differently here, since the leading control becomes a chevron and the switch becomes an eye, so read that task and close or fold it rather than leaving the two fighting.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-08T15:22:58.376Z",
       "note": "Adversarial review of the built thing. Kept: an effect eye lands one slot in from the panel edge because the cross keeps the outer place, so the eyes in Layers and the eyes in Effects are not one column. That is what the checklist asked for and it is the first question in the audit. Kept: a fold is forgotten when you pick another layer or restructure the list. Not driven: Tab through the panel, since this terminal has no Accessibility grant, so keyboard reach is claimed from the code and said so in the audit."
+    },
+    {
+      "t": "2026-09-08T15:23:24.364Z",
+      "note": "An effect is now a small pane: a chevron that folds its settings (press the name too), a footnote semibold title in the primary ink, and the layer row's eye at the right of the row beside the cross in place of the tick. A switched-off effect reads off by eye, title and faded settings, and its settings stay open and live. Next only, Sources/Photonz/EffectsListInspector.swift plus the shared PanelSectionLook that CollapsibleSection now reads. Verified on the probe with Screen Recording granted: Scripts/playtest/effect-row-is-a-small-pane-walk.json and effect-eye-over-two-shapes-walk.json both green, captures in queue/audits/2026-09-08-effect-row-small-pane.json. Scripts/test.sh green, 4844 tests. Pushed as e189ea49."
     }
   ],
-  "started": "2026-09-08T15:03:47.496Z"
+  "started": "2026-09-08T15:03:47.496Z",
+  "completed": "2026-09-08T15:23:24.365Z"
 }
