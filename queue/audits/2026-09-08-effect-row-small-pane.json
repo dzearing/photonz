@@ -1,0 +1,31 @@
+{
+  "feature": "An effect reads like a small pane",
+  "epic": "ui-building",
+  "summary": "Every effect in the Effects list is now a heading with a chevron, a lit name and an eye: you can fold a shadow you are not working on out of the way, and you switch an effect off with the same eye that hides a layer instead of a tick.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: the Effects list is already there under next-shape-parts.",
+  "try": [
+    { "do": "Press R and drag out a rectangle.", "shot": "2026-09-08-effect-row-small-pane-1-open.png" },
+    { "do": "Press the plus on the Effects header and choose Shadow." },
+    { "do": "Press the chevron to the left of the word Shadow.", "shot": "2026-09-08-effect-row-small-pane-2-folded.png" },
+    { "do": "Press the word Shadow itself to bring the settings back." },
+    { "do": "Press the eye on the Border row, at the right of the row next to the cross.", "shot": "2026-09-08-effect-row-small-pane-3-off.png" },
+    { "do": "Drag the Border's Width slider while the border is switched off." },
+    { "do": "Press the eye again and watch the border come back at the new width." },
+    { "do": "Click another layer and back, and notice every effect is open again." }
+  ],
+  "evaluate": [
+    "Does an effect read as the header of the settings under it now, rather than as one more grey row?",
+    "The eyes do not line up down the panel: a layer's eye is the outermost icon, an effect's eye is one slot in because the cross kept the outer place. Is that worth swapping, so every eye in the dock is in one column?",
+    "Appearance still uses ticks and Effects now uses chevrons and eyes. Do the two lists read as two kinds of thing, or as drift?",
+    "Is the chevron big enough to hit, given the name beside it folds the effect too?",
+    "A fold is forgotten as soon as you pick another layer, or add, remove or reorder an effect. Does that lose you anything in real use?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so all three pictures are real captures of the window, not offscreen renders.",
+    "The eye sits between the grip and the cross rather than at the panel edge, because the checklist said the cross keeps its place and the cross has always been the outermost icon on an effect row. The cost is in the second question above.",
+    "Folds are cleared whenever the list is added to, taken from or reordered. A LayerEffect has no identity of its own, so a row is known by its place: keeping a fold through a removal would move it onto whichever effect inherited the place, which is worse than opening everything.",
+    "A switched-off effect fades its settings but leaves them live. Fading the block turned the colour well's checkerboard on at first, which read as a half transparent colour; flattening the block before fading it fixed that.",
+    "Keyboard reach was not driven: this terminal has no Accessibility grant, so a scripted walk cannot send Tab through the panel. The chevron and the eye are ordinary buttons with names and values a screen reader reads (the chevron says the effect's name and 'settings showing' or 'settings hidden', the eye says 'Hide Shadow' or 'Show Shadow' plus its own reading), but nobody has tabbed to them.",
+    "Thirteen scripted walks were already failing before this work, all of them reaching for an Outline row that became a Border on 2026-09-07. Confirmed pre-existing by stashing this change and re-running seven of them; filed as its own task."
+  ]
+}

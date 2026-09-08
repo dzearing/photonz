@@ -1,0 +1,27 @@
+{
+  "id": "thirteen-scripted-walks-still-look-for-an-outlin",
+  "title": "Thirteen scripted walks still look for an Outline row that is now a Border",
+  "goal": "Thirteen of the app's scripted walks stop partway through because they reach for a control called Outline in the Appearance list, and a shape's edge is not called that any more: it is a Border in the Effects list. Until they run to the end again, nobody can tell a real mistake from this one, so the walk suite cannot be trusted to catch anything.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2030,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T15:19:16.854Z",
+  "updated": "2026-09-08T15:19:16.857Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-08 while building the effect-row heading. Scripts/playtest.sh Scripts/playtest/border-effect-walk.json prints: step 6 (press): no control called \"Switch\" in \"Outline\" is in the panel; the ones that are: none. The same first line comes out of tick-leads, colour-onto-an-off-part, switch-says-mixed and glow-effect. Confirmed PRE-EXISTING rather than caused by the heading work: git stash push -- Sources/, swift build, re-ran all seven, identical failures at identical step numbers, then git stash pop. Two more fail for a different reason and are probably the same drift: effects-remembered-walk step 9 expects no Remove control in the panel and finds one, and effects-say-their-reach-walk step 19 cannot read \"Switch\" in \"Border\" over a two-layer selection. The thirteen files that name Outline: grep -rl '\"Outline\"' Scripts/playtest/. The cause is commit a501ed6a, The Outline row leaves Appearance and a layer's edge is a Border. A previous version of this task, bring-the-scripted-walks-back-in-line-with-the-s, was dropped when the drift was about the Shadow move; this is the next round of the same drift.",
+  "acceptance": [
+    "Every walk that names Outline runs to the end and writes its pictures",
+    "The walks reach the shape's edge where it lives now, so what they prove is still the thing they were written to prove",
+    "Running the whole suite reports the same count of failures before and after for every OTHER walk, so nothing else was quietly changed to make these pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T15:19:16.856Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-08T04:59:46.419Z",
-  "updated": "2026-09-08T05:50:23.662Z",
+  "updated": "2026-09-08T15:22:02.612Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 with a screenshot, saying they asked for this before. An earlier screenshot the same day did show the tick first, so this reversed during that day's work; the row was touched by four commits between noon and half past four, so find which and say so rather than assuming. Today EffectsListInspector.swift line 89 lays the row out as the title at ColorPartLayout.labelWidth then the switch at switchWidth, so the name comes first. The widths live in ColorStylePanel.swift lines 221 and 225 and are shared with the Appearance list, so put the ORDER there too rather than swapping two views and leaving the next list to guess. Note this interacts with an-effect-s-tick-sits-over-the-rule-that-marks-i, which lines the settings rule up under the tick: once the tick is the left column that alignment becomes simple, so whichever lands second should check the other still holds.",
@@ -74,6 +74,10 @@
     {
       "t": "2026-09-08T05:49:37.041Z",
       "note": "The tick leads every row in both panel lists, ordered by one shared PanelRowHead so a later list cannot come out reversed. Tickless rows hold the column open, and the settings rule now hangs centred under the tick. Verified on the probe app with Scripts/playtest/tick-leads-walk.json (Screen Recording granted, real captures measured pixel by pixel) and Scripts/test.sh green. Audit: queue/audits/2026-09-08-tick-leads.json. Commit 9923e740, pushed."
+    },
+    {
+      "t": "2026-09-08T15:22:02.612Z",
+      "note": "Half of this is superseded, on purpose. On 2026-09-08 the user asked for an effect to read like a small pane, so the leading column of an effect row is now a chevron that folds its settings and the switch has become an eye at the other end of the row (an-effect-row-reads-like-a-small-pane-with-a-che). The part that still stands, and still holds: Appearance rows keep the tick first, rows with nothing to switch still hold the column open so no name is ragged, and the rule that marks a row settings still hangs on that leading column, which is now the chevron. Nothing here needs redoing; this note is so the two tasks are not read as fighting."
     }
   ],
   "started": "2026-09-08T05:32:23.037Z",

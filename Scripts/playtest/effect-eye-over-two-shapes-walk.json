@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/effect-eye-over-two-shapes",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [200, 260], "to": [400, 400] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [520, 260], "to": [720, 400] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "a", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "1-two-picked",
+      "note": "two boxes picked, one with a shadow: the Shadow heading says how far it reaches"
+    },
+    { "do": "panel", "stage": "1-two-picked" },
+    { "do": "snapshot", "name": "1-two-picked" },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "2-eye-over-two",
+      "note": "the eye acting on a row that speaks for one of the two picked shapes"
+    },
+    { "do": "panel", "stage": "2-eye-over-two" },
+    { "do": "snapshot", "name": "2-eye-over-two" }
+  ]
+}

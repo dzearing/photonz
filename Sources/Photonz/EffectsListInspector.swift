@@ -15,7 +15,7 @@ import SwiftUI
 ///   own settings.
 /// - **The order is visible, so it is editable.** The top of the list is
 ///   nearest the eye. Drag a row and what paints over what changes.
-/// - **A row can be taken out.** The cross removes the effect; the tick beside
+/// - **A row can be taken out.** The cross removes the effect; the eye beside
 ///   it keeps every number on it and stops it drawing. Compare-with-and-without
 ///   is the thing you do constantly, so it is the gesture that keeps your work.
 struct EffectsListInspector: View {
@@ -62,12 +62,28 @@ struct EffectsListInspector: View {
     }
 }
 
-/// One effect: its name, its tick, the colour it paints, a grip, a cross, and
-/// its own settings behind a rule that says they are its.
+/// One effect, drawn as a SMALL PANE: a chevron, a lit name, a grip, an eye, a
+/// cross, and its own settings under it behind a rule that says they are its.
 ///
-/// The rule is the fix for the thing the user actually reported on 2026-09-07:
-/// a shadow's Blur, Size and Opacity drawn flat under its row read as a second
+/// The rule is the fix for the thing the user reported on 2026-09-07: a
+/// shadow's Blur, Size and Opacity drawn flat under its row read as a second
 /// copy of the layer's own Blur and Opacity. Now they are visibly the shadow's.
+///
+/// The heading is the fix for what they reported on 2026-09-08, looking at a
+/// Border: the row wore a tick where every other heading in the dock wears a
+/// chevron, and its title weighed exactly what the settings under it weighed,
+/// so the row and its contents ran together into one grey list. An effect is
+/// not a row with some numbers after it — it is a section of its own, four or
+/// five settings deep, which is why it is drawn like one:
+///
+/// - **A chevron leads it** and folds its settings away, the same glyph the
+///   layers list uses for a group and the dock uses for a section, one step
+///   smaller (`PanelSectionLook.EffectRow`).
+/// - **The name is lit**, semibold in the primary ink, so it reads as the
+///   header of what sits under it rather than as another label.
+/// - **The switch is an eye** at the end of the row, drawn and behaving like
+///   the eye on a layer row, because "this one is not showing" is a thing this
+///   app already has one picture for.
 private struct EffectRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
@@ -82,17 +98,22 @@ private struct EffectRowView: View {
     /// into a number of places moved.
     @State private var blockHeight: CGFloat = 0
 
+    /// Whether this effect's settings are folded away right now. Held by the
+    /// editor rather than by this view, which is rebuilt whenever anything
+    /// about the selection moves.
+    private var isFolded: Bool { editorState.isEffectFolded(row) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
-                // The tick and then the name, in that order, from the one place
-                // the panel's columns live. Every effect row here and every part
-                // row in Appearance reads the same way because neither of them
-                // arranges the two itself.
-                PanelRowHead(title: row.title) { effectSwitch }
+                // The chevron and the lit name, as one press: a section header
+                // opens on its title as well as on its arrow, and a 9pt glyph
+                // on its own is a mean target for a control you use as often
+                // as this one.
+                foldControl
                 // The colour is NOT here. It is a setting of the effect, so it
                 // sits with the width and the position under the rule below,
-                // and the header carries only the name, the tick and the two
+                // and the header carries only the name, the eye and the two
                 // controls that act on the whole entry (reported by the user on
                 // 2026-09-07: the colour was the one setting in the wrong
                 // place, and the only colour in the app that could not take a
@@ -105,19 +126,23 @@ private struct EffectRowView: View {
                                minHeight: ColorPartLayout.rowHeight, alignment: .leading)
                 }
                 Spacer(minLength: 0)
-                // The two things every entry in a list you added to has: a grip
-                // to put it somewhere else in the order, and a cross to take it
-                // out. They sit at the end of the row so the name, the tick and
-                // the colour stay in the columns Appearance uses.
+                // The three things at the end of the row: a grip to put the
+                // entry somewhere else in the order, the eye that stops it
+                // drawing, and the cross that takes it out. The eye sits
+                // BETWEEN them so the cross keeps the panel edge it has always
+                // had, and so the two presses that mean opposite things — stop
+                // it drawing, throw it away — are never the same target twice
+                // running.
                 if row.canReorder { grip }
+                effectEye
                 removeButton
             }
             .modifier(OffEffectColorDrop(row: row, active: !row.isOn, incoming: $incoming))
             if let note = row.reachNote {
-                // Under the NAME it is about, not under the tick. The tick is
-                // the row's leading column now, so a note left at the row's
-                // own edge would start a whole column left of the word it
-                // explains and read as belonging to the list rather than to
+                // Under the NAME it is about, not under the chevron. The
+                // chevron is the row's leading column, so a note left at the
+                // row's own edge would start a whole column left of the word
+                // it explains and read as belonging to the list rather than to
                 // this row.
                 Text(note)
                     .font(.caption2)
@@ -125,8 +150,24 @@ private struct EffectRowView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.leading, ColorPartLayout.nameLeading)
             }
-            if row.isOn {
+            if !isFolded {
+                // Shown whether or not the effect is drawing. An effect that is
+                // off keeps every number on it, and the reason you switched it
+                // off is usually that you are about to change one of them, so
+                // the settings stay open and stay live and only say quietly, by
+                // being a shade fainter, that nothing they describe is on the
+                // canvas right now.
                 OwnedSettings(owner: row.title) { settings }
+                    // Flattened BEFORE it is faded. Without the group SwiftUI
+                    // fades each child on its own, and the colour well is a
+                    // solid swatch drawn over a checkerboard that says "this
+                    // paint has alpha": fade them separately and the checker
+                    // comes up through the swatch, so a switched-off border
+                    // claimed its colour was half transparent (seen in a probe
+                    // capture, 2026-09-08).
+                    .compositingGroup()
+                    .opacity(row.isOn || row.isMixed
+                             ? 1 : PanelSectionLook.EffectRow.offSettingsOpacity)
             }
         }
         .playtestField(row.title)
@@ -199,25 +240,98 @@ private struct EffectRowView: View {
         .playtestControl("Remove", detail: "takes the effect out of the list")
     }
 
-    // MARK: The tick
+    // MARK: The heading
 
-    private var effectSwitch: some View {
-        Toggle(row.title, isOn: Binding(get: { row.isMixed ? false : row.isOn },
-                                        set: { on in
-            editorState.setEffectEnabled(row: row, on: row.isMixed ? true : on)
-        }))
-            .labelsHidden()
-            .controlSize(.small)
-            .opacity(row.isMixed ? MixedLook.controlOpacity : 1)
-            .help(row.switchIDs.count > 1
-                  ? "Stops it drawing on all \(row.switchIDs.count) of them, and keeps its settings"
-                  : "Stops it drawing, and keeps its settings")
-            // The row's own reading, not a bare on/off: over two shapes where
-            // only one holds the effect the tick used to announce a flat "on"
-            // while the line under it said "Applies to 1 of the 2 selected
-            // layers". A screen reader hears the control, not the caption.
-            .accessibilityValue(row.switchReading)
-            .playtestControl("Switch", detail: row.switchReading)
+    /// The chevron and the name, as one control.
+    ///
+    /// The chevron sits in the column the tick used to hold, centred on
+    /// `ColorPartLayout.tickCenter`, because that is where `OwnedSettings`
+    /// hangs the rule that marks this effect's settings: the rule now hangs
+    /// from the chevron that folds them, which is a better sentence than the
+    /// one it replaced.
+    private var foldControl: some View {
+        Button {
+            withAnimation(.spring(duration: 0.2)) {
+                editorState.toggleEffectFolded(row)
+            }
+        } label: {
+            HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
+                // ALWAYS this wide. The empty rectangle is what holds the
+                // column open, the same way `PanelRowHead` holds it open for a
+                // row with no tick, so every name in the panel starts on one
+                // line.
+                Color.clear
+                    .frame(width: ColorPartLayout.switchWidth,
+                           height: ColorPartLayout.rowHeight)
+                    .overlay(alignment: .leading) {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: PanelSectionLook.EffectRow.chevronSize,
+                                          weight: PanelSectionLook.EffectRow.chevronWeight))
+                            .foregroundStyle(.secondary)
+                            .rotationEffect(.degrees(isFolded ? 0 : 90))
+                            .frame(width: ColorPartLayout.tickWidth)
+                    }
+                Text(row.title)
+                    .font(PanelSectionLook.EffectRow.titleFont)
+                    // Lit when it is drawing, quiet when it is not, so a
+                    // switched-off effect reads as off from the name as well as
+                    // from the eye at the other end of the row.
+                    .foregroundStyle(row.isOn || row.isMixed
+                                     ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(width: ColorPartLayout.labelWidth,
+                           height: ColorPartLayout.rowHeight, alignment: .leading)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(isFolded ? "Show this \(row.kind.title.lowercased())'s settings"
+              : "Hide this \(row.kind.title.lowercased())'s settings")
+        .accessibilityLabel(row.title)
+        .accessibilityValue(isFolded ? "settings hidden" : "settings showing")
+        // The same word the layers list uses for the chevron on a group, so a
+        // scripted walk folds an effect the way it opens a group, and so the
+        // one gesture has one name across the app.
+        .playtestControl("Twist", detail: isFolded ? "shut" : "open")
+    }
+
+    // MARK: The eye
+
+    /// Whether this effect is drawing. Mixed reads as off, because a Mac has no
+    /// third eye and the row says "mixed" in words beneath itself.
+    private var isShowing: Bool { row.isMixed ? false : row.isOn }
+
+    /// The switch, drawn as the eye a layer row wears: the same glyph pair, the
+    /// same 11pt, the same tertiary tint when off, in the same shared slot down
+    /// the panel's edge. Asked for by the user on 2026-09-08 — the app has one
+    /// picture for "this is not showing" and an effect had a second one.
+    private var effectEye: some View {
+        Button {
+            editorState.setEffectEnabled(row: row, on: row.isMixed ? true : !isShowing)
+        } label: {
+            Image(systemName: isShowing ? "eye" : "eye.slash")
+                .font(.system(size: 11))
+                .foregroundStyle(isShowing ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
+                .frame(height: ColorPartLayout.rowHeight)
+                .panelEdgeIcon("eye", of: row.title)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .opacity(row.isMixed ? MixedLook.controlOpacity : 1)
+        .help(row.switchIDs.count > 1
+              ? "Stops it drawing on all \(row.switchIDs.count) of them, and keeps its settings"
+              : "Stops it drawing, and keeps its settings")
+        .accessibilityLabel(isShowing ? "Hide \(row.title)" : "Show \(row.title)")
+        // The row's own reading, not a bare on/off: over two shapes where only
+        // one holds the effect the switch used to announce a flat "on" while
+        // the line under it said "Applies to 1 of the 2 selected layers". A
+        // screen reader hears the control, not the caption.
+        .accessibilityValue(row.switchReading)
+        // Still "Switch": it is the row's switch whatever it is drawn as, and
+        // every scripted walk that compares a shape with and without an effect
+        // reaches it by that word.
+        .playtestControl("Switch", detail: row.switchReading)
     }
 
     // MARK: The settings

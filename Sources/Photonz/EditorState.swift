@@ -520,6 +520,9 @@ final class EditorState {
             // A half-typed style name belongs to the row that opened it, and
             // that row is gone (Next, `next-styles`).
             if colorStyleNaming != nil { colorStyleNaming = nil }
+            // ...and so does a folded effect: the Effects list is about to be
+            // some other shape's.
+            forgetEffectFolds()
         }
     }
     /// The "Canvas" pseudo-layer selection: no layer is selected, the canvas
@@ -539,6 +542,7 @@ final class EditorState {
             // (Next, `next-styles`).
             if multiSelectedLayerIDs != oldValue {
                 colorStyleNaming = nil
+                forgetEffectFolds()
                 history?.syncSelection(selectionSnapshot)
             }
         }
@@ -1009,6 +1013,49 @@ final class EditorState {
     /// when the selection moves on. It lives here rather than inside the row so
     /// only one field is ever open, and so a walk can open one.
     var colorStyleNaming: ColorStyleNamingRequest?
+
+    /// Which effects in the Effects list are folded shut right now, by
+    /// `LayerEffectRow.id`.
+    ///
+    /// An effect is a small pane with a chevron (2026-09-08), so it has to
+    /// remember whether you folded it while you go on working on the layer.
+    /// It lives here rather than in the row's own `@State` because a row is
+    /// rebuilt every time anything about the selection changes, and because a
+    /// row's id repeats from layer to layer — `shadow.0` is the first shadow of
+    /// whatever is picked — so view state would silently carry a fold across to
+    /// another shape.
+    ///
+    /// Emptied whenever the picked layers change, and whenever the list itself
+    /// is added to, taken from or reordered. A `LayerEffect` carries no
+    /// identity of its own, so a row is known by its PLACE: take the first of
+    /// two shadows out and the survivor inherits the id of the one that left,
+    /// which would show it folded because its neighbour was. Everything opening
+    /// after a structural change is never wrong; a fold landing on the wrong
+    /// effect is.
+    private(set) var foldedEffectRows: Set<String> = []
+
+    /// Whether one effect's settings are folded away.
+    func isEffectFolded(_ row: LayerEffectRow) -> Bool {
+        foldedEffectRows.contains(row.id)
+    }
+
+    /// The chevron on an effect's heading.
+    func toggleEffectFolded(_ row: LayerEffectRow) {
+        if foldedEffectRows.contains(row.id) {
+            foldedEffectRows.remove(row.id)
+        } else {
+            foldedEffectRows.insert(row.id)
+        }
+    }
+
+    /// Called when what the list holds, or which layers it speaks for, has
+    /// changed under the folds. Written only when there is something to clear:
+    /// `@Observable` tells every reader about a write whether or not the value
+    /// moved, and this one sits on the selection's hot path.
+    func forgetEffectFolds() {
+        guard !foldedEffectRows.isEmpty else { return }
+        foldedEffectRows = []
+    }
 
     /// The color let go of on the Library shelf that is waiting for a name.
     ///

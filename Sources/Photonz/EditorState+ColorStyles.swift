@@ -397,12 +397,15 @@ extension EditorState {
         guard !ids.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
+        // The rows below this one are about to shift up a place, and a fold is
+        // known by its place (`foldedEffectRows`).
+        forgetEffectFolds()
         perform { _ = $0.addEffect(kind, layerIDs: ids) }
         rememberStyleDefault(of: ids)
     }
 
     /// The cross on a row: takes that entry out of the list. Different from the
-    /// tick beside it, which keeps everything about the effect and stops it
+    /// eye beside it, which keeps everything about the effect and stops it
     /// drawing.
     ///
     /// Taking one away arms the tool exactly as adding one does, so the next
@@ -413,6 +416,7 @@ extension EditorState {
         guard !row.switchIDs.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
+        forgetEffectFolds()
         perform { _ = $0.removeEffect(layerIDs: row.switchIDs, at: row.index) }
         rememberStyleDefault(of: layerStyleSelection.layerIDs)
     }
@@ -435,11 +439,12 @@ extension EditorState {
         guard canMoveEffect(row: row, to: target) else { return }
         stylePreview = nil
         discardDragPreview()
+        forgetEffectFolds()
         perform { _ = $0.moveEffect(layerIDs: row.switchIDs, from: row.index, to: target) }
         rememberStyleDefault(of: layerStyleSelection.layerIDs)
     }
 
-    /// The tick on one entry in the list.
+    /// The eye on one entry in the list.
     ///
     /// Switching one off arms the tool as well, and because the entry keeps
     /// every number on it the next box starts with the same effect, off and

@@ -1,0 +1,205 @@
+{
+  "out": "/tmp/photonz-playtest/effect-row-is-a-small-pane",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        560,
+        460
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-open",
+      "note": "two effects, each a small pane: a chevron pointing down, a lit name, and its settings under a rule"
+    },
+    {
+      "do": "panel",
+      "stage": "1-open"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-open"
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-folded",
+      "note": "the Shadow's chevron points right and its settings are folded away; the Border below is untouched"
+    },
+    {
+      "do": "panel",
+      "stage": "2-folded"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-folded"
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-unfolded",
+      "note": "pressing the chevron again brings the Shadow's settings back"
+    },
+    {
+      "do": "panel",
+      "stage": "3-unfolded"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-off",
+      "note": "the Border's eye is shut, its name has gone quiet and its settings are faded, and they are still there to change"
+    },
+    {
+      "do": "panel",
+      "stage": "4-off"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-off"
+    },
+    {
+      "do": "render",
+      "name": "4-canvas-border-off"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Border",
+      "across": 0.45
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-changed-while-off",
+      "note": "the Width slider moved while the Border was switched off, and the number under it changed"
+    },
+    {
+      "do": "panel",
+      "stage": "5-changed-while-off"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-changed-while-off"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-back-on",
+      "note": "the eye opens again and the border comes back at the width set while it was off"
+    },
+    {
+      "do": "panel",
+      "stage": "6-back-on"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-back-on"
+    },
+    {
+      "do": "render",
+      "name": "6-canvas-border-on"
+    },
+    {
+      "do": "press",
+      "control": "Remove",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-removed",
+      "note": "the cross still takes the Shadow out and leaves the Border where it was"
+    },
+    {
+      "do": "panel",
+      "stage": "7-removed"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-removed"
+    }
+  ]
+}

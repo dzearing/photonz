@@ -334,11 +334,50 @@ Today's fixed order — shadow behind, fill, then outline over the top
 (`DocumentRenderer`) — is what a freshly converted layer gets, so a document
 opened tomorrow paints exactly as it painted yesterday.
 
+### An effect is a small pane, not a list row
+
+Settled on 2026-09-08, looking at a Border. The row wore a tick where every
+other heading in the dock wears a chevron, and its title weighed exactly what
+the settings under it weighed, so the row and its contents ran together into one
+grey list and there was no way to fold a shadow you were not working on out of
+the way.
+
+An effect is not a row with some numbers after it. It is four or five settings
+deep, it can be one of several, and it is exactly the shape of a section. So it
+is drawn as one, a size down:
+
+- **A chevron leads it**, and folds its settings away. The same glyph the dock
+  uses for a section and the layers list uses for a group, one step smaller.
+  Pressing the name folds it too, because a 9pt arrow is a mean target for a
+  thing you press this often.
+- **The name is lit** — semibold, in the primary ink — so it reads as the header
+  of what sits under it. Switched off it goes quiet.
+- **The switch is an eye**, at the end of the row beside the cross, drawn and
+  behaving like the eye on a layer row. The app has one picture for "this is not
+  showing" and an effect used to have a second one.
+- **The rule that marks the settings hangs from the chevron**, which is where it
+  hung from the tick before: `OwnedSettings` still takes its inset from
+  `ColorPartLayout.tickCenter`, and the chevron sits in the column the tick had.
+
+The two sizes of heading share their numbers in `PanelSectionLook`, so the small
+one cannot drift from the big one.
+
+**Appearance keeps its ticks.** A part is what a shape simply has, one or two
+settings deep; an effect is a thing somebody added, with a name of its own and a
+list of settings under it. Those are different objects and they are allowed to
+look different.
+
+**Folded is remembered while the layer stays picked**, and no longer: a
+`LayerEffect` carries no identity, so a row is known by its place in the list.
+Pick something else, or add, remove or reorder an entry, and every effect is
+open again. A fold that survived a removal would land on the wrong effect, and
+that is worse than one that does not survive at all.
+
 ### Off is not remove
 
 A row carries both, and they mean different things:
 
-- **The tick** switches the effect off and keeps everything about it. This is
+- **The eye** switches the effect off and keeps everything about it. This is
   the one that is used constantly: compare with and without.
 - **The remove** takes the entry out of the list. Only entries of a `many` kind
   have one, because taking away the Fill row would leave a shape with no way to
@@ -347,8 +386,13 @@ A row carries both, and they mean different things:
 
 Two ways to make something go away is the real hazard in this model. The answer
 is that only countable things can be removed, so on a plain rectangle there is
-exactly one gesture, the tick, and remove appears only once you have added a
+exactly one gesture, the eye, and remove appears only once you have added a
 second of something.
+
+**An effect that is off keeps its settings open.** They fade, they do not
+disappear and they do not go dead: the reason you switched it off is usually
+that you are about to change one of the numbers on it, and the fold is the
+gesture for putting it out of sight.
 
 ### What existing documents must keep drawing, and why Position is not built
 
@@ -626,8 +670,8 @@ the layer, so neither carried the saved-colours menu every other colour row has.
 
 Both halves are one answer now:
 
-- **The row header carries the name, the tick, the grip and the cross** — the
-  four things that act on the whole entry — and nothing else.
+- **The row header carries the chevron, the name, the grip, the eye and the
+  cross** — the things that act on the whole entry — and nothing else.
 - **The first setting under the rule is Color**, whatever the effect is, in the
   same columns and with the same control every other colour row uses: the well,
   the saved-colours menu, "Save as Style" and the name field it opens. An effect
@@ -773,7 +817,7 @@ is on screen, while this build keeps the number the row was left at.
   in `Tests/PhotonzRenderTests/BorderEffectRenderTests.swift`.
 - `PhotonzRender/DocumentRenderer.swift` — `ringed` draws one ring and both the
   Outline and every added Border go through it.
-- `Photonz/EffectsListInspector.swift` — Effects: the rows, the plus, the tick,
+- `Photonz/EffectsListInspector.swift` — Effects: the rows, the plus, the eye,
   the cross, the grip, the empty line, and the Border's Position and Width.
 
 ### What is rough, as built

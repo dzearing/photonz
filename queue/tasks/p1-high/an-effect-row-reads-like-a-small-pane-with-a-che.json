@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T13:59:43.121Z",
-  "updated": "2026-09-08T13:59:43.159Z",
+  "updated": "2026-09-08T15:22:58.376Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-08 with two screenshots of a Border row. The treatment to echo is already in the file: a panel section header draws a chevron at 10 point bold and its title with subheadline semibold (Sources/Photonz/LayersPanel.swift, the CollapsibleSection body around line 1500), so an effect header wants the same but one step smaller, and the runner should take the values from there rather than inventing new ones. The row today is built in EffectsListInspector.swift around line 89, with the switch in the ColorPartLayout.switchWidth column; moving it to the right means the row's columns change, so check the alignment work that lines the settings rule up under the left column, since the left column becomes the chevron. The eye to copy is the layer row's visibility button (LayersPanel.swift around line 2240), which uses eye and eye slash at 11 point with a tertiary tint when off. Note this partly reverses the-tick-comes-before-the-name-on-every-row-that, which asked for the tick to lead the row; that request is satisfied differently here, since the leading control becomes a chevron and the switch becomes an eye, so read that task and close or fold it rather than leaving the two fighting.",
@@ -31,6 +31,35 @@
     {
       "t": "2026-09-08T13:59:43.158Z",
       "note": "seq 260 -> 2"
+    },
+    {
+      "t": "2026-09-08T15:03:47.497Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T15:07:43.376Z",
+      "note": "Adversarial review before building. (1) Two hide-shaped controls in one row: a chevron that folds settings and an eye that stops the effect drawing. Kept them far apart, left edge and right edge, and gave the eye the layer rows exact drawing so the one that already means shown/hidden everywhere in the app keeps meaning that. (2) The mock-ish ask would have the eye at the far right like a layer row, but the checklist says the cross keeps its place, and the cross is at the panel edge today. Settled on grip, eye, cross: the cross does not move and the eye sits beside it, which is what the ask says in words. (3) Settings open while off is new, and it makes the landing swatch in the header redundant whenever the settings are showing, since the colour row is right there. So the header swatch now only appears while the settings are folded away. (4) The fold cannot be keyed to an effect identity because a LayerEffect has none: the row id is kind.index, so removing or reordering would move a fold onto the wrong effect. Folds are therefore cleared whenever the list is added to, taken from or reordered, which never looks wrong, rather than remapped, which can. (5) Shortest version: no new persistence, no launch-to-launch memory, no per-kind defaults."
+    },
+    {
+      "t": "2026-09-08T15:07:43.376Z",
+      "note": "Values taken from the file rather than invented: a section header is chevron.right 10pt bold secondary with a subheadline semibold title (11pt); the layers group twist is chevron.right 9pt semibold secondary. An effect header is the group twist chevron and a footnote semibold title (10pt, measured), so it is one step down the same scale. Hoisted both into PanelSectionLook so CollapsibleSection and the effect row read one place."
+    },
+    {
+      "t": "2026-09-08T15:22:58.376Z",
+      "note": "Built. PanelSectionLook holds the two sizes of heading in one place and CollapsibleSection now reads it. An effect heading is a chevron (9pt semibold, the layers group twist) in the column the tick used to hold, so OwnedSettings rule still hangs from it, plus a footnote semibold title in the primary ink; chevron and title are one button. The eye is the layer rows eye glyph for glyph, in the shared panel edge slot, between the grip and the cross. Fold state lives in EditorState.foldedEffectRows and is cleared on selection change and on add, remove and move."
+    },
+    {
+      "t": "2026-09-08T15:22:58.376Z",
+      "note": "Verified on the running probe with Screen Recording granted. New walk Scripts/playtest/effect-row-is-a-small-pane-walk.json runs green through fold, unfold, switch off, change the Width while off (4 pt to 18 pt with the eye shut), switch back on, remove. Second walk effect-eye-over-two-shapes-walk.json drives the eye over a two shape selection. Captures show the rule centred under the chevron, the folded effect keeping its lit name, and the off effect reading off by eye, title and faded settings."
+    },
+    {
+      "t": "2026-09-08T15:22:58.376Z",
+      "note": "Caught in a real capture and fixed: fading the settings of a switched off effect with a plain opacity let the colour wells checkerboard show through the swatch, so a solid border colour claimed to be half transparent. SwiftUI fades children one by one unless the block is flattened first; compositingGroup before opacity fixes it."
+    },
+    {
+      "t": "2026-09-08T15:22:58.376Z",
+      "note": "Adversarial review of the built thing. Kept: an effect eye lands one slot in from the panel edge because the cross keeps the outer place, so the eyes in Layers and the eyes in Effects are not one column. That is what the checklist asked for and it is the first question in the audit. Kept: a fold is forgotten when you pick another layer or restructure the list. Not driven: Tab through the panel, since this terminal has no Accessibility grant, so keyboard reach is claimed from the code and said so in the audit."
     }
-  ]
+  ],
+  "started": "2026-09-08T15:03:47.496Z"
 }

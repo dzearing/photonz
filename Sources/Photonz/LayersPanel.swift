@@ -1541,11 +1541,12 @@ private struct CollapsibleSection<Content: View>: View {
     private var header: some View {
         HStack(spacing: 6) {
             Image(systemName: "chevron.right")
-                .font(.system(size: 10, weight: .bold))
+                .font(.system(size: PanelSectionLook.Section.chevronSize,
+                              weight: PanelSectionLook.Section.chevronWeight))
                 .foregroundStyle(.secondary)
                 .rotationEffect(.degrees(isCollapsed ? 0 : 90))
             Text(title)
-                .font(.subheadline.weight(.semibold))
+                .font(PanelSectionLook.Section.titleFont)
             Spacer(minLength: 8)
             if let accessory { accessory }
             Image(systemName: "line.3.horizontal")
