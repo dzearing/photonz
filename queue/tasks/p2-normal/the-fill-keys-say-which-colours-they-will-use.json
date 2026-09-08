@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-07T18:25:47.166Z",
-  "updated": "2026-09-08T02:30:19.614Z",
+  "updated": "2026-09-08T02:31:01.145Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fell out of the-colour-swatches-appear-only-for-tools-that-p on 2026-09-07. The paths are EditorState+Regions.fillSelectedLayer (option-delete, foreground), deleteRegion / clearBackgroundLayer (delete, background) and EditorState+Crop backgroundExtended. The pair lives on EditorState.foregroundFillHex / backgroundFillHex, persisted in defaults, and its only home on screen is now Tool.fill via Tool.colorControl == .foregroundBackground. Options worth weighing before building: leave it as is and rely on G plus the existing tooltips, which may well be the right answer; put the pair in a menu (an Edit > Fill row that names the colour); or show it inside the crop bar only while cropping. This may be a decision card rather than a build. RESOLVED as a build rather than a decision card: the two homes are the Edit menu's three fill rows (EditorCommands.fillRows, each row drawing its own colour chip because a menu image is a template by default) and the Canvas inspector's New space well (LayersPanel.CanvasInspector.newSpaceRow). X moved off the bucket's swap button onto an invisible stand-in in the tool bar background (EditorView.fillColorShortcuts), the ToolGroupShortcuts idiom, so it answers under every tool. FillColors in PhotonzCore holds both rules (canFill, newSpace) so the menu row and the key press cannot drift.",
@@ -70,7 +70,7 @@
     }
   ],
   "started": "2026-09-08T02:12:32.969Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-08T02:12:00.803Z",
     "exit": 1,

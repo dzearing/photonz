@@ -33,6 +33,16 @@ import SwiftUI
 /// The line under the fields is `LayerGeometrySelection.caption`, so what the
 /// panel says is decided and tested next to what it does. A locked layer says
 /// it is locked there rather than describing arrow keys that step nothing.
+///
+/// The section has a second subject: the MARQUEE. While a selection tool has
+/// the arrow keys they walk the selection outline rather than the picked
+/// layer, and a panel that went on reporting the layer's numbers would be
+/// describing something the keyboard is not touching, so it reads the
+/// selection box instead and its four numbers place the marquee exactly.
+/// `EditorState.regionGeometry` decides which subject, using `Nudge.target` —
+/// the same rule the keys use, so the two can never disagree. The header says
+/// "Selection" and the caption says the selection box, not the layer under it,
+/// because a section that swaps subject silently is a section telling a lie.
 struct GeometryInspector: View {
     @Environment(EditorState.self) private var editorState
 
@@ -60,6 +70,61 @@ struct GeometryInspector: View {
     private var selection: LayerGeometrySelection { editorState.geometrySelection }
 
     var body: some View {
+        // While a selection tool has the arrow keys the marquee owns this
+        // section, because a panel reporting a layer's numbers while the keys
+        // walk the marquee is describing something the keyboard is not
+        // touching. `EditorState.regionGeometry` decides, by the same rule the
+        // keys use.
+        if let region = editorState.regionGeometry {
+            regionBody(region)
+        } else {
+            layerBody()
+        }
+    }
+
+    /// The marquee's own four numbers. No Mixed and nothing read-only: there
+    /// is exactly one selection and all four of its numbers take typing.
+    private func regionBody(_ region: RegionGeometry) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                regionField(.x, region)
+                regionField(.y, region)
+            }
+            HStack(spacing: 8) {
+                regionField(.width, region)
+                regionField(.height, region)
+            }
+            Text(region.caption)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+        .padding(.vertical, 8)
+    }
+
+    private func regionField(_ field: LayerGeometryField,
+                             _ region: RegionGeometry) -> some View {
+        GeometryNumberField(
+            field: field,
+            // One selection, so there is no set of ids for the draft to start
+            // fresh on: a new box changes `reading`, and that resets it.
+            selectionKey: [],
+            reading: region.reading(field),
+            help: RegionGeometry.help(field),
+            // The outline first, then the outline READ AGAIN, the same way the
+            // layer fields do it: what the box shows is what the selection
+            // became, not what was asked for.
+            set: { value in
+                editorState.setRegionGeometry(field: field, to: value)
+                return editorState.regionGeometry?.reading(field) ?? region.reading(field)
+            },
+            stepAll: { direction, coarse in
+                editorState.stepRegionGeometry(field: field, direction: direction, coarse: coarse)
+            })
+    }
+
+    private func layerBody() -> some View {
         let selection = selection
         // Nil as soon as the number takes typing again, so the panel never
         // holds a sentence about a rule that is no longer there.

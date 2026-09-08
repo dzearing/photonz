@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1750,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T18:37:47.800Z",
-  "updated": "2026-09-07T18:37:47.800Z",
+  "updated": "2026-09-08T02:31:53.319Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found writing the audit for arrow-keys-move-a-marquee-selection on 2026-09-07. The nudge branch lives in Sources/Photonz/CanvasKeys.swift and the precedence rule is Nudge.target in PhotonzCore/Nudge.swift; the panel would read the same rule to decide whose numbers to show. EditorState.selection is the region; it is editor state and not in History, so a typed number is not an undo step either.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-07T18:37:47.800Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T02:31:53.319Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T02:35:56.935Z",
+      "note": "Adversarial review before building. (1) The real win is redlining, not typing: draw a marquee round a UI element with M and the panel finally reads its exact size, which is the thing this app is mostly used for. (2) The risk is the panel silently swapping whose numbers it shows, so the section retitles to Selection and the caption says the selection box, not the layer under it. (3) The section is currently only present when a layer is picked, so a marquee drawn with nothing picked would have nowhere to show its numbers: the section has to become available on a live region too. (4) W and H on a wand blob or an ellipse means scaling the outline to the typed box, the way Transform Selection does. Kept typeable rather than read-only: a rect marquee is the common case and scaling is predictable, anchored at the top left corner. (5) Cut from scope: following a region DRAG live. The region only lands in EditorState on mouse up, so the numbers jump at the end of a drag rather than counting up during it. Arrow nudges commit per press so those are live. Noted as rough rather than plumbed, because a preview channel for regions is a bigger change than this task."
+    },
+    {
+      "t": "2026-09-08T02:35:56.936Z",
+      "note": "Not undoable, on purpose: EditorState.selection is editor state and never entered History, so an arrow nudge of the marquee is not an undo step today either. Typing a number matches it rather than inventing a half-history for one surface."
+    },
+    {
+      "t": "2026-09-08T02:51:12.956Z",
+      "note": "Built. PhotonzCore gains RegionGeometry (the selection box as four typed numbers, with its own caption and tips) and SelectionRegion.resized(to:), which scales and moves the outline so its box is exactly what was typed. EditorState.regionGeometry picks the subject with Nudge.target, the same rule the arrow keys use, and setRegionGeometry / stepRegionGeometry land the numbers. GeometryInspector grew a marquee branch beside the layer one; the panel makes the section available on a live region and retitles it Selection while it is reading one."
+    },
+    {
+      "t": "2026-09-08T02:51:12.956Z",
+      "note": "Verified on the real app, not by reading. Scripts/playtest/panel-reads-the-marquee-walk.json, 69 steps, all four acceptance items claimed with expect steps that fail the run when they are wrong: arrow tool reads the rectangle 120,100 160x60; marquee tool reads the selection 400,300 200x100; typing 300 into W resized the region itself to 300x100 and left the rectangle alone; typing 500 into X moved it; two right arrows afterwards walked it to 502 with the panel following; V put the rectangle numbers back; Escape with M still in hand put them back too; and a marquee drawn with nothing picked brings the section up on its own. Screen Recording was granted so the pictures are real window captures. Scripts/test.sh: 4677 tests, all passing."
+    },
+    {
+      "t": "2026-09-08T02:51:12.956Z",
+      "note": "Second adversarial pass, on the built thing. Fixed: the caption read as a fragment after a full stop, so it is now one sentence. Left as rough in the audit: the numbers jump on mouse up rather than following a region drag, because the selection has no preview channel and building one is more than this task."
     }
-  ]
+  ],
+  "started": "2026-09-08T02:31:53.318Z"
 }

@@ -1,0 +1,29 @@
+{
+  "feature": "The panel reads the marquee",
+  "epic": "measure-redline",
+  "summary": "Draw a marquee with a selection tool and the Position and Size section becomes the Selection section: X, Y, W and H are the marquee's own box, so you can sweep a box round a button in a screenshot and read its exact size off the panel. All four numbers take typing, so a selection can be placed and sized exactly rather than only dragged. Pick the arrow tool up again and the numbers go back to the layer you have picked.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: the Position and Size flag is on by default in Next.",
+  "try": [
+    { "do": "Open a screenshot and draw a rectangle with R, so a layer is picked." },
+    { "do": "Read the Position and Size section at the foot of the panel: it is the rectangle's numbers." },
+    { "do": "Press M and drag a marquee somewhere else on the picture.", "shot": "2026-09-08-panel-reads-the-marquee-1.png" },
+    { "do": "Type 300 into W and press Return. The marquee itself gets wider; the rectangle does not move." },
+    { "do": "Press the right arrow twice and watch X count up with the marquee." },
+    { "do": "Press V. The section is called Position and Size again and reads the rectangle." },
+    { "do": "Press V again to drop the rectangle, then M, then drag a fresh marquee.", "shot": "2026-09-08-panel-reads-the-marquee-2.png" },
+    { "do": "Press Escape to clear the marquee and watch the section go back to the layer." }
+  ],
+  "evaluate": [
+    "When you press M, is the section changing its name to Selection enough of a signal, or did you read the marquee's numbers as the layer's for a moment?",
+    "The layers list still highlights the rectangle while the panel reads the marquee. Does that read as honest, or as two things disagreeing?",
+    "Is typing a width into a marquee something you would actually reach for, or is the value here only reading the numbers a sweep produced?",
+    "Typing a number into the marquee is not an undo step, exactly as nudging it with the arrows is not. Does that ever catch you out?",
+    "With an ellipse marquee, typing W scales the ellipse to that box. Is that what you expected, or would you want the ellipse to sit unscaled in the new box?"
+  ],
+  "rough": [
+    "The numbers do not follow a drag. Sweep a new marquee, or drag an existing one by its outline, and the panel jumps to the answer on mouse up rather than counting during the gesture. The layer fields DO follow a drag, because a layer drag has a preview channel and the selection has none. Building one for the region was more than this task, so it is here rather than fixed.",
+    "The section keeps its slot in the panel and only changes its title, so nothing jumps around. It is still at the foot of the dock, below Effects, which is where Position and Size already sat.",
+    "The rule for whose numbers these are is the same rule the arrow keys use, so the panel and the keyboard can never disagree. That means one case worth knowing: with the arrow tool in hand, a live marquee, and nothing pickable selected, the arrows already move the marquee, so the panel reads it there too.",
+    "Screen Recording was granted, so both pictures here are real window captures rather than offscreen renders."
+  ]
+}

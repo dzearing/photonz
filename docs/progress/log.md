@@ -11962,3 +11962,39 @@ and two real window captures at
 Worth disagreeing with, and in the audit: M no longer gives the wand back, and
 the marquee pair shares one memory with the wand, so ellipse then W then M
 gives the rectangle rather than the ellipse you left.
+
+## 2026-09-07 — The panel reads the marquee while the marquee has the keys
+
+With a selection tool in hand the arrow keys walk the marquee, but the Position
+and Size section went on showing the picked layer's numbers, so the panel was
+describing something the keyboard was not touching. It now reads the selection
+box: the header says "Selection", the four numbers are the marquee's, and all
+four take typing, so a selection can be placed and sized exactly rather than
+only dragged. Sweep a box round a button in a screenshot and its size is on the
+panel, which is the redline use this epic is for.
+
+`PhotonzCore` gained `RegionGeometry` (the box as four typed numbers, with its
+own caption and hover tips) and `SelectionRegion.resized(to:)`, which scales and
+moves the outline so its bounding box is exactly what was typed, the way
+Transform Selection behaves: an ellipse stays an ellipse. Which subject the
+panel is on is `EditorState.regionGeometry`, decided by `Nudge.target` — the
+same rule the keys use, so the panel and the keyboard can never disagree about
+whose numbers are on screen. The section also becomes available on a live region
+alone, so a marquee drawn with nothing picked has somewhere to report its size.
+Next only, behind `next-geometry-fields`.
+
+Verified on the probe rather than by reading:
+`Scripts/playtest/panel-reads-the-marquee-walk.json`, 69 steps, every acceptance
+item claimed with an `expect` that fails the run when it is wrong — the arrow
+tool reads the rectangle, M reads the selection, a typed W resizes the marquee
+and not the rectangle, two arrow presses afterwards walk it with the panel
+following, V puts the layer numbers back, Escape puts them back with M still in
+hand. `Scripts/test.sh`: 4677 green. Audit and two real window captures at
+`queue/audits/2026-09-08-panel-reads-the-marquee.json`.
+
+Worth disagreeing with, and in the audit: the numbers jump on mouse up rather
+than following a region drag, because the selection has no preview channel and
+the layer fields do; and a typed number is not an undo step, matching the arrow
+nudge, since the selection has never entered History.
+
+Next: back to the queue.

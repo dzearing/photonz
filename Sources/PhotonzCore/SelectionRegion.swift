@@ -87,6 +87,34 @@ public struct SelectionRegion: Equatable, @unchecked Sendable {
         return path.copy(using: &transform).flatMap(SelectionRegion.init)
     }
 
+    /// The region scaled and moved so its bounding box is exactly `box`.
+    ///
+    /// This is what typing a width into the Position & Size panel does while a
+    /// selection tool has the keys. The outline keeps its shape and its
+    /// proportions within the box, so an ellipse stays an ellipse and a wand
+    /// blob stays the blob it was, the way Transform Selection behaves
+    /// elsewhere. A rectangle, which is what a marquee usually is, simply
+    /// becomes the rectangle asked for.
+    ///
+    /// Nil when there is nothing sensible to scale to: a box with no area, or
+    /// one carrying a number that is not real, leaves the caller holding its
+    /// original region rather than losing the selection to a slipped keystroke.
+    public func resized(to box: CGRect) -> SelectionRegion? {
+        let current = bounds
+        let target = box.standardized
+        guard current.width > 0, current.height > 0,
+              target.width > 0, target.height > 0,
+              target.minX.isFinite, target.minY.isFinite,
+              target.width.isFinite, target.height.isFinite else { return nil }
+        guard target != current else { return self }
+        // Read right to left, the order CoreGraphics applies them in: the
+        // region's own corner to the origin, scale, then out to the new corner.
+        var transform = CGAffineTransform(translationX: target.minX, y: target.minY)
+            .scaledBy(x: target.width / current.width, y: target.height / current.height)
+            .translatedBy(x: -current.minX, y: -current.minY)
+        return path.copy(using: &transform).flatMap(SelectionRegion.init)
+    }
+
     /// Combines against an optional existing selection: with no base, replace
     /// and add start from the shape; subtract and intersect select nothing.
     public static func combine(_ base: SelectionRegion?, with shape: SelectionRegion, mode: Mode) -> SelectionRegion? {

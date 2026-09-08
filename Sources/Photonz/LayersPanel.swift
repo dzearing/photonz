@@ -413,7 +413,12 @@ struct InspectorPanel: View {
         // selection: pick four buttons and one typed width reaches all four.
         // Which of the four fields accept typing is `LayerGeometryEditing`'s
         // call.
-        if Experiments.shared.geometryFieldsEnabled, editorState.hasLayerSelection {
+        // A live marquee brings the section up on its own, with or without a
+        // layer picked: while a selection tool has the arrow keys the numbers
+        // are the selection's, and a marquee swept over an empty canvas would
+        // otherwise have nowhere to report its size.
+        if Experiments.shared.geometryFieldsEnabled,
+           editorState.hasLayerSelection || editorState.regionGeometry != nil {
             set.insert(.geometry)
         }
         // Every color the picked layers have, in ONE place. Present as soon as
@@ -632,6 +637,11 @@ struct InspectorPanel: View {
         // holds every part the picked layers paint, each with its switch and
         // its own settings. Appearance is what it is.
         if id == .color, Experiments.shared.shapePartsEnabled { return "Appearance" }
+        // The numbers under this header belong to the marquee while a
+        // selection tool has the arrow keys, so the header says so: a person
+        // reading "Position & Size" over a layer's name would take them for
+        // the layer's.
+        if id == .geometry, editorState.regionGeometry != nil { return "Selection" }
         guard Experiments.shared.colorStylesEnabled else { return id.title }
         switch id {
         case .annotation:

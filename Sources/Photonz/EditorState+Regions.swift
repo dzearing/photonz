@@ -26,6 +26,66 @@ extension EditorState {
                            hasRegion: selection != nil)
     }
 
+    // MARK: - The selection box as four typed numbers
+
+    /// The selection box when the Position & Size fields are describing the
+    /// MARQUEE rather than the picked layers, else nil.
+    ///
+    /// The rule is `Nudge.target`, the same one the arrow keys use, so the
+    /// panel and the keyboard can never disagree about whose numbers are on
+    /// screen: with a selection tool in hand the marquee has both, and with
+    /// the arrow tool the picked layer takes them back. A live region with
+    /// nothing movable picked keeps them either way, since the alternative is
+    /// a panel describing nothing.
+    var regionGeometry: RegionGeometry? {
+        guard selectionTargetsPixels, let region = selection,
+              Nudge.target(pixelRegion: true,
+                           regionToolActive: activeTool.isRegionSelectionTool,
+                           layerWouldMove: nudgeWouldMoveALayer) == .region
+        else { return nil }
+        return RegionGeometry(bounds: region.bounds)
+    }
+
+    /// Whether an arrow key has a layer to move. The canvas asks the same
+    /// question of its own copy of the selection (`nudgeWouldMoveALayer` in
+    /// CanvasView); this is it asked of the state the panel reads, so the two
+    /// answer alike. A locked layer counts as nothing, since a nudge and a
+    /// typed number both leave it where it is.
+    var nudgeWouldMoveALayer: Bool {
+        let picked = actionableLayerIDs
+        if picked.count > 1 { return document?.multiLayerDrag(moving: picked) != nil }
+        guard let id = picked.first, let layer = document?.canvasLayer(id: id) else { return false }
+        return !layer.isLocked
+    }
+
+    /// A number typed into one of the four fields while the panel is reading
+    /// the marquee: the outline moves or scales to it.
+    ///
+    /// Not an undo step, because the selection has never been one: it is
+    /// editor state that never enters History, so an arrow nudge of the
+    /// marquee is not undoable either and a typed number matches it.
+    func setRegionGeometry(field: LayerGeometryField, to value: CGFloat) {
+        guard let box = regionGeometry?.applying(value, to: field) else { return }
+        commitRegionBox(box)
+    }
+
+    /// An arrow key inside one of those fields: the same 1 and 10 the canvas
+    /// nudges the marquee by, applied to the number you are standing in.
+    func stepRegionGeometry(field: LayerGeometryField, direction: Int, coarse: Bool) {
+        guard let box = regionGeometry?.stepping(field, direction: direction, coarse: coarse) else {
+            return
+        }
+        commitRegionBox(box)
+    }
+
+    /// The outline scaled and moved so its box is exactly `box`. A refusal
+    /// leaves the selection as it was rather than dropping it, so a slipped
+    /// keystroke can never lose the marquee.
+    private func commitRegionBox(_ box: CGRect) {
+        guard let resized = selection?.resized(to: box) else { return }
+        selection = resized
+    }
+
     /// X — swap foreground and background, like Photoshop.
     func swapFillColors() {
         (foregroundFillHex, backgroundFillHex) = (backgroundFillHex, foregroundFillHex)
