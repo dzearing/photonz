@@ -1366,14 +1366,20 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         return reach.insetBy(dx: -pad, dy: -pad)
     }
 
-    /// Whether "Rasterize Layer" applies: the layer is a vector shape/annotation
-    /// that can be baked into pixels. Image layers are already pixels; the other
-    /// vector kinds (text, measure, zoom callout, collage) draw chrome outside
-    /// their frame or carry semantics that a lone bitmap can't reproduce, so
-    /// they're excluded for now.
+    /// Whether "Turn Into Picture" applies: the layer is a shape or a piece of
+    /// text, so it can be baked into pixels. Both draw entirely inside their own
+    /// frame (plus the reach `reachPadding` already accounts for), which is what
+    /// makes the bitmap look identical the instant after.
+    ///
+    /// An image layer is already pixels, so there is nothing to turn. The rest
+    /// are left out: a measurement re-reads itself and a zoom callout mirrors
+    /// the canvas under it, so a lone bitmap would freeze a number or a picture
+    /// that is supposed to keep up; a collage and a group hold other layers.
     public var isRasterizable: Bool {
-        if case .annotation = content { return true }
-        return false
+        switch content {
+        case .annotation, .text: return true
+        default: return false
+        }
     }
 
     /// The blend mode the renderer actually uses: highlight annotations always

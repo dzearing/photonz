@@ -12579,3 +12579,44 @@ both. `Scripts/test.sh` green, 4809 tests; the thirteen marquee and band walks
 all pass. Audit: `queue/audits/2026-09-08-a-box-says-what-it-picks.json`.
 
 Next: the queue's own order.
+
+## 2026-09-08 — Turn a shape or a piece of text into a picture
+
+The other half of the delete-over-a-marquee work. That task taught the canvas to
+say "only a picture can have a piece taken out"; this one gives the person
+somewhere to go with that. The refusal line now ends "Turn it into a picture
+from the Layer menu, then try again", and the command it names is in the Layer
+menu and in a layer row's own menu, called **Turn Into Picture…** rather than
+Photoshop's Rasterize Layer, so the pill and the menu row say the same words.
+
+What changed under it:
+
+- `Layer.isRasterizable` covers text as well as shapes. Both draw entirely
+  inside their own frame, so both bake faithfully; a measurement, a zoom
+  callout, a collage and a group stay out because each holds something live a
+  lone bitmap would freeze.
+- `RegionSliceRefusal` gained a third reason, `.canBecomeAPicture`, so a shape
+  and a measurement no longer get the same dead-end sentence.
+- `RasterizePrompt` (PhotonzCore) holds every user-facing word: the menu row,
+  the question, the two buttons, the "Don't ask again" label. Pure and tested,
+  which is what keeps the menu row and the pill's way out from drifting apart.
+- The command asks before it acts, as a sheet on the window rather than a
+  blocking dialog. It asks because the picture is IDENTICAL the instant after:
+  what is gone is invisible, and finding out a week later that the words are not
+  editable is the failure worth one sentence. The checkbox means it costs a
+  click once.
+
+Verified on the real app, not only in tests: the walk
+`Scripts/playtest/turn-into-a-picture-walk.json` reads the Layer menu, opens the
+row menu for a shape and for a piece of text, photographs the question, answers
+it, presses Delete and takes the piece out, then undoes twice. The document
+render after turning is bit-identical to the render after undoing back to the
+shape: max per-channel delta 0 over 3.84M channels. `Scripts/test.sh` green,
+4819 tests. Audit: `queue/audits/2026-09-08-turn-into-a-picture.json`.
+
+Open question left for the user, in the audit: the notice pill still cannot be
+clicked, so the way out is named rather than offered. Making the refusal itself
+carry the command would be one step instead of three, but it would be the first
+pill in the app with an action in it.
+
+Next: the queue's own order.

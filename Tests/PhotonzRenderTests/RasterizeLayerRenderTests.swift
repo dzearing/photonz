@@ -59,6 +59,53 @@ struct RasterizeLayerRenderTests {
         doc.rasterizeLayer(id: id, rasterized: ref, frame: region)
     }
 
+    /// Every channel of two renders compared: the max drift and how much of the
+    /// picture drifted at all, so a test can say "identical" and mean it.
+    private func compare(_ before: CGImage, _ after: CGImage) {
+        #expect(before.width == after.width && before.height == after.height)
+        let a = pixels(before), b = pixels(after)
+        var maxDelta = 0
+        var worstCount = 0
+        for i in stride(from: 0, to: min(a.count, b.count), by: 1) {
+            let d = abs(Int(a[i]) - Int(b[i]))
+            if d > maxDelta { maxDelta = d }
+            if d > 6 { worstCount += 1 }
+        }
+        #expect(maxDelta <= 12, "max per-channel delta \(maxDelta)")
+        let tolerated = Double(worstCount) / Double(a.count)
+        #expect(tolerated < 0.02, "\(worstCount) channels drifted >6 (\(tolerated * 100)%)")
+    }
+
+    @Test("A piece of text looks identical after rasterizing, and can then be cut into")
+    func textIsPixelStableAfterRasterize() {
+        let store = ImageStore()
+        let renderer = DocumentRenderer()
+        let base = store.register(solidImage(width: 240, height: 120, r: 250, g: 250, b: 250))
+        var doc = PhotonzDocument.withBaseImage(base)
+
+        var text = TextContent(string: "Sign in")
+        text.fontSize = 28
+        text.colorHex = "#111111"
+        let layer = Layer(name: "Heading", content: .text(text),
+                          frame: CGRect(x: 24, y: 30, width: 150, height: 44))
+        doc.addLayer(layer)
+
+        let before = renderer.render(doc, store: store)
+        #expect(before != nil)
+        rasterize(layer.id, in: &doc, store: store, renderer: renderer)
+        if case .image = doc.layer(id: layer.id)?.content {} else {
+            Issue.record("text layer did not become an image")
+        }
+        let after = renderer.render(doc, store: store)
+        guard let before, let after else { return }
+        compare(before, after)
+
+        // The reason the command exists: what comes out is an ordinary picture,
+        // so a marquee over part of it is no longer refused.
+        guard let baked = doc.layer(id: layer.id) else { return }
+        #expect(RegionTarget.canSlice(baked))
+    }
+
     @Test("A styled rectangle looks identical after rasterizing")
     func styledRectangleIsPixelStableAfterRasterize() {
         let store = ImageStore()

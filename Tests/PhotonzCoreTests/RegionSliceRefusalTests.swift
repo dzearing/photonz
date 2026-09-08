@@ -27,14 +27,23 @@ struct RegionSliceRefusalTests {
         #expect(RegionSliceRefusal.refusal(for: picture(frame), action: .erase) == nil)
     }
 
-    @Test func aShapeRefusesBecauseItIsNotPixels() {
+    @Test func aShapeRefusesButSaysItCanBecomeAPicture() {
+        // A shape is not pixels, but it is one command away from being some,
+        // so the refusal points at that command instead of dead-ending.
         let refusal = RegionSliceRefusal.refusal(for: box(frame), action: .cut)
-        #expect(refusal?.reason == .notPixels)
+        #expect(refusal?.reason == .canBecomeAPicture)
     }
 
     @Test func textRefusesTheSameWayAShapeDoes() {
         let text = Layer(name: "Heading", content: .text(TextContent(string: "Hello")), frame: frame)
-        #expect(RegionSliceRefusal.refusal(for: text, action: .cut)?.reason == .notPixels)
+        #expect(RegionSliceRefusal.refusal(for: text, action: .cut)?.reason == .canBecomeAPicture)
+    }
+
+    @Test func aMeasurementHasNoWayForward() {
+        // Nothing turns a live measurement into pixels, so its refusal must
+        // not send someone hunting for a command that will not be there.
+        let measure = Layer(name: "Width", content: .measure(MeasureContent()), frame: frame)
+        #expect(RegionSliceRefusal.refusal(for: measure, action: .cut)?.reason == .notPixels)
     }
 
     @Test func aCroppedOrTurnedPictureRefusesAsAPicture() {
@@ -52,7 +61,8 @@ struct RegionSliceRefusalTests {
     @Test func refusingAgreesWithWhatCanBeSliced() {
         // One rule, two callers: anything RegionTarget will slice must not
         // refuse, and anything it will not slice must.
-        let layers = [picture(frame), box(frame)]
+        let layers = [picture(frame), box(frame),
+                      Layer(name: "Heading", content: .text(TextContent(string: "Hi")), frame: frame)]
         for layer in layers {
             #expect(RegionTarget.canSlice(layer) == (RegionSliceRefusal.refusal(for: layer, action: .cut) == nil))
         }
@@ -72,6 +82,16 @@ struct RegionSliceRefusalTests {
         #expect(erase.detail.hasSuffix("Clear the marquee to delete the whole layer."))
     }
 
+    @Test func aShapeIsToldHowToBecomeAPicture() {
+        // The half that was missing: the person is holding a marquee over a
+        // rectangle and needs to know a picture is one command away.
+        for action in [RegionSliceRefusal.Action.cut, .erase] {
+            let detail = RegionSliceRefusal(action: action, reason: .canBecomeAPicture).detail
+            #expect(detail.contains("Turn it into a picture"))
+            #expect(detail.contains("Layer menu"))
+        }
+    }
+
     @Test func aCroppedPictureIsToldWhatIsInTheWay() {
         let detail = RegionSliceRefusal(action: .cut, reason: .adjustedPicture).detail
         #expect(detail.contains("cropped or turned"))
@@ -80,7 +100,7 @@ struct RegionSliceRefusalTests {
 
     @Test func nothingItSaysUsesAnEmDash() {
         for action in [RegionSliceRefusal.Action.cut, .erase] {
-            for reason in [RegionSliceRefusal.Reason.notPixels, .adjustedPicture] {
+            for reason in [RegionSliceRefusal.Reason.notPixels, .adjustedPicture, .canBecomeAPicture] {
                 let refusal = RegionSliceRefusal(action: action, reason: reason)
                 #expect(!refusal.title.contains("—"))
                 #expect(!refusal.detail.contains("—"))

@@ -1,0 +1,278 @@
+{
+  "out": "/tmp/photonz-playtest/turn-into-a-picture",
+  "seed": "A marquee over half a rectangle refuses, because a shape is not pixels. This walk follows the way out the refusal now names: turn the shape into a picture from the layer's own menu, answer the question that asks first, then press the same key again and watch the piece really come out.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        160
+      ],
+      "to": [
+        560,
+        380
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        380,
+        270
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-rectangle-picked",
+      "note": "a rectangle drawn and picked; layers should be 2 (Background + Rectangle)"
+    },
+    {
+      "do": "menus",
+      "stage": "1b-the-layer-menu-offers-it",
+      "menu": "Layer"
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        160
+      ],
+      "to": [
+        380,
+        380
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-refused-with-a-way-out",
+      "note": "THE NEW LINE: copied must read 'Cannot delete a piece - Only a picture can have a piece taken out. Turn it into a picture from the Layer menu, then try again.' layers stays 2"
+    },
+    {
+      "do": "snapshot",
+      "name": "turn-2-refused"
+    },
+    {
+      "do": "rightClick",
+      "on": "Rectangle",
+      "shot": "turn-3-row-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-row-menu-offers-it",
+      "note": "the layer row menu must carry a row called 'Turn Into Picture…'"
+    },
+    {
+      "do": "rightClick",
+      "on": "Rectangle",
+      "choose": "Turn Into Picture…"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "turn-4-question"
+    },
+    {
+      "do": "describe",
+      "stage": "4-it-asks-first",
+      "note": "the sheet asks 'Turn “Rectangle” into a picture?' and says the shape stops being editable. Nothing has changed yet: canUndo must still be whatever step 1 left it"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "5-turned",
+      "note": "the answer was yes: the layer is now a picture, layers stays 2, canUndo true, and the canvas looks exactly as it did"
+    },
+    {
+      "do": "render",
+      "name": "turn-5-turned-doc"
+    },
+    {
+      "do": "snapshot",
+      "name": "turn-5-turned"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-the-piece-comes-out",
+      "note": "THE POINT: the same key over the same marquee now takes the piece out. layers stays 2 and the left half of the rectangle is gone"
+    },
+    {
+      "do": "snapshot",
+      "name": "turn-6-piece-out"
+    },
+    {
+      "do": "render",
+      "name": "turn-6-piece-out-doc"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-two-undos-put-the-shape-back",
+      "note": "one undo puts the piece back, a second undo takes the picture back to being an editable rectangle: turning is ONE step, not several"
+    },
+    {
+      "do": "render",
+      "name": "turn-7-shape-back"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        540
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "8-a-piece-of-text-exists",
+      "note": "a text layer typed on the canvas, so the same offer can be checked on words rather than a shape"
+    },
+    {
+      "do": "rightClick",
+      "on": "Text",
+      "shot": "turn-8-text-row-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "9-text-can-be-turned-too",
+      "note": "THE OTHER HALF: a piece of text must carry 'Turn Into Picture…' in its row menu exactly as a shape does"
+    }
+  ]
+}

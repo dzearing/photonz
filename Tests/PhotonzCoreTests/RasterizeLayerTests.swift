@@ -18,18 +18,53 @@ struct RasterizeLayerTests {
                      style: style)
     }
 
-    @Test("Only annotation layers report as rasterizable")
+    @Test("Shapes and text report as rasterizable, nothing else does")
     func isRasterizableGating() {
         #expect(annotationLayer().isRasterizable)
         for shape in AnnotationShape.allCases {
             #expect(annotationLayer(shape: shape).isRasterizable)
         }
+        // Text is the other thing a person draws on top of a picture and then
+        // wants to cut into, and it draws entirely inside its own frame, so it
+        // bakes as faithfully as a shape does.
+        let text = Layer(name: "T", content: .text(TextContent(string: "hi")),
+                         frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(text.isRasterizable)
+
+        // A picture is already pixels, so there is nothing to turn.
         let image = Layer(name: "Bg", content: .image(ImageRef(pixelSize: CGSize(width: 10, height: 10))),
                           frame: CGRect(x: 0, y: 0, width: 10, height: 10))
         #expect(!image.isRasterizable)
-        let text = Layer(name: "T", content: .text(TextContent(string: "hi")),
-                         frame: CGRect(x: 0, y: 0, width: 10, height: 10))
-        #expect(!text.isRasterizable)
+        // The rest carry live meaning a lone bitmap cannot reproduce (a
+        // measurement that re-reads itself, a callout that mirrors the canvas)
+        // or hold other layers.
+        let measure = Layer(name: "M", content: .measure(MeasureContent()),
+                            frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(!measure.isRasterizable)
+        let group = Layer(name: "G", content: .group(GroupContent(children: [])),
+                          frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(!group.isRasterizable)
+    }
+
+    @Test("What comes out of it is a picture a marquee can cut into")
+    func rasterizedLayerCanBeSliced() {
+        // The whole point of the command: before it, a marquee refuses; after
+        // it, the layer is an ordinary untransformed picture, which is exactly
+        // what `RegionTarget` will slice.
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 300, height: 300))
+        for layer in [annotationLayer(),
+                      Layer(name: "Heading", content: .text(TextContent(string: "Hello")),
+                            frame: CGRect(x: 20, y: 30, width: 100, height: 60))] {
+            doc.addLayer(layer)
+            #expect(!RegionTarget.canSlice(layer))
+            doc.rasterizeLayer(id: layer.id,
+                               rasterized: ImageRef(pixelSize: CGSize(width: 100, height: 60)),
+                               frame: CGRect(x: 20, y: 30, width: 100, height: 60))
+            let after = doc.layer(id: layer.id)
+            #expect(after != nil)
+            #expect(RegionTarget.canSlice(after!))
+            #expect(RegionSliceRefusal.refusal(for: after!, action: .erase) == nil)
+        }
     }
 
     @Test("Rasterizing swaps content to the image ref, keeps identity, resets baked style")

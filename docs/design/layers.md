@@ -52,13 +52,28 @@ and acts on the clicked row. Details:
   participant's slot/name/lock. Merging into the locked Background works and
   stays locked; participants must be visible; one undo step. Caveat: a merged
   zoom callout bakes against only its co-participants, not the full backdrop.
+- **Turn Into Picture** (2026-09-08, Photoshop calls it Rasterize Layer) bakes a
+  shape or a piece of text into pixels: same sizing as Merge Down but with only
+  that layer in the temp document, then `PhotonzDocument.rasterizeLayer(id:rasterized:frame:)`
+  swaps the content for the bitmap and resets the now-baked style, crop and
+  transform (blend mode is carried, since it composites against what is below).
+  One undo step, pixel-identical result (`RasterizeLayerRenderTests`), and what
+  comes out is an ordinary untransformed image layer, which is exactly what
+  `RegionTarget.canSlice` needs — so it is the way out
+  `RegionSliceRefusal.canBecomeAPicture` names when a marquee over half a shape
+  refuses. Gated by `Layer.isRasterizable` (annotation or text only: a
+  measurement re-reads itself, a zoom callout mirrors the canvas, a collage and
+  a group hold other layers). It asks first, because the picture is identical
+  the instant after and the thing that is gone is invisible: an NSAlert sheet
+  worded by `RasterizePrompt` (PhotonzCore), with a "Don't ask again" checkbox
+  remembered in `EditorState.turnIntoPictureAskedKey`.
 - **Restacking** floors at the locked Background — nothing slides beneath it;
   locked layers don't move.
 
 ## Layers panel UI (Phase 6, redesign planned Phase 10.5)
 
 - Right-side glass panel: thumbnails, visibility eye, lock, opacity slider, drag-reorder.
-- Double-click name to rename; context menu: duplicate, delete, merge down, rasterize style.
+- Double-click name to rename; context menu: duplicate, delete, merge down, turn into picture.
 - **`LayerInspector`** below the list for the selected layer — opacity, blur, corner radius, border (+color), and **shadow**: enable toggle then Blur, Color, **Distance** (offset magnitude), **Direction** (offset angle 0–360°, derived from `ShadowStyle.offset` via distance+angle), Opacity. Every slider drag previews via `previewLayerStyle` and commits to `History` on release (one undo step per gesture).
 - **`AnnotationInspector`** (Phase 10) shows above `LayerInspector` when the selected layer is an annotation: per-object Color / Thickness / Head Size (arrow only). See `tools.md`.
 - **PLANNED redesign (Phase 10.5):** convert this floating overlay into a *docked, full-height* right side panel with a 1px draggable resize handle on its left edge (persisted width), and make the inner sections (Layers list, Annotation properties, Effects, Shadow, …) **drag-reorderable collapsible sections** (Photoshop-style, elegant/modern; persist order + collapsed state). Also tracked as Phase 10 perf item 10.7: layer *selection* must be instant (no re-render / thumbnail regen on select), and bug 10.6: enabling Shadow currently shows nothing.

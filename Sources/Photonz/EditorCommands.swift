@@ -394,7 +394,11 @@ struct EditorCommands: Commands {
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))
-            Button("Rasterize Layer") {
+            // The one command that makes a shape or a piece of text into pixels,
+            // which is what a marquee needs before it can cut a piece out of it
+            // (`RasterizePrompt`, `RegionSliceRefusal`). Named the way the
+            // refusal pill names it, not the way Photoshop does.
+            Button(RasterizePrompt.menuItem) {
                 if let selectedID { editor?.rasterizeLayer(id: selectedID) }
             }
             .disabled(!(selectedID.map { editor?.canRasterizeLayer(id: $0) ?? false } ?? false))

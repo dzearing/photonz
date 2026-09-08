@@ -2485,7 +2485,7 @@ private struct LayersRow: View, Equatable {
         Button("Merge Down") { editorState.mergeDown(id: id) }
             .keyboardShortcut("e", modifiers: .command)
         if display.isRasterizable {
-            Button("Rasterize Layer") { editorState.rasterizeLayer(id: id) }
+            Button(RasterizePrompt.menuItem) { editorState.rasterizeLayer(id: id) }
         }
         Divider()
         Button("Bring to Front") { editorState.bringLayerToFront(id: id) }

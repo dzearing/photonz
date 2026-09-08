@@ -1,0 +1,30 @@
+{
+  "feature": "Turn a shape or a piece of text into a picture",
+  "epic": "ui-building",
+  "summary": "A marquee over half a rectangle used to dead-end: the canvas said it could not cut that, and there was nowhere to go. Now the refusal names the way out, and one command turns the shape or the words into a picture so the piece really comes out.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on: the command sits in the Layer menu and in a layer row's own menu.",
+  "try": [
+    { "do": "Draw a rectangle on a blank canvas, then press V and click it to pick it." },
+    { "do": "Press M and drag a marquee over its left half, then press Delete.", "shot": "2026-09-08-turn-into-a-picture-1.png" },
+    { "do": "Read the line at the bottom of the canvas: it now names what to do next." },
+    { "do": "Right click the Rectangle row in the Layers list and look for Turn Into Picture.", "shot": "2026-09-08-turn-into-a-picture-2.png" },
+    { "do": "Choose it and read the question before answering it.", "shot": "2026-09-08-turn-into-a-picture-3.png" },
+    { "do": "Click Turn Into Picture, then press Delete again with the marquee still up.", "shot": "2026-09-08-turn-into-a-picture-4.png" },
+    { "do": "Press Command Z twice: the piece comes back, then the editable rectangle does." },
+    { "do": "Type some text with the T tool, pick it, and check its row menu offers the same thing." }
+  ],
+  "evaluate": [
+    "After the refusal, did you know where to go next without hunting?",
+    "Is Turn Into Picture the right name for this, or would you rather it said Rasterize the way Photoshop does?",
+    "Is being asked before it happens worth the extra click, or would you rather it just did it and left undo to sort it out?",
+    "Does the question say enough about what you lose, in words you would use?",
+    "The layer keeps its old name after turning, so a picture can still be called Rectangle. Does that read wrong in the Layers list?"
+  ],
+  "rough": [
+    "The refusal line points at the Layer menu only, though the layer's own row menu offers it too. Naming both made the line too long for one pill.",
+    "The pill still cannot be clicked. Offering the command as a button inside the refusal itself would be one step instead of three, but no notice pill in the app has an action in it yet, and adding the first one is a bigger change than this task. Say the word and it becomes its own task.",
+    "The command was already there for shapes under the name Rasterize Layer, and nothing pointed at it. This renames it, adds text, adds the question, and connects the refusal to it.",
+    "Text is now turnable; a measurement, a zoom callout, a collage and a group are not, because each carries something live that a lone bitmap would freeze.",
+    "Screen Recording was granted, so every picture here is a real screen capture of the probe app, not an offscreen render."
+  ]
+}

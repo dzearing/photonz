@@ -212,20 +212,66 @@ extension EditorState {
         selectedLayerID = merged.id
     }
 
-    // MARK: - Rasterize (vector shape → pixels)
+    // MARK: - Turn Into Picture (a shape or a piece of text → pixels)
 
-    /// Whether "Rasterize Layer" applies to the given layer (menu enablement).
+    /// Where the "Don't ask again" answer is remembered. Per app bundle, so the
+    /// dev and probe builds keep their own answer and neither can turn the
+    /// question off for the release app.
+    static let turnIntoPictureAskedKey = "photonz.turnIntoPicture.dontAsk"
+
+    /// Whether "Turn Into Picture" applies to the given layer (menu enablement).
     func canRasterizeLayer(id: UUID) -> Bool {
         document?.layer(id: id)?.isRasterizable ?? false
     }
 
-    /// Bakes a vector shape/annotation layer into pixels in one undo step: the
-    /// shape is rendered WITH all its style effects (blur, shadow, border, corner
+    /// Asks the question, then turns the layer into a picture if the answer is
+    /// yes (`RasterizePrompt`).
+    ///
+    /// It asks because what the command takes away is invisible: the picture is
+    /// identical the instant after, and the thing that is gone is that the shape
+    /// or the words could be edited at all. The question rides the window as a
+    /// sheet rather than blocking the app, and it carries "Don't ask again" so
+    /// somebody cutting up half a mockup is asked once and never again.
+    func rasterizeLayer(id: UUID) {
+        guard let document, let layer = document.layer(id: id),
+              let prompt = RasterizePrompt(layer: layer) else { return }
+        guard !UserDefaults.standard.bool(forKey: Self.turnIntoPictureAskedKey) else {
+            applyRasterize(id: id)
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = prompt.title
+        alert.informativeText = prompt.message
+        alert.addButton(withTitle: prompt.confirm)
+        alert.addButton(withTitle: prompt.cancel)
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = RasterizePrompt.suppression
+        let answer: @MainActor (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            if alert.suppressionButton?.state == .on {
+                UserDefaults.standard.set(true, forKey: Self.turnIntoPictureAskedKey)
+            }
+            guard response == .alertFirstButtonReturn else { return }
+            self?.applyRasterize(id: id)
+        }
+        if let window = hostWindow {
+            alert.beginSheetModal(for: window) { response in
+                MainActor.assumeIsolated { answer(response) }
+            }
+        } else {
+            answer(alert.runModal())
+        }
+    }
+
+    /// Bakes a shape or a piece of text into pixels in one undo step: the layer
+    /// is rendered WITH all its style effects (blur, shadow, border, corner
     /// radius, opacity) and geometry (crop, transform) into a bitmap covering its
     /// padded on-canvas footprint, that bitmap is stored, and the layer's content
     /// becomes `.image` with its now-baked style reset. Looks pixel-identical;
-    /// undo restores the editable vector shape. The layer keeps its slot/name/id.
-    func rasterizeLayer(id: UUID) {
+    /// undo restores the editable shape. The layer keeps its slot/name/id, and
+    /// what comes out is an ordinary picture, so a marquee can take a piece out
+    /// of it (`RegionTarget.canSlice`).
+    private func applyRasterize(id: UUID) {
         guard let document, let layer = document.layer(id: id), layer.isRasterizable else { return }
 
         // The baked bitmap covers everything the layer can draw: its transformed

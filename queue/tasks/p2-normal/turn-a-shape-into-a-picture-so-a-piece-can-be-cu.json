@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1910,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T01:19:25.700Z",
-  "updated": "2026-09-08T01:19:25.701Z",
+  "updated": "2026-09-08T11:59:56.559Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "The other half of cutting-part-of-a-shape-says-what-it-cannot-do (2026-09-08). RegionTarget.canSlice gates every region op on an untransformed uncropped image layer. PreviewRenderer already has layerRegion(of:in:store:path:) and rasterize(region:of:store:), which render one layer alone, so the pixels are reachable; what is missing is a command that replaces the layer content with .image(ref) over the layer frame and a name for it. Photoshop calls it Rasterize Layer. Worth checking with the user first whether it belongs on a menu at all or should be offered inside the refusal pill.",
+  "notes": "The other half of cutting-part-of-a-shape-says-what-it-cannot-do (2026-09-08). RegionTarget.canSlice gates every region op on an untransformed uncropped image layer. PreviewRenderer already has layerRegion(of:in:store:path:) and rasterize(region:of:store:), which render one layer alone, so the pixels are reachable; what is missing is a command that replaces the layer content with .image(ref) over the layer frame and a name for it. Photoshop calls it Rasterize Layer. Worth checking with the user first whether it belongs on a menu at all or should be offered inside the refusal pill.\n\nDone 2026-09-08. Files: PhotonzCore/RasterizePrompt.swift (new, all the words), PhotonzCore/RegionSliceRefusal.swift (.canBecomeAPicture), PhotonzCore/Layer.swift (isRasterizable covers .text), Photonz/EditorState+LayerOps.swift (rasterizeLayer asks, applyRasterize does), EditorCommands.swift + LayersPanel.swift (both menus use RasterizePrompt.menuItem). Suppression key: photonz.turnIntoPicture.dontAsk. Walk: Scripts/playtest/turn-into-a-picture-walk.json. Audit: queue/audits/2026-09-08-turn-into-a-picture.json. Left undone on purpose: no action button inside the refusal pill (no pill in the app has one yet).",
   "acceptance": [
     "A shape or a piece of text can be turned into a picture from the layer menu and from the layer row menu",
     "Turning one is a single undo step and the picture looks identical the instant after",
@@ -23,6 +23,32 @@
     {
       "t": "2026-09-08T01:19:25.701Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T11:44:55.796Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T11:59:37.340233Z",
+      "note": "Review before building: the command already existed for shapes as \"Rasterize Layer\" and nothing anywhere pointed at it, so the missing half was the CONNECTION, not the command. A first-time user hits the refusal pill and has no next step; the pill had to name the way out. Text was excluded from the gate even though text is one of the two things the refusal is about. Shortest version that delivers the value: widen the gate to text, name the way out in the pill, ask once before it happens, and use one vocabulary for all three. Rejected for now: putting a button inside the refusal pill, because no notice pill in the app carries an action and adding the first one is a bigger change than this task (recorded in the audit's rough so the user can call for it)."
+    },
+    {
+      "t": "2026-09-08T11:59:37.340233Z",
+      "note": "Built. Core: Layer.isRasterizable now covers text as well as shapes; RegionSliceRefusal gained a .canBecomeAPicture reason whose line reads \"Only a picture can have a piece taken out. Turn it into a picture from the Layer menu, then try again.\"; new RasterizePrompt (PhotonzCore) holds every word of the question and the menu row. App: EditorState.rasterizeLayer now asks first with an NSAlert sheet carrying \"Don't ask again\", then does the work; both menus say \"Turn Into Picture…\". Tests first, 4819 green."
+    },
+    {
+      "t": "2026-09-08T11:59:37.340233Z",
+      "note": "Verified in the probe app with Scripts/playtest/turn-into-a-picture-walk.json. Layer menu reading carries \"Turn Into Picture…\" between Merge Down and Arrange in Collage; the row menu carries it for the Rectangle AND for a text layer. The sheet appears, Return confirms, Delete then takes the piece out, and two undos put the editable rectangle back. The document render after turning is bit-identical to the render after undoing back to the shape (max per-channel delta 0 over 3,840,000 channels)."
+    },
+    {
+      "t": "2026-09-08T11:59:37.340233Z",
+      "note": "Review of the built thing: the pill line is long but reads in one glance; the layer keeps its old name after turning (Photoshop does the same) which can leave a picture called Rectangle, raised as an evaluate question rather than changed; the marquee survives the turn, which is what makes \"press Delete again\" work at all."
+    },
+    {
+      "t": "2026-09-08T11:59:56.557Z",
+      "note": "Turn Into Picture ships: shapes AND text bake into pixels from the Layer menu and the layer row menu, asking first with a Don't ask again sheet, and the marquee refusal now names it as the way out. Verified in the probe app (Scripts/playtest/turn-into-a-picture-walk.json): menu readings for both kinds, the question photographed, Delete then takes the piece out, two undos restore the editable shape, and the turned render is bit-identical to the shape (delta 0). Scripts/test.sh green, 4819 tests. Audit: queue/audits/2026-09-08-turn-into-a-picture.json"
     }
-  ]
+  ],
+  "started": "2026-09-08T11:44:55.795Z",
+  "completed": "2026-09-08T11:59:56.558Z"
 }

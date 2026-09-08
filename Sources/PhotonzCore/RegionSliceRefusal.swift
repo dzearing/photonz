@@ -30,10 +30,16 @@ public struct RegionSliceRefusal: Hashable, Sendable {
 
     /// Why this layer cannot take it, which is the half a person can act on.
     public enum Reason: Hashable, Sendable {
-        /// There is no bitmap at all: a shape, text, a measurement, a group.
-        /// Nothing about the marquee will help, so the words point at the
-        /// layer.
+        /// There is no bitmap at all and nothing can make one: a measurement,
+        /// a zoom callout, a group. Nothing about the marquee will help, so
+        /// the words point at the layer.
         case notPixels
+        /// There is no bitmap YET: a shape or a piece of text, which one
+        /// command turns into pixels (`RasterizePrompt`). This is the half the
+        /// refusal used to be missing. Saying only "only a picture can have a
+        /// piece taken out" leaves a person holding a marquee over a rectangle
+        /// with nowhere to go, when a picture is one menu row away.
+        case canBecomeAPicture
         /// It IS a picture, but it has been cropped or turned, and the region
         /// path maps into the bitmap through the layer's frame, so that
         /// mapping no longer tells the truth. The words must not send someone
@@ -55,8 +61,13 @@ public struct RegionSliceRefusal: Hashable, Sendable {
     /// sentence on screen can never disagree with what the keys actually do.
     public static func refusal(for layer: Layer, action: Action) -> RegionSliceRefusal? {
         guard !RegionTarget.canSlice(layer) else { return nil }
-        return RegionSliceRefusal(action: action,
-                                  reason: layer.imageRef == nil ? .notPixels : .adjustedPicture)
+        let reason: Reason
+        if layer.imageRef != nil {
+            reason = .adjustedPicture
+        } else {
+            reason = layer.isRasterizable ? .canBecomeAPicture : .notPixels
+        }
+        return RegionSliceRefusal(action: action, reason: reason)
     }
 
     /// The verdict, set in its own weight at the head of the pill: what the key
@@ -80,6 +91,13 @@ public struct RegionSliceRefusal: Hashable, Sendable {
         switch reason {
         case .notPixels:
             return "Only a picture can have a piece taken out. \(wayOut)"
+        case .canBecomeAPicture:
+            // The one way out that gets the person what they actually asked
+            // for, so it is the only one printed: clearing the marquee is on
+            // the other two lines, and it takes the WHOLE layer, which is not
+            // what someone who drew a marquee over half of something wants.
+            return "Only a picture can have a piece taken out. "
+                + "Turn it into a picture from the Layer menu, then try again."
         case .adjustedPicture:
             return "This picture is cropped or turned. \(wayOut)"
         }
