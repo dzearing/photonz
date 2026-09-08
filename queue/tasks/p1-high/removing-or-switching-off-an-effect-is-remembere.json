@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 6,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T03:31:55.154Z",
-  "updated": "2026-09-08T04:04:58.966398Z",
+  "updated": "2026-09-08T04:48:01.273Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07, and it is the same gap that switching-a-part-off-is-remembered-for-the-next closed for the outline, reappearing in the effects list which arrived later. Confirmed by reading Sources/Photonz/EditorState+ColorStyles.swift: addEffect (line 395) ends with rememberStyleDefault, so adding is remembered, while removeEffect (line 407), moveEffect (line 429) and setEffectEnabled (line 437) all perform the document change and return, arming nothing. So the tool default keeps whatever effects it captured the last time something DID arm it. Add the same call to the three that lack it, and check there is no fourth path. Also answer the question the user's report opens: a fresh rectangle should probably not carry a blur at all, so find out whether that comes from a captured default or from the shape's standard style and say which in the audit. Same rule to preserve as the outline fix: rememberStyleDefault only teaches the tool from a single layer edit.",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-08T04:04:58.966398Z",
       "note": "Found while finishing: a blur added to a rectangle paints nothing at all, and on an ellipse the halo is cut off square at the box. Reproduced with renders and filed as a-blur-you-add-to-a-box-actually-softens-it (p1). Not fixed here."
+    },
+    {
+      "t": "2026-09-08T04:48:01.273Z",
+      "note": "Removing an effect, switching one off and reordering the list now arm the shape tool, the way adding already did (Sources/Photonz/EditorState+ColorStyles.swift). Verified on the probe with Screen Recording granted: Scripts/playtest/effects-remembered-walk.json, 91 steps green, covering remove, switch off with settings kept, reorder, add still working, and an ellipse that keeps its own. Survival across a quit covered by two AnnotationStyles round-trip tests. Scripts/test.sh 4695 green. Audit: queue/audits/2026-09-07-effects-remembered.json. Filed two follow-ups: a blur on a rectangle paints nothing (p1) and 14 walks left red by this morning's panel split (p2)."
     }
   ],
-  "started": "2026-09-08T03:33:14.917Z"
+  "started": "2026-09-08T03:33:14.917Z",
+  "completed": "2026-09-08T04:48:01.273Z"
 }
