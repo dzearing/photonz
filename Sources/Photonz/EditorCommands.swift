@@ -601,9 +601,12 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("[", modifiers: [.command, .shift])
                 .disabled(!hasLayerSelection)
             Divider()
+            // Off while everything picked is locked: the lock is a promise the
+            // menu keeps out loud, so the row says no before the press rather
+            // than the layer disappearing under one.
             Button("Delete Layer") { editor?.deleteSelectedLayers() }
                 .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(!hasLayerSelection)
+                .disabled(!(editor?.canDeleteSelectedLayers ?? false))
         }
 
         // The mock's Measure command group (§6, `next-measure-panel`): the tool,

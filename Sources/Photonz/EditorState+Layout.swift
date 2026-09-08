@@ -24,6 +24,13 @@ extension EditorState {
 
     var hasLayerSelection: Bool { !actionableLayerIDs.isEmpty }
 
+    /// Whether Layers > Delete Layer would take anything: false while every
+    /// layer picked is locked, so the row greys out and the app says no before
+    /// the press rather than deleting and leaving you to notice.
+    var canDeleteSelectedLayers: Bool {
+        document?.canDeleteLayers(ids: actionableLayerIDs) ?? false
+    }
+
     /// Layers > Delete Layer (⌘⌫): the whole selection in one undo step.
     func deleteSelectedLayers() {
         let ids = actionableLayerIDs
@@ -671,10 +678,17 @@ extension EditorState {
     /// first press handed back the outline with the pictures still gone,
     /// which reads as undo refusing to bring your work back (reported
     /// 2026-09-08).
+    ///
+    /// A locked member is left behind rather than taken with the rest: the
+    /// lock holds against the menu command and the row menu the same way it
+    /// already held against ⌫, and a sweep that caught one locked layer still
+    /// clears everything else. With nothing but locked layers picked this does
+    /// nothing at all, so it never spends an undo step on an empty delete.
     func deleteLayers(ids: [UUID]) {
-        guard !ids.isEmpty else { return }
+        guard let document else { return }
+        let idSet = document.deletableLayerIDs(in: Set(ids))
+        guard !idSet.isEmpty else { return }
         discardDragPreview()
-        let idSet = Set(ids)
         if let selected = selectedLayerID, idSet.contains(selected) { selectedLayerID = nil }
         perform { $0.removeLayers(ids: idSet) }
         setSelection(nil, captureLayers: false, recording: false)

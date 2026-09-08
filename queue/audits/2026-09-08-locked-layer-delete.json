@@ -1,0 +1,29 @@
+{
+  "feature": "A locked layer stays put when you delete",
+  "epic": "ui-building",
+  "summary": "Locking a layer now holds against every way to delete it, not just the Backspace key. Layer > Delete Layer greys out while the only thing picked is locked, and a selection holding a locked layer and an unlocked one clears the unlocked one and leaves the locked one where it is.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: a blank canvas is enough.",
+  "try": [
+    { "do": "Draw two rectangles on a blank canvas." },
+    { "do": "In the Layers list, click the padlock on the first rectangle's row so it closes." },
+    { "do": "Click that locked row to pick it. Read the grey line under Position and Size.", "shot": "2026-09-08-locked-layer-delete-1-locked-picked.png" },
+    { "do": "Open the Layer menu. Delete Layer is grey." },
+    { "do": "Press Command Backspace anyway. Nothing happens and the rectangle is still there." },
+    { "do": "Right-click the locked row in the Layers list. Delete at the bottom is grey, with Locked ticked two lines above it." },
+    { "do": "Click the unlocked row, then shift-click the locked one, and choose Layer > Delete Layer.", "shot": "2026-09-08-locked-layer-delete-2-after-mixed.png" },
+    { "do": "The unlocked rectangle is gone and the locked one is still on the canvas." }
+  ],
+  "evaluate": [
+    "The greyed Delete Layer says no without saying why. The only reason on screen is the line under Position and Size, which talks about position and size rather than deleting. Is that enough, or should the app tell you the lock is what stopped you?",
+    "A mixed pick deletes the unlocked layers and quietly keeps the locked one. Would you rather it told you one was kept, or is silently doing the safe thing right?",
+    "Pressing Command Backspace on a locked layer does nothing at all, with no message. Does the padlock in the row make that obvious enough?",
+    "The row menu's Delete is grey whenever the row you right-clicked is locked, even if other unlocked layers are picked at the same time. Does the menu read as being about the row you clicked, or about the whole selection?",
+    "The Background is locked too, so Delete Layer is now grey while it is picked, where it used to delete the background outright. Is greying it the right answer, or do you want a way to clear the background from the menu?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures are real captures of the window rather than offscreen renders.",
+    "Neither picture shows the greyed menu row. A scripted walk cannot open the menu bar and photograph it, and the menu bar a walk can read back is frozen at launch, so its dimming is not trustworthy. The walk proves the grey a different way: it reads the very value the Layer menu row's enabled state is bound to, and logged \"menu row dimmed, nothing deleted (locked: Rectangle)\" with the layer count unchanged. So the greyed rows are proven by the value behind them, not photographed. Worth a look when you play with it.",
+    "The line under Position and Size still says only \"Unlock it in the Layers list to change its position or size\". Now that the lock also stops a delete, that sentence is narrower than the truth, but it sits in the Position and Size section so widening it there felt wrong. Left alone on purpose.",
+    "Fixed in shared code rather than only in Next, because a lock that holds in one release and not the other is the same bug in a new place."
+  ]
+}

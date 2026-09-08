@@ -445,6 +445,22 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         prune(&layers)
     }
 
+    /// Which of `ids` a delete may actually take. A locked layer is left where
+    /// it is: the lock is one promise, so it has to hold against every way to
+    /// delete (the menu command, the row menu, the key) rather than only the
+    /// key. Unknown ids drop out too, so the count says exactly what would go.
+    public func deletableLayerIDs(in ids: Set<UUID>) -> Set<UUID> {
+        ids.filter { layer(id: $0)?.isLocked == false }
+    }
+
+    /// Whether a delete over `ids` would remove anything: false while the only
+    /// thing picked is locked, which is when Delete Layer greys out. The row's
+    /// enablement and the command read this same answer, so the menu never
+    /// offers a delete that would quietly do nothing.
+    public func canDeleteLayers(ids: Set<UUID>) -> Bool {
+        !deletableLayerIDs(in: ids).isEmpty
+    }
+
     /// Moves a layer to a new slot AMONG ITS OWN SIBLINGS. A child reorders
     /// inside its group and never escapes it.
     public mutating func moveLayer(id: UUID, to newIndex: Int) {

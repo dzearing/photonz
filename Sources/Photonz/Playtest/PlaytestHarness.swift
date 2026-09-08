@@ -1003,7 +1003,23 @@ private final class Run {
             case .ungroup: editor.ungroupSelection()
             case .stackSelection: editor.stackSelection(.stack)
             case .gridSelection: editor.stackSelection(.grid)
-            case .deleteLayer: editor.deleteSelectedLayers()
+            case .deleteLayer:
+                // Like Frame Selection above, this command can quietly do
+                // nothing, and the log has to say which nothing it was: the
+                // menu row was dimmed, or it ran and a locked member stayed.
+                let dimmed = !editor.canDeleteSelectedLayers
+                let picked = editor.actionableLayerIDs
+                let before = editor.document?.flattenedLayers.count ?? 0
+                editor.deleteSelectedLayers()
+                let after = editor.document?.flattenedLayers.count ?? 0
+                let kept = picked.compactMap { editor.document?.layer(id: $0) }
+                if dimmed {
+                    actionDetail = "menu row dimmed, nothing deleted"
+                        + (kept.isEmpty ? "" : " (locked: \(kept.map(\.name).sorted().joined(separator: ", ")))")
+                } else {
+                    actionDetail = "deleted \(before - after) of \(picked.count) picked"
+                        + (kept.isEmpty ? "" : ", kept locked \(kept.map(\.name).sorted().joined(separator: ", "))")
+                }
             case .selectComponentOriginal: editor.selectComponentOriginal()
             case .copyLayer: editor.copySelectedLayer()
             case .pasteLayer: editor.paste()

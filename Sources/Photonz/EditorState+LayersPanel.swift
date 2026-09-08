@@ -417,6 +417,8 @@ extension EditorState {
             deleteLayers(ids: Array(multiSelectedLayerIDs))
             return
         }
+        // A locked layer stays put whichever door the delete came through.
+        guard document?.layer(id: id)?.isLocked == false else { return }
         discardDragPreview()
         if selectedLayerID == id { selectedLayerID = nil }
         perform { $0.removeLayer(id: id) }

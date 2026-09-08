@@ -98,3 +98,54 @@ struct RemoveLayersTests {
         #expect(doc.layers.isEmpty)
     }
 }
+
+@Suite("A locked layer survives a delete")
+struct DeletableLayersTests {
+
+    private let canvas = CGSize(width: 1000, height: 800)
+
+    @Test func lockedLayersAreNotDeletable() {
+        var doc = PhotonzDocument(canvasSize: canvas)
+        let open = annotationLayer(name: "Open", frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        let shut = annotationLayer(name: "Shut", frame: CGRect(x: 20, y: 0, width: 10, height: 10),
+                                   locked: true)
+        doc.addLayer(open)
+        doc.addLayer(shut)
+        #expect(doc.deletableLayerIDs(in: [open.id, shut.id]) == [open.id])
+        #expect(doc.deletableLayerIDs(in: [shut.id]).isEmpty)
+    }
+
+    /// The menu row's enablement and the command itself read the same answer,
+    /// so Delete Layer is live exactly when pressing it would remove something.
+    @Test func canDeleteAgreesWithWhatWouldGo() {
+        var doc = PhotonzDocument(canvasSize: canvas)
+        let open = annotationLayer(name: "Open", frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        let shut = annotationLayer(name: "Shut", frame: CGRect(x: 20, y: 0, width: 10, height: 10),
+                                   locked: true)
+        doc.addLayer(open)
+        doc.addLayer(shut)
+        #expect(doc.canDeleteLayers(ids: [open.id]))
+        #expect(doc.canDeleteLayers(ids: [open.id, shut.id]))
+        #expect(!doc.canDeleteLayers(ids: [shut.id]))
+        #expect(!doc.canDeleteLayers(ids: []))
+    }
+
+    /// A lock holds wherever the layer lives, group child included.
+    @Test func honoursTheLockInsideAGroup() {
+        var doc = PhotonzDocument(canvasSize: canvas)
+        let child = annotationLayer(name: "Child", frame: CGRect(x: 0, y: 0, width: 10, height: 10),
+                                    locked: true)
+        let group = Layer(name: "Group", content: .group(GroupContent(children: [child])),
+                          frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        doc.addLayer(group)
+        #expect(doc.deletableLayerIDs(in: [child.id]).isEmpty)
+        #expect(doc.deletableLayerIDs(in: [group.id]) == [group.id])
+    }
+
+    @Test func unknownIDsAreNotDeletable() {
+        var doc = PhotonzDocument(canvasSize: canvas)
+        let open = annotationLayer(name: "Open", frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        doc.addLayer(open)
+        #expect(doc.deletableLayerIDs(in: [UUID(), open.id]) == [open.id])
+    }
+}

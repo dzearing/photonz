@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2080,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T21:49:59.668Z",
-  "updated": "2026-09-08T21:49:59.671Z",
+  "updated": "2026-09-08T21:52:30.276Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-08 while writing the key-press half of UX-PATTERNS section 4. REPRODUCED on the probe, not read off the code. Walk: lock a rectangle from its Layers row, pick it with selectRow, then the deleteLayer action (the same call the menu row makes).\n\n  $ Scripts/playtest.sh Scripts/playtest/locked-layer-delete-command-walk.json\n  1-locked-picked | layers: 2 | copied: none | arrows: [rectangle frame (200,160,360,220)]\n  2-after-delete-command | layers: 1 | copied: none | arrows: []\n\nCause: EditorCommands.swift:604 dims Delete Layer on !hasLayerSelection only, and EditorState+Layout.deleteLayers -> Document.removeLayers (Document.swift:438) prunes by id with no isLocked check. The canvas key path in CanvasKeys.swift:99 DOES check !layer.isLocked, which is why plain Backspace already honours the lock and the two disagree.\n\nAlso note for whoever takes this: once the command honours the lock, plain Backspace on a locked layer is UX-PATTERNS section 4 case 1 (the whole command is dimmed, the key may stay quiet) and needs nothing further, because the Position and Size caption already says on screen that the layer is locked and where to unlock it.\n\nBoth walks are checked in: Scripts/playtest/locked-layer-delete-command-walk.json (the command deleting a locked layer) and Scripts/playtest/locked-layer-key-press-walk.json (Backspace and the arrows on the same locked layer, which DO honour the lock and say nothing).",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-08T21:49:59.670Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T21:52:30.275Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T22:05:00.000Z",
+      "note": "Adversarial review before building. The lock is one promise, so the fix belongs where every delete passes, not on the menu row alone. Found a THIRD door the notes did not name: the Delete in a layer row's right-click menu went straight to removeLayer with no lock check either, and the marquee sweep path (CanvasKeys line 89) deleted locked members too. All three now go through the same filter. Also decided NOT to widen the Position and Size caption to mention deleting: it explains why those fields are dim and delete is not its subject. Raised in the audit instead."
+    },
+    {
+      "t": "2026-09-08T22:06:00.000Z",
+      "note": "TDD: PhotonzDocument.deletableLayerIDs(in:) and canDeleteLayers(ids:) in Document.swift, tests first in Tests/PhotonzCoreTests/LayerMultiSelectTests.swift (suite \"A locked layer survives a delete\", 4 tests, red then green). App layer: EditorState.canDeleteSelectedLayers drives the Layer menu row's disabled state, deleteLayers(ids:) filters and returns without spending an undo step when nothing is deletable, deleteLayer(id:) guards the locked single, LayersPanel row menu Delete is disabled on a locked row."
+    },
+    {
+      "t": "2026-09-08T22:07:00.000Z",
+      "note": "The playtest deleteLayer action now logs which nothing it did (dimmed row vs ran and kept a locked member), matching the frameSelection idiom right above it, because a walk that only prints the step name reads the same either way."
+    },
+    {
+      "t": "2026-09-08T22:08:00.000Z",
+      "note": "Verified on the probe. Scripts/playtest/locked-layer-delete-command-walk.json extended to two rectangles and now covers all three behaviours: step 20 'deleteLayer - menu row dimmed, nothing deleted (locked: Rectangle)' with layers still 3; step 28 'deleteLayer - deleted 1 of 2 picked, kept locked Rectangle' with layers 2. locked-layer-key-press-walk.json still holds at 2 layers throughout, so the key path did not regress. Scripts/test.sh: 4996 tests in 422 suites passed."
+    },
+    {
+      "t": "2026-09-08T22:09:00.000Z",
+      "note": "Could NOT photograph the greyed menu row: a walk's `menus` step reads the menu bar frozen at launch unless the probe has focus, and Ghoztty Accessibility is denied so the probe cannot be brought to the front. The walk proves the grey through the exact value the row is bound to instead. Said so plainly in the audit's rough."
+    },
+    {
+      "t": "2026-09-08T22:10:00.000Z",
+      "note": "Landed in shared code, not Next only. Next has forked nothing here, and a lock that holds in one release and not the other would be the same bug in a new place."
     }
-  ]
+  ],
+  "started": "2026-09-08T21:52:30.274Z"
 }

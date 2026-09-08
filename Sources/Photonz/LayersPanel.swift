@@ -2562,8 +2562,11 @@ private struct LayersRow: View, Equatable {
             get: { display.isLocked },
             set: { _ in editorState.toggleLayerLock(id: id) }))
         Divider()
+        // Dimmed on a locked layer, with the Locked toggle right above it: the
+        // way out of the greyed row is the line you just read.
         Button("Delete", role: .destructive) { editorState.deleteLayer(id: id) }
             .keyboardShortcut(.delete, modifiers: .command)
+            .disabled(display.isLocked)
     }
 }
 
