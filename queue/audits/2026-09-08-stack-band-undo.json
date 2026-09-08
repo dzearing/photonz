@@ -1,0 +1,25 @@
+{
+  "feature": "Undo a stack made from a marquee band",
+  "epic": "ui-building",
+  "summary": "Sweep a band round two things, stack them, and one Undo now takes the stack apart and leaves both where they were, with the band back on screen. It used to take two presses, and the first one looked like it did nothing.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: stacking and undo are on by default.",
+  "try": [
+    { "do": "Draw two rectangles on a blank canvas, one above the other." },
+    { "do": "Press V for the pointer, then drag a band round both of them.", "shot": "2026-09-08-stack-band-undo-0.png" },
+    { "do": "Choose Layer > Stack Selection. They become one stack and the band comes down." },
+    { "do": "Press Command Z once.", "shot": "2026-09-08-stack-band-undo-1.png" },
+    { "do": "Check the Layers list: two rectangles, no group, and the dashed band is back." },
+    { "do": "Press Shift Command Z once. The stack is back and the band is down again." },
+    { "do": "Do the same with Layer > Grid Selection, which takes the same one press."}
+  ],
+  "evaluate": [
+    "Does one press now feel like it stepped back over the whole thing you just did?",
+    "Is having the band come back with the stack right, or would you rather undo left the band alone?",
+    "After the undo the band is back but neither rectangle is picked, so the inspector is empty. Does that read as unfinished to you?",
+    "Does the redo feel like the exact mirror of the undo, or does anything lag behind?"
+  ],
+  "rough": [
+    "The band comes back but the two things it caught are not picked again, so you have to re-sweep before you can stack them a second time. That is how undo has always behaved everywhere (which layers were picked has never been part of an undo step), not something this change introduced, but it is the clumsy part of the flow. Filed as its own task.",
+    "Screen Recording was granted, so both pictures here are real captures of the window, not offscreen renders."
+  ]
+}

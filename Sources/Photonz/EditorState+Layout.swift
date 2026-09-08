@@ -348,6 +348,13 @@ extension EditorState {
     /// one group that arranges them, and a group already picked simply starts
     /// arranging itself. The group is left selected, so the very next thing you
     /// type is its gap.
+    ///
+    /// A band that caught the members no longer describes anything once they
+    /// are one stack, so it comes down WITH the edit rather than as a step of
+    /// its own — the same rule as grouping and batch delete. Recorded
+    /// separately, the first ⌘Z handed back the outline and left the stack
+    /// standing, which reads as undo doing nothing at all (reported
+    /// 2026-09-08).
     func stackSelection(_ kind: GroupLayoutKind) {
         guard canStackSelection else { return }
         let ids = actionableLayerIDs
@@ -357,7 +364,7 @@ extension EditorState {
         guard let madeID else { return }
         groupContextID = document?.parentID(of: madeID)
         selectedLayerID = madeID
-        setSelection(nil, captureLayers: false)
+        setSelection(nil, captureLayers: false, recording: false)
     }
 
     // MARK: - Where the pieces sit when something is resized

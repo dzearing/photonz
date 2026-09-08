@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 250,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T11:00:24.080Z",
-  "updated": "2026-09-08T11:00:24.083Z",
+  "updated": "2026-09-08T11:01:51.166Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-08 with the probe, same shape as the marquee-delete undo bug fixed the same day (task undo-does-not-bring-back-pictures-deleted-with-a).\n\nWalk (written to Scripts/playtest/tmp-stack-undo-walk.json, run and then removed):\n  blank 1200x800, dropImage x2, tool select, drag 80,80 -> 1150,500, action stackSelection, action undo, action undo\n\n  Scripts/playtest.sh Scripts/playtest/tmp-stack-undo-walk.json --no-build\n\nState per step out of log.json:\n  [10 1-band-caught-both] layers: 3  region: 80,80 1070x420  sel: [probe, probe 2]\n  [13 2-stacked]          layers: 2  region: none            sel: [Group]\n  [16 3-one-undo]         layers: 2  region: 80,80 1070x420  sel: [Group]   <- stack still there\n  [19 4-two-undos]        layers: 3  region: 80,80 1070x420  sel: []        <- only now\n\nCAUSE, same one line: Sources/Photonz/EditorState+Layout.swift stackSelection() ends with setSelection(nil, captureLayers: false), which RECORDS the band coming down as its own undo step on top of the edit. groupSelection/ungroupSelection right above it pass recording: false so the band rides with the edit; deleteLayers was fixed to do the same on 2026-09-08. gridSelection may share it: check every command that clears the band after a perform.\n\nThe core contract is pinned in Tests/PhotonzCoreTests/SelectionHistoryTests.swift (aSweepDeleteHandsBackThePicturesAndTheBandInOnePress, bandThenClearAsItsOwnStepBuriesTheDelete).",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-08T11:00:24.082Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T11:01:51.165Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T11:20:00.000Z",
+      "note": "REPRODUCED on the probe with a new permanent walk, Scripts/playtest/stack-from-a-band-walk.json (two rectangles, band round both, stackSelection, undo, redo). Before the fix, stage 3-one-undo read layers: 2, region: 80,50 440x330, tree still holding the Group: only the band came back."
+    },
+    {
+      "t": "2026-09-08T11:21:00.000Z",
+      "note": "Adversarial pass before building: the notes named stackSelection but asked for every command that clears the band after a perform. Audited all of them. groupSelection, ungroupSelection, deleteLayers, the Frames commands and the Components one already pass recording: false. deselect() is the act itself so its own step is right. extendSelection and addSweptLayersToSelection change no document, so nothing can be buried under them. previewCopyDrag clears the band BEFORE its edit, so recording: false there would lose the band for good rather than fix anything, and its order already gives one press back over the copies. The direct `selection = nil` assignments in LayerOps and EditorState bypass history entirely and so ride with their edit by construction. stackSelection was the last of the shape."
+    },
+    {
+      "t": "2026-09-08T11:35:00.000Z",
+      "note": "Fixed: stackSelection now clears the band with recording: false, so grid and stack both ride with the edit. Two core tests pin the contract (aStackMadeFromABandComesApartInOnePress, aStackFromABandRedoesInOnePressToo) alongside the delete pair already there."
+    },
+    {
+      "t": "2026-09-08T11:50:00.000Z",
+      "note": "VERIFIED on the probe. 3-one-undo now reads layers: 3, both rectangles back at (140,90) and (140,220), tree free of the Group, band restored, in one press; 4-redone puts the stack back in one press. Scripts/test.sh green, 4800 tests. stack-and-grid-walk (78 steps) and region-keeps-your-layer-walk (86 steps) both still ok, so no walk was leaning on the extra step. Screen Recording was granted: the audit carries real captures."
+    },
+    {
+      "t": "2026-09-08T11:55:00.000Z",
+      "note": "Adversarial pass on the built thing found one rough edge, reproduced and filed as undo-brings-the-band-back-without-bringing-back (p2): the undo hands back the band but not the picking, so the inspector goes empty and you must re-sweep to stack again. Pre-existing and general, not from this change: SelectionSnapshot carries only the region, never which layers were picked. Recorded in the audit's rough."
+    },
+    {
+      "t": "2026-09-08T11:58:00.000Z",
+      "note": "Audit written: queue/audits/2026-09-08-stack-band-undo.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T11:01:51.164Z"
 }

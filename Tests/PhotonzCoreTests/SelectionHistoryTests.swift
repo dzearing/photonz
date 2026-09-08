@@ -223,6 +223,48 @@ struct SelectionHistoryTests {
         #expect(history.current.layers.count == 2)  // only the second press reaches them
     }
 
+    // MARK: - A sweep that stacks what it caught
+
+    /// Sweeping a band round two pictures and pressing Stack Selection makes
+    /// them one stack and drops the band. Same rule as the delete above: the
+    /// band no longer describes anything, so it rides WITH the stack and one
+    /// ⌘Z takes the stack apart and hands the outline back with it.
+    ///
+    /// Recorded the other way round the first press left the stack standing
+    /// and gave back only the outline, which reads as undo doing nothing at
+    /// all (reported 2026-09-08, `stackSelection`).
+    @Test func aStackMadeFromABandComesApartInOnePress() {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
+                                                        layers: [sweptLayer("left"), sweptLayer("right")]))
+        let band = region(80, 80)
+        history.syncSelection(band) // the band the sweep left on screen
+        let ids = Set(history.current.layers.map(\.id))
+
+        history.perform { _ = $0.stackSelection(ids: ids, kind: .stack) }
+        history.syncSelection(SelectionSnapshot()) // the stack consumed it: no step of its own
+        #expect(history.current.layers.count == 1)
+        #expect(history.current.layers[0].isGroup)
+        #expect(history.selection.region == nil)
+
+        history.undo()
+        #expect(history.current.layers.map(\.name) == ["left", "right"])
+        #expect(history.selection == band)
+    }
+
+    @Test func aStackFromABandRedoesInOnePressToo() {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
+                                                        layers: [sweptLayer("left"), sweptLayer("right")]))
+        history.syncSelection(region(80, 80))
+        let ids = Set(history.current.layers.map(\.id))
+        history.perform { _ = $0.stackSelection(ids: ids, kind: .stack) }
+        history.syncSelection(SelectionSnapshot())
+
+        history.undo()
+        history.redo()
+        #expect(history.current.layers.count == 1)
+        #expect(history.selection.region == nil)
+    }
+
     @Test func aSweepDeleteRedoesInOnePressToo() {
         var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
                                                         layers: [sweptLayer("left"), sweptLayer("right")]))
