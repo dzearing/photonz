@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/measure-lands-in-the-list",
+  "seed": "A walk that drives the app was said to be unable to make a measurement at all: pick up the ruler, click the two points a person would click, and nothing appears. The report was half right. A Distance caliper takes THREE clicks, not two: one on each end, then one more to park the number. Two clicks leave a caliper half placed, and the log used to show an empty list with no word about why. This walk makes a measurement the right way on a blank canvas AND on an opened screenshot, and in between it stops after two clicks on purpose so the log says out loud what the caliper is still waiting for.",
+  "setup": { "forget": ["shapes", "measure", "panel", "tools", "grid"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [300, 240], "to": [560, 420] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "v" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "describe", "stage": "0-armed", "note": "THE SETUP: a blank 900x600 canvas with one drawn rectangle, the ruler in Distance mode. Use the measureMode step, never a bare I: pressing I when Measure is already up cycles the MODE instead of arming it, and that alone is enough to make a walk measure nothing" },
+
+    { "do": "click", "at": [300, 700] },
+    { "do": "click", "at": [500, 700] },
+    { "do": "describe", "stage": "1-two-clicks-is-not-enough", "note": "THE FIRST CLAIM: two clicks leave nothing on the picture ON PURPOSE, and the log now says why: measuring reads \"both feet are down, waiting for a click to park the number\"" },
+
+    { "do": "click", "at": [400, 760] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-blank-canvas-measured", "note": "THE SECOND CLAIM: the third click parks the number and the caliper lands. measures names it: Width = 200 px. The dock has grown a Measurements section" },
+    { "do": "panel", "stage": "2-blank-canvas-measured" },
+    { "do": "snapshot", "name": "1-measured-on-a-blank-canvas" },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "click", "at": [234, 786] },
+    { "do": "click", "at": [480, 786] },
+    { "do": "click", "at": [357, 840] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-screenshot-measured", "note": "THE THIRD CLAIM: the same three clicks on an opened screenshot measure the Save Changes button, so this is not a blank-canvas trick. measures names the reading" },
+    { "do": "panel", "stage": "3-screenshot-measured" },
+    { "do": "snapshot", "name": "2-measured-on-a-screenshot" }
+  ]
+}

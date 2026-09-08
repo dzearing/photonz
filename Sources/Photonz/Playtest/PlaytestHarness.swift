@@ -2767,11 +2767,22 @@ private final class Run {
         try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
         let before = Set(PlaytestHarness.readyEditors.map { ObjectIdentifier($0) })
         coordinator.openWindowAction?(.file(url))
+        // Wait for the window this file opened, and NOTHING else. Reaching for
+        // whatever editor happened to be last as a fallback inside the poll
+        // meant the very first pass always succeeded whenever a document was
+        // already open, so an `open` after a `blank` (or after another `open`)
+        // silently went on driving the OLD window while the log printed the new
+        // file's name. Only once nothing new has arrived at all is the
+        // frontmost editor a sensible answer.
         var opened: EditorState?
-        try await poll("an editor for \(url.lastPathComponent)", within: 15) {
-            opened = PlaytestHarness.readyEditors.last { !before.contains(ObjectIdentifier($0)) }
-                ?? PlaytestHarness.readyEditors.last
-            return opened != nil
+        do {
+            try await poll("an editor for \(url.lastPathComponent)", within: 15) {
+                opened = PlaytestHarness.readyEditors.last { !before.contains(ObjectIdentifier($0)) }
+                return opened != nil
+            }
+        } catch {
+            opened = PlaytestHarness.readyEditors.last
+            if opened == nil { throw error }
         }
         guard let opened else { throw Failure(description: "the editor lost its window") }
         try await adopt(opened, window: size, step: "open", subject: url.lastPathComponent, number: number)
@@ -3917,6 +3928,10 @@ private final class Run {
             "foregroundFill": editor.foregroundFillHex,
             "backgroundFill": editor.backgroundFillHex,
             "measureMode": editor.measureToolMode.rawValue,
+            // What a half-placed caliper is still waiting for. A Distance
+            // caliper takes three clicks, so a walk that clicks twice leaves
+            // an empty `measures` list on purpose; this says so out loud.
+            "measuring": canvas?.playtestMeasuringReport ?? "no canvas",
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",
             "layers": layers.count,

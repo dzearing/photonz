@@ -1,27 +1,57 @@
 {
   "id": "a-scripted-walk-can-place-a-measurement",
   "title": "A scripted walk can place a measurement",
-  "goal": "A walk that drives the app for us cannot make a measurement: it picks up the ruler, clicks the two points a person would click, and nothing appears on the picture. That means the measurements list, which is one of the two lists in the right hand panel, can never be photographed or checked by the loop.",
+  "goal": "A walk that drives the app for us was said to be unable to make a measurement at all. It can: a measurement takes three clicks, one on each end and one more to park the number, and the walk that reported the problem used two. What was really missing is that nothing told you so. A half placed measurement showed up in the walk's log as an empty list, with no word about what it was waiting for, so the loop could not tell a feature that was broken from a walk that stopped early.",
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 1780,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T19:18:28.635Z",
-  "updated": "2026-09-07T19:18:28.635Z",
+  "updated": "2026-09-08T07:18:09.113715Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-07 while measuring the panel edge column. Tried, in the probe build: tool measure + waitFor edgeMap + measureMode distance + two click steps (with and without move steps in between), and a drag step with 12 steps, on a 900x600 blank canvas with two rectangles. In every case the log state came back measures=[] and no Measurements section arrived in the dock. Scripts/playtest/caliper-catches-a-drawn-edge-walk.json uses three click steps over an opened screenshot and appears to work, so the difference may be the blank canvas, the edge map, or a change to how the caliper takes clicks. Start by re-running that walk and seeing whether it still makes a caliper.",
   "acceptance": [
-    "A walk that picks the Measure tool and clicks two points on a blank canvas leaves one measurement on the picture and one row in the Measurements list",
-    "The same walk works on an opened screenshot, not only a blank canvas",
-    "Whatever the fix is, one walk under Scripts/playtest proves it and its log names the measurement it made"
+    "A walk that picks the Measure tool and clicks the three points a person clicks (each end, then once more to park the number) leaves one measurement on the picture and one row in the Measurements list",
+    "The same walk does it on an opened screenshot too, not only a blank canvas",
+    "A walk that stops half way through placing a measurement says in its log what the caliper is still waiting for, instead of showing an empty list with no explanation",
+    "One walk under Scripts/playtest proves all of it and its log names the measurement it made"
   ],
   "log": [
     {
       "t": "2026-09-07T19:18:28.635Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T07:07:22.879Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T07:18:09.113715Z",
+      "note": "Reproduced first, as asked. Re-ran caliper-catches-a-drawn-edge-walk.json in the probe: it still makes calipers, four of them, on a drawn box and on the picture. Then built a walk matching the report (blank 900x600, two rectangles, Measure, two clicks): measures stayed []. Then added a third click: Width = 200 px landed and a Measurements section appeared in the dock. So the reported bug does not exist. A distance caliper takes THREE clicks (foot A, foot B, then one to park the number), and the report used two."
+    },
+    {
+      "t": "2026-09-08T07:18:09.113715Z",
+      "note": "Two real things the report did expose, both fixed. (1) Nothing anywhere said WHY two clicks left nothing: the log printed measures=[] with no word about a half-placed caliper. Added CanvasMeasure.playtestMeasuringReport, surfaced as a `measuring` field in every walk state, reading \"nothing in flight\" / \"foot A is down, waiting for a click on foot B\" / \"both feet are down, waiting for a click to park the number\" / \"dragging an alignment guide\". (2) The harness `open` step, when a document was already open, adopted the OLD window while logging the new file's name: its poll fell back to readyEditors.last on the very first pass, which is never nil once anything is open. Now it waits for a genuinely new editor and only falls back when nothing new ever arrives. That is what stopped acceptance item 2 from being provable in one walk. open-groups-remembered-walk.json and zoom-readout-double-click-walk.json, the only other walks that open twice, both still pass."
+    },
+    {
+      "t": "2026-09-08T07:18:09.113715Z",
+      "note": "Adversarial review: a walk author reaching for `key i` to re-arm the ruler silently cycles the MODE instead, which is the other half of how this looked broken. The measureMode step is idempotent and does the right thing, so the new walk uses it and says so in its own notes rather than a new API being added."
+    },
+    {
+      "t": "2026-09-08T07:18:09.113715Z",
+      "note": "Acceptance item 1 rewritten: it said two clicks, which encoded the report's wrong premise. Whether a drag that lands on release should replace the three clicks is a real product question, but the flag for it already exists and choosing is not this task; filed as decide-whether-letting-go-of-a-drag-should-land."
+    },
+    {
+      "t": "2026-09-08T07:18:09.113715Z",
+      "note": "Proof: Scripts/playtest/measure-lands-in-the-list-walk.json, status ok, 30 steps. Stage 1-two-clicks-is-not-enough reads measuring \"both feet are down, waiting for a click to park the number\"; stage 2-blank-canvas-measured names Width = 200 px with a Measurements section in the dock; stage 3-screenshot-measured names Width = 120 px on the Save Changes button of settings-pane-2x.png. Real screen captures beside both. Scripts/test.sh green (4757 tests)."
+    },
+    {
+      "t": "2026-09-08T07:18:09.113715Z",
+      "note": "Filed with reproductions: measure-a-shape-you-drew-yourself-not-just-a-scr (Size mode measures nothing over a shape you drew, works over a screenshot) and decide-whether-letting-go-of-a-drag-should-land (distance-lands-on-release.json claims a caliper landed in a stage where its own log shows none)."
     }
-  ]
+  ],
+  "started": "2026-09-08T07:07:22.879Z"
 }

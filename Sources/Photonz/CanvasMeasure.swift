@@ -262,6 +262,23 @@ extension CanvasNSView {
         return raw
     }
 
+    /// What a half-placed caliper is still waiting for, in the words a walk's
+    /// log can print. A Distance caliper takes THREE clicks — foot A, foot B,
+    /// then one to park the number — so a walk that stops after two lands
+    /// nothing, and this is the line that says why instead of leaving the log
+    /// showing an empty measurements list with no explanation.
+    var playtestMeasuringReport: String {
+        if alignmentDrag != nil { return "dragging an alignment guide" }
+        switch measurePlacement {
+        case nil:
+            return "nothing in flight"
+        case .firstPlaced:
+            return "foot A is down, waiting for a click on foot B"
+        case .secondPlaced:
+            return "both feet are down, waiting for a click to park the number"
+        }
+    }
+
     /// Whether the caliper lands the moment the measuring line is done, with its
     /// number placed for you (Next, `next-measure-modes` / distance-on-release),
     /// instead of waiting for a third click to set the head.

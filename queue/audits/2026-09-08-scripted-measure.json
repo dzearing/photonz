@@ -1,0 +1,27 @@
+{
+  "feature": "A scripted walk can place a measurement",
+  "epic": "measure-redline",
+  "summary": "A walk that drives the app can now make a measurement and prove it, on a blank canvas and on an opened screenshot, and when a walk stops half way through placing one the log says what the caliper is still waiting for instead of showing an empty list.",
+  "setup": "Nothing to turn on. Run Scripts/playtest.sh Scripts/playtest/measure-lands-in-the-list-walk.json and read /tmp/photonz-playtest/measure-lands-in-the-list/log.json.",
+  "try": [
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/measure-lands-in-the-list-walk.json" },
+    { "do": "Open the log and find stage 1-two-clicks-is-not-enough: measuring reads \"both feet are down, waiting for a click to park the number\"" },
+    { "do": "Find stage 2-blank-canvas-measured: measures names Width = 200 px and the dock has grown a Measurements section" },
+    { "do": "Find stage 3-screenshot-measured: measures names Width = 120 px on the Save Changes button of the opened screenshot", "shot": "2026-09-08-measure-walk-sc.png" },
+    { "do": "In the app, pick the ruler and click three times: one end, the other end, then once more to park the number" },
+    { "do": "Watch the number land and a row appear under Measurements in the right hand panel" }
+  ],
+  "evaluate": [
+    "Reading the log, is it obvious why two clicks left nothing, without going to the code?",
+    "Is three clicks the right number for a distance measurement, or should letting go of a drag be enough?",
+    "When a measurement lands, does the Measurements row tell you enough to recognise which one it is?",
+    "Does the number park somewhere your eye already is, or somewhere you have to hunt for?"
+  ],
+  "rough": [
+    "The bug as reported did not exist. A scripted walk could always place a measurement; it takes THREE clicks, not two, and the walk that reported the problem used two. What was genuinely missing was any word about why, so the fix is a line in the log rather than a change to the tool.",
+    "Two footguns bite walk authors here. Pressing I when the ruler is already up cycles the MODE rather than arming the tool, so a walk that re-arms with a key press quietly ends up in a different mode; use the measureMode step. And an open step that ran after another document silently kept driving the OLD window while the log printed the new file's name, which is fixed.",
+    "Size mode finds nothing over a shape you drew yourself: hover the middle of a rectangle on a blank canvas and the hint still reads \"Click an element for its width and height\" with no highlight. It works over a pasted screenshot. Filed separately.",
+    "Scripts/playtest/distance-lands-on-release.json claims a drag lands a caliper. It does not with the flag as it ships, and the walk goes on to say it did. Filed separately.",
+    "Screen Recording was granted, so the picture above is a real capture of the window, not an offscreen render."
+  ]
+}
