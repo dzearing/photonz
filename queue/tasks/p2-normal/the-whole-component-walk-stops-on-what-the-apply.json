@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1860,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:29:17.752Z",
-  "updated": "2026-09-07T21:29:17.752Z",
+  "updated": "2026-09-08T08:41:47.902Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-07 twice, and it is NOT caused by the room-knob change: with Sources/PhotonzCore/LayerPlacement.swift and ComponentNumberKnob.swift stashed back to ec95e005 it fails identically.\n\n  $ Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json\n  ...\n  {\"error\": \"step 167 (expect): the control called \\\"Apply to Other Versions\\\" reads \\\"Shadow, there is something to carry\\\", not \\\"there is something to carry\\\"\", \"status\": \"failed\", \"steps\": 166}\n\nSources/Photonz/ComponentPanel.swift:1067 passes only the two constants to .playtestControl(\"Apply to Other Versions\", detail:), so the \"Shadow, \" is coming from somewhere else: look at pressTargets() in Sources/Photonz/Playtest/PlaytestHarness.swift, which is what builds the detail an expect step reads. Was already failing in the 13:40 run of 2026-09-07 (no path-12/13/14 pictures in /tmp/photonz-playtest/component-whole-path from it).",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-07T21:29:17.752Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T08:41:47.901Z",
+      "note": "Duplicate of the-whole-component-walk-stops-at-the-apply-butt (same error, same walk, step 167 vs 173), fixed by c830cf0c. Verified today: Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json finishes 181/181 status ok on HEAD. Dropped from the run of the-whole-component-walk-stops-on-a-wording-it-d so it does not take a runner cycle."
     }
   ]
 }

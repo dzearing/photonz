@@ -12426,3 +12426,32 @@ Next / open: a copy's row and an original's row now read almost identically
 twist arrow tell them apart. If that proves too subtle the mark is the thing
 to make louder, not the version. Raised in the audit's `rough` for the user
 to react to.
+
+## 2026-09-08 — the walk that stopped on a wording was already back in step
+
+Task `the-whole-component-walk-stops-on-a-wording-it-d` (epic `ui-components`).
+
+Three tasks had been filed for the same failure: the whole-component walk
+stopping on `Apply to Other Versions` reading "Shadow, there is something to
+carry". One of them was fixed a few hours earlier (c830cf0c, the Effects list
+no longer lends its name to a control two sections away), and the other two
+were filed before that landed.
+
+**Verified rather than assumed.** Ran the walk on HEAD:
+`Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json` finishes
+`{"status":"ok","steps":181}`, with real screen captures written
+(`path-*-sc.png`), so the last three steps of the component path (carry the
+shadow across, undo it) run again. Both acceptance items hold: the two expects
+on that button (`component-whole-path-walk.json:776` and `:828`) still assert
+"there is something to carry" and "every version already matches", so the walk
+did not get quieter to pass. `Scripts/test.sh` green, 4778 tests in 401 suites.
+
+No code changed. Both remaining duplicates are dropped with the reason, so
+neither takes a runner cycle.
+
+**Next.** The three follow-ups filed by c830cf0c are still open: four walks
+that cannot find the Shadow entry in the Effects list, four that stop on a
+panel control scrolled out of reach, and the colour drag onto the Library
+shelf.
+
+**Open question.** None.

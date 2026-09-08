@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1840,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T20:45:01.723Z",
-  "updated": "2026-09-07T20:45:01.723Z",
+  "updated": "2026-09-08T08:41:44.332Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on main at dcd83620 (with the version-row change stashed, so it predates it):\n\n  $ Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json\n  \"error\" : \"step 173 (expect): the control called \\\"Apply to Other Versions\\\" reads \\\"Shadow, there is something to carry\\\", not \\\"there is something to carry\\\"\",\n  \"status\" : \"failed\",\n  \"steps\" : 172\n\nThe control gained a leading section name in its detail (\"Shadow, ...\"). Either the expect string wants the section prefix or the detail should not carry it; the same expect appears more than once in that walk.",
@@ -21,6 +21,27 @@
     {
       "t": "2026-09-07T20:45:01.723Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T08:38:48.025Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T09:05:00.000Z",
+      "note": "Adversarial read first: the two sides are the button's own detail (ComponentPanel.swift:1067 passes only the two constants) and the walk's expect. Neither had changed, so neither side was 'right' to edit; the 'Shadow, ' prefix comes from the walk's rule for which panel row owns a control."
+    },
+    {
+      "t": "2026-09-08T09:06:00.000Z",
+      "note": "Ran it on HEAD (d7c10a8d): PHOTONZ_PLAYTEST_TIMEOUT=420 Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json -> done.json {\"status\":\"ok\",\"steps\":181}. Real screen captures written (path-*-sc.png), so Screen Recording was granted. Both acceptance items hold: the walk finishes ok, and the two expects on 'Apply to Other Versions' (component-whole-path-walk.json:776 and :828) still assert 'there is something to carry' / 'every version already matches'."
+    },
+    {
+      "t": "2026-09-08T09:07:00.000Z",
+      "note": "Already fixed by c830cf0c (2026-09-08 01:29) under the duplicate task the-whole-component-walk-stops-at-the-apply-butt: the Effects list scrolls inside the dock, so an expanded Shadow's off-screen height lay across the Component section and lent its name to that button; PlaytestPanelPress.fields now requires a row to share the control's scrolling area. This task was filed at dcd83620, before that landed. No code change needed. Scripts/test.sh green, 4778 tests in 401 suites."
+    },
+    {
+      "t": "2026-09-08T08:41:44.331Z",
+      "note": "Already fixed. The walk finishes 181/181 status ok on HEAD (verified today by running it on the probe with real screen captures); the 'Shadow, ' prefix was the panel row-naming rule, fixed by c830cf0c under the duplicate task the-whole-component-walk-stops-at-the-apply-butt, which landed after this one was filed. No code change needed; Scripts/test.sh green at 4778 tests."
     }
-  ]
+  ],
+  "started": "2026-09-08T08:38:48.024Z"
 }
