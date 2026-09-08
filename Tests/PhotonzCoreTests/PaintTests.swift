@@ -158,11 +158,15 @@ struct PaintTests {
 
     // MARK: - Slots that can only take a flat color
 
-    @Test func onlyFillAndStrokeOfferGradients() {
+    @Test func aLetterAndAHaloTakeNoGradient() {
         #expect(ColorSlot.fill.acceptsGradient)
         #expect(ColorSlot.stroke.acceptsGradient)
+        // A box's edge is a Border now, and a box's edge always took a ramp
+        // (`OutlineRetirementTests`).
+        #expect(ColorSlot.border.acceptsGradient)
         #expect(ColorSlot.text.acceptsGradient == false)
-        #expect(ColorSlot.border.acceptsGradient == false)
+        #expect(ColorSlot.shadow.acceptsGradient == false)
+        #expect(ColorSlot.glow.acceptsGradient == false)
     }
 }
 
@@ -192,24 +196,24 @@ struct LayerPaintTests {
         #expect(layer.annotation?.fill?.kind == .angular)
     }
 
-    @Test func aStrokeTakesAGradientToo() {
+    @Test func anEdgeTakesAGradientToo() {
         var layer = box(fill: nil)
         var gradient = Paint(hex: "#FF0000")
         gradient.becoming(.linear)
-        layer.setPaint(gradient, for: .stroke)
-        #expect(layer.paint(for: .stroke)?.isGradient == true)
+        layer.setPaint(gradient, for: .border)
+        #expect(layer.paint(for: .border)?.isGradient == true)
         // The flat stand-in stays readable for everything that still needs one.
-        #expect(layer.colorHex(for: .stroke) == "#FF0000")
+        #expect(layer.colorHex(for: .border) == "#FF0000")
     }
 
     @Test func aSlotThatCannotHoldAGradientKeepsTheFlatColor() {
         var layer = box(fill: nil)
-        layer.style.borderWidth = 2
+        layer.style.effects.append(.shadow(ShadowStyle()))
         var gradient = Paint(hex: "#00FF00")
         gradient.becoming(.linear)
-        layer.setPaint(gradient, for: .border)
-        #expect(layer.paint(for: .border)?.isGradient == false)
-        #expect(layer.style.borderColorHex == "#00FF00")
+        layer.setPaint(gradient, forEffectAt: layer.style.effects.count - 1)
+        #expect(layer.paint(forEffectAt: layer.style.effects.count - 1)?.isGradient == false)
+        #expect(layer.colorHex(forEffectAt: layer.style.effects.count - 1) == "#00FF00")
     }
 
     @Test func aFrameSurfaceTakesAGradient() throws {

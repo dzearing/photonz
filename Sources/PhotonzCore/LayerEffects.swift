@@ -120,7 +120,19 @@ public struct BlurEffect: Hashable, Codable, Sendable {
 public struct BorderEffect: Hashable, Codable, Sendable {
     /// How thick the line is, in document points.
     public var width: CGFloat
-    public var colorHex: String
+    /// What the ring is drawn in. Flat by default; it holds a gradient once one
+    /// is chosen, exactly as a shape's outline always could — which matters
+    /// because a shape's outline BECAME one of these
+    /// (`OutlineRetirement.swift`), and a gradient edge somebody drew must not
+    /// flatten just because the app moved where it lives.
+    public var paint: Paint
+    /// The one flat colour the ring stands for. Everything that can only draw
+    /// one reads it: a swatch, a contrast reading, a letter's outline. Setting
+    /// it makes the ring flat, which is what painting a border a colour means.
+    public var colorHex: String {
+        get { paint.hex }
+        set { paint.hex = newValue; paint.kind = .solid }
+    }
     /// Which side of the layer's edge it sits on. This is the whole of what
     /// makes an inner border and an outer border two different things.
     public var position: BorderPosition
@@ -140,9 +152,38 @@ public struct BorderEffect: Hashable, Codable, Sendable {
                 position: BorderPosition = .outside,
                 isOn: Bool = true) {
         self.width = width
-        self.colorHex = colorHex
+        self.paint = Paint(hex: colorHex)
         self.position = position
         self.isOn = isOn
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case width, colorHex, paint, position, isOn
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        width = try c.decode(CGFloat.self, forKey: .width)
+        position = try c.decodeIfPresent(BorderPosition.self, forKey: .position) ?? .outside
+        isOn = try c.decodeIfPresent(Bool.self, forKey: .isOn) ?? true
+        // The flat colour is where it has always been; the ramp goes in beside
+        // it, and only when there is one.
+        if let ramp = try c.decodeIfPresent(Paint.self, forKey: .paint) {
+            paint = ramp
+        } else {
+            paint = Paint(hex: try c.decodeIfPresent(String.self, forKey: .colorHex) ?? "#000000")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(width, forKey: .width)
+        // Always the plain string, so a border written today still draws in a
+        // build that has never heard of a gradient one.
+        try c.encode(colorHex, forKey: .colorHex)
+        if paint.isGradient { try c.encode(paint, forKey: .paint) }
+        try c.encode(position, forKey: .position)
+        try c.encode(isOn, forKey: .isOn)
     }
 
     /// Whether this entry puts anything on the canvas.

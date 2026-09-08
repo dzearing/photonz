@@ -2112,3 +2112,6 @@
 {"t":"2026-09-08T13:56:53.476Z","ev":"task_unblocked","id":"outline-leaves-appearance-and-an-effect-s-colour","decision":"outline-leaves-appearance-and-an-effect-s-colour-with-outline-gone-from-appearanc"}
 {"t":"2026-09-08T13:56:57.669Z","ev":"task_started","id":"outline-leaves-appearance-and-an-effect-s-colour","title":"Outline leaves Appearance, and an effect's colour lives in its settings","priority":"p1-high"}
 {"t":"2026-09-08T13:57:04.436Z","ev":"task_resequenced","id":"outline-leaves-appearance-and-an-effect-s-colour","from":20,"to":1}
+{"t":"2026-09-08T13:59:43.125Z","ev":"task_created","id":"an-effect-row-reads-like-a-small-pane-with-a-che","priority":"p1-high","title":"An effect row reads like a small pane, with a chevron, an eye and a lit title"}
+{"t":"2026-09-08T13:59:43.160Z","ev":"task_resequenced","id":"an-effect-row-reads-like-a-small-pane-with-a-che","from":260,"to":2}
+{"t":"2026-09-08T14:58:03.183Z","ev":"task_created","id":"a-label-can-wear-a-box-as-well-as-an-outline-on","priority":"p2-normal","title":"A label can wear a box as well as an outline on its letters"}

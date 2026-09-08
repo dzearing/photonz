@@ -39,6 +39,33 @@ public enum TextRasterizer {
                                  borderWidth: CGFloat = 0,
                                  borderColorHex: String = "#000000",
                                  scale: CGFloat = 1) -> CGImage? {
+        rasterize(text, size: size,
+                  outlines: borderWidth > 0
+                      ? [TextOutline(width: borderWidth, colorHex: borderColorHex)] : [],
+                  scale: scale)
+    }
+
+    /// One outline round the letters: how thick, and what colour.
+    public struct TextOutline: Hashable, Sendable {
+        public var width: CGFloat
+        public var colorHex: String
+        public init(width: CGFloat, colorHex: String) {
+            self.width = width
+            self.colorHex = colorHex
+        }
+    }
+
+    /// The same words, with as many outlines round the letters as the layer's
+    /// Effects list holds borders.
+    ///
+    /// A label's edge is a Border like every other layer's since the Outline
+    /// row left Appearance (`OutlineRetirement.swift`), and a border is
+    /// countable, so a label can wear a fat pale halo AND a thin dark line the
+    /// way a box can. They are drawn widest first so the narrow one lands on
+    /// top of the fat one, which is the order the list itself paints in.
+    public static func rasterize(_ text: TextContent, size: CGSize,
+                                 outlines: [TextOutline],
+                                 scale: CGFloat = 1) -> CGImage? {
         guard scale > 0, scale.isFinite else { return nil }
         // Words that stay on one line give way here, before anything is laid
         // out, so everything below — the box, the alignment, the halo — is
@@ -67,19 +94,20 @@ public enum TextRasterizer {
             CTFrameDraw(frame, context)
         }
 
-        if borderWidth > 0, text.fontSize > 0 {
-            // Outer border: draw fat border-colored glyphs underneath, then the
-            // normal fill on top, so the stroke shows only OUTSIDE the letters —
-            // it grows outward with the fill intact. (A single centered stroke
-            // would eat into the glyphs.) The underlay stroke is doubled because a
-            // centered stroke extends half its width outward.
-            var underlay = text
-            underlay.colorHex = borderColorHex
-            draw(attributedString(underlay, borderWidth: borderWidth * 2, borderColorHex: borderColorHex))
-            draw(attributedString(text))
-        } else {
-            draw(attributedString(text))
+        // Outer border: draw fat border-colored glyphs underneath, then the
+        // normal fill on top, so the stroke shows only OUTSIDE the letters —
+        // it grows outward with the fill intact. (A single centered stroke
+        // would eat into the glyphs.) The underlay stroke is doubled because a
+        // centered stroke extends half its width outward.
+        if text.fontSize > 0 {
+            for outline in outlines.filter({ $0.width > 0 }).sorted(by: { $0.width > $1.width }) {
+                var underlay = text
+                underlay.colorHex = outline.colorHex
+                draw(attributedString(underlay, borderWidth: outline.width * 2,
+                                      borderColorHex: outline.colorHex))
+            }
         }
+        draw(attributedString(text))
 
         return context.makeImage()
     }

@@ -326,11 +326,34 @@ extension AnnotationBuilder {
         guard var a = layer.annotation,
               let start = layer.annotationEndpoint(.start),
               let end = layer.annotationEndpoint(.end) else { return layer }
-        if let colorHex { a.colorHex = colorHex }
-        // The whole paint, gradient and all. `colorHex` above is the flat way
-        // in and stays exactly what it was.
-        if let paint { a.paint = paint }
-        if let strokeWidth { a.strokeWidth = strokeWidth }
+        var updated = layer
+        // A box and an oval draw no stroke of their own: their edge is a Border
+        // in the Effects list, so what used to set the stroke's colour and
+        // width sets that border's (`OutlineRetirement.swift`). A line and an
+        // arrow ARE their stroke, so theirs is set where it always was.
+        if a.drawsARingRatherThanBeingOne {
+            if let strokeWidth {
+                let hadOne = updated.style.borderEffectIndex != nil
+                updated.style.borderWidth = strokeWidth
+                // A shape gaining an edge takes the colour it is being painted,
+                // or the one it was already wearing, never a black one nobody
+                // asked for.
+                if !hadOne, let index = updated.style.borderEffectIndex {
+                    updated.style.effects[index].border?.paint =
+                        paint ?? colorHex.map { Paint(hex: $0) } ?? a.paint
+                }
+            }
+            if let index = updated.style.borderEffectIndex {
+                if let paint { updated.style.effects[index].border?.paint = paint }
+                else if let colorHex { updated.style.effects[index].border?.colorHex = colorHex }
+            }
+        } else {
+            if let colorHex { a.colorHex = colorHex }
+            // The whole paint, gradient and all. `colorHex` above is the flat
+            // way in and stays exactly what it was.
+            if let paint { a.paint = paint }
+            if let strokeWidth { a.strokeWidth = strokeWidth }
+        }
         if let arrowheadScale { a.arrowheadScale = arrowheadScale }
         if let arrowheadStyle { a.arrowheadStyle = arrowheadStyle }
         if let cornerRadius { a.cornerRadius = cornerRadius }
@@ -339,7 +362,6 @@ extension AnnotationBuilder {
         if let caption { a.caption = caption }
         if let captionFontSize { a.captionFontSize = captionFontSize }
         if let captionRoundness { a.captionRoundness = captionRoundness }
-        var updated = layer
         updated.content = .annotation(a)
         return updating(updated, start: start, end: end)
     }

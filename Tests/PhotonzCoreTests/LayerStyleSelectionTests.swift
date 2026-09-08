@@ -72,8 +72,10 @@ struct LayerStyleSelectionTests {
     }
 
     @Test func borderColorsThatDifferReadMixed() {
-        var a = LayerStyle(); a.borderColorHex = "#FF0000"
-        var b = LayerStyle(); b.borderColorHex = "#00FF00"
+        // A colour needs a ring to be on: setting one where there is no ring
+        // leaves no Border row of nought behind (`OutlineRetirementTests`).
+        var a = LayerStyle(borderWidth: 2, borderColorHex: "#FF0000")
+        var b = LayerStyle(borderWidth: 2, borderColorHex: "#00FF00")
         #expect(selection([a, b]).reading { $0.borderColorHex }.isMixed)
         #expect(selection([a, a]).reading { $0.borderColorHex }.value == "#FF0000")
     }

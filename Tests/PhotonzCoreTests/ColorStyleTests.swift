@@ -14,8 +14,11 @@ struct ColorStyleTests {
                      stroke: String = "#101010") -> Layer {
         var annotation = AnnotationContent(shape: .rectangle, start: .zero,
                                            end: CGPoint(x: 60, y: 30))
+        annotation.strokeWidth = 2
         annotation.colorHex = stroke
         annotation.fillColorHex = fill
+        // Its edge arrives as a Border in the Effects list
+        // (`OutlineRetirementTests`).
         return Layer(name: name, content: .annotation(annotation),
                      frame: CGRect(x: 0, y: 0, width: 60, height: 30))
     }
@@ -31,8 +34,9 @@ struct ColorStyleTests {
 
     // MARK: - The slots a layer offers
 
-    @Test func aBoxOffersItsInteriorAndItsInk() {
-        #expect(box().colorSlots == [.fill, .stroke])
+    @Test func aBoxOffersItsInteriorAndItsEdge() {
+        // Its edge is a Border in the Effects list (`OutlineRetirementTests`).
+        #expect(box().colorSlots == [.fill, .border])
     }
 
     @Test func aLineOffersOnlyItsInk() {
@@ -60,7 +64,7 @@ struct ColorStyleTests {
 
     @Test func aSlotReadsTheColorThatIsThere() {
         #expect(box(fill: "#AABBCC", stroke: "#112233").colorHex(for: .fill) == "#AABBCC")
-        #expect(box(fill: "#AABBCC", stroke: "#112233").colorHex(for: .stroke) == "#112233")
+        #expect(box(fill: "#AABBCC", stroke: "#112233").colorHex(for: .border) == "#112233")
         #expect(box(fill: nil).colorHex(for: .fill) == nil)
         #expect(text(color: "#00FF00").colorHex(for: .text) == "#00FF00")
         #expect(text().colorHex(for: .fill) == nil)
@@ -88,7 +92,7 @@ struct ColorStyleTests {
     @Test func aSavedStyleIsNamedForYouWhenYouSayNothing() {
         var doc = document([box(), box()])
         _ = doc.saveColorStyle(from: doc.layers[0].id, slot: .fill)
-        _ = doc.saveColorStyle(from: doc.layers[1].id, slot: .stroke)
+        _ = doc.saveColorStyle(from: doc.layers[1].id, slot: .border)
         #expect(doc.colorStyles.map(\.name) == ["Color", "Color 2"])
     }
 
@@ -207,7 +211,7 @@ struct ColorStyleTests {
         let styleID = doc.saveColorStyle(from: ids[0], slot: .fill, name: "Accent")!
         #expect(doc.colorStyleUsageCount(id: styleID) == 1)
         _ = doc.bindColorStyle(layerID: ids[1], slot: .fill, styleID: styleID)
-        _ = doc.bindColorStyle(layerID: ids[1], slot: .stroke, styleID: styleID)
+        _ = doc.bindColorStyle(layerID: ids[2], slot: .text, styleID: styleID)
         #expect(doc.colorStyleUsageCount(id: styleID) == 3)
     }
 

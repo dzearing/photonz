@@ -88,8 +88,11 @@ struct BoxCornerRadiusTests {
     func layerReadsTheShape() {
         var style = LayerStyle()
         style.cornerRadius = 0
+        // 20, not 24: the box's line is a ring hugging the box now rather than
+        // a stroke riding a path half its width inside it, so the curve the
+        // panel says is the curve you see (`OutlineRetirementTests`).
         #expect(layer(rectangle(radius: 20, stroke: 8), style: style)
-            .boxCornerRadius(boxSize: size) == 24)
+            .boxCornerRadius(boxSize: size) == 20)
     }
 
     @Test("A rectangle rounded by nothing but the old mask keeps reading that mask")

@@ -57,8 +57,13 @@ struct AnnotationStylesTests {
         styles.setStrokeWidth(8, forShape: .arrow)
         #expect(styles.content(for: .arrow)?.strokeWidth == 8)
         #expect(styles.strokeWidth(forShape: .arrow) == 8)
-        for tool in [Tool.line, .rectangle, .ellipse] {
-            #expect(styles.content(for: tool)?.strokeWidth == AnnotationContent.defaultStrokeWidth)
+        #expect(styles.content(for: .line)?.strokeWidth == AnnotationContent.defaultStrokeWidth)
+        // A box and an oval draw no stroke of their own: their edge arrives as
+        // a Border instead (`OutlineRetirementTests`).
+        for tool in [Tool.rectangle, .ellipse] {
+            #expect(styles.content(for: tool)?.strokeWidth == 0)
+            #expect(styles.arrivingStyle(forShape: tool.annotationShape!)
+                .borderEffects.first?.width == AnnotationContent.defaultStrokeWidth)
         }
     }
 

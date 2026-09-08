@@ -117,7 +117,7 @@ extension EditorState {
             let ids = colorStyleSelection(target).layerIDs
             guard !ids.isEmpty else { return }
             discardDragPreview()
-            perform { _ = $0.setColorHex(layerIDs: ids, effectAt: place, hex: paint.hex) }
+            perform { _ = $0.setPaint(layerIDs: ids, effectAt: place, paint: paint) }
             recordRecentColor(hex: paint.hex)
             return
         }

@@ -41,7 +41,10 @@ extension AnnotationShape {
     /// above it already says which shape it belongs to.
     public func colorTitle(for slot: ColorSlot) -> String? {
         switch (self, slot) {
-        case (.rectangle, .stroke), (.ellipse, .stroke): return "Outline"
+        // A box's and an oval's edge is a Border in the Effects list, so the
+        // row that paints it is called after the ring it paints
+        // (`OutlineRetirement.swift`).
+        case (.rectangle, .border), (.ellipse, .border): return "Outline"
         case (.rectangle, .fill), (.ellipse, .fill): return "Fill"
         case (.arrow, .stroke), (.line, .stroke), (.highlight, .stroke): return "Color"
         default: return nil

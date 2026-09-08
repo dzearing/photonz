@@ -225,8 +225,8 @@ struct ComponentNumberKnobTests {
         #expect(piece(c.doc, in: copy, named: "Row")?.style.cornerRadius == 6)
     }
 
-    /// Thickness on a shape is the line it draws itself, and the old border
-    /// ring goes with it, so a copy never ends up wearing two rings.
+    /// Thickness on a shape is the one ring round it, which is a Border in its
+    /// Effects list (`OutlineRetirementTests`).
     @Test func thicknessWritesTheOneRing() {
         var c = withCard()
         c.doc.updateLayer(id: c.boxID) { $0.style.borderWidth = 5 }
@@ -235,8 +235,8 @@ struct ComponentNumberKnobTests {
         let copy = c.doc.insertComponentInstance(of: c.componentID, at: CGPoint(x: 400, y: 40))!
         _ = c.doc.setInstanceOverride(instance: copy, property: knob, value: .number(9))
         c.doc.syncComponentInstances()
-        #expect(piece(c.doc, in: copy, named: "Box")?.annotation?.strokeWidth == 9)
-        #expect(piece(c.doc, in: copy, named: "Box")?.style.borderWidth == 0)
+        #expect(piece(c.doc, in: copy, named: "Box")?.annotation?.strokeWidth == 0)
+        #expect(piece(c.doc, in: copy, named: "Box")?.style.borderWidth == 9)
     }
 
     /// A number below nought is not a thing anybody means, so the model holds

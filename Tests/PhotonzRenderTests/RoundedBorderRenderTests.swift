@@ -104,22 +104,6 @@ struct RoundedBorderRenderTests {
         #expect(isClear(pixel(image, Int(box.minX) + 4, Int(box.minY) + 4)))
     }
 
-    @Test("A ring round a shape with a thick line of its own sits on the shape's edge")
-    func followsTheSilhouetteOfAStrokedShape() {
-        // The shape strokes a 16pt line inside its edge, so its silhouette at
-        // the frame is round by 30 + 8. A ring that took the raw 30 would cut
-        // the corner off the shape it is meant to hug.
-        let image = render([roundedBox([.border(BorderEffect(width: 6, colorHex: "#00FF00",
-                                                             position: .outside))],
-                                       stroke: 16, position: .inside)])
-        #expect(isGreen(pixel(image, Int(box.minX) - 3, Int(box.midY))))
-        // The corner's centre of curvature is 38 in and 38 down from the box's
-        // top-left, and the ring is the band from 38 to 44 out from it. Nine
-        // points in diagonally is 41 out from that centre, so it is on the ring
-        // — and it is INSIDE a ring that took the raw 30 instead, which would
-        // paint nothing there and cut the corner off the shape it is hugging.
-        #expect(isGreen(pixel(image, Int(box.minX) + 9, Int(box.minY) + 9)))
-    }
 
     @Test("The ring keeps following the corner on a magnified render")
     func roundsAtEveryZoom() {

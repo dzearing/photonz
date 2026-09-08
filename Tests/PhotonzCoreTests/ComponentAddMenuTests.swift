@@ -69,7 +69,7 @@ struct ComponentAddMenuTests {
             "Text \u{201C}Save\u{201D} \u{00B7} Wording",
             "Rectangle \u{00B7} Show or hide",
             "Text \u{201C}Save\u{201D} \u{00B7} Show or hide",
-            "Rectangle \u{00B7} Outline",
+            "Rectangle \u{00B7} Border",
             "Text \u{201C}Save\u{201D} \u{00B7} Text",
             "Rectangle \u{00B7} Corner radius",
             "Rectangle \u{00B7} Thickness",
@@ -123,9 +123,9 @@ struct ComponentAddMenuTests {
     @Test func aRowCarriesTheKnobItWouldMake() {
         let c = saveButton()
         let sections = ComponentAddMenu.sections(for: c.doc.componentPropertyCandidates(componentID: c.componentID))
-        let outline = sections.first { $0.kind == .color }?.rows.first { $0.label.hasSuffix("Outline") }
+        let outline = sections.first { $0.kind == .color }?.rows.first { $0.label.hasSuffix("Border") }
         #expect(outline?.kind == .color)
-        #expect(outline?.slot == .stroke)
+        #expect(outline?.slot == .border)
         #expect(outline?.numberSlot == nil)
         let radius = sections.first { $0.kind == .number }?.rows.first { $0.label.hasSuffix("Corner radius") }
         #expect(radius?.numberSlot == .cornerRadius)

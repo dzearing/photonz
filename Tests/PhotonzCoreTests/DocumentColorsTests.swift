@@ -11,7 +11,6 @@ struct DocumentColorsTests {
                                                                  colorHex: stroke ?? fill,
                                                                  fillColorHex: fill)),
                           frame: CGRect(x: 0, y: 0, width: 10, height: 10))
-        layer.style = LayerStyle()
         return layer
     }
 

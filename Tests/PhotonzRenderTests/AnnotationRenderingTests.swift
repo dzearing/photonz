@@ -39,8 +39,12 @@ struct AnnotationRenderingTests {
         let base = store.register(solidImage(width: 100, height: 100,
                                              r: baseColor.r, g: baseColor.g, b: baseColor.b))
         var doc = PhotonzDocument.withBaseImage(base)
-        doc.addLayer(Layer(name: "Annotation", content: .annotation(annotation),
-                           frame: CGRect(x: 0, y: 0, width: 100, height: 100)))
+        // Built the way the app builds one, so the layer's box hugs the shape.
+        // That matters since a box's edge became a Border round that box
+        // (`OutlineRetirement.swift`): a frame bigger than the shape would ring
+        // the frame instead.
+        doc.addLayer(AnnotationBuilder.layer(content: annotation,
+                                             from: annotation.start, to: annotation.end))
         return DocumentRenderer().render(doc, store: store)!
     }
 

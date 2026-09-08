@@ -43,15 +43,20 @@ struct OutlineWidthTests {
 
     // MARK: - Which layers draw their own outline
 
-    @Test func everyShapeButAHighlightDrawsItsOwnOutline() {
-        for shape in [AnnotationShape.rectangle, .ellipse, .line, .arrow] {
+    @Test func onlyALineAndAnArrowAreTheirOwnStroke() {
+        // A box and an oval wear a ring like everything else does: their edge
+        // is a Border in the Effects list (`OutlineRetirementTests`). A line and
+        // an arrow ARE their stroke, so theirs stays where it was.
+        for shape in [AnnotationShape.line, .arrow] {
             let layer = Layer(name: "S", content: .annotation(AnnotationContent(shape: shape)),
                               frame: CGRect(x: 0, y: 0, width: 10, height: 10))
-            #expect(layer.drawsItsOwnOutline, "\(shape) draws a line round itself")
+            #expect(layer.drawsItsOwnOutline, "\(shape) IS its stroke")
         }
-        let highlight = Layer(name: "H", content: .annotation(AnnotationContent(shape: .highlight)),
+        for shape in [AnnotationShape.rectangle, .ellipse, .highlight] {
+            let layer = Layer(name: "S", content: .annotation(AnnotationContent(shape: shape)),
                               frame: CGRect(x: 0, y: 0, width: 10, height: 10))
-        #expect(!highlight.drawsItsOwnOutline)
+            #expect(!layer.drawsItsOwnOutline, "\(shape) wears a ring")
+        }
     }
 
     @Test func aPictureOrAFrameHasNoOutlineOfItsOwn() {
@@ -108,15 +113,6 @@ struct OutlineWidthTests {
         #expect(!reading.isMixed)
     }
 
-    @Test func thicknessReadsTheRingYouCanActuallySeeWhenBothAreSet() {
-        // The border is drawn over the stroke, so a wider border is the ring.
-        let box = rectangle(strokeWidth: 4, style: border(6))
-        let doc = document([box])
-        #expect(doc.shapeSelection(layerIDs: [box.id]).outlineWidth.value == 6)
-        let thick = rectangle(strokeWidth: 9, style: border(3))
-        let doc2 = document([thick])
-        #expect(doc2.shapeSelection(layerIDs: [thick.id]).outlineWidth.value == 9)
-    }
 
     @Test func twoShapesThatDisagreeReadMixed() {
         let a = rectangle(strokeWidth: 2)
@@ -132,34 +128,17 @@ struct OutlineWidthTests {
         let b = rectangle(strokeWidth: 8)
         var doc = document([a, b])
         #expect(doc.setOutlineWidth(layerIDs: [a.id, b.id], to: 5) == 2)
-        #expect(doc.layer(id: a.id)?.annotation?.strokeWidth == 5)
-        #expect(doc.layer(id: b.id)?.annotation?.strokeWidth == 5)
+        // On the box's edge, which is a Border in its Effects list.
+        #expect(doc.layer(id: a.id)?.style.borderWidth == 5)
+        #expect(doc.layer(id: b.id)?.style.borderWidth == 5)
     }
 
-    @Test func aPullFoldsTheOldBorderOntoTheStrokeColorAndAll() {
-        let box = rectangle(strokeWidth: 0, colorHex: "#FF0000", style: border(6, "#0000FF"))
-        var doc = document([box])
-        doc.setOutlineWidth(layerIDs: [box.id], to: 6)
-        let after = doc.layer(id: box.id)
-        // One ring, and it is the blue one that was on screen.
-        #expect(after?.annotation?.strokeWidth == 6)
-        #expect(after?.annotation?.colorHex == "#0000FF")
-        #expect(after?.style.borderWidth == 0)
-    }
 
-    @Test func aStrokeWiderThanTheOldBorderKeepsItsOwnColor() {
-        let box = rectangle(strokeWidth: 9, colorHex: "#FF0000", style: border(3, "#0000FF"))
-        var doc = document([box])
-        doc.setOutlineWidth(layerIDs: [box.id], to: 9)
-        #expect(doc.layer(id: box.id)?.annotation?.colorHex == "#FF0000")
-        #expect(doc.layer(id: box.id)?.style.borderWidth == 0)
-    }
 
     @Test func pullingItToZeroTakesTheOutlineOffAltogether() {
         let box = rectangle(strokeWidth: 0, style: border(6))
         var doc = document([box])
         doc.setOutlineWidth(layerIDs: [box.id], to: 0)
-        #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == 0)
         #expect(doc.layer(id: box.id)?.style.borderWidth == 0)
     }
 
@@ -167,7 +146,7 @@ struct OutlineWidthTests {
         let box = rectangle(strokeWidth: 3, locked: true)
         var doc = document([box])
         #expect(doc.setOutlineWidth(layerIDs: [box.id], to: 9) == 0)
-        #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == 3)
+        #expect(doc.layer(id: box.id)?.style.borderWidth == 3)
     }
 
     @Test func aPictureIsNotAnOutlineTheRowCanSet() {

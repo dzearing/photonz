@@ -454,12 +454,19 @@ public enum StarterComponents {
             annotation.colorHex = palette.style(stroke ?? .border).colorHex
             var bindings: [ColorStyleBinding] = []
             if let fill { bindings.append(ColorStyleBinding(slot: .fill, styleID: palette.style(fill).id)) }
-            if let stroke {
-                bindings.append(ColorStyleBinding(slot: .stroke, styleID: palette.style(stroke).id))
+            var layer = Layer(name: name, content: .annotation(annotation),
+                              frame: CGRect(origin: CGPoint(x: px(x), y: px(y)), size: size),
+                              colorStyleBindings: bindings, placement: placement)
+            // `Layer.init` has already moved that stroke into the Effects list
+            // as the box's edge (`OutlineRetirement.swift`), so the name goes on
+            // THAT border rather than on a stroke nothing draws.
+            if stroke != nil, let index = layer.style.borderEffectIndex {
+                layer.colorStyleBindings = (layer.colorStyleBindings ?? []) + [
+                    ColorStyleBinding(slot: .border, effectIndex: index,
+                                      styleID: palette.style(stroke!).id)
+                ]
             }
-            return Layer(name: name, content: .annotation(annotation),
-                         frame: CGRect(origin: CGPoint(x: px(x), y: px(y)), size: size),
-                         colorStyleBindings: bindings, placement: placement)
+            return layer
         }
 
         /// A piece of text, hung from its vertical middle so it sits where a

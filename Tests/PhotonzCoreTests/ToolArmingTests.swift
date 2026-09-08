@@ -20,14 +20,16 @@ struct ToolArmingTests {
     // MARK: - Fixtures
 
     private func box(fill: String? = "#3366FF", stroke: String = "#101010",
-                     locked: Bool = false) -> Layer {
-        shape(.rectangle, fill: fill, stroke: stroke, locked: locked)
+                     strokeWidth: CGFloat = 0, locked: Bool = false) -> Layer {
+        shape(.rectangle, fill: fill, stroke: stroke, strokeWidth: strokeWidth, locked: locked)
     }
 
     private func shape(_ kind: AnnotationShape, fill: String? = nil,
-                       stroke: String = "#101010", locked: Bool = false) -> Layer {
+                       stroke: String = "#101010", strokeWidth: CGFloat = 0,
+                       locked: Bool = false) -> Layer {
         var annotation = AnnotationContent(shape: kind, start: .zero,
                                            end: CGPoint(x: 60, y: 30))
+        annotation.strokeWidth = strokeWidth
         annotation.colorHex = stroke
         if kind == .rectangle || kind == .ellipse { annotation.fillColorHex = fill }
         var layer = Layer(name: "\(kind)", content: .annotation(annotation),
@@ -54,9 +56,11 @@ struct ToolArmingTests {
     // MARK: - One shape painted
 
     @Test func paintingOneBoxesOutlineArmsTheBoxTool() {
-        let layer = box(stroke: "#B0184A")
+        // A box's edge is a Border now, so that is the slot the row paints
+        // (`OutlineRetirementTests`).
+        let layer = box(stroke: "#B0184A", strokeWidth: 4)
         let doc = document([layer])
-        let arming = doc.toolArming(layerIDs: [layer.id], slot: .stroke)
+        let arming = doc.toolArming(layerIDs: [layer.id], slot: .border)
         #expect(arming.count == 1)
         #expect(arming.first?.shape == .rectangle)
         #expect(arming.first?.paint?.hex == "#B0184A")
@@ -83,18 +87,21 @@ struct ToolArmingTests {
     // MARK: - Every kind the change reached, and only those
 
     @Test func eachKindIsArmedForItself() {
-        let rect = shape(.rectangle, stroke: "#B0184A")
-        let arrow = shape(.arrow, stroke: "#B0184A")
+        // An arrow IS its stroke and a box wears a Border, so each is read on
+        // the slot it actually has (`OutlineRetirementTests`).
+        let rect = shape(.rectangle, stroke: "#B0184A", strokeWidth: 4)
+        let arrow = shape(.arrow, stroke: "#B0184A", strokeWidth: 4)
         let doc = document([rect, arrow])
-        let arming = doc.toolArming(layerIDs: [rect.id, arrow.id], slot: .stroke)
+        let arming = doc.toolArming(layerIDs: [rect.id], slot: .border)
+            + doc.toolArming(layerIDs: [arrow.id], slot: .stroke)
         #expect(arming.map(\.shape) == [.rectangle, .arrow])
         #expect(arming.allSatisfy { $0.paint?.hex == "#B0184A" })
     }
 
     @Test func aKindNobodyPickedIsNotArmed() {
-        let rect = shape(.rectangle, stroke: "#B0184A")
-        let doc = document([rect, shape(.ellipse)])
-        let arming = doc.toolArming(layerIDs: [rect.id], slot: .stroke)
+        let rect = shape(.rectangle, stroke: "#B0184A", strokeWidth: 4)
+        let doc = document([rect, shape(.ellipse, strokeWidth: 4)])
+        let arming = doc.toolArming(layerIDs: [rect.id], slot: .border)
         #expect(arming.map(\.shape) == [.rectangle])
     }
 
@@ -137,10 +144,10 @@ struct ToolArmingTests {
     // MARK: - Layers that have no say
 
     @Test func aLockedLayerIsNotWhatArmsTheTool() {
-        let locked = shape(.rectangle, stroke: "#101010", locked: true)
-        let live = shape(.rectangle, stroke: "#B0184A")
+        let locked = shape(.rectangle, stroke: "#101010", strokeWidth: 4, locked: true)
+        let live = shape(.rectangle, stroke: "#B0184A", strokeWidth: 4)
         let doc = document([locked, live])
-        let arming = doc.toolArming(layerIDs: [locked.id, live.id], slot: .stroke)
+        let arming = doc.toolArming(layerIDs: [locked.id, live.id], slot: .border)
         #expect(arming.first?.paint?.hex == "#B0184A",
                 "a locked box the pick could not repaint must not make the row read Mixed")
     }
@@ -204,10 +211,18 @@ struct ToolArmingTests {
         #expect(styles == AnnotationStyles())
     }
 
-    @Test func aRingAndInkAreNotTheToolsColorToArm() {
+    @Test func inkAndAHaloAreNotTheToolsColorToArm() {
         var styles = AnnotationStyles()
-        styles.arm(Paint(hex: "#34C759"), slot: .border, forShape: .rectangle)
         styles.arm(Paint(hex: "#34C759"), slot: .text, forShape: .rectangle)
+        styles.arm(Paint(hex: "#34C759"), slot: .shadow, forShape: .rectangle)
+        #expect(styles == AnnotationStyles())
+    }
+
+    /// A ring round an ARROW is not its line, so it arms nothing: only a shape
+    /// that arrives with a Border has an edge that is the tool's own colour.
+    @Test func aRingRoundSomethingThatIsItsLineArmsNothing() {
+        var styles = AnnotationStyles()
+        styles.arm(Paint(hex: "#34C759"), slot: .border, forShape: .arrow)
         #expect(styles == AnnotationStyles())
     }
 

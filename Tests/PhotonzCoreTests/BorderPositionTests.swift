@@ -115,7 +115,10 @@ struct BorderPositionTests {
     @Test("An outside stroke makes the shape's reach a whole width bigger all round")
     func shapeReachGrows() {
         let box = rectangle(width: 6, position: .outside)
-        #expect(box.contentOutset == 6)
+        // The box's edge is a Border in its Effects list, so the room it needs
+        // is the ring's reach rather than padding baked into the shape's own
+        // bitmap (`OutlineRetirementTests`).
+        #expect(box.contentOutset == 0)
         #expect(box.outlineOutset == 6)
         #expect(box.renderBounds == box.localBounds.insetBy(dx: -6, dy: -6))
         // The frame itself does not move, so clicking still follows the shape.
@@ -125,7 +128,7 @@ struct BorderPositionTests {
     @Test("A centred stroke reaches half as far")
     func centredReachGrows() {
         let box = rectangle(width: 6, position: .center)
-        #expect(box.contentOutset == 3)
+        #expect(box.outlineOutset == 3)
         #expect(box.renderBounds == box.localBounds.insetBy(dx: -3, dy: -3))
     }
 
@@ -171,56 +174,9 @@ struct BorderPositionTests {
 
     // MARK: One control over a mixed selection
 
-    @Test("One pick reaches a shape and a picture, each the way it draws")
-    func setsBothKinds() {
-        var doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400))
-        let box = rectangle(width: 6, position: .inside)
-        let shot = picture(width: 5, position: .inside)
-        doc.addLayer(box)
-        doc.addLayer(shot)
 
-        let changed = doc.setOutlinePosition(layerIDs: [box.id, shot.id], to: .outside)
-        #expect(changed == 2)
-        #expect(doc.layer(id: box.id)?.annotation?.strokePosition == .outside)
-        #expect(doc.layer(id: shot.id)?.style.borderPosition == .outside)
-        #expect(doc.outlinePositionReading(layerIDs: [box.id, shot.id]).value == .outside)
-        #expect(doc.outlinePositionReading(layerIDs: [box.id, shot.id]).isMixed == false)
 
-        // Setting it again changes nothing, so a menu that reopens on the same
-        // answer is not an undo step.
-        #expect(doc.setOutlinePosition(layerIDs: [box.id, shot.id], to: .outside) == 0)
-    }
 
-    @Test("Two layers that disagree read as mixed")
-    func mixedReading() {
-        var doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400))
-        let inside = rectangle(width: 6, position: .inside)
-        let outside = rectangle(width: 6, position: .outside)
-        doc.addLayer(inside)
-        doc.addLayer(outside)
-        #expect(doc.outlinePositionReading(layerIDs: [inside.id, outside.id]).isMixed)
-    }
-
-    @Test("A locked layer keeps the line where it had it")
-    func locksAreLeftAlone() {
-        var doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400))
-        var box = rectangle(width: 6, position: .inside)
-        box.isLocked = true
-        doc.addLayer(box)
-        #expect(doc.setOutlinePosition(layerIDs: [box.id], to: .outside) == 0)
-        #expect(doc.layer(id: box.id)?.annotation?.strokePosition == .inside)
-    }
-
-    @Test("A line is not offered a position, so a pick over one leaves it alone")
-    func arrowsAreLeftAlone() {
-        var doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400))
-        let arrow = Layer(name: "Arrow",
-                          content: .annotation(AnnotationContent(shape: .arrow, strokeWidth: 6)),
-                          frame: CGRect(x: 0, y: 0, width: 80, height: 40))
-        doc.addLayer(arrow)
-        #expect(doc.layer(id: arrow.id)?.hasOutlinePosition == false)
-        #expect(doc.setOutlinePosition(layerIDs: [arrow.id], to: .outside) == 0)
-    }
 }
 
 /// The tool remembers where you put the line, the way it remembers how thick

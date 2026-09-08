@@ -83,9 +83,10 @@ public struct ToolColorStyleNotice: Hashable, Sendable {
     private static func partsTitle(_ slot: ColorSlot) -> String {
         switch slot {
         case .fill: return "fills"
-        case .stroke: return "outlines"
+        // A ring round a shape IS its outline, and that is the word a person
+        // reaches for (`OutlineRetirement.swift`).
+        case .stroke, .border: return "outlines"
         case .text: return "text"
-        case .border: return "borders"
         case .shadow: return "shadows"
         case .glow: return "glows"
         }
@@ -101,7 +102,7 @@ public struct ToolColorStyleNotice: Hashable, Sendable {
     public var part: String {
         switch (shape, slot) {
         case (.rectangle, .fill), (.ellipse, .fill): return "The \(shape.title)\u{2019}s inside"
-        case (.rectangle, .stroke), (.ellipse, .stroke): return "The \(shape.title)\u{2019}s outline"
+        case (.rectangle, .border), (.ellipse, .border): return "The \(shape.title)\u{2019}s outline"
         default: return "The \(shape.title)"
         }
     }
@@ -173,7 +174,11 @@ public extension PhotonzDocument {
                                    styles: AnnotationStyles) -> ToolColorStyleNotice? {
         guard let shape = layer.annotation?.shape else { return nil }
         for slot in layer.colorSlots {
-            guard let id = styles.colorStyleID(forShape: shape, slot: slot),
+            // The tool keeps a box's outline colour under `.stroke`, which is
+            // where a box's edge used to live; on the layer it is the Border in
+            // its Effects list (`OutlineRetirement.swift`).
+            let armedAs: ColorSlot = (slot == .border && shape.arrivesWithABorder) ? .stroke : slot
+            guard let id = styles.colorStyleID(forShape: shape, slot: armedAs),
                   layer.paint(for: slot) != nil else { continue }
             let kind: ToolColorStyleNotice.Kind
             if colorStyle(id: id) == nil {

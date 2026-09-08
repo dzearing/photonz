@@ -1,57 +1,53 @@
 import CoreGraphics
 import Foundation
 
-/// ONE width for the line round a layer.
+/// ONE width for the line round a layer, and ONE place it lives.
 ///
-/// A rectangle used to offer two of them: Thickness in the shape's own section
-/// and Border under Effects. They are the same ring. The shape strokes its
-/// outline just inside the layer box, the border paints a ring hugging that
-/// same box, and at the same width the two land on identical pixels — so with
+/// A rectangle used to offer two: Thickness in the shape's own section and
+/// Border under Effects. They are the same ring — a shape's stroke and a ring
+/// hugging the same box land on identical pixels at the same width — so with
 /// both set the border simply covered the stroke and the second slider silently
-/// won, in a different color.
+/// won, in a different colour.
 ///
-/// So a layer that draws a line round itself has one control for it, its own,
-/// and a layer with no line of its own — a picture, a label, a frame, a group,
-/// a zoom callout, a highlight — keeps the Border row. An ellipse joins the
-/// rectangle in that: its added border follows the oval now, at the same width
-/// and the same position landing on the same pixels its own outline draws
-/// (`RingShape.swift`). A line and an arrow still do not: their stroke IS the
-/// layer, so a ring round the bounding box is an accident of how it is painted
-/// rather than something anyone reaches for.
-///
-/// Shapes drawn before this change can still carry a border. Nothing is folded
-/// just by opening the document, so those keep the look they were saved with;
-/// the Thickness row reads whichever ring is actually visible, and the first
-/// pull moves it onto the stroke, carrying its color so the box does not change
-/// color under the hand.
+/// That is settled now: a box and an oval have no stroke of their own at all.
+/// Their edge is a Border in the Effects list, like the ring round a picture,
+/// like every other line round every other layer (`OutlineRetirement.swift`).
+/// A line and an arrow are the exception, because their stroke IS the layer:
+/// taking it off would be a delete, so its width stays in the shape's own
+/// settings beside the ending and the head size.
 extension Layer {
 
-    /// True when a line round this layer is part of what it IS, rather than
-    /// styling laid over it. Every shape but a highlight, which is a filled
-    /// wash with no outline to set.
+    /// True when the stroke IS the layer rather than a line round it: a line
+    /// and an arrow, and nothing else.
+    ///
+    /// A box and an oval used to be here too, back when they strokes their own
+    /// path. Their edge is a Border in the Effects list now, exactly like the
+    /// ring round a picture, so there is one kind of edge in the app and this
+    /// answers for the two shapes that do not have one at all
+    /// (`OutlineRetirement.swift`).
     public var drawsItsOwnOutline: Bool {
         guard let annotation else { return false }
-        return annotation.shape != .highlight
+        return !annotation.drawsARingRatherThanBeingOne && annotation.shape != .highlight
     }
 
-    /// The width of the one line round this shape, whichever way it is drawn.
-    ///
-    /// The wider of the two, because the border is painted OVER the stroke: a
-    /// 4pt stroke under a 6pt border is a 6pt ring, and reading 4 there would
-    /// be a row denying what is plainly on the canvas.
+    /// The width of the one line round this layer, wherever that line lives:
+    /// the stroke a line or an arrow IS, or the ring nearest the eye in the
+    /// Effects list.
     public var outlineWidth: CGFloat {
-        guard let annotation else { return style.borderWidth }
+        guard let annotation, drawsItsOwnOutline else { return style.borderWidth }
         return max(annotation.strokeWidth, style.borderWidth)
     }
 
-    /// The color that ring is painted, for the same reason: the border covers
-    /// the stroke, so when it is the wider of the two it is the color you see.
-    var outlineColorHex: String {
-        guard let annotation else { return style.borderColorHex }
-        return style.borderWidth >= annotation.strokeWidth && style.borderWidth > 0
-            ? style.borderColorHex
-            : annotation.colorHex
+    /// What that line is drawn in, gradient and all.
+    public var outlinePaint: Paint {
+        guard let annotation, drawsItsOwnOutline else {
+            return style.borderEffects.first?.paint ?? Paint(hex: style.borderColorHex)
+        }
+        return annotation.paint
     }
+
+    /// The one flat colour it stands for.
+    var outlineColorHex: String { outlinePaint.hex }
 }
 
 extension ShapeSelection.Member {
@@ -75,11 +71,11 @@ extension ShapeSelection {
 
 extension LayerStyleSelection {
 
-    /// The picked layers the Border row can honestly reach: the ones with no
-    /// line of their own. A rectangle picked alongside a screenshot takes the
-    /// border off its own row and leaves the screenshot's alone.
+    /// The picked layers the old Border row can honestly reach: the ones with
+    /// no Thickness of their own. A rectangle picked alongside a screenshot
+    /// takes the border off its own row and leaves the screenshot's alone.
     public var borders: LayerStyleSelection {
-        LayerStyleSelection(members: members.filter { !$0.drawsItsOwnOutline },
+        LayerStyleSelection(members: members.filter { !$0.hasItsOwnThickness },
                             selectionCount: selectionCount)
     }
 }
@@ -98,7 +94,7 @@ extension PhotonzDocument {
         let width = max(0, width)
         var changed = 0
         for id in layerIDs {
-            guard let layer = layer(id: id), !layer.isLocked, layer.drawsItsOwnOutline
+            guard let layer = layer(id: id), !layer.isLocked, layer.hasOutlineThickness
             else { continue }
             // The border goes with it. Two rings round one box, one of them
             // hidden under the other, is the thing this row exists to end, and
@@ -111,48 +107,15 @@ extension PhotonzDocument {
     }
 }
 
-extension PhotonzDocument {
+extension Layer {
 
-    /// What the Outline row's Width reads over a set of picked layers,
-    /// whichever ring each one draws: the number they all wear, or that they
-    /// differ.
+    /// Whether a Thickness has anything to set on this layer.
     ///
-    /// One reading for both kinds because one row asks the question. A
-    /// rectangle picked with a screenshot used to get two Width sliders under
-    /// two rows called Outline, and the only way to tell which one moved which
-    /// layer was to drag it and watch.
-    public func outlineWidthReading(layerIDs: [UUID]) -> StyleReading<CGFloat> {
-        let widths = layerIDs.compactMap { layer(id: $0) }
-            .filter { !$0.isLocked }
-            .map(\.outlineWidth)
-        guard let first = widths.first else { return StyleReading(value: nil, isMixed: false) }
-        return StyleReading(value: first, isMixed: widths.dropFirst().contains { $0 != first })
-    }
-
-    /// One pull on the Outline row's Width, every picked layer, whichever ring
-    /// each one draws. Returns how many changed, so a caller can tell a no-op
-    /// from an edit.
-    ///
-    /// `setOutlineWidth` stays the shape-only path: it is what a component's
-    /// number knob and the shape sliders call, and those must not start
-    /// putting rings round pictures. This is the row that promises to reach
-    /// everything picked, so it is the one that does.
-    @discardableResult
-    public mutating func setRingWidth(layerIDs: [UUID], to width: CGFloat) -> Int {
-        let width = max(0, width)
-        var changed = 0
-        for id in layerIDs {
-            guard let layer = layer(id: id), !layer.isLocked,
-                  layer.outlineWidth != width else { continue }
-            updateLayer(id: id) { target in
-                if target.drawsItsOwnOutline {
-                    target.setOutlineWidth(width)
-                } else {
-                    target.style.borderWidth = width
-                }
-            }
-            changed += 1
-        }
-        return changed
+    /// Every shape but a highlight: a line and an arrow have a stroke, a box
+    /// and an oval have an edge in their Effects list, and a highlight is a
+    /// wash with neither.
+    public var hasOutlineThickness: Bool {
+        guard let annotation else { return false }
+        return annotation.shape != .highlight
     }
 }

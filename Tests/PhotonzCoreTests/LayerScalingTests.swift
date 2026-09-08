@@ -118,9 +118,12 @@ struct LayerScalingTests {
                           frame: .zero)
         let doubled = group.resized(to: group.localBounds.applying(
             CGAffineTransform(scaleX: 3, y: 3)))
-        let after = doubled.children.first?.annotation
-        #expect(after?.strokeWidth == 4)
-        #expect(after?.cornerRadius == 6)
+        let after = doubled.children.first
+        // The box's edge is a Border in its Effects list now
+        // (`OutlineRetirementTests`), and a ring keeps its point size the way
+        // the stroke it came from did.
+        #expect(after?.style.borderEffects.first?.width == 4)
+        #expect(after?.annotation?.cornerRadius == 6)
     }
 
     @Test("A shape's drawn span scales with the group")

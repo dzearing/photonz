@@ -181,21 +181,23 @@ struct ContentSelectionTests {
 
     @Test func shapesSharingAThicknessReadIt() {
         let doc = document([shape(.rectangle, stroke: 6), shape(.arrow, stroke: 6)])
-        let reading = doc.shapeSelection(layerIDs: doc.layers.map(\.id)).number { $0.strokeWidth }
+        // Read through `outlineWidth`, which finds each shape's line wherever
+        // it lives: an arrow's stroke, a box's Border (`OutlineRetirementTests`).
+        let reading = doc.shapeSelection(layerIDs: doc.layers.map(\.id)).outlineWidth
         #expect(reading.value == 6)
         #expect(!reading.isMixed)
     }
 
     @Test func shapesThatDifferReadMixed() {
         let doc = document([shape(.rectangle, stroke: 2), shape(.rectangle, stroke: 8)])
-        #expect(doc.shapeSelection(layerIDs: doc.layers.map(\.id)).number { $0.strokeWidth }.isMixed)
+        #expect(doc.shapeSelection(layerIDs: doc.layers.map(\.id)).outlineWidth.isMixed)
     }
 
     @Test func aLockedShapeIsLeftAlone() {
         let doc = document([shape(.rectangle, stroke: 2), shape(.rectangle, stroke: 8, locked: true)])
         let selection = doc.shapeSelection(layerIDs: doc.layers.map(\.id))
         #expect(selection.count == 1)
-        #expect(selection.number { $0.strokeWidth }.value == 2)
+        #expect(selection.outlineWidth.value == 2)
     }
 
     // MARK: - Where the line's width lives

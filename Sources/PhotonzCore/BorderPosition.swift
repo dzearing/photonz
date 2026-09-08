@@ -66,38 +66,28 @@ extension AnnotationContent {
 
 extension Layer {
 
-    /// Whether the Outline row can offer this layer a Position at all: a shape
-    /// with an edge, or anything that takes a ring round its box. Text is out,
-    /// because its outline follows the letters rather than the box, so inside
-    /// and outside would mean nothing on it.
+    /// Whether a Position means anything on this layer: a shape with an edge,
+    /// or anything that takes a ring round its box. Text is out, because a
+    /// border on a label follows the letters rather than the box, so inside and
+    /// outside would mean nothing on it.
     public var hasOutlinePosition: Bool {
         if let annotation { return annotation.shape.hasOutlinePosition }
         if case .text = content { return false }
         return true
     }
 
-    /// Where this layer's one line sits, whichever ring it draws.
-    ///
-    /// One reading for both kinds, the way `outlineWidth` is one reading: a
-    /// shape strokes its own path and a picture takes a ring round its box, and
-    /// nothing a person does differs (`OutlineWidth.swift`).
-    public var outlinePosition: BorderPosition {
-        guard let annotation, annotation.shape.hasOutlinePosition else { return style.borderPosition }
-        // The border is painted OVER the stroke, so when it is the wider of the
-        // two it is the ring you can see, and its position is the one the row
-        // has to report.
-        return style.borderWidth > annotation.strokeWidth
-            ? style.borderPosition
-            : annotation.strokePosition
-    }
+    /// Where this layer's one line sits: the side of the edge the ring nearest
+    /// the eye is on. Every layer's edge is a Border in the Effects list now
+    /// (`OutlineRetirement.swift`), so there is one answer rather than two.
+    public var outlinePosition: BorderPosition { style.borderPosition }
 
     /// How far this layer's outline reaches past its own frame, in document
     /// points. Zero unless something is set to `center` or `outside`.
     ///
-    /// Both rings count, because a layer can carry both: a legacy shape with a
-    /// stroke of its own AND a border ring left by the old Effects slider.
+    /// Every ring counts, and the furthest of them decides: a layer can wear
+    /// several Borders, and a line or an arrow still strokes its own path.
     public var outlineOutset: CGFloat {
-        var reach = style.borderPosition.outset(width: style.borderWidth)
+        var reach = style.borderEffectOutset
         if let annotation { reach = max(reach, annotation.strokeOutset) }
         return reach
     }
@@ -113,47 +103,5 @@ extension Layer {
     /// by, what a dirty rect grows by, and what `renderBounds` starts from.
     public var reachPadding: CGFloat {
         (style.previewPadding + contentOutset).rounded(.up)
-    }
-}
-
-extension PhotonzDocument {
-
-    /// What the Outline row's Position reads over a set of picked layers,
-    /// whichever ring each one draws: the answer they all wear, or that they
-    /// differ.
-    public func outlinePositionReading(layerIDs: [UUID]) -> StyleReading<BorderPosition> {
-        let positions = layerIDs.compactMap { layer(id: $0) }
-            .filter { !$0.isLocked && $0.hasOutlinePosition }
-            .map(\.outlinePosition)
-        guard let first = positions.first else { return StyleReading(value: nil, isMixed: false) }
-        return StyleReading(value: first,
-                            isMixed: positions.dropFirst().contains { $0 != first })
-    }
-
-    /// One pick on the Outline row's Position, every picked layer, whichever
-    /// ring each one draws. Returns how many changed, so a caller can tell a
-    /// no-op from an edit.
-    ///
-    /// A shape gets it on its own stroke and everything else on its border
-    /// ring, exactly the way `setRingWidth` splits, so one control means one
-    /// thing however mixed the selection is.
-    @discardableResult
-    public mutating func setOutlinePosition(layerIDs: [UUID], to position: BorderPosition) -> Int {
-        var changed = 0
-        for id in layerIDs {
-            guard let layer = layer(id: id), !layer.isLocked, layer.hasOutlinePosition,
-                  layer.outlinePosition != position else { continue }
-            updateLayer(id: id) { target in
-                if var annotation = target.annotation, annotation.shape.hasOutlinePosition {
-                    annotation.strokePosition = position
-                    target.content = .annotation(annotation)
-                }
-                // The border ring moves too, so a layer carrying both never
-                // ends up with one line inside and one outside.
-                target.style.borderPosition = position
-            }
-            changed += 1
-        }
-        return changed
     }
 }

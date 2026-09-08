@@ -59,6 +59,17 @@ will arrive as one more row with a switch, a colour and its own settings.
 
 ### The parts a layer has
 
+> **Superseded on 2026-09-08: Outline left Appearance.** Border became something
+> you ADD in Effects, and a layer then had two ways to draw a line round itself
+> with no way to tell which one you were looking at (reported by the user on
+> 2026-09-07 and again on 2026-09-08). So a layer has NO Outline part any more:
+> its edge is a Border in the Effects list, one of a list it can hold several
+> of, with its own colour, width and position. A freshly drawn box still arrives
+> with its edge already listed, so nothing you draw looks different — the user
+> settled that on the decision card. See `OutlineRetirement.swift`.
+>
+> The rest of this section is kept for the record of what the split used to be.
+
 | Layer | Parts |
 | --- | --- |
 | Rectangle, ellipse | Fill · Outline · Shadow |

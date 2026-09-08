@@ -69,8 +69,12 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     /// that quietly does nothing is worse than no row.
     public var acceptsGradient: Bool {
         switch self {
-        case .fill, .stroke: return true
-        case .text, .border, .shadow, .glow: return false
+        // A border takes one because a shape's outline always could, and a
+        // shape's outline IS a border now (`OutlineRetirement.swift`). A shadow
+        // and a glow are light rather than paint, and a letter's ink has no box
+        // for a ramp to run across.
+        case .fill, .stroke, .border: return true
+        case .text, .shadow, .glow: return false
         }
     }
 
@@ -227,7 +231,10 @@ extension Layer {
         switch content {
         case .annotation(let annotation):
             switch annotation.shape {
-            case .rectangle, .ellipse: slots = [.fill, .stroke]
+            // A box and an oval have no stroke of their own since the Outline
+            // row left Appearance: their edge is a Border in the Effects list,
+            // so its colour is the border's (`OutlineRetirement.swift`).
+            case .rectangle, .ellipse: slots = [.fill]
             case .line, .arrow, .highlight: slots = [.stroke]
             }
         case .text: slots = [.text]
@@ -249,12 +256,12 @@ extension Layer {
     ///
     /// A border pointed at a saved color keeps its slot at zero width, so
     /// taking the border off for a moment does not quietly lose the name.
+    ///
+    /// The ring in question is the one nearest the eye in the Effects list,
+    /// since a layer has no ring of its own any more (`OutlineRetirement.swift`).
     var hasBorderColor: Bool {
-        style.borderWidth > 0
-            // An EFFECT's border colour wearing a name is not this ring, and a
-            // Border row appearing in the Color section because somebody named
-            // an added border's colour would be a row painting nothing.
-            || (colorStyleBindings ?? []).contains { $0.slot == .border && $0.effectIndex == nil }
+        guard let index = style.borderEffectIndex else { return false }
+        return style.borderWidth > 0 || colorStyleID(forEffectAt: index) != nil
     }
 
     /// The color in a slot right now, or nil when the slot is empty (a box with
@@ -267,6 +274,9 @@ extension Layer {
         case (.fill, .group(let group)):
             return group.isFrame ? group.backgroundHex : nil
         case (.stroke, .annotation(let annotation)):
+            // A box and an oval have no stroke to report: their edge is a
+            // Border in the Effects list (`OutlineRetirement.swift`).
+            guard !annotation.drawsARingRatherThanBeingOne else { return nil }
             return annotation.colorHex
         case (.text, .text(let text)):
             return text.colorHex
@@ -289,7 +299,10 @@ extension Layer {
         case (.fill, .group(let group)):
             return group.isFrame ? group.background : nil
         case (.stroke, .annotation(let annotation)):
+            guard !annotation.drawsARingRatherThanBeingOne else { return nil }
             return annotation.paint
+        case (.border, _):
+            return hasBorderColor ? style.borderEffects.first?.paint : nil
         default:
             return colorHex(for: slot).map { Paint(hex: $0) }
         }
@@ -314,6 +327,10 @@ extension Layer {
         case (.stroke, .annotation(var annotation)):
             annotation.paint = paint
             content = .annotation(annotation)
+        case (.border, _):
+            // The ring nearest the eye, ramp and all.
+            guard let index = style.borderEffectIndex else { return }
+            style.updateBorderEffect(at: index) { $0.paint = paint }
         default:
             setColorHex(paint.hex, for: slot)
         }
@@ -367,8 +384,16 @@ extension Layer {
     }
 
     /// The style painting a slot, or nil when the color there is the layer's own.
+    ///
+    /// `.border` means the ring nearest the eye, and that ring is an entry in
+    /// the Effects list, so the name lives on the entry
+    /// (`OutlineRetirement.swift`). Everything that speaks of a layer's border
+    /// colour reads and writes the same one name that way.
     public func colorStyleID(for slot: ColorSlot) -> UUID? {
-        colorStyleBindings?.first { $0.slot == slot && $0.effectIndex == nil }?.styleID
+        if slot == .border, let index = style.borderEffectIndex {
+            return colorStyleID(forEffectAt: index)
+        }
+        return colorStyleBindings?.first { $0.slot == slot && $0.effectIndex == nil }?.styleID
     }
 
     /// Whether any of this layer's colors comes from a style.
@@ -377,6 +402,10 @@ extension Layer {
     /// Points a slot at a style. The color itself is written by the document,
     /// which is the only thing that knows what the style is painted.
     mutating func bindColorStyle(_ styleID: UUID, for slot: ColorSlot) {
+        if slot == .border, let index = style.borderEffectIndex {
+            bindColorStyle(styleID, forEffectAt: index)
+            return
+        }
         var bindings = (colorStyleBindings ?? [])
             .filter { !($0.slot == slot && $0.effectIndex == nil) }
         bindings.append(ColorStyleBinding(slot: slot, styleID: styleID))
@@ -385,6 +414,10 @@ extension Layer {
 
     /// Lets go of a slot's style, keeping the color it is wearing.
     mutating func unbindColorStyle(for slot: ColorSlot) {
+        if slot == .border, let index = style.borderEffectIndex {
+            unbindColorStyle(forEffectAt: index)
+            return
+        }
         let remaining = (colorStyleBindings ?? [])
             .filter { !($0.slot == slot && $0.effectIndex == nil) }
         // Back to nothing rather than an empty list, so a layer that never
@@ -425,18 +458,31 @@ extension Layer {
         style.effect(at: index)?.colorHex
     }
 
-    /// The whole paint an effect's colour stands for. Flat today, always: no
-    /// effect draws a ramp, so this is the one flat colour dressed as a paint
-    /// for the rows that speak in paints.
+    /// The whole paint an effect's colour stands for. A border can hold a ramp,
+    /// because a shape's outline always could and a shape's outline IS a border
+    /// now (`OutlineRetirement.swift`); a shadow and a glow are light rather
+    /// than paint, so theirs is the one flat colour dressed as a paint.
     public func paint(forEffectAt index: Int) -> Paint? {
-        colorHex(forEffectAt: index).map { Paint(hex: $0) }
+        if let border = style.effect(at: index)?.border { return border.paint }
+        return colorHex(forEffectAt: index).map { Paint(hex: $0) }
     }
 
     /// Paints the effect at a place in the list. An entry with no colour is
     /// left alone rather than gaining one.
     public mutating func setColorHex(_ hex: String, forEffectAt index: Int) {
-        guard style.effect(at: index)?.colorSlot != nil else { return }
-        style.updateEffect(at: index) { $0.colorHex = hex }
+        setPaint(Paint(hex: hex), forEffectAt: index)
+    }
+
+    /// The same, with the whole paint. A ramp handed to an effect that cannot
+    /// draw one keeps its flat colour rather than being refused, exactly as
+    /// every other slot that cannot take a gradient does.
+    public mutating func setPaint(_ paint: Paint, forEffectAt index: Int) {
+        guard let slot = style.effect(at: index)?.colorSlot else { return }
+        if slot.acceptsGradient, style.effect(at: index)?.border != nil {
+            style.updateBorderEffect(at: index) { $0.paint = paint }
+        } else {
+            style.updateEffect(at: index) { $0.colorHex = paint.hex }
+        }
     }
 
     /// The style painting an effect's colour, or nil when the colour is its own.
@@ -671,7 +717,7 @@ extension PhotonzDocument {
                     // An effect takes one flat colour, so a saved ramp lands as
                     // the colour it starts on rather than the border quietly
                     // dropping the name the day somebody makes it a gradient.
-                    layer.setColorHex(style.paint(for: binding.slot).hex, forEffectAt: place)
+                    layer.setPaint(style.paint(for: binding.slot), forEffectAt: place)
                 } else {
                     layer.setPaint(style.paint(for: binding.slot), for: binding.slot)
                 }

@@ -22,7 +22,7 @@ extension EditorState {
         var layer = AnnotationBuilder.layer(content: content, from: start, to: end)
         // Inherit this shape's last non-destructive effects (e.g. a drop shadow
         // added to the previous arrow carries to the next).
-        layer.style = annotationStyles.layerStyle(forShape: shape)
+        layer.style = annotationStyles.arrivingStyle(forShape: shape)
         // ...and any SAVED colour the tool is holding, so the new shape wears
         // the name rather than a copy of it and still follows the name the day
         // it is edited. The document has the last word: a name it has never
@@ -329,7 +329,7 @@ extension EditorState {
     /// empty until commit. Nil for non-shape tools.
     var activeAnnotationStyle: LayerStyle? {
         guard let shape = activeTool.annotationShape else { return nil }
-        return annotationStyles.layerStyle(forShape: shape)
+        return annotationStyles.arrivingStyle(forShape: shape)
     }
 
     /// The selected annotation layer when the select tool is active — the
@@ -394,7 +394,10 @@ extension EditorState {
 
     /// What the current selection/tool draws its outline in, gradient and all.
     var activeToolPaint: Paint? {
-        if let layer = selectedAnnotationLayer { return layer.annotation?.paint }
+        // What the shape's EDGE is drawn in, wherever that edge lives: a box's
+        // Border in the Effects list, or the stroke a line simply is
+        // (`OutlineRetirement.swift`).
+        if let layer = selectedAnnotationLayer { return layer.outlinePaint }
         return annotationStyles.paint(for: activeTool)
     }
 
@@ -602,88 +605,6 @@ extension EditorState {
         rememberAnnotationDefaults(targets, in: doc, strokeWidth: width,
                                    arrowheadScale: nil, cornerRadius: nil)
         saveAnnotationStyles()
-    }
-
-    /// What the Outline row's Width reads when it is speaking for two kinds of
-    /// line at once: the ring each picked layer actually has, and whether they
-    /// agree.
-    func outlineWidthReading(ids: [UUID]) -> StyleReading<CGFloat> {
-        document?.outlineWidthReading(layerIDs: ids) ?? StyleReading(value: nil, isMixed: false)
-    }
-
-    /// One frame of a pull on that Width, recording nothing: a shape's stroke
-    /// and a picture's ring both move, so the number under the knob means the
-    /// same thing on every layer it reaches.
-    func previewRingWidth(ids: [UUID], _ width: CGFloat) {
-        guard var doc = document else { return }
-        let shapes = annotationRestyleTargets(ids, in: doc)
-        if !shapes.isEmpty {
-            rememberAnnotationDefaults(shapes, in: doc, strokeWidth: width,
-                                       arrowheadScale: nil, cornerRadius: nil)
-        }
-        // This row writes the layer's LOOK as well as its shape, so anything a
-        // previous style drag left in the preview would be read back over it.
-        stylePreview = nil
-        discardDragPreview()
-        doc.setRingWidth(layerIDs: ids, to: width)
-        submit(doc)
-    }
-
-    /// Letting go of it: ONE undo step over every picked layer, whichever ring
-    /// each of them draws.
-    func commitRingWidth(ids: [UUID], _ width: CGFloat) {
-        guard let doc = document else { return }
-        let shapes = annotationRestyleTargets(ids, in: doc)
-        stylePreview = nil
-        discardDragPreview()
-        perform { $0.setRingWidth(layerIDs: ids, to: width) }
-        if !shapes.isEmpty {
-            rememberAnnotationDefaults(shapes, in: doc, strokeWidth: width,
-                                       arrowheadScale: nil, cornerRadius: nil)
-            saveAnnotationStyles()
-        }
-        // A ring is styling laid over a layer rather than part of the shape, so
-        // it rides along with the rest of a layer's remembered look, exactly
-        // the way pulling it on its own row already does.
-        rememberStyleDefault(of: ids.filter { doc.layer(id: $0)?.drawsItsOwnOutline == false })
-    }
-
-    /// Which of the picked layers the Outline row's Position can honestly
-    /// reach: the ones with an edge for a line to sit one side of. A line and
-    /// an arrow ARE their stroke and a letter's outline follows the letters, so
-    /// neither is offered one and the row simply is not there over them.
-    func outlinePositionIDs(ids: [UUID]) -> [UUID] {
-        guard let doc = document else { return [] }
-        return ids.filter { doc.layer(id: $0)?.hasOutlinePosition == true }
-    }
-
-    /// What that popup reads: the answer they all wear, or that they differ.
-    func outlinePositionReading(ids: [UUID]) -> StyleReading<BorderPosition> {
-        document?.outlinePositionReading(layerIDs: ids) ?? StyleReading(value: nil, isMixed: false)
-    }
-
-    /// Picking one: ONE undo step over every picked layer, whichever ring each
-    /// of them draws, plus where the next shape of that kind starts.
-    ///
-    /// There is no preview half to this the way there is for a width: a popup
-    /// is picked rather than pulled, so the first thing that happens is also
-    /// the last.
-    func setOutlinePosition(ids: [UUID], to position: BorderPosition) {
-        guard let doc = document else { return }
-        let targets = outlinePositionIDs(ids: ids).filter { doc.layer(id: $0)?.isLocked == false }
-        guard !targets.isEmpty else { return }
-        stylePreview = nil
-        discardDragPreview()
-        perform { $0.setOutlinePosition(layerIDs: targets, to: position) }
-        for shape in Set(targets.compactMap { doc.layer(id: $0)?.annotation?.shape })
-        where shape.hasOutlinePosition {
-            annotationStyles.setStrokePosition(position, forShape: shape)
-        }
-        saveAnnotationStyles()
-        // A ring round a picture, a frame or a group is styling laid over the
-        // layer, so it rides along with the rest of that layer's remembered
-        // look the way its width already does.
-        rememberStyleDefault(of: targets.filter { doc.layer(id: $0)?.drawsItsOwnOutline == false })
     }
 
     /// The picked layers a shape slider may touch: shapes, unlocked.

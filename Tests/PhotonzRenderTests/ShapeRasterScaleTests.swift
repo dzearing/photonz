@@ -105,24 +105,30 @@ struct ShapeRasterScaleTests {
     }
 
     @Test func aStrokeStaysWhereItWasAtEveryScale() throws {
-        var content = AnnotationContent(shape: .rectangle, strokeWidth: 3, colorHex: "#34C759")
+        // The rasterizer's own job, so the content is handed to it directly: a
+        // box's edge is a Border in the layer's Effects list now, so a rectangle
+        // layer carries no stroke for the rasterizer to draw
+        // (`OutlineRetirement.swift`).
+        var content = AnnotationContent(shape: .rectangle, strokeWidth: 3, colorHex: "#34C759",
+                                        start: .zero, end: CGPoint(x: 160, y: 100))
         content.cornerRadius = 6
-        let layer = AnnotationBuilder.layer(content: content,
-                                            from: CGPoint(x: 20, y: 20), to: CGPoint(x: 180, y: 120))
-        let drawn = try #require(layer.annotation)
-        let plain = try #require(AnnotationRasterizer.rasterize(drawn, size: layer.frame.size))
-        let crisp = try #require(AnnotationRasterizer.rasterize(drawn, size: layer.frame.size, scale: 4))
+        let size = CGSize(width: 160, height: 100)
+        let plain = try #require(AnnotationRasterizer.rasterize(content, size: size))
+        let crisp = try #require(AnnotationRasterizer.rasterize(content, size: size, scale: 4))
         #expect(closeEnough(inkBounds(plain), inkBounds(crisp)))
     }
 
     @Test func aShapeStrokeIsSharperThanTheSameStrokeBlownUp() throws {
-        var content = AnnotationContent(shape: .rectangle, strokeWidth: 3, colorHex: "#34C759")
+        // The rasterizer's own job, so the content is handed to it directly: a
+        // box's edge is a Border in the layer's Effects list now, so a rectangle
+        // layer carries no stroke for the rasterizer to draw
+        // (`OutlineRetirement.swift`).
+        var content = AnnotationContent(shape: .rectangle, strokeWidth: 3, colorHex: "#34C759",
+                                        start: .zero, end: CGPoint(x: 160, y: 100))
         content.cornerRadius = 6
-        let layer = AnnotationBuilder.layer(content: content,
-                                            from: CGPoint(x: 20, y: 20), to: CGPoint(x: 180, y: 120))
-        let drawn = try #require(layer.annotation)
-        let plain = try #require(AnnotationRasterizer.rasterize(drawn, size: layer.frame.size))
-        let crisp = try #require(AnnotationRasterizer.rasterize(drawn, size: layer.frame.size, scale: 4))
+        let size = CGSize(width: 160, height: 100)
+        let plain = try #require(AnnotationRasterizer.rasterize(content, size: size))
+        let crisp = try #require(AnnotationRasterizer.rasterize(content, size: size, scale: 4))
         #expect(hardEdges(crisp) > hardEdges(blownUp(plain, by: 4)) * 2)
     }
 

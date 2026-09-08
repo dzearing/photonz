@@ -537,7 +537,6 @@ public final class DocumentRenderer: @unchecked Sendable {
             .cropped(to: buffer)
 
         image = rounded(image, box: box, radius: layer.style.cornerRadius)
-        image = bordered(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
         image = borderEffects(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
         // Blurring a group blurs the card it makes — surface, corner and ring
         // as one — and its halo escapes the group's box the way its shadow
@@ -689,15 +688,19 @@ public final class DocumentRenderer: @unchecked Sendable {
             // step below is 1:1 and the words stay sharp however far in you are
             // zoomed. A border outlines the GLYPHS (inside the rasterizer); the
             // box border below is suppressed for text.
-            let textBorder = layer.style.borderWidth / contentScale
-            let textBorderHex = layer.style.borderColorHex
-            var variant = textBorder > 0 ? "outline:\(textBorder):\(textBorderHex)" : ""
+            // A label's edge is a Border in its Effects list like every other
+            // layer's, since the Outline row left Appearance
+            // (`OutlineRetirement.swift`). On a label it follows the LETTERS
+            // rather than the box, which is what an outline on type means and
+            // what the layer's own ring always did here.
+            let outlines = layer.style.paintedBorders.map {
+                TextRasterizer.TextOutline(width: $0.width / contentScale, colorHex: $0.colorHex)
+            }
+            var variant = outlines.map { "outline:\($0.width):\($0.colorHex)" }.joined(separator: ",")
             if contentScale != 1 { variant += "|crisp" }
             let bake = crispScale(contentScale, box: boxInPoints)
             guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
-                TextRasterizer.rasterize(text, size: boxInPoints,
-                                         borderWidth: textBorder, borderColorHex: textBorderHex,
-                                         scale: bake)
+                TextRasterizer.rasterize(text, size: boxInPoints, outlines: outlines, scale: bake)
             }) else { return nil }
             image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .annotation(let annotation):
@@ -832,16 +835,15 @@ public final class DocumentRenderer: @unchecked Sendable {
             ? image.extent.insetBy(dx: contentOutset, dy: contentOutset)
             : image.extent
         image = rounded(image, box: box, radius: maskRadius, keepingOutside: contentOutset > 0)
+        // Every ring round this layer, in the order the Effects list holds
+        // them. A label is exempt: its borders outline the letters and were
+        // baked into the words above, so drawing them again as a box would put
+        // a frame round a label nobody asked for.
         let isTextLayer: Bool = { if case .text = layer.content { return true } else { return false } }()
         if !isTextLayer {
-            image = bordered(image, box: box, radius: ringRadius, shape: ringShape,
-                             style: layer.style)
+            image = borderEffects(image, box: box, radius: ringRadius, shape: ringShape,
+                                  style: layer.style)
         }
-        // A border you ADDED is a ring round the layer's box, whatever the layer
-        // is — including text, whose Appearance outline follows the letters
-        // instead. Asking for a box round a label has to be answerable.
-        image = borderEffects(image, box: box, radius: ringRadius, shape: ringShape,
-                              style: layer.style)
 
         // Style: blur, after the paint rather than before it, so the softness
         // takes the whole layer — what it draws, its rounded corner and its
@@ -948,23 +950,15 @@ public final class DocumentRenderer: @unchecked Sendable {
             .cropped(to: image.extent)
     }
 
-    /// A stroke hugging the (possibly rounded) outline of `box`, sitting where
-    /// the style says: wholly inside the box, straddling its edge, or wholly
-    /// outside it (`BorderPosition.swift`). The drawing itself is `ringed`
-    /// below, which every added border uses too.
-    private func bordered(_ image: CIImage, box: CGRect, radius: CGFloat,
-                          shape: RingShape = .box, style: LayerStyle) -> CIImage {
-        guard style.borderWidth > 0 else { return image }
-        return ringed(image, box: box, radius: radius, shape: shape, width: style.borderWidth,
-                      outset: style.borderPosition.outset(width: style.borderWidth),
-                      colorHex: style.borderColorHex)
-    }
-
-    /// Every ring somebody ADDED, laid over the layer's own edge.
+    /// Every ring round the layer, in the order its Effects list holds them.
     ///
-    /// The Outline in Appearance is the one line a shape HAS; these are the
-    /// extra ones, so there can be several and each carries its own width,
-    /// colour and side of the edge (`LayerEffects.swift`, `BorderEffect`).
+    /// There used to be TWO passes here: the layer's own Outline, from a width
+    /// and colour stored on the style, and then the borders somebody added over
+    /// the top of it. That was the second way to draw a line round a shape the
+    /// user reported on 2026-09-07, so the layer's own ring became an entry in
+    /// the list like any other and this is the one pass that draws them
+    /// (`OutlineRetirement.swift`). Each carries its own width, colour and side
+    /// of the edge (`LayerEffects.swift`, `BorderEffect`).
     ///
     /// Painted from the FOOT of the list upwards, so the entry nearest the top
     /// ends up nearest the eye — the same rule the shadows follow, and the
@@ -976,7 +970,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         var result = image
         for border in painted.reversed() {
             result = ringed(result, box: box, radius: radius, shape: shape, width: border.width,
-                            outset: border.outset, colorHex: border.colorHex)
+                            outset: border.outset, paint: border.paint)
         }
         return result
     }
@@ -991,13 +985,13 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// makes the picture bigger, which is why the result is cropped to what the
     /// two of them cover rather than back to the layer's own box.
     private func ringed(_ image: CIImage, box: CGRect, radius: CGFloat, shape: RingShape,
-                        width: CGFloat, outset: CGFloat, colorHex: String) -> CIImage {
+                        width: CGFloat, outset: CGFloat, paint: Paint) -> CIImage {
         let outerRect = outset > 0 ? box.insetBy(dx: -outset, dy: -outset) : box
         // An oval has no corners to round, so it is drawn as an oval rather
         // than as a rounded rect that would have to be a capsule to come close
         // and a square everywhere else (`RingShape.swift`).
         if shape == .ellipse {
-            guard let oval = ellipseRing(in: outerRect, width: width, colorHex: colorHex)
+            guard let oval = ellipseRing(in: outerRect, width: width, paint: paint)
             else { return image }
             return oval.composited(over: image).cropped(to: image.extent.union(outerRect))
         }
@@ -1007,8 +1001,14 @@ public final class DocumentRenderer: @unchecked Sendable {
         // is not: it turned an 11pt ring round a sharp button into a lozenge
         // (found on the probe, 2026-09-07).
         let outerRadius = radius > 0 ? radius + outset : 0
+        // A flat ring is generated in its own colour, which is one filter and
+        // no bitmap. A gradient one is generated white and the ramp poured
+        // through it, because a box's edge can be a gradient — it was the
+        // shape's own stroke before the Outline row left Appearance, and a
+        // gradient edge somebody drew must not flatten (`OutlineRetirement`).
+        let flat = !paint.isGradient
         let outer = roundedRectImage(rect: outerRect, radius: outerRadius,
-                                     color: ciColor(hex: colorHex))
+                                     color: flat ? ciColor(hex: paint.hex) : .white)
         let innerRect = outerRect.insetBy(dx: width, dy: width)
         var ring = outer
         if !innerRect.isNull, !innerRect.isEmpty {
@@ -1018,7 +1018,42 @@ public final class DocumentRenderer: @unchecked Sendable {
             ring = outer.applyingFilter("CISourceOutCompositing",
                                         parameters: [kCIInputBackgroundImageKey: inner])
         }
+        if !flat { ring = poured(paint, through: ring, in: outerRect) }
         return ring.composited(over: image).cropped(to: image.extent.union(outerRect))
+    }
+
+    /// `paint`'s ramp, laid into the shape `mask` draws and nowhere else.
+    ///
+    /// The ramp is baked in the ring's own box so it runs across the ring the
+    /// way it runs across a shape, and drawn top-left down like everything else
+    /// that is drawn rather than composited, so an angle means the same thing
+    /// here as it does on a fill.
+    private func poured(_ paint: Paint, through mask: CIImage, in rect: CGRect) -> CIImage {
+        guard let ramp = gradientImage(paint, in: rect) else { return mask }
+        return ramp.applyingFilter("CISourceInCompositing",
+                                   parameters: [kCIInputBackgroundImageKey: mask])
+    }
+
+    /// A bitmap of `paint`'s ramp filling `rect`, in the document's own points.
+    private func gradientImage(_ paint: Paint, in rect: CGRect) -> CIImage? {
+        let width = Int(rect.width.rounded()), height = Int(rect.height.rounded())
+        guard width >= 1, height >= 1,
+              let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        // Top-left down, the way every other painted gradient in the app is
+        // drawn (`AnnotationRasterizer`), so 135° runs the same way on an edge
+        // as it does on the inside it surrounds.
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        let box = CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height))
+        GradientPainter.fill(path: CGPath(rect: box, transform: nil), with: paint, in: context)
+        guard let cg = context.makeImage() else { return nil }
+        return CIImage(cgImage: cg)
+            .transformed(by: CGAffineTransform(translationX: rect.minX, y: rect.minY))
     }
 
     /// One oval ring filling `rect`, `width` thick inwards from its edge.
@@ -1035,12 +1070,13 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// The shape is baked as a white mask and the colour laid into it, so an
     /// added border is the same colour here as it is round a box — the mask
     /// then caches across every colour and every layer that shares its size.
-    private func ellipseRing(in rect: CGRect, width: CGFloat, colorHex: String) -> CIImage? {
+    private func ellipseRing(in rect: CGRect, width: CGFloat, paint: Paint) -> CIImage? {
         guard let mask = ellipseRingMask(size: rect.size, width: width) else { return nil }
         let placed = mask.transformed(
             by: CGAffineTransform(translationX: rect.midX - mask.extent.midX,
                                   y: rect.midY - mask.extent.midY))
-        return CIImage(color: ciColor(hex: colorHex)).cropped(to: placed.extent)
+        if paint.isGradient { return poured(paint, through: placed, in: placed.extent) }
+        return CIImage(color: ciColor(hex: paint.hex)).cropped(to: placed.extent)
             .applyingFilter("CISourceInCompositing",
                             parameters: [kCIInputBackgroundImageKey: placed])
     }

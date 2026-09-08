@@ -117,7 +117,33 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// The non-destructive effects (shadow, opacity, blur, …) a NEW annotation
     /// of this shape starts with — captured from the last one the user styled,
     /// so e.g. adding a drop shadow to one arrow carries to the next.
-    public func layerStyle(forShape shape: AnnotationShape) -> LayerStyle { defaults(forShape: shape).layerStyle }
+    /// ...and, on a box or an oval, the EDGE it arrives with.
+    ///
+    /// The user settled this on 2026-09-08: with the Outline row gone from
+    /// Appearance, a freshly drawn shape still comes out with a line round it,
+    /// and that line is a Border in the Effects list, ready to be retuned,
+    /// reordered or taken off with the cross (`OutlineRetirement.swift`). So
+    /// the width, the colour and the side of the edge the tool is armed with go
+    /// in as a Border rather than as the shape's own stroke.
+    public func layerStyle(forShape shape: AnnotationShape) -> LayerStyle {
+        defaults(forShape: shape).layerStyle
+    }
+
+    /// The whole style a freshly drawn shape arrives with: the effects it
+    /// remembers, and the EDGE on top of them.
+    public func arrivingStyle(forShape shape: AnnotationShape) -> LayerStyle {
+        let d = defaults(forShape: shape)
+        var style = d.layerStyle
+        guard shape.arrivesWithABorder, d.strokeWidth > 0 else { return style }
+        var border = BorderEffect(width: d.strokeWidth, position: d.strokePosition)
+        // The whole paint, so a tool armed with a gradient draws a gradient
+        // edge exactly as it did when the edge was the shape's own stroke.
+        border.paint = d.paint
+        // Under whatever this shape's style already carries, which is where the
+        // shape's own line painted.
+        style.effects.append(.border(border))
+        return style
+    }
 
     public mutating func setColorHex(_ hex: String, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].colorHex = hex
@@ -305,7 +331,12 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         guard let shape = tool.annotationShape else { return nil }
         let d = defaults(forShape: shape)
         // Highlight is a filled box; the stroke width slider doesn't touch it.
-        let width = tool.usesStrokeWidth ? d.strokeWidth : AnnotationContent.defaultStrokeWidth
+        // A box or an oval draws no stroke of its own at all any more: its edge
+        // arrives as a Border in the Effects list, put there by
+        // `arrivingStyle(forShape:)` just above (`OutlineRetirement.swift`).
+        let width = shape.arrivesWithABorder
+            ? 0
+            : (tool.usesStrokeWidth ? d.strokeWidth : AnnotationContent.defaultStrokeWidth)
         var content = AnnotationContent(shape: shape, strokeWidth: width, colorHex: d.colorHex,
                                         arrowheadScale: d.arrowheadScale,
                                         cornerRadius: d.cornerRadius, fillColorHex: d.fillColorHex,
@@ -502,4 +533,20 @@ extension Tool {
 extension AnnotationContent {
     /// The stroke width annotations start with (also `init`'s default).
     public static let defaultStrokeWidth: CGFloat = 4
+}
+
+extension AnnotationShape {
+
+    /// Whether a freshly drawn one of these arrives with a Border in its
+    /// Effects list instead of a stroke of its own.
+    ///
+    /// A box and an oval have an inside, so the line round them is a ring that
+    /// can come off. A line and an arrow ARE their stroke, and a highlight is a
+    /// wash, so neither arrives with a border (`OutlineRetirement.swift`).
+    public var arrivesWithABorder: Bool {
+        switch self {
+        case .rectangle, .ellipse: return true
+        case .line, .arrow, .highlight: return false
+        }
+    }
 }

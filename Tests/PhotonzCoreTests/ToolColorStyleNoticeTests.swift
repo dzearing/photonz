@@ -28,9 +28,14 @@ struct ToolColorStyleNoticeTests {
 
     /// A drag's worth of new shape, built the way the canvas builds one.
     private func drawn(_ tool: Tool, with styles: AnnotationStyles) -> Layer? {
-        guard let content = styles.content(for: tool) else { return nil }
-        return AnnotationBuilder.layer(content: content, from: .zero,
-                                       to: CGPoint(x: 80, y: 40))
+        guard let content = styles.content(for: tool), let shape = tool.annotationShape
+        else { return nil }
+        var layer = AnnotationBuilder.layer(content: content, from: .zero,
+                                            to: CGPoint(x: 80, y: 40))
+        // The edge a freshly drawn shape arrives with, which for a box is a
+        // Border in its Effects list (`OutlineRetirementTests`).
+        layer.style = styles.arrivingStyle(forShape: shape)
+        return layer
     }
 
     // MARK: - Picking a plain colour lets go of the name
@@ -296,7 +301,7 @@ struct ToolColorStyleNoticeTests {
 
         let shape = try #require(drawn(.rectangle, with: styles))
         let notice = try #require(doc.armedColorStyleLeftBehind(shape, styles: styles))
-        #expect(notice.slot == .stroke)
+        #expect(notice.slot == .border)
         #expect(notice.title == "Surface is not for outlines")
         #expect(notice.detail
                 == "The Rectangle\u{2019}s outline is the plain color the tool remembers, not a saved color")

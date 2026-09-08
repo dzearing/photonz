@@ -20,7 +20,10 @@ struct BorderEffectTests {
     private func box(_ style: LayerStyle = LayerStyle()) -> Layer {
         Layer(name: "Box",
               content: .annotation(AnnotationContent(shape: .rectangle,
-                                                     strokeWidth: 4,
+                                                     // A bare box: its edge would be a Border in this very list
+                                                     // (`OutlineRetirementTests`), and these are about what
+                                                     // somebody ADDS to it.
+                                                     strokeWidth: 0,
                                                      colorHex: "#FF0000",
                                                      start: .zero,
                                                      end: CGPoint(x: 100, y: 60))),

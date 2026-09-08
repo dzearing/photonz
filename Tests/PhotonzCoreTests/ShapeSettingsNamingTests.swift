@@ -33,7 +33,9 @@ struct ShapeSettingsNamingTests {
 
     @Test func aBoxNamesItsOutlineAndItsInside() {
         for shape in [AnnotationShape.rectangle, .ellipse] {
-            #expect(shape.colorTitle(for: .stroke) == "Outline")
+            // A box's edge is a Border in its Effects list
+            // (`OutlineRetirementTests`).
+            #expect(shape.colorTitle(for: .border) == "Outline")
             #expect(shape.colorTitle(for: .fill) == "Fill")
         }
     }

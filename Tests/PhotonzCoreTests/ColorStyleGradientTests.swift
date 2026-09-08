@@ -125,11 +125,11 @@ struct ColorStyleGradientTests {
 
     @Test func aGradientIsNotOfferedWhereNoRampCanBeDrawn() {
         var doc = document([box(), text()])
-        doc.updateLayer(id: doc.layers[0].id) { $0.setPaint(sunset(), for: .stroke) }
-        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke, name: "Sunset")!
-        #expect(doc.colorStyles(for: .stroke).map(\.id).contains(id))
+        doc.updateLayer(id: doc.layers[0].id) { $0.setPaint(sunset(), for: .fill) }
+        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .fill, name: "Sunset")!
+        #expect(doc.colorStyles(for: .fill).map(\.id).contains(id))
+        // A letter's ink has no box for a ramp to run across.
         #expect(!doc.colorStyles(for: .text).map(\.id).contains(id))
-        #expect(!doc.colorStyles(for: .border).map(\.id).contains(id))
     }
 
     @Test func aFlatSlotWearingAGradientStyleTakesItsFlatColor() {

@@ -56,7 +56,8 @@ struct ComponentColorKnobTests {
         let c = withComponent()
         let candidates = c.doc.componentPropertyCandidates(componentID: c.componentID)
         let slots = Dictionary(uniqueKeysWithValues: candidates.map { ($0.layerID, $0.colorSlots) })
-        #expect(slots[c.boxID] == [.fill, .stroke])
+        // Fill and the box's edge, which is a Border (`OutlineRetirementTests`).
+        #expect(slots[c.boxID] == [.fill, .border])
         #expect(slots[c.labelID] == [.text])
         let kinds = Dictionary(uniqueKeysWithValues: candidates.map { ($0.layerID, Set($0.kinds)) })
         // A box also has numbers to offer, which is its own kind
@@ -71,7 +72,8 @@ struct ComponentColorKnobTests {
         var c = withComponent()
         _ = c.doc.setColorEnabled(layerIDs: [c.boxID], slot: .fill, on: false)
         let candidates = c.doc.componentPropertyCandidates(componentID: c.componentID)
-        #expect(candidates.first { $0.layerID == c.boxID }?.colorSlots == [.stroke])
+        // The box's edge, which is a Border (`OutlineRetirementTests`).
+        #expect(candidates.first { $0.layerID == c.boxID }?.colorSlots == [.border])
     }
 
     /// Exposing the fill leaves the outline still on offer: "already exposed"
@@ -81,7 +83,7 @@ struct ComponentColorKnobTests {
         _ = c.doc.addComponentProperty(componentID: c.componentID, target: c.boxID,
                                        kind: .color, slot: .fill)
         let candidates = c.doc.componentPropertyCandidates(componentID: c.componentID)
-        #expect(candidates.first { $0.layerID == c.boxID }?.colorSlots == [.stroke])
+        #expect(candidates.first { $0.layerID == c.boxID }?.colorSlots == [.border])
     }
 
     /// A colour knob is named for the PART it paints, never for the layer it
@@ -92,15 +94,15 @@ struct ComponentColorKnobTests {
         let fill = c.doc.addComponentProperty(componentID: c.componentID, target: c.boxID,
                                               kind: .color, slot: .fill)!
         let outline = c.doc.addComponentProperty(componentID: c.componentID, target: c.boxID,
-                                                 kind: .color, slot: .stroke)!
+                                                 kind: .color, slot: .border)!
         let ink = c.doc.addComponentProperty(componentID: c.componentID, target: c.labelID,
                                              kind: .color, slot: .text)!
         let properties = c.doc.componentProperties(of: c.componentID)
         #expect(properties.first { $0.id == fill }?.name == "Fill")
-        #expect(properties.first { $0.id == outline }?.name == "Outline")
+        #expect(properties.first { $0.id == outline }?.name == "Border")
         #expect(properties.first { $0.id == ink }?.name == "Text")
         #expect(properties.first { $0.id == fill }?.slot == .fill)
-        #expect(properties.first { $0.id == outline }?.slot == .stroke)
+        #expect(properties.first { $0.id == outline }?.slot == .border)
     }
 
     /// Two fills on two different layers are numbered apart rather than

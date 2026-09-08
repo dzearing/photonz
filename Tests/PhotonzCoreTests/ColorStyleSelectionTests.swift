@@ -153,7 +153,8 @@ struct ColorStyleSelectionTests {
         let label = text()
         let doc = document([shape, label])
         let slots = doc.colorStyleSlots(layerIDs: [shape.id, label.id])
-        #expect(slots == [.fill, .stroke, .text])
+        // A box's edge is a Border in its Effects list (`OutlineRetirementTests`).
+        #expect(slots == [.fill, .text, .border])
     }
 
     @Test func aSelectionWithNoColorsAnywhereOffersNoRows() {
@@ -169,8 +170,8 @@ struct ColorStyleSelectionTests {
         // because there is no color in it right now.
         let empty = box("Empty", fill: nil)
         let doc = document([empty])
-        #expect(doc.colorRowSlots(layerIDs: [empty.id]) == [.fill, .stroke])
-        #expect(doc.colorStyleSlots(layerIDs: [empty.id]) == [.stroke])
+        #expect(doc.colorRowSlots(layerIDs: [empty.id]) == [.fill, .border])
+        #expect(doc.colorStyleSlots(layerIDs: [empty.id]) == [.border])
     }
 
     @Test func eachKindOfLayerOffersOnlyTheRowsItHas() {
@@ -283,8 +284,8 @@ struct ColorStyleSelectionTests {
     @Test func aSlotWithNoSwitchIgnoresBeingSwitched() {
         let shape = box()
         var doc = document([shape])
-        #expect(doc.setColorEnabled(layerIDs: [shape.id], slot: .stroke, on: false) == 0)
-        #expect(doc.layer(id: shape.id)?.colorHex(for: .stroke) == "#101010")
+        #expect(doc.setColorEnabled(layerIDs: [shape.id], slot: .border, on: false) == 0)
+        #expect(doc.layer(id: shape.id)?.colorHex(for: .border) == "#101010")
     }
 
     // MARK: - Painting the whole selection
@@ -406,9 +407,9 @@ struct ColorStyleSelectionTests {
         let shape = box("Box", fill: "#3366FF", stroke: "#101010")
         let label = text("Label", color: "#FFFFFF")
         var doc = document([shape, label])
-        #expect(doc.setColorHex(layerIDs: [shape.id, label.id], slot: .stroke, hex: "#AA0000") == 1)
+        #expect(doc.setColorHex(layerIDs: [shape.id, label.id], slot: .border, hex: "#AA0000") == 1)
         #expect(doc.setColorHex(layerIDs: [shape.id, label.id], slot: .text, hex: "#00AA00") == 1)
-        #expect(doc.layer(id: shape.id)?.colorHex(for: .stroke) == "#AA0000")
+        #expect(doc.layer(id: shape.id)?.colorHex(for: .border) == "#AA0000")
         #expect(doc.layer(id: label.id)?.colorHex(for: .text) == "#00AA00")
     }
 

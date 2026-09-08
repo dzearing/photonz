@@ -15,6 +15,18 @@ public struct LayerTransfer: Codable, Sendable {
         self.imageData = imageData
     }
 
+    private enum CodingKeys: String, CodingKey { case layer, imageData }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        // A layer copied out of a build from before the Outline row left
+        // Appearance arrives with its edge as its own stroke; it lands here as
+        // a Border in the Effects list, painting the same pixels
+        // (`OutlineRetirement.swift`).
+        layer = try c.decode(Layer.self, forKey: .layer).retiringItsOutline()
+        imageData = try c.decodeIfPresent(Data.self, forKey: .imageData)
+    }
+
     /// Custom pasteboard type identifying a serialized Photonz layer.
     public static let pasteboardType = "com.photonz.layer"
 }

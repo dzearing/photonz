@@ -50,46 +50,22 @@ struct LayerPartsTests {
 
     // MARK: - Which ring a layer's outline part paints
 
-    @Test func aShapePaintsItsOwnStrokeAndEverythingElseTakesARing() {
-        #expect(shape(.rectangle).outlineSlot == .stroke)
-        #expect(shape(.arrow).outlineSlot == .stroke)
-        #expect(picture().outlineSlot == .border)
-        #expect(shape(.highlight).outlineSlot == .border)
-    }
 
-    @Test func onlyAShapeWithAnInsideCanHaveItsOutlineSwitchedOff() {
-        #expect(shape(.rectangle).outlineIsSwitchable)
-        #expect(shape(.ellipse).outlineIsSwitchable)
-        // A line IS its line: switching it off is a delete, not a setting.
-        #expect(!shape(.line).outlineIsSwitchable)
-        #expect(!shape(.arrow).outlineIsSwitchable)
-        // ...but a ring round a box is styling, and anything can take one.
-        #expect(picture().outlineIsSwitchable)
-        #expect(shape(.highlight).outlineIsSwitchable)
-    }
 
-    @Test func aHighlightsUnpaintedStrokeWidthIsNotAnOutline() {
-        // It carries a stroke width it never draws, so only the ring its
-        // styling adds counts as an outline.
-        #expect(!shape(.highlight, strokeWidth: 6).hasOutline)
-        #expect(shape(.highlight, strokeWidth: 6, style: border(2)).hasOutline)
-    }
 
     // MARK: - The rows a selection gets
 
-    @Test func aRectangleGetsFillAndOutline() {
+    @Test func aRectangleGetsFillAndNothingElse() {
         let box = shape(.rectangle, fillHex: "#00FF00")
         let doc = document([box])
         let rows = doc.layerPartRows(layerIDs: [box.id])
         // A shadow is countable, so it is not a fixed row that is off nearly
         // all the time: it arrives from the plus at the foot of the list
-        // (`AppearanceListTests`).
-        #expect(rows.map(\.title) == ["Fill", "Outline"])
-        #expect(rows.map(\.hasSwitch) == [true, true])
+        // (`AppearanceListTests`). Nor is the box's edge here any more — it is
+        // a Border in that same list (`OutlineRetirementTests`).
+        #expect(rows.map(\.title) == ["Fill"])
+        #expect(rows.map(\.hasSwitch) == [true])
         #expect(rows[0].isOn)
-        #expect(rows[1].isOn)
-        // Only the outline has anything under it.
-        #expect(rows.map(\.hasSettings) == [false, true])
     }
 
     @Test func anArrowsOneColorIsNotCalledAnOutlineAndHasNoSwitch() {
@@ -104,70 +80,12 @@ struct LayerPartsTests {
         #expect(!ink.hasSwitch)
     }
 
-    @Test func anArrowsWidthIsNotHiddenInADrawerThisRowCannotOpen() {
-        // A row with no switch is a colour and nothing else, so it has no
-        // drawer to keep a width in. Making an arrow thicker is the commonest
-        // thing anyone does to one, and it was two clicks down inside a row
-        // called Color. The width is the shape's own Thickness setting now,
-        // out where the ending and the head size are.
-        let arrow = shape(.arrow)
-        let doc = document([arrow])
-        let ink = doc.layerPartRows(layerIDs: [arrow.id])[0]
-        #expect(ink.widthIDs.isEmpty)
-        #expect(!ink.hasSettings)
-    }
 
-    @Test func aRectanglesWidthStaysWithTheOutlineItBelongsTo() throws {
-        // The other half of the same rule: where the outline is a part that
-        // switches off, its width is that part's setting and stays in it.
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let doc = document([box])
-        let outline = try #require(doc.layerPartRows(layerIDs: [box.id]).first { $0.part == .outline })
-        #expect(outline.widthIDs == [box.id])
-        #expect(outline.hasSettings)
-    }
 
-    @Test func anArrowPickedWithABoxTakesTheBoxesOutlineWidthRow() throws {
-        // One row speaks for both, it can be switched off (the box can live
-        // without its ring), so the width is in there and reaches both.
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let arrow = shape(.arrow)
-        let doc = document([box, arrow])
-        let rows = doc.layerPartRows(layerIDs: [box.id, arrow.id])
-        let outline = try #require(rows.first { $0.slot == .stroke })
-        #expect(outline.title == "Outline")
-        #expect(outline.widthIDs == [box.id, arrow.id])
-    }
 
-    @Test func aPictureGetsAnOutlineItCanSwitchOnAndAShadow() {
-        let shot = picture()
-        let doc = document([shot])
-        let rows = doc.layerPartRows(layerIDs: [shot.id])
-        #expect(rows.map(\.title) == ["Outline"])
-        // The same model as a rectangle's, on a layer that is not a shape at
-        // all: the ring is off, and one switch turns it on.
-        #expect(rows[0].part == .outline)
-        #expect(rows[0].slot == .border)
-        #expect(rows[0].hasSwitch)
-        #expect(!rows[0].isOn)
-    }
 
     // MARK: - A highlight, which was offered the same name twice
 
-    @Test func aHighlightIsOfferedOneLineRoundItNotTwo() throws {
-        // Reported 2026-09-06: picking a highlight put two rows called Outline
-        // one above the other. Both switches wrote the same border width and
-        // they painted different colours, so picking either was a guess.
-        let wash = shape(.highlight)
-        let doc = document([wash])
-        let rows = doc.layerPartRows(layerIDs: [wash.id])
-        #expect(rows.filter { $0.title == "Outline" }.count == 1)
-        let outline = try #require(rows.first { $0.title == "Outline" })
-        // The one that is real: the ring the highlight's styling draws.
-        #expect(outline.slot == .border)
-        #expect(outline.switchIDs == [wash.id])
-        #expect(outline.widthIDs == [wash.id])
-    }
 
     @Test func aHighlightsWashIsAColorRatherThanAnOutline() {
         // A highlight IS its wash, the way an arrow is its line: there is no
@@ -175,108 +93,23 @@ struct LayerPartsTests {
         let wash = shape(.highlight)
         let doc = document([wash])
         let rows = doc.layerPartRows(layerIDs: [wash.id])
-        #expect(rows.map(\.title) == ["Color", "Outline"])
+        #expect(rows.map(\.title) == ["Color"])
         let ink = rows[0]
         #expect(ink.slot == .stroke)
         #expect(ink.part == nil)
         #expect(!ink.hasSwitch)
-        #expect(ink.widthIDs.isEmpty)
-        #expect(!ink.hasSettings)
     }
 
-    @Test func aHighlightsRingIsStillTheSameSwitch() {
-        // Dropping the duplicate must not cost the highlight its ring.
-        let wash = shape(.highlight)
-        var doc = document([wash])
-        #expect(doc.setOutlineEnabled(layerIDs: [wash.id], on: true) == 1)
-        #expect(doc.layer(id: wash.id)!.style.borderWidth > 0)
-        #expect(doc.setOutlineEnabled(layerIDs: [wash.id], on: false) == 1)
-        #expect(doc.layer(id: wash.id)!.style.borderWidth == 0)
-    }
 
-    @Test func aHighlightPickedWithABoxKeepsItsWashOutOfTheOutline() throws {
-        // One row called Outline over both of them: the box's stroke and the
-        // highlight's ring are the same line to a person. What must NOT
-        // happen is the highlight's wash being painted from it, so the row
-        // carries the box under stroke and the highlight under border and
-        // paints neither one with the other's colour.
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let wash = shape(.highlight)
-        let doc = document([box, wash])
-        let rows = doc.layerPartRows(layerIDs: [box.id, wash.id])
-        #expect(rows.filter { $0.title == "Outline" }.count == 1)
-        let outline = try #require(rows.first { $0.part == .outline })
-        #expect(outline.colors == [PartColor(slot: .stroke, layerIDs: [box.id]),
-                                   PartColor(slot: .border, layerIDs: [wash.id])])
-        #expect(outline.switchIDs == [box.id, wash.id])
-        // And the wash keeps its own row, the one it has on its own.
-        let ink = try #require(rows.first { $0.part == nil && $0.slot == .stroke })
-        #expect(ink.title == "Color")
-        #expect(ink.colors == [PartColor(slot: .stroke, layerIDs: [wash.id])])
-    }
 
     // MARK: - Two kinds of line picked together, which was two rows called Outline
 
-    @Test func aBoxAndAPictureAreOfferedOneOutlineNotTwo() throws {
-        // Reported 2026-09-07: picking a rectangle and a screenshot listed
-        // Outline twice, one for the line the shape draws itself and one for
-        // the ring the picture wears. They are the same idea to a person.
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let shot = picture(style: border(2))
-        let doc = document([box, shot])
-        let rows = doc.layerPartRows(layerIDs: [box.id, shot.id])
-        #expect(rows.filter { $0.title == "Outline" }.count == 1)
-        let outline = try #require(rows.first { $0.part == .outline })
-        #expect(outline.switchIDs == [box.id, shot.id])
-        #expect(outline.onCount == 2)
-        #expect(outline.isOn)
-        #expect(outline.widthIDs == [box.id, shot.id])
-        #expect(outline.reachNote == nil)
-    }
 
-    @Test func thatOneRowKnowsWhichColorEachOfThemWears() throws {
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let shot = picture(style: border(2))
-        let doc = document([box, shot])
-        let outline = try #require(doc.layerPartRows(layerIDs: [box.id, shot.id])
-            .first { $0.part == .outline })
-        #expect(outline.colors == [PartColor(slot: .stroke, layerIDs: [box.id]),
-                                   PartColor(slot: .border, layerIDs: [shot.id])])
-        #expect(outline.mixesLineKinds)
-    }
 
-    @Test func oneSwitchTakesTheLineOffBothKindsAtOnce() {
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let shot = picture(style: border(2))
-        var doc = document([box, shot])
-        let outline = doc.layerPartRows(layerIDs: [box.id, shot.id]).first { $0.part == .outline }!
-        #expect(doc.setOutlineEnabled(layerIDs: outline.switchIDs, on: false) == 2)
-        #expect(!doc.layer(id: box.id)!.hasOutline)
-        #expect(!doc.layer(id: shot.id)!.hasOutline)
-    }
 
-    @Test func oneWidthReachesBothKindsOfLine() {
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let shot = picture(style: border(2))
-        var doc = document([box, shot])
-        #expect(doc.outlineWidthReading(layerIDs: [box.id, shot.id]).isMixed)
-        #expect(doc.setRingWidth(layerIDs: [box.id, shot.id], to: 6) == 2)
-        #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == 6)
-        #expect(doc.layer(id: shot.id)?.style.borderWidth == 6)
-        let reading = doc.outlineWidthReading(layerIDs: [box.id, shot.id])
-        #expect(!reading.isMixed)
-        #expect(reading.value == 6)
-    }
 
-    @Test func aLockedLayerKeepsItsLineWhateverTheWidthRowDoes() {
-        let box = shape(.rectangle, fillHex: "#00FF00", locked: true)
-        var doc = document([box])
-        #expect(doc.setRingWidth(layerIDs: [box.id], to: 9) == 0)
-    }
 
-    @Test func aTextBlockPickedWithABoxAlsoGetsOneOutline() throws {
-        // The same duplicate, one layer kind over: a caption wears a ring the
-        // way a picture does.
+    @Test func aTextBlockPickedWithABoxGetsTheirTwoColours() throws {
         let box = shape(.rectangle, fillHex: "#00FF00")
         let caption = Layer(name: "Caption",
                             content: .text(TextContent(string: "Hi")),
@@ -284,22 +117,17 @@ struct LayerPartsTests {
                             style: border(1))
         let doc = document([box, caption])
         let rows = doc.layerPartRows(layerIDs: [box.id, caption.id])
-        #expect(rows.filter { $0.title == "Outline" }.count == 1)
-        // Fill, Outline, Text: the order the parts list documents, with any
-        // shadows somebody added coming under them.
-        #expect(rows.map(\.title) == ["Fill", "Outline", "Text"])
+        // No Outline row on either of them: a box's edge and a label's are both
+        // Borders in the Effects list (`OutlineRetirementTests`).
+        #expect(rows.map(\.title) == ["Fill", "Text"])
     }
 
-    @Test func aLoneTextBlockGetsItsInkAndTheRingItCanWear() {
+    @Test func aLoneTextBlockGetsItsInk() {
         let caption = Layer(name: "Caption",
                             content: .text(TextContent(string: "Hi")),
                             frame: CGRect(x: 0, y: 0, width: 80, height: 20))
         let doc = document([caption])
-        // Outline sits where the parts list says it sits, above Text, so it
-        // never moves when a shape joins the selection. It used to sit below,
-        // which meant picking a box beside a caption reordered the panel.
-        #expect(doc.layerPartRows(layerIDs: [caption.id]).map(\.title)
-                == ["Outline", "Text"])
+        #expect(doc.layerPartRows(layerIDs: [caption.id]).map(\.title) == ["Text"])
     }
 
     @Test func aLoneArrowIsStillJustAColor() {
@@ -308,13 +136,10 @@ struct LayerPartsTests {
         #expect(doc.layerPartRows(layerIDs: [arrow.id]).map(\.title) == ["Color"])
     }
 
-    @Test func anEllipseStillGetsFillAndOutline() {
+    @Test func anEllipseStillGetsItsFill() {
         let oval = shape(.ellipse, fillHex: "#00FF00")
         let doc = document([oval])
-        let rows = doc.layerPartRows(layerIDs: [oval.id])
-        #expect(rows.map(\.title) == ["Fill", "Outline"])
-        #expect(rows[1].slot == .stroke)
-        #expect(rows[1].widthIDs == [oval.id])
+        #expect(doc.layerPartRows(layerIDs: [oval.id]).map(\.title) == ["Fill"])
     }
 
     @Test func nothingIsCalledABorderAnyMore() {
@@ -324,29 +149,7 @@ struct LayerPartsTests {
         #expect(!titles.contains("Border"))
     }
 
-    @Test func aSwitchReadsOffUntilEveryLayerItReachesHasThePart() throws {
-        let outlined = shape(.rectangle)
-        let plain = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
-        let doc = document([outlined, plain])
-        let rows = doc.layerPartRows(layerIDs: [outlined.id, plain.id])
-        let outline = try #require(rows.first { $0.slot == .stroke })
-        #expect(outline.onCount == 1)
-        #expect(!outline.isOn)
-    }
 
-    @Test func aRowWhosePickedLayersDisagreeSaysMixedRatherThanReadingOff() throws {
-        let outlined = shape(.rectangle)
-        let plain = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
-        let doc = document([outlined, plain])
-        let rows = doc.layerPartRows(layerIDs: [outlined.id, plain.id])
-        let outline = try #require(rows.first { $0.slot == .stroke })
-        #expect(outline.isMixed)
-        // And it says how many, in words, because the switch saying Mixed does
-        // not say which of them already have the part.
-        #expect(outline.reachNote
-                == "1 of the 2 selected layers has an outline. "
-                + "Switching this on gives the rest one too.")
-    }
 
     @Test func aRowWhosePickedLayersAgreeIsNeverMixed() throws {
         let a = shape(.rectangle, fillHex: "#00FF00")
@@ -426,69 +229,13 @@ struct LayerPartsTests {
 
     // MARK: - Switching the outline off, which could not be done at all
 
-    @Test func aRectanglesOutlineComesOffAndItsColorIsKept() {
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        var doc = document([box])
-        #expect(doc.setOutlineEnabled(layerIDs: [box.id], on: false) == 1)
-        let after = doc.layer(id: box.id)!
-        #expect(!after.hasOutline)
-        #expect(after.annotation?.strokeWidth == 0)
-        // The colour is exactly where it was, so switching back on brings the
-        // same ring back rather than a black one.
-        #expect(after.annotation?.colorHex == "#FF0000")
-    }
 
-    @Test func switchingItBackOnRestoresTheWidthThePanelRemembers() {
-        let box = shape(.rectangle, strokeWidth: 12, fillHex: "#00FF00")
-        var doc = document([box])
-        doc.setOutlineEnabled(layerIDs: [box.id], on: false)
-        doc.setOutlineEnabled(layerIDs: [box.id], on: true, restoring: [box.id: 12])
-        #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == 12)
-    }
 
-    @Test func withNothingRememberedItComesBackAtTheWidthAFreshOneWears() {
-        let box = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
-        var doc = document([box])
-        doc.setOutlineEnabled(layerIDs: [box.id], on: true)
-        #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == AnnotationContent.defaultStrokeWidth)
-    }
 
-    @Test func aPicturesRingIsTheSameSwitch() {
-        let shot = picture()
-        var doc = document([shot])
-        #expect(doc.setOutlineEnabled(layerIDs: [shot.id], on: true) == 1)
-        #expect(doc.layer(id: shot.id)!.style.borderWidth > 0)
-        #expect(doc.setOutlineEnabled(layerIDs: [shot.id], on: false) == 1)
-        #expect(doc.layer(id: shot.id)!.style.borderWidth == 0)
-    }
 
-    @Test func anArrowRefusesToLoseItsLineAndSaysSoByChangingNothing() {
-        let arrow = shape(.arrow)
-        var doc = document([arrow])
-        #expect(doc.setOutlineEnabled(layerIDs: [arrow.id], on: false) == 0)
-        #expect(doc.layer(id: arrow.id)?.annotation?.strokeWidth == 4)
-    }
 
-    @Test func aLockedLayerIsNeverSwitched() {
-        let box = shape(.rectangle, fillHex: "#00FF00", locked: true)
-        var doc = document([box])
-        #expect(doc.setOutlineEnabled(layerIDs: [box.id], on: false) == 0)
-    }
 
-    @Test func switchingOnWhatIsAlreadyOnChangesNothing() {
-        let box = shape(.rectangle)
-        var doc = document([box])
-        #expect(doc.setOutlineEnabled(layerIDs: [box.id], on: true) == 0)
-    }
 
-    @Test func oneSwitchReachesEveryPickedShape() {
-        let a = shape(.rectangle, fillHex: "#00FF00")
-        let b = shape(.ellipse, fillHex: "#0000FF")
-        var doc = document([a, b])
-        #expect(doc.setOutlineEnabled(layerIDs: [a.id, b.id], on: false) == 2)
-        #expect(doc.layer(id: a.id)!.hasOutline == false)
-        #expect(doc.layer(id: b.id)!.hasOutline == false)
-    }
 
     // MARK: - Finding the row that paints one kind of colour
 
@@ -505,32 +252,7 @@ struct LayerPartsTests {
         #expect(fill?.colors == [PartColor(slot: .fill, layerIDs: [box.id])])
     }
 
-    /// A shape and a picture share ONE Outline row, and asking for either kind
-    /// of line finds that same row, ring and stroke together. Saving from it
-    /// keeps one colour for both, which is what the single row promises.
-    @Test func bothKindsOfLineFindTheOneOutlineRow() {
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let shot = picture(style: border(2))
-        let doc = document([box, shot])
-        let byStroke = doc.layerPartRow(layerIDs: [box.id, shot.id], slot: .stroke)
-        let byBorder = doc.layerPartRow(layerIDs: [box.id, shot.id], slot: .border)
-        #expect(byStroke == byBorder)
-        #expect(byStroke?.title == LayerPart.outline.title)
-        #expect(byStroke?.colors.map(\.slot) == [.stroke, .border])
-    }
 
-    /// A highlight's wash is a stroke colour that is not a line round
-    /// anything, so it gets a row of its own. Asking for a stroke finds that
-    /// row rather than the Outline row beside it, because that is the row the
-    /// wash is on.
-    @Test func aWashIsFoundOnItsOwnRowRatherThanTheOutlineRow() {
-        let wash = shape(.highlight)
-        let box = shape(.rectangle, fillHex: "#00FF00")
-        let doc = document([wash, box])
-        let row = doc.layerPartRow(layerIDs: [wash.id, box.id], slot: .stroke)
-        #expect(row?.part == nil)
-        #expect(row?.colors == [PartColor(slot: .stroke, layerIDs: [wash.id])])
-    }
 
     @Test func nothingPaintsAKindOfColourNobodyPicked() {
         let arrow = shape(.arrow)
@@ -547,35 +269,8 @@ struct LayerPartsTests {
     /// 2026-09-07). Letting go of a colour on the row is that whole errand in
     /// one move — and one move is one undo.
 
-    @Test func aColourLetGoOnASwitchedOffOutlineGivesTheBoxALineWearingIt() {
-        let box = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
-        var doc = document([box])
-        #expect(doc.turnOnPart(.outline, layerIDs: [box.id], paint: Paint(hex: "#B0184A")) == 1)
-        let after = try! #require(doc.layer(id: box.id))
-        #expect(after.hasOutline)
-        #expect(after.annotation?.strokeWidth == AnnotationContent.defaultStrokeWidth)
-        #expect(after.colorHex(for: .stroke) == "#B0184A")
-    }
 
-    @Test func theLineComesBackAtTheWidthItWasTakenAwayAt() {
-        let box = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
-        var doc = document([box])
-        doc.turnOnPart(.outline, layerIDs: [box.id], paint: Paint(hex: "#B0184A"),
-                       restoring: [box.id: 12])
-        #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == 12)
-    }
 
-    /// A ring round a picture is the same part, so it takes a colour the same
-    /// way — and it has to gain its width first, because a layer with no ring
-    /// has no border colour to paint at all.
-    @Test func aPicturesRingTakesAColourTheSameWay() {
-        let shot = picture()
-        var doc = document([shot])
-        #expect(doc.turnOnPart(.outline, layerIDs: [shot.id], paint: Paint(hex: "#0A84FF")) == 1)
-        let after = try! #require(doc.layer(id: shot.id))
-        #expect(after.style.borderWidth > 0)
-        #expect(after.colorHex(for: .border) == "#0A84FF")
-    }
 
     @Test func aColourLetGoOnASwitchedOffFillFillsTheBoxWithIt() {
         let box = shape(.rectangle, fillHex: nil)
@@ -593,41 +288,6 @@ struct LayerPartsTests {
         #expect(doc.layer(id: box.id)?.style.shadow?.colorHex == "#0A84FF")
     }
 
-    /// A row where one box is outlined and the other is not shows the word
-    /// Mixed and no swatch either, and its switch resolves to ON for all of
-    /// them. A colour let go of on it does the same thing: they all end up
-    /// wearing it, in one step.
-    @Test func aColourOnAMixedRowGivesEveryOneOfThemTheLine() {
-        let bare = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00")
-        let lined = shape(.rectangle, strokeWidth: 6, fillHex: "#00FF00")
-        var doc = document([bare, lined])
-        let row = try! #require(doc.layerPartRows(layerIDs: [bare.id, lined.id])
-            .first { $0.part == .outline })
-        #expect(row.isMixed)
-        #expect(doc.turnOnPart(.outline, layerIDs: row.switchIDs,
-                               paint: Paint(hex: "#B0184A")) == 2)
-        #expect(doc.layer(id: bare.id)?.hasOutline == true)
-        #expect(doc.layer(id: bare.id)?.colorHex(for: .stroke) == "#B0184A")
-        // The one that already had a line keeps the width it had and takes the
-        // colour, rather than being reset to a fresh one.
-        #expect(doc.layer(id: lined.id)?.annotation?.strokeWidth == 6)
-        #expect(doc.layer(id: lined.id)?.colorHex(for: .stroke) == "#B0184A")
-    }
 
-    @Test func aLockedLayerTakesNoColourThisWayEither() {
-        let box = shape(.rectangle, strokeWidth: 0, fillHex: "#00FF00", locked: true)
-        var doc = document([box])
-        #expect(doc.turnOnPart(.outline, layerIDs: [box.id], paint: Paint(hex: "#B0184A")) == 0)
-        #expect(doc.layer(id: box.id)?.hasOutline == false)
-    }
 
-    /// An arrow IS its line, so there is no width to switch on: the colour
-    /// simply lands on the ink, which is the only thing the row could mean.
-    @Test func anArrowJustTakesTheColourBecauseItHasNoLineToSwitchOn() {
-        let arrow = shape(.arrow)
-        var doc = document([arrow])
-        #expect(doc.turnOnPart(.outline, layerIDs: [arrow.id], paint: Paint(hex: "#B0184A")) == 1)
-        #expect(doc.layer(id: arrow.id)?.annotation?.strokeWidth == 4)
-        #expect(doc.layer(id: arrow.id)?.colorHex(for: .stroke) == "#B0184A")
-    }
 }

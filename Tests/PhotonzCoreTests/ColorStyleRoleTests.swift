@@ -50,7 +50,7 @@ struct ColorStyleRoleTests {
 
     @Test func savingFromAnOutlineMakesAnInkColor() {
         var doc = document([box()])
-        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke, name: "Hairline")!
+        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .border, name: "Hairline")!
         #expect(doc.colorStyle(id: id)?.roles == [.ink])
     }
 
@@ -70,7 +70,7 @@ struct ColorStyleRoleTests {
 
     @Test func anInkColorIsNotOfferedAsSomethingToFillWith() {
         var doc = document([box()])
-        let hairline = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke,
+        let hairline = doc.saveColorStyle(from: doc.layers[0].id, slot: .border,
                                           name: "Hairline")!
         #expect(doc.colorStyles(for: .fill).map(\.id).contains(hairline) == false)
         #expect(doc.colorStyles(for: .stroke).map(\.id) == [hairline])
@@ -85,48 +85,48 @@ struct ColorStyleRoleTests {
 
     @Test func anInkColorIsOfferedOnOutlinesAndOnText() {
         var doc = document([box(), text()])
-        let ink = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke, name: "Ink")!
-        #expect(doc.colorStyles(for: .stroke).map(\.id) == [ink])
+        let ink = doc.saveColorStyle(from: doc.layers[0].id, slot: .border, name: "Ink")!
+        #expect(doc.colorStyles(for: .border).map(\.id) == [ink])
         #expect(doc.colorStyles(for: .text).map(\.id) == [ink])
     }
 
     @Test func theRowsKeepTheShelfsOrder() {
         var doc = document([box(), box()])
-        let first = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke, name: "A")!
-        let second = doc.saveColorStyle(from: doc.layers[1].id, slot: .stroke, name: "B")!
-        #expect(doc.colorStyles(for: .stroke).map(\.id) == [first, second])
+        let first = doc.saveColorStyle(from: doc.layers[0].id, slot: .border, name: "A")!
+        let second = doc.saveColorStyle(from: doc.layers[1].id, slot: .border, name: "B")!
+        #expect(doc.colorStyles(for: .border).map(\.id) == [first, second])
     }
 
     // MARK: - Widening one by hand
 
     @Test func aColorCanBeSetToServeBothParts() {
         var doc = document([box()])
-        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke, name: "Accent")!
+        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .border, name: "Accent")!
         doc.setColorStyleRoles(id: id, roles: [.ink, .surface])
         #expect(doc.colorStyles(for: .fill).map(\.id) == [id])
-        #expect(doc.colorStyles(for: .stroke).map(\.id) == [id])
+        #expect(doc.colorStyles(for: .border).map(\.id) == [id])
     }
 
     @Test func tickingNothingIsRefusedSoAColorNeverVanishes() {
         var doc = document([box()])
-        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke, name: "Accent")!
+        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .border, name: "Accent")!
         doc.setColorStyleRoles(id: id, roles: [])
         #expect(doc.colorStyle(id: id)?.roles == [.ink])
-        #expect(doc.colorStyles(for: .stroke).map(\.id) == [id])
+        #expect(doc.colorStyles(for: .border).map(\.id) == [id])
     }
 
     @Test func rolesAreKeptInOneOrderWithoutRepeats() {
         var doc = document([box()])
-        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke, name: "Accent")!
+        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .border, name: "Accent")!
         doc.setColorStyleRoles(id: id, roles: [.surface, .ink, .surface])
         #expect(doc.colorStyle(id: id)?.roles == [.ink, .surface])
     }
 
     @Test func changingWhatAColorIsForRepaintsNothing() {
         var doc = document([box(fill: "#3366FF", stroke: "#101010")])
-        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .stroke, name: "Accent")!
+        let id = doc.saveColorStyle(from: doc.layers[0].id, slot: .border, name: "Accent")!
         doc.setColorStyleRoles(id: id, roles: [.ink, .surface])
-        #expect(doc.layers[0].colorHex(for: .stroke) == "#101010")
+        #expect(doc.layers[0].colorHex(for: .border) == "#101010")
         #expect(doc.layers[0].colorHex(for: .fill) == "#3366FF")
     }
 
@@ -137,7 +137,7 @@ struct ColorStyleRoleTests {
         let id = doc.addColorStyle(name: "Old", colorHex: "#ABCDEF")
         #expect(doc.colorStyle(id: id)?.roles == nil)
         #expect(doc.colorStyles(for: .fill).map(\.id) == [id])
-        #expect(doc.colorStyles(for: .stroke).map(\.id) == [id])
+        #expect(doc.colorStyles(for: .border).map(\.id) == [id])
         #expect(doc.effectiveColorStyleRoles(id: id) == ColorStyleRole.allCases)
     }
 

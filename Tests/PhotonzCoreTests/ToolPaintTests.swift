@@ -147,13 +147,16 @@ struct ToolPaintTests {
                                                                  end: CGPoint(x: 100, y: 60),
                                                                  fillColorHex: "#FF3B30")),
                           frame: CGRect(x: 0, y: 0, width: 100, height: 60))
+        // The box's edge is a Border in its Effects list, so painting the
+        // outline paints that border (`OutlineRetirementTests`).
         let outlined = AnnotationBuilder.restyled(layer, paint: ramp("#3366FF"))
-        #expect(outlined.annotation?.paint.isGradient == true)
+        #expect(outlined.style.borderEffects.first?.paint.isGradient == true)
         #expect(outlined.annotation?.fill?.isGradient == false, "the fill is left where it was")
 
         let filled = AnnotationBuilder.restyled(outlined, fill: .some(ramp("#34C759", kind: .radial)))
         #expect(filled.annotation?.fill?.kind == .radial)
-        #expect(filled.annotation?.paint.isGradient == true, "and the outline is left where it was")
+        #expect(filled.style.borderEffects.first?.paint.isGradient == true,
+                "and the outline is left where it was")
 
         let cleared = AnnotationBuilder.restyled(filled, fill: .some(nil))
         #expect(cleared.annotation?.fill == nil)

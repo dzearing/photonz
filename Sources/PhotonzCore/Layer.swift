@@ -759,12 +759,6 @@ public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
 public struct LayerStyle: Hashable, Codable, Sendable {
     public var opacity: Double
     public var cornerRadius: CGFloat
-    public var borderWidth: CGFloat
-    public var borderColorHex: String
-    /// Where that ring sits relative to the layer edge. Inside is where every
-    /// ring drawn before there was a choice sat, and it is what an older
-    /// document opens as (`BorderPosition.swift`).
-    public var borderPosition: BorderPosition = .inside
     /// Everything somebody ADDED to this layer, in the order it paints: the
     /// Effects list, top of the list nearest the eye.
     ///
@@ -802,6 +796,66 @@ public struct LayerStyle: Hashable, Codable, Sendable {
             }
         }
     }
+
+    /// The layer's ring, as a plain number: the Border nearest the eye.
+    ///
+    /// There used to be a ring HERE, a stored width and colour of its own,
+    /// drawn under every border in the Effects list. That was the second way to
+    /// draw a line round a box, and the user reported it as exactly that on
+    /// 2026-09-07: two controls, both drawing a line round the same shape, and
+    /// no way to tell which one you were looking at. So the ring left
+    /// Appearance and became an entry in the list like any other
+    /// (`OutlineRetirement.swift`).
+    ///
+    /// These three stay as a VIEW over that entry, the way `blurRadius` and
+    /// `shadows` are views over theirs: every caller written before the change
+    /// — a component copying a style across, a magnifier scaling one up, a
+    /// document opened from disk — goes on saying `style.borderWidth = 4` and
+    /// goes on meaning it.
+    ///
+    /// Zero when there is no border in the list, and zero when the border that
+    /// IS there is switched off, because off has to look off.
+    public var borderWidth: CGFloat {
+        get {
+            guard let border = effects.compactMap(\.border).first else { return 0 }
+            return border.isOn ? border.width : 0
+        }
+        set {
+            if let index = borderEffectIndex {
+                effects[index].border?.width = newValue
+                if newValue > 0 { effects[index].border?.isOn = true }
+            } else if newValue > 0 {
+                effects.append(.border(BorderEffect(width: newValue,
+                                                    position: .inside)))
+            }
+        }
+    }
+
+    /// What that ring is painted. Setting it on a layer with NO ring does
+    /// nothing at all, rather than leaving a Border of no width sitting in the
+    /// list: a row that draws nothing is a row in the way, and the way to a
+    /// coloured edge is to give the layer one.
+    public var borderColorHex: String {
+        get { effects.compactMap(\.border).first?.colorHex ?? "#000000" }
+        set {
+            guard let index = borderEffectIndex else { return }
+            effects[index].border?.colorHex = newValue
+        }
+    }
+
+    /// Where that ring sits relative to the layer edge. Inside is where every
+    /// ring drawn before there was a choice sat, and it is what an older
+    /// document opens as (`BorderPosition.swift`).
+    public var borderPosition: BorderPosition {
+        get { effects.compactMap(\.border).first?.position ?? .inside }
+        set {
+            guard let index = borderEffectIndex else { return }
+            effects[index].border?.position = newValue
+        }
+    }
+
+    /// Where the ring nearest the eye sits in the list.
+    var borderEffectIndex: Int? { effects.firstIndex { $0.kind == .border } }
 
     /// Every shadow this layer throws, nearest the eye FIRST.
     ///
@@ -856,10 +910,9 @@ public struct LayerStyle: Hashable, Codable, Sendable {
                 shadows: [ShadowStyle], blendMode: BlendMode = .normal) {
         self.opacity = opacity
         self.cornerRadius = cornerRadius
-        self.borderWidth = borderWidth
-        self.borderColorHex = borderColorHex
         self.effects = LayerStyle.effects(blurRadius: blurRadius, shadows: shadows)
         self.blendMode = blendMode
+        appendRing(width: borderWidth, colorHex: borderColorHex)
     }
 
     public init(opacity: Double = 1, cornerRadius: CGFloat = 0,
@@ -867,10 +920,22 @@ public struct LayerStyle: Hashable, Codable, Sendable {
                 effects: [LayerEffect], blendMode: BlendMode = .normal) {
         self.opacity = opacity
         self.cornerRadius = cornerRadius
-        self.borderWidth = borderWidth
-        self.borderColorHex = borderColorHex
         self.effects = effects
         self.blendMode = blendMode
+        appendRing(width: borderWidth, colorHex: borderColorHex)
+    }
+
+    /// A ring asked for the way a ring used to be asked for: one more Border at
+    /// the FOOT of the list, which is where the layer's own ring painted —
+    /// under every border somebody added (`OutlineRetirement.swift`).
+    ///
+    /// Nothing at all when there is no width, so a colour handed to a layer
+    /// that has no ring cannot leave a Border row of nought behind it.
+    mutating func appendRing(width: CGFloat, colorHex: String,
+                             position: BorderPosition = .inside) {
+        guard width > 0 else { return }
+        effects.append(.border(BorderEffect(width: width, colorHex: colorHex,
+                                            position: position)))
     }
 
     /// The Effects list a layer written before the list existed opens with.
@@ -889,7 +954,7 @@ public struct LayerStyle: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case opacity, blurRadius, cornerRadius, borderWidth, borderColorHex
-        case borderPosition
+        case borderPosition, ringIsAnEffect
         case shadow, shadows, effects, blendMode
     }
 
@@ -897,10 +962,6 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         opacity = try c.decodeIfPresent(Double.self, forKey: .opacity) ?? 1
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
-        borderWidth = try c.decodeIfPresent(CGFloat.self, forKey: .borderWidth) ?? 0
-        borderColorHex = try c.decodeIfPresent(String.self, forKey: .borderColorHex) ?? "#000000"
-        // A ring had nowhere but inside to be until 2026-09-07.
-        borderPosition = try c.decodeIfPresent(BorderPosition.self, forKey: .borderPosition) ?? .inside
         blendMode = try c.decodeIfPresent(BlendMode.self, forKey: .blendMode) ?? .normal
         if let list = try c.decodeIfPresent([LayerEffect].self, forKey: .effects) {
             effects = list
@@ -920,6 +981,26 @@ public struct LayerStyle: Hashable, Codable, Sendable {
             }
             effects = LayerStyle.effects(blurRadius: blur, shadows: shadows)
         }
+        // The layer's own ring, from back when it had one of its own. It comes
+        // in at the FOOT of the list because that is where it painted: under
+        // every border somebody added, which the renderer laid over it
+        // (`OutlineRetirement.swift`).
+        //
+        // `ringIsAnEffect` is how a file written since the retirement says so.
+        // Without it a document saved by a build that had both — an added
+        // border in the list AND a ring of its own — would open with the ring
+        // dropped, and every one of them would look thinner than it was saved.
+        // With it, `borderWidth` below is a mirror for older builds and is read
+        // by nobody here.
+        let alreadyRetired = try c.decodeIfPresent(Bool.self, forKey: .ringIsAnEffect) ?? false
+        if !alreadyRetired {
+            appendRing(width: try c.decodeIfPresent(CGFloat.self, forKey: .borderWidth) ?? 0,
+                       colorHex: try c.decodeIfPresent(String.self, forKey: .borderColorHex)
+                           ?? "#000000",
+                       // A ring had nowhere but inside to be until 2026-09-07.
+                       position: try c.decodeIfPresent(BorderPosition.self,
+                                                       forKey: .borderPosition) ?? .inside)
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -927,11 +1008,16 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         try c.encode(opacity, forKey: .opacity)
         try c.encode(blurRadius, forKey: .blurRadius)
         try c.encode(cornerRadius, forKey: .cornerRadius)
+        // The ring nearest the eye, written where a ring has always been
+        // written, so a file saved today still draws an edge in a build from
+        // before the retirement. Nothing here reads it back: `ringIsAnEffect`
+        // says it is a mirror.
         try c.encode(borderWidth, forKey: .borderWidth)
         try c.encode(borderColorHex, forKey: .borderColorHex)
         // Written only when it is not where rings have always been, so a
         // document that has never moved one is byte for byte what it was.
         if borderPosition != .inside { try c.encode(borderPosition, forKey: .borderPosition) }
+        try c.encode(true, forKey: .ringIsAnEffect)
         try c.encode(blendMode, forKey: .blendMode)
         // The first shadow and the blur are written where they have always been
         // written, so a file saved today still opens in a build from yesterday
@@ -980,10 +1066,10 @@ extension LayerStyle {
         reach.append(contentsOf: paintedGlows.map(\.outset))
         padding += reach.max() ?? 0
         // A ring that sits on or past the edge draws outside the box, so the
-        // room it needs is part of how far this style reaches. The layer's own
-        // Outline and the borders somebody ADDED are rings round the same box,
-        // so the furthest of them decides; they do not stack end to end.
-        padding += max(borderPosition.outset(width: borderWidth), borderEffectOutset)
+        // room it needs is part of how far this style reaches. Rings round the
+        // same box overlap, so the furthest of them decides; they do not stack
+        // end to end.
+        padding += borderEffectOutset
         return padding.rounded(.up)
     }
 
@@ -993,7 +1079,7 @@ extension LayerStyle {
     /// during a resize — the stroke would stretch, the blur/shadow would bloat —
     /// so a resize of a layer with any of it must re-render the frame instead.
     var hasNoFixedSizeDecoration: Bool {
-        borderWidth == 0 && cornerRadius == 0 && blurRadius == 0
+        cornerRadius == 0 && blurRadius == 0
             && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
     }
 
@@ -1002,7 +1088,7 @@ extension LayerStyle {
     /// like this is a container rather than an object, so its children can draw
     /// straight onto the canvas and grouping changes no pixels.
     public var isPlain: Bool {
-        opacity >= 1 && blurRadius <= 0 && cornerRadius <= 0 && borderWidth <= 0
+        opacity >= 1 && blurRadius <= 0 && cornerRadius <= 0
             && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
             && blendMode == .normal
     }
@@ -1189,6 +1275,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         self.colorStyleBindings = colorStyleBindings
         self.placement = placement
         self.flowFill = flowFill
+        // A box or an oval asked for with a stroke of its own gets that stroke
+        // as a Border in its Effects list instead. There is one kind of edge in
+        // the app now, and this is what keeps everything that builds a layer in
+        // code — a starter component, the shape tool, a test — building the
+        // same one the panel can edit (`OutlineRetirement.swift`).
+        moveItsOutlineIntoEffects()
     }
 
     /// A copy with a fresh identity, for duplicate/paste. The frame offset

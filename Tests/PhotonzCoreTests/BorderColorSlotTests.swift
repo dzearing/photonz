@@ -46,7 +46,9 @@ struct BorderColorSlotTests {
 
     @Test func givingABoxABorderGivesItABorderColor() {
         let bordered = box(border: 3, borderHex: "#FF3B30")
-        #expect(bordered.colorSlots == [.fill, .stroke, .border])
+        // No `.stroke`: a box has no stroke of its own since its edge became a
+        // Border (`OutlineRetirementTests`).
+        #expect(bordered.colorSlots == [.fill, .border])
         #expect(bordered.colorHex(for: .border) == "#FF3B30")
     }
 
@@ -87,7 +89,7 @@ struct BorderColorSlotTests {
         let bordered = box("Bordered", border: 4)
         let doc = document([plain, bordered])
         #expect(doc.colorRowSlots(layerIDs: [plain.id]).contains(.border) == false)
-        #expect(doc.colorRowSlots(layerIDs: [plain.id, bordered.id]) == [.fill, .stroke, .border])
+        #expect(doc.colorRowSlots(layerIDs: [plain.id, bordered.id]) == [.fill, .border])
     }
 
     /// It paints every bordered layer picked, in one step, and stays quiet
@@ -104,7 +106,8 @@ struct BorderColorSlotTests {
         #expect(doc.setColorHex(layerIDs: ids, slot: .border, hex: "#FF3B30") == 2)
         #expect(doc.layer(id: a.id)?.style.borderColorHex == "#FF3B30")
         #expect(doc.layer(id: b.id)?.style.borderColorHex == "#FF3B30")
-        #expect(doc.layer(id: c.id)?.style.borderColorHex == "#101010")
+        // C has no ring at all, so there is nothing on it to paint.
+        #expect(doc.layer(id: c.id)?.colorHex(for: .border) == nil)
         let after = doc.colorStyleSelection(layerIDs: ids, slot: .border)
         #expect(after.reading == .color("#FF3B30"))
         #expect(after.note == nil)

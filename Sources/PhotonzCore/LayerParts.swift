@@ -22,11 +22,6 @@ import Foundation
 public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     /// What is inside the shape: a box's interior, a frame's surface.
     case fill
-    /// The line round the layer, whichever way it is drawn. A shape strokes its
-    /// own path and everything else gets a ring round its box, and that
-    /// difference is nothing a person does differently, so it is one part with
-    /// one name. See `OutlineWidth.swift`.
-    case outline
     /// What the layer throws behind it.
     ///
     /// A shadow is no longer a row in Appearance: it is something you ADD, so
@@ -40,7 +35,6 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     public var title: String {
         switch self {
         case .fill: return "Fill"
-        case .outline: return "Outline"
         case .shadow: return "Shadow"
         }
     }
@@ -51,7 +45,6 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     public var article: String {
         switch self {
         case .fill, .shadow: return "a"
-        case .outline: return "an"
         }
     }
 
@@ -59,30 +52,23 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
 
 extension Layer {
 
-    /// Which of this layer's colours the Outline part paints: a shape's own
-    /// stroke, or the ring its styling draws round everything else.
+    /// Which of this layer's colours its edge paints.
+    ///
+    /// A line and an arrow ARE their stroke, so the colour is their ink.
+    /// Everything else wears a ring, and a ring is a Border in the Effects
+    /// list, so its colour is the border's (`OutlineRetirement.swift`).
     public var outlineSlot: ColorSlot { drawsItsOwnOutline ? .stroke : .border }
 
-    /// Whether the line round this layer is there right now. The one test for
-    /// both kinds of ring, so a switch cannot read one and set the other.
-    ///
-    /// A highlight is the reason this is not simply `outlineWidth > 0`: it
-    /// carries a stroke width in its content that it never paints, so the only
-    /// ring it can have is the one its styling draws.
-    public var hasOutline: Bool {
-        (drawsItsOwnOutline ? outlineWidth : style.borderWidth) > 0
-    }
+    /// Whether there is a line round this layer right now.
+    public var hasOutline: Bool { outlineWidth > 0 }
 
     /// Whether this layer's outline can be switched OFF.
     ///
-    /// A box or an ellipse can live without one: it still has an inside. A
-    /// line or an arrow IS its line — switching it off would leave nothing on
+    /// A line or an arrow IS its line — taking it away would leave nothing on
     /// the canvas at all, which is not a setting, it is a delete. So those
     /// carry no switch, and their colour is a property rather than a part.
-    ///
-    /// Anything that is not a shape at all — a picture, a frame, a label, a
-    /// highlight — wears a ring its styling draws, and a ring is always
-    /// something a layer can be without.
+    /// Everything else wears a ring, and a ring is always something a layer can
+    /// be without: the cross on its row takes it out.
     public var outlineIsSwitchable: Bool { annotation?.outlineIsSwitchable ?? true }
 
     /// The width the outline comes back at when it is switched on and nothing
@@ -269,61 +255,24 @@ extension PhotonzDocument {
                 widthIDs: [], selectionCount: count))
         }
 
-        // Who has a line round them at all, and which of the two ways it is
-        // drawn. A shape strokes its own path; everything else — a picture, a
-        // frame, a label, a group, a highlight — wears a ring its styling
-        // draws. One part, two ways of painting it.
-        let inked = picked.filter { $0.colorSlots.contains(.stroke) }
-        let stroked = inked.filter(\.drawsItsOwnOutline)
-        let ringed = picked.filter { !$0.drawsItsOwnOutline }
-        // A row called Outline needs at least one line somebody can take off.
-        // Two arrows and nothing else have no such line: an arrow IS its line,
-        // and a row offering to remove it would be a delete wearing a switch.
-        let outlined = stroked.contains(where: \.outlineIsSwitchable) || !ringed.isEmpty
-
         // A colour that is a property rather than a part: a highlight's wash,
-        // and a lone arrow's or line's ink. No switch, because the layer IS
-        // it, and no width, because a line's thickness lives in the shape's
-        // own settings beside its ending and its head size.
+        // and an arrow's or a line's ink. No switch, because the layer IS it,
+        // and no width, because a line's thickness lives in the shape's own
+        // settings beside its ending and its head size.
         //
-        // A highlight keeps this row even next to a box, because its stroke
-        // colour is the wash it paints and not a line round anything. It never
-        // draws the stroke width it carries.
-        let plainInk = outlined ? inked.filter { !$0.drawsItsOwnOutline } : inked
+        // There is no Outline row under this one any more. It was the second
+        // way to draw a line round a box — the first being a Border in the
+        // Effects list — and the user reported the pair of them on 2026-09-07
+        // as two controls with no way to tell which one you were looking at. A
+        // layer's edge is a Border now, and only a Border
+        // (`OutlineRetirement.swift`).
+        let inked = picked.filter { $0.colorSlots.contains(.stroke) }
+        let plainInk = inked
         if !plainInk.isEmpty {
             rows.append(LayerPartRow(
                 part: nil, colors: [PartColor(slot: .stroke, layerIDs: plainInk.map(\.id))],
                 title: ColorSlot.stroke.title,
                 switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
-        }
-
-        // ONE Outline row, however many kinds of line are picked.
-        //
-        // It used to be two whenever a shape and anything else were picked
-        // together: the stroke row and the ring row, one above the other, both
-        // called Outline, each with a switch that reached half the selection
-        // (reported 2026-09-07). They are the same idea to a person, so this
-        // is one row that knows which colour each picked layer actually wears.
-        if outlined {
-            var colors: [PartColor] = []
-            if !stroked.isEmpty {
-                colors.append(PartColor(slot: .stroke, layerIDs: stroked.map(\.id)))
-            }
-            if !ringed.isEmpty {
-                colors.append(PartColor(slot: .border, layerIDs: ringed.map(\.id)))
-            }
-            // Everything but a line and an arrow, in draw order, so the switch
-            // reads the same way twice running.
-            let switched = picked.filter { !$0.drawsItsOwnOutline || $0.outlineIsSwitchable }
-            rows.append(LayerPartRow(
-                part: .outline, colors: colors, title: LayerPart.outline.title,
-                switchIDs: switched.map(\.id),
-                onCount: switched.filter(\.hasOutline).count,
-                // The width reaches every picked layer, arrows included: they
-                // cannot lose their line but they can be made thicker, and one
-                // Width over a box, an arrow and a screenshot is what the one
-                // row promises.
-                widthIDs: picked.map(\.id), selectionCount: count))
         }
 
         // A letter's ink. Always there, so no switch.
@@ -371,16 +320,13 @@ extension PhotonzDocument {
     /// — so it is one edit, and one undo puts all of it back.
     ///
     /// Every named layer ends up wearing the colour, including the ones that
-    /// already had the part. That is what a row where some of them are outlined
-    /// and some are not already promises: its switch resolves to ON for all of
-    /// them rather than stripping the ones that have it.
+    /// already had the part. That is what a row where some of them have it and
+    /// some do not already promises: its switch resolves to ON for all of them
+    /// rather than stripping the ones that have it.
     ///
-    /// A layer that already has the part KEEPS the width it was tuned to; only
-    /// the ones gaining it take a width, `restoring` first and the width a
-    /// fresh one wears otherwise. Returns how many layers changed.
+    /// Returns how many layers changed.
     @discardableResult
     public mutating func turnOnPart(_ part: LayerPart, layerIDs: [UUID], paint: Paint,
-                                    restoring: [UUID: CGFloat] = [:],
                                     index: Int = 0) -> Int {
         var changed = 0
         for id in layerIDs {
@@ -393,24 +339,6 @@ extension PhotonzDocument {
                     // The colour that landed, not the one the switch would have
                     // seeded: somebody chose this one by letting go of it.
                     $0.setPaint(paint, for: .fill)
-                }
-            case .outline:
-                let width = max(1, restoring[id] ?? layer.startingOutlineWidth)
-                updateLayer(id: id) { target in
-                    // The width goes on FIRST: a layer with no ring has no
-                    // border colour at all, so painting before widening would
-                    // paint nothing. An arrow has no width to switch — it IS
-                    // its line — and simply takes the colour.
-                    if !target.hasOutline, target.outlineIsSwitchable {
-                        if target.drawsItsOwnOutline {
-                            target.setOutlineWidth(width)
-                        } else {
-                            target.style.borderWidth = width
-                        }
-                    }
-                    let slot = target.outlineSlot
-                    target.unbindColorStyle(for: slot)
-                    target.setPaint(paint, for: slot)
                 }
             case .shadow:
                 updateLayer(id: id) { target in
@@ -429,39 +357,6 @@ extension PhotonzDocument {
                         shadow.colorHex = paint.hex
                         target.style.shadows.append(shadow)
                     }
-                }
-            }
-            changed += 1
-        }
-        return changed
-    }
-
-    /// Switches the line round a set of layers on or off, whichever ring each
-    /// one draws. Returns how many changed, so a caller can tell a no-op from
-    /// an edit.
-    ///
-    /// Off is a width of zero, which the rasterizer has always understood as no
-    /// line at all, so nothing about how an existing document draws changes:
-    /// this only gives the panel a way to say it. The colour is left exactly
-    /// where it was, so switching back on brings the same ring back rather than
-    /// a black one.
-    ///
-    /// `restoring` is what each layer's line comes back at, for a panel that
-    /// remembers the width it took away. Anything not named there comes back at
-    /// the width a fresh one wears.
-    @discardableResult
-    public mutating func setOutlineEnabled(layerIDs: [UUID], on: Bool,
-                                           restoring: [UUID: CGFloat] = [:]) -> Int {
-        var changed = 0
-        for id in layerIDs {
-            guard let layer = layer(id: id), !layer.isLocked,
-                  layer.outlineIsSwitchable, layer.hasOutline != on else { continue }
-            let width = on ? max(1, restoring[id] ?? layer.startingOutlineWidth) : 0
-            updateLayer(id: id) { target in
-                if target.drawsItsOwnOutline {
-                    target.setOutlineWidth(width)
-                } else {
-                    target.style.borderWidth = width
                 }
             }
             changed += 1

@@ -178,12 +178,24 @@ extension Layer {
     /// Effects slider left on it, colour and all, so it ends up wearing one ring
     /// instead of two (`OutlineWidth.swift`).
     mutating func setOutlineWidth(_ width: CGFloat) {
-        guard drawsItsOwnOutline, var annotation else { return }
-        let color = outlineColorHex
-        annotation.strokeWidth = max(0, width)
-        annotation.colorHex = color
-        content = .annotation(annotation)
-        style.borderWidth = 0
+        guard var annotation, hasOutlineThickness else { return }
+        let paint = outlinePaint
+        if drawsItsOwnOutline {
+            // A line and an arrow ARE their stroke, so the number is its width.
+            annotation.strokeWidth = max(0, width)
+            annotation.paint = paint
+            content = .annotation(annotation)
+        } else {
+            // A box or an oval wears its edge as a Border in the Effects list,
+            // so the number is that border's (`OutlineRetirement.swift`). The
+            // colour rides along so a shape gaining an edge does not gain a
+            // black one.
+            let hadOne = style.borderEffectIndex != nil
+            style.borderWidth = max(0, width)
+            if !hadOne, let index = style.borderEffectIndex {
+                style.effects[index].border?.paint = paint
+            }
+        }
     }
 
     /// What this layer reads for one number, or nil where it has no such number
@@ -195,7 +207,7 @@ extension Layer {
         case .cornerRadius:
             return hasRoundableCorners ? .number(roundedCornerRadius) : nil
         case .thickness:
-            return drawsItsOwnOutline ? .number(outlineWidth) : nil
+            return hasOutlineThickness ? .number(outlineWidth) : nil
         case .gap:
             // Only something that arranges its contents holds them apart, so
             // the layout answers for this one.

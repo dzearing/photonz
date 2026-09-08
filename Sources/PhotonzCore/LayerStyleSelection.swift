@@ -59,14 +59,14 @@ public struct LayerStyleSelection: Hashable, Sendable {
         /// strokes its own outline, so its width belongs on the shape's own
         /// Thickness row and the Border row leaves it alone. See
         /// `OutlineWidth.swift`.
-        public let drawsItsOwnOutline: Bool
+        public let hasItsOwnThickness: Bool
 
         public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double,
-                    drawsItsOwnOutline: Bool = false) {
+                    hasItsOwnThickness: Bool = false) {
             self.id = id
             self.style = style
             self.cornerRadiusLimit = cornerRadiusLimit
-            self.drawsItsOwnOutline = drawsItsOwnOutline
+            self.hasItsOwnThickness = hasItsOwnThickness
         }
     }
 
@@ -238,7 +238,7 @@ extension PhotonzDocument {
             members.append(LayerStyleSelection.Member(
                 id: id, style: resolved,
                 cornerRadiusLimit: max(1, Double(min(bounds.width, bounds.height) / 2)),
-                drawsItsOwnOutline: layer.drawsItsOwnOutline))
+                hasItsOwnThickness: layer.hasOutlineThickness))
         }
         return LayerStyleSelection(members: members, selectionCount: layerIDs.count)
     }

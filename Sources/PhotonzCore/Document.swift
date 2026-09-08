@@ -69,7 +69,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         canvasSize = try c.decode(CGSize.self, forKey: .canvasSize)
-        layers = try c.decode([Layer].self, forKey: .layers)
+        // A shape saved before the Outline row left Appearance carries its edge
+        // as its own stroke. It opens as a Border in the Effects list instead,
+        // painting exactly the same pixels (`OutlineRetirement.swift`).
+        layers = try c.decode([Layer].self, forKey: .layers).map { $0.retiringItsOutline() }
         // `pixelScale` postdates the format; legacy documents omit it.
         pixelScale = try c.decodeIfPresent(CGFloat.self, forKey: .pixelScale) ?? 1
         // `colorStyles` postdates it too; a document from before has none.

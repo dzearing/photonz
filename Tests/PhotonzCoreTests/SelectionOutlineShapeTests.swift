@@ -35,9 +35,10 @@ struct SelectionOutlineShapeTests {
 
     @Test("A rounded rectangle's outline follows the shape's own curve")
     func roundedRectangleRadius() {
-        // 49 pt of curve on a path inset half of a 4 pt inside line: the
-        // silhouette at the frame is 51.
-        #expect(rectangle(radius: 49).selectionOutlineRadius(box: box) == 51)
+        // The curve the box itself carries: its edge is a ring hugging the box
+        // now, not a stroke riding a path half a width inside it
+        // (`OutlineRetirementTests`).
+        #expect(rectangle(radius: 49).selectionOutlineRadius(box: box) == 49)
     }
 
     @Test("A square rectangle's outline stays square")

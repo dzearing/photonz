@@ -1,0 +1,27 @@
+{
+  "id": "a-label-can-wear-a-box-as-well-as-an-outline-on",
+  "title": "A label can wear a box as well as an outline on its letters",
+  "goal": "A border added to a piece of text draws a line round each letter, which is what you want when words sit over a busy screenshot. There is no way to put a plain box round the label itself any more, and a bordered label is a common thing to want. Give a label both, and make it obvious which one you are getting.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2020,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T14:58:03.179Z",
+  "updated": "2026-09-08T14:58:03.182Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Fallout from outline-leaves-appearance-and-an-effect-s-colour (2026-09-08). A layer ring on a text layer has always been baked into the text raster as a glyph outline (DocumentRenderer, .text case, TextRasterizer.TextOutline). When the Outline row retired, every border on a label became that glyph outline and DocumentRenderer stops calling borderEffects for text, so the box a Border used to draw round a label (added 2026-09-07) is gone. Likely shape: a per-border choice of what it follows, i.e. widen RingShape to include the letters and let the row pick, or a separate setting in the Text section.",
+  "acceptance": [
+    "A label can be given an outline that follows its letters and a box that follows its frame, and both can be on at once",
+    "The row says which of the two it is without having to try it",
+    "A document saved before this opens with its letter outline unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T14:58:03.181Z",
+      "note": "created (manual)"
+    }
+  ]
+}

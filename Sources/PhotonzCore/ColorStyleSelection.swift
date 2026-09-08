@@ -446,11 +446,19 @@ extension PhotonzDocument {
     /// let go of.
     @discardableResult
     public mutating func setColorHex(layerIDs: [UUID], effectAt index: Int, hex: String) -> Int {
+        setPaint(layerIDs: layerIDs, effectAt: index, paint: Paint(hex: hex))
+    }
+
+    /// The same with the whole paint, so a border can be given a ramp: a box's
+    /// edge is a border now and a box's edge has always been able to hold one
+    /// (`OutlineRetirement.swift`).
+    @discardableResult
+    public mutating func setPaint(layerIDs: [UUID], effectAt index: Int, paint: Paint) -> Int {
         let targets = colorStyleSelection(layerIDs: layerIDs, effectAt: index).layerIDs
         for id in targets {
             updateLayer(id: id) {
                 $0.unbindColorStyle(forEffectAt: index)
-                $0.setColorHex(hex, forEffectAt: index)
+                $0.setPaint(paint, forEffectAt: index)
             }
         }
         return targets.count
@@ -466,7 +474,7 @@ extension PhotonzDocument {
         for id in targets {
             let slot = layer(id: id)?.style.effect(at: index)?.colorSlot ?? .border
             updateLayer(id: id) {
-                $0.setColorHex(style.paint(for: slot).hex, forEffectAt: index)
+                $0.setPaint(style.paint(for: slot), forEffectAt: index)
                 $0.bindColorStyle(styleID, forEffectAt: index)
             }
         }
