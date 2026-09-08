@@ -12493,3 +12493,42 @@ seconds while a test run was loading the machine and all pass cleanly on their
 own, so nobody needs to chase them.
 
 Next: the two p1 bugs above are the top of the queue.
+
+## 2026-09-08 — Delete over a marquee already said why, so this run proved it
+
+The task asked for a message when Backspace over a marquee lands on a shape and
+can do nothing. Reading the code first said it was already there: the refusal
+landed on 2026-09-07 with the cut task, which covered Backspace as well as
+Command X through `RegionSliceRefusal`. So the work was to reproduce it on the
+probe instead of taking the code's word for it, and to close the half the cut
+walk never pressed.
+
+New walk, `Scripts/playtest/delete-over-a-marquee-walk.json`, presses the same
+key in both places, picture first so no leftover pill can be mistaken for one.
+Screen Recording granted, so the shots are real window captures.
+
+- On a picture: the corner comes out, `copied` is `none`, and the render differs
+  from the one before it. Nothing is said, which is right.
+- On a shape: layers stays 3 and the line reads "Cannot delete a piece · Only a
+  picture can have a piece taken out. Clear the marquee to delete the whole
+  layer."
+- The way out works: Escape then Backspace takes the whole rectangle, and the
+  document renders byte-for-byte as it did before the shape existed.
+
+One stage of the walk was wrong on the first run and is worth remembering: it
+claimed the line fades after a few seconds. It does, on a three second clock
+tested in `CopyConfirmation`, but a walk cannot show that. The harness's `wait`
+ends as soon as the app goes quiet, so a 3.4s wait returned in 0.2s and the log
+still showed the pill up. A walk can only time a clock under
+`PHOTONZ_PLAYTEST_PACE=off`.
+
+One code change, and it is copy: the Experiments switch governs Backspace too,
+so "Say when a piece cannot be cut out" is now "Say when a piece cannot be taken
+out", the wording the message itself uses. The flag name is untouched, so no
+setting moves.
+
+`Scripts/test.sh` green, 4800 tests. Audit:
+`queue/audits/2026-09-08-delete-over-a-marquee.json`.
+
+Next: the queue's own order. Option Backspace, which fills a marquee, is still
+silent over a shape and has its own task waiting.
