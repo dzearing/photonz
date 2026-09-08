@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 220,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T06:25:25.691Z",
-  "updated": "2026-09-08T06:25:25.692Z",
+  "updated": "2026-09-08T06:43:16.547Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-08 while working the outline task. Command: Scripts/playtest.sh with a walk that draws an ellipse with O, switches its Outline off, adds a Border from the Effects plus and widens it. Output: /tmp/photonz-playtest/outline-repro/3-canvas-ellipse-border.png shows a red ellipse inside a black SQUARE ring. The cause is DocumentRenderer.ringed (Sources/PhotonzRender/DocumentRenderer.swift, around line 1000), which builds every ring out of roundedRectImage over the layer box, so the shape of the layer never enters into it. Sources/PhotonzCore/OutlineWidth.swift already calls this out in words: on an ellipse, a line or an arrow the border draws a RECTANGLE round the bounding box, which is an accident of how it is painted rather than something anyone reaches for. This BLOCKS retiring the Appearance outline (see the task outline-leaves-appearance-and-an-effect-s-colour): a shape edge cannot be drawn only by added borders while an added border cannot follow a shape. A line and an arrow are a separate question and are not in this scope: their stroke IS the layer, and a ring round a stroke is a different idea.",
@@ -25,6 +25,27 @@
     {
       "t": "2026-09-08T06:25:25.692Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T06:43:16.547Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T06:56:35.984Z",
+      "note": "Adversarial review before building. The mock is not the question here, the drawing is. Two ways to draw an oval ring: two ovals inset from each other, or one stroke down the middle of the ring. Inset ovals are not an offset curve, so the ring would vary by about 5% in thickness on a 2:1 oval, and worse, it would NOT land on the pixels the shape's own outline draws. That second point decides it: the whole reason a shape has one line round it and not two is that the stroke and the border coincide, and retiring the Appearance outline depends on it. So the ring is stroked, exactly as AnnotationRasterizer strokes the shape. Scope held to the ellipse: a line and an arrow are their stroke, so a ring round one is a different idea and wants its own decision."
+    },
+    {
+      "t": "2026-09-08T06:56:35.984Z",
+      "note": "Failing tests first (Tests/PhotonzRenderTests/EllipseBorderRenderTests.swift): the four corners of an ellipse's box came back green, i.e. a square ring. Fix: Layer.ringShape in PhotonzCore says whether a ring hugs the box or the oval (Sources/PhotonzCore/RingShape.swift, tested); DocumentRenderer.ringed takes it and, for an oval, draws the ring as a white CG stroke down the middle of the ring and lays the colour into it, so the colour matches the rounded-rect path exactly. Masks are cached by size and stroke width, and a ring bigger than crispRasterCap is baked smaller and blown up the way a layer's content is, so an oval at 800% zoom cannot ask for a 750MB bitmap."
+    },
+    {
+      "t": "2026-09-08T06:56:35.984Z",
+      "note": "Verified on the probe (Screen Recording granted, real captures): Scripts/playtest/ellipse-border-walk.json -> /tmp/photonz-playtest/ellipse-border. 2-canvas-outside.png, 3-canvas-inside.png and 4-canvas-centred.png each show an oval ring at all three positions; 5-canvas-resized.png shows it following a squashed oval; 6-canvas-rectangle.png shows a rectangle beside it with its square ring unchanged. Full suite 4757 tests green. Perf on a deliberately extreme case (an oval filling a 12MP canvas, 24pt ring): 17.1ms warm against 13.9ms for the same shape as a rectangle, 27ms on the first frame."
+    },
+    {
+      "t": "2026-09-08T06:56:35.984Z",
+      "note": "Docs corrected where they now said the wrong thing: OutlineWidth.swift and docs/design/tools.md both stated that a border on an ellipse draws a rectangle. Also: this unblocks outline-leaves-appearance-and-an-effect-s-colour, which was waiting on exactly this."
     }
-  ]
+  ],
+  "started": "2026-09-08T06:43:16.546Z"
 }

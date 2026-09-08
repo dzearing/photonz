@@ -1,0 +1,28 @@
+{
+  "feature": "A border follows the shape it is on",
+  "epic": "ui-building",
+  "summary": "Add a Border to an oval and you get an oval ring round it. It used to be a black square round the shape's bounding box.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on: this is how every border is drawn now.",
+  "try": [
+    { "do": "Press O and drag out an oval on a blank canvas." },
+    { "do": "In Effects, click the plus and choose Border.", "shot": "2026-09-08-ellipse-border-1.png" },
+    { "do": "Drag the Border's Width slider up to about 13pt." },
+    { "do": "Switch the Border's Position between Outside, Inside and Center." },
+    { "do": "Drag a corner handle to squash the oval flat and watch the ring follow." },
+    { "do": "Press R, drag out a rectangle beside it, and give that a Border too.", "shot": "2026-09-08-ellipse-border-2.png" },
+    { "do": "Add a second Border to the oval, in another colour, at another position." }
+  ],
+  "evaluate": [
+    "Does the oval ring read as part of the shape, rather than as something laid over it?",
+    "At Center, does the ring sit convincingly half in and half out of the oval's edge?",
+    "When you squash the oval flat, does the ring stay the same thickness all the way round?",
+    "Does the rectangle beside it look exactly as it did before?",
+    "With two borders on one oval, is it clear which one is on top?"
+  ],
+  "rough": [
+    "A line and an arrow still get a rectangle round their bounding box. That was left out on purpose: a line's stroke IS the layer, so a ring round a stroke is a different idea and wants its own decision.",
+    "The screenshots are real captures of the running probe app.",
+    "Cost, measured on a deliberately extreme case (an oval filling a 12-megapixel canvas with a 24pt ring): 17.1ms against 13.9ms for the same shape as a rectangle, and 27ms on the very first frame while the ring is drawn. A ring is drawn as a bitmap rather than on the GPU, so it is cached by size and reused while you move the shape; only resizing draws a new one.",
+    "This was the thing standing in the way of retiring the Outline row in Appearance: a shape's edge could not be drawn only by added borders while an added border could not follow the shape. It can now, and at the same width and position the two land on the same pixels."
+  ]
+}

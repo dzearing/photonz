@@ -12,10 +12,12 @@ import Foundation
 ///
 /// So a layer that draws a line round itself has one control for it, its own,
 /// and a layer with no line of its own — a picture, a label, a frame, a group,
-/// a zoom callout, a highlight — keeps the Border row. The rule is not about
-/// rectangles: on an ellipse, a line or an arrow the border draws a RECTANGLE
-/// round the bounding box, which is an accident of how it is painted rather
-/// than something anyone reaches for.
+/// a zoom callout, a highlight — keeps the Border row. An ellipse joins the
+/// rectangle in that: its added border follows the oval now, at the same width
+/// and the same position landing on the same pixels its own outline draws
+/// (`RingShape.swift`). A line and an arrow still do not: their stroke IS the
+/// layer, so a ring round the bounding box is an accident of how it is painted
+/// rather than something anyone reaches for.
 ///
 /// Shapes drawn before this change can still carry a border. Nothing is folded
 /// just by opening the document, so those keep the look they were saved with;

@@ -12174,3 +12174,49 @@ dashed selection rect still cuts across the corners of a well rounded box, and
 whether it should mark the frame or the ink is a judgement the user may want to
 make. The ellipse border and the outline decision from yesterday are both still
 open.
+
+## 2026-09-08 — A border on an oval is an oval
+
+Draw an ellipse, add a Border under Effects, and you got a black SQUARE round
+it. Every ring in the app — a layer's own outline and each added border — was
+drawn as a rounded rectangle round the layer's box, because a box is all most
+layers have, so the shape of the layer never entered into it.
+
+Now the ring asks the layer what its silhouette is. `Layer.ringShape`
+(`Sources/PhotonzCore/RingShape.swift`) answers `.ellipse` for an ellipse and
+`.box` for everything else, and `DocumentRenderer.ringed` draws accordingly.
+
+**Drawn as a stroke, not as two ovals.** The obvious implementation is one oval
+with a smaller one cut out of it, and it is wrong twice: an oval inset from
+another is not an offset curve, so the ring varies by about 5% in thickness on a
+2:1 oval, and it does not land on the pixels the shape's own outline draws. That
+second point is the one that matters — the whole reason a shape has ONE line
+round it and not two is that the stroke and the border coincide at the same
+width and position (`OutlineWidth.swift`). So the ring is a stroke down the
+middle of itself, exactly as `AnnotationRasterizer` strokes the shape, and a
+test walks eight points of the compass looking for a red seam under a green
+border.
+
+**A line and an arrow were left alone** on purpose: their stroke IS the layer,
+so a ring round a stroke is a different idea and wants its own decision.
+
+Tests first: 7 render tests (4 of them failing on the old renderer) plus 3 in
+core. `Scripts/test.sh` green at 4757. Walked on the probe with
+`Scripts/playtest/ellipse-border-walk.json` (Screen Recording granted): an oval
+with the ring outside, inside and centred, squashed flat by its corner handle,
+and a rectangle beside it unchanged. Audit:
+`queue/audits/2026-09-08-ellipse-border.json`.
+
+**Perf.** A ring on an oval is a CoreGraphics bitmap, the one part of the
+composite that is not on the GPU, so it is cached by size and stroke width
+(moving a shape reuses it; only resizing draws a new one) and capped at
+`crispRasterCap`, drawn smaller and blown up past that — an oval at 800% zoom
+would otherwise ask for a bitmap of three quarters of a gigabyte. Measured on a
+deliberately extreme case, an oval filling a 12MP canvas with a 24pt ring:
+17.1ms warm against 13.9ms for the same shape as a rectangle, 27ms on the first
+frame. The 12MP/10-layer interactive budget is untouched at 5.4ms.
+
+**Next.** This was the thing standing in the way of
+*outline-leaves-appearance-and-an-effect-s-colour*: a shape's edge could not be
+drawn only by added borders while an added border could not follow the shape. It
+can now.

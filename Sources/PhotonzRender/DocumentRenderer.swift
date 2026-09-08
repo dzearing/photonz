@@ -38,6 +38,20 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
     private var surfaceCache: [SurfaceKey: CIImage] = [:]
     private var surfaceOrder: [SurfaceKey] = []
+    /// An oval ring's mask, drawn once and reused. White ink, so the colour is
+    /// laid in afterwards and one bitmap serves every colour that ring is ever
+    /// painted (`ellipseRingMask`).
+    private struct RingKey: Hashable {
+        let pixelWidth: Int
+        let pixelHeight: Int
+        let width: CGFloat
+    }
+    private var ringCache: [RingKey: CIImage] = [:]
+    private var ringOrder: [RingKey] = []
+    /// How big a ring is still worth keeping. Past this it is cheaper to draw
+    /// again than to hold 32 of them: a ring is mostly empty pixels, and one
+    /// oval the size of a screen is not the thing anybody drags about.
+    private static let ringCacheCap = 2_000_000
     /// How big a surface gradient is ever drawn, on its longer side. A
     /// gradient is smooth, so drawing it small and stretching it is the same
     /// picture; drawing a sweep at the size of a 12-megapixel screen is a
@@ -801,6 +815,10 @@ public final class DocumentRenderer: @unchecked Sendable {
         // with the frame it sits on.
         let shapeRadius = (layer.annotation?.boxCornerRadius(in: boxInPoints) ?? 0) * contentScale
         let ringRadius = shapeRadius > 0 ? shapeRadius : maskRadius
+        // ...and WHAT it follows, which on an ellipse is not a rectangle at
+        // all: a border added to an oval used to come out as a square frame
+        // round it (reported on the probe, 2026-09-08).
+        let ringShape = layer.ringShape
 
         // Style: corner radius, then border — both follow the layer's box, and
         // both happen before the geometric transform so they rotate with it.
@@ -815,12 +833,14 @@ public final class DocumentRenderer: @unchecked Sendable {
         image = rounded(image, box: box, radius: maskRadius, keepingOutside: contentOutset > 0)
         let isTextLayer: Bool = { if case .text = layer.content { return true } else { return false } }()
         if !isTextLayer {
-            image = bordered(image, box: box, radius: ringRadius, style: layer.style)
+            image = bordered(image, box: box, radius: ringRadius, shape: ringShape,
+                             style: layer.style)
         }
         // A border you ADDED is a ring round the layer's box, whatever the layer
         // is — including text, whose Appearance outline follows the letters
         // instead. Asking for a box round a label has to be answerable.
-        image = borderEffects(image, box: box, radius: ringRadius, style: layer.style)
+        image = borderEffects(image, box: box, radius: ringRadius, shape: ringShape,
+                              style: layer.style)
 
         // Style: blur, after the paint rather than before it, so the softness
         // takes the whole layer — what it draws, its rounded corner and its
@@ -931,9 +951,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// outside it (`BorderPosition.swift`). The drawing itself is `ringed`
     /// below, which every added border uses too.
     private func bordered(_ image: CIImage, box: CGRect, radius: CGFloat,
-                          style: LayerStyle) -> CIImage {
+                          shape: RingShape = .box, style: LayerStyle) -> CIImage {
         guard style.borderWidth > 0 else { return image }
-        return ringed(image, box: box, radius: radius, width: style.borderWidth,
+        return ringed(image, box: box, radius: radius, shape: shape, width: style.borderWidth,
                       outset: style.borderPosition.outset(width: style.borderWidth),
                       colorHex: style.borderColorHex)
     }
@@ -948,12 +968,12 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// ends up nearest the eye — the same rule the shadows follow, and the
     /// whole meaning of the grip on the row.
     private func borderEffects(_ image: CIImage, box: CGRect, radius: CGFloat,
-                               style: LayerStyle) -> CIImage {
+                               shape: RingShape = .box, style: LayerStyle) -> CIImage {
         let painted = style.paintedBorders
         guard !painted.isEmpty else { return image }
         var result = image
         for border in painted.reversed() {
-            result = ringed(result, box: box, radius: radius, width: border.width,
+            result = ringed(result, box: box, radius: radius, shape: shape, width: border.width,
                             outset: border.outset, colorHex: border.colorHex)
         }
         return result
@@ -968,9 +988,17 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// outside puts the ring's INNER edge on the box. An outside ring therefore
     /// makes the picture bigger, which is why the result is cropped to what the
     /// two of them cover rather than back to the layer's own box.
-    private func ringed(_ image: CIImage, box: CGRect, radius: CGFloat,
+    private func ringed(_ image: CIImage, box: CGRect, radius: CGFloat, shape: RingShape,
                         width: CGFloat, outset: CGFloat, colorHex: String) -> CIImage {
         let outerRect = outset > 0 ? box.insetBy(dx: -outset, dy: -outset) : box
+        // An oval has no corners to round, so it is drawn as an oval rather
+        // than as a rounded rect that would have to be a capsule to come close
+        // and a square everywhere else (`RingShape.swift`).
+        if shape == .ellipse {
+            guard let oval = ellipseRing(in: outerRect, width: width, colorHex: colorHex)
+            else { return image }
+            return oval.composited(over: image).cropped(to: image.extent.union(outerRect))
+        }
         // A square box keeps square corners however far the ring is pushed out.
         // Growing a rounded rect by d grows its radius by d, which is the right
         // answer for a corner that IS round and the wrong one for a corner that
@@ -989,6 +1017,116 @@ public final class DocumentRenderer: @unchecked Sendable {
                                         parameters: [kCIInputBackgroundImageKey: inner])
         }
         return ring.composited(over: image).cropped(to: image.extent.union(outerRect))
+    }
+
+    /// One oval ring filling `rect`, `width` thick inwards from its edge.
+    ///
+    /// Drawn as a STROKE down the middle of the ring rather than as one oval
+    /// with a smaller one cut out of it, because a stroke is what the shape
+    /// itself draws (`AnnotationRasterizer`): at the same width and the same
+    /// position the two land on the same pixels, which is the whole reason a
+    /// shape has one line round it and not two (`OutlineWidth.swift`). Two
+    /// ovals inset from each other would instead be up to a twentieth of a
+    /// width off round the diagonals of a stretched oval, and would show as a
+    /// seam wherever a border sat on top of an outline.
+    ///
+    /// The shape is baked as a white mask and the colour laid into it, so an
+    /// added border is the same colour here as it is round a box — the mask
+    /// then caches across every colour and every layer that shares its size.
+    private func ellipseRing(in rect: CGRect, width: CGFloat, colorHex: String) -> CIImage? {
+        guard let mask = ellipseRingMask(size: rect.size, width: width) else { return nil }
+        let placed = mask.transformed(
+            by: CGAffineTransform(translationX: rect.midX - mask.extent.midX,
+                                  y: rect.midY - mask.extent.midY))
+        return CIImage(color: ciColor(hex: colorHex)).cropped(to: placed.extent)
+            .applyingFilter("CISourceInCompositing",
+                            parameters: [kCIInputBackgroundImageKey: placed])
+    }
+
+    /// The oval ring as white ink on nothing, filling `size` from the origin.
+    ///
+    /// Cached: a ring is redrawn on every frame of a drag, and a bitmap the
+    /// size of the layer's box is the one part of the composite that is not on
+    /// the GPU. Moving a shape reuses its ring outright; only resizing one
+    /// draws a new bitmap, at the cost of the shape's own raster, which is
+    /// redrawn on the same frames for the same reason. Only a ring small
+    /// enough to be worth keeping is kept, so one enormous oval cannot fill the
+    /// cache with itself.
+    ///
+    /// A ring on a zoomed-in canvas is asked for at the zoom's own resolution,
+    /// which is what keeps it hard-edged at 800%. Past `crispRasterCap` it is
+    /// drawn smaller and blown up instead, exactly as a layer's content is
+    /// (`crispScale`): a 12-megapixel oval at 8x would otherwise ask for a
+    /// bitmap of three quarters of a gigabyte.
+    private func ellipseRingMask(size: CGSize, width: CGFloat) -> CIImage? {
+        guard size.width.isFinite, size.height.isFinite, width > 0,
+              size.width >= 1, size.height >= 1 else { return nil }
+        // `crispScale` walks a zoom back for the same reason, but it answers
+        // for a layer being magnified; this is the picture as asked for, so
+        // the ceiling is applied to it directly.
+        let area = size.width * size.height
+        let bake = area > Self.crispRasterCap ? (Self.crispRasterCap / area).squareRoot() : 1
+        let pixelWidth = Int((size.width * bake).rounded())
+        let pixelHeight = Int((size.height * bake).rounded())
+        guard pixelWidth >= 1, pixelHeight >= 1 else { return nil }
+        // Everything below is stated in the bitmap's own pixels, so the stroke
+        // is drawn as thin as the picture it is drawn into.
+        let inkWidth = width * bake
+        let key = RingKey(pixelWidth: pixelWidth, pixelHeight: pixelHeight, width: inkWidth)
+
+        let baked: CIImage
+        cacheLock.lock()
+        let hit = ringCache[key]
+        cacheLock.unlock()
+        if let hit {
+            baked = hit
+        } else {
+            guard let drawn = drawEllipseRing(pixelWidth: pixelWidth, pixelHeight: pixelHeight,
+                                              width: inkWidth) else { return nil }
+            baked = drawn
+            if pixelWidth * pixelHeight <= Self.ringCacheCap {
+                cacheLock.lock()
+                if ringCache[key] == nil {
+                    ringCache[key] = drawn
+                    ringOrder.append(key)
+                    if ringOrder.count > Self.cacheCapacity {
+                        ringCache[ringOrder.removeFirst()] = nil
+                    }
+                }
+                cacheLock.unlock()
+            }
+        }
+        guard bake < 1 else { return baked }
+        return baked.transformed(by: CGAffineTransform(scaleX: size.width / CGFloat(pixelWidth),
+                                                       y: size.height / CGFloat(pixelHeight)))
+    }
+
+    private func drawEllipseRing(pixelWidth: Int, pixelHeight: Int, width: CGFloat) -> CIImage? {
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: pixelWidth, height: pixelHeight,
+                                      bitsPerComponent: 8, bytesPerRow: pixelWidth * 4,
+                                      space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        let bounds = CGRect(x: 0, y: 0, width: CGFloat(pixelWidth), height: CGFloat(pixelHeight))
+        let white = CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
+        // The line the stroke rides is half a width in from the ring's outer
+        // edge, so the ink lands exactly between `bounds` and `bounds` inset by
+        // the width. Pulled thicker than there is room for, there is no middle
+        // left to ride and the oval is simply filled solid.
+        let path = bounds.insetBy(dx: width / 2, dy: width / 2)
+        if path.width > 0, path.height > 0 {
+            context.setStrokeColor(white)
+            context.setLineWidth(width)
+            context.addEllipse(in: path)
+            context.strokePath()
+        } else {
+            context.setFillColor(white)
+            context.addEllipse(in: bounds)
+            context.fillPath()
+        }
+        guard let cg = context.makeImage() else { return nil }
+        return CIImage(cgImage: cg)
     }
 
     /// Every shadow the layer throws, in the order the Appearance list holds
