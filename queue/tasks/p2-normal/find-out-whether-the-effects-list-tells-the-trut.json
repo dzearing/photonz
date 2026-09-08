@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T09:45:59.236Z",
-  "updated": "2026-09-08T12:09:06.829Z",
+  "updated": "2026-09-08T13:43:01.006Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SEEN 2026-09-08 while updating switch-says-mixed-walk for the Appearance/Effects split. Not chased any further than the reading below, which is why this is filed as a question rather than as a bug.\n\nReproduction, probe build of clean main:\n\n  cat > /tmp/mix-probe.json  (blank 1100x720 in a 1420x980 window; draw two rectangles; click the first; panelMenu Add Effect -> Shadow; marquee-drag over both; panel step)\n  Scripts/playtest.sh /tmp/mix-probe.json --no-build\n\nThe panel step with BOTH picked reads, in part:\n\n  Switch (Fill, on), Color (Fill), Switch (Outline, on), ...\n  Effects section, Add Effect, Switch (Shadow, on), Reorder (Shadow), Remove (Shadow), Color (Shadow, Color), Kind (Shadow, Drop), Slider (Shadow, Softness) ...\n\nOnly the first rectangle has a shadow, and the row says \"Shadow, on\" with no mention that the second one has none. The Appearance rows in the same panel do carry a mixed reading (switch-says-mixed-walk asserts \"Outline, mixed\" and \"Fill, mixed\"), so the two lists answer the same question differently.\n\nWhat was NOT confirmed: what pressing that switch does to the shape with no shadow, whether one undo puts both back, and whether the Effects list is meant to be a single-shape surface in the first place. Answer those before changing anything.",
@@ -26,6 +26,27 @@
     {
       "t": "2026-09-08T12:09:06.828Z",
       "note": "seq 2020 -> 50"
+    },
+    {
+      "t": "2026-09-08T13:43:01.005Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T13:48:23.644210Z",
+      "note": "Reproduced on a probe build of clean main. Two walks, /tmp/mix-probe.json and /tmp/mix-probe2.json, output in /tmp/photonz-playtest/. Four things came back.\n\n(1) The panel is NOT silent. The Shadow row already prints \"Applies to 1 of the 2 selected layers.\" under its name, and it is on the screen capture. The original report read the playtest panel dump, which lists CONTROLS only and carries no text, so the sentence was invisible to the walk rather than missing from the app.\n\n(2) The tick's own reading is silent though. The dump says \"Shadow, on\" flat, which is what a screen reader hears too: the qualification lives only in a separate line of grey text.\n\n(3) A second, false sentence is printed under the same row: \"1 of the 2 selected layers has a shadow. The rows below change those; the switch gives the rest one too.\" It is ShadowInspector's own reach note, left over from when the shadow was a panel section with its own switch. Inside the Effects list the switch is up on the row and reaches ONLY the layers that hold the effect (setEffectEnabled -> row.switchIDs -> holders), so it never gives the rest one. Two sentences saying the same count, one of them wrong.\n\n(4) The real bug, and it is worse than what was filed. Give rectangle 1 a Shadow and rectangle 2 a Border, pick both: the Effects list shows ONE row, Shadow. Rectangle 2's border is gone from the panel entirely, with no row, no cross, no note. layerEffectRows takes the FIRST kind found at each list position and drops every other kind there. Verified against panel-4-second-has-border.json (Border, on, with its Position and Width) versus panel-5-shadow-and-border.json (Shadow only)."
+    },
+    {
+      "t": "2026-09-08T13:48:23.644210Z",
+      "note": "Adversarial review of the idea before building.\n\nThe task asks the list to \"say the shapes disagree\", but two different disagreements are being run together. Disagreeing about the TICK (both hold the effect, one has it switched off) already works: the row reads Mixed, the tick is drawn one step quieter, one press turns all of them on and one undo puts them back, exactly like Appearance. Disagreeing about MEMBERSHIP (one holds the effect, the other holds nothing) is a different question, and copying the Appearance answer onto it is the tempting wrong move.\n\nWhy the tick must NOT give the effect to a shape that has none: Appearance can do that because a part is a fixed slot and every layer carries its own remembered value, so turning Outline on for the bare box gives that box back ITS outline. An Effects entry has no such memory. A shape that never had a shadow has no numbers to come back to, so the tick would have to copy the other shape's softness, size, distance, direction, opacity and colour onto it silently. That is a much bigger act than a tick, and it gives the tick two jobs. The plus already does the honest version of it, and already reaches every picked shape.\n\nSo the shortest version that delivers the value: leave what the tick DOES alone, make what it SAYS carry the qualification, delete the false sentence, and stop the list hiding an effect. Nothing here needs a decision from the user: the vanished border is a plain bug, and the tick's reach follows from the model rather than from taste."
+    },
+    {
+      "t": "2026-09-08T13:56:05.950851Z",
+      "note": "Shipped, TDD, all 4874 tests green.\n\nPhotonzCore/LayerEffects.swift \u2014 layerEffectRows now builds one row per (position, KIND) instead of one per position, so an effect a picked layer really has can never be absent from the list. New LayerEffectRow.switchReading: \"on\"/\"off\" while the row reaches everything picked, \"mixed\" while the layers it reaches disagree about the tick, and \"on for 1 of 2\" while it reaches fewer layers than are picked. Five new tests in EffectsListTests.\n\nPhotonz/EffectsListInspector.swift \u2014 the tick's accessibilityValue and playtest detail read switchReading instead of a bare on/off.\n\nPhotonz/LayersPanel.swift \u2014 ShadowInspector prints its reach note only when it also draws the switch that note describes. Inside the Effects list it printed a second count under the row's own and promised \"the switch gives the rest one too\", which that switch does not do. Current, where the switch really is on the section, is untouched.\n\ndocs/design/shape-parts.md \u2014 \"More than one layer picked\" rewritten: rows line up by position and then by kind, nothing a picked layer has may be missing, and a new \"What the tick says, and what it does\" section records why the tick's reach stays as it is.\n\nScripts/playtest/effects-say-their-reach-walk.json \u2014 covers both disagreements end to end: shadow and border in one place both showing with their own crosses, the tick reading \"on for 1 of 2\", one press then one undo, and the Mixed case resolving to on. Passes on the probe.\n\nAudit: queue/audits/2026-09-08-effects-list-reach.json, with two real screen captures (Screen Recording granted this run)."
+    },
+    {
+      "t": "2026-09-08T13:56:05.950851Z",
+      "note": "Adversarial review of the BUILT thing, on the probe.\n\nWhat is still rough, all of it written into the audit's rough list: the tick's reach is spoken and written but not DRAWN, so a row reaching 1 of 2 looks identical to one reaching both; dimming it was rejected on purpose, since the quiet tick already means \"no position to show\" and this one has a position. The Effects section is height-capped by the dock and scrolls inside itself, so the Border row that used to be missing is now present and still below the fold in a 980pt window until you scroll (verified: inWindow false in panel-2-different-kinds-one-place.json) \u2014 pre-existing dock behavior, but this change makes it matter more. And reordering a row that reaches only some of the picked shapes is unchanged and now has two rows able to share a place, which this change did not settle."
     }
-  ]
+  ],
+  "started": "2026-09-08T13:43:01.004Z"
 }

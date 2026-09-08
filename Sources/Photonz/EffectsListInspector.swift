@@ -212,8 +212,12 @@ private struct EffectRowView: View {
             .help(row.switchIDs.count > 1
                   ? "Stops it drawing on all \(row.switchIDs.count) of them, and keeps its settings"
                   : "Stops it drawing, and keeps its settings")
-            .playtestControl("Switch",
-                             detail: row.isMixed ? "mixed" : (row.isOn ? "on" : "off"))
+            // The row's own reading, not a bare on/off: over two shapes where
+            // only one holds the effect the tick used to announce a flat "on"
+            // while the line under it said "Applies to 1 of the 2 selected
+            // layers". A screen reader hears the control, not the caption.
+            .accessibilityValue(row.switchReading)
+            .playtestControl("Switch", detail: row.switchReading)
     }
 
     // MARK: The settings

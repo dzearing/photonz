@@ -315,6 +315,84 @@ struct EffectsListTests {
         #expect(rows[1].reachNote?.contains("1 of the 2 selected layers") == true)
     }
 
+    @Test("Two shapes holding different effects in the same place get a row each")
+    func differentKindsInOnePlaceBothShow() {
+        // The list used to take the FIRST kind at each place and drop the rest,
+        // so a shape whose border sat where another shape's shadow sat had no
+        // row at all: nothing to switch, nothing to remove, and nothing on
+        // screen saying it was there (found on the probe, 2026-09-08).
+        let one = box(), two = box()
+        var doc = document([one, two])
+        doc.addEffect(.shadow, layerIDs: [one.id])
+        doc.addEffect(.border, layerIDs: [two.id])
+
+        let rows = doc.layerEffectRows(layerIDs: [one.id, two.id])
+        #expect(rows.map(\.kind) == [.shadow, .border])
+        #expect(rows[0].switchIDs == [one.id])
+        #expect(rows[1].switchIDs == [two.id])
+        // Neither is hidden, and each says which shape it is speaking for.
+        #expect(rows[0].reachNote?.contains("1 of the 2 selected layers") == true)
+        #expect(rows[1].reachNote?.contains("1 of the 2 selected layers") == true)
+        // Two rows in one place still tell themselves apart, so the list can
+        // draw both.
+        #expect(Set(rows.map(\.id)).count == 2)
+    }
+
+    @Test("A kind only one of them holds is still counted as one of its kind")
+    func aLoneKindIsNotNumbered() {
+        let one = box(), two = box()
+        var doc = document([one, two])
+        doc.addEffect(.shadow, layerIDs: [one.id])
+        doc.addEffect(.border, layerIDs: [two.id])
+        // One shadow between them is "Shadow", not "Shadow 1": the numbering
+        // counts rows of that kind in the list, and there is one of each.
+        #expect(doc.layerEffectRows(layerIDs: [one.id, two.id]).map(\.title)
+                == ["Shadow", "Border"])
+    }
+
+    @Test("Shapes that agree about the kind in a place still share one row")
+    func agreeingKindsStillMerge() {
+        let one = box(), two = box()
+        var doc = document([one, two])
+        doc.addEffect(.shadow, layerIDs: [one.id, two.id])
+        let rows = doc.layerEffectRows(layerIDs: [one.id, two.id])
+        #expect(rows.count == 1)
+        #expect(rows[0].switchIDs.count == 2)
+    }
+
+    @Test("The tick says which shapes it is speaking for when it cannot reach them all")
+    func theTickSaysItsReach() {
+        let one = box(), two = box()
+        var doc = document([one, two])
+        doc.addEffect(.shadow, layerIDs: [one.id])
+        let rows = doc.layerEffectRows(layerIDs: [one.id, two.id])
+        // The count was already written under the row. It goes on the tick too,
+        // because a screen reader and a scripted walk hear the control and not
+        // the line of grey text beside it.
+        #expect(rows[0].switchReading == "on for 1 of 2")
+
+        doc.setEffectEnabled(layerIDs: [one.id], at: 0, on: false)
+        #expect(doc.layerEffectRows(layerIDs: [one.id, two.id])[0].switchReading
+                == "off for 1 of 2")
+    }
+
+    @Test("A tick that reaches everything says on and off and nothing else")
+    func theTickStaysPlainWhenItReachesEveryone() {
+        let one = box(), two = box()
+        var doc = document([one, two])
+        doc.addEffect(.shadow, layerIDs: [one.id, two.id])
+        #expect(doc.layerEffectRows(layerIDs: [one.id, two.id])[0].switchReading == "on")
+        #expect(doc.layerEffectRows(layerIDs: [one.id])[0].switchReading == "on")
+
+        // Disagreeing about the TICK is the other question, and it already has
+        // its own word: Mixed says it without a count, and the line under the
+        // row carries the numbers.
+        doc.setEffectEnabled(layerIDs: [one.id], at: 0, on: false)
+        let row = doc.layerEffectRows(layerIDs: [one.id, two.id])[0]
+        #expect(row.isMixed)
+        #expect(row.switchReading == "mixed")
+    }
+
     @Test("A locked layer is never restyled by the list")
     func lockedLayersSitOut() {
         var locked = box()

@@ -1,0 +1,75 @@
+{
+  "out": "/tmp/photonz-playtest/effects-say-their-reach",
+  "seed": "Pick two shapes that do not agree about an EFFECT and the list has to tell the truth about both of them. There are two disagreements here and they are not the same question. MEMBERSHIP: one shape holds the effect and the other holds nothing there. The tick now says its own reach out loud, \"on for 1 of 2\", instead of announcing a flat on while only a line of grey text underneath carried the count; and where two picked shapes hold DIFFERENT things in the same place, each gets a row, because until 2026-09-08 the second shape's effect vanished from the panel with nothing said about it. THE TICK: both shapes hold the effect and one has it switched off, which the row still answers with the word Mixed and no count, exactly as every Appearance row does, and one press makes them agree.",
+  "setup": { "forget": ["shapes", "panel", "color", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 150], "to": [380, 300], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 150], "to": [660, 300], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [260, 225] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-first-shadowed", "note": "one shape picked, one shadow: the tick says on and nothing else, because it reaches everything picked" },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, on" },
+
+    { "do": "click", "at": [540, 225] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, on" },
+
+    { "do": "drag", "from": [100, 110], "to": [720, 340], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "2-different-kinds-one-place" },
+    { "do": "describe", "stage": "2-different-kinds-one-place", "note": "one shape holds a shadow where the other holds a border: BOTH are in the list, each saying it reaches one of the two, and each keeps its own cross. Before this the border simply was not in the panel at all" },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, on for 1 of 2" },
+    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, on for 1 of 2" },
+    { "do": "expect", "control": "Remove", "in": "Border", "present": true },
+    { "do": "snapshot", "name": "1-shadow-and-border" },
+
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-pressed", "note": "one press: the shadow stops drawing on the shape that has one, and the tick goes on saying which shape that is" },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, off for 1 of 2" },
+    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, on for 1 of 2" },
+    { "do": "render", "name": "a-after-press" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-one-undo", "note": "ONE undo puts it back, and nothing else moved" },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, on for 1 of 2" },
+    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, on for 1 of 2" },
+    { "do": "render", "name": "b-after-undo" },
+
+    { "do": "click", "at": [540, 225] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Remove", "in": "Border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, off" },
+
+    { "do": "drag", "from": [100, 110], "to": [720, 340], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "5-tick-differs" },
+    { "do": "describe", "stage": "5-tick-differs", "note": "the OTHER disagreement: both hold a shadow now and one has it switched off, so the row says Mixed and carries no count, because the line under it already spells the numbers out" },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, mixed" },
+    { "do": "snapshot", "name": "2-tick-mixed" },
+
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-agreed", "note": "one press and they agree: the tick reaches both of them, so it says on and nothing else" },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, on" },
+    { "do": "render", "name": "c-both-shadowed" }
+  ]
+}

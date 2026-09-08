@@ -1,0 +1,29 @@
+{
+  "feature": "The Effects list over several shapes at once",
+  "epic": "ui-building",
+  "summary": "Pick shapes that hold different effects and the Effects list now shows all of them: an effect only one shape has still gets its own row, its own cross and a tick that says out loud which shape it is speaking for. Before this a shape's border could be missing from the panel entirely, with nothing said about it.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag \"Appearance is what it is, Effects is what you add\" on (it is on by default in Next). Any blank document.",
+  "try": [
+    { "do": "Draw two rectangles side by side." },
+    { "do": "Click the first one, press the plus on the Effects header and choose Shadow." },
+    { "do": "Click the second one, press the plus and choose Border." },
+    { "do": "Drag a marquee round both of them.", "shot": "2026-09-08-effects-list-reach-1-shadow-and-border.png" },
+    { "do": "Read the Effects list, scrolling it if the Border row is below the fold." },
+    { "do": "Press the tick on the Shadow row, then press Command Z once." },
+    { "do": "Click the second rectangle, take its Border out with the cross, add a Shadow instead, and switch that shadow off." },
+    { "do": "Marquee both again and read the Shadow row.", "shot": "2026-09-08-effects-list-reach-2-tick-mixed.png" }
+  ],
+  "evaluate": [
+    "With a shadow on one shape and a border on the other, does the list showing both rows read as the truth, or does it read as two things that should not be side by side?",
+    "\"Applies to 1 of the 2 selected layers\" under the row and a tick that reads on: is that clear enough on sight, or did you expect the tick itself to look different from one that reaches everything?",
+    "The tick only reaches the shapes that already hold the effect, and the plus is the way to give the rest one. Is that the behaviour you wanted, or should the tick hand the effect to the shapes without it the way the Outline tick does in Appearance?",
+    "When both shapes hold the shadow and one has it switched off, the row says Mixed with no count. Does the difference between Mixed and \"on for 1 of 2\" land, or do the two readings blur together?",
+    "The Border row lands below the fold in a 980pt window and needs a scroll inside the Effects section. Did you find it, or did the panel look like it was still hiding it?"
+  ],
+  "rough": [
+    "The tick's reach is spoken, not drawn. A row reaching 1 of 2 shapes shows a tick at full strength, the same as one reaching both, and only the grey line under the row and the spoken reading tell them apart. Dimming it was rejected on purpose: the quiet tick already means \"no position to show\", and this tick does have one for the shape it reaches. If it turns out to need a mark of its own, that is a real follow-up.",
+    "The Effects section is height-capped by the dock and scrolls inside itself, so with one shadow expanded the second row sits below the fold. That is not new here, but this change makes it matter more: the row that used to be missing is now present and still off screen until you scroll. A dock that gives the list its room belongs to the found-dock work.",
+    "A false sentence was removed rather than rewritten. The shadow's settings used to print \"1 of the 2 selected layers has a shadow. The rows below change those; the switch gives the rest one too\" inside the Effects list. The switch does no such thing there, and the row's own line already carried the count, so the duplicate is gone. The Current release, where that switch really is on the section, is untouched.",
+    "Reordering a row that reaches only some of the picked shapes is unchanged and still questionable: two rows can now sit at the same place in the list, so what a drag means when they disagree is not something this change settled."
+  ]
+}

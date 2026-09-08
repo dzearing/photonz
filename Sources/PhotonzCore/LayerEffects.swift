@@ -596,6 +596,23 @@ public struct LayerEffectRow: Hashable, Sendable, Identifiable {
     /// and the switch is drawn one step quieter (`UX-PATTERNS.md` section 4).
     public var isMixed: Bool { onCount > 0 && onCount < switchIDs.count }
 
+    /// What the tick says OUT LOUD: its state, and, while the row speaks for
+    /// fewer layers than are picked, which of them it is speaking for.
+    ///
+    /// The count was already written under the row, but only as a line of grey
+    /// text: a screen reader announcing the switch, and a scripted walk reading
+    /// the panel, both heard a flat "on" over two shapes where only one had the
+    /// effect (found 2026-09-08). The two are different questions and they keep
+    /// different words. Mixed means the layers that HAVE it disagree about
+    /// whether it draws, and carries no count, because the line under the row
+    /// already spells that one out. A count means the row cannot reach
+    /// everything picked, whatever the ones it does reach are doing.
+    public var switchReading: String {
+        let state = isMixed ? "mixed" : (isOn ? "on" : "off")
+        guard !isMixed, !switchIDs.isEmpty, switchIDs.count < selectionCount else { return state }
+        return "\(state) for \(switchIDs.count) of \(selectionCount)"
+    }
+
     /// Everything in this list was added, so everything in it can be taken out
     /// again. That is what makes it a list rather than a set of rows that are
     /// off nearly all the time.
@@ -634,28 +651,42 @@ extension PhotonzDocument {
     /// Effects starts with nothing in it and gains a row only when you press
     /// the plus.
     ///
-    /// Over several picked layers the rows line up by POSITION in the list, not
-    /// by kind, the same rule the Appearance rows follow. Adding an effect adds
-    /// it to every picked layer, so the lists stay the same length as each
-    /// other from then on; a layer that is behind says so in the row's own
-    /// sentence rather than the row vanishing.
+    /// Over several picked layers the rows line up by POSITION in the list and
+    /// then by KIND within a position. Adding an effect adds it to every picked
+    /// layer, so the lists stay the same length as each other from then on; a
+    /// layer that is behind says so in the row's own sentence rather than the
+    /// row vanishing. Where the picked layers hold DIFFERENT things in one
+    /// place — a shadow on one, a border on the other — that place brings a row
+    /// each, because an effect a picked layer really has may never be missing
+    /// from the list.
     public func layerEffectRows(layerIDs: [UUID]) -> [LayerEffectRow] {
         let picked = layerIDs.compactMap { layer(id: $0) }.filter { !$0.isLocked }
         guard !picked.isEmpty else { return [] }
         let depth = picked.map { $0.style.effects.count }.max() ?? 0
-        // The kind at each place is whatever the first layer that HAS a row
-        // there wears, so a shorter list never changes what the rows are called.
+        // One row per KIND at each place, not one row per place. Taking only
+        // the first kind found at a place meant a shape whose border sat where
+        // another shape's shadow sat had NO ROW AT ALL: nothing to switch,
+        // nothing to remove, and nothing on screen saying its effect was there
+        // (found on the probe, 2026-09-08). A row may speak for some of the
+        // picked layers and say so; it may never leave one of them out in
+        // silence.
+        var places: [(index: Int, kind: EffectKind)] = []
+        var totals: [EffectKind: Int] = [:]
+        for index in 0..<depth {
+            var here: [EffectKind] = []
+            for layer in picked {
+                guard let kind = layer.style.effect(at: index)?.kind,
+                      !here.contains(kind) else { continue }
+                here.append(kind)
+            }
+            for kind in here {
+                places.append((index, kind))
+                totals[kind, default: 0] += 1
+            }
+        }
         var rows: [LayerEffectRow] = []
         var seen: [EffectKind: Int] = [:]
-        var totals: [EffectKind: Int] = [:]
-        var kinds: [EffectKind] = []
-        for index in 0..<depth {
-            guard let kind = picked.compactMap({ $0.style.effect(at: index)?.kind }).first
-            else { continue }
-            kinds.append(kind)
-            totals[kind, default: 0] += 1
-        }
-        for (index, kind) in kinds.enumerated() {
+        for (index, kind) in places {
             let holders = picked.filter { $0.style.effect(at: index)?.kind == kind }
             seen[kind, default: 0] += 1
             rows.append(LayerEffectRow(

@@ -3137,7 +3137,15 @@ struct ShadowInspector: View {
             // off above six rows full of numbers is a contradiction until you
             // know only some of the picked layers have a shadow. Said first,
             // it is the sentence that makes the rows make sense.
-            if let reach = shadowReachNote(selection, shadows) {
+            //
+            // Only where the switch it describes is actually here. Borrowed by
+            // the Effects list, these rows are settings hanging under a row
+            // whose tick lives up on that row and reaches ONLY the layers that
+            // hold the effect, so this sentence printed a second count under
+            // the row's own and then promised something untrue: "the switch
+            // gives the rest one too" (found on the probe, 2026-09-08). The
+            // list's row says its reach itself.
+            if showsSwitch, let reach = shadowReachNote(selection, shadows) {
                 Text(reach)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)

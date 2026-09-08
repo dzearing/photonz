@@ -421,12 +421,45 @@ a 2pt outside line is still 120×32.
 ### More than one layer picked
 
 The list still speaks for the whole selection, and one rule extends it: **rows
-line up by position in the list, not by kind.** Two boxes that each have one
-shadow show one Shadow row whose settings read Mixed where they differ. A box
-with two shadows picked beside a box with one shows the first shadow as a normal
-row and the second saying it reaches one of the two layers, the same sentence
-Fill already says. Adding an effect adds it to every picked layer, so the lists
-stay the same length as each other from then on.
+line up by position in the list, and then by kind within a position.** Two boxes
+that each have one shadow show one Shadow row whose settings read Mixed where
+they differ. A box with two shadows picked beside a box with one shows the first
+shadow as a normal row and the second saying it reaches one of the two layers,
+the same sentence Fill already says. Adding an effect adds it to every picked
+layer, so the lists stay the same length as each other from then on.
+
+**Nothing a picked layer really has may be missing from the list.** Where the
+picked layers hold different things in the same place — a shadow on one, a
+border on the other — that place brings a row EACH, and each one says which
+layers it reaches. Lining up by position alone meant the panel took the first
+kind it found there and dropped the rest, so a shape whose border sat where
+another shape's shadow sat had no row at all: nothing to switch, nothing to
+remove, and nothing on screen saying its border was there (found on the probe,
+2026-09-08).
+
+### What the tick says, and what it does
+
+Two disagreements live on one row and they are not the same question.
+
+**They disagree about the tick.** Both layers hold the effect and one has it
+switched off. The row reads **Mixed**, the tick is drawn one step quieter, one
+press turns it on for all of them and one undo puts them all back — exactly what
+an Appearance part does. No count on the tick: the line under the row already
+spells the numbers out.
+
+**They disagree about membership.** One layer holds the effect and the other
+holds nothing there. The tick reads **"on for 1 of 2"** — its state and its
+reach, out loud, so a screen reader and a scripted walk hear what the grey line
+under the row says in text.
+
+Pressing that tick reaches only the layers that hold the effect, and it stays
+that way. An Appearance part is a fixed slot and every layer carries its own
+remembered value, so switching Outline on hands a bare box back ITS outline. An
+Effects entry has no such memory: a shape that never had a shadow has no numbers
+to come back to, so a tick that gave it one would be silently copying another
+shape's softness, size, distance, direction, opacity and colour across. That is
+a much bigger act than a tick. **The plus is the way to make them agree**, and
+it already reaches every picked layer in one step one undo puts back.
 
 ### Where the code is
 
