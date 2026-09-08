@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T11:08:02.076Z",
-  "updated": "2026-09-08T12:27:21.112566Z",
+  "updated": "2026-09-08T12:27:42.034Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-08 on the probe while fixing undo-does-not-take-apart-a-stack-made-from-a-mar.\n\n  Scripts/playtest.sh Scripts/playtest/stack-from-a-band-walk.json\n\nStage states out of /tmp/photonz-playtest/stack-from-a-band/log.json:\n  [1-band-caught-both] layers: 3  region: 80,50 440x330  sel: [Rectangle, Rectangle 2]\n  [2-stacked]          layers: 2  region: none            sel: [Group]\n  [3-one-undo]         layers: 3  region: 80,50 440x330  sel: []      <- band back, pick gone\n  [4-redone]           layers: 2  region: none            sel: []      <- redo loses it too\nSee queue/audits/2026-09-08-stack-band-undo-1.png: no row is highlighted in the Layers list.\n\nNOT a regression from that fix; it is general. SelectionSnapshot (PhotonzCore) carries only region + targetsPixels, so which LAYERS were picked has never been part of an undo step. Fixing it means either widening the snapshot or re-deriving the pick from the restored band the way setSelection(captureLayers: true) does. Note the band-caught-nothing case: setSelection keeps that as a pixel region on the layer you had, so a re-derive must not clobber it (SelectionHistoryTests pins the contract).\n\nBROADENED BY TRIAGE 2026-09-08. Three audits in one day name this same thing, so it is one rule and not three bugs: queue/audits/2026-09-08-stack-band-undo.json (\"the two things it caught are not picked again\"), queue/audits/2026-09-08-sweep-delete-undo.json (\"they are not picked again, so pressing Delete straight after the undo does nothing\"), and queue/audits/2026-09-07-marquee-keeps-your-layer.json, which is the change that made the gap visible. Every one of them says the same sentence: which layers were picked has never been part of an undo step. Fix it once, in the snapshot, not per command. Selection history for the marquee already landed on 2026-09-08 (SelectionSnapshot, SelectionHistoryTests), so the shape of the answer exists; it is the LAYER pick that is still missing from it.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-08T12:27:21.112403Z",
       "note": "Adversarial review of the built thing, on the probe with a real window capture. queue/audits/2026-09-08-undo-pick-stack.png after one undo is pixel-for-pixel the state before the stack: both rows lit, '2 layers selected', the two-layer Appearance and Arrange sections back, the band back on the canvas, so Stack Selection is there to press again without sweeping anything. Nothing felt clumsy in the flow. What I left alone on purpose: a pick made purely by clicking rows is still outside undo, because a Command Z that stepped back over clicks would spend presses before it reached your work. Recorded in the audit's rough so the user can disagree with it."
+    },
+    {
+      "t": "2026-09-08T12:27:42.032Z",
+      "note": "Undo and redo now hand back the layer pick along with the marquee. PhotonzCore: SelectionSnapshot carries a LayerPick, so every History step pushes the pick that was live with it; no command changed. App: EditorState syncs the pick into History from the same didSets the marquee uses and restores it in restoreSelectionFromHistory. Verified: Scripts/test.sh green (4828 tests, 9 new); Scripts/playtest/undo-hands-back-the-pick-walk.json passes 42 steps and FAILS at step 20 with 'the layers picked are nothing' when the restore block is removed, so the walk is a real test; six related marquee/band walks still ok. New harness step expectPicked. Audit: queue/audits/2026-09-08-undo-hands-back-the-pick.json. Commit 86c3214d."
     }
   ],
-  "started": "2026-09-08T12:11:26.480Z"
+  "started": "2026-09-08T12:11:26.480Z",
+  "completed": "2026-09-08T12:27:42.033Z"
 }
