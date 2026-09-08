@@ -1,0 +1,69 @@
+{
+  "id": "picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c",
+  "taskId": "picking-a-text-layer-leaves-its-settings-below-t",
+  "question": "When you pick something on the canvas, where should its settings appear in the right hand panel?",
+  "context": "Measured on a 1200 by 720 window with a marked up screenshot: the panel has 688 points of room, and with a piece of text picked the Text section runs from 602 to 778, so its bottom 90 points are past the edge. A measurement is worse. This worked on 2026-09-06 and came back when Appearance and Effects moved up under Layers on 2026-09-07, so the two asks are in tension and only you can say which wins.",
+  "options": [
+    {
+      "id": "top",
+      "label": "What you picked sits at the top",
+      "summary": "The settings for the thing you just clicked move to the top of the right hand panel, right under the layers list. Appearance and Effects follow directly under them. Pick a piece of text and Text is the first thing you see; pick a plain rectangle and nothing changes at all, because a rectangle has no section of its own, so Appearance and Effects are still right under Layers.",
+      "pros": [
+        "Nothing moves under you: click, and the settings are already where you are looking.",
+        "The panel keeps one fixed reading order, so you learn where things live once.",
+        "On a plain shape it is exactly the arrangement asked for on 2026-09-07."
+      ],
+      "cons": [
+        "When something with its own settings is picked, Appearance and Effects are one section lower than they are today.",
+        "With text picked, the bottom few points of Effects fall past the edge on a laptop window."
+      ],
+      "mitigation": "Appearance stays whole and on screen in every case measured, and Effects only loses its last few points on the tallest case (text). The panel can still be rearranged by dragging sections, so anyone who wants Appearance first can put it back."
+    },
+    {
+      "id": "scroll",
+      "label": "The panel scrolls itself to what you picked",
+      "summary": "The order stays exactly as it is now, and the panel slides itself down the moment you click something so the settings you want are on screen. Click a piece of text and the panel glides so the Text section is visible.",
+      "pros": [
+        "Appearance and Effects keep the exact position asked for on 2026-09-07.",
+        "Works for any section, however tall the document makes the ones above it."
+      ],
+      "cons": [
+        "The panel moves every time you pick something, which is motion you did not ask for.",
+        "Picking from the layers list scrolls that same list mostly off the top: about a row and a half of it is left, so the next thing you want to click has moved."
+      ],
+      "mitigation": "It only scrolls when the section is not already fully visible, and it glides rather than jumps, so picking two things in a row that need the same place stays still."
+    },
+    {
+      "id": "fold",
+      "label": "The rest folds up while something is picked",
+      "summary": "When you pick something, the sections you are not using close to just their titles so everything fits without scrolling. Appearance and Effects would be shut headers while a piece of text is selected, one click from opening again.",
+      "pros": [
+        "Everything fits, in every case, with room to spare.",
+        "The panel stays short and quiet instead of being a long list."
+      ],
+      "cons": [
+        "The app decides what you are not using, and it will be wrong: putting a shadow on a label needs Effects open while text is picked.",
+        "It overwrites the open and closed state you set by hand, so your own arrangement does not survive a click."
+      ],
+      "mitigation": "It could fold only sections you have never opened yourself, and never re-fold one you opened while the same thing was picked."
+    },
+    {
+      "id": "leave",
+      "label": "Leave it, scrolling is fine",
+      "summary": "Nothing changes. Picking a piece of text, a measurement, an arrow or a zoom callout leaves its settings below the bottom edge on a laptop window, and you scroll the panel down to reach them.",
+      "pros": [
+        "Appearance and Effects stay exactly where the 2026-09-07 change put them, in every case.",
+        "No new behavior to learn and nothing to go wrong."
+      ],
+      "cons": [
+        "Every time you pick text you scroll before you can change its font, size or colour.",
+        "It is the thing that was reported as broken twice, on 2026-09-06 and again now."
+      ],
+      "mitigation": "The panel can be rearranged by hand, so anyone bothered by it can drag Text above Appearance themselves.",
+      "declines": true
+    }
+  ],
+  "recommended": "top",
+  "status": "pending",
+  "created": "2026-09-08T10:50:33.991Z"
+}

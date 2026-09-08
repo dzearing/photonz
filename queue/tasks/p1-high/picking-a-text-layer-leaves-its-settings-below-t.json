@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 230,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T09:45:45.773Z",
-  "updated": "2026-09-08T09:45:45.776Z",
+  "updated": "2026-09-08T10:52:22.645Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-08 on clean main with the probe build.\n\n  Scripts/playtest-all.sh --no-build dock-picked-first\n  dock-picked-first-walk  16s  FAILED  step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s\n\nThe dock's own numbers, read out of the walk's describe state (viewport 688pt, window 1200x720, a screenshot with a measurement, four rectangles, a label and a zoom callout on it):\n\n  rectangle picked:   Layers 6-169, Appearance 169-431, Effects 431-512, Measurements 512-599, Position & Size 599-734\n  text picked:        Layers 6-169, Appearance 169-370, Effects 370-515, Measurements 515-602, Text 602-778, Position & Size 778-913\n  measurement picked: Layers 6-169, Appearance 169-334, Effects 334-415, Measurements 415-502, Measurement 502-781, Position & Size 781-916\n\nText runs 602-778 in a 688pt viewport, so its bottom 90pt is below the fold; Measurement is worse. Measured on 2026-09-06 in commit 9c9039be the same document had Text at 344-520, whole.\n\nCAUSE. Sources/Photonz/LayersPanel.swift, the migration orderVersionLookUnderLayers (4), added by 9a165d31 on 2026-09-07: it moves color and effects to sit directly after layers. The picked-thing sections (annotation, callout, text, measure, collage, canvas) sit before geometry, which used to put them third and now puts them fifth. Two user asks in tension: 2026-09-06 \"the panel says what you picked before it explains itself\" and 2026-09-07 \"Appearance and Effects sit directly under Layers\".\n\nDIRECTIONS worth putting on a card, in plain terms:\n(a) The panel scrolls itself to what you picked, so the order stays as it is and the thing you clicked is on screen the moment you click it.\n(b) What you picked comes first, above Appearance and Effects, so it is always the top thing under the lists.\n(c) The sections you are not using fold up while something is picked, so everything fits.\nNone of these is safe for a runner to choose alone; it is a question about how the panel behaves, so it wants a decision card with the numbers above in the brief.\n\nA measurement's section is 279pt here and 470pt in the 2026-09-06 measurement, so under (b) it still would not fit whole; the 2026-09-06 decision settled for its header being on screen. Say so on the card.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-08T09:45:45.775Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T10:47:13.020Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T10:52:15.818080Z",
+      "note": "REPRODUCED on a fresh probe build of clean main. `Scripts/playtest-all.sh dock-picked-first` -> dock-picked-first-walk 16s FAILED step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s. The dock's own offsets in a 688pt viewport: text picked -> Text 602-778 (dockInView stops at Measurements); measurement picked -> Measurement 502-781; zoom callout right after it is drawn -> Zoom Callout 627-741; plain rectangle -> Appearance 169-431, whole. A second run with the waitFor steps stripped out also failed on `press Details`, because the Measurement section's Details control is itself off the window. Same bug, second symptom."
+    },
+    {
+      "t": "2026-09-08T10:52:15.818080Z",
+      "note": "ADVERSARIAL REVIEW of the three directions, before building any of them. (a) auto-scroll: fine when you pick on the canvas, bad when you pick in the layers list, which is where the walk picks and where half of real picking happens. Bringing Text whole into view costs 90pt of travel, which takes the Layers header off the top and leaves about a row and a half of the list under the pointer that just clicked it. Motion on every selection, for a problem the order can solve without any motion. (b) picked section first: arithmetic on the measured heights puts Text at 169-345 and Appearance at 345-546 both whole, Effects 546-691 (3pt cut), Measurement at 169-448 whole, callout 169-283 whole, and a plain rectangle unchanged, so the 2026-09-07 arrangement survives untouched in the case it was asked for. Shortest change too: one more numbered migration in loadOrder moving pickedSections before .color instead of before .geometry. (c) auto-fold: the app has to guess what you are not using and will guess wrong (a shadow on a label needs Effects open while text is picked), and it overwrites collapse state the user set by hand. Rejected. The note's worry that a measurement still would not fit under (b) is out of date: the Details fold brought that section from 470pt to 279pt, so it fits at 169-448."
+    },
+    {
+      "t": "2026-09-08T10:52:15.818080Z",
+      "note": "Decision filed with the numbers and a real screenshot of the panel with text picked: queue/decisions/picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c.{json,md} plus 2026-09-08-picked-below-the-fold-today.png. Recommended \"What you picked sits at the top\". \"Leave it, scrolling is fine\" carries declines:true so answering no retires the task. Acceptance item 4 says the runner must not choose the direction, so this run stops here."
+    },
+    {
+      "t": "2026-09-08T10:52:22.643Z",
+      "note": "Reproduced on a fresh probe build (walk fails at sectionInView Text; Text sits 602-778 in a 688pt viewport). Direction is a UX call the runner may not make, so a decision card is open with the measured numbers, a real screenshot and four options, recommending that what you picked sits at the top."
     }
-  ]
+  ],
+  "started": "2026-09-08T10:47:13.019Z"
 }
