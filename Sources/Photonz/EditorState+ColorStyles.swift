@@ -511,6 +511,17 @@ extension EditorState {
         rememberStyleDefault(of: ids)
     }
 
+    /// The Follows popup on one border entry: whether that ring goes round a
+    /// label's letters or round the box the words sit in
+    /// (`BorderFollows.swift`). Only a label is ever asked.
+    func setBorderEffectFollows(at index: Int, ids: [UUID], to follows: BorderFollows) {
+        guard !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.updateBorderEffect(layerIDs: ids, at: index) { $0.follows = follows } }
+        rememberStyleDefault(of: ids)
+    }
+
     /// Turns one glow outside the layer's edge or inside it, over every picked
     /// layer with a glow at that place. The same move the shadow's Kind makes:
     /// one effect drawn somewhere else, never a second row.

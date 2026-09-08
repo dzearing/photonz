@@ -60,13 +60,19 @@ public struct LayerStyleSelection: Hashable, Sendable {
         /// Thickness row and the Border row leaves it alone. See
         /// `OutlineWidth.swift`.
         public let hasItsOwnThickness: Bool
+        /// True on a label, the one layer whose border has two things it could
+        /// go round (`BorderFollows.swift`). Everything else has a box and
+        /// nothing else, so its Border row never asks the question.
+        public let hasLetters: Bool
 
         public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double,
-                    hasItsOwnThickness: Bool = false) {
+                    hasItsOwnThickness: Bool = false,
+                    hasLetters: Bool = false) {
             self.id = id
             self.style = style
             self.cornerRadiusLimit = cornerRadiusLimit
             self.hasItsOwnThickness = hasItsOwnThickness
+            self.hasLetters = hasLetters
         }
     }
 
@@ -89,6 +95,14 @@ public struct LayerStyleSelection: Hashable, Sendable {
 
     /// The layers a drag in this row restyles, in the order they were given.
     public var layerIDs: [UUID] { members.map(\.id) }
+
+    /// Whether every layer this row speaks for is a LABEL, which is what
+    /// decides whether the row asks what its border follows. A selection with a
+    /// box in it does not get the question: a box has no letters, so the answer
+    /// would do nothing to it (`BorderFollows.swift`).
+    public var hasLettersEverywhere: Bool {
+        !members.isEmpty && members.allSatisfy(\.hasLetters)
+    }
 
     /// What one row reads: the thing they all say, or that they differ.
     public func reading<Value: Hashable & Sendable>(
@@ -238,7 +252,8 @@ extension PhotonzDocument {
             members.append(LayerStyleSelection.Member(
                 id: id, style: resolved,
                 cornerRadiusLimit: max(1, Double(min(bounds.width, bounds.height) / 2)),
-                hasItsOwnThickness: layer.hasOutlineThickness))
+                hasItsOwnThickness: layer.hasOutlineThickness,
+                hasLetters: layer.hasLetters))
         }
         return LayerStyleSelection(members: members, selectionCount: layerIDs.count)
     }

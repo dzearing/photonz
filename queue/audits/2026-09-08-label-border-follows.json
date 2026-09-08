@@ -1,0 +1,29 @@
+{
+  "feature": "A label can wear a box as well as an outline on its letters",
+  "epic": "ui-building",
+  "summary": "A Border on a label now says what it goes round. Letters draws a line round each letter, the way a caption over a screenshot wants; Box draws a plain rectangle round the label itself, which had no way to be asked for since the Outline row left Appearance. A label can wear one of each at once.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Effects list is behind next-shape-parts, which is on by default.",
+  "try": [
+    { "do": "Open a screenshot, press T, click on it and type a few words." },
+    { "do": "Press Escape, then press the plus on the Effects header and choose Border." },
+    { "do": "Read the Border row: it says Follows Letters, and there is no Position row.", "shot": "2026-09-08-label-border-2-letters.png" },
+    { "do": "Drag its Width up and watch the line grow round each letter." },
+    { "do": "Set Follows to Box.", "shot": "2026-09-08-label-border-3-box.png" },
+    { "do": "Try Position Inside and Outside on it, and drag Corner Radius in Appearance to round the box." },
+    { "do": "Add a second Border from the plus: it arrives on the letters, so the label wears both.", "shot": "2026-09-08-label-border-4-both.png" },
+    { "do": "Open a document you bordered a label in before today and check its outline is where you left it." }
+  ],
+  "evaluate": [
+    "Is Follows the word you would look for, or were you hunting for something called Shape or Around?",
+    "Should a new Border on a label still arrive on the letters, or should a label's first border be a box?",
+    "The box hugs the words tight, because it follows the label's frame and a label's frame is snug. Does it want room inside it?",
+    "With one of each on, does the list read clearly, or do two rows both called Border need telling apart in the header as well?",
+    "Position vanishing when the ring follows the letters: helpful, or does a row that changes shape underneath you feel unsteady?"
+  ],
+  "rough": [
+    "The grip between a letter border and a box border does nothing you can see. A letter outline is baked into the words and a box ring is laid round them afterwards, so the box always paints over, whichever order the list holds. Order among borders of the same kind is real.",
+    "There is no padding between the words and the box, because the box follows the label's frame. A roomier bordered label needs room on a text layer, which is its own piece of work.",
+    "A gradient poured into a border only shows on a box: an outline round the letters is drawn in the flat colour the gradient stands for. That was true before this change and is unchanged by it.",
+    "Screen Recording was granted, so the three pictures are real captures of the probe window, not offscreen renders."
+  ]
+}

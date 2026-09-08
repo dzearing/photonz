@@ -1,0 +1,50 @@
+{
+  "out": "/tmp/photonz-playtest/label-border-follows",
+  "seed": "A caption typed over a screenshot. Its Border row now asks what the ring goes round: the Letters, which is what a caption over a busy picture wants, or the Box the words sit in. The walk takes both, then puts one of each on the same label.",
+  "setup": { "forget": ["shapes", "color", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "key", "key": "t" },
+    { "do": "waitFor", "condition": "tool", "value": "text", "timeout": 3 },
+    { "do": "click", "at": [420, 300] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Needs a border" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-label", "note": "a label typed over the screenshot, with nothing added to it" },
+    { "do": "snapshot", "name": "1-label" },
+    { "do": "render", "name": "1-canvas-label" },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Twist", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "reveal", "control": "Slider", "in": "Border" },
+    { "do": "press", "control": "Slider", "in": "Border", "across": 0.08 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "2-letters" },
+    { "do": "describe", "stage": "2-letters", "note": "the border a label arrives with: it follows the LETTERS, and the row says so. No Position row, because a line grown out of the glyphs has no inside or outside" },
+    { "do": "snapshot", "name": "2-letters" },
+    { "do": "render", "name": "2-canvas-letters" },
+
+    { "do": "panelMenu", "menu": "Follows", "in": "Border", "choose": "Box" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "3-box" },
+    { "do": "describe", "stage": "3-box", "note": "the same border switched to follow the BOX: a plain rectangle round the label, and the Position row arrives with it" },
+    { "do": "snapshot", "name": "3-box" },
+    { "do": "render", "name": "3-canvas-box" },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "4-both" },
+    { "do": "describe", "stage": "4-both", "note": "a second border, arriving on the letters, so the label wears a box AND an outline on its words at once" },
+    { "do": "snapshot", "name": "4-both" },
+    { "do": "render", "name": "4-canvas-both" }
+  ]
+}

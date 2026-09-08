@@ -655,7 +655,7 @@ construction rather than by inspection.
 | Kind | Count | Its own settings |
 | --- | --- | --- |
 | Shadow | **many** | Color · Kind (Drop · Inner) · Blur · Size · Distance · Direction · Opacity |
-| Border | **many** | Color · Position (Inside · Center · Outside) · Width |
+| Border | **many** | Color · *Follows (Letters · Box), on a label only* · Position (Inside · Center · Outside) · Width |
 | Blur | one, pinned | Amount (no colour: a blur paints none) |
 | *Glow (next)* | many | Color · Kind (Outer · Inner) · Blur · Size · Opacity |
 
@@ -768,6 +768,17 @@ thing furthest back, so a halo buried under one would be a halo you cannot see.
 **An outer glow makes room for itself.** Its reach is part of `previewPadding`,
 so drag sprites, group buffers and dirty rects all grow for it. An inner glow
 never puts a pixel outside its layer and asks for no room at all.
+
+**A border on a LABEL says what it goes round.** A line round each letter is
+what a caption over a screenshot wants, and it is what a border on type has
+always drawn here; a plain rectangle round the whole label is an ordinary thing
+to want too. So a label's Border row carries a **Follows** popup — Letters or
+Box — above everything else on it, because the answer changes what the rows
+under it mean: an outline grown out of the glyphs has no inside or outside, so
+Position is not asked while it is following the letters. A border is countable,
+so one of each is two rows. Nothing else has letters, so nothing else is asked
+(`PhotonzCore/BorderFollows.swift`). Letters is what a new border arrives as and
+what a border saved before the choice existed opens as, so no document changes.
 
 **Order is real within a kind.** Borders paint over the layer's own edge in list
 order, top of the list nearest the eye, and the shadows are then cast from the

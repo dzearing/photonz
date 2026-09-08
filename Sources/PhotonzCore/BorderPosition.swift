@@ -66,16 +66,6 @@ extension AnnotationContent {
 
 extension Layer {
 
-    /// Whether a Position means anything on this layer: a shape with an edge,
-    /// or anything that takes a ring round its box. Text is out, because a
-    /// border on a label follows the letters rather than the box, so inside and
-    /// outside would mean nothing on it.
-    public var hasOutlinePosition: Bool {
-        if let annotation { return annotation.shape.hasOutlinePosition }
-        if case .text = content { return false }
-        return true
-    }
-
     /// Where this layer's one line sits: the side of the edge the ring nearest
     /// the eye is on. Every layer's edge is a Border in the Effects list now
     /// (`OutlineRetirement.swift`), so there is one answer rather than two.

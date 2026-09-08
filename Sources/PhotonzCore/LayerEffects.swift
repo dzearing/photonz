@@ -136,6 +136,10 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     /// Which side of the layer's edge it sits on. This is the whole of what
     /// makes an inner border and an outer border two different things.
     public var position: BorderPosition
+    /// What the ring goes round on a LABEL: its letters, or the box the words
+    /// sit in (`BorderFollows.swift`). Nothing but a label has letters, so on
+    /// every other layer the ring follows the box whatever this says.
+    public var follows: BorderFollows
     /// Whether it paints at all. Off keeps every number on it, exactly as a
     /// shadow's tick does.
     public var isOn: Bool
@@ -150,21 +154,27 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     public init(width: CGFloat = BorderEffect.startingWidth,
                 colorHex: String = "#000000",
                 position: BorderPosition = .outside,
+                follows: BorderFollows = .letters,
                 isOn: Bool = true) {
         self.width = width
         self.paint = Paint(hex: colorHex)
         self.position = position
+        self.follows = follows
         self.isOn = isOn
     }
 
     private enum CodingKeys: String, CodingKey {
-        case width, colorHex, paint, position, isOn
+        case width, colorHex, paint, position, follows, isOn
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         width = try c.decode(CGFloat.self, forKey: .width)
         position = try c.decodeIfPresent(BorderPosition.self, forKey: .position) ?? .outside
+        // A file written before the choice existed says nothing, and every
+        // border it holds on a label was drawn round the letters, so that is
+        // what it opens as (`BorderFollows.swift`).
+        follows = try c.decodeIfPresent(BorderFollows.self, forKey: .follows) ?? .letters
         isOn = try c.decodeIfPresent(Bool.self, forKey: .isOn) ?? true
         // The flat colour is where it has always been; the ramp goes in beside
         // it, and only when there is one.
@@ -183,6 +193,9 @@ public struct BorderEffect: Hashable, Codable, Sendable {
         try c.encode(colorHex, forKey: .colorHex)
         if paint.isGradient { try c.encode(paint, forKey: .paint) }
         try c.encode(position, forKey: .position)
+        // Only the answer that is not the ordinary one, so a label bordered
+        // today opens in an older build drawing exactly what it drew before.
+        if follows != .letters { try c.encode(follows, forKey: .follows) }
         try c.encode(isOn, forKey: .isOn)
     }
 

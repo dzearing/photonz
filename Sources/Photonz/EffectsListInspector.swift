@@ -352,6 +352,9 @@ private struct EffectRowView: View {
             // the row, and the colour, which is the row above this one.
             ShadowInspector(showsSwitch: false, showsColor: false, inset: false, index: index)
         case .border:
+            // On a label, WHAT the ring goes round comes before everything
+            // else: it changes what the rest of the settings even describe.
+            BorderFollowsRow(row: row)
             // Where the ring sits, then how thick it is: which side of the edge
             // you are on changes what a width even means, so it is asked first.
             BorderPositionRow(row: row)
@@ -406,17 +409,94 @@ private struct EffectColorRow: View {
     }
 }
 
+/// What one added ring round a LABEL goes round: its letters, or the box the
+/// words sit in.
+///
+/// Only a label is asked. Everything else has a box and nothing else, so the
+/// row is not there at all rather than being there greyed out: a question with
+/// one possible answer is a question in the way.
+///
+/// It sits at the top of the border's settings because it changes what the two
+/// rows under it mean — a line round each letter has no inside and no outside,
+/// so the Position popup goes away with it (`BorderFollows.swift`).
+private struct BorderFollowsRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    var body: some View {
+        let borders = editorState.layerStyleSelection.borders(at: row.index)
+        if borders.hasLettersEverywhere {
+            let ids = borders.layerIDs
+            let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
+            HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
+                Text("Follows")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+                Picker("Follows", selection: Binding(
+                    get: { reading.isMixed ? nil : reading.value },
+                    set: { new in
+                        guard let new else { return }
+                        editorState.setBorderEffectFollows(at: row.index, ids: ids, to: new)
+                    })) {
+                        if reading.isMixed {
+                            Text(LayerStyleSelection.mixedText).tag(BorderFollows?.none)
+                        }
+                        ForEach(BorderFollows.allCases, id: \.self) { follows in
+                            Text(follows.title).tag(BorderFollows?.some(follows))
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .controlSize(.small)
+                    // The width the Position popup beside it carries, for the
+                    // same reason: an ideal-width menu inside the dock's column
+                    // pushed the whole pane wider than the window.
+                    .frame(width: 92, alignment: .leading)
+                    .disabled(ids.isEmpty)
+                    .help("Letters draws round each letter, so words stay readable over "
+                          + "anything. Box draws round the label's frame.")
+                    .playtestControl("Follows", detail: reading.isMixed ? "mixed"
+                                        : (reading.value ?? .letters).title)
+                Spacer(minLength: 0)
+            }
+            // Its own row name, the way the Color row above it carries one:
+            // with this row on screen the border holds THREE menus, and a walk
+            // that said `{"menu": "Border"}` could not say which of them it
+            // meant. So this one is `{"menu": "Follows", "in": "Border"}` and
+            // the Position keeps the row's own name.
+            .playtestField("Follows")
+        }
+    }
+}
+
 /// Which side of the layer's edge one added ring sits on.
 ///
 /// The same three words the Outline row in Appearance uses, because it is the
 /// same question: a line is inside the edge, straddling it, or outside it. An
 /// inner border and an outer border are two entries in the list that differ by
 /// nothing but this.
+///
+/// Not asked of a ring that is following a label's LETTERS: an outline grown
+/// out of the glyphs has no inside or outside to choose between, so the popup
+/// would be three words that do nothing (`BorderFollows.swift`).
 private struct BorderPositionRow: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
 
+    /// Whether this ring has a side of an edge to sit on at all.
+    private var isAboutAnEdge: Bool {
+        let borders = editorState.layerStyleSelection.borders(at: row.index)
+        guard borders.hasLettersEverywhere else { return true }
+        let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
+        return !reading.isMixed && reading.value == .box
+    }
+
     var body: some View {
+        if isAboutAnEdge { picker }
+    }
+
+    @ViewBuilder private var picker: some View {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
         let ids = borders.layerIDs
         let reading = borders.reading { $0.borderEffect(at: row.index)?.position ?? .outside }

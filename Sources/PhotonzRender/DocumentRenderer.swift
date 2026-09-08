@@ -537,7 +537,8 @@ public final class DocumentRenderer: @unchecked Sendable {
             .cropped(to: buffer)
 
         image = rounded(image, box: box, radius: layer.style.cornerRadius)
-        image = borderEffects(image, box: box, radius: layer.style.cornerRadius, style: layer.style)
+        image = borderEffects(image, box: box, radius: layer.style.cornerRadius,
+                              borders: layer.boxBorders)
         // Blurring a group blurs the card it makes — surface, corner and ring
         // as one — and its halo escapes the group's box the way its shadow
         // does. A group is always a drawn thing, never a photograph.
@@ -690,10 +691,11 @@ public final class DocumentRenderer: @unchecked Sendable {
             // box border below is suppressed for text.
             // A label's edge is a Border in its Effects list like every other
             // layer's, since the Outline row left Appearance
-            // (`OutlineRetirement.swift`). On a label it follows the LETTERS
-            // rather than the box, which is what an outline on type means and
-            // what the layer's own ring always did here.
-            let outlines = layer.style.paintedBorders.map {
+            // (`OutlineRetirement.swift`). On a label a border follows the
+            // LETTERS unless its row says it follows the box, in which case it
+            // is drawn round the frame below with everything else's ring
+            // (`BorderFollows.swift`).
+            let outlines = layer.letterBorders.map {
                 TextRasterizer.TextOutline(width: $0.width / contentScale, colorHex: $0.colorHex)
             }
             var variant = outlines.map { "outline:\($0.width):\($0.colorHex)" }.joined(separator: ",")
@@ -835,15 +837,13 @@ public final class DocumentRenderer: @unchecked Sendable {
             ? image.extent.insetBy(dx: contentOutset, dy: contentOutset)
             : image.extent
         image = rounded(image, box: box, radius: maskRadius, keepingOutside: contentOutset > 0)
-        // Every ring round this layer, in the order the Effects list holds
-        // them. A label is exempt: its borders outline the letters and were
-        // baked into the words above, so drawing them again as a box would put
-        // a frame round a label nobody asked for.
-        let isTextLayer: Bool = { if case .text = layer.content { return true } else { return false } }()
-        if !isTextLayer {
-            image = borderEffects(image, box: box, radius: ringRadius, shape: ringShape,
-                                  style: layer.style)
-        }
+        // Every ring round this layer's BOX, in the order the Effects list
+        // holds them. On a label that is only the borders whose row says they
+        // follow its frame: the ones following the letters were baked into the
+        // words above, and drawing those again as a box would put a frame round
+        // a label nobody asked for (`BorderFollows.swift`).
+        image = borderEffects(image, box: box, radius: ringRadius, shape: ringShape,
+                              borders: layer.boxBorders)
 
         // Style: blur, after the paint rather than before it, so the softness
         // takes the whole layer — what it draws, its rounded corner and its
@@ -964,11 +964,10 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// ends up nearest the eye — the same rule the shadows follow, and the
     /// whole meaning of the grip on the row.
     private func borderEffects(_ image: CIImage, box: CGRect, radius: CGFloat,
-                               shape: RingShape = .box, style: LayerStyle) -> CIImage {
-        let painted = style.paintedBorders
-        guard !painted.isEmpty else { return image }
+                               shape: RingShape = .box, borders: [BorderEffect]) -> CIImage {
+        guard !borders.isEmpty else { return image }
         var result = image
-        for border in painted.reversed() {
+        for border in borders.reversed() {
             result = ringed(result, box: box, radius: radius, shape: shape, width: border.width,
                             outset: border.outset, paint: border.paint)
         }
