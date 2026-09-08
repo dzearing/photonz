@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 1870,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:29:27.651Z",
-  "updated": "2026-09-08T09:15:37.383908Z",
+  "updated": "2026-09-08T09:15:42.641Z",
   "deps": [],
   "blockedBy": [],
   "notes": "GroupFlow.closedAround moves the contents to padding.left/padding.top and Layer.arrangedBounds keeps the frame origin, so the contents move and the box grows down and right. Growing outward means also moving the layer frame by -dx/-dy in GroupFlow.flowing; it is idempotent, because the second pass computes dx = 0. Careful with the case a surface is present: there the top left is anchored today and a button grows to the right, which is right and must not change. Found while fixing more-room-on-a-copy-moves-it-instead-of-making-i on 2026-09-07: the copy knob was taken off drawings like this, but the inspector still offers it.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-09-08T09:15:37.383908Z",
       "note": "Left alone on purpose: Layer.spendsRoom still hides the room knob on a component copy of a fill-less drawing. The room is correct now but still invisible on a group that paints nothing, so that gate is still the right call; raised as a question in the audit instead of changed here."
+    },
+    {
+      "t": "2026-09-08T09:15:42.639Z",
+      "note": "Room on a group set to Free now grows the box outward instead of sliding the drawing. GroupFlow.flowing offsets the group's own frame by what its contents moved in, only on an axis that is the size of its contents and only where nothing in the group is a surface. Six new tests plus the whole suite green (4790), and verified live on the probe: 40 of room took the group from X 200 Y 160 W 280 H 200 to X 160 Y 120 W 360 H 280 with the document renders byte for byte identical, while the starter Button given 32 of room kept its X and Y and grew right. Audit: queue/audits/2026-09-08-room-grows-outward.json"
     }
   ],
-  "started": "2026-09-08T09:01:59.647Z"
+  "started": "2026-09-08T09:01:59.647Z",
+  "completed": "2026-09-08T09:15:42.640Z"
 }
