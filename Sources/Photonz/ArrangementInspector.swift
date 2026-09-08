@@ -175,7 +175,11 @@ struct ArrangementInspector: View {
         }
         .help(PhotonzDocument.instanceArrangementReason)
         if let one {
-            ForEach(one.layout.followedReadout(clipsContents: one.clipsContents), id: \.title) {
+            // Whatever the Component section a few rows up already hands over
+            // as a knob is left out here: the same word over the same number,
+            // one of them dead, is the panel saying it twice.
+            ForEach(one.layout.followedReadout(clipsContents: one.clipsContents,
+                                               covered: one.knobbed), id: \.title) {
                 readout in
                 row(readout.title) {
                     Text(readout.value)
@@ -192,6 +196,16 @@ struct ArrangementInspector: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+        // A copy has the same two answers to more room as its original, and it
+        // is the one place a person actually turns the room up, on the knob a
+        // few rows above. So the line belongs here as much as it does there.
+        if let answer = contents.roomAnswer {
+            Text(answer.sentence)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+                .playtestControl("Room answer", detail: answer.sentence)
         }
     }
 
@@ -377,6 +391,15 @@ struct ArrangementInspector: View {
     /// disagree — one group's own four sides, or two groups against each other
     /// — so room typed on one side is never hidden behind a chevron and never
     /// shows as a single number that is not true.
+    ///
+    /// Under it, one line saying what the number will DO to this group
+    /// (`RoomAnswer`). Room has two honest answers that look like opposites: a
+    /// loose drawing grows its box outward and keeps every piece where it was
+    /// drawn, and a drawing with a surface in it keeps the corner it is pinned
+    /// at and moves the pieces in. Which one you get turns on whether a piece
+    /// inside has been named the surface, and nothing on the canvas shows that,
+    /// so the section says it before the number is typed rather than leaving it
+    /// to be discovered by undoing.
     @ViewBuilder
     private func padding() -> some View {
         let reading = contents.padding
@@ -421,6 +444,13 @@ struct ArrangementInspector: View {
                     editorState.updateArrangement(ids: ids) { $0.padding[side] = value }
                 }
             }
+        }
+        if let answer = contents.roomAnswer {
+            Text(answer.sentence)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+                .playtestControl("Room answer", detail: answer.sentence)
         }
     }
 

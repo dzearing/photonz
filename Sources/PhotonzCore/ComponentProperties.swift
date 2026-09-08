@@ -846,6 +846,29 @@ extension PhotonzDocument {
         return componentProperties(of: componentID, version: instanceVersion(of: instance))
     }
 
+    /// The numbers a copy carries as knobs on its OWN outermost edges: the
+    /// room it keeps inside them, the gap it holds its contents apart by.
+    ///
+    /// Those are the two knobs that can name the copy's own root rather than a
+    /// piece inside it, and a copy's Layout section reads the very same
+    /// numbers back on greyed rows. Two rows wearing the word Padding, one
+    /// typeable and one dead, is the panel saying the same thing twice, so the
+    /// Layout section leaves out whatever the Component section above it
+    /// already hands over. The same answer the size rows have always given:
+    /// W and H are two rows up, so the section does not say them again.
+    ///
+    /// Empty for anything that is not a copy, and empty for a knob that reaches
+    /// a piece INSIDE the copy, which is a different number from the copy's own.
+    public func numberKnobsOnTheCopyItself(instance: UUID) -> Set<ComponentNumberSlot> {
+        guard let copy = layer(id: instance), let componentID = copy.instanceOf,
+              let main = mainComponent(componentID: componentID,
+                                       version: instanceVersion(of: instance))
+        else { return [] }
+        return Set(instanceProperties(instance: instance)
+            .filter { $0.kind == .number && $0.target == main.id }
+            .compactMap(\.numberSlot))
+    }
+
     /// Which knobs this copy has answered for itself, as opposed to following
     /// the original. This is what puts the revert control on a row.
     public func instanceOverrides(instance: UUID) -> Set<UUID> {

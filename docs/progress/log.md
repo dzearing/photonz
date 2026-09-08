@@ -12677,3 +12677,34 @@ is where a resize drag grabs.
 Next: the audit (`queue/audits/2026-09-08-selection-outline-rounds.json`) asks
 whether the corner handles sitting off the curve reads right, and whether an
 oval's square box now looks inconsistent beside a curved rectangle.
+
+## 2026-09-08 — A group says what more room will do to it
+
+Room at a group's edges has had two opposite-looking answers since yesterday's
+fix: a loose drawing grows its box outward and keeps every piece where it was
+drawn, while a drawing with a surface in it keeps the corner it is pinned at
+and moves the pieces in. Reproduced both on the probe first
+(`Scripts/playtest/room-means-one-thing-walk.json`): the same 40 took a loose
+group from 200,140 270x190 to 160,100 350x270 with nothing moved, and a button
+from 200,480 240x90 to 200,480 131x109 with its word moved 20 in and 10 down.
+
+Neither behaviour changed. Unifying was considered and rejected in both
+directions: outward everywhere puffs a button's pill out around its word and
+moves a corner somebody aligned by, and from-the-corner everywhere slides a
+loose drawing across and down. What was missing is that nothing said which
+answer you were about to get, so `RoomAnswer` in PhotonzCore now works it out
+and the Layout section prints one line under Padding: "More room grows the box
+outward, and nothing inside moves", "More room moves the pieces in from the
+edges", or "This box is the size it was given, so more room moves nothing".
+The tests hold each answer against what `GroupFlow` actually does, so the
+sentence and the canvas cannot drift apart.
+
+Second half of the same task: a copy's Layout section used to repeat, greyed,
+whatever the Component section already offered as a knob, so a copy with a room
+knob wore the word Padding twice over one number. `numberKnobsOnTheCopyItself`
+and `followedReadout(covered:)` leave that row out, the way W and H have always
+been left out of it.
+
+Next: the audit (`queue/audits/2026-09-08-room-says-what-it-will-do.json`) asks
+whether saying which answer you get is enough, or whether the app should pick
+one rule and use it everywhere.

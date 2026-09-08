@@ -32,7 +32,14 @@ extension GroupLayout {
     ///
     /// `clipsContents` is the group's own switch, which lives on the layer
     /// rather than in the layout.
-    public func followedReadout(clipsContents: Bool) -> [LayoutReadout] {
+    ///
+    /// `covered` names the numbers the copy already carries as knobs on its own
+    /// edges (`numberKnobsOnTheCopyItself`). Those are typeable a few rows above
+    /// in the Component section, under the very same word, so printing them
+    /// here again would leave the panel with two rows called Padding holding
+    /// one number, one of which cannot be typed in.
+    public func followedReadout(clipsContents: Bool,
+                                covered: Set<ComponentNumberSlot> = []) -> [LayoutReadout] {
         var rows: [LayoutReadout] = []
         switch kind {
         case .stack:
@@ -48,9 +55,9 @@ extension GroupLayout {
         if clipsContents {
             rows.append(LayoutReadout(title: "Clip contents", value: "On"))
         }
-        rows += gapRows()
+        if !covered.contains(.gap) { rows += gapRows() }
         let room = usedPadding
-        if room != .none {
+        if room != .none, !covered.contains(.padding) {
             rows.append(LayoutReadout(title: "Padding",
                                       value: room.uniform.map { Self.whole($0) } ?? room.shorthand))
         }

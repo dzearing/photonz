@@ -5,14 +5,14 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T12:08:01.154Z",
-  "updated": "2026-09-08T12:09:06.757Z",
+  "updated": "2026-09-08T13:13:41.904Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Design review 2026-09-08, from two audits a day apart. queue/audits/2026-09-08-room-grows-outward.json says it plainly in its rough notes: \"A group with a surface in it was deliberately left alone: there the box is the thing you can see, so a button pill stays pinned at its top left and grows right and down. That is two different answers to the same field, and it is only obvious once you know a surface is what makes the difference.\" queue/audits/2026-09-07-room-lands-on-something.json asks the reader the matching question: \"The roomier copy grows to the right and down from where its top left already was. Should it grow out in every direction around the word instead?\"\n\nSECOND THING, same row, cheap to fix here: that audit also asks \"Is Padding the right word for this row, next to a Layout section that already says Padding?\" A copy override knob and the group Layout row both read Padding and mean different things. Whatever this task settles, the two rows should not wear the same name.",
+  "notes": "Design review 2026-09-08, from two audits a day apart. queue/audits/2026-09-08-room-grows-outward.json says it plainly in its rough notes: \"A group with a surface in it was deliberately left alone: there the box is the thing you can see, so a button pill stays pinned at its top left and grows right and down. That is two different answers to the same field, and it is only obvious once you know a surface is what makes the difference.\" queue/audits/2026-09-07-room-lands-on-something.json asks the reader the matching question: \"The roomier copy grows to the right and down from where its top left already was. Should it grow out in every direction around the word instead?\"\n\nSECOND THING, same row, cheap to fix here: that audit also asks \"Is Padding the right word for this row, next to a Layout section that already says Padding?\" A copy override knob and the group Layout row both read Padding and mean different things. Whatever this task settles, the two rows should not wear the same name.\n\nAdversarial review before building. Walked it as a first-time user: pick a group, see Free/Stack/Grid and a Padding field, type 40. On a loose drawing NOTHING VISIBLE happens (the pieces hold still and the box that grew is not painted), and on a drawing with a surface the pill visibly reshapes and the word moves. So the real trap is not that the two answers are opposites; it is that one of them is invisible and the section never says which you are about to get.\n\nConsidered picking one answer, and did not. Always outward would puff a button's pill out in every direction around its word, moving the top left of a thing somebody aligned to something else. Always from the corner would slide a loose drawing across and down, which is the exact bug fixed on 2026-09-08. Each unification makes one real case worse, so both behaviours were kept and the difference was made visible, which is the branch this task's own goal allows. The question of whether the user would rather have one rule goes in the audit.\n\nReproduced first, on the probe, before writing any code: Scripts/playtest/room-means-one-thing-walk.json, both cases in one document. Loose group 200,140 270x190 -> 160,100 350x270 with both shapes unmoved. Button (rectangle named the surface) 200,480 240x90 -> 200,480 131x109 with the word moving 260,510 -> 240,520. Same field, same 40, two answers.",
   "acceptance": [
     "Typing the same room into two groups that differ only in whether a piece is the surface gives an answer a person can predict, and the audit shows both side by side",
     "If the two answers stay different, the group says which one it will give before you type, in the Layout section itself and not only in a tooltip",
@@ -28,6 +28,20 @@
     {
       "t": "2026-09-08T12:09:06.756Z",
       "note": "seq 2030 -> 30"
+    },
+    {
+      "t": "2026-09-08T12:48:49.829Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T13:06:13.142828Z",
+      "note": "reproduced both answers live on the probe with real numbers; adversarial review written into notes"
+    },
+    {
+      "t": "2026-09-08T13:13:41.902Z",
+      "note": "Both answers kept, and the group now says which one it will give before you type. RoomAnswer in PhotonzCore works it out (grows the box outward / moves the pieces in / moves nothing) and the Layout section prints it as one line under Padding, on an original and on a copy. Neither behaviour changed: unifying was considered and rejected both ways in the task log. Second half: a copy's Layout section no longer repeats, greyed, a number its Component knob already carries, so the word Padding stops appearing twice over one number (numberKnobsOnTheCopyItself + followedReadout(covered:)). Verified live on the probe with Screen Recording granted: Scripts/playtest/room-means-one-thing-walk.json, 107 steps green, claims both lines, the boxes before and after (loose 200,140 270x190 -> 160,100 350x270 with nothing moved; button 200,480 240x90 -> 200,480 131x109 with its word moved in and the surface still filling the box), both undos exact, and the third answer on a Fixed group. Scripts/test.sh green, 4858 tests, 18 of them new. Audit: queue/audits/2026-09-08-room-says-what-it-will-do.json with four real captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T12:48:49.828Z",
+  "completed": "2026-09-08T13:13:41.903Z"
 }

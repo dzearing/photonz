@@ -1,0 +1,30 @@
+{
+  "feature": "A group says what more room will do to it",
+  "epic": "ui-layout",
+  "summary": "The Layout section now prints one line under Padding saying what typing a number there will do to this particular group: grow its box outward and move nothing, or move the pieces in from the edges. Both answers were already there; which one you got was invisible until you typed.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Draw a rectangle, then draw an ellipse below and to the right of it." },
+    { "do": "Sweep over both, press Command G, and read the line under Padding in the Layout section.", "shot": "2026-09-08-room-says-what-it-will-do-1-loose-sc.png" },
+    { "do": "Type 40 into Padding and press Return: the pieces hold still and the box grows out 40 on every side, as the line said.", "shot": "2026-09-08-room-says-what-it-will-do-2-loose-after-sc.png" },
+    { "do": "Press Command Z, then draw a rectangle lower down and put the word Save on it with the text tool." },
+    { "do": "Sweep over both, press Command G, double click into the group, pick the rectangle and set Horizontal and Vertical to Stretch." },
+    { "do": "Select the group again and read the line under Padding: it now says something different.", "shot": "2026-09-08-room-says-what-it-will-do-3-surface-sc.png" },
+    { "do": "Type 40 into Padding: the button keeps the corner it is pinned at, the pill still fills the box, and the word moves in.", "shot": "2026-09-08-room-says-what-it-will-do-4-surface-after-sc.png" },
+    { "do": "Press Fixed for Width and for Height on the first group and read the line once more." }
+  ],
+  "evaluate": [
+    "Reading the line before you type, do you know what the number is about to do?",
+    "Two answers to one field, each right for the drawing it happens to: is saying which one you will get enough, or would you rather the app picked one rule and used it everywhere?",
+    "Is the line in the right place, under the number rather than at the foot of the section?",
+    "On the loose drawing, room changes nothing you can see except the selection box. Does the line make that feel deliberate, or does it still feel like the field did nothing?",
+    "A copy shows the same line under its Component knob's number. Does it read as being about that knob?"
+  ],
+  "rough": [
+    "Nothing about how room BEHAVES changed. Unifying the two answers was considered and rejected: growing outward everywhere would puff a button's pill out in all directions and move the corner somebody aligned it by, and growing from the corner everywhere would slide a loose drawing across and down, which is the bug fixed yesterday. Each unification makes one real case worse, so both were kept and the difference was made visible. If you want one rule anyway, the second question above is the place to say so.",
+    "The line never tells you how to CHANGE the answer. On a loose drawing it does not say that stretching a piece both ways would make it the surface and bring the room onto something you can see. That sentence would have been three lines in a section already fighting for height, so it stayed in the Arrangement tooltip.",
+    "On a copy the line sits in the Layout section while the number it is about is a knob two sections above it, in Component. It reads fine, but it is further from its field than it is on an original.",
+    "Second half of the same task: a copy's Layout section used to repeat, greyed, whatever its Component section already offered as a knob, so a copy with a room knob showed two rows called Padding holding one number, one of them dead. The greyed one is gone now, the same way W and H have always been left out of that section.",
+    "Verified live on the probe with Screen Recording granted, so all four shots are real window captures. Scripts/playtest/room-means-one-thing-walk.json drives both cases end to end and claims each line, each box before and after, and both undos."
+  ]
+}

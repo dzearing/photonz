@@ -1,0 +1,530 @@
+{
+  "out": "/tmp/photonz-playtest/room-means-one-thing",
+  "seed": "Two drawings that differ only in whether one piece is the surface, given the same 40 of room. Each one SAYS which answer it will give before the number is typed, and the walk claims both lines, the boxes before and after, and that one undo puts either case back.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "text",
+      "panel",
+      "groups",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 800,
+      "width": 1360,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        140
+      ],
+      "to": [
+        320,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        260
+      ],
+      "to": [
+        470,
+        330
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        100
+      ],
+      "to": [
+        520,
+        380
+      ],
+      "steps": 10
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Loose"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "200"
+    },
+    {
+      "do": "expect",
+      "field": "Y",
+      "reads": "140"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "270"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "190"
+    },
+    {
+      "do": "expect",
+      "control": "Room answer",
+      "reads": "More room grows the box outward, and nothing inside moves."
+    },
+    {
+      "do": "panel",
+      "stage": "1-loose-before"
+    },
+    {
+      "do": "describe",
+      "stage": "1-loose-before",
+      "note": "a rectangle and an ellipse in one group that arranges nothing. No piece is painted to the group's edges, and the Layout section says so under the Padding row before anything is typed. Box X 200 Y 140 W 270 H 190."
+    },
+    {
+      "do": "snapshot",
+      "name": "room-1-loose-before"
+    },
+    {
+      "do": "render",
+      "name": "room-1-loose-before-doc"
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "40"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "160"
+    },
+    {
+      "do": "expect",
+      "field": "Y",
+      "reads": "100"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "350"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "270"
+    },
+    {
+      "do": "describe",
+      "stage": "2-loose-after",
+      "note": "ANSWER ONE, as promised: the box grew outward, X and Y each down by 40 and W and H each up by 80, and neither shape moved a pixel."
+    },
+    {
+      "do": "snapshot",
+      "name": "room-2-loose-after"
+    },
+    {
+      "do": "render",
+      "name": "room-2-loose-after-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "200"
+    },
+    {
+      "do": "expect",
+      "field": "Y",
+      "reads": "140"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "270"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "190"
+    },
+    {
+      "do": "describe",
+      "stage": "3-loose-undone",
+      "note": "one undo puts the loose case back exactly as it was"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        480
+      ],
+      "to": [
+        440,
+        570
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        260,
+        510
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Save"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        160,
+        440
+      ],
+      "to": [
+        500,
+        620
+      ],
+      "steps": 10
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Button"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expect",
+      "control": "Room answer",
+      "reads": "More room grows the box outward, and nothing inside moves."
+    },
+    {
+      "do": "click",
+      "at": [
+        410,
+        555
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionAcross"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "stretchSelectionDown"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "selectRow",
+      "row": "Button"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "200"
+    },
+    {
+      "do": "expect",
+      "field": "Y",
+      "reads": "480"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "240"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "90"
+    },
+    {
+      "do": "expect",
+      "control": "Room answer",
+      "reads": "More room moves the pieces in from the edges."
+    },
+    {
+      "do": "panel",
+      "stage": "4-surface-before"
+    },
+    {
+      "do": "describe",
+      "stage": "4-surface-before",
+      "note": "the same kind of drawing with one difference: the box under the word has been named the surface. The line under Padding changed with it, before any number was typed. Box X 200 Y 480 W 240 H 90."
+    },
+    {
+      "do": "snapshot",
+      "name": "room-3-surface-before"
+    },
+    {
+      "do": "render",
+      "name": "room-3-surface-before-doc"
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "40"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "200"
+    },
+    {
+      "do": "expect",
+      "field": "Y",
+      "reads": "480"
+    },
+    {
+      "do": "describe",
+      "stage": "5-surface-after",
+      "note": "ANSWER TWO, as promised: the corner it is pinned at held at 200, 480, the surface still fills the box, and the word moved in."
+    },
+    {
+      "do": "snapshot",
+      "name": "room-4-surface-after"
+    },
+    {
+      "do": "render",
+      "name": "room-4-surface-after-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "200"
+    },
+    {
+      "do": "expect",
+      "field": "Y",
+      "reads": "480"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "240"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "90"
+    },
+    {
+      "do": "describe",
+      "stage": "6-surface-undone",
+      "note": "one undo puts the surface case back exactly as it was too"
+    },
+    {
+      "do": "render",
+      "name": "room-5-undone-doc"
+    },
+    {
+      "do": "selectRow",
+      "row": "Loose"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "press",
+      "control": "Fixed",
+      "in": "Width"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Fixed",
+      "in": "Height"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Room answer",
+      "reads": "This box is the size it was given, so more room moves nothing."
+    },
+    {
+      "do": "describe",
+      "stage": "7-fixed",
+      "note": "the third answer, for completeness: a drawing held to a size of its own has nowhere to put more room, and says so in the same place."
+    },
+    {
+      "do": "snapshot",
+      "name": "room-6-fixed"
+    }
+  ]
+}

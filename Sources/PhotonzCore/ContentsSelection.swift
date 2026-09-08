@@ -61,6 +61,17 @@ public struct ContentsSelection: Hashable, Sendable {
         public let editing: PlacementEditing
         /// Who inside it has a rule of its own.
         public let overrides: [PlacementOverride]
+        /// What more room at its edges would do to it, or nil where there is
+        /// nothing to say. Read here, off the layer itself, because whether a
+        /// piece inside is the surface is the thing that decides it and the
+        /// rows have no other way to see inside.
+        public let roomAnswer: RoomAnswer?
+        /// The numbers a COPY already carries as knobs of its own, on its own
+        /// outermost edges. Those rows are typeable in the Component section a
+        /// few rows above, so the Layout section leaves its greyed copy of
+        /// them out rather than printing the same word and the same number
+        /// twice.
+        public let knobbed: Set<ComponentNumberSlot>
     }
 
     /// The picked groups these rows speak for and can set, in draw order.
@@ -194,6 +205,16 @@ public struct ContentsSelection: Hashable, Sendable {
     /// leaves the placement rows to say the whole story on their own.
     public var nothingArranged: Bool { groups.allSatisfy { $0.arrangement == nil } }
 
+    /// What more room would do to every picked group, or nil where they would
+    /// not all do the same thing. A line that spoke for some of them and not
+    /// the others would be worse than no line: the reader has no way to tell
+    /// which ones it meant.
+    public var roomAnswer: RoomAnswer? {
+        guard let first = groups.first?.roomAnswer,
+              groups.allSatisfy({ $0.roomAnswer == first }) else { return nil }
+        return first
+    }
+
     /// Which of the contents' two directions the picked groups' own flows have
     /// taken over. Where they do not agree, neither direction is treated as
     /// taken: it is still a question for some of them, and a row that went dead
@@ -321,7 +342,9 @@ extension PhotonzDocument {
                     rule: group.group?.contentPlacement,
                     editing: PlacementEditing(arrangement: arrangement,
                                               onAScreen: group.isFrame),
-                    overrides: group.contentsWithTheirOwnPlacement(arrangement: arrangement))
+                    overrides: group.contentsWithTheirOwnPlacement(arrangement: arrangement),
+                    roomAnswer: group.roomAnswer,
+                    knobbed: numberKnobsOnTheCopyItself(instance: group.id))
             },
             selectionCount: picked.count,
             isFollowed: isFollowed)
