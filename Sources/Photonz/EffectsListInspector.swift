@@ -21,25 +21,57 @@ import SwiftUI
 struct EffectsListInspector: View {
     @Environment(EditorState.self) private var editorState
 
+    /// The gap between two effects, and the padding this list draws above and
+    /// below the whole stack. The dock reads both to work out how much room one
+    /// open effect needs (`InspectorPanel.squeezeFloor(for:room:)`).
+    static let paneSpacing: CGFloat = 16
+    static let listInset: CGFloat = 8
+
+    /// Told what this list is made of whenever it changes: one block per
+    /// effect, how tall it is and whether it is open. The dock's height budget
+    /// keeps room to draw the first OPEN one whole, so a squeezed Effects
+    /// section never cuts a slider in half.
+    var onPanes: (([DockHeightBudget.Block]) -> Void)?
+
+    /// Each effect's measured extent, by its place in the list.
+    @State private var panes: [Int: DockHeightBudget.Block] = [:]
+
     var body: some View {
         let rows = editorState.layerEffectRows
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: Self.paneSpacing) {
             if rows.isEmpty {
                 empty
             } else {
                 ForEach(rows) { row in
-                    EffectRowView(row: row)
+                    EffectRowView(row: row, onExtent: { panes[row.index] = $0 })
                 }
                 if let caption {
                     Text(caption)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
+                        // Measured like an effect, and folded like one, so a
+                        // cut that lands on it shows its top rather than
+                        // ending the list on empty glass.
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                            panes[rows.count] = DockHeightBudget.Block(height: $0, isOpen: false)
+                        }
                 }
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
-        .padding(.vertical, 8)
+        .padding(.vertical, Self.listInset)
+        // Both, because either can move on its own: an effect folding changes
+        // a height, and removing one changes how many there are while the
+        // measurements of the rest stay exactly as they were.
+        .onChange(of: panes, initial: true) { report(rows.count + (caption == nil ? 0 : 1)) }
+        .onChange(of: rows.count) { report(rows.count + (caption == nil ? 0 : 1)) }
+    }
+
+    /// The panes in list order, dropping any measurement left behind by an
+    /// effect that has since been removed.
+    private func report(_ count: Int) {
+        onPanes?((0..<count).compactMap { panes[$0] })
     }
 
     /// What an untouched shape shows: one line saying what this list is for and
@@ -87,6 +119,9 @@ struct EffectsListInspector: View {
 private struct EffectRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
+    /// How tall this pane is and whether it is open, told to the list so the
+    /// dock can keep room for it. See `EffectsListInspector.onPanes`.
+    let onExtent: (DockHeightBudget.Block) -> Void
 
     /// What is being held over this row right now, while it is switched off.
     @State private var incoming: ColorDrop.Answer?
@@ -179,11 +214,20 @@ private struct EffectRowView: View {
         .offset(y: carry)
         .zIndex(carry == 0 ? 0 : 1)
         .background {
-            GeometryReader { proxy in
-                Color.clear.onAppear { blockHeight = proxy.size.height }
-                    .onChange(of: proxy.size.height) { _, new in blockHeight = new }
-            }
+            Color.clear
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { new in
+                    blockHeight = new
+                    report(new)
+                }
         }
+        // A fold always changes the height, so this is belt and braces — but
+        // the dock's floor turns on `isOpen`, and a floor that lagged a fold by
+        // a frame is the same cut slider one frame later.
+        .onChange(of: isFolded) { report(blockHeight) }
+    }
+
+    private func report(_ height: CGFloat) {
+        onExtent(DockHeightBudget.Block(height: height, isOpen: !isFolded))
     }
 
     // MARK: The three things a list row can do

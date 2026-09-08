@@ -1,0 +1,28 @@
+{
+  "id": "opening-an-effect-brings-it-into-view",
+  "title": "Opening an effect brings it into view",
+  "goal": "In a short window, opening an effect can leave it half below the bottom of the properties panel, and nothing scrolls to it: you press the chevron, the settings appear somewhere you cannot see, and you have to go looking. Opening an effect should bring that effect on screen.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T22:52:16.537Z",
+  "updated": "2026-09-08T22:52:16.540Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Observed 2026-09-08 while finishing one-open-effect-fits-in-the-effects-list. Command: Scripts/playtest.sh Scripts/playtest/effects-fit-one-open-walk.json (window 1280x600). At stage 4-first-folded the log reads dockViewport 568 with dockSections [\"Layers 6-169\",\"Appearance 169-334\",\"Effects 334-617\",\"Position & Size 617-752\"] and dockInView [\"Layers\",\"Appearance\"]: the Shadow that was just opened runs 49pt past the bottom of the dock and the dock did not scroll. Capture: queue/audits/2026-09-08-effects-one-open-4.png.\n\nThis is the dock reveal (DockRevealScratch / revealSection in Sources/Photonz/LayersPanel.swift) not being asked for by the fold control in Sources/Photonz/EffectsListInspector.swift. UX-PATTERNS Reveal rules apply: shortest move that puts the group on screen, nothing already visible may twitch, and only a command the user just issued may scroll. Opening an effect IS such a command.",
+  "acceptance": [
+    "With the panel too full to hold everything, pressing an effect chevron open scrolls the panel so that effect is fully on screen",
+    "A panel that already shows the effect whole does not move at all",
+    "Folding an effect away never scrolls anything",
+    "A playtest walk proves the opened effect is fully in view afterwards"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T22:52:16.539Z",
+      "note": "created (manual)"
+    }
+  ]
+}

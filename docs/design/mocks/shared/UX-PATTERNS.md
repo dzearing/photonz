@@ -234,6 +234,19 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
      chose, and shortening it compresses nothing, it hides controls. So forms
      are drawn whole and paid for first, and the lists share what is left,
      tallest first, each down to its own floor of about three rows.
+
+     **A list of PANES has a taller floor** (added 2026-09-08, from
+     `one-open-effect-fits-in-the-effects-list`, audit
+     `2026-09-08-effects-list-fits-one-open-effect`). Effects is a list whose
+     entries are small panes: a heading with its own settings under it. Three
+     rows of floor cuts a pane across the middle, and half a slider reads as a
+     rendering fault however carefully the edge is faded (a Border opened in a
+     full dock lost the bottom half of its Width slider). So a pane list's floor
+     is **everything down to and including its first OPEN pane, drawn whole,
+     plus a peek at the next entry**. Nothing below that peek is protected:
+     three effects open is a list you scroll. The floor stops at 45% of the
+     dock, so one enormous pane cannot starve every group under it, and when the
+     floor makes the dock over-subscribed rule 3 applies as it always does.
   3. **When it still does not fit, the dock scrolls and nothing is thrown
      away.** This is the case that keeps being met, so it is written down here
      rather than re-decided each time. A dock can simply be asked for more than
@@ -252,7 +265,11 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
      repeated in six sections and answered leave the words alone.
   4. **A body that has been shortened says so.** Its cut edge fades out. macOS
      hides its scrollers at rest, so a control clipped in half with no cue
-     reads as a rendering fault rather than as something to scroll.
+     reads as a rendering fault rather than as something to scroll. **The cut
+     must leave something to fade**: squeezed to exactly one whole entry, a
+     list ends on clean empty glass and reads as a list holding one thing, with
+     the rest gone and nothing saying so. That is why the floor in rule 2 pays
+     for a peek at the next entry as well as for the entry it protects.
 
   **Reveal** (added 2026-09-04 to describe shipped behavior: commit `4a6aac7`,
   audit `2026-09-03-library-reveal`): when the app brings a group into view for

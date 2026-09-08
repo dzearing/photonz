@@ -865,6 +865,9 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
+        case .expectSectionFits(let section):
+            note(number, step.name, try checkSectionFits(section), state: describe())
+
         case .scrollPanel(let row, let by):
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
@@ -2060,6 +2063,36 @@ private final class Run {
         return count == 0
             ? "nothing has been measured, as claimed"
             : "\(count) \(plural(count)) on the canvas, as claimed"
+    }
+
+    /// Whether the dock left the named section room for its first open entry.
+    ///
+    /// The claim is about points, and the answer is in points, so a walk that
+    /// fails here says by how much rather than leaving someone to measure a
+    /// capture with a ruler.
+    private func checkSectionFits(_ title: String) throws -> String {
+        let probe = InspectorLayoutProbe.shared
+        let showing = probe.measured.map(\.title)
+        guard let section = probe.measured.first(where: { $0.title == title }) else {
+            throw Failure(description: "there is no \"\(title)\" section in the dock right now; "
+                + "it is showing: \(showing.isEmpty ? "nothing" : showing.joined(separator: ", "))")
+        }
+        guard let room = probe.listRoom[section.id] else {
+            return "\(title) is not a list the dock may shorten, so nothing in it is cut"
+        }
+        func points(_ value: CGFloat) -> String { "\(Int(value.rounded())) pt" }
+        guard let needs = room.needsForFirstOpen else {
+            return "\(title) has nothing open in it, so there is no control for a cut to fall in"
+        }
+        guard room.keepsItsFloor else {
+            throw Failure(description: "\(title) was drawn \(points(room.drawn)) tall and needs "
+                + "\(points(needs)) to draw its first open entry whole, so the dock has cut a "
+                + "control across the middle; the whole list wants \(points(room.natural))")
+        }
+        return room.drawn >= room.natural - 0.5
+            ? "\(title) is drawn whole, all \(points(room.natural)) of it"
+            : "\(title) is shortened to \(points(room.drawn)) of \(points(room.natural)) and scrolls, "
+                + "past its first open entry at \(points(needs))"
     }
 
     private func checkPanel(_ thing: PlaytestPanelThing, named: String, inRow: String?,
@@ -4387,6 +4420,14 @@ private final class Run {
                 "\($0.title) \(Int($0.frame.minY.rounded()))-\(Int($0.frame.maxY.rounded()))"
             },
             "dockViewport": Int(InspectorLayoutProbe.shared.viewportHeight.rounded()),
+            // What the height budget did to each list: "Effects 129/129 floor
+            // 129" reads as drawn/natural, and the floor it may never go under.
+            "dockListRoom": InspectorLayoutProbe.shared.measured.compactMap { section in
+                InspectorLayoutProbe.shared.listRoom[section.id].map {
+                    "\(section.title) \(Int($0.drawn.rounded()))/\(Int($0.natural.rounded()))"
+                        + ($0.needsForFirstOpen.map { " needs \(Int($0.rounded()))" } ?? "")
+                }
+            },
             // The sections a person can see WHOLE without touching the scroll
             // wheel, which is the claim the panel order has to keep true.
             "dockInView": InspectorLayoutProbe.shared.measured

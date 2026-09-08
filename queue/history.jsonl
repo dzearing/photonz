@@ -2195,3 +2195,6 @@
 {"t":"2026-09-08T22:19:25.036Z","ev":"task_reprioritized","id":"a-long-walk-sweep-does-not-cost-a-task-its-runne","from":"p3-low","to":"p2-normal"}
 {"t":"2026-09-08T22:19:25.074Z","ev":"task_resequenced","id":"a-long-walk-sweep-does-not-cost-a-task-its-runne","from":140,"to":60}
 {"t":"2026-09-08T22:20:20.804Z","ev":"manager","filed":7,"readyBefore":2,"readyAfter":8,"report":"queue/manager/2026-09-08-2225.md"}
+{"t":"2026-09-08T22:20:47.938Z","ev":"manager_pass","exit":0,"ready":8}
+{"t":"2026-09-08T22:20:47.977Z","ev":"task_started","id":"one-open-effect-fits-in-the-effects-list","title":"One open effect fits in the Effects list","priority":"p1-high"}
+{"t":"2026-09-08T22:52:16.541Z","ev":"task_created","id":"opening-an-effect-brings-it-into-view","priority":"p2-normal","title":"Opening an effect brings it into view"}

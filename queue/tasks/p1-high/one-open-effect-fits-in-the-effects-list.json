@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:16:29.781Z",
-  "updated": "2026-09-08T22:16:29.784Z",
+  "updated": "2026-09-08T22:52:29.979696Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-08 on clean main with the probe build, running Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json. Picture: queue/manager/shots/2026-09-08-2215-versions.png (the Border row, bottom right of the panel).\n\nThe dock geometry read out of that walk (dockSections in log.json, viewport 996pt):\n  Layers 6-169, Appearance 169-334, Effects 334-479, Component 479-625, Position & Size 625-760, Layout 760-902, Library 902-1047\n\nSo the Effects list is given 145pt. One open Border is a row head plus Color, Position and Width, which needs about 165pt, and the last 20pt is what gets sliced. The Width label is faded but the slider under it is cut clean through with no fade and no scroll bar.\n\nThis is the height budget landed on 2026-09-07 (forms drawn whole and paid for first, lists share what is left), not the section ORDER question, which is the separate blocked task picking-a-text-layer-leaves-its-settings-below-t. Do not solve that one here.\n\nFlag: next-shape-parts (FeatureCatalog.shapePartsFlag), on by default in Next. Files: Sources/Photonz/LayersPanel.swift for the budget, and the Effects list section within it. The dock rules being scrubbed by the-dock-rules-say-plainly-that-they-govern-the are the rules this has to end up obeying; read them first if that task has landed.",
@@ -24,6 +24,35 @@
     {
       "t": "2026-09-08T22:16:29.783Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-08T22:20:47.975Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T22:52:29.979696Z",
+      "note": "REPRODUCED on the probe: Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json gave Effects 334-479 (145pt) in a 996pt dock, and the capture shows the Border's Width slider cut clean through. The Effects list was being squeezed to the flat 112pt list floor, which is three ROWS, and an effect is not a row."
+    },
+    {
+      "t": "2026-09-08T22:52:29.979696Z",
+      "note": "Adversarial review before building: the flat floor is right for a list of rows and wrong for a list of panes. Rejected snapping the cut to a pane boundary (with tall panes it wastes 100+ points of empty glass) and forcing a visible scroller (macOS overlay scrollers hide at rest anyway, and the fade is the idiom UX-PATTERNS already names)."
+    },
+    {
+      "t": "2026-09-08T22:52:29.979696Z",
+      "note": "Built: DockHeightBudget.paneListFloor in PhotonzCore, test first (11 new tests). A pane list's floor is everything down to and including its first OPEN pane, plus a peek at the next entry, capped at 45% of the dock. EffectsListInspector measures each effect and reports it; InspectorPanel.squeezeFloor feeds the budget."
+    },
+    {
+      "t": "2026-09-08T22:52:29.979696Z",
+      "note": "Reviewed the built thing on the probe and found the peek was missing: squeezed to exactly one whole effect, the list ended on clean empty glass and read as holding one Border with the Shadow and Glow gone. Added the peek (bodyEdgeFade + 8) so the next heading shows under the fade."
+    },
+    {
+      "t": "2026-09-08T22:52:29.979696Z",
+      "note": "New walk Scripts/playtest/effects-fit-one-open-walk.json with a new expectSectionFits step. Proven to catch the regression: with paneListFloor stubbed back to the flat floor it fails with \"Effects was drawn 112 pt tall and needs 129 pt to draw its first open entry whole\". Green with the fix."
+    },
+    {
+      "t": "2026-09-08T22:52:29.979696Z",
+      "note": "Verified: Scripts/test.sh 5016 tests green. Walks green: effects-fit-one-open, component-whole-path (the original repro, now Effects 129/129 drawn whole), effect-row-is-a-small-pane, effects-remembered, border-effect, parts-settings-inline, effects-say-their-reach. Audit queue/audits/2026-09-08-effects-list-fits-one-open-effect.json with three real window captures. Follow-up filed: opening-an-effect-brings-it-into-view."
     }
-  ]
+  ],
+  "started": "2026-09-08T22:20:47.974Z"
 }

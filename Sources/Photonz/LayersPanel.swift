@@ -51,6 +51,10 @@ struct DockBudgetScratch: Equatable {
     /// The part of a list section's body that does NOT scroll with the list:
     /// the layers list's count line and grab bar.
     var listExtras: [InspectorSectionID: CGFloat] = [:]
+    /// The panes a list section is made of, for the lists that are stacks of
+    /// small panes rather than stacks of rows. Only Effects reports these, and
+    /// they decide its floor: see `DockHeightBudget.paneListFloor`.
+    var listPanes: [InspectorSectionID: [DockHeightBudget.Block]] = [:]
 }
 
 // MARK: - Docked inspector panel
@@ -77,6 +81,16 @@ struct InspectorPanel: View {
     /// How deep the fade is at the edge of a body the dock has shortened: the
     /// cue that there is more of it past the cut.
     static let bodyEdgeFade: CGFloat = 14
+    /// The breathing room under every section body, inside the part the dock
+    /// may shorten. A floor has to pay for it too, or a body drawn at exactly
+    /// its floor is six points short of its own content and fades an edge that
+    /// has nothing past it.
+    static let bodyBottomPadding: CGFloat = 6
+    /// How much of the NEXT thing a shortened body keeps on screen. Deeper than
+    /// the fade, so what shows through it is a heading somebody can read the
+    /// top of rather than a smudge, and it is the difference between a cut that
+    /// says "there is more" and one that says "that is all".
+    static let bodyPeek: CGFloat = bodyEdgeFade + 8
     /// The hairline under each section, which the dock pays for as surely as
     /// it pays for the header.
     static let sectionDividerHeight: CGFloat = 1
@@ -327,6 +341,9 @@ struct InspectorPanel: View {
     /// it always was — no extra scrollers, no frames pinned to a measurement
     /// taken a pass ago.
     private func dockCeilings(_ sections: [InspectorSectionID]) -> [InspectorSectionID: CGFloat] {
+        // The dock's own padding above the first section and below the last is
+        // room no section can have.
+        let room = budget.viewportHeight.map { $0 - 2 * InspectorPanel.listTopPadding }
         let groups = sections.map { id -> DockHeightBudget.Group in
             let header = budget.headers[id] ?? InspectorPanel.headerRowHeight
             let open = !isCollapsed(id)
@@ -339,21 +356,56 @@ struct InspectorPanel: View {
             return DockHeightBudget.Group(key: id.rawValue,
                                           fixed: header + InspectorPanel.sectionDividerHeight + paid,
                                           flexible: scrolls ? body : 0,
-                                          floor: InspectorPanel.listFloor)
+                                          floor: squeezeFloor(for: id, room: room))
         }
-        // The dock's own padding above the first section and below the last is
-        // room no section can have.
-        let room = budget.viewportHeight.map { $0 - 2 * InspectorPanel.listTopPadding }
         let heights = DockHeightBudget.flexibleHeights(groups, viewport: room)
         var ceilings: [InspectorSectionID: CGFloat] = [:]
         for id in sections {
+            let natural = budget.bodies[id] ?? 0
+            defer {
+                // What the budget did to this section, in numbers a scripted
+                // walk can read back: "Effects was drawn 129 tall and its open
+                // Border needs 129" is a claim, and a capture is not.
+                if heights[id.rawValue] != nil {
+                    recordInspectorListRoom(id, natural: natural,
+                                            drawn: ceilings[id] ?? natural,
+                                            panes: budget.listPanes[id] ?? [],
+                                            spacing: EffectsListInspector.paneSpacing,
+                                            topInset: EffectsListInspector.listInset,
+                                            bottomInset: EffectsListInspector.listInset
+                                                + InspectorPanel.bodyBottomPadding,
+                                            peek: InspectorPanel.bodyPeek,
+                                            room: room)
+                }
+            }
             guard let height = heights[id.rawValue],
                   // Only when it is actually being shortened. A section given
                   // exactly its own height gains nothing from a scroller.
-                  height < (budget.bodies[id] ?? 0) - PanelAreaResize.tolerance else { continue }
+                  height < natural - PanelAreaResize.tolerance else { continue }
             ceilings[id] = height
         }
         return ceilings
+    }
+
+    /// How short a list section may be squeezed.
+    ///
+    /// Three rows for a list of rows, which is the ordinary case: layers,
+    /// measurements, the Library shelf. A list of PANES asks for more, because
+    /// a pane cut across the middle shows half a slider rather than most of a
+    /// row — see `DockHeightBudget.paneListFloor`, and the Border the user was
+    /// handed sliced in two on 2026-09-08.
+    private func squeezeFloor(for id: InspectorSectionID, room: CGFloat?) -> CGFloat {
+        guard let panes = budget.listPanes[id], !panes.isEmpty else {
+            return InspectorPanel.listFloor
+        }
+        return DockHeightBudget.paneListFloor(
+            panes,
+            spacing: EffectsListInspector.paneSpacing,
+            topInset: EffectsListInspector.listInset,
+            bottomInset: EffectsListInspector.listInset + InspectorPanel.bodyBottomPadding,
+            peek: InspectorPanel.bodyPeek,
+            base: InspectorPanel.listFloor,
+            viewport: room)
     }
 
     // MARK: Bringing the Library into view
@@ -746,7 +798,7 @@ struct InspectorPanel: View {
             // with the split on this section is the list rather than four
             // sliders that are always there (`next-shape-parts`).
             if Experiments.shared.shapePartsEnabled {
-                EffectsListInspector()
+                EffectsListInspector(onPanes: { budget.listPanes[.effects] = $0 })
             } else {
                 EffectsInspector()
             }
@@ -1506,7 +1558,7 @@ private struct CollapsibleSection<Content: View>: View {
     /// behind the content it is given for.
     @ViewBuilder private var boundedBody: some View {
         let measured = content()
-            .padding(.bottom, 6)
+            .padding(.bottom, InspectorPanel.bodyBottomPadding)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                 onBodyHeight?($0)
             }

@@ -5,6 +5,7 @@
 // section's live frame inside the dock's scroll viewport so a walk can read
 // back, as words, which sections a person can see and which ones are below the
 // fold. Probe builds only: the shipping app compiles the no-ops at the bottom.
+import PhotonzCore
 import SwiftUI
 
 #if PHOTONZ_PLAYTEST
@@ -37,6 +38,54 @@ import SwiftUI
     /// The section currently being carried, by its title, so a walk can say
     /// the dock really did pick one up rather than only that it looks lifted.
     var carrying: String?
+    /// What the height budget did to each list section this pass, so a walk can
+    /// say "nothing in Effects is cut across the middle" in words rather than
+    /// by someone squinting at a capture.
+    var listRoom: [InspectorSectionID: ListRoom] = [:]
+
+    /// One list section's side of the height budget.
+    ///
+    /// This deliberately records the RAW measurements rather than the floor the
+    /// panel worked out from them, so a walk checking the promise is not asking
+    /// the same code that made it: a floor that stopped being applied would
+    /// otherwise lower the bar and the check with it.
+    struct ListRoom: Equatable {
+        /// How tall the body would be if nothing were taken from it.
+        let natural: CGFloat
+        /// What it was actually drawn at.
+        let drawn: CGFloat
+        /// The entries this list is made of, when it is a stack of panes.
+        /// Empty for a list of plain rows, which may be cut anywhere.
+        let panes: [DockHeightBudget.Block]
+        /// The gap between two panes, the padding above and below the stack,
+        /// and how much of the next entry a cut is meant to leave showing.
+        let spacing: CGFloat
+        let topInset: CGFloat
+        let bottomInset: CGFloat
+        let peek: CGFloat
+        /// How much dock there is to share out, so a check knows when a single
+        /// pane is simply too tall to promise whole.
+        let room: CGFloat?
+
+        /// The height that draws every entry down to and including the first
+        /// open one, whole. Nil for a list of rows, which promises nothing.
+        var needsForFirstOpen: CGFloat? {
+            guard let open = panes.firstIndex(where: \.isOpen) else { return nil }
+            let through = panes.prefix(through: open)
+            var wanted = topInset + through.reduce(0) { $0 + $1.height }
+                + spacing * CGFloat(through.count - 1)
+            wanted += open == panes.count - 1 ? bottomInset : spacing + peek
+            guard let room else { return wanted }
+            return min(wanted, room * DockHeightBudget.floorShareOfDock)
+        }
+
+        /// Whether the cut, if there is one, falls past everything the dock
+        /// promised to keep whole.
+        var keepsItsFloor: Bool {
+            guard let needs = needsForFirstOpen else { return true }
+            return drawn >= min(natural, needs) - 0.5
+        }
+    }
 
     /// The visible sections with a measurement, in draw order.
     var measured: [Section] {
@@ -74,6 +123,17 @@ import SwiftUI
     InspectorLayoutProbe.shared.carrying = title
 }
 
+@MainActor func recordInspectorListRoom(_ id: InspectorSectionID,
+                                        natural: CGFloat, drawn: CGFloat,
+                                        panes: [DockHeightBudget.Block],
+                                        spacing: CGFloat, topInset: CGFloat,
+                                        bottomInset: CGFloat, peek: CGFloat, room: CGFloat?) {
+    InspectorLayoutProbe.shared.listRoom[id] =
+        InspectorLayoutProbe.ListRoom(natural: natural, drawn: drawn, panes: panes,
+                                      spacing: spacing, topInset: topInset,
+                                      bottomInset: bottomInset, peek: peek, room: room)
+}
+
 extension View {
     /// Tells the probe which sections the dock is drawing, in order.
     func inspectorLayoutProbe(sections: [InspectorSectionID]) -> some View {
@@ -89,6 +149,11 @@ extension View {
 @MainActor func recordInspectorViewportHeight(_ height: CGFloat) {}
 @MainActor func recordInspectorDockFrame(_ frame: CGRect) {}
 @MainActor func recordInspectorCarrying(_ title: String?) {}
+@MainActor func recordInspectorListRoom(_ id: InspectorSectionID,
+                                        natural: CGFloat, drawn: CGFloat,
+                                        panes: [DockHeightBudget.Block],
+                                        spacing: CGFloat, topInset: CGFloat,
+                                        bottomInset: CGFloat, peek: CGFloat, room: CGFloat?) {}
 
 extension View {
     func inspectorLayoutProbe(sections: [InspectorSectionID]) -> some View { self }

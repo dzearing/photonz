@@ -71,6 +71,73 @@ public enum DockHeightBudget {
         var squeezed: CGFloat { min(flexible, floor) }
     }
 
+    /// One block in a list whose entries are PANES rather than rows: an
+    /// effect, drawn as a heading with its own settings folded under it.
+    public struct Block: Sendable, Equatable {
+        /// How tall this pane is right now, folded or open.
+        public let height: CGFloat
+        /// Whether its settings are showing.
+        public let isOpen: Bool
+
+        public init(height: CGFloat, isOpen: Bool) {
+            self.height = max(0, height)
+            self.isOpen = isOpen
+        }
+    }
+
+    /// The most of the dock a single list may claim as its floor. A pane can be
+    /// arbitrarily tall — an effect with a dozen settings on it — and a floor
+    /// that took the whole window would starve every group under it, so past
+    /// this share the pane gives up and scrolls inside itself like anything
+    /// else.
+    public static let floorShareOfDock: CGFloat = 0.45
+
+    /// How short a list of PANES may be squeezed before the budget stops
+    /// asking.
+    ///
+    /// A list of rows can be cut anywhere: the cut lands between two rows, or
+    /// through one row that looks like the rows above it, and it reads as a
+    /// list with more in it. A list of panes cannot. Each entry is a heading
+    /// with a set of controls under it, so a cut lands through the middle of a
+    /// slider, and a half-drawn slider reads as a rendering fault however
+    /// carefully the edge is faded. Reported by the user on 2026-09-08: one
+    /// border opened in a full dock, and the Width slider was sliced in half.
+    ///
+    /// So the rule for a pane list is: **whatever else is squeezed, the first
+    /// open pane is drawn whole, and the next entry shows its top.** Everything
+    /// above the open pane is counted in too, since a list cannot start halfway
+    /// down. Nothing below the peek is: three effects open is a list you
+    /// scroll, and the cut edge fading is the honest answer there.
+    ///
+    /// The `peek` is not decoration. Squeezed to the open pane exactly, the cut
+    /// lands in the gap between two entries and the section ends on clean empty
+    /// glass: it reads as a list holding one effect, and the two under it are
+    /// gone with nothing saying so (seen in a probe capture, 2026-09-08). A
+    /// sliver of the next heading under the fade is what makes the edge mean
+    /// "there is more" instead of "that is all".
+    ///
+    /// `spacing` is the gap between two panes and the insets are the padding
+    /// the list draws above and below its stack. A list with nothing open in it
+    /// is a list of headings, which cuts as cleanly as any row list, so it
+    /// keeps `base`.
+    public static func paneListFloor(_ blocks: [Block],
+                                     spacing: CGFloat,
+                                     topInset: CGFloat,
+                                     bottomInset: CGFloat,
+                                     peek: CGFloat,
+                                     base: CGFloat,
+                                     viewport: CGFloat?) -> CGFloat {
+        guard let openIndex = blocks.firstIndex(where: \.isOpen) else { return base }
+        let through = blocks.prefix(through: openIndex)
+        var wanted = topInset + through.reduce(0) { $0 + $1.height }
+            + spacing * CGFloat(through.count - 1)
+        // Either there is more under it, and the cut shows the top of it, or
+        // there is not, and the list ends on its own padding.
+        wanted += openIndex == blocks.count - 1 ? bottomInset : spacing + peek
+        guard let viewport else { return max(base, wanted) }
+        return max(base, min(wanted, viewport * floorShareOfDock))
+    }
+
     /// The height to draw each scrollable body at, by group key. Groups with
     /// nothing scrollable in them are absent.
     ///

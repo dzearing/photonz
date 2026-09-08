@@ -149,4 +149,111 @@ struct DockHeightBudgetTests {
         #expect(DockHeightBudget.flexibleHeights(groups, viewport: nil)["layers"] == 300)
         #expect(DockHeightBudget.overflow(groups, viewport: nil) == 0)
     }
+
+    // MARK: A list of panes, not of rows
+
+    private func pane(_ height: CGFloat, open: Bool = false) -> DockHeightBudget.Block {
+        DockHeightBudget.Block(height: height, isOpen: open)
+    }
+
+    @Test("A list of folded panes squeezes to the plain floor, like any list of rows")
+    func foldedPanesUsePlainFloor() {
+        let blocks = [pane(24), pane(24), pane(24)]
+        let floor = DockHeightBudget.paneListFloor(blocks, spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 996)
+        #expect(floor == 112)
+    }
+
+    @Test("A list whose first pane is open keeps room to draw that pane whole")
+    func firstOpenPaneIsDrawnWhole() {
+        // One border, opened: a heading and three settings under it, 149 tall,
+        // in a list that pads itself 8 at the top. A folded effect sits under
+        // it, so the floor pays for the gap and a peek at its heading too.
+        let floor = DockHeightBudget.paneListFloor([pane(149, open: true), pane(24)],
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 996)
+        #expect(floor == 195)
+    }
+
+    @Test("A folded pane above the open one is counted in, so the cut clears both")
+    func foldedPaneAboveTheOpenOne() {
+        // 8 of padding, 24 folded, 16 of gap, 149 open, 14 of padding: nothing
+        // may cut the open pane, and the folded one above it cannot be skipped
+        // over. Nothing follows it, so there is nothing to peek at.
+        let floor = DockHeightBudget.paneListFloor([pane(24), pane(149, open: true)],
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 996)
+        #expect(floor == 211)
+    }
+
+    @Test("Only the FIRST open pane is protected: the rest of the list may be cut")
+    func onlyTheFirstOpenPaneIsProtected() {
+        let blocks = [pane(149, open: true), pane(149, open: true), pane(149, open: true)]
+        let floor = DockHeightBudget.paneListFloor(blocks, spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 996)
+        #expect(floor == 195)
+    }
+
+    @Test("A list that ends on the open pane pays for padding, not for a peek")
+    func nothingBelowMeansNoPeek() {
+        // The same open border, once with an effect under it and once as the
+        // last thing in the list: the difference is the gap and the sliver of
+        // the next heading that says the list goes on.
+        let alone = DockHeightBudget.paneListFloor([pane(149, open: true)],
+                                                   spacing: 16, topInset: 8, bottomInset: 14,
+                                                   peek: 22, base: 112, viewport: 996)
+        let withMore = DockHeightBudget.paneListFloor([pane(149, open: true), pane(24)],
+                                                      spacing: 16, topInset: 8, bottomInset: 14,
+                                                      peek: 22, base: 112, viewport: 996)
+        #expect(alone == 171)
+        #expect(withMore == alone - 14 + 16 + 22)
+    }
+
+    @Test("A pane list never claims more than its share of the dock")
+    func floorNeverEatsTheDock() {
+        // A single pane taller than the window would starve every other group.
+        // The floor stops at its share and the pane scrolls inside itself.
+        let floor = DockHeightBudget.paneListFloor([pane(900, open: true)],
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 400)
+        #expect(floor == 400 * DockHeightBudget.floorShareOfDock)
+    }
+
+    @Test("...but the share never pushes the floor BELOW the plain one")
+    func shareNeverUndercutsTheBase() {
+        let floor = DockHeightBudget.paneListFloor([pane(900, open: true)],
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 100)
+        #expect(floor == 112)
+    }
+
+    @Test("An unmeasured dock trusts the pane it can see")
+    func unmeasuredDockTrustsThePane() {
+        let floor = DockHeightBudget.paneListFloor([pane(149, open: true)],
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: nil)
+        #expect(floor == 171)
+    }
+
+    @Test("An empty list asks for nothing more than the plain floor")
+    func emptyPaneList() {
+        #expect(DockHeightBudget.paneListFloor([], spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                               base: 112, viewport: 996) == 112)
+    }
+
+    @Test("A pane list at its floor draws the open pane whole")
+    func floorSurvivesTheBudget() {
+        // The dock that reproduced the bug: seven groups, 996 points, and the
+        // Effects list handed 145 — well short of one open border.
+        let effects = DockHeightBudget.Group(
+            key: "effects", fixed: 33,
+            flexible: 171, floor: DockHeightBudget.paneListFloor(
+                [pane(149, open: true)], spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                base: 112, viewport: 996))
+        let groups = [list("layers", natural: 300), effects,
+                      form("component", 300), form("geometry", 300),
+                      form("layout", 300)]
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: 996)
+        #expect(heights["effects"] == 171)
+    }
 }

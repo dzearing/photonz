@@ -1,0 +1,157 @@
+{
+  "out": "/tmp/photonz-playtest/effects-fit-one-open",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 600
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        240
+      ],
+      "to": [
+        560,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-border",
+      "note": "a box with one Border in Effects, opened: Color, Position and Width, and the Width slider drawn whole rather than sliced across the middle"
+    },
+    {
+      "do": "expectSectionFits",
+      "section": "Effects"
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Border",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "1-one-border"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-one-border"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Glow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-three-open",
+      "note": "three effects, all open, in a dock that cannot hold them: the list scrolls inside itself and its cut edge fades out, and the first entry is still drawn whole"
+    },
+    {
+      "do": "expectSectionFits",
+      "section": "Effects"
+    },
+    {
+      "do": "panel",
+      "stage": "2-three-open"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-three-open"
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Glow",
+      "by": -160
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-scrolled",
+      "note": "the wheel over the Effects list brings the entries below the cut into view, which is what the faded edge was saying"
+    },
+    {
+      "do": "panel",
+      "stage": "3-scrolled"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-scrolled"
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Border",
+      "by": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-first-folded",
+      "note": "the Border folded away, so the first thing OPEN is the Shadow: the dock keeps room for the folded Border above it and the whole Shadow under it. In a window this short the section is now taller than the dock and the DOCK scrolls, which is the rule; what must never happen is a control cut inside the section"
+    },
+    {
+      "do": "expectSectionFits",
+      "section": "Effects"
+    },
+    {
+      "do": "panel",
+      "stage": "4-first-folded"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-first-folded"
+    }
+  ]
+}

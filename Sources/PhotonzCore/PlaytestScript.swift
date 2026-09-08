@@ -1119,6 +1119,20 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// The named dock section must be drawing whatever it holds down to and
+    /// including its first OPEN entry, whole.
+    ///
+    /// The dock shortens a list when the panel is over-subscribed, and a list
+    /// of small panes — Effects, where every entry is a heading with its own
+    /// settings under it — cuts badly: on 2026-09-08 a Border opened in a full
+    /// dock and its Width slider was sliced across the middle, which reads as
+    /// a rendering fault rather than as a list with more in it. The floor that
+    /// stops it is `DockHeightBudget.paneListFloor`, and this is how a walk
+    /// proves the floor is really being applied, in the real dock, at whatever
+    /// height the window happens to be.
+    ///
+    /// The section is named the way the dock names it: "Effects", "Layers".
+    case expectSectionFits(section: String)
     /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
     /// down the list). A list that builds only the rows you can see has to be
     /// scrolled to prove the rest arrive, and that is not something a click can
@@ -1188,7 +1202,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectMeasures", "expectPicked", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectMeasures", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
@@ -1233,6 +1247,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectSectionFits: "expectSectionFits"
         case .expectPicked: "expectPicked"
         case .scrollPanel: "scrollPanel"
         case .reveal: "reveal"
@@ -1465,6 +1480,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
             self = .expectMeasures(count: Int(howMany))
+        case "expectSectionFits":
+            self = .expectSectionFits(section: try f.string("section"))
         case "expectPicked":
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")

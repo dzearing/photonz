@@ -1,0 +1,29 @@
+{
+  "feature": "The Effects list keeps room for one open effect",
+  "epic": "ui-building",
+  "summary": "Open an effect in a full dock and it is drawn whole: no more sliders sliced across the middle. When the list really cannot hold everything it scrolls inside itself and leaves the top of the next effect showing, so the cut says there is more rather than that is all.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Appearance is what it is, Effects is what you add\" is on by default. Make the window short enough that the dock is tight, around 600 points tall, or open a component so the dock fills up.",
+  "try": [
+    { "do": "Press R and drag a rectangle on the canvas." },
+    { "do": "Look at Effects: the Border it arrives with is open. Every setting on it, down to the Width slider, is drawn whole.", "shot": "2026-09-08-effects-one-open-1.png" },
+    { "do": "Press the plus on the Effects header and add a Shadow." },
+    { "do": "Press the plus again and add a Glow." },
+    { "do": "Look at the bottom of the Effects list: the Border is still whole, and the Shadow's heading below it fades out at the cut.", "shot": "2026-09-08-effects-one-open-2.png" },
+    { "do": "Turn the wheel over the Effects list. It scrolls inside itself and the sections under it hold still." },
+    { "do": "Press the chevron on Border to fold it away. The Shadow is now the first open one, and it gets the room instead.", "shot": "2026-09-08-effects-one-open-4.png" }
+  ],
+  "evaluate": [
+    "Does the faded top of the next effect read as a list with more in it, or does it still look like something failed to draw?",
+    "With one effect open the dock scrolls a little further than it used to. Is that a fair trade for never cutting a control?",
+    "When the list is squeezed, is the sliver of the next heading the right amount, or would you rather see more or less of it?",
+    "Folding an effect away hands its room to the next open one. Does that feel like the panel following you, or like it moving on its own?",
+    "In a really short window the whole Effects section can sit below the fold and the dock scrolls to it. Is that better than cutting the effect inside the section?"
+  ],
+  "rough": [
+    "The captures here are real window captures from the probe, taken with Screen Recording granted.",
+    "The floor stops at 45% of the dock. One effect with a great many settings on it, in a short window, is still cut across the middle: nothing else would fit otherwise.",
+    "Giving Effects its room pushes the overflow outward, so in a short window the dock scrolls more than it did. That is the rule the dock already had (UX-PATTERNS §3, nothing is thrown away), but it is a change you will notice.",
+    "Only the FIRST open effect is protected. With three open, the second one is still cut, and the fade over its heading is the whole of the cue.",
+    "The peek is 22 points, deep enough that the fade has a heading to work on. That number was chosen by looking at captures, not measured against anything."
+  ]
+}
