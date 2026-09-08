@@ -13215,3 +13215,42 @@ existing walks that drive the Size menu rerun green. Audit
 shortened.
 
 Next: back to the queue.
+
+## 2026-09-08 — A part only some of the picked layers have keeps its colour
+
+Task `the-settings-of-a-part-only-some-of-them-have-ca` (p3, epic
+`ui-components`). Filed about the Shadow row, which no longer exists: a shadow
+became an Effects entry on 2026-09-07, and an effect row already unfolds its
+settings whatever the picked layers are doing. The row that still went blank is
+**Fill**, the one row in Appearance that has a switch. Reproduced on the probe
+first: three boxes with one hollow, all three picked, and the panel listing had
+`Switch (Fill, mixed)` and no Color control at all, so the only move on offer
+was the switch and the switch fills all three.
+
+`PartRowView` drew the colour only while `row.isOn`, and a mixed row fell
+through to `MixedWord`. It now asks the model instead: `LayerPartRow.showsSettings`
+is true as soon as ONE picked layer has the part. Nothing else was needed to make
+the reach correct — `ColorStyleSelection.members` has always been the layers that
+actually HAVE the slot, and `setPaint(layerIDs:slot:paint:)` paints exactly those
+in one `perform`, so a colour picked on a mixed Fill row paints the two filled
+boxes and leaves the hollow one hollow. This is the shared rule in
+`UX-PATTERNS.md`, "What a control DOES for several picked things": reaching some
+of what is picked shows the value for those and sets only those.
+
+Two knock-ons. `OffPartColorDrop` is now active only while NOBODY has the part:
+the row is the landing spot when there is no swatch to aim at, and once the
+swatch is back the two would fight over the same pointer and promise different
+things. And the Appearance caption used to say everything here reaches every
+picked layer, which the row above it now contradicts, so it reads "…unless a row
+says underneath how many it reaches."
+
+`Scripts/test.sh` green at 4931, with four new tests in `LayerPartsTests`. New
+walk `mixed-part-keeps-its-colour-walk.json` proves the colour is there while the
+switch says mixed, that a colour let go on it leaves the hollow box hollow, that
+one undo puts both back, and that the switch still gives the third one a fill.
+Six neighbouring parts/colour walks rerun green. Audit
+`2026-09-08-mixed-part-keeps-its-colour` with three real window captures.
+`docs/design/shape-parts.md` gained the "Off means NONE of the picked layers has
+it" rule beside "Off means off, everywhere".
+
+Next: back to the queue.

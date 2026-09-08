@@ -290,4 +290,78 @@ struct LayerPartsTests {
 
 
 
+    // MARK: - A part only SOME of the picked layers have
+
+    /// Pick five boxes where three are filled and the Fill row says Mixed. The
+    /// row showed the word and nothing else, so the only move on offer was the
+    /// switch, which fills all five: recolouring the three that already had a
+    /// fill meant picking them again on their own (found by the audit of
+    /// 2026-09-06, `switch-says-mixed`).
+    ///
+    /// The shared rule the panel answers to says what a control reaching SOME
+    /// of the picked things does — "the value, or Mixed, for the ones it
+    /// reaches", and setting it "reaches only those"
+    /// (`UX-PATTERNS.md`, "What a control DOES for several picked things"). So
+    /// the colour is there as soon as ONE of them has the part.
+    @Test func aPartOnlySomeOfThemHaveStillShowsItsColour() throws {
+        let filled = shape(.rectangle, fillHex: "#00FF00")
+        let alsoFilled = shape(.rectangle, fillHex: "#00FF00")
+        let hollow = shape(.rectangle)
+        let doc = document([filled, alsoFilled, hollow])
+        let ids = [filled.id, alsoFilled.id, hollow.id]
+        let fill = try #require(doc.layerPartRows(layerIDs: ids).first { $0.slot == .fill })
+        #expect(fill.isMixed)
+        #expect(fill.showsSettings)
+        // And the row still says out loud who it is speaking for, which is what
+        // keeps "only those" from being a surprise.
+        #expect(fill.reachNote
+                == "2 of the 3 selected layers have a fill. "
+                + "Switching this on gives the rest one too.")
+    }
+
+    /// The other end of the same rule: a part NO picked layer has shows
+    /// nothing. An empty well over nothing is a control that cannot answer,
+    /// and the whole row is the landing spot for a colour instead.
+    @Test func aPartNoneOfThemHaveShowsNoColourAtAll() throws {
+        let hollow = shape(.rectangle)
+        let alsoHollow = shape(.rectangle)
+        let doc = document([hollow, alsoHollow])
+        let fill = try #require(doc.layerPartRows(layerIDs: [hollow.id, alsoHollow.id])
+            .first { $0.slot == .fill })
+        #expect(!fill.isMixed)
+        #expect(!fill.showsSettings)
+    }
+
+    /// A colour that is a property rather than a part — a line's ink, a
+    /// letter's ink — can never be absent, so it never has a reason to hide.
+    @Test func aColourNobodyCanSwitchOffAlwaysShowsItself() throws {
+        let arrow = shape(.arrow)
+        let doc = document([arrow])
+        let ink = try #require(doc.layerPartRows(layerIDs: [arrow.id]).first)
+        #expect(!ink.hasSwitch)
+        #expect(ink.showsSettings)
+    }
+
+    /// What the colour on a Mixed row DOES: it paints the layers that have the
+    /// part and leaves the rest alone, in one step. Giving the other two a
+    /// fill is what the switch beside it is for, and the line under the row
+    /// says so.
+    @Test func aColourPickedOnAMixedPartLeavesTheOnesWithoutItAlone() throws {
+        let filled = shape(.rectangle, fillHex: "#00FF00")
+        let alsoFilled = shape(.rectangle, fillHex: "#00FF00")
+        let hollow = shape(.rectangle)
+        var doc = document([filled, alsoFilled, hollow])
+        let ids = [filled.id, alsoFilled.id, hollow.id]
+        let painted = doc.setPaint(layerIDs: ids, slot: .fill, paint: Paint(hex: "#0A84FF"))
+        #expect(painted == 2)
+        #expect(doc.layer(id: filled.id)?.colorHex(for: .fill) == "#0A84FF")
+        #expect(doc.layer(id: alsoFilled.id)?.colorHex(for: .fill) == "#0A84FF")
+        // Still hollow. Painting it would have switched its fill on behind the
+        // person's back, which is the one thing this row must not do.
+        #expect(doc.layer(id: hollow.id)?.colorHex(for: .fill) == nil)
+        // And the row goes on saying Mixed afterwards, because the question it
+        // answers is who HAS a fill rather than what colour it is.
+        let fill = try #require(doc.layerPartRows(layerIDs: ids).first { $0.slot == .fill })
+        #expect(fill.isMixed)
+    }
 }

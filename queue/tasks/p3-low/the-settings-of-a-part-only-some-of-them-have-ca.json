@@ -1,23 +1,23 @@
 {
   "id": "the-settings-of-a-part-only-some-of-them-have-ca",
   "title": "The settings of a part only some of them have can still be reached",
-  "goal": "Pick five layers where three have a shadow. The Shadow row says Mixed, but there is no way to open it and change those three shadows: the only move on offer is giving all five one. Opening a part that only some of the picked layers have should show its settings, speaking for the ones that have it.",
+  "goal": "Pick five boxes where three have a fill. The Fill row says the picked layers disagree, but the row goes blank: the only move on offer is the switch, which gives all five a fill. A part only some of the picked layers have should still show its colour, speaking for the ones that have it.",
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T02:47:48.252Z",
-  "updated": "2026-09-08T12:09:07.225Z",
+  "updated": "2026-09-08T20:08:18.762Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "PartsInspector.PartRowView: opens = isOn && row.hasSettings, so a mixed row hides its chevron. The old Shadow section did this already: ShadowInspector draws its sliders for selection.shadows, the subset that has one. The parts list threw that away when the switch moved up onto the row. Found while doing a-switch-says-mixed-the-way-every-other-control (audit 2026-09-06-switch-says-mixed, rough 3).",
+  "notes": "PartsInspector.PartRowView: opens = isOn && row.hasSettings, so a mixed row hides its chevron. The old Shadow section did this already: ShadowInspector draws its sliders for selection.shadows, the subset that has one. The parts list threw that away when the switch moved up onto the row. Found while doing a-switch-says-mixed-the-way-every-other-control (audit 2026-09-06-switch-says-mixed, rough 3).\n\n2026-09-08: the panel had moved since this was filed. Shadow left Appearance for the Effects list on 2026-09-07, and an effect row already unfolds its settings whatever the picked layers are doing, so the row this is actually about is Fill \u2014 the one row in Appearance that still has a switch. PartRowView drew the colour only while row.isOn, so a mixed row fell through to MixedWord and offered nothing to set. Fixed by gating on the new LayerPartRow.showsSettings (true as soon as one picked layer has the part); the colour machinery already painted only the layers that HAVE the slot (ColorStyleSelection.members), so the reach came for free. OffPartColorDrop is now active only while nobody has the part, so the swatch and the row never both take a drop. Walk: Scripts/playtest/mixed-part-keeps-its-colour-walk.json.",
   "acceptance": [
-    "A part row that says Mixed can be unfolded like any other row",
-    "Its settings change only the picked layers that have that part, in one undo step",
-    "The line under the row still says how many it reaches",
-    "A part no picked layer has still shows nothing to unfold"
+    "A part row over layers that disagree about having it still shows its colour",
+    "A colour picked there changes only the picked layers that have that part, in one undo step",
+    "The line under the row still says how many of the picked layers it reaches",
+    "A part no picked layer has still shows no colour at all"
   ],
   "log": [
     {
@@ -31,6 +31,23 @@
     {
       "t": "2026-09-08T12:09:07.224Z",
       "note": "seq 80 -> 70"
+    },
+    {
+      "t": "2026-09-08T20:08:18.761Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T20:22:41.149654Z",
+      "note": "goal and acceptance rewritten for the panel that exists: Shadow is an Effects row now and already unfolds; Fill is the row that still went blank"
+    },
+    {
+      "t": "2026-09-08T20:22:41.149783Z",
+      "note": "reproduced on the probe: with 3 boxes and 1 hollow the Fill row offered only Switch (Fill, mixed) and no Color at all"
+    },
+    {
+      "t": "2026-09-08T20:22:41.149785Z",
+      "note": "shipped: LayerPartRow.showsSettings + PartsInspector shows the colour while mixed; caption reworded; 4931 tests pass and 7 panel walks green"
     }
-  ]
+  ],
+  "started": "2026-09-08T20:08:18.760Z"
 }

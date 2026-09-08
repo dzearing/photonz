@@ -1,0 +1,58 @@
+{
+  "out": "/tmp/photonz-playtest/mixed-part-keeps-its-colour",
+  "seed": "A part only SOME of the picked layers have can still be set, and what you set reaches only those. This walk draws three boxes, takes the fill off one, picks all three, and reads the Fill row: the switch says mixed and the row STILL shows the colour of the two that are filled, so recolouring those two never means picking them again on their own. A colour let go on that swatch paints the two and leaves the third hollow, which is why the switch goes on saying mixed afterwards. Before 2026-09-08 the row showed the word Mixed and nothing else, so the only move on offer was the switch, and the switch fills all three (audit 2026-09-06-switch-says-mixed, rough 3).",
+  "setup": { "forget": ["shapes", "panel", "color", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 150], "to": [380, 320], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [420, 150], "to": [660, 320], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [700, 150], "to": [940, 320], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [260, 240] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Switch", "in": "Fill" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, off" },
+    { "do": "describe", "stage": "1-one-hollow", "note": "the first box has no fill, so the selection about to be made really does disagree about having one" },
+
+    { "do": "drag", "from": [100, 110], "to": [1000, 360], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "2-three-picked" },
+    { "do": "describe", "stage": "2-three-picked", "note": "three picked, one hollow: the switch says mixed and the row STILL shows the colour of the two that are filled" },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, mixed" },
+    { "do": "expect", "control": "Color", "in": "Fill", "present": true },
+    { "do": "snapshot", "name": "1-mixed-keeps-its-colour" },
+
+    { "do": "action", "action": "paintSelectionBorderColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-a-colour-to-carry", "note": "the three borders go crimson, so there is a colour on screen that the two fills are not already wearing" },
+
+    { "do": "dragColor", "from": "Border", "onto": "Fill", "hold": "2-colour-over-the-swatch", "expect": "takes" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "4-painted" },
+    { "do": "describe", "stage": "4-painted", "note": "the two filled boxes took the colour and the hollow one is still hollow, which is why the switch goes on saying mixed: what changed is the colour, not who has a fill" },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, mixed" },
+    { "do": "expect", "control": "Color", "in": "Fill", "present": true },
+    { "do": "render", "name": "two-painted-one-hollow" },
+    { "do": "snapshot", "name": "3-painted" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "5-one-undo", "note": "ONE undo puts both boxes back to the colour they shared" },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, mixed" },
+    { "do": "render", "name": "after-one-undo" },
+
+    { "do": "press", "control": "Switch", "in": "Fill" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, on" },
+    { "do": "describe", "stage": "6-switch-still-gives-the-rest-one", "note": "the switch has not changed its meaning: it still gives the third box a fill too, and the line under the row said it would" },
+    { "do": "render", "name": "all-three-filled" }
+  ]
+}

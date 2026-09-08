@@ -95,6 +95,18 @@ its name and nothing else: no colour, no settings. Switching it back on brings
 back the colour and settings it had, so switching off is never destructive and
 never loses what you had set.
 
+**Off means NONE of the picked layers has it.** Over several layers, a row where
+three of five boxes are filled is not an off row, it is a row speaking for
+three: it shows their colour, a colour picked there paints those three in one
+step, and the line under the row says how many it reaches. Giving the other two
+a fill is what the switch beside it is for, and the same line says so. This is
+the shared rule for any control that reaches some of what is picked
+(`shared/UX-PATTERNS.md`, "What a control DOES for several picked things"); the
+row used to show the word Mixed and nothing else, which left the switch as the
+only move on offer and the switch fills all five (fixed 2026-09-08, audit
+`2026-09-08-mixed-part-keeps-its-colour`, walk
+`Scripts/playtest/mixed-part-keeps-its-colour-walk.json`).
+
 **Every switch means the same thing underneath.** A colour that can be absent is
 stored as an absent colour (`setAnnotationFill(nil)`); an outline that is off is
 a width of zero, which is a real document state that saves, reopens, undoes and

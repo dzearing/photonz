@@ -1,0 +1,30 @@
+{
+  "feature": "A part only some of the picked layers have can still be set",
+  "epic": "ui-components",
+  "summary": "Pick five boxes where three are filled and the Fill row no longer goes blank: it shows the colour of the three that have a fill, and picking a colour there paints those three and leaves the other two hollow. Before this the row showed the word Mixed and nothing else, so the only move on offer was the switch, which fills all five.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. Any blank canvas.",
+  "try": [
+    { "do": "Draw three rectangles side by side with the rectangle tool." },
+    { "do": "Click the first one on its own and press the Fill switch in Appearance so it goes hollow." },
+    { "do": "Drag a marquee round all three with the select tool." },
+    { "do": "Read the Fill row: the switch is quiet, the colour of the two filled boxes is on it, and the line under it says 2 of the 3 have a fill.", "shot": "mixed-part-1-keeps-its-colour-sc.png" },
+    { "do": "Click that colour and pick a new one in the picker.", "shot": "mixed-part-3-painted-sc.png" },
+    { "do": "Look at the canvas: the two filled boxes changed and the hollow one is still hollow." },
+    { "do": "Press Command-Z once and both boxes go back together." },
+    { "do": "Press the Fill switch: all three are filled now, which is what the line under the row promised." }
+  ],
+  "evaluate": [
+    "The row shows the colour of the two that have a fill. Does that read as 'these two are red', or does it look like a claim about all three?",
+    "The word Mixed left the Fill row's colour column and the sentence under the row carries it instead. Is the sentence enough, or do you want the word back beside the switch?",
+    "Painting the row reaches only the layers that have a fill. Is that what your hand expected, or did you want it to fill the hollow one too?",
+    "The switch still gives every picked layer a fill in one press. With a colour now sitting beside it, is it still obvious which of the two does what?",
+    "The Appearance caption now reads 'unless a row says underneath how many it reaches'. Does that sentence earn its place, or is it small print?"
+  ],
+  "rough": [
+    "The task was written about the Shadow row, and there is no Shadow row any more: a shadow became an entry in the Effects list on 2026-09-07, and an effect row already unfolds its settings whether or not the picked layers agree. Fill is the one row in Appearance that still had a switch and could still go blank, so that is the row this fixed. The task's acceptance was rewritten to match the panel that exists.",
+    "Letting a colour GO on the row's name no longer gives every picked layer the part while some of them already have it. The swatch is back on the row and takes the colour itself, because two drop targets stacked on one row would promise two different things. Dropping on the name still works when NO picked layer has the part, which is what that gesture was built for.",
+    "The Appearance caption used to promise that everything in the panel reached every picked layer. That was contradicted by the row above it the moment this landed, so it now names its own exception. Worth a read: it is the only copy change here.",
+    "Screen Recording was granted for this run, so the pictures are real captures of the window, not offscreen renders.",
+    "The walk that keeps it true is Scripts/playtest/mixed-part-keeps-its-colour-walk.json: it proves the colour is on the row while it says mixed, that a colour let go on it leaves the hollow box hollow, and that one undo puts both back."
+  ]
+}

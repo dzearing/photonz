@@ -185,10 +185,23 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
     /// the third rather than stripping the other two.
     public var isOn: Bool { !switchIDs.isEmpty && onCount == switchIDs.count }
 
-    /// Whether the row has settings of its own to unfold. The fill has none —
-    /// a gradient is a kind of colour, not a setting — so its row shows no
-    /// chevron rather than opening an empty drawer.
-    public var hasSettings: Bool { part == .shadow || !widthIDs.isEmpty }
+    /// Whether the row shows its settings, which for a part in Appearance is
+    /// its colour and nothing else.
+    ///
+    /// As soon as ONE of the picked layers HAS the part. That is the shared
+    /// rule for a control speaking for some of what is picked — "the value, or
+    /// Mixed, for the ones it reaches", and setting it "reaches only those"
+    /// (`UX-PATTERNS.md`, "What a control DOES for several picked things").
+    /// Five boxes where three are filled used to show the word Mixed and
+    /// nothing else, so the only move on offer was the switch, which fills all
+    /// five: recolouring the three meant picking them again on their own
+    /// (found by the audit of 2026-09-06, `switch-says-mixed`).
+    ///
+    /// A part NO picked layer has still shows nothing. An empty well over
+    /// nothing is a control that cannot answer, and while there is no swatch
+    /// the whole row is the landing spot for a colour instead
+    /// (`OffPartColorDrop`).
+    public var showsSettings: Bool { !hasSwitch || onCount > 0 }
 
     /// True while some of the layers this row's switch reaches have the part
     /// and the rest do not.

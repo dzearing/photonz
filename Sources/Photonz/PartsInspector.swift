@@ -87,11 +87,18 @@ struct PartsInspector: View {
     /// Said only when the list is speaking for more than one layer. Over a
     /// single one every row means what it looks like it means, and a sentence
     /// explaining that is a sentence in the way.
+    ///
+    /// It used to promise that everything here reached every picked layer,
+    /// full stop. That stopped being true the day a row only some of them have
+    /// started showing its colour: the Fill row over five boxes where three
+    /// are filled paints those three, and says so in its own line two lines
+    /// above this one. So the promise names its own exception rather than
+    /// being contradicted by the row above it.
     private var caption: String? {
         let count = editorState.colorStyleSelectionCount
         guard count > 1 else { return nil }
-        return "\(count) layers. A tick or a colour picked here reaches every "
-            + "one of them, in one step."
+        return "\(count) layers. What you set here reaches every one of them, "
+            + "in one step, unless a row says underneath how many it reaches."
     }
 }
 
@@ -109,6 +116,15 @@ struct PartsInspector: View {
 /// the landing spot instead, and while a colour is over it the column where
 /// the swatch would be shows the colour about to land. Nothing new sits there
 /// the rest of the time, so off still looks off.
+///
+/// "Off" means NONE of the picked layers has the part. A row where three of
+/// five boxes are filled is not off, it is a row speaking for three, so it
+/// shows their colour and painting it paints those three — the shared rule for
+/// a control that reaches some of what is picked (`UX-PATTERNS.md`, "What a
+/// control DOES for several picked things"). It used to show the word Mixed
+/// and nothing else, which left the switch as the only move on offer and the
+/// switch fills all five (found by the audit of 2026-09-06,
+/// `switch-says-mixed`).
 private struct PartRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerPartRow
@@ -118,10 +134,12 @@ private struct PartRowView: View {
     /// colour.
     @State private var incoming: ColorDrop.Answer?
 
-    /// Whether this part is showing anything at all. A colour that is a
-    /// property rather than a part — a line's ink, a letter's ink — has no
-    /// switch and is therefore always on.
-    private var isOn: Bool { row.hasSwitch ? row.isOn : true }
+    /// Whether this row has a colour to show: one of the picked layers has the
+    /// part, or the colour is a property rather than a part — a line's ink, a
+    /// letter's ink — which can never be absent. Read off the row itself, so
+    /// what the panel draws and what a colour picked here reaches are the one
+    /// answer (`LayerPartRow.showsSettings`).
+    private var showsColor: Bool { row.showsSettings }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -133,28 +151,30 @@ private struct PartRowView: View {
                 PanelRowHead(title: row.title) {
                     if row.hasSwitch { partSwitch }
                 }
-                if isOn {
+                if showsColor {
+                    // The colour of the layers that HAVE the part, whether that
+                    // is all of them or three of five. The well itself says
+                    // Mixed when those three disagree about the colour, and the
+                    // line under the row says how many of the picked layers the
+                    // row is speaking for, so the two questions keep their own
+                    // words.
                     colorControl
                 } else if let paint = incoming?.landing?.paint {
                     // A colour is over the row: this is where it would land,
                     // wearing it, so letting go is never a guess.
                     LandingSwatch(paint: paint)
-                } else if row.isMixed {
-                    // The word where the row shows its value, which is where
-                    // this row's colour says Mixed too. A part that only some
-                    // of them have has no colour on screen to collide with it,
-                    // and the line under the row says which of the two the
-                    // word is about.
-                    MixedWord()
-                        .frame(minWidth: ColorPartLayout.readoutWidth,
-                               minHeight: ColorPartLayout.rowHeight, alignment: .leading)
                 }
                 Spacer(minLength: 0)
             }
-            // The whole row takes the drop while the part is off, because
-            // there is no swatch to aim at and a person carrying a colour
-            // aims at the row's NAME. Nothing is drawn here at rest.
-            .modifier(OffPartColorDrop(row: row, active: !isOn, incoming: $incoming))
+            // The whole row takes the drop only while NOBODY has the part,
+            // because then there is no swatch to aim at and a person carrying a
+            // colour aims at the row's NAME. The moment one of them has it the
+            // swatch is back and takes the colour itself: two drop targets
+            // stacked on one row would fight over the same pointer, and they
+            // would promise two different things — the row gives the part to
+            // every picked layer, the swatch paints the ones that have it.
+            // Nothing is drawn here at rest.
+            .modifier(OffPartColorDrop(row: row, active: !showsColor, incoming: $incoming))
             if let note = row.reachNote {
                 // Under the NAME it is about, not under the tick. The tick is
                 // the row's leading column now, so a note left at the row's
