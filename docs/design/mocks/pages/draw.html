@@ -348,12 +348,12 @@
 
               <div class="section" style="border-bottom:0">
                 <div class="sec-h">Node <span class="mut">selected</span></div>
-                <div class="grid2">
-                  <div class="field"><span class="k">X</span><span class="v" id="penNX">·</span></div>
-                  <div class="field"><span class="k">Y</span><span class="v" id="penNY">·</span></div>
-                  <div class="field"><span class="k">Type</span><span class="v" id="penNT">·</span></div>
-                  <div class="field"><span class="k">Nodes</span><span class="v" id="penNN">0</span></div>
+                <div class="numgrid">
+                  <span class="stepper sm"><span class="k">X</span><input id="penNX" value="" aria-label="X"></span>
+                  <span class="stepper sm"><span class="k">Y</span><input id="penNY" value="" aria-label="Y"></span>
                 </div>
+                <div class="irow"><span class="rl">Type</span><span class="val" id="penNT">–</span></div>
+                <div class="irow"><span class="rl">Nodes</span><span class="val" id="penNN">0</span></div>
                 <p class="note">A vector Path is a <b style="color:var(--ink)">Layer</b> of anchor points, not pixels. Scale it to any size, edit the nodes forever. <span data-target="draw-boolean" style="color:var(--accent);cursor:pointer">Combine two paths →</span></p>
               </div>
             </div>
@@ -862,9 +862,12 @@
       if(cnt) cnt.textContent = n + (n===1?" node":" nodes") + (closed ? " · closed" : " · open");
       if($("penNN")) $("penNN").textContent = String(n);
       var a = anchors[selIdx] || anchors[n-1];
-      if($("penNX")) $("penNX").textContent = a ? String(Math.round(a.x)) : "·";
-      if($("penNY")) $("penNY").textContent = a ? String(Math.round(a.y)) : "·";
-      if($("penNT")) $("penNT").textContent = a ? (a.hOut || a.hIn ? "smooth" : "corner") : "·";
+      // X and Y are real number fields now, so they carry their number in
+      // `value`; with no anchor picked they go empty, which is how a field says
+      // nothing is set. Type is a plain value, so it takes an en dash instead.
+      if($("penNX")) $("penNX").value = a ? String(Math.round(a.x)) : "";
+      if($("penNY")) $("penNY").value = a ? String(Math.round(a.y)) : "";
+      if($("penNT")) $("penNT").textContent = a ? (a.hOut || a.hIn ? "smooth" : "corner") : "\u2013";
       if($("penBrushName")) $("penBrushName").textContent = br.name;
       if($("penFillState")) $("penFillState").textContent = closed ? "closed shape" : "open path · no fill";
       if($("penMtag")) $("penMtag").textContent = "Path 1 · vector · " + br.name;

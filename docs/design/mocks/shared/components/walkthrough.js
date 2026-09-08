@@ -63,7 +63,8 @@
                                  between steps: a step that ends the
                                  conversation says so.
        data-time="on|off"        the document has time: transport + timeline
-       data-set="#id=text|#id2=text"     set a readout's text
+       data-set="#id=text|#id2=text"     set a readout's text, or a number
+                                 field's value when the target is an <input>
        data-css="#id=width:26%"  inline geometry (a trimmed clip, a bar)
        data-class="#id=blk|#id2=-caret"  add a variant class ("-x" removes it)
        data-cue / data-cue-label / data-cue-place    the click cue
@@ -101,12 +102,20 @@
       return [el, el.getAttribute('data-dock') || 'open'];
     });
     var snapText = [], snapStyle = [];
+    /* A panel number is a real `.stepper` field on most pages now, and a field
+       carries its number in `value`, not in its text. So a step that sets W
+       reads and writes the one the target actually has, rather than writing a
+       text node inside an input where nothing would ever show it. */
+    function readSet(el) { return 'value' in el && el.tagName === 'INPUT' ? el.value : el.textContent; }
+    function writeSet(el, text) {
+      if ('value' in el && el.tagName === 'INPUT') el.value = text; else el.textContent = text;
+    }
     function remember(store, el, val) {
       for (var k = 0; k < store.length; k++) if (store[k][0] === el) return;
       store.push([el, val]);
     }
     steps.forEach(function (s) {
-      pairs(s.getAttribute('data-set'), function (el) { remember(snapText, el, el.textContent); });
+      pairs(s.getAttribute('data-set'), function (el) { remember(snapText, el, readSet(el)); });
       pairs(s.getAttribute('data-css'), function (el) { remember(snapStyle, el, el.getAttribute('style')); });
     });
     /* the Ask overlay's open state, kept whole: the pal's class + aria and its
@@ -127,7 +136,7 @@
         if (r[1] === null) r[0].removeAttribute('class'); else r[0].setAttribute('class', r[1]);
       });
       snapDock.forEach(function (r) { r[0].setAttribute('data-dock', r[1]); });
-      snapText.forEach(function (r) { r[0].textContent = r[1]; });
+      snapText.forEach(function (r) { writeSet(r[0], r[1]); });
       snapStyle.forEach(function (r) {
         if (r[1] === null) r[0].removeAttribute('style'); else r[0].setAttribute('style', r[1]);
       });
@@ -248,7 +257,7 @@
         });
       }
 
-      pairs(s.getAttribute('data-set'), function (el, text) { el.textContent = text; });
+      pairs(s.getAttribute('data-set'), function (el, text) { writeSet(el, text); });
       pairs(s.getAttribute('data-css'), function (el, css) { el.style.cssText += ';' + css; });
     }
 

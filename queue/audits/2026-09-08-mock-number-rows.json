@@ -1,0 +1,29 @@
+{
+  "feature": "Number rows in the mock panels are real fields",
+  "epic": "design-system",
+  "summary": "Ninety size, position, corner and rotation numbers across the design study were small grey boxes nobody could type into. They are now the real number field where the app takes typing, and a plain no-box readout where the app works the number out for you, so a panel sketched from these pages behaves like the product.",
+  "setup": "The design study in a browser: http://127.0.0.1:8791. No app build, no flags. The reference for both controls is the Fields page, http://127.0.0.1:8791/pages/comp-fields.html.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/editor.html and find Transform in the right panel.", "shot": "2026-09-08-mock-number-rows-editor.png" },
+    { "do": "Click into W and type a number. It takes the keyboard now; it used to be a picture." },
+    { "do": "Hover W and watch the spinner column fade in at the right edge." },
+    { "do": "Open http://127.0.0.1:8791/pages/img-grade-wt.html and read the Source block: W, H, Depth and Space wear no box, because the file decided them.", "shot": "2026-09-08-mock-number-rows-grade.png" },
+    { "do": "Open http://127.0.0.1:8791/pages/redline.html and read Save Changes: From, To, Distance and Units are readouts, because you drew that measurement." },
+    { "do": "Open http://127.0.0.1:8791/pages/draw.html, click an anchor on the pink stroke, and watch X and Y fill in while Type and Nodes stay plain rows.", "shot": "2026-09-08-mock-number-rows-draw.png" },
+    { "do": "Open http://127.0.0.1:8791/pages/icon-draw-wt.html, press Next four times to watch the walkthrough type into X, Y, W and H, then press Reset." }
+  ],
+  "evaluate": [
+    "In the Transform panel, does the row now look like somewhere your cursor would land?",
+    "In the grade panel, does a bare W 6000 read as a fact about the file, or does it read as a row that failed to draw its box?",
+    "Rotation shows the degree sign in its own slot after the number. Does that read better than 0 degrees inside the box?",
+    "On the redline measurement, is it obvious at a glance that From and To are results and Role and Label are choices?",
+    "In the pen and vector node panels, was moving Type and Nodes out to plain labelled rows the right call, or should all four have stayed in one grid?"
+  ],
+  "rough": [
+    "This ran in the browser against the design study, so the pictures are real Chrome captures of the served pages. No app build and no screen capture of the macOS app were involved.",
+    "One place still shows a grey box where a number would be typable, and it is named on purpose: the Animate rows in the five video walkthroughs, which list Opacity, Position, Scale, Rotation and Blur beside a keyframe button. Position holds a pair (960, 840) rather than one number, so that row needs a two-axis redesign rather than a control swap, and half-converting the block would look worse than leaving it. Filed as its own task.",
+    "The type ramp on the typography page keeps its grey boxes. Its W means weight, not width, so putting it in the design system's W slot would say the wrong word; it is a specimen strip on a documentation page, not a panel.",
+    "Redline Units now reads px as a plain value. The app has no units picker at all today, so a readout is honest, but if one ever ships that row wants a menu.",
+    "Video timecodes (In, Out, Dur), node counts, contrast ratios and stray numbers in prose were left alone. They are not geometry and none of them claims a slot beside a field."
+  ]
+}

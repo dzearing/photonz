@@ -1,0 +1,28 @@
+{
+  "id": "animate-rows-in-the-video-mocks-show-opacity-and",
+  "title": "Animate rows in the video mocks show opacity and rotation as pictures of numbers",
+  "goal": "On five video walkthrough pages the Animate section lists Opacity, Position, Scale, Rotation and Blur as small grey boxes beside a keyframe button. Every one of those is a number a person types in the real app, so the row promises nothing and teaches the wrong panel. Make them real number fields, and give Position the two boxes it needs because it holds an X and a Y rather than one number.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 1300,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T21:15:29.592Z",
+  "updated": "2026-09-08T21:15:29.595Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Pages: video-freeze-wt, video-move-wt, video-title-wt (two blocks), video-zoom-wt, and the same shape in video-motion. The markup is <div class=\"irow split\"><span class=\"rl\">Rotation</span><span class=\"field\"><span class=\"v\">0&deg;</span></span><button class=\"btn ghost icon sm\">…</button></div> — a KEYLESS .field, which is why the 2026-09-08 sweep (task size-and-position-rows-in-the-mock-panels-are-pi) did not match it. Target is .stepper sm with the row label carrying the name, so no .k inside, and the unit in a <span class=\"u\">. Position is the whole reason this is a separate task: ids vPosition, vCentre and the data-set strings on the walkthrough steps write one string (\"1390, 290\"), so splitting it into two fields means rewriting those data-set pairs on every step of those pages. shared/components/walkthrough.js already writes into an <input> via value, added 2026-09-08, so the field half is free.",
+  "acceptance": [
+    "Opacity, Scale, Rotation and Blur in the Animate section are number fields you can type into, on all five video walkthrough pages",
+    "Position shows its X and its Y as two separate numbers, not one comma-separated string in a box",
+    "The keyframe button still sits at the end of each row and the rows still line up as a column",
+    "Every one of the five pages returns 200 and its walkthrough still drives the numbers from step to step"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T21:15:29.594Z",
+      "note": "created (manual)"
+    }
+  ]
+}

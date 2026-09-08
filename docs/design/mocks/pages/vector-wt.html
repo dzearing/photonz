@@ -288,12 +288,12 @@
 
                   <div class="section" style="border-bottom:0">
                     <div class="sec-h">Node <span class="mut">selected</span></div>
-                    <div class="grid2">
-                      <div class="field"><span class="k">X</span><span class="v" id="vbNX">·</span></div>
-                      <div class="field"><span class="k">Y</span><span class="v" id="vbNY">·</span></div>
-                      <div class="field"><span class="k">Type</span><span class="v" id="vbNT">·</span></div>
-                      <div class="field"><span class="k">Nodes</span><span class="v" id="vbNN">4</span></div>
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">X</span><input id="vbNX" value="" aria-label="X"></span>
+                      <span class="stepper sm"><span class="k">Y</span><input id="vbNY" value="" aria-label="Y"></span>
                     </div>
+                    <div class="irow"><span class="rl">Type</span><span class="val" id="vbNT">–</span></div>
+                    <div class="irow"><span class="rl">Nodes</span><span class="val" id="vbNN">4</span></div>
                     <p class="note">The brush never touches the geometry. Drag a node and the mark re-renders around the new curve.</p>
                   </div>
                 </div>
@@ -808,6 +808,9 @@
       var closed = state.shape === "closed", empty = !anchors.length;
       var fillName = fillLabel(), fillSw = fillCss();
       function set(id, text) { var n = $(id); if (n) n.textContent = text; }
+      /* X and Y are real number fields, and a field carries its number in
+         `value`. Empty is how a field says nothing is picked. */
+      function setNum(id, text) { var n = $(id); if (n) n.value = text; }
       set("vbBrushName", br.name);
       set("vbReadout", empty ? "Pen · no path yet"
         : (closed ? "Shape · stroked with " + br.name : "Open path · stroked with " + br.name));
@@ -817,9 +820,9 @@
       set("vbFillState", state.fill === "none" ? "no fill yet" : "closed shape");
       set("vbFillName", fillName);
       set("vbPlabel", empty ? "empty artboard" : (closed ? "closed shape · Paint fill · Brush stroke" : "open path · Brush stroke"));
-      set("vbNX", a ? String(Math.round(a.x)) : "·");
-      set("vbNY", a ? String(Math.round(a.y)) : "·");
-      set("vbNT", a ? ((a.hOut || a.hIn) ? "smooth" : "corner") : "·");
+      setNum("vbNX", a ? String(Math.round(a.x)) : "");
+      setNum("vbNY", a ? String(Math.round(a.y)) : "");
+      set("vbNT", a ? ((a.hOut || a.hIn) ? "smooth" : "corner") : "\u2013");
       set("vbNN", String(anchors.length));
       set("vbHint", empty ? "Click on the artboard to place an anchor"
         : "Drag an anchor or a handle and " + br.name + " re-renders live");
