@@ -247,22 +247,28 @@ extension EditorState {
             landed = pasteImage(image)
         }
         guard let landed else { return }
-        handOverPointer(pasted: landed, held: tool, carrying: carried)
+        handOverPointer(placed: landed, held: tool, carrying: carried)
     }
 
-    /// The pasted layer is picked and the pointer is in hand, so the next drag
-    /// moves what you just pasted instead of drawing over it.
+    /// The layer that just arrived is picked and the pointer is in hand, so the
+    /// next drag moves it instead of drawing over it.
     ///
-    /// A paste that failed, or that opened a new document instead of landing a
-    /// layer, never gets here: switching the tool for nothing is exactly the
+    /// Both ways of getting a new picture into an open document come through
+    /// here: a paste, and a file let go on the canvas or on the layers list
+    /// (`addImageLayerOrOpen`). They are the same act to the person doing it,
+    /// so they hand the pointer over the same way, remember the same tool, and
+    /// give it back on the same undo.
+    ///
+    /// An arrival that failed, or that opened a new document instead of landing
+    /// a layer, never gets here: switching the tool for nothing is exactly the
     /// kind of small theft that makes a tool bar feel untrustworthy.
-    private func handOverPointer(pasted id: UUID, held tool: Tool,
-                                 carrying carried: PasteToolReturn?) {
+    func handOverPointer(placed id: UUID, held tool: Tool,
+                         carrying carried: PasteToolReturn?) {
         guard Experiments.shared.pasteHandsYouThePointerEnabled else { return }
         setTool(.select)
         // Picking a tool drops the picked layer for tools that do not keep one,
         // and clears the tool memory. Select keeps it, but saying so here means
-        // the paste is picked no matter which tool it came out of.
+        // what arrived is picked no matter which tool it came out of.
         selectedLayerID = id
         pasteToolReturn = PasteToolReturn.after(pasting: id, holding: tool, carrying: carried)
     }

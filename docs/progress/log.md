@@ -12220,3 +12220,46 @@ frame. The 12MP/10-layer interactive budget is untouched at 5.4ms.
 *outline-leaves-appearance-and-an-effect-s-colour*: a shape's edge could not be
 drawn only by added borders while an added border could not follow the shape. It
 can now.
+
+## 2026-09-08 — Dropping a picture hands you the pointer
+
+Yesterday a paste started leaving you with the pointer in hand and the pasted
+thing picked. A drop did not, so dragging a picture in from the Finder still
+left you holding the rectangle tool and the obvious next move, nudging the
+picture into place, drew a box over it.
+
+A drop and a paste are the same act to the person doing it, so they now come
+through one place: `handOverPointer(placed:held:carrying:)` in
+`EditorState+Clipboard.swift`, reached from `addImageLayerOrOpen` in
+`EditorState.swift`. That covers a file let go on the canvas, one let go on a
+row in the layers list, and a picture placed off the Library shelf, all in one
+call. The tool memory (`PasteToolReturn`) is unchanged, so undo hands the
+rectangle back and redo takes the pointer up again exactly as it does for a
+paste.
+
+**One switch, not two.** It shares `next-paste-hands-you-the-pointer` rather
+than adding a drop flag of its own: two switches could be set to disagree, and
+a product where a paste hands the pointer over and a drop does not is not
+something anyone would ask for. The switch reads "A new picture hands you the
+pointer" now.
+
+**The marquee had to go too.** A marquee that points at pixels changes what the
+very next drag means (`CanvasPointerDrags.swift`, the region-content branch):
+it moves what is inside the outline rather than the layer. So with an outline
+up over the drop point, handing the pointer over would still not have let you
+drag the picture. A drop clears it the way a paste does.
+
+Left alone: letting a picture go into a collage slot, which fills a slot inside
+a layer that is already there, so there is no new picture to move.
+
+`Scripts/test.sh` green at 4757. Walked on the probe with the new
+`Scripts/playtest/drop-hands-you-the-pointer-walk.json` (Screen Recording
+granted): the drag after a drop moved the picture from (240,200) to (480,380)
+with the layer count unchanged, undo gave the rectangle back, a drop on a
+layers row handed the pointer over too, and the marquee read a rectangle before
+the drop and none after. Audit:
+`queue/audits/2026-09-08-drop-hands-you-the-pointer.json`.
+
+**Next.** Redo puts a pasted or dropped picture back and takes the pointer up
+but does not re-pick the layer; that is how paste already behaved and it is
+written into the audit rather than changed under this task.

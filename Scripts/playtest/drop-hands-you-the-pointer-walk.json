@@ -1,0 +1,61 @@
+{
+  "out": "/tmp/photonz-playtest/drop-hands-you-the-pointer",
+  "seed": "Dragging a picture in from the Finder used to leave you holding whatever tool you had, so the obvious next move, nudging the picture into place, drew a shape over it instead. The walk holds the rectangle tool, lets a file go on the canvas, and checks the pointer arrived with the picture picked: the drag that follows should MOVE it, and the tree should still hold one picture rather than a picture with a box on top. Then it drops again and presses undo straight away, which should hand the rectangle tool back, and redo should take the pointer up again. Last it lets a file go on a row in the layers list, which has to hand the pointer over the same way.",
+  "setup": { "forget": ["shapes", "color", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1180, "height": 860 },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-rectangle-in-hand", "note": "an empty canvas with the rectangle tool in hand, the way anyone who has just drawn a box is holding it" },
+
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [400, 300] },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-dropped", "note": "the drop should have handed the pointer over with the dropped picture picked: two layers, tool select" },
+    { "do": "snapshot", "name": "2-dropped-pointer-in-hand" },
+
+    { "do": "drag", "from": [400, 300], "to": [640, 480] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-dragged", "note": "the drag must MOVE the picture: still two layers, the picture somewhere new, no rectangle drawn over it" },
+    { "do": "snapshot", "name": "3-dragged-not-drawn" },
+    { "do": "render", "name": "3-dragged-doc" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [250, 560] },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-dropped-again", "note": "a second drop, again with the pointer in hand" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "waitFor", "condition": "tool", "value": "rectangle", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-undone", "note": "undo took the drop back out and handed the rectangle tool back with it" },
+    { "do": "snapshot", "name": "5-undo-gives-the-tool-back" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-redone", "note": "redo put the picture back and took the pointer up again" },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "dragFile", "file": "fixtures/Photonz drop probe.png", "at": [1050, 140], "space": "window", "hold": "7-over-a-layer-row", "release": true },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-dropped-on-a-row", "note": "a file let go on a row in the layers list lands where the line promised and hands the pointer over the same way: one more layer, tool select" },
+    { "do": "snapshot", "name": "7-panel-drop-pointer-in-hand" },
+
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "drag", "from": [200, 150], "to": [500, 400] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-marquee-up", "note": "a marquee drawn before a drop: region should read a rectangle" },
+    { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [350, 250] },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "9-marquee-cleared", "note": "the drop cleared the marquee, so the next drag moves the picture rather than the pixels inside the old outline: region should read none" },
+    { "do": "snapshot", "name": "9-marquee-cleared" }
+  ]
+}

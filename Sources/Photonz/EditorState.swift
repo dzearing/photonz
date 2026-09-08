@@ -671,6 +671,12 @@ final class EditorState {
     /// `landing` is the slot in the LAYERS STACK a drop on the right hand
     /// panel pointed at — the one the drop line drew — so the picture arrives
     /// where the panel promised instead of always on top.
+    ///
+    /// Whatever route it came in by, the picture that just arrived is the thing
+    /// you are now working on: it is picked and the pointer comes into your
+    /// hand, because nudging what you just dropped into place is the next thing
+    /// anyone does. Undo hands your tool back, exactly as it does for a paste
+    /// (`handOverPointer`).
     func addImageLayerOrOpen(at url: URL, droppedAt point: CGPoint? = nil,
                              landingAt landing: LayerDrop? = nil) {
         if url.pathExtension.lowercased() == "photonz" || document == nil {
@@ -679,7 +685,20 @@ final class EditorState {
         }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
-        pasteImage(image, at: point, fileName: url.lastPathComponent, landingAt: landing)
+        let tool = activeTool
+        // The layer this lands clears the memory on its way through, so the run
+        // it belongs to is carried across by hand, as the paste path does.
+        let carried = pasteToolReturn
+        // A marquee belonged to the moment before the drop, and one that points
+        // at pixels changes what the very next drag means: it would move what
+        // is inside the outline rather than the picture that just arrived. So
+        // it goes, the same way a paste's does.
+        if Experiments.shared.pasteHandsYouThePointerEnabled {
+            setSelection(nil, recording: false)
+        }
+        guard let landed = pasteImage(image, at: point, fileName: url.lastPathComponent,
+                                      landingAt: landing) else { return }
+        handOverPointer(placed: landed, held: tool, carrying: carried)
     }
 
     /// Opens a CGImage (from a file or a screen capture) as a fresh document.

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1770,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T18:49:49.979Z",
-  "updated": "2026-09-07T18:49:49.980Z",
+  "updated": "2026-09-08T07:06:22.325536Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the paste task (pasting-hands-you-the-pointer-with-the-new-layer, 2026-09-07). The paste path already does this in EditorState+Clipboard.swift via handOverPointer(pasted:held:carrying:), gated on the next-paste-hands-you-the-pointer flag; pasteImage already returns the layer id it landed. The drop callers pass a point or a landing, which is the branch handOverPointer is deliberately not reached from today. Decide whether it needs its own flag or shares the paste one.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-07T18:49:49.980Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T06:58:45.180Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T07:06:22.325536Z",
+      "note": "Review before building: a drop and a paste are the same act to the person doing it (a new picture arrives in an open document), so they should not be told apart. Shortest version: reuse the paste's own memory and switch rather than inventing a drop flag, since two switches could be set to disagree and nobody would ask for a product where paste hands the pointer over and a drop does not. Widened the switch's title and words instead: \"A new picture hands you the pointer\"."
+    },
+    {
+      "t": "2026-09-08T07:06:22.325536Z",
+      "note": "Review found one thing the acceptance would have failed on quietly: a marquee that points at pixels changes what the very next drag means (CanvasPointerDrags.swift:405 moves the region's content instead of the layer), so with an outline up over the drop point, handing the pointer over would still not let you drag the picture. The drop now clears the marquee the way a paste does, under the same flag."
+    },
+    {
+      "t": "2026-09-08T07:06:22.325536Z",
+      "note": "Left out on purpose: letting a picture go into a collage slot fills a slot inside an existing layer, so there is no new layer to move and nothing to hand over for."
+    },
+    {
+      "t": "2026-09-08T07:06:22.325536Z",
+      "note": "Built: handOverPointer in EditorState+Clipboard.swift is now shared (placed:held:carrying:) and addImageLayerOrOpen in EditorState.swift goes through it, which covers the canvas drop, the layers-panel drop and the Library place in one place."
+    },
+    {
+      "t": "2026-09-08T07:06:22.325536Z",
+      "note": "Verified in the probe with Scripts/playtest/drop-hands-you-the-pointer-walk.json (new): drop with the rectangle in hand leaves tool=select with the dropped picture picked; the drag after it moved that picture from (240,200) to (480,380) with the layer count unchanged at 2, so nothing was drawn over it; undo straight after a drop gave the rectangle back and redo took the pointer up; a file let go on a layers row landed in the promised slot and handed the pointer over too; a marquee drawn first read a rectangle before the drop and none after. Scripts/test.sh: 4757 tests, all pass."
+    },
+    {
+      "t": "2026-09-08T07:06:22.325536Z",
+      "note": "Audit: queue/audits/2026-09-08-drop-hands-you-the-pointer.json, with two real screen captures (the probe holds Screen Recording)."
     }
-  ]
+  ],
+  "started": "2026-09-08T06:58:45.179Z"
 }
