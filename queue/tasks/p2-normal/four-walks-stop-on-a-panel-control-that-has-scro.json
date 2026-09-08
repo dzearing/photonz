@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2000,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T08:29:45.076Z",
-  "updated": "2026-09-08T08:29:45.079Z",
+  "updated": "2026-09-08T12:06:30.223Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-08 on unmodified main (checked by stashing an unrelated harness change and rebuilding the probe; the messages are byte-identical either way). Pre-existing, not caused by the whole-component-walk fix that landed the same day.\n\nScripts/playtest.sh Scripts/playtest/clip-contents-walk.json\n  {\"error\": \"step 12 (press): the control \\\"Limits\\\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on. Scroll to it with a scrollPanel step first.\", \"status\": \"failed\"}\n\nScripts/playtest.sh Scripts/playtest/size-limits-walk.json — same message at step 14, control \"Limits\".\nScripts/playtest.sh Scripts/playtest/out-of-view-mark-walk.json — same message at step 8, control \"Limits\".\nScripts/playtest.sh Scripts/playtest/contents-for-several-walk.json — same message at step 58, control \"Stack\".\n\nThe reach rule is PlaytestHarness.isInReach: the whole control has to be inside the window AND inside its scrolling area. Three of the four want the same control (Limits), so a section that moved or grew is the likely cause. Answer the product question first (does a person have to scroll for Limits now, and should they) before adding scrollPanel steps.",
@@ -24,6 +24,11 @@
     {
       "t": "2026-09-08T08:29:45.078Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T12:06:30.221Z",
+      "note": "Triage 2026-09-08: ran the walks myself on a probe built from HEAD (Scripts/playtest-all.sh, 12 passed, 0 failed, 2m 25s). clip-contents-walk 10s ok, size-limits-walk 9s ok, contents-for-several-walk 24s ok, out-of-view-mark-walk 9s ok. Fixed by find-out-why-thirteen-scripted-walks-are-failing with a new reveal step that scrolls until a named control is pressable, replacing hand-tuned scroll distances."
     }
-  ]
+  ],
+  "completed": "2026-09-08T12:06:30.222Z"
 }

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2010,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T08:29:45.113Z",
-  "updated": "2026-09-08T08:29:45.116Z",
+  "updated": "2026-09-08T12:06:30.259Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-08 on unmodified main (checked by stashing an unrelated harness change and rebuilding the probe; identical either way). Pre-existing.\n\nScripts/playtest.sh Scripts/playtest/colour-off-the-shelf-walk.json\n  {\"error\": \"step 13 (dragColor): \\\"Library\\\" stayed dark for the colour off \\\"Fill\\\", and the walk expected it to takes\", \"status\": \"failed\"}\n\nStart by watching it happen: Scripts/probe-app.sh, draw a shape, drag the Fill swatch onto the Library shelf, and see whether the shelf highlights. If it does, the walk drag is landing in the wrong place; if it does not, it is a real drop target regression. (The error text also reads oddly, \"expected it to takes\" — worth fixing while in there.)",
@@ -22,6 +22,11 @@
     {
       "t": "2026-09-08T08:29:45.115Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T12:06:30.257Z",
+      "note": "Triage 2026-09-08: ran the walks myself on a probe built from HEAD (Scripts/playtest-all.sh, 12 passed, 0 failed, 2m 25s). colour-off-the-shelf-walk 15s ok and colour-onto-the-library-walk 8s ok. The shelf was never dark: the harness was picking the smallest of four drop areas stacked over the Library instead of the one the walk named. Fixed by find-out-why-thirteen-scripted-walks-are-failing; no walk step was weakened."
     }
-  ]
+  ],
+  "completed": "2026-09-08T12:06:30.258Z"
 }

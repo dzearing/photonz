@@ -1,0 +1,33 @@
+{
+  "id": "room-on-a-group-means-one-thing-whether-or-not-a",
+  "title": "Room on a group means one thing, whether or not a piece is the surface",
+  "goal": "Typing a number into Room on a group does two opposite things and nothing on screen says which one you are about to get. On a loose drawing the box grows outward and the pieces stay put. On a drawing where one piece has been named the surface, the pieces move and the box stays pinned at its top left. Whether a group has a surface is invisible, so the same number in the same field gives two different answers for a reason you cannot see. Pick one answer, or make the difference visible before the number is typed.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T12:08:01.154Z",
+  "updated": "2026-09-08T12:09:06.757Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-08, from two audits a day apart. queue/audits/2026-09-08-room-grows-outward.json says it plainly in its rough notes: \"A group with a surface in it was deliberately left alone: there the box is the thing you can see, so a button pill stays pinned at its top left and grows right and down. That is two different answers to the same field, and it is only obvious once you know a surface is what makes the difference.\" queue/audits/2026-09-07-room-lands-on-something.json asks the reader the matching question: \"The roomier copy grows to the right and down from where its top left already was. Should it grow out in every direction around the word instead?\"\n\nSECOND THING, same row, cheap to fix here: that audit also asks \"Is Padding the right word for this row, next to a Layout section that already says Padding?\" A copy override knob and the group Layout row both read Padding and mean different things. Whatever this task settles, the two rows should not wear the same name.",
+  "acceptance": [
+    "Typing the same room into two groups that differ only in whether a piece is the surface gives an answer a person can predict, and the audit shows both side by side",
+    "If the two answers stay different, the group says which one it will give before you type, in the Layout section itself and not only in a tooltip",
+    "Room typed on a group with a surface still keeps the surface painted to the group edges, since that is what a surface is for",
+    "One undo puts either case back exactly as it was",
+    "A walk covers both cases and its log records the two boxes before and after"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T12:08:01.156Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T12:09:06.756Z",
+      "note": "seq 2030 -> 30"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "Round a rectangle right up and the dashed outline that says it is selected stays a hard rectangle, so it stands off the shape at every corner. It should trace the shape you have picked, the way it does on a square one.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 1960,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T06:41:47.388Z",
-  "updated": "2026-09-08T06:41:47.388Z",
+  "updated": "2026-09-08T12:09:06.720Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while auditing corner radius on 2026-09-08: queue/audits/2026-09-08-corner-radius-4-zoomed-sc.png shows the dashed rect cutting across the corners of a 49pt rounded box at 156%. Reproduce with Scripts/playtest.sh Scripts/playtest/corner-radius-rounds-walk.json and look at 6-zoomed-sc.png. The outline is drawn in Sources/Photonz/CanvasDisplay.swift (inkCorners / the selection frame path). Layer.boxCornerRadius(boxSize:) in PhotonzCore/CornerRadiusSelection.swift is the curve to follow, and it is what the renderer rings with. It is a judgement call whether the outline marks the FRAME (as now) or the INK, so it may want the user asked rather than just changed.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-08T06:41:47.388Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T12:09:06.719Z",
+      "note": "seq 1960 -> 20"
     }
   ]
 }

@@ -1,0 +1,42 @@
+{
+  "id": "undo-brings-the-band-back-without-bringing-back",
+  "title": "Undo puts back what was picked, not only what was drawn",
+  "goal": "Undo brings your work back but leaves nothing picked, so the step after an undo is always a re-pick. Sweep a band round two things and stack them, press Undo, and the two things and the dotted band both come back with neither of them picked: the panel goes empty and you have to sweep the band again before you can stack them a second time. Undoing a delete is the same, so Delete pressed straight after the undo does nothing. Undo should hand back the picking along with the drawing.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T11:08:02.076Z",
+  "updated": "2026-09-08T12:09:06.577Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-08 on the probe while fixing undo-does-not-take-apart-a-stack-made-from-a-mar.\n\n  Scripts/playtest.sh Scripts/playtest/stack-from-a-band-walk.json\n\nStage states out of /tmp/photonz-playtest/stack-from-a-band/log.json:\n  [1-band-caught-both] layers: 3  region: 80,50 440x330  sel: [Rectangle, Rectangle 2]\n  [2-stacked]          layers: 2  region: none            sel: [Group]\n  [3-one-undo]         layers: 3  region: 80,50 440x330  sel: []      <- band back, pick gone\n  [4-redone]           layers: 2  region: none            sel: []      <- redo loses it too\nSee queue/audits/2026-09-08-stack-band-undo-1.png: no row is highlighted in the Layers list.\n\nNOT a regression from that fix; it is general. SelectionSnapshot (PhotonzCore) carries only region + targetsPixels, so which LAYERS were picked has never been part of an undo step. Fixing it means either widening the snapshot or re-deriving the pick from the restored band the way setSelection(captureLayers: true) does. Note the band-caught-nothing case: setSelection keeps that as a pixel region on the layer you had, so a re-derive must not clobber it (SelectionHistoryTests pins the contract).\n\nBROADENED BY TRIAGE 2026-09-08. Three audits in one day name this same thing, so it is one rule and not three bugs: queue/audits/2026-09-08-stack-band-undo.json (\"the two things it caught are not picked again\"), queue/audits/2026-09-08-sweep-delete-undo.json (\"they are not picked again, so pressing Delete straight after the undo does nothing\"), and queue/audits/2026-09-07-marquee-keeps-your-layer.json, which is the change that made the gap visible. Every one of them says the same sentence: which layers were picked has never been part of an undo step. Fix it once, in the snapshot, not per command. Selection history for the marquee already landed on 2026-09-08 (SelectionSnapshot, SelectionHistoryTests), so the shape of the answer exists; it is the LAYER pick that is still missing from it.",
+  "acceptance": [
+    "After undoing a stack made from a band, the things the band caught are picked again, so the panel reads them and Stack Selection is available straight away",
+    "After undoing a delete, the things that came back are picked again, so pressing Delete again removes the same things",
+    "Redo leaves the picking right too, not just the drawing",
+    "A band that caught nothing stays a pixel region on undo, exactly as it does now, and a step that never had a pick does not invent one",
+    "One rule decides it for every kind of step rather than each command remembering its own pick, so a command added later cannot come out wrong",
+    "A walk covers undo restoring the pick, for a stack and for a delete"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T11:08:02.078Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T12:07:47.950Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-08T12:07:47.986Z",
+      "note": "Triage 2026-09-08 reproduced it again on a probe built from HEAD and raised it to p1. Command: Scripts/playtest.sh Scripts/playtest/stack-from-a-band-walk.json --no-build (exit 0, the walk passes because it does not check the pick). From /tmp/photonz-playtest/stack-from-a-band/log.json, state at each stage: band drawn, selection [Rectangle, Rectangle 2], region 80,50 440x330; stacked, selection [Group], region none; ONE UNDO, selection [], region 80,50 440x330; REDO, selection [], region none. So undo hands back the band and the layers and drops the pick, and redo drops it too. Raised because three audits in one day report it and it costs a re-pick on every undo, which is the most common step in the app."
+    },
+    {
+      "t": "2026-09-08T12:09:06.576Z",
+      "note": "seq 2030 -> 10"
+    }
+  ]
+}

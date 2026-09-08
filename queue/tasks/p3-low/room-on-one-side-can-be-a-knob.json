@@ -4,12 +4,12 @@
   "goal": "A card with 16 points of room at the sides and 10 at the top and bottom cannot offer its room to copies at all today, because a knob has to show one number and there is no single number there. This lets one side be offered on its own, so a copy can be given more room at the top without touching the other three.",
   "epic": "ui-components",
   "priority": "p3-low",
-  "seq": 20,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:01:53.423Z",
-  "updated": "2026-09-07T12:58:26.532Z",
+  "updated": "2026-09-08T12:09:07.010Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ComponentNumberSlot.padding reads GroupLayout.usedPadding.uniform and returns nil when the sides disagree, so the slot is simply not offered. A per-side knob means either widening ComponentNumberSlot with four side cases or giving the slot a GroupPadding.Side. Watch the Add menu size: four extra rows per group is exactly the bloat the kind-grouped menu exists to stop, so only offer sides where they already disagree.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-07T12:58:26.531Z",
       "note": "seq 1240 -> 20"
+    },
+    {
+      "t": "2026-09-08T12:09:07.009Z",
+      "note": "seq 20 -> 10"
     }
   ]
 }

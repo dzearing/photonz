@@ -4,12 +4,12 @@
   "goal": "Option Backspace fills the part of a picture you marked with a marquee. Do the same over a shape or a piece of text and nothing happens and nothing is said. Command X and Backspace now explain themselves in that situation; this key should too, in the same words.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 1920,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T01:19:35.670Z",
-  "updated": "2026-09-08T01:19:35.671Z",
+  "updated": "2026-09-08T12:09:06.685Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-08 with Scripts/playtest.sh Scripts/playtest/cut-says-what-it-cannot-do-walk.json, stage 4a-fill-region: a rectangle picked with a marquee over its left half, then Option Backspace. Log reads layers 2 (unchanged), canUndo unchanged, and copied still holding the PREVIOUS message (\"Cannot delete a piece ...\") rather than raising one of its own, i.e. the key did nothing and said nothing. Cause: EditorState.fillSelectedLayer(useBackground:) does `if let target = regionTargetID() { fillRegion(...) }` and RegionTarget.id returns nil for a picked layer that cannot be sliced. Fix is the same shape as the cut one: RegionSliceRefusal needs a third Action case and fillSelectedLayer needs the same early raiseCanvasNotice. The bucket click path (fillLayer(at:hit:useBackground:)) has a pointer and different semantics, so decide separately whether it speaks.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-08T01:19:35.671Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T12:09:06.684Z",
+      "note": "seq 1920 -> 10"
     }
   ]
 }

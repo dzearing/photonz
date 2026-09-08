@@ -4,12 +4,12 @@
   "goal": "The design rules already answer the question the app keeps getting wrong: every panel group holds itself to its own height with its own scroller, and exactly one group takes the leftover room. The app follows that for one group out of six, and five separate fixes in two days each trimmed one section instead of adopting the rule. The rule is written in mock page language, class names and stylesheet variables, so it reads as a note about the design study rather than as a law the app has to obey. Rewrite it so nobody can read it that way again.",
   "epic": "design-system",
   "priority": "p3-low",
-  "seq": 160,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "docs",
   "created": "2026-09-07T12:58:03.854Z",
-  "updated": "2026-09-07T12:58:27.008Z",
+  "updated": "2026-09-08T12:09:07.402Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-07 digest design review. The rule: docs/design/mocks/shared/UX-PATTERNS.md section 3, panel group, 'The body has its own bounded max-height (--gh) and its own scroller, so a 60-layer stack scrolls inside Layers and never pushes Effects or Library off screen. Exactly one group per dock may be .grow and take the leftover space.' In the app, only the Layers list works this way (Sources/Photonz/LayersPanel.swift lines 1493 to 1526, added by opening-a-group-in-the-layers-list-pushes-the-cont on 2026-09-07). Everything else is in the single outer ScrollView at LayersPanel.swift line 99, which is why sections push each other off the bottom. Tasks that treated the symptom one section at a time: layout-stops-lecturing-and-starts-fitting, a-measurement-fits-in-the-panel, the-panel-says-what-you-picked-before-it-explain, the-look-controls-come-back-above-the-fold (dropped), the-properties-panel-fits-on-the-screen-it-has (now p1-high and pointed at this rule). Do this after the app task lands, so the wording can name what the app actually does.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-09-07T12:58:27.007Z",
       "note": "seq 1420 -> 160"
+    },
+    {
+      "t": "2026-09-08T12:09:07.401Z",
+      "note": "seq 160 -> 120"
     }
   ]
 }

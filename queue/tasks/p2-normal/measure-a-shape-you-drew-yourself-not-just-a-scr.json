@@ -4,12 +4,12 @@
   "goal": "Pick the ruler, switch it to Size, and point at a rectangle you drew a moment ago: nothing lights up and clicking measures nothing. The hint still says click an element for its width and height. The same mode works perfectly over a screenshot you pasted in, so the one thing Size mode cannot measure is the thing you made.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 1970,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T07:17:37.059Z",
-  "updated": "2026-09-08T07:17:37.060Z",
+  "updated": "2026-09-08T12:09:06.938Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08 in the probe build. Walk: blank 900x600, key r, drag (300,240)->(560,420), key v, escape, measureMode size, waitFor edgeMap, move to (430,330), wait, click (430,330). Log at /tmp/photonz-playtest/repro-size/log.json: every step after the click reports measures=[] and cue=none. The screen capture size-sc.png shows the pointer dot dead centre on the red rectangle with no highlight and the hint pill still reading \"Size  Click an element for its width and height\". Contrast: Scripts/playtest/distance-lands-on-release.json step 13 drags in Size mode over settings-pane-2x.png and lands two measurements (Width = 624 px, Height = 44 px), so the element ladder works on picture pixels but not on drawn layers. Distance mode DOES snap to drawn shapes (Scripts/playtest/caliper-catches-a-drawn-edge-walk.json reads 64 px off a drawn box), so the edge map sees them; the gap is in the Size mode element preview. Start at CanvasMeasure.refreshMeasureHoverReadout / drawElementPreview and ElementBounds.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-08T07:17:37.060Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T12:09:06.937Z",
+      "note": "seq 1970 -> 80"
     }
   ]
 }

@@ -1,0 +1,33 @@
+{
+  "id": "the-rules-say-what-a-key-press-does-when-it-cann",
+  "title": "The rules say what a key press does when it cannot act, and what a question you can silence looks like",
+  "goal": "Two things the app built this week have no rule behind them, so the next person to meet either one will invent their own. First: the rules already say what a BUTTON does when it cannot act, dim it in place, but say nothing about a KEY PRESS, which has nothing to dim. Three commands answered that on their own in two days and they already disagree with each other. Second: one command now asks before it does something you cannot easily take back, with a Do not ask again box, and there is no rule for how that question is worded, where the answer is remembered, or when a command is even allowed to ask. Write both down so the next one matches.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 130,
+  "status": "pending",
+  "release": "next",
+  "area": "docs",
+  "created": "2026-09-08T12:08:29.871Z",
+  "updated": "2026-09-08T12:09:07.439Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Design review 2026-09-08. Evidence for the key press half: queue/audits/2026-09-08-cut-says-what-it-cannot-do.json says the family already disagrees with itself, \"Option Backspace, which fills the marquee, still does nothing and says nothing over a shape... the family now disagrees with itself. Filed as its own task\" (that task is filling-part-of-a-shape-says-what-it-cannot-do-t). queue/audits/2026-09-08-delete-over-a-marquee.json is the third instance. The existing ladder is docs/design/mocks/shared/UX-PATTERNS.md section 4, \"A control that cannot act\", whose table has rows for a command, a chooser, a field and a bare affordance, and no row for a key.\n\nEvidence for the silenced question half: Sources/PhotonzCore/RasterizePrompt.swift and EditorState+LayerOps.swift shipped the first one on 2026-09-08 (audit 2026-09-08-turn-into-a-picture.json), with the wording and the suppression key chosen locally. Section 3 of UX-PATTERNS covers Modal and toast as \"rare document-scoped dialogs\" and says nothing about suppressing one.",
+  "acceptance": [
+    "The section on a control that cannot act gains a row for a key press: what the app says, where it says it, and how the sentence is shaped, taken from what shipped rather than invented",
+    "It says whether naming the way out is required, since that is the difference between the refusal that dead-ends and the one that helps",
+    "The panels and surfaces list gains the question you can silence: when a command may ask, how the question is worded, where the answer is remembered, and how a person gets the question back",
+    "Both entries cite the commits and audits they were taken from, so a reader can see the real thing",
+    "The pass names any place already shipped that does not match the rule it just wrote, and files it rather than quietly fixing it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T12:08:29.873Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T12:09:07.438Z",
+      "note": "seq 1300 -> 130"
+    }
+  ]
+}

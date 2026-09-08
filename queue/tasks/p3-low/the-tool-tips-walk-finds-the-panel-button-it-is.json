@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 150,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T12:49:50.824Z",
-  "updated": "2026-09-07T12:58:26.974Z",
+  "updated": "2026-09-08T12:06:30.366Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fails at step 13 (hover, label Inspector) with: no control with a tooltip starting \"Inspector\"; on screen: Arrow, Crop: Free, Frame, Hide Panel, Highlight, Line, Measure: Distance ... Found by the full playtest-all run on 2026-09-07; it is not caused by the wait pacing change that landed the same day (it fails identically under PHOTONZ_PLAYTEST_PACE=full). Sibling of the two other pending walk repairs from the press visibility check: the clip contents walk and the panel controls walk.\n\nTriage 2026-09-07: the rename this trips over is itself a finding. The same control answers to three names right now: the tooltip says Panel, the View menu says Show Layers, and the walk was written against the old Inspector. Filed as one-name-for-the-button-that-shows-and-hides-t; if that lands first, use whatever name it settles on.",
@@ -30,6 +30,11 @@
     {
       "t": "2026-09-07T12:58:26.974Z",
       "note": "seq 1410 -> 150"
+    },
+    {
+      "t": "2026-09-08T12:06:30.364Z",
+      "note": "Triage 2026-09-08: ran the walks myself on a probe built from HEAD (Scripts/playtest-all.sh, 12 passed, 0 failed, 2m 25s). tool-tips 13s ok. The walk was updated for the Hide Panel name."
     }
-  ]
+  ],
+  "completed": "2026-09-08T12:06:30.365Z"
 }

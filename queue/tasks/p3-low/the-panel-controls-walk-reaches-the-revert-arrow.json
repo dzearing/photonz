@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T11:27:48.780Z",
-  "updated": "2026-09-07T12:58:26.941Z",
+  "updated": "2026-09-08T12:06:30.330Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured on 2026-09-07 and PROVEN not caused by the stricter press rule that landed the same day: the walk was stashed back to the pre-change build (git stash of PlaytestHarness.swift + PlaytestPanelPress.swift), the probe rebuilt, and it failed at the same step 63 with the OLD message \"is not in the window\". Its own dump /tmp/photonz-playtest/panel-controls/panel-8-own-opacity.json puts \"Revert Opacity\" at press point x=1082 y=-10, which is below the window content bottom edge, so the old point-only check rejected it too. Last good run was 2026-09-06 22:41 (panel-9-following-again.json in that folder still carries that timestamp), so it regressed when rows were added to the dock. Likely fix is a scrollPanel step before step 62, the same shape as the fix mixed-one-look-walk got. Same family as the-clip-contents-walk-reaches-the-switch-it-is; the app side of the squeeze is the-properties-panel-fits-on-the-screen-it-has.\n\nTriage 2026-09-07: same root cause as the-clip-contents-walk-reaches-the-switch-it-is and the-properties-panel-fits-on-the-screen-it-has, which is now p1-high. Do the panel one first and re-run this before changing the walk.",
@@ -35,6 +35,11 @@
     {
       "t": "2026-09-07T13:26:36.149418Z",
       "note": "Panel height changed under this on 2026-09-07 by the-properties-panel-fits-on-the-screen-it-has: the dock now shares out its height, so list shaped sections (Layers, Appearance, Measurements, Library) are bounded and scroll inside themselves while form shaped ones are drawn whole. Measured after it, in a 996pt dock: one text picked Effects 838-996, four picked 574-732, an arrow 712-870, a callout 835-993, fifteen layers 574-732 -- all wholly in view; only two pieces of text picked is still over, by 34pt. Re-run this walk before changing anything: the control it stops on may now be above the fold on its own. Scripts/playtest/dock-fits-the-window-walk.json is the instrument that reads the section offsets back."
+    },
+    {
+      "t": "2026-09-08T12:06:30.328Z",
+      "note": "Triage 2026-09-08: ran the walks myself on a probe built from HEAD (Scripts/playtest-all.sh, 12 passed, 0 failed, 2m 25s). panel-controls-walk 16s ok. It reaches the revert arrow again."
     }
-  ]
+  ],
+  "completed": "2026-09-08T12:06:30.329Z"
 }

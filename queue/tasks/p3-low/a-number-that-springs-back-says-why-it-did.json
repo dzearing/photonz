@@ -4,12 +4,12 @@
   "goal": "Type a width a layer will not take and the box comes back to the width it kept, with nothing to say why. Anyone watching sees a box that ignored them rather than a layer that refused. The line under Position & Size should carry the reason for a few seconds, the way it already does when you click a number you cannot type.",
   "epic": "ui-components",
   "priority": "p3-low",
-  "seq": 90,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T03:18:26.387Z",
-  "updated": "2026-09-07T12:58:26.771Z",
+  "updated": "2026-09-08T12:09:07.261Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Decided in docs/design/mocks/shared/UX-PATTERNS.md section 4, \"What a control shows after a set the picked things refused\": nothing moved at all -> the control returns to the value it had AND the line under the section carries the reason, in the wording law two halves, with no toast. The read-back half landed on 2026-09-06 (GeometryNumberField now sets then re-reads geometrySelection); this is the half that was left.\n\nGeometryInspector.swift already has the mechanism: `explaining: LayerGeometryField?` puts a sentence in the caption line for 6 seconds, but it only answers for READ-ONLY fields via LayerGeometrySelection.explanation(for:). A refusal on a typeable field needs its own state and its own sentence. The reason itself is not in LayerGeometrySelection today: LayerGeometryEditing.minimumWidth only knows the text floor, while a group refused by its own flow (GroupLayout.minWidth/maxWidth, the Layout section Smallest and Largest rows) is refused inside Layer.resized(to:). Either plumb the group layout limits into LayerGeometryEditing so note(for:) warns before you type as well, or work the sentence out from the before/after pair the commit already has.\n\nScripts/playtest/width-reads-back-walk.json is the walk that sets a Smallest width of 160 on a Button and types 50.\n\nTriage 2026-09-07, design review: the line under a section is now doing three jobs with no shared rule, so settle the rule here rather than adding a fourth use of it later. The three: the standing caption ('Up or down arrow steps by 1, Shift by 10'), the six second explanation of why a number cannot be typed, and the refusal reason this task adds. Evidence: audit 2026-09-06-a-decided-number-looks-decided rough 4 says the standing caption still promises stepping on three fields that are now plain text, and the same audit records a stale-explanation bug where the six second message outlived the rule it was explaining.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-07T12:58:26.770Z",
       "note": "seq 1330 -> 90"
+    },
+    {
+      "t": "2026-09-08T12:09:07.260Z",
+      "note": "seq 90 -> 80"
     }
   ]
 }

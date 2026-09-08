@@ -4,12 +4,12 @@
   "goal": "When a card or a bar arranges its own contents and has been held to a size that cannot hold them, the layers list says the layers are out of view but there is nothing you can do from there: the layers have no position of their own, so the only fix is finding the containers size and changing it. The mark should offer that fix where it already names the problem.",
   "epic": "ui-layout",
   "priority": "p3-low",
-  "seq": 120,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T10:15:15.780Z",
-  "updated": "2026-09-07T12:58:26.874Z",
+  "updated": "2026-09-08T12:09:07.367Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the bring-into-view task on 2026-09-07 (queue/audits/2026-09-07-bring-into-view.json, rough 2). Today RowOutOfView.canReturn is false inside an arranging container because PhotonzDocument.canPlace defers to LayerGeometryEditing.canMove, and the mark falls back to an explanation. The move that would help is clearing or growing the containers height/width limit (GroupLayout.maxHeight/height) so the contents fit. Careful: that undoes a number the user typed on purpose, so the wording has to say what it will change before it is pressed.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-07T12:58:26.873Z",
       "note": "seq 1360 -> 120"
+    },
+    {
+      "t": "2026-09-08T12:09:07.366Z",
+      "note": "seq 120 -> 110"
     }
   ]
 }

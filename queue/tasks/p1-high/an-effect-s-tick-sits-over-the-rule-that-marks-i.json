@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 5,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:51:11.380Z",
-  "updated": "2026-09-08T00:22:02.787Z",
+  "updated": "2026-09-08T12:06:19.488Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 with a screenshot of a Blur effect. The rule is drawn by OwnedSettings (Sources/Photonz/PartsInspector.swift line 268), a 2 point rounded rectangle with a leading padding of 1, and it is used by both lists, from EffectsListInspector.swift line 124 and PartsInspector.swift line 167. The row above puts the title first at ColorPartLayout.labelWidth of 68 and then the switch at switchWidth of 16 (EffectsListInspector.swift lines 94 to 98, widths in ColorStylePanel.swift lines 221 and 225), so the tick sits about 68 points in while the rule starts at the row's leading edge. Hence the mismatch. Fix by giving the rule the same leading offset the switch column has, taken from ColorPartLayout rather than typed again, and note the tick is 16 wide against a 2 wide rule so centring the rule on the tick means offsetting by the switch column's leading edge plus half the difference. Since OwnedSettings is shared, this lands in both lists at once, which is why the acceptance checks both.",
@@ -57,7 +57,16 @@
     {
       "t": "2026-09-08T00:22:02.786Z",
       "note": "Lining the rule up under the tick where the tick sits today costs 81pt of width and the settings do not fit: the row spills past both panel edges and the Remove cross falls off the window (playtest step 25 failed). Built and photographed three ways out; which one is a visual direction call over every row in two lists. Decision opened with a brief and four captures."
+    },
+    {
+      "t": "2026-09-08T12:06:11.404Z",
+      "note": "decision \"To hang the settings rule under the effect's tick, something has to move. Which?\" resolved: The tick leads the row (Answered in effect by the user on 2026-09-08: they filed 'The tick comes before the name on every row that has one', which is option a, and it shipped in 9923e740. Closed by triage rather than left on the board.)"
+    },
+    {
+      "t": "2026-09-08T12:06:19.486Z",
+      "note": "Triage 2026-09-08: already shipped. The user answered this card in effect by filing 'The tick comes before the name on every row that has one', which is option a, and that landed in 9923e740. Its audit queue/audits/2026-09-08-tick-leads.json measures the result on real window captures: ticks at 0, the settings rule at 6, centred on the 14 wide tick, in both Appearance and Effects, from one shared PanelRowHead and one nameLeading rather than a per-list inset. That meets every acceptance item here, so this is closed rather than run again."
     }
   ],
-  "started": "2026-09-08T00:08:20.777Z"
+  "started": "2026-09-08T00:08:20.777Z",
+  "completed": "2026-09-08T12:06:19.487Z"
 }

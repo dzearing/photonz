@@ -4,12 +4,12 @@
   "goal": "Inside a stack or a grid, one piece can be the surface the others sit on, painted to the group's own edges. Today you get there by stretching it one way and then the other, and only the second of those two picks tells you what it is about to do. There should be one way in that says what it gives you before you take it.",
   "epic": "ui-layout",
   "priority": "p3-low",
-  "seq": 100,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T08:41:01.561Z",
-  "updated": "2026-09-07T12:58:26.806Z",
+  "updated": "2026-09-08T12:09:07.297Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left rough by the-stretch-menu-says-what-stretching-both-ways (2026-09-07). That task could only reword the existing menus, which meant the hint appears on the SECOND pick only: ResolvedPlacement.choiceTitle(horizontal:arranged:) says Surface behind the rest when the other axis already resolves to stretch. A piece with neither axis stretched sees plain Stretch on both menus. Candidate shapes: a single row or menu item in Layout, or a Layer menu command beside Stack Selection. Core naming is ResolvedPlacement.surfaceTitle and becomesSurface(horizontal:)/(vertical:) in Sources/PhotonzCore/LayerPlacement.swift; the panel is Sources/Photonz/PlacementInspector.swift. Behind next-auto-layout.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-09-07T12:58:26.805Z",
       "note": "seq 1340 -> 100"
+    },
+    {
+      "t": "2026-09-08T12:09:07.296Z",
+      "note": "seq 100 -> 90"
     }
   ]
 }

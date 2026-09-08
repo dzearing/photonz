@@ -4,12 +4,12 @@
   "goal": "Open a document whose text is at a size the Size menu does not offer and the Size box grows to fit it, moving the Weight menu beside it. The row should hold still, the way the Font row now does.",
   "epic": "ui-building",
   "priority": "p3-low",
-  "seq": 70,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T02:32:30.357Z",
-  "updated": "2026-09-07T12:58:26.702Z",
+  "updated": "2026-09-08T12:09:07.189Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left out of the Font menu width task (2026-09-07) on purpose: the fix there shortens a too-long title with an ellipsis, which is fine for a family name and useless for a number. So this one needs a different answer, most likely measuring the widest size the menu could ever show (three digits plus the unit) and holding that width from the start, which costs a few points of width on every document. See queue/audits/2026-09-07-font-menu-one-width.json and MenuMetrics in Sources/Photonz/MenuMetrics.swift.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-07T12:58:26.702Z",
       "note": "seq 1310 -> 70"
+    },
+    {
+      "t": "2026-09-08T12:09:07.188Z",
+      "note": "seq 70 -> 60"
     }
   ]
 }

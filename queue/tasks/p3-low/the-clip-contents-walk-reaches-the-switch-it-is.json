@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T11:05:30.596Z",
-  "updated": "2026-09-07T12:58:26.907Z",
+  "updated": "2026-09-08T12:06:30.295Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured on 2026-09-07, NOT caused by the stricter press rule that landed the same day. Proof: its own dump /tmp/photonz-playtest/clip-contents/panel-2-overflows.json puts \"Clip contents\" (Group, off) at x=1033 y=-65. The panel dump prints the press POINT (PlaytestHarness.readPanel -> control.point), and y=-65 is 65pt BELOW the window content bottom edge, so the OLD point-only check rejected it too. Last good run was 2026-09-06 22:09 (panel-3-cut.json, panel-4-not-clicked.json and panel-5-back.json in that folder still carry that timestamp; only panel-1 and panel-2 are from today). So it regressed when rows were added to the dock between then and now. Likely fix is a scrollPanel step before step 22, the same shape as the fix mixed-one-look-walk got. Related: the-properties-panel-fits-on-the-screen-it-has, which is the app side of the same squeeze.\n\nTriage 2026-09-07: this and the-panel-controls-walk-reaches-the-revert-arrow are the same story as the-properties-panel-fits-on-the-screen-it-has, which is now p1-high. Do that one first: if the panel holds itself to the window, both switches come back into reach and these two may need nothing more than a re-run. If the walk still cannot reach the control after that, fix the walk.",
@@ -35,6 +35,11 @@
     {
       "t": "2026-09-07T13:26:36.149418Z",
       "note": "Panel height changed under this on 2026-09-07 by the-properties-panel-fits-on-the-screen-it-has: the dock now shares out its height, so list shaped sections (Layers, Appearance, Measurements, Library) are bounded and scroll inside themselves while form shaped ones are drawn whole. Measured after it, in a 996pt dock: one text picked Effects 838-996, four picked 574-732, an arrow 712-870, a callout 835-993, fifteen layers 574-732 -- all wholly in view; only two pieces of text picked is still over, by 34pt. Re-run this walk before changing anything: the control it stops on may now be above the fold on its own. Scripts/playtest/dock-fits-the-window-walk.json is the instrument that reads the section offsets back."
+    },
+    {
+      "t": "2026-09-08T12:06:30.293Z",
+      "note": "Triage 2026-09-08: ran the walks myself on a probe built from HEAD (Scripts/playtest-all.sh, 12 passed, 0 failed, 2m 25s). clip-contents-walk 10s ok. The reveal step gets it to the Clip contents switch."
     }
-  ]
+  ],
+  "completed": "2026-09-08T12:06:30.294Z"
 }
