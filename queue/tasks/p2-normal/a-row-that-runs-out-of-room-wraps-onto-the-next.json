@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:17:00.438Z",
-  "updated": "2026-09-08T23:42:55.186366Z",
+  "updated": "2026-09-08T23:43:19.156Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CAPABILITY GAP in auto layout, which the user promoted to now on 2026-09-03. Sources/PhotonzCore/GroupLayout.swift: GroupLayoutKind is stack | grid and nothing else, and a stack has direction, columns, gap, spreadsGap, rowGap, padding, width, height and the four min/max numbers. There is no wrap anywhere in PhotonzCore. A grid wraps at a fixed column count with equal cells, which is not the same shape: chips are different widths.\n\nThis was an open thread in the 2026-09-04 manager report (Wrapping as a third stack behaviour) and nothing has been filed for it since.\n\nWhere it goes: GroupFlow.stacked() in Sources/PhotonzCore/GroupFlow.swift is the one place that walks the flow axis. Three landed features already share that seam (spread, fill the room left over, smallest and largest), so read what is there rather than re-deciding how leftover room is worked out. rowGap already exists on GroupLayout for the grid and is the right number to reuse for the gap between wrapped lines.\n\nA wrapped row needs a width to wrap against, so on a row that hugs its contents the choice does nothing: say so on the row rather than letting it silently do nothing, the way couldSpread already gates the spread choice. Flag: next-auto-layout (FeatureCatalog.autoLayoutFlag), on by default in Next.",
@@ -52,7 +52,12 @@
     {
       "t": "2026-09-08T23:42:55.186366Z",
       "note": "Second adversarial pass, on the built thing. Everything in the acceptance works. Left rough and written into the audit: lines pack from the top on a row that also has a height, nothing warns you a row is overflowing before you go looking in the Layout section (filed as a-group-says-when-its-contents-run-past-its-edge), and Gap keeps its name beside Line gap where a grid would rename both."
+    },
+    {
+      "t": "2026-09-08T23:43:19.154Z",
+      "note": "A row with a width to wrap against now carries on onto the next line, with its own Line gap. Core in GroupLayout/GroupFlow (wraps, couldWrap, GroupFlow.lines), UI in ArrangementInspector.wrapRow. 23 new tests in GroupWrapTests, full suite 5072 green, walked on the probe by Scripts/playtest/wrap-onto-more-lines-walk.json (69 steps, ok) with real window captures. Audit: queue/audits/2026-09-08-row-wrap.json. Pushed as 4cbe762e."
     }
   ],
-  "started": "2026-09-08T23:27:25.651Z"
+  "started": "2026-09-08T23:27:25.651Z",
+  "completed": "2026-09-08T23:43:19.155Z"
 }

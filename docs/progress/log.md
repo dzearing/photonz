@@ -13450,3 +13450,33 @@ off the shelf onto text, and the text tool keeping the NAME so the next block
 typed still follows it.
 
 Next: back to the queue.
+
+## 2026-09-08 — A row that runs out of room wraps onto the next line
+
+Auto layout's last obvious capability gap: a row of pieces of different widths
+ran straight out past its own edge, and the only thing that started a second
+line was a grid of equal cells. A row can now wrap.
+
+**What changed.** `GroupLayout.wraps` (plus `wrapsContents` and `couldWrap`),
+`GroupFlow.stacked` restructured to lay out line by line with `GroupFlow.lines`
+breaking them, and a `Wrap onto more lines` checkbox under Gap in the Layout
+section with a `Line gap` field that appears once it is on. Only a row, only
+where there is a width to wrap against (fixed, floor or ceiling), and a row that
+has not actually wrapped is byte for byte the layout it always had.
+
+**One thing worth knowing.** A wrapped row cannot re-derive its reading order
+through `GroupFlow.rows(of:)`: its half-the-tallest tolerance reads a short piece
+hanging at the bottom of a tall line as a line of its own, and once that piece
+sorts ahead of a wider neighbour the row shuffles itself on the next flow pass.
+`GroupFlow.lines(of:)` clusters by real vertical overlap instead, which is exact
+here because the tallest piece on a line spans the whole line.
+
+**Verified.** 23 tests in `GroupWrapTests`, full suite 5072 green, and walked end
+to end on the probe by `Scripts/playtest/wrap-onto-more-lines-walk.json` with
+real window captures. Audit: `queue/audits/2026-09-08-row-wrap.json`.
+
+**Next / open.** Filed `a-group-says-when-its-contents-run-past-its-edge`:
+nothing tells you a group is overflowing before you go looking in the Layout
+section, and that is true of any group with a size of its own, not only a
+wrapping row. Not in this slice: wrapping a column into columns, and sharing
+leftover height between the lines (they pack from the top on purpose).
