@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T05:08:20.535Z",
-  "updated": "2026-09-08T13:57:04.435Z",
+  "updated": "2026-09-08T15:03:16.014Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 after border-is-an-effect-you-can-add-and-shadow-is-on shipped. That task added BorderEffect (Sources/PhotonzCore/LayerEffects.swift) with a colour, width and position, but left LayerPart.outline in place, which is exactly the duplication its own acceptance asked to settle in user words; it was not settled, so settle it now by retiring the outline. The migration is the careful part, since the outline is the only edge older documents have: convert it on open rather than dropping it, and prove with a test that the picture is unchanged. On the colour: the row header currently carries the effect's colour swatch beside the tick (EffectsListInspector.swift around line 98), while its width and position sit in the settings below, so the colour is the only setting in the wrong place. Move it into the settings and use the same colour control the rest of the panel uses so saved colours work, since a colour that cannot take a style is the odd one out.",
@@ -74,7 +74,12 @@
     {
       "t": "2026-09-08T13:57:04.434Z",
       "note": "seq 20 -> 1"
+    },
+    {
+      "t": "2026-09-08T15:03:16.012Z",
+      "note": "The Outline row is out of Appearance and a layer's edge is a Border in the Effects list. A shape arrives with one already listed, so nothing you draw looks different; documents saved with an outline convert as they open, pixel for pixel on boxes, ovals and picture rings (OutlineFoldRenderTests). Sources/PhotonzCore/OutlineRetirement.swift is the move; LayerStyle.borderWidth/colour/position are now a view over the first Border, the way blurRadius already was; DocumentRenderer has one ring pass instead of two; BorderEffect holds a Paint so a gradient edge survives. Shipped in a501ed6a + 3b07a3f3. Scripts/test.sh green at 4844. Walked on the probe with real captures; audit at queue/audits/2026-09-08-outline-retired.json."
     }
   ],
-  "started": "2026-09-08T13:56:57.666Z"
+  "started": "2026-09-08T13:56:57.666Z",
+  "completed": "2026-09-08T15:03:16.013Z"
 }
