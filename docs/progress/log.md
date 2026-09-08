@@ -12757,3 +12757,31 @@ with the fix removed. No shipping behaviour changed.
 Next: back to the queue. Open question for the user, raised in the audit —
 the W box happily shows `txM` while you type, and it is worth deciding
 whether a size field should refuse anything that is not a number.
+
+## 2026-09-08 — a paint tool throws your marquee away
+
+Confirmed the report on the real app, and smaller than it came in: blank
+document, marquee tool, drag a box, press R once. The dashed outline goes,
+the Selection X/Y/W/H section goes with it, and Command Z brings back
+neither. It undoes the marquee-draw step itself, so the screen does not
+change at all. Same for the ellipse, arrow, line, highlighter, text, crop,
+measure and zoom tools; the pointer, the marquee family and the paint bucket
+keep it.
+
+The clearing is deliberate, with a reason written next to it: dashed chrome
+that a paint tool will not honour reads as interactive. So this is not a
+plain bug fix, it is a reversal of a design call, and the choice changes what
+is on screen. Filed it as a decision with four options, recommending that the
+outline simply stays up, which is what Photoshop does and what the app's own
+comment already cites as the reason it preserves the outline inside the
+selection family.
+
+To make the card decidable, the recommended option was built behind a
+throwaway patch, run in the probe, photographed, and reverted; the working
+tree carries no source change. So both pictures on the card are the real app:
+the outline gone after one press of R, and the outline still up with the
+rectangle tool in hand and a shape drawn over it. The new shape wears a blue
+outline with handles while the marquee keeps its black and white dashes, and
+the two do not read as the same object.
+
+Next: waiting on the answer. Whichever way it lands, the work is small.

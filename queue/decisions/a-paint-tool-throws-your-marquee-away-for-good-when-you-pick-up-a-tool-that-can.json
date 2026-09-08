@@ -1,0 +1,66 @@
+{
+  "id": "a-paint-tool-throws-your-marquee-away-for-good-when-you-pick-up-a-tool-that-can",
+  "taskId": "a-paint-tool-throws-your-marquee-away-for-good",
+  "question": "When you pick up a tool that cannot paint inside a marquee, what should happen to the outline you drew?",
+  "context": "Today, drawing a marquee and then pressing R (rectangle) makes the outline vanish, the Selection X/Y/W/H section disappears from the panel, and Command Z does nothing about it: it steps to your last edit to the picture instead. Reproduced in the app on 2026-09-08. Option A was also built and photographed before filing, so both pictures in the brief are the real app.",
+  "options": [
+    {
+      "id": "a",
+      "label": "It stays up",
+      "summary": "The outline stays on the canvas whatever tool you pick up, and its X, Y, W and H stay in the panel. Draw a rectangle, take a measurement, come back to the marquee tool, and the outline is exactly where you left it. Only you clear it, by clicking bare canvas or pressing Escape.",
+      "pros": [
+        "Nothing you placed by hand ever disappears without you asking",
+        "Matches Photoshop, where the outline survives every tool trip",
+        "The panel keeps showing the numbers, so you can keep lining the box up while you work",
+        "No new rule to learn"
+      ],
+      "cons": [
+        "The dashed outline is on screen while you draw, and a shape you draw is not confined to it, so the outline is not telling you anything about the next stroke"
+      ],
+      "mitigation": "The outline is thin black and white dashes and the thing you are drawing gets a blue outline with handles, so the two never read as the same object. Photoshop has had exactly this for thirty years and people use the leftover outline as a landmark, not a promise."
+    },
+    {
+      "id": "b",
+      "label": "It goes, and one undo brings it back",
+      "summary": "Picking up a paint tool still clears the outline, but it becomes a real step: press Command Z once and the outline is back, along with the tool you were holding when you drew it. Press Command Z again and you are back to your last edit to the picture.",
+      "pros": [
+        "The screen stays quiet: no dashes while you draw",
+        "Nothing is lost for good, which is the actual complaint",
+        "Redo puts you back in the paint tool"
+      ],
+      "cons": [
+        "Undo now has to hand back your tool as well as your outline, so one press can change two things at once, which is more surprising than it sounds"
+      ],
+      "mitigation": "Undo already hands your tool back after a paste, so the app has taught this move once already."
+    },
+    {
+      "id": "c",
+      "label": "It waits out of sight",
+      "summary": "The outline is kept but hidden while a paint tool is in hand. Pick up the pointer or the marquee tool again and it fades back in exactly where it was. Command Z is never spent on it.",
+      "pros": [
+        "Quiet screen while you draw, and nothing is lost",
+        "Undo stays purely about the picture"
+      ],
+      "cons": [
+        "An outline that is invisible but still live is a hidden mode: you would reasonably think it was gone, and then it reappears"
+      ],
+      "mitigation": "A brief note the first time it comes back, saying the outline was kept."
+    },
+    {
+      "id": "d",
+      "label": "Leave it as it is",
+      "summary": "Picking up a paint tool keeps clearing the outline for good, and Command Z keeps stepping over it to your last edit to the picture.",
+      "pros": [
+        "No change, no risk"
+      ],
+      "cons": [
+        "One stray press of a tool letter still throws away an outline you spent time placing, with nothing to bring it back"
+      ],
+      "mitigation": "None. This is the behaviour the report is about.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-08T15:57:55.869Z"
+}
