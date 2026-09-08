@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1740,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T18:25:47.166Z",
-  "updated": "2026-09-08T02:12:32.970Z",
+  "updated": "2026-09-08T02:30:19.614Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fell out of the-colour-swatches-appear-only-for-tools-that-p on 2026-09-07. The paths are EditorState+Regions.fillSelectedLayer (option-delete, foreground), deleteRegion / clearBackgroundLayer (delete, background) and EditorState+Crop backgroundExtended. The pair lives on EditorState.foregroundFillHex / backgroundFillHex, persisted in defaults, and its only home on screen is now Tool.fill via Tool.colorControl == .foregroundBackground. Options worth weighing before building: leave it as is and rely on G plus the existing tooltips, which may well be the right answer; put the pair in a menu (an Edit > Fill row that names the colour); or show it inside the crop bar only while cropping. This may be a decision card rather than a build. RESOLVED as a build rather than a decision card: the two homes are the Edit menu's three fill rows (EditorCommands.fillRows, each row drawing its own colour chip because a menu image is a template by default) and the Canvas inspector's New space well (LayersPanel.CanvasInspector.newSpaceRow). X moved off the bucket's swap button onto an invisible stand-in in the tool bar background (EditorView.fillColorShortcuts), the ToolGroupShortcuts idiom, so it answers under every tool. FillColors in PhotonzCore holds both rules (canFill, newSpace) so the menu row and the key press cannot drift.",
@@ -30,7 +30,7 @@
     },
     {
       "t": "2026-09-08T02:12:00.804Z",
-      "note": "runner failed (exit 1, attempt 1): API Error: Connection refused \u2014 a firewall or proxy may be blocking it (ConnectionRefused)"
+      "note": "runner failed (exit 1, attempt 1): API Error: Connection refused — a firewall or proxy may be blocking it (ConnectionRefused)"
     },
     {
       "t": "2026-09-08T02:12:32.970Z",
@@ -63,6 +63,10 @@
     {
       "t": "2026-09-08T02:46:00.000Z",
       "note": "Scripts/test.sh green (4660 tests, 389 suites) with the new walk in place. Audit at queue/audits/2026-09-08-fill-colours.json with two real screen captures."
+    },
+    {
+      "t": "2026-09-08T02:30:19.613Z",
+      "note": "Three homes for the fill pair, all verified in the probe with real screen captures: the Edit menu's Fill with Foreground (option-delete) / Fill with Background / Swap Fill Colors rows each wearing their colour, the Canvas section's New space well, and a live preview painting the space a canvas-edge drag is adding in the colour it will arrive in. X moved to a tool-bar stand-in so it swaps under every tool (checked under Select and crop). Tool bar width identical on builds with and without the change (Tools 514pt, Grid 52pt, Zoom 199pt). FillColors in PhotonzCore holds both rules with tests; Scripts/test.sh green at 4660 tests. Audit: queue/audits/2026-09-08-fill-colours.json. Commit 044f892b, pushed to main."
     }
   ],
   "started": "2026-09-08T02:12:32.969Z",
@@ -70,6 +74,7 @@
   "lastError": {
     "at": "2026-09-08T02:12:00.803Z",
     "exit": 1,
-    "message": "API Error: Connection refused \u2014 a firewall or proxy may be blocking it (ConnectionRefused)"
-  }
+    "message": "API Error: Connection refused — a firewall or proxy may be blocking it (ConnectionRefused)"
+  },
+  "completed": "2026-09-08T02:30:19.614Z"
 }

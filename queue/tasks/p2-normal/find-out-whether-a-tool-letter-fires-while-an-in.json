@@ -1,0 +1,27 @@
+{
+  "id": "find-out-whether-a-tool-letter-fires-while-an-in",
+  "title": "Find out whether a tool letter fires while an inspector field has the keyboard",
+  "goal": "When you click into one of the number fields in the right hand panel and start typing, a letter may be taken as a tool shortcut instead of going into the field: pressing T there switched to the Text tool and pressing X swapped the fill colours. It is not yet known whether that happens in the real app or only in the scripted test runner, which can never be the active app. Find out which, because if it is real then typing into any panel field is unsafe.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1930,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T02:30:02.266Z",
+  "updated": "2026-09-08T02:30:02.266Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced in the probe on 2026-09-08, but NOT confirmed against the real app, which is why this is p2 and phrased as a question. Walk: open a capture, {\"do\":\"action\",\"action\":\"selectCanvas\"}, {\"do\":\"focus\",\"field\":\"W\"} (log said: W now holds 1440), then {\"do\":\"key\",\"key\":\"t\"} and {\"do\":\"key\",\"key\":\"x\"}. Log went tool select -> tool text, and fg/bg #000000/#FFFFFF -> #FFFFFF/#000000. Both shortcuts are SwiftUI Buttons with .keyboardShortcut on an invisible stand-in: ToolGroupShortcuts in Sources/Photonz/ToolGroupButton.swift and EditorView.fillColorShortcuts. The doubt is that a walk never makes the app active (docs/design/playtest-harness.md, Which shortcuts a walk can press), and SwiftUI may only suppress shortcuts for a focused TextField in the key window of an active app. A standalone AppKit repro on the same day showed a raw NSTextField field editor DOES keep a plain letter from a main-menu key equivalent, which is the opposite result and part of why this needs a real-app check rather than a guess.",
+  "acceptance": [
+    "A written answer, backed by a run, saying whether a tool letter typed into an inspector field reaches the field or fires the shortcut in the REAL app",
+    "If it fires the shortcut, letters typed into a focused panel field go into the field and no tool shortcut runs",
+    "If it is only an artefact of the scripted runner, the playtest harness notes say so, so no later run files this again"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T02:30:02.266Z",
+      "note": "created (manual)"
+    }
+  ]
+}
