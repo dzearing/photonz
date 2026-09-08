@@ -107,6 +107,8 @@ public enum FeatureCatalog {
 
     public static let cutSaysWhatItCannotDoFlag = "next-cut-says-what-it-cannot-do"
 
+    public static let selectionUndoFlag = "next-undo-puts-back-your-marquee"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -501,6 +503,15 @@ public enum FeatureCatalog {
                     name: pasteHandsYouThePointerFlag,
                     title: "Pasting hands you the pointer",
                     description: "A paste leaves you holding the pointer with the pasted thing picked, so the obvious next move, dragging it where you want it, works straight away. Before this you kept whatever tool you had, and a drag on the thing you just pasted drew a new shape over it instead of moving it. The marquee you had up is cleared, since the paste is now the thing you are working on. Undo hands your tool back: press Command Z on a paste and the rectangle, arrow or brush you were using is in your hand again, and redo takes the pointer back up. Pasting several times in a row still steps each copy past the last, each one picked in turn, and undoing the run puts back the tool you started with. Off means paste leaves the tool alone, the way it always did.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: selectionUndoFlag,
+                    title: "Undo puts back a marquee you lost",
+                    description: "A marquee is something you place by hand, so Command Z takes it back like everything else. Draw one, nudge it with the arrow keys, drag the outline somewhere better, invert it or clear it, and each of those is one press to undo and one to put back. Before this, a marquee never entered the undo history at all: press Command Z after spending a minute lining one up and it stepped over your last edit to the picture instead, and the outline was gone for good. Steps interleave, so undo always takes back whatever you did last, paint or outline, in the order you did it. A run of arrow-key nudges counts as one act, the way letting go of a drag does, so holding the key down is still a single press to undo. An edit that consumes the marquee, like grouping layers or New Layer via Copy, still undoes in one press and hands the outline back with it. Off means the marquee stays outside the undo history and is lost the moment it changes.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

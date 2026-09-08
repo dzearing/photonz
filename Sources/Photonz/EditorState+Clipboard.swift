@@ -232,7 +232,7 @@ extension EditorState {
         // Pasting lands a NEW layer — the marquee belonged to the moment
         // before it; keeping stale ants over fresh content misleads
         // (Photoshop also deselects on a plain paste).
-        setSelection(nil)
+        setSelection(nil, recording: false)
         let tool = activeTool
         // The paste's own edit clears this on the way through, so the run it
         // belongs to is carried across by hand.

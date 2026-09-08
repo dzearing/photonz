@@ -200,12 +200,24 @@ final class EditorState {
     /// path — marquee rect, ellipse, wand blob, or boolean combinations.
     /// Nil = no selection. Distinct from layer selection; while a region
     /// exists, region ops (fill, copy, promote) target it.
-    var selection: SelectionRegion?
+    /// Every write lands in History as well, so the stack always knows the
+    /// outline that is really on screen; whether that write is a STEP of its
+    /// own is `setSelection(recording:)`.
+    var selection: SelectionRegion? {
+        didSet { history?.syncSelection(selectionSnapshot) }
+    }
     /// True when the region was made by a region tool (rect/ellipse/wand) —
     /// pixel semantics: ⌫ erases pixels, ⌘C copies the clipped composite,
     /// bucket fills the region. False for the arrow tool's marquee, which
     /// keeps its layer semantics (rubber-band capture, batch delete).
-    private(set) var selectionTargetsPixels = false
+    private(set) var selectionTargetsPixels = false {
+        didSet { history?.syncSelection(selectionSnapshot) }
+    }
+    /// The marquee as History stores it: the outline and what it means, which
+    /// travel together because they are one thing on screen.
+    var selectionSnapshot: SelectionSnapshot {
+        SelectionSnapshot(region: selection, targetsPixels: selectionTargetsPixels)
+    }
     /// Magic-wand color tolerance (Euclidean RGBA distance, 0–255 units).
     /// Persisted like the fill colors — a tuned tolerance outlives relaunch.
     var wandTolerance: Double = UserDefaults.standard.object(forKey: EditorState.wandToleranceKey)
@@ -309,7 +321,7 @@ final class EditorState {
         if cropRect != nil { cancelCrop() }
         if activeTool != .select { setTool(.select) }
         selectedLayerID = nil
-        setSelection(nil)
+        setSelection(nil, recording: false) // entering a mode, not an act on the marquee
         // The settings popover hangs off the chip in the tool bar, and adjusting
         // the grid takes that whole bar over: leaving it up would leave a
         // popover pointing at a control that is no longer there.
@@ -1105,6 +1117,7 @@ final class EditorState {
         withoutRememberingOpenGroups { expandedGroupIDs = [] }
         viewport = .fit(documentSize: document.canvasSize, in: canvasViewSize)
         selection = nil
+        selectionTargetsPixels = false
         selectedLayerID = nil
         activeTool = .select
         previewMoves = [:]
@@ -1401,8 +1414,25 @@ final class EditorState {
     /// `context` is the group the sweep started inside, read at the press
     /// because the press itself lets go of where you were: a band swept while
     /// you are working inside a button picks that button's own pieces.
+    /// `recording` is off for the selection changes that are a CONSEQUENCE of
+    /// an edit rather than an act of their own — grouping consumes the band
+    /// that picked the members, ⌘J consumes the marquee it promoted — because
+    /// that edit's own step already carries the outline that was there before
+    /// it, so one ⌘Z puts both back and a step of its own would only make the
+    /// person press it twice.
+    /// `run` names a burst that undoes as one act (`History.recordSelectionChange`):
+    /// a held arrow key walks the outline and one ⌘Z brings it all the way back.
     func setSelection(_ region: SelectionRegion?, captureLayers: Bool = true,
-                      inside context: UUID? = nil) {
+                      inside context: UUID? = nil,
+                      recording: Bool = true, run: String? = nil) {
+        let before = selectionSnapshot
+        // A defer, because the body below leaves by several doors and the
+        // marquee has to be recorded through all of them.
+        defer {
+            if recording, Experiments.shared.selectionUndoEnabled {
+                history?.recordSelectionChange(from: before, run: run)
+            }
+        }
         selection = region
         selectionTargetsPixels = region != nil && !captureLayers
         guard captureLayers else { return }
@@ -1987,6 +2017,17 @@ final class EditorState {
         raiseCanvasNotice(.linksBroken(LinkBreakReport(breaks: kept)))
     }
 
+    /// Puts the marquee back to the outline that belongs with the picture the
+    /// stack just stepped to. Before `rerender`, so the checks in there — a
+    /// canvas that changed size drops a selection that no longer means
+    /// anything — get to look at the restored outline rather than the one it
+    /// replaced.
+    private func restoreSelectionFromHistory() {
+        guard Experiments.shared.selectionUndoEnabled, let snapshot = history?.selection else { return }
+        selection = snapshot.region
+        selectionTargetsPixels = snapshot.targetsPixels
+    }
+
     func undo() {
         discardDragPreview() // undone edits may invalidate a held sprite
         stylePreview = nil
@@ -1995,6 +2036,7 @@ final class EditorState {
         let returning = pasteToolReturn
         let pastedWasThere = returning.map { document?.layer(id: $0.layer) != nil } ?? false
         history?.undo()
+        restoreSelectionFromHistory()
         rerender()
         // Taking a paste back hands your tool back with it: the paste borrowed
         // the pointer, and the copy it borrowed it for is gone again.
@@ -2014,6 +2056,7 @@ final class EditorState {
         let returning = pasteToolReturn
         let pastedWasGone = returning.map { document?.layer(id: $0.layer) == nil } ?? false
         history?.redo()
+        restoreSelectionFromHistory()
         rerender()
         // ...and putting the paste back takes the pointer up again, so undo
         // and redo of one paste read the same both ways round.

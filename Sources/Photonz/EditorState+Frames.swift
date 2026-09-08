@@ -110,7 +110,8 @@ extension EditorState {
         }
         groupContextID = madeID.flatMap { document?.parentID(of: $0) }
         selectedLayerID = madeID
-        setSelection(nil, captureLayers: false)
+        // Rides with the edit above rather than being a step of its own.
+        setSelection(nil, captureLayers: false, recording: false)
     }
 
     /// The frame inspector's size menu and its typed width and height. The
@@ -205,7 +206,9 @@ extension EditorState {
         // The moment they move it stops being true, so it comes down rather
         // than lying, exactly as it does when a ⇧-click changes the selection.
         // A pixel region belongs to the region tools: that one stays.
-        if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
+        if selection != nil, !selectionTargetsPixels {
+            setSelection(nil, captureLayers: false, recording: false)
+        }
         // A sprite left over from an earlier one-layer drag would float that
         // layer over a picture that has already moved it. Dropped once, not
         // once per mouse move: this runs on every point of the drag.
@@ -226,7 +229,9 @@ extension EditorState {
         // so it comes down the moment they move. A drag already dropped it on
         // its first live update; an arrow-key nudge has no live update at all,
         // and without this the band sits there outlining empty canvas.
-        if selection != nil, !selectionTargetsPixels { setSelection(nil, captureLayers: false) }
+        if selection != nil, !selectionTargetsPixels {
+            setSelection(nil, captureLayers: false, recording: false)
+        }
         discardDragPreview()
         // Draw order, so a selection dropped on a screen keeps its stacking
         // inside it rather than landing in whatever order a dictionary iterated.

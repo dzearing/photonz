@@ -1,0 +1,72 @@
+{
+  "out": "/tmp/photonz-playtest/undo-puts-back-the-marquee",
+  "setup": { "forget": ["grid", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 100], "to": [280, 160], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-rectangle", "note": "a rectangle painted: one layer, canUndo true, region none" },
+
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "drag", "from": [400, 300], "to": [600, 400], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-drawn", "note": "a marquee drawn: region must read 400,300 200x100" },
+    { "do": "snapshot", "name": "2-drawn" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-undo-drawing", "note": "one undo: region must be none and the rectangle must still be there (layers 1)" },
+    { "do": "snapshot", "name": "3-undo-drawing" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-redo-drawing", "note": "redo: region back at 400,300 200x100, still one layer" },
+    { "do": "snapshot", "name": "4-redo-drawing" },
+
+    { "do": "key", "key": "right" },
+    { "do": "key", "key": "right" },
+    { "do": "key", "key": "right" },
+    { "do": "key", "key": "right" },
+    { "do": "key", "key": "right" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-nudged", "note": "five right arrows: region must read 405,300 200x100" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-undo-nudges", "note": "ONE undo must take the whole run of five nudges back: region 400,300 200x100" },
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-redo-nudges", "note": "redo puts the whole run forward again: region 405,300 200x100" },
+
+    { "do": "drag", "from": [500, 350], "to": [560, 390], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-hand-moved", "note": "dragged the outline by hand 60 across and 40 down: region must read 465,340 200x100" },
+    { "do": "snapshot", "name": "8-hand-moved" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "9-undo-hand-move", "note": "undo of the hand move: region back to 405,300 200x100" },
+
+    { "do": "click", "at": [820, 620] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "10-cleared", "note": "a click on bare canvas with the marquee tool clears it: region none" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "11-undo-clear", "note": "undo puts the cleared marquee back: region 405,300 200x100" },
+    { "do": "snapshot", "name": "11-undo-clear" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [640, 480], "to": [760, 560], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "12-second-rect", "note": "a second rectangle painted while the marquee is up: layers 2" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "13-undo-picture", "note": "undo takes the PICTURE edit back (layers 1) and leaves the marquee where it was" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "14-undo-selection", "note": "the next undo is the selection step again: region none, layers still 1" },
+    { "do": "snapshot", "name": "14-undo-selection" },
+    { "do": "render", "name": "15-final-render" }
+  ]
+}

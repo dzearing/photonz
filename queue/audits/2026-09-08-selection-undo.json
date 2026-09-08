@@ -1,0 +1,26 @@
+{
+  "feature": "Undo puts back a marquee you lost",
+  "epic": "measure-redline",
+  "summary": "A marquee is now part of the undo history, so Command Z takes back drawing one, nudging it, dragging it somewhere better, or clearing it, and Command Shift Z puts it back. Before this a marquee never entered the history at all: pressing Command Z after lining one up stepped over your last edit to the picture instead and the outline was gone for good.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag \"Undo puts back a marquee you lost\" is on by default.",
+  "try": [
+    { "do": "Open any picture, press M for the marquee, and drag out an outline you care about.", "shot": "2026-09-08-selection-undo-1-drawn.png" },
+    { "do": "Press Command Z once.", "shot": "2026-09-08-selection-undo-2-undone.png" },
+    { "do": "Press Command Shift Z to put the outline back." },
+    { "do": "Tap the right arrow key five times, then press Command Z once: the whole run of nudges comes back in one press." },
+    { "do": "Drag the outline itself somewhere else, then press Command Z." },
+    { "do": "Click on bare canvas to clear the marquee, then press Command Z.", "shot": "2026-09-08-selection-undo-3-put-back.png" },
+    { "do": "With the marquee up, paint a rectangle, then press Command Z twice: the first press takes the rectangle back, the second takes back the outline." }
+  ],
+  "evaluate": [
+    "When you press Command Z after placing a marquee, is taking back the outline what you expected, or did you want your last edit to the picture back instead?",
+    "A whole run of arrow-key nudges comes back in one press, however long you spent nudging. Is that the right amount to take back, or do you want each pause between nudges to start a fresh step?",
+    "Undoing a marquee leaves the picture untouched but still counts as a press. Does the undo history feel cluttered by outline steps once you have done a few?",
+    "Typing a number into the Selection panel is an undo step too, and consecutive typed numbers join one step. Should each field you commit be its own press to take back?"
+  ],
+  "rough": [
+    "Picking up a tool that cannot use a marquee, like the brush or the rectangle, still throws the outline away and nothing brings it back. That is pre-existing behaviour rather than something this change caused, and it is filed on its own as \"A paint tool throws your marquee away for good\" because whether the tool should drop it at all is a question worth answering first.",
+    "A run of nudges has no time limit: nudge, walk away, come back and nudge again, and one press takes back both. That is deliberate, on the grounds that fine-tuning an outline is one act, but it is the line most likely to be wrong.",
+    "The launch line reported the probe's Screen Recording grant as unknown, but the walk did write real window captures, and the three shots here are those captures rather than offscreen renders."
+  ]
+}

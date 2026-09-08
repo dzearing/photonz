@@ -1,0 +1,28 @@
+{
+  "id": "a-paint-tool-throws-your-marquee-away-for-good",
+  "title": "A paint tool throws your marquee away for good",
+  "goal": "Draw a marquee, then pick up the brush or the rectangle, and the outline vanishes. Nothing brings it back: Command Z takes back your last edit to the picture instead, so an outline you spent time placing is lost to a single keystroke on the wrong tool. Either the tool should leave the marquee alone, or losing it should be one press to undo.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 1940,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T03:31:15.834Z",
+  "updated": "2026-09-08T03:31:15.834Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-08 while finishing undo-puts-back-a-selection-you-lost, and reproduced rather than read off the code.\n\nRepro: Scripts/playtest.sh Scripts/playtest/undo-puts-back-the-marquee-walk.json\n\nFrom its log.json, stage 11 (undo of a clear) then a tool switch to rectangle:\n  11-undo-clear   region=405,300 200x100 layers=2 canUndo=True\n  12-second-rect  region=none        layers=3 canUndo=True   <- after {\"do\":\"tool\",\"tool\":\"rectangle\"}\n  13-undo-picture region=none        layers=2 canUndo=True   <- undo took the rectangle back, outline still gone\n  14-undo-selection region=400,300 200x100 layers=2          <- keeps stepping back past the run, never returns 405,300\n\nCause: EditorState.setTool does a raw `selection = nil` for a tool where `preservesSelectionRegion` is false (EditorState.swift:1561, Tools.swift:106). That write syncs to History but is never recorded as a step, deliberately, because restoring an outline while a brush is in hand shows ants the paint tool does not honour. So the fix is a UX call first: Photoshop keeps the selection across every tool change, which would make the whole question go away. Worth a decision card before code.",
+  "acceptance": [
+    "Picking up a tool that cannot use a marquee either leaves the outline alone or records losing it, whichever the decision lands on",
+    "If it is recorded, one Command Z after picking that tool puts the outline back and the outline is legible on screen while that tool is in hand",
+    "If it is left alone, the outline is still there when you pick a marquee tool back up",
+    "Undo of a picture edit is unaffected either way"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T03:31:15.834Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -396,6 +396,11 @@ extension Experiments {
     /// flag off only takes away the View row and the Grid controls.
     var canvasGridEnabled: Bool { isEnabled(FeatureCatalog.canvasGridFlag) }
 
+    /// `next-undo-puts-back-your-marquee`: whether a selection is part of the
+    /// undo history at all. Off, nothing about a marquee is recorded and
+    /// nothing about one is restored, which is exactly how it behaved before.
+    var selectionUndoEnabled: Bool { isEnabled(FeatureCatalog.selectionUndoFlag) }
+
     /// `next-copy-picks-your-layer`: whether the layer you picked survives a
     /// marquee. On, ⌘C takes that layer's pixels inside the marquee and ⇧⌘C
     /// is Copy Merged; off, the marquee supersedes the layer and ⌘C hands back

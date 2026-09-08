@@ -5,9 +5,26 @@ import Foundation
 /// in the ImageStore), so whole-document snapshots are cheap and bulletproof.
 public struct History: Sendable {
     public private(set) var current: PhotonzDocument
-    private var undoStack: [PhotonzDocument] = []
-    private var redoStack: [PhotonzDocument] = []
+    /// The marquee that belongs with `current`. A selection is editor state
+    /// and is never saved, but it is something a person places by hand, so it
+    /// rides in this stack alongside the picture: one ⌘Z always steps back
+    /// over whatever you did last, paint or outline (`SelectionSnapshot`).
+    public private(set) var selection = SelectionSnapshot()
+
+    /// One point the stack can return to: the picture and the marquee that
+    /// was over it, put back together.
+    private struct Step: Sendable {
+        var document: PhotonzDocument
+        var selection: SelectionSnapshot
+    }
+
+    private var undoStack: [Step] = []
+    private var redoStack: [Step] = []
     private let limit: Int
+    /// The name of the run of selection changes the last step belongs to, so a
+    /// burst of arrow-key nudges collapses into one step. Anything else landing
+    /// in the stack ends the run.
+    private var runName: String?
 
     public init(document: PhotonzDocument, limit: Int = 200) {
         var document = document
@@ -56,23 +73,64 @@ public struct History: Sendable {
         if sync.updatedInstances > 0 { next.reflowLayouts() }
         guard next != current else { return EditReport() }
         let breaks = LinkBreakReport.between(current, next)
-        undoStack.append(current)
-        if undoStack.count > limit { undoStack.removeFirst() }
+        push(Step(document: current, selection: selection))
         redoStack.removeAll()
         current = next
         return EditReport(componentSync: sync, linkBreaks: breaks)
     }
 
+    /// The marquee moved without that being a step of its own — the canvas was
+    /// resized out from under it, a tool that has no use for it put it down,
+    /// or an edit consumed it. The stack simply follows along, so the NEXT
+    /// step records the outline that is really on screen.
+    public mutating func syncSelection(_ next: SelectionSnapshot) {
+        selection = next
+    }
+
+    /// Records the marquee's move from `previous` to where it is now as one
+    /// undoable step. Call it after the change has landed (`syncSelection`
+    /// having carried it here), which is how the same didSet can serve both.
+    ///
+    /// `run` names a burst that should undo as a single act: five taps of the
+    /// arrow key put the outline five points along, and one ⌘Z brings it all
+    /// the way back, the way letting go of a drag records once. Consecutive
+    /// changes sharing a run join the step already on the stack; a different
+    /// run, no run at all, an edit to the picture, or an undo all end it.
+    ///
+    /// Returns whether anything was recorded.
+    @discardableResult
+    public mutating func recordSelectionChange(from previous: SelectionSnapshot,
+                                               run: String? = nil) -> Bool {
+        guard previous != selection else { return false }
+        redoStack.removeAll()
+        // The step already on the stack holds where the run began, which is
+        // where undo has to land, so there is nothing to add.
+        if let run, run == runName, !undoStack.isEmpty { return true }
+        push(Step(document: current, selection: previous))
+        runName = run
+        return true
+    }
+
     public mutating func undo() {
         guard let previous = undoStack.popLast() else { return }
-        redoStack.append(current)
-        current = previous
+        redoStack.append(Step(document: current, selection: selection))
+        current = previous.document
+        selection = previous.selection
+        runName = nil
     }
 
     public mutating func redo() {
         guard let next = redoStack.popLast() else { return }
-        undoStack.append(current)
-        current = next
+        undoStack.append(Step(document: current, selection: selection))
+        current = next.document
+        selection = next.selection
+        runName = nil
+    }
+
+    private mutating func push(_ step: Step) {
+        undoStack.append(step)
+        if undoStack.count > limit { undoStack.removeFirst() }
+        runName = nil
     }
 }
 

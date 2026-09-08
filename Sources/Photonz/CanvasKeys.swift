@@ -131,7 +131,9 @@ extension CanvasNSView {
                         layerWouldMove: nudgeWouldMoveALayer) == .region,
            let delta = Nudge.delta(keyCode: event.keyCode, large: coarseNudge),
            let moved = region.translated(by: delta) {
-            commitSelection(moved, capture: false)
+            // One run: a held arrow key walks the outline and one ⌘Z brings it
+            // all the way back, rather than thirty presses retracing it.
+            commitSelection(moved, capture: false, run: "region-nudge")
             return
         }
         // Arrow keys nudge a whole multi-selection: every picked layer travels

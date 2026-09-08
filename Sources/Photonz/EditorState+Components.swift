@@ -1043,7 +1043,7 @@ extension EditorState {
         // selected: the next thing you do is almost always to it.
         groupContextID = document.parentID(of: made.group)
         selectedLayerID = made.group
-        setSelection(nil, captureLayers: false)
+        setSelection(nil, captureLayers: false, recording: false)
         let knob = document.componentHome(of: made.group)
             .flatMap { document.componentProperty(componentID: $0, propertyID: made.property) }?.name
         raiseCanvasNotice(.componentChoiceMade(options: made.options, knob: knob ?? "the choice knob"))

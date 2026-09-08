@@ -304,7 +304,9 @@ struct EditorView: View {
                        lumaField: editorState.measureLumaField,
                        onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
                        onViewportChange: { editorState.setViewport($0) },
-                       onSelectionChange: { editorState.setSelection($0, captureLayers: $1, inside: $2) },
+                       onSelectionChange: {
+                           editorState.setSelection($0, captureLayers: $1, inside: $2, run: $3)
+                       },
                        onWandAt: { editorState.wandSelect(at: $0, mode: $1) },
                        onDeleteRegion: { editorState.deleteRegion() },
                        onRegionMoveBegin: { editorState.beginRegionMove(copy: $0) },

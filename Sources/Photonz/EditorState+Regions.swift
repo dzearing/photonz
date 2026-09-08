@@ -61,9 +61,10 @@ extension EditorState {
     /// A number typed into one of the four fields while the panel is reading
     /// the marquee: the outline moves or scales to it.
     ///
-    /// Not an undo step, because the selection has never been one: it is
-    /// editor state that never enters History, so an arrow nudge of the
-    /// marquee is not undoable either and a typed number matches it.
+    /// An undo step, like every other act on the marquee: a number typed here
+    /// and an arrow key on the canvas both move the outline, so ⌘Z takes back
+    /// either. A run of them collapses into one step, so holding the arrow in
+    /// a field is one press to undo rather than thirty.
     func setRegionGeometry(field: LayerGeometryField, to value: CGFloat) {
         guard let box = regionGeometry?.applying(value, to: field) else { return }
         commitRegionBox(box)
@@ -83,7 +84,7 @@ extension EditorState {
     /// keystroke can never lose the marquee.
     private func commitRegionBox(_ box: CGRect) {
         guard let resized = selection?.resized(to: box) else { return }
-        selection = resized
+        setSelection(resized, captureLayers: false, run: "region-geometry")
     }
 
     /// X — swap foreground and background, like Photoshop.
@@ -313,9 +314,10 @@ extension EditorState {
         clearPreviewAfterNextFrame = dragPreview != nil
         let newRef = store.register(stamped)
         perform { $0.updateLayer(id: session.targetID) { $0.content = .image(newRef) } }
-        // The selection follows its content (Photoshop).
+        // The selection follows its content (Photoshop), inside the same step
+        // as the bake: one ⌘Z puts the pixels and the outline back together.
         if let moved = selection?.translated(by: CGVector(dx: delta.x, dy: delta.y)) {
-            setSelection(moved, captureLayers: false)
+            setSelection(moved, captureLayers: false, recording: false)
         }
     }
 

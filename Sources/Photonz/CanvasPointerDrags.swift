@@ -1210,10 +1210,12 @@ extension CanvasNSView {
         }
     }
 
+    /// `run` names a burst of changes that undo as one act: the arrow keys
+    /// walking the outline are one, a drag or a click is not.
     func commitSelection(_ region: SelectionRegion?, capture: Bool,
-                                 inside context: UUID? = nil) {
+                                 inside context: UUID? = nil, run: String? = nil) {
         selection = region
         refreshOverlays()
-        onSelectionChange(region, capture, context)
+        onSelectionChange(region, capture, context, run)
     }
 }

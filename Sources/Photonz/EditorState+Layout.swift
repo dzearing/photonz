@@ -225,7 +225,8 @@ extension EditorState {
         groupContextID = madeID.flatMap { document?.parentID(of: $0) }
         selectedLayerID = madeID
         // The rubber band that picked the members no longer describes anything.
-        setSelection(nil, captureLayers: false)
+        // Rides with the edit above rather than being a step of its own.
+        setSelection(nil, captureLayers: false, recording: false)
     }
 
     /// Layer ▸ Ungroup (⇧⌘G): takes the selected groups apart in one undo
@@ -241,7 +242,7 @@ extension EditorState {
         var freed: [UUID] = []
         perform { freed = $0.ungroupLayers(ids: ids) }
         if groupContextID.map({ document?.layer(id: $0) == nil }) ?? false { groupContextID = nil }
-        setSelection(nil, captureLayers: false)
+        setSelection(nil, captureLayers: false, recording: false)
         selectLayers(Set(freed).union(kept))
     }
 

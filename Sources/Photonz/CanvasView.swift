@@ -92,7 +92,7 @@ struct CanvasView: NSViewRepresentable {
     /// (region, captureLayers): capture is true for the arrow tool's marquee
     /// (which doubles as rubber-band layer selection), false for the region
     /// selection tools.
-    let onSelectionChange: (SelectionRegion?, Bool, UUID?) -> Void
+    let onSelectionChange: (SelectionRegion?, Bool, UUID?, String?) -> Void
     /// Magic-wand click: (document point, combine mode). Flood fill runs
     /// app-side (off-main) and lands via the `selection` prop.
     let onWandAt: (CGPoint, SelectionRegion.Mode) -> Void
@@ -353,7 +353,10 @@ struct CanvasView: NSViewRepresentable {
 final class CanvasNSView: NSView {
     var onViewSizeChange: ((CGSize) -> Void) = { _ in }
     var onViewportChange: ((Viewport) -> Void) = { _ in }
-    var onSelectionChange: ((SelectionRegion?, Bool, UUID?) -> Void) = { _, _, _ in }
+    /// The fourth value names a RUN of changes that should undo as one act —
+    /// a held arrow key walking the outline — and is nil for a change that
+    /// stands alone (`History.recordSelectionChange`).
+    var onSelectionChange: ((SelectionRegion?, Bool, UUID?, String?) -> Void) = { _, _, _, _ in }
     var onWandAt: ((CGPoint, SelectionRegion.Mode) -> Void) = { _, _ in }
     var onDeleteRegion: () -> Void = {}
     var onRegionMoveBegin: ((Bool) -> CGRect?) = { _ in nil }
