@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:51:11.380Z",
-  "updated": "2026-09-07T21:51:11.417Z",
+  "updated": "2026-09-08T00:22:02.787Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 with a screenshot of a Blur effect. The rule is drawn by OwnedSettings (Sources/Photonz/PartsInspector.swift line 268), a 2 point rounded rectangle with a leading padding of 1, and it is used by both lists, from EffectsListInspector.swift line 124 and PartsInspector.swift line 167. The row above puts the title first at ColorPartLayout.labelWidth of 68 and then the switch at switchWidth of 16 (EffectsListInspector.swift lines 94 to 98, widths in ColorStylePanel.swift lines 221 and 225), so the tick sits about 68 points in while the rule starts at the row's leading edge. Hence the mismatch. Fix by giving the rule the same leading offset the switch column has, taken from ColorPartLayout rather than typed again, and note the tick is 16 wide against a 2 wide rule so centring the rule on the tick means offsetting by the switch column's leading edge plus half the difference. Since OwnedSettings is shared, this lands in both lists at once, which is why the acceptance checks both.",
@@ -29,6 +29,35 @@
     {
       "t": "2026-09-07T21:51:11.417Z",
       "note": "seq 210 -> 5"
+    },
+    {
+      "t": "2026-09-08T00:08:20.777Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T00:21:08.000Z",
+      "note": "Reproduced and measured, probe capture at the default 264pt panel: the rule's middle sits 2pt from the row's leading edge, the tick's middle sits 83pt in. So the gap the user saw is 81pt. Tick ink measured at 76.0..90.0, i.e. the small checkbox draws 14 wide inside a 16 wide column that is leading aligned, so the tick's middle is NOT the column's middle."
+    },
+    {
+      "t": "2026-09-08T00:21:08.000Z",
+      "note": "Adversarial review before building: the rule cannot move right without the settings moving right with it, and the settings have a hard minimum of about 175pt. Built it anyway to see. At 264 the row overflows BOTH panel edges: the name is clipped left, the value clipped right, and Scripts/playtest.sh failed at step 25 because the Remove cross was pushed off the window and could no longer be pressed. Evidence: queue/audits/2026-09-07-effect-rule-spills.png."
+    },
+    {
+      "t": "2026-09-08T00:21:08.000Z",
+      "note": "Two ways out, both built and photographed. Tick before the name: rule middle 1037.0, tick middle 1037.0, exact, walk passes, settings keep their width, colour/grip/cross do not move (queue/audits/2026-09-07-effect-rule-tick-leads.png). As asked, with the panel widened: works from about 300pt, fails below (queue/audits/2026-09-07-effect-rule-wider-panel.png)."
+    },
+    {
+      "t": "2026-09-08T00:21:08.000Z",
+      "note": "Which one is a visual direction call over every row in two lists, and this panel's layout has been the user's call each time, so it is a decision rather than a guess. Sources reverted to the shipped state; the captures and brief are committed."
+    },
+    {
+      "t": "2026-09-08T00:21:08.000Z",
+      "note": "Implementation detail for whoever picks it up: the shared value is ColorPartLayout.tickCenter = switchLeading + tickWidth/2, read by OwnedSettings as .padding(.leading, tickCenter - ruleWidth/2) (PartsInspector.swift). One number serves both lists. For option A also swap the Text and the switch in the row HStacks of EffectsListInspector.swift and PartsInspector.swift and set switchLeading to 0; the two column widths add up the same either way, so nothing downstream moves."
+    },
+    {
+      "t": "2026-09-08T00:22:02.786Z",
+      "note": "Lining the rule up under the tick where the tick sits today costs 81pt of width and the settings do not fit: the row spills past both panel edges and the Remove cross falls off the window (playtest step 25 failed). Built and photographed three ways out; which one is a visual direction call over every row in two lists. Decision opened with a brief and four captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T00:08:20.777Z"
 }

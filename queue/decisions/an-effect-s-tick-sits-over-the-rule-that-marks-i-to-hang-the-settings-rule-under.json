@@ -1,0 +1,55 @@
+{
+  "id": "an-effect-s-tick-sits-over-the-rule-that-marks-i-to-hang-the-settings-rule-under",
+  "taskId": "an-effect-s-tick-sits-over-the-rule-that-marks-i",
+  "question": "To hang the settings rule under the effect's tick, something has to move. Which?",
+  "context": "Lining the rule up under the tick where the tick sits today costs 81 points of width, and the settings do not fit: at the current panel width the row spills past both edges and the cross that removes an effect falls off the window. Verified with a probe capture. Three ways out, with pictures in the brief.",
+  "options": [
+    {
+      "id": "a",
+      "label": "The tick leads the row",
+      "summary": "Every row in Appearance and Effects starts with its tick, and the name comes after it, so a row reads \"tick, Blur\". The rule that runs down beside that effect's settings hangs straight under the tick, near the left edge, and the settings keep all the room they have today.",
+      "pros": [
+        "The tick and the rule share a line, which is the thing that looked wrong.",
+        "The settings keep their full width, so sliders stay long and nothing is cut off.",
+        "It is how a checkbox and its label are ordered nearly everywhere else on the Mac.",
+        "The colour, the drag grip and the cross do not move at all."
+      ],
+      "cons": [
+        "The column of names you scan down is no longer flush with the panel's edge: every name shifts about a quarter of an inch to the right, behind a column of ticks."
+      ],
+      "mitigation": "The names stay in one straight column, all starting at the same place, so scanning the list still works the same way. Only their left edge moves."
+    },
+    {
+      "id": "b",
+      "label": "The settings step in under the tick, and the panel gets wider",
+      "summary": "The row stays exactly as it is, name first. The settings and their rule step in a long way, to sit under the tick. Because that leaves the settings very little room, the panel has to be wider: it would open at about 300 points instead of 264, and it could no longer be dragged narrower than that.",
+      "pros": [
+        "Nothing in the row moves, so the panel reads exactly as it does today.",
+        "The rule lines up under the tick, which is what was asked for."
+      ],
+      "cons": [
+        "The panel permanently takes more room from the picture you are working on.",
+        "You can no longer pull the panel in narrow when you want the canvas back.",
+        "The settings sit a long way in from the edge, which reads as a deep hanging indent."
+      ],
+      "mitigation": "The panel only needs the extra width while a row's settings are showing, and that is most of the time in Effects, so it would be set once rather than jumping about."
+    },
+    {
+      "id": "c",
+      "label": "Leave it as it is",
+      "summary": "The rule keeps starting at the panel's left edge, under the row's name rather than under its tick. Nothing changes.",
+      "pros": [
+        "No change to a panel you have just finished settling.",
+        "The settings keep the most room of any option."
+      ],
+      "cons": [
+        "The thing you reported stays: the rule looks tacked on rather than hanging from the tick it belongs to."
+      ],
+      "mitigation": "The rule still groups the settings correctly, so which blur belongs to which effect is still readable. It is only the alignment that is off.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-08T00:20:26.944Z"
+}

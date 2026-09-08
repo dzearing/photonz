@@ -2,6 +2,44 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-07 — The rule under an effect's tick does not fit where it was asked to go (go loop)
+
+Queue task `an-effect-s-tick-sits-over-the-rule-that-marks-i` (epic
+`ui-building`), reported by the user with a screenshot: on an effect row the
+tick and the vertical rule that marks that effect's settings do not share a
+line, so the rule looks tacked on.
+
+**Reproduced and measured first.** A probe capture at the default 264pt panel
+puts the rule's middle 2pt from the row's leading edge and the tick's middle
+83pt in, an 81pt gap. Also measured, because the task's own note assumed
+otherwise: the small checkbox draws 14pt wide inside a 16pt column that is
+leading aligned, so the tick's middle is not the column's middle.
+
+**The fix as asked does not fit.** Moving the rule right moves the settings
+right with it, and the settings need about 175pt. Built it and photographed it:
+at 264 the row spills past both panel edges, the name is clipped on the left,
+the value on the right, and `Scripts/playtest.sh` failed at step 25 because the
+cross that removes an effect had been pushed off the window.
+
+Two ways out, both built and photographed rather than argued:
+
+- **Tick before the name.** Rule middle 1037.0, tick middle 1037.0, exact. Walk
+  passes, settings keep their width, and the colour, grip and cross do not move
+  at all. Only the name shifts 24pt right.
+- **As asked, panel widened.** Works from about 300pt, fails below it, so the
+  inspector's 220pt minimum would have to go.
+
+Which one is a visual direction call across every row in two lists, and this
+panel's layout has been the user's own call each time, so it is a decision card
+rather than a guess: `queue/decisions/an-effect-s-tick-sits-over-the-rule-that-marks-i-to-hang-the-settings-rule-under.md`,
+with four captures under `queue/audits/2026-09-07-effect-rule-*.png`. Sources
+are back at the shipped state; the working implementation is written down in the
+task's log so whichever option wins is a short run.
+
+Open question: none beyond the card. `Scripts/test.sh` green, 4604 tests.
+
+Next: the queue picks the next task; this one returns when the card is answered.
+
 ## 2026-09-07 — A border is something you add, and a shadow is one entry (go loop)
 
 Queue task `border-is-an-effect-you-can-add-and-shadow-is-on` (epic
