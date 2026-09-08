@@ -5,11 +5,11 @@
   "epic": "loop-robustness",
   "priority": "p2-normal",
   "seq": 1800,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "tooling",
   "created": "2026-09-07T19:36:17.285Z",
-  "updated": "2026-09-08T07:39:06.851Z",
+  "updated": "2026-09-08T07:39:28.276Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-07 on a tree with no changes to decisions: the check \"with two answers in, the history quotes the one that came last\" failed on 4 of 6 runs. Almost certainly two resolveDecision calls landing in the same millisecond, so the ISO timestamps tie and the ordering that decides which answer is last is undefined. Fix the drill or the tie-break in queue-lib, not by sleeping.",
@@ -65,7 +65,12 @@
     {
       "t": "2026-09-08T07:39:06.851Z",
       "note": "No audit written: this is tooling with no user-facing surface to playtest."
+    },
+    {
+      "t": "2026-09-08T07:39:28.274Z",
+      "note": "queue-lib.mjs: now() is strictly monotonic so two writes in one process never share a millisecond, plus an explicit created-then-id fallback in the last-answer sort for cross-process ties. Root cause was readDecisions returning cards newest-first while the sort compared only answer.resolved, so a tie made .pop() take the oldest card and quote the wrong answer. Verified: drill 10/10 green, and still 10/10 red when the guarded behaviour is deliberately broken; churn, audit-index, state-poll and failure drills pass; Scripts/test.sh green at 4757 tests. Commit 018034fe."
     }
   ],
-  "started": "2026-09-08T07:34:08.467Z"
+  "started": "2026-09-08T07:34:08.467Z",
+  "completed": "2026-09-08T07:39:28.275Z"
 }
