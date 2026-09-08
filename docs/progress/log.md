@@ -12732,3 +12732,28 @@ Next: the audit asks whether the eyes should share one column down the panel
 place) and whether Appearance should follow Effects or stay on ticks. Also
 filed: thirteen scripted walks still reach for an Outline row that became a
 Border on 2026-09-07, confirmed pre-existing by stashing this change.
+
+## 2026-09-08 — a tool letter typed into a panel field
+
+A walk had reported that typing in the right hand panel switched tools: T
+picked up the Text tool, X swapped the fill colours. Settled it on the real
+app with a new probe-only diagnostic (`--shortcut-diag`), which launches
+normally, takes the front, and presses each key three ways with and without
+the panel's W box holding the keyboard. The app was never doing it. Through
+`NSApplication.sendEvent`, t, x and ⇧M all went into the box and fired
+nothing; the same presses with nothing focused fired all three. Only the way
+the playtest harness pressed keys, offering the window's key equivalents by
+hand, fired them.
+
+So the harness applies AppKit's rule now: a field editor holding the
+keyboard, nothing but shift held, and a press that would insert a character
+means typing, and the key equivalents are never offered. Shift counts,
+measured rather than assumed, because ⇧M behaved exactly like a plain
+letter. `expect field` also read `NSTextField.stringValue`, which lags a
+live edit, and now reads the field editor.
+`Scripts/playtest/typing-in-a-field-walk.json` holds it and fails at step 7
+with the fix removed. No shipping behaviour changed.
+
+Next: back to the queue. Open question for the user, raised in the audit —
+the W box happily shows `txM` while you type, and it is worth deciding
+whether a size field should refuse anything that is not a number.
