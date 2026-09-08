@@ -2275,11 +2275,20 @@ be the size of it. So:
 
 **A hugging axis takes that axis over.** There is no spare room on it, so the
 contents keep the arrangement they already have and move as one to the room at
-the near edge; the group's own corner holds still, so a control grows to the
-right and downward. Typed X and Y are closed on that axis, with the reason
-pointing at Padding, the same way a stack closes the axis it flows along. An
-axis with a size of its own is untouched: the placement rules still answer it,
-which is why a button dragged wider keeps its label in the middle.
+the near edge. Typed X and Y are closed on that axis, with the reason pointing
+at Padding, the same way a stack closes the axis it flows along. An axis with a
+size of its own is untouched: the placement rules still answer it, which is why
+a button dragged wider keeps its label in the middle.
+
+**Room grows the box outward, it does not move the drawing** (fixed 2026-09-08).
+Where the contents move in to make space at the near edges, the group moves back
+by exactly as much, so what you can see stays where you put it and the box
+closes around it 16 further out on every side that is the size of its contents.
+Before this, typing 16 into a group set to Free slid the whole drawing right and
+down by 16 and grew the box only right and down: nothing got roomier, it just
+moved. A group with a SURFACE in it is the exception, because there the box IS
+the thing you can see: a button's pill is pinned at its top left and grows to
+the right as its room grows, with the label riding along inside it.
 
 **Dragging a handle still sizes rather than scales**, and it pins only the axis
 that changed: drag a hugging button wider and it holds that width while its

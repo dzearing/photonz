@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/room-grows-outward",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 160], "to": [320, 240], "steps": 8 },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [380, 280], "to": [480, 360], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "drag", "from": [150, 110], "to": [540, 420], "steps": 10 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-grouped", "note": "a rectangle and an ellipse, loosely placed, are now one group that arranges nothing. The Layout section should read Free with a Padding field." },
+    { "do": "snapshot", "name": "room-1-grouped" },
+    { "do": "render", "name": "room-1-grouped-doc" },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "40" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-room", "note": "40 of room typed. The rectangle and the ellipse must be EXACTLY where they were; only the selection box should have grown 40 further out on every side." },
+    { "do": "snapshot", "name": "room-2-forty" },
+    { "do": "render", "name": "room-2-forty-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-undone", "note": "one undo puts the room back to 0 and the box back to the size it was, with nothing moved" },
+    { "do": "snapshot", "name": "room-3-undone" },
+    { "do": "render", "name": "room-3-undone-doc" },
+    { "do": "panel", "stage": "4-panel" }
+  ]
+}

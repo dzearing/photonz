@@ -83,10 +83,18 @@ enum GroupFlow {
         var out = layer
         out.children = group.children.map(flowing)
         guard let layout = group.layout else { return out }
-        out.children = placed(out.children, layout: layout,
-                              contentPlacement: group.contentPlacement,
-                              bounds: Bounds.of(layer, group, layout),
-                              onAScreen: group.isFrame)
+        let settled = placed(out.children, layout: layout,
+                             contentPlacement: group.contentPlacement,
+                             bounds: Bounds.of(layer, group, layout),
+                             onAScreen: group.isFrame)
+        out.children = settled.children
+        // Room on a group that arranges nothing grows the box OUTWARD around
+        // what is inside it. The contents had to move inside the group to make
+        // space at the near edges, so the group moves back by exactly as much
+        // and everything lands on the canvas where somebody put it: type 16
+        // and a margin appears, rather than the whole drawing sliding right
+        // and down by 16.
+        out.frame = out.frame.offsetBy(dx: -settled.grew.dx, dy: -settled.grew.dy)
         return out
     }
 
@@ -101,7 +109,7 @@ enum GroupFlow {
     /// take.
     private static func placed(_ children: [Layer], layout: GroupLayout,
                                contentPlacement: LayerPlacement?,
-                               bounds: Bounds, onAScreen: Bool) -> [Layer] {
+                               bounds: Bounds, onAScreen: Bool) -> Settled {
         // Any label a container narrowed last time goes back to the width its
         // WORDS want before anything is measured, so every answer below is
         // worked out from the words rather than from the last answer.
@@ -146,7 +154,42 @@ enum GroupFlow {
                                to: CGRect(x: x.low, y: y.low, width: x.length, height: y.length),
                                fillingHeight: rules[index].vertical == .stretch)
         }
-        return out
+        return Settled(children: out,
+                       grew: layout.arranges
+                           ? .zero
+                           : growth(fitted, rules: rules, layout: layout, bounds: bounds))
+    }
+
+    /// One group's contents after the flow, and how far the group itself has to
+    /// move to leave them where they were on the canvas.
+    struct Settled {
+        var children: [Layer]
+        var grew: CGVector
+    }
+
+    /// How far a group that arranges nothing pushed its contents in from its
+    /// near edges, which is how far the group moves back so that closing around
+    /// them grows its box OUTWARD instead of sliding the whole drawing across
+    /// and down.
+    ///
+    /// Only on an axis that is the size of its CONTENTS. An axis with a size
+    /// somebody gave it does not move its contents in the first place, and an
+    /// axis a limit is holding open has real room to place things in, so where
+    /// the contents sit in that room is an arrangement and not a margin.
+    ///
+    /// A group with a SURFACE in it is the exception, because there the box is
+    /// the thing you can see: a button's pill is pinned at its top left and
+    /// grows to the right as its room grows, and the label rides along inside
+    /// it. Growing that outward would move the button itself.
+    private static func growth(_ children: [Layer], rules: [ResolvedPlacement],
+                               layout: GroupLayout, bounds: Bounds) -> CGVector {
+        guard !children.isEmpty,
+              !children.indices.contains(where: { rules[$0].stepsOutOfTheFlow(of: layout) })
+        else { return .zero }
+        let padding = layout.usedPadding
+        return CGVector(
+            dx: bounds.width == nil ? padding.left - near(children, rules, horizontal: true) : 0,
+            dy: bounds.height == nil ? padding.top - near(children, rules, horizontal: false) : 0)
     }
 
     // MARK: - The smallest and the largest it may get

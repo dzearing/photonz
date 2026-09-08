@@ -1,0 +1,28 @@
+{
+  "feature": "Room on a loose drawing grows the box outward",
+  "epic": "ui-components",
+  "summary": "Type room into the Layout section of a group set to Free and the pieces inside it stay exactly where you drew them, while the box closes around them that much further out on every side. It used to slide the whole drawing right and down instead.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Draw a rectangle, then draw an ellipse somewhere below and to the right of it.", "shot": "2026-09-08-room-grows-outward-1-grouped-sc.png" },
+    { "do": "Sweep over both and press Command G." },
+    { "do": "Read the X, Y, W and H in Position & Size, and note where the two shapes sit." },
+    { "do": "Type 40 into Padding in the Layout section and press Return.", "shot": "2026-09-08-room-grows-outward-2-forty-sc.png" },
+    { "do": "Look at the two shapes: neither should have moved a pixel." },
+    { "do": "Read X, Y, W and H again: X and Y each went down by 40, W and H each went up by 80." },
+    { "do": "Press Command Z once and check everything is back where it started." },
+    { "do": "Now drop a Button from the starter components, select it and type 28 into its Padding: it should still grow to the right from the corner it is pinned at, not move." }
+  ],
+  "evaluate": [
+    "When you type room on a loose drawing, does it now read as a margin appearing rather than the drawing being pushed?",
+    "The group's X and Y numbers change when you type room, because the box grew out to the left and up. Does that read as honest, or does it look like something moved?",
+    "A group set to Free paints nothing, so the only sign the room is there is the dashed selection box. Is that enough, or should room on a fill-less group show itself some other way?",
+    "Is the button still doing the right thing when you give it more room, growing right and down from its corner?",
+    "Does one undo put everything back the way you expect?"
+  ],
+  "rough": [
+    "A group with a surface in it was deliberately left alone: there the box is the thing you can see, so a button's pill stays pinned at its top left and grows right and down. That is two different answers to the same field, and it is only obvious once you know a surface is what makes the difference.",
+    "Room on a Free group is still invisible except in the selection box, which is why the room knob was taken off drawings like this for component copies. This fix makes the room correct, not visible.",
+    "Verified live on the probe app, Screen Recording granted, so both shots above are real window captures. The document renders before and after typing 40 are byte for byte identical, which is the proof nothing on the canvas moved."
+  ]
+}

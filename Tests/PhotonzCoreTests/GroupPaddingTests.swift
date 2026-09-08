@@ -169,6 +169,31 @@ struct GroupPaddingTests {
         #expect(history.current.layers[0].group?.layout?.padding == GroupPadding(16))
     }
 
+    @Test("Room typed on a group that arranges nothing grows its box, it does not move the drawing")
+    func typingRoomOnALooseDrawingMovesNothing() {
+        var history = History(document: document([group([
+            box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+            box("B", CGRect(x: 60, y: 40, width: 40, height: 20)),
+        ], layout: .free(), origin: CGPoint(x: 100, y: 50))]))
+        let id = history.current.layers[0].id
+        func onTheCanvas() -> [CGRect] {
+            let group = history.current.layers[0]
+            return group.children.map {
+                $0.frame.offsetBy(dx: group.frame.origin.x, dy: group.frame.origin.y)
+            }
+        }
+        let before = onTheCanvas()
+        let box = history.current.layers[0].localBounds
+        _ = history.perform { $0.updateGroupLayout(id: id) { $0.padding = GroupPadding(16) } }
+        // Nothing on screen moved: the two pieces are exactly where they were
+        // drawn, and the box closed around them 16 further out on every side.
+        #expect(onTheCanvas() == before)
+        #expect(history.current.layers[0].localBounds == box.insetBy(dx: -16, dy: -16))
+        history.undo()
+        #expect(onTheCanvas() == before)
+        #expect(history.current.layers[0].localBounds == box)
+    }
+
     @Test("A copy of a component keeps the room its stack was given when it is resized")
     func aResizedCopyKeepsItsRoom() {
         var doc = document([group([

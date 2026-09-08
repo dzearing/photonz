@@ -34,6 +34,12 @@ struct GroupHugTests {
 
     private func frames(_ layer: Layer) -> [CGRect] { layer.children.map(\.frame) }
 
+    /// Where each piece sits in the space the GROUP sits in, which is where a
+    /// person looking at the canvas sees it.
+    private func canvasFrames(_ layer: Layer) -> [CGRect] {
+        layer.children.map { $0.frame.offsetBy(dx: layer.frame.origin.x, dy: layer.frame.origin.y) }
+    }
+
     private func piece(_ layer: Layer, _ name: String) -> CGRect {
         layer.children.first { $0.name == name }?.frame ?? .null
     }
@@ -62,7 +68,9 @@ struct GroupHugTests {
         let hugging = GroupFlow.flowing(
             group([box("Words", CGRect(x: 10, y: 4, width: 50, height: 20))],
                   layout: .free(padding: GroupPadding(8))))
-        #expect(hugging.localBounds == CGRect(x: 0, y: 0, width: 66, height: 36))
+        // The box grew OUTWARD around the words: they sat at 10, 4 on the
+        // canvas and they are still there, with 8 of room now on every side.
+        #expect(hugging.localBounds == CGRect(x: 2, y: -4, width: 66, height: 36))
         // The contents start inside the near edges, so the room typed is the
         // room actually kept on every side.
         #expect(frames(hugging) == [CGRect(x: 8, y: 8, width: 50, height: 20)])
@@ -184,6 +192,86 @@ struct GroupHugTests {
         // ...and going back to less room puts everything back.
         let back = GroupFlow.flowing(plate(padding: GroupPadding(8), height: 36))
         #expect(piece(back, "Background").height == 36)
+    }
+
+    // MARK: - Room grows the box outward, it does not slide the drawing
+
+    @Test("Room typed on a loose drawing leaves every piece exactly where it was on the canvas")
+    func roomOnALooseDrawingMovesNothing() {
+        let loose = group([box("A", CGRect(x: 0, y: 0, width: 40, height: 20)),
+                           box("B", CGRect(x: 60, y: 40, width: 40, height: 20))],
+                          layout: .free(), origin: CGPoint(x: 100, y: 50))
+        let none = GroupFlow.flowing(loose)
+        let roomy = GroupFlow.flowing(
+            group(none.children, layout: .free(padding: GroupPadding(16)),
+                  origin: none.frame.origin))
+        // Where each piece sits ON THE CANVAS is what a person sees, and none
+        // of it moved: A is still at 100, 50 and B is still at 160, 90.
+        #expect(canvasFrames(none) == [CGRect(x: 100, y: 50, width: 40, height: 20),
+                                       CGRect(x: 160, y: 90, width: 40, height: 20)])
+        #expect(canvasFrames(roomy) == canvasFrames(none))
+        // The box grew outward by 16 on each of the four sides instead.
+        #expect(roomy.localBounds == none.localBounds.insetBy(dx: -16, dy: -16))
+    }
+
+    @Test("Each side grows outward by its own number, not by an average of them")
+    func unevenRoomGrowsEachSideOutward() {
+        let loose = group([box("A", CGRect(x: 0, y: 0, width: 40, height: 20))],
+                          layout: .free(), origin: CGPoint(x: 100, y: 50))
+        let none = GroupFlow.flowing(loose)
+        let roomy = GroupFlow.flowing(
+            group(none.children,
+                  layout: .free(padding: GroupPadding(top: 12, right: 8, bottom: 24, left: 16)),
+                  origin: none.frame.origin))
+        #expect(canvasFrames(roomy) == canvasFrames(none))
+        #expect(roomy.localBounds == CGRect(x: 100 - 16, y: 50 - 12,
+                                            width: 16 + 40 + 8, height: 12 + 20 + 24))
+    }
+
+    @Test("Room on a loose drawing settles: running the flow again moves nothing")
+    func roomOnALooseDrawingSettles() {
+        let once = GroupFlow.flowing(
+            group([box("A", CGRect(x: 3, y: 7, width: 40, height: 20)),
+                   box("B", CGRect(x: 60, y: 40, width: 40, height: 20))],
+                  layout: .free(padding: GroupPadding(top: 4, right: 9, bottom: 14, left: 20)),
+                  origin: CGPoint(x: 100, y: 50)))
+        let twice = GroupFlow.flowing(once)
+        #expect(twice.frame == once.frame)
+        #expect(twice.localBounds == once.localBounds)
+        #expect(frames(twice) == frames(once))
+    }
+
+    @Test("An empty group told to keep room stays where it is however often the flow runs")
+    func anEmptyGroupWithRoomDoesNotDrift() {
+        var settled = group([], layout: .free(padding: GroupPadding(16)),
+                            origin: CGPoint(x: 100, y: 50))
+        for _ in 0..<3 { settled = GroupFlow.flowing(settled) }
+        #expect(settled.localBounds == CGRect(x: 100, y: 50, width: 32, height: 32))
+    }
+
+    @Test("An axis with a size of its own does not grow outward, because nothing moved on it")
+    func anAxisWithASizeOfItsOwnStaysPut() {
+        let loose = group([box("A", CGRect(x: 5, y: 5, width: 40, height: 20))],
+                          layout: .free(padding: GroupPadding(10), width: 200),
+                          origin: CGPoint(x: 100, y: 50))
+        let flowed = GroupFlow.flowing(loose)
+        // Across, the group was GIVEN 200, so its contents were left where they
+        // were put and its left edge is where it always was. Down, it is the
+        // size of what is in it, so it grew outward around the piece.
+        #expect(flowed.localBounds == CGRect(x: 100, y: 50 + 5 - 10, width: 200, height: 40))
+        #expect(canvasFrames(flowed) == [CGRect(x: 105, y: 55, width: 40, height: 20)])
+    }
+
+    @Test("A group with a surface in it keeps growing from the corner it is pinned at")
+    func aSurfaceKeepsTheTopLeftAnchored() {
+        let button = GroupFlow.flowing(plate())
+        let roomier = GroupFlow.flowing(
+            plate(padding: GroupPadding(top: 8, right: 28, bottom: 8, left: 28)))
+        // A button IS its pill, so more room grows the pill to the right and
+        // down from where it is pinned rather than moving the button itself.
+        #expect(button.frame.origin == .zero)
+        #expect(roomier.frame.origin == .zero)
+        #expect(roomier.localBounds == CGRect(x: 0, y: 0, width: 28 + 50 + 28, height: 36))
     }
 
     // MARK: - It settles, and it settles once
