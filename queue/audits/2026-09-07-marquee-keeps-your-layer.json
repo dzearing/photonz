@@ -1,0 +1,29 @@
+{
+  "feature": "A marquee keeps the layer you picked",
+  "epic": "ui-building",
+  "summary": "Drawing a box round part of the picture no longer lets go of the layer you had picked. A box that catches nothing says WHERE, not WHAT: the layer stays picked, and delete, the paint bucket and copy all act on that one layer and leave every other layer alone. A box thrown right round a layer still picks it up, which is what the pointer's band has always been for.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Start a blank canvas and drop two pictures onto it, side by side." },
+    { "do": "With the pointer tool, click the left picture to pick it." },
+    { "do": "Starting on bare canvas below it, drag a box back up across its bottom right corner. The picture stays picked, in the layers list and on the canvas.", "shot": "2026-09-07-marquee-keeps-your-layer-1-band-sc.png" },
+    { "do": "Press delete. The box is cleared out of the left picture and the right picture is untouched.", "shot": "2026-09-07-marquee-keeps-your-layer-2-deleted-sc.png" },
+    { "do": "Press ⌘Z once and check the pixels come back exactly as they were." },
+    { "do": "Draw the box again, take the paint bucket, and click inside the box over bare canvas. It paints the picked picture, not the canvas under the pointer." },
+    { "do": "Press Escape, then drag a box right round both pictures. Both are picked, and delete removes them both." }
+  ],
+  "evaluate": [
+    "A box that catches nothing keeps your pick, and a box that catches a layer takes it. Does that read as one rule, or as two you have to remember?",
+    "Both kinds of box look the same on screen, marching ants either way, but delete clears pixels after one and removes layers after the other. Did you ever get the one you did not want?",
+    "With a picture picked and a box up, delete clears pixels instead of removing the picture. Does that catch you out, and is Escape then delete an obvious enough way back to removing it?",
+    "The picked layer keeps its blue frame and handles while you drag the box across it. Does that reassure you, or is it clutter over the box you are drawing?",
+    "You can now draw the box with the pointer already in your hand and never reach for the marquee tool. Is the marquee tool still worth its slot on the bar?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures here are real captures of the window, not offscreen renders.",
+    "With a SHAPE or a piece of text picked, delete over a box does nothing at all and says nothing about why. It used to quietly paint the locked Background instead, which is a layer you never picked, so this is safer but still silent. Filed as a follow-up.",
+    "Nothing on screen tells a box that picks layers apart from a box that picks pixels. The rule is honest but invisible, and it is the thing most likely to surprise. Filed as a follow-up.",
+    "With nothing picked at all, delete over a box clears the locked Background to the background colour. On a white canvas with a white background colour that is white on white, so it looks like nothing happened.",
+    "The task said the marquee TOOL was dropping the pick. It was not: the M tool already kept it, and delete over its marquee already cleared the picked layer alone. The gesture at fault was the pointer's own band, which let go of the pick the instant the button went down, before it knew whether it was a click or a box."
+  ]
+}

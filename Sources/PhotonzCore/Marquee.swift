@@ -93,12 +93,23 @@ public enum BareCanvasPress: Equatable, Sendable {
     /// selection can be built out of two or three sweeps.
     public var sweepAddsToSelection: Bool { self == .spares }
 
+    /// Whether a finished sweep decides the selection at all.
+    ///
+    /// A band takes over only when it CATCHES something. Thrown round empty
+    /// canvas it has said WHERE, not WHAT — it is choosing a piece of the
+    /// picture, not a different layer — so what was picked stays picked and
+    /// the band becomes a pixel region on it. Picking a layer and then drawing
+    /// a box used to deselect it, which left the obvious next keystroke, ⌫ to
+    /// clear those pixels, with no layer to act on (reported 2026-09-07).
+    public static func sweepDecidesSelection(caught: [UUID]) -> Bool { !caught.isEmpty }
+
     /// What is picked once a sweep that took in `swept` lets go. Adding is
     /// adding and never toggling: sweeping back over something already
     /// picked leaves it picked.
     public func selection(afterSweeping swept: [UUID],
                           startingFrom existing: Set<UUID>) -> Set<UUID> {
-        sweepAddsToSelection ? existing.union(swept) : Set(swept)
+        guard Self.sweepDecidesSelection(caught: swept) else { return existing }
+        return sweepAddsToSelection ? existing.union(swept) : Set(swept)
     }
 }
 

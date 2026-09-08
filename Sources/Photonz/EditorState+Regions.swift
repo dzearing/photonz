@@ -70,30 +70,20 @@ extension EditorState {
 
     // MARK: - Region-targeted ops (17.5)
 
-    /// The image layer a region op bakes into: the preferred (hit) layer when
-    /// it's bakeable, else the selected layer, else the locked Background
-    /// under the region. Only untransformed, uncropped image layers qualify —
-    /// the axis-aligned doc→bitmap mapping would lie for anything else.
+    /// The image layer a region op bakes into (`RegionTarget`): the layer you
+    /// picked, so ⌫, fill, copy and a drag of the region's pixels all land on
+    /// the same one. `hit` is the layer under the pointer, which only answers
+    /// when nothing is picked, and the locked Background answers last.
     private func regionTargetID(preferring hit: UUID? = nil) -> UUID? {
         guard let document, let region = selection else { return nil }
-        func bakeable(_ layer: Layer?) -> Bool {
-            guard let layer else { return false }
-            return layer.imageRef != nil && layer.crop == nil && layer.transform.isIdentity
-        }
-        if let hit, bakeable(document.layer(id: hit)) { return hit }
-        if let id = selectedLayerID, bakeable(document.layer(id: id)) { return id }
-        return document.layers.first(where: {
-            $0.isLocked && bakeable($0) && $0.frame.intersects(region.bounds)
-        })?.id
+        return RegionTarget.id(picked: selectedLayerID, hit: hit,
+                               region: region.bounds, in: document)
     }
 
-    /// Whether a region op could bake into THIS layer: only an untransformed,
-    /// uncropped image layer can be sliced, since the op writes into its
-    /// bitmap. A shape or a piece of text would have to be turned into pixels
-    /// first, which is a different decision and never a side effect of ⌘X.
+    /// Whether a region op could bake into THIS layer (`RegionTarget.canSlice`).
     func canSliceRegion(from id: UUID) -> Bool {
         guard let layer = document?.layer(id: id) else { return false }
-        return layer.imageRef != nil && layer.crop == nil && layer.transform.isIdentity
+        return RegionTarget.canSlice(layer)
     }
 
     /// Bakes a region op into an image layer's bitmap as ONE undo step. The

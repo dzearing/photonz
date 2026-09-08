@@ -576,9 +576,10 @@ extension CanvasNSView {
             multiSelectOutlineLayer.isHidden = true
             return
         }
-        // Mid-sweep the band says what is picked. A ⇧-press that has not moved
-        // is not a sweep — it spares the selection — so what is already picked
-        // stays outlined rather than blinking out while the button is down.
+        // Mid-sweep the band says what is picked, but only once it has caught
+        // something: a press that has not moved, and a band still out over
+        // empty canvas, both leave what was already picked outlined rather
+        // than blinking it out while the button is down.
         let captured: Set<UUID>
         if marquee != nil, let rect = marqueeRect {
             // With ⇧ the band adds, so mid-sweep it outlines the layers it has
@@ -587,8 +588,6 @@ extension CanvasNSView {
             captured = marqueePress.selection(
                 afterSweeping: document.layerIDs(fullyInside: rect, inside: marqueeContext),
                 startingFrom: pickedLayerIDs)
-        } else if marquee != nil, marqueePress.clearsSelectionOnPress {
-            captured = []
         } else {
             captured = multiSelectedLayerIDs
         }

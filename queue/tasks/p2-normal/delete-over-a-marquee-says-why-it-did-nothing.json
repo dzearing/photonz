@@ -1,0 +1,28 @@
+{
+  "id": "delete-over-a-marquee-says-why-it-did-nothing",
+  "title": "Delete over a marquee says why it did nothing",
+  "goal": "With a shape or a piece of text picked and a marquee drawn, pressing delete does nothing at all and says nothing about why. The app should tell you, in a word or two, that a marquee can only be cleared out of a picture, so you are not left pressing a key that quietly fails.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1890,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T23:41:19.454Z",
+  "updated": "2026-09-07T23:41:19.455Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while auditing a-marquee-keeps-the-layer-you-picked-and-delete on 2026-09-07. Walk /tmp/region-cases-walk.json stage 2-delete-on-shape: a rectangle picked, region 250,300 200x120, delete pressed, render byte-identical to the start. Before that task landed it silently painted the locked Background instead, which was worse. RegionTarget.id returns nil for a picked layer that fails RegionTarget.canSlice (Sources/PhotonzCore/RegionTarget.swift), and EditorState.deleteRegion returns early on nil. The message could hang off the same channel the measure hint uses, or the copy confirmation toast.",
+  "acceptance": [
+    "With a rectangle picked and a marquee up, delete puts up a short plain message rather than doing nothing in silence",
+    "The message names what would have to be true for it to work, in ordinary words",
+    "Delete over a marquee on a picture is unchanged: it clears the pixels with no message at all",
+    "A playtest walk covers both, with the message read out of the log"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T23:41:19.455Z",
+      "note": "created (manual)"
+    }
+  ]
+}

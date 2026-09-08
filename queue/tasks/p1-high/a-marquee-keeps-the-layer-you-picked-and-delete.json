@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:48:43.401Z",
-  "updated": "2026-09-07T21:48:43.438Z",
+  "updated": "2026-09-08T00:07:04.076833Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07. Confirmed by reading Sources/Photonz/EditorState.swift: setSelection at line 1382 takes captureLayers, which defaults to true, and when true it replaces the layer selection with whatever the region swept, setting selectedLayerID to the single captured layer or to nil when the sweep caught several or none (lines 1388 to 1392). So drawing a marquee over empty space or across several layers clears the pick. The intent is written in the comment above it, that a swept band picks what it encloses, which is right for the pointer tool's sweep and wrong for the region tools, where the marquee is meant to say WHERE not WHAT. Note the machinery for the wanted behaviour already exists: selectionTargetsPixels is set when captureLayers is false (line 1385), and the comment at line 1509 states the intended rule outright, that the layer selection survives into the selection family and is the target of region operations including fill and the delete key. So the fix is which path a region tool takes, not new state. Check every caller of setSelection for which of the two meanings it wants, and check what delete does today for a pixel region since it may act on the composite the way copy did.",
@@ -31,6 +31,89 @@
     {
       "t": "2026-09-07T21:48:43.438Z",
       "note": "seq 210 -> 4"
+    },
+    {
+      "t": "2026-09-07T23:13:13.868Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-07T23:21:19.367092Z",
+      "note": "Reproduced, and the task notes named the wrong gesture. Walk /tmp/pointer-sweep-walk.json: pick a picture, then drag a box on bare canvas with the POINTER in hand. Stage 1-band-over-nothing comes back selected=nil, selection=[], region=200,550 500x200 \u2014 the pick is gone the moment the button goes down (CanvasPointerDrags.swift:512 calls onSelectLayer(nil) on the press, before the band has travelled at all), and stage 4-delete-after-band shows delete doing nothing: nothing is picked and the band's region is not a pixel region, so the render is byte-identical to the start."
+    },
+    {
+      "t": "2026-09-07T23:21:19.367092Z",
+      "note": "The MARQUEE TOOL path already worked: walk Scripts/playtest/region-keeps-your-layer-walk.json picks Hero banner, switches to rectSelect, drags a marquee across both pictures, and selected stays Hero banner; delete cleared the region on that layer alone and one undo gave a byte-identical render back. So acceptance 1, 2 and 4 already hold for a plain image layer with the M tool, and the bug is the pointer band."
+    },
+    {
+      "t": "2026-09-07T23:21:19.367092Z",
+      "note": "Two more faults found while probing (/tmp/region-cases-walk.json). (a) With a SHAPE picked and a marquee up, delete does not touch the shape: regionTargetID falls through to the locked Background and paints it, so the op lands on a layer you did not pick (invisible here only because the background is white). (b) The bucket inside a region prefers the layer under the pointer over the layer you picked (regionTargetID(preferring: hit)), so fill and delete disagree about what a region means \u2014 acceptance 6."
+    },
+    {
+      "t": "2026-09-07T23:21:19.367092Z",
+      "note": "Adversarial review before building. The app has TWO boxes drawn with one gesture \u2014 a lasso for layers on the pointer, a pixel marquee on M \u2014 and nothing on screen says which you got. A first-time user picks a layer, drags a box, and is silently deselected. Shortest fix that delivers the value, no new chrome and no new tool: a band takes over the selection only when it CATCHES something. A band that caught layers still picks them up (acceptance 5, and the sweep-then-delete cleanup gesture is untouched, since that band caught layers). A band that caught nothing leaves the pick alone and becomes a pixel region on it, so delete, fill, copy and move all act on the layer you picked. Cost: after a band over empty space, delete clears pixels instead of removing the layer; Escape drops the band and delete removes the layer as before, which is the Photoshop rule."
+    },
+    {
+      "t": "2026-09-07T23:21:19.367092Z",
+      "note": "Release: every file this touches (EditorState, EditorState+Regions, CanvasPointerDrags, PhotonzCore) is shared, nothing is forked under Releases/, so the fix reaches Current and Next together and the porting rule is satisfied by construction."
+    },
+    {
+      "t": "2026-09-07T23:41:58.498837Z",
+      "note": "Built, TDD. PhotonzCore first: BareCanvasPress.sweepDecidesSelection(caught:) says a band decides the selection only when it catches something, and selection(afterSweeping:startingFrom:) now returns what was already picked for an empty catch (MarqueeTests, and the old test that asserted the opposite was rewritten with the reason). New RegionTarget (Sources/PhotonzCore/RegionTarget.swift, 11 tests) owns which layer a region works on: the picked layer if it can be sliced, nothing at all if it cannot, and only with NO pick does the layer under the pointer or the locked Background answer."
+    },
+    {
+      "t": "2026-09-07T23:41:58.498837Z",
+      "note": "App layer: EditorState.setSelection keeps the pick and sets selectionTargetsPixels when a sweep catches nothing; EditorState+Regions.regionTargetID and canSliceRegion now call RegionTarget, which is what makes the bucket stop preferring the layer under the pointer; CanvasPointerDrags no longer deselects on the press (both the bare-canvas band and the screen-surface sweep), and the plain click deselects on release instead; CanvasDisplay drops the branch that blanked the outline for a press that had not moved."
+    },
+    {
+      "t": "2026-09-07T23:41:58.498837Z",
+      "note": "Verified in the real app, Scripts/playtest/region-keeps-your-layer-walk.json, 84 steps, status ok. 2-band-caught-nothing: selected stays Photonz drop probe with region 200,250 400x250 (acceptance 1). 3-deleted: the band cleared out of the left picture only, right picture byte-identical (acceptance 2). 4-undone: render md5 equal to the start render, one undo (acceptance 4). 2b: copy over the band pastes back 260x100, the picked picture's pixels inside the band, not the 400x250 of everything flattened; 6-bucket: the bucket clicked over bare canvas paints the PICKED picture (acceptance 6). 5-band-caught-both picks both up and 5b delete removes them both, so the sweep-a-mess-and-clear-it gesture is untouched (acceptance 5). 8-delete-with-no-pick: nothing changed (acceptance 3)."
+    },
+    {
+      "t": "2026-09-07T23:41:58.498837Z",
+      "note": "Acceptance 3 answer, for the audit: with nothing picked, delete over a marquee has only the locked Background to act on, and clearing that to the background colour is what the Background is for (Photoshop). On a white canvas with a white background colour it is white on white, so it looks like nothing happened, which is honest but invisible."
+    },
+    {
+      "t": "2026-09-07T23:41:58.498837Z",
+      "note": "Adversarial review of the built thing, on the probe. Good: the picked layer keeps its blue frame, its handles and its highlighted row while the band is drawn over it, so nothing blinks. Rough, and left in: the two kinds of box look identical, marching ants either way, while delete means clear pixels after one and remove layers after the other; and with a shape picked, delete over a box now does nothing rather than painting a layer you did not pick, but says nothing about why. Both filed: you-can-tell-a-box-that-picks-layers-from-a-box and delete-over-a-marquee-says-why-it-did-nothing, p2."
+    },
+    {
+      "t": "2026-09-07T23:41:58.498837Z",
+      "note": "Scripts/test.sh green: 4604 tests in 385 suites."
+    },
+    {
+      "t": "2026-09-08T00:03:18.419Z",
+      "note": "runner failed (exit 0, attempt 1): Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely."
+    },
+    {
+      "t": "2026-09-08T00:03:49.101Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T00:07:04.076833Z",
+      "note": "Re-run after the previous attempt was killed on a background-task timeout with the work already on disk. Nothing was rebuilt from scratch: this run re-verified every acceptance item from the evidence rather than trusting the earlier log."
+    },
+    {
+      "t": "2026-09-08T00:07:04.076833Z",
+      "note": "Verified this run. Scripts/test.sh green, 4604 tests in 385 suites. Scripts/playtest/region-keeps-your-layer-walk.json re-run end to end on the probe, 84 steps, walk complete, probe quit after. Acceptance 1: stage 2-band-caught-nothing reports selected 9BCD8CE7 with region 200,250 400x250, so the pick survived the band. Acceptance 5: stage 5-band-caught-both reports both pictures selected and 5b shows delete removed them. Acceptance 6: stage 2b copy hands back the picked picture's pixels and stage 6 the bucket paints the picked picture, not the layer under the pointer. Acceptance 3: stage 8 with nothing picked, render md5 equal to the start render."
+    },
+    {
+      "t": "2026-09-08T00:07:04.076833Z",
+      "note": "Acceptance 2 checked by pixels, not by eye: whole-render md5 differs after the delete (f38db1ac -> 82ffc356) while the right half of the canvas, cropped x 600 to 1200 with sips, is byte-identical either side (f192cd57 both). So the clear landed on the picked left picture alone. Acceptance 4: the render after one undo is md5 f38db1ac, equal to the start render."
+    },
+    {
+      "t": "2026-09-08T00:07:04.076833Z",
+      "note": "Audit screenshots refreshed from THIS run's captures (2560x1800 window captures, Screen Recording granted) and both read as claimed: the band shot shows the left picture still framed, handled and highlighted in the layers list with the marching-ants box over its corner; the deleted shot shows the box cleared out of that picture with the right one untouched."
+    },
+    {
+      "t": "2026-09-08T00:07:04.076833Z",
+      "note": "One nuance for whoever picks up the family next: delete, both fills and the region move all reach their layer through RegionTarget, but copy reaches the same layer by its own route (CopyRoute plus the copyPicksYourLayerEnabled flag, from the earlier copy task). Same answer today, verified on the probe, but it is two rules rather than one and worth folding together when copy is next touched."
     }
-  ]
+  ],
+  "started": "2026-09-08T00:03:49.101Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-08T00:03:18.418Z",
+    "exit": 0,
+    "message": "Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely."
+  }
 }

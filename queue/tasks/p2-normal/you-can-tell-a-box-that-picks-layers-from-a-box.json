@@ -1,0 +1,28 @@
+{
+  "id": "you-can-tell-a-box-that-picks-layers-from-a-box",
+  "title": "You can tell a box that picks layers from a box that picks pixels",
+  "goal": "There are two kinds of box you can draw on the picture and they look identical: one picks up the layers it encloses, the other picks a piece of the picture to work on. Which one you got decides whether delete removes whole layers or clears pixels, and right now nothing on screen says. Make the difference visible.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 1900,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-07T23:41:19.493Z",
+  "updated": "2026-09-07T23:41:19.494Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Raised in the audit queue/audits/2026-09-07-marquee-keeps-your-layer.json on 2026-09-07. The rule now lives in BareCanvasPress.sweepDecidesSelection (Sources/PhotonzCore/Marquee.swift): a band takes over the selection only when it catches something, and a band that caught nothing becomes a pixel region on the layer already picked. Honest, but invisible. The mid-sweep chrome already knows which it is (CanvasDisplay refreshMultiSelectOutline reads the same call), so the drawing side has the answer in hand.",
+  "acceptance": [
+    "A box that has caught layers looks different from a box that has caught nothing, in a way you can see without reading anything",
+    "The difference is there while the box is being drawn, not only after it lands",
+    "Neither look adds chrome that gets in the way of drawing the next one",
+    "A playtest walk photographs both, in one document, for comparison"
+  ],
+  "log": [
+    {
+      "t": "2026-09-07T23:41:19.494Z",
+      "note": "created (manual)"
+    }
+  ]
+}

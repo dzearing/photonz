@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T21:46:23.217Z",
-  "updated": "2026-09-07T23:12:09.779129Z",
+  "updated": "2026-09-07T23:12:40.986Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 in two parts. First, they cannot add a border: AddableEffect in Sources/PhotonzCore/LayerEffects.swift offers exactly dropShadow, innerShadow and blur, and there is no border among them. The only edge is LayerPart.outline in Appearance, which is one edge on the layer's own boundary with no offset and no second copy, so what they want cannot be expressed at all. Second, the two shadow entries: the underlying model already has one shadow kind with a ShadowKind of drop or inner, and only the add menu splits it into two names, so making it one entry with a switch is a menu change plus a control on the row, not a model change. That also matches the rule already agreed in this area, that inner versus outer is a property of an effect rather than a separate effect, which is exactly what the border offset gives. The awkward part to decide rather than dodge is the relationship between the Appearance outline and an added border, since they will otherwise be two ways to draw the same line; the acceptance asks for an answer in user words or for one to absorb the other.",
@@ -55,7 +55,12 @@
     {
       "t": "2026-09-07T23:12:09.779129Z",
       "note": "Full walk sweep: Scripts/playtest-all.sh, 270 walks, 256 passed and 14 failed. Held the 14 against a baseline rather than assuming: stashed the whole working tree, rebuilt the probe from clean main, ran each of the 14 again. THIRTEEN fail identically on main and are not mine, including the one that looked most like my harness change (component-whole-path expecting 'Apply to Other Versions' to read without its owner: it already read 'Shadow, there is something to carry' before I touched anything). Filed as find-out-why-thirteen-scripted-walks-are-failing at p2 with every command and message. ONE was mine: appearance-list-walk picked 'Inner Shadow' off the plus, which no longer exists. Updated to pick Shadow and then set the row's Kind to Inner, which is the flow a person now follows, and it passes. Scripts/test.sh green after, 4592 tests, and the border walk still passes."
+    },
+    {
+      "t": "2026-09-07T23:12:40.985Z",
+      "note": "Border is an addable effect in Next, countable, with a colour, a Width and a Position (Inside/Center/Outside), so an inner and an outer one are two entries; the plus now offers one Shadow whose Kind switches it inner in place. Model in PhotonzCore/LayerEffects.swift (BorderEffect), painting in PhotonzRender/DocumentRenderer.swift (ringed/borderEffects), panel in EffectsListInspector.swift. Verified: 4592 tests green (BorderEffectTests and BorderEffectRenderTests written first), and driven on the probe end to end by Scripts/playtest/border-effect-walk.json with real window captures. Also fixed, found on the probe: an outside ring round a square box came out with rounded corners. Audit queue/audits/2026-09-07-border-effect.json. Commit d658179c, pushed."
     }
   ],
-  "started": "2026-09-07T21:57:01.382Z"
+  "started": "2026-09-07T21:57:01.382Z",
+  "completed": "2026-09-07T23:12:40.986Z"
 }

@@ -1386,10 +1386,18 @@ final class EditorState {
         guard captureLayers else { return }
         let level = sweepContext(context)
         let captured = region.flatMap { document?.layerIDs(fullyInside: $0.bounds, inside: level) } ?? []
-        if captured.count == 1 {
+        if !BareCanvasPress.sweepDecidesSelection(caught: captured) {
+            // The band caught nothing, so it has said WHERE and not WHAT: the
+            // layer you had picked stays picked, and the band becomes a PIXEL
+            // region on it, so ⌫ clears those pixels out of that layer and
+            // fill, copy and a drag of the region all act on the same one.
+            // A band that DID catch layers is still how you pick a handful of
+            // them up, and ⌫ still removes the ones it caught.
+            selectionTargetsPixels = region != nil
+        } else if captured.count == 1 {
             selectedLayerID = captured[0] // didSet clears any multi-selection
         } else {
-            if !captured.isEmpty { selectedLayerID = nil }
+            selectedLayerID = nil
             multiSelectedLayerIDs = Set(captured)
             // A marquee has no anchor row: the next shift-click in a list
             // starts over from the row it lands on.

@@ -507,13 +507,13 @@ extension CanvasNSView {
             marqueePress = press
             marqueeContext = Experiments.shared.layerGroupsEnabled ? groupContext : nil
             marqueeClickTarget = nil // bare canvas: a click that never travels picks nothing
-            if press.clearsSelectionOnPress {
-                onClickedNothing()
-                if selectedLayerFrame != nil || isCanvasSelected {
-                    selectedLayerFrame = nil
-                    onSelectLayer(nil) // also drops the Canvas pseudo-selection
-                }
-            }
+            // The press itself no longer lets go of the layer: what the
+            // gesture turns out to be decides that, and the press does not
+            // know yet. A click deselects on the way back up, and a band
+            // deselects only if it CATCHES something — a band thrown round
+            // empty canvas says WHERE, not WHAT, and the layer it was drawn
+            // over stays picked so ⌫ can clear those pixels out of it.
+            if press.clearsSelectionOnPress { onClickedNothing() }
             marquee = MarqueeDrag(anchor: p)
         }
         refreshOverlays()
@@ -580,13 +580,10 @@ extension CanvasNSView {
         marqueePress = press
         marqueeContext = screen
         marqueeClickTarget = screen
-        if press.clearsSelectionOnPress {
-            onClickedNothing()
-            if selectedLayerFrame != nil || isCanvasSelected {
-                selectedLayerFrame = nil
-                onSelectLayer(nil)
-            }
-        }
+        // As on bare canvas, the press keeps its hands off the selection: the
+        // release picks the screen for a click, and a band decides only when
+        // it catches something.
+        if press.clearsSelectionOnPress { onClickedNothing() }
         marquee = MarqueeDrag(anchor: p)
     }
 
@@ -1175,14 +1172,19 @@ extension CanvasNSView {
                 return
             }
             if drag.isClick(atZoom: viewport.zoom) {
-                commitSelection(nil, capture: true) // a plain click deselects
-                // Bare canvas means "nothing", and nothing includes the level
-                // you were working at: the click steps back out of the group,
-                // the way a click on a layer outside it already does. Without
-                // this a click that let go of several pieces at once left you
-                // standing inside a group with nothing picked, and the next
-                // sweep would still be looking inside it.
-                if level != nil { onSelectLayer(nil) }
+                // A plain click on bare canvas is the gesture that means
+                // "nothing", so THIS is where the selection is let go — the
+                // press used to do it, which threw the pick away before the
+                // gesture had said whether it was a click or a band.
+                // Nothing includes the level you were working at: the click
+                // steps back out of the group, the way a click on a layer
+                // outside it already does. Without that a click that let go of
+                // several pieces at once left you standing inside a group with
+                // nothing picked, and the next sweep would still be looking
+                // inside it.
+                selectedLayerFrame = nil
+                onSelectLayer(nil) // also drops the Canvas pseudo-selection
+                commitSelection(nil, capture: true)
                 return
             }
             // A sweep decides the selection whatever started it, so the

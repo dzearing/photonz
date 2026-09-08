@@ -153,9 +153,20 @@ struct BareCanvasPressTests {
                 == [a, b])
     }
 
-    @Test func aPlainSweepThatCatchesNothingPicksNothing() {
+    @Test func aPlainSweepThatCatchesNothingLeavesWhatWasPickedAlone() {
+        // A band takes over the selection only when it CATCHES something.
+        // Thrown round empty canvas it has said WHERE, not WHAT: the layer you
+        // were working on stays picked, so ⌫, fill and copy still have it to
+        // act on. Picking a layer and then drawing a box used to deselect it
+        // and leave the obvious next keystroke with nothing to do
+        // (reported 2026-09-07).
         #expect(BareCanvasPress(shift: false).selection(afterSweeping: [], startingFrom: [a, b])
-                == [])
+                == [a, b])
+    }
+
+    @Test func aBandDecidesTheSelectionOnlyWhenItCatchesSomething() {
+        #expect(!BareCanvasPress.sweepDecidesSelection(caught: []))
+        #expect(BareCanvasPress.sweepDecidesSelection(caught: [a]))
     }
 
     @Test func sweepingSomethingAlreadyPickedLeavesItPicked() {
