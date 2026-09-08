@@ -1,0 +1,55 @@
+{
+  "id": "a-wrapped-label-says-which-width-you-are-looking-when-words-are-wrapped-to-fit-th",
+  "taskId": "a-wrapped-label-says-which-width-you-are-looking",
+  "question": "When words are wrapped to fit the box around them, should the label be as wide as the words that came out, or as wide as the room it was given?",
+  "context": "Selecting a wrapped label shows W 140 while its longest line stops about 29 short of the box, so the number and the picture disagree. This decides which one gives way.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Fit the words",
+      "summary": "After a wrap, the label's box snaps to the longest line the words actually came out to, so the selection outline hugs the words and W is always how wide the words are. Anything around it that is set to hug shrinks to match, so a stack held at a Largest of 140 settles at whatever its wrapped words need.",
+      "pros": [
+        "One number with one meaning: W on a label is always the words, wrapped or not",
+        "The selection outline stops where the last letter does, so what you measure and what you see agree",
+        "A spec copied off a wrapped label is the width of the text, which is what a redline is for"
+      ],
+      "cons": [
+        "A group you gave a Largest of 140 can settle at 111, which can read as the number being ignored",
+        "A left-aligned label that used to sit in a wider box shifts by a few points when its box tightens"
+      ],
+      "mitigation": "Largest already reads as a ceiling rather than a target, and the group's own W keeps showing what it settled at, so the ceiling and the result are both on screen a row apart."
+    },
+    {
+      "id": "b",
+      "label": "Keep the room, and name both numbers",
+      "summary": "Nothing on the canvas moves. The label keeps the whole width its container handed it, and a line appears with the size fields saying so: wrapped to fit Group, words 111 wide. Both numbers are on screen and each one is labelled.",
+      "pros": [
+        "Nothing that is built today changes shape or moves",
+        "A group held at a Largest of 140 is exactly 140, with no surprise",
+        "Both numbers are readable in one place instead of one being hidden"
+      ],
+      "cons": [
+        "The selection outline still runs past the last letter, so the picture still disagrees with the number",
+        "It adds another line of explanation to a panel that has been shedding them"
+      ],
+      "mitigation": "The line sits directly under W and H, right where the confusing number is, rather than in a separate section."
+    },
+    {
+      "id": "c",
+      "label": "Leave it as it is",
+      "summary": "A wrapped label goes on reporting the room it was given. Nothing is added and nothing moves.",
+      "declines": true,
+      "pros": [
+        "No risk to layouts that already look right",
+        "Frees the queue for feature work"
+      ],
+      "cons": [
+        "A person redlining a wrapped label reads a width that is not the width of the words"
+      ],
+      "mitigation": "The measure tool can still be dragged across the words by hand to get their real width."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-08T18:51:51.783Z"
+}

@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/wrapped-label-width",
+  "seed": "A label the container wrapped keeps the whole room the container gave it as its box, even though the words that came out of the wrap are narrower. The walk builds the stack, puts a ceiling on it, then picks the label itself so its W can be read beside the words it actually has.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 240], "to": [340, 280] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [300, 320] },
+    { "do": "type", "text": "Save all the changes" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "selectRow", "row": "Text" },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "click", "at": [320, 260] },
+    { "do": "click", "at": [340, 330], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.9 },
+
+    { "do": "press", "control": "Limits", "in": "Width" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "focus", "field": "Largest width" },
+    { "do": "type", "text": "140" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-group-picked", "note": "the stack at its ceiling of 140, words on two lines" },
+    { "do": "snapshot", "name": "wrapped-1-group" },
+    { "do": "panel", "stage": "1-group-picked" },
+
+    { "do": "press", "control": "Twist", "in": "Group" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "selectRow", "row": "Text" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-label-picked", "note": "THE TEST: the label itself is picked. Its selection outline runs the whole 140 the stack gave it, well past the end of the words, and W says 140 rather than how wide the two lines came out." },
+    { "do": "snapshot", "name": "wrapped-2-label" },
+    { "do": "panel", "stage": "2-label-picked" }
+  ]
+}

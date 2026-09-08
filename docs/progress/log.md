@@ -13044,3 +13044,37 @@ under the border differs from the pixel inside the fill; write it once the
 direction is known, and revisit `corner-radius-rounds-walk` and
 `ellipse-border-walk`, which currently darken the ring by hand to have anything
 to photograph.
+
+## 2026-09-08 — A wrapped label and the width it reports
+
+The queue task "A wrapped label says which width you are looking at" said the
+number a container-wrapped label shows is ambiguous. Reproduced it twice rather
+than taking the report on faith. In a throwaway core test, a label whose words
+are 141 wide, inside a free group with a Largest width of 100, comes out with a
+frame of exactly 100 while the wrapped words only reach 78;
+`Layer.textWrapped(inRoom:)` sets the frame to the whole room the container
+allowed rather than to the longest line the wrap produced. Then live, in the
+probe with Screen Recording granted: `Scripts/playtest/wrapped-label-width-walk.json`
+rebuilds the 2026-09-05 audit's own example (a square and "Save all the
+changes", stacked, Largest width 140) and picks the label itself. Its selection
+outline runs the full 140 while the longest line stops about 29 short of it, and
+W reads 140. So the two numbers that disagree are the label's W and the words a
+person can see, not W and anything in another section.
+
+Also checked the ripple before proposing anything: `GroupFlow.placed` settles a
+group's width from the UNWRAPPED children, wraps, then only re-measures height,
+so narrowing the label alone would leave a hugging group sitting at its ceiling
+with a visible gap. Whether that group should shrink too is a thing a person
+should see and choose, so it went into the decision rather than being guessed.
+
+Filed the decision with three options: fit the words (recommended), keep the
+room and name both numbers in the panel, and leave it (marked as declining).
+The brief carries a real capture, cropped so the label's outline and the W field
+sit side by side in one picture. Turning W into a readout was considered and
+rejected again for the reason the predecessor task found: it removes the only
+keyboard way to set a paragraph width while the canvas drag keeps it.
+
+Next: the answer decides whether `textWrapped(inRoom:)` lands the box on the
+wrap's longest line (and whether a hugging container re-measures after the wrap),
+or whether the change is a labelled line under W and H instead. Tests first
+either way, in `GroupTextWrapTests`. Task is blocked on the answer.

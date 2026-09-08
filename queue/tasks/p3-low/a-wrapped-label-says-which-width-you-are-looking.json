@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:19:41.071Z",
-  "updated": "2026-09-08T12:09:07.046Z",
+  "updated": "2026-09-08T18:53:52.816Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of a-stretched-piece-stops-offering-a-size-you-cann (2026-09-06), which was asked to make this a readout and found the premise false. Evidence, verified with a test: a label with natural width 166 inside a 100-wide free group flows to 104 with wrappedByItsContainer = true. Typing 60 or 140 CLEARS the flag in Layer.resized and sticks; only 400 (wider than the words) snaps back to 104, because textHugsItsWords is then true again and GroupFlow.wrapping re-wraps it. So the W field is a live control, not a decided number, and it must NOT become a GeometryReadout: that would remove the keyboard way to set a paragraph width while the canvas drag keeps it. The real complaint is the audit line 2026-09-05-words-that-wrap rough3: two numbers that look like they disagree. Likely answers are a word in the Layout section rather than a change to the W field. Ask the user before building: this is a visual-direction call.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-08T12:09:07.045Z",
       "note": "seq 30 -> 20"
+    },
+    {
+      "t": "2026-09-08T18:42:30.004Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T18:51:35.593Z",
+      "note": "Adversarial review before building: reproduced the complaint rather than trusting it, and found the premise is TRUE but mis-stated. Core repro (throwaway test): a label whose words are 141 wide, inside a free group with Largest width 100, comes out with a frame of 100 while the WRAPPED words only reach 78. Same for two other phrases (104 natural, 100 box, 63 ink; 151 natural, 100 box, 89 ink). textWrapped(inRoom:) sets the frame to the whole room the container allowed, not to the longest line the wrap produced."
+    },
+    {
+      "t": "2026-09-08T18:51:35.593Z",
+      "note": "Reproduced live in the probe app too, with Screen Recording granted. Scripts/playtest/wrapped-label-width-walk.json builds the audit's own example: a square and the words Save all the changes, stacked, Largest width 140, then picks the LABEL. Capture wrapped-2-label-sc.png: the label's selection outline runs the full 140 while the longest line stops about 29 short of it, and W reads 140. So the two numbers that look like they disagree are the label's W and the words a person can see."
+    },
+    {
+      "t": "2026-09-08T18:51:35.593Z",
+      "note": "Checked the ripple before proposing a change: GroupFlow.placed decides the group's width from the UNWRAPPED children, then wraps, then only re-measures height. Verified: a group with Largest 100 holding a label whose wrapped ink is 78 comes out 100. So narrowing the label to its words does not on its own narrow the group; a group that hugs would stay at its ceiling with a visible gap unless it is re-measured after the wrap too. That is the part a person should decide, so it went into the decision rather than being guessed."
+    },
+    {
+      "t": "2026-09-08T18:51:35.593Z",
+      "note": "Shortest version considered and rejected: turning W into a readout. The predecessor task already proved that removes the only keyboard way to set a paragraph width while the canvas drag keeps it. Stretched and filled labels are untouched either way, since GroupFlow.wrapRooms excludes them and they keep going through sizeIsDecidedByItsContainer."
+    },
+    {
+      "t": "2026-09-08T18:53:52.815Z",
+      "note": "Waiting on a visual-direction decision: after a wrap, should a label be as wide as the words that came out, or as wide as the room it was given? Reproduced both in a test and live in the probe app, with a capture in the brief."
     }
-  ]
+  ],
+  "started": "2026-09-08T18:42:30.003Z"
 }
