@@ -4,12 +4,12 @@
   "goal": "Border is now something you add in Effects, but the old Outline row is still sitting in Appearance, so there are two ways to draw a line round a shape and no way to tell which one you are looking at. Take Outline out. And an effect's colour should be a setting under that effect, alongside its width and position, set the way every other colour in the app is set, with saved colours available. Today the border's colour sits up in the row header, which is neither where its own settings are nor how colours work anywhere else.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 20,
-  "status": "blocked",
+  "seq": 1,
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T05:08:20.535Z",
-  "updated": "2026-09-08T12:09:06.612Z",
+  "updated": "2026-09-08T13:57:04.435Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 after border-is-an-effect-you-can-add-and-shadow-is-on shipped. That task added BorderEffect (Sources/PhotonzCore/LayerEffects.swift) with a colour, width and position, but left LayerPart.outline in place, which is exactly the duplication its own acceptance asked to settle in user words; it was not settled, so settle it now by retiring the outline. The migration is the careful part, since the outline is the only edge older documents have: convert it on open rather than dropping it, and prove with a test that the picture is unchanged. On the colour: the row header currently carries the effect's colour swatch beside the tick (EffectsListInspector.swift around line 98), while its width and position sit in the settings below, so the colour is the only setting in the wrong place. Move it into the settings and use the same colour control the rest of the panel uses so saved colours work, since a colour that cannot take a style is the odd one out.",
@@ -62,7 +62,19 @@
     {
       "t": "2026-09-08T12:09:06.611Z",
       "note": "seq 8 -> 20"
+    },
+    {
+      "t": "2026-09-08T13:56:53.474Z",
+      "note": "decision \"With Outline gone from Appearance, what should drawing a shape give you?\" resolved: Shapes arrive with their edge already listed (The user said again on 2026-09-08 that Outline is no longer needed since borders are effects. Option a is the one that removes it with no change to what a drawn shape looks like: the edge is still there, listed as a Border you can retune, reorder or remove. If they would rather shapes arrive bare, that is a one line change afterwards.)"
+    },
+    {
+      "t": "2026-09-08T13:56:57.667Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T13:57:04.434Z",
+      "note": "seq 20 -> 1"
     }
   ],
-  "started": "2026-09-08T05:50:37.605Z"
+  "started": "2026-09-08T13:56:57.666Z"
 }

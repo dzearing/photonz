@@ -48,6 +48,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-08T06:25:43.460Z"
+  "status": "resolved",
+  "created": "2026-09-08T06:25:43.460Z",
+  "answer": {
+    "choice": "a",
+    "note": "The user said again on 2026-09-08 that Outline is no longer needed since borders are effects. Option a is the one that removes it with no change to what a drawn shape looks like: the edge is still there, listed as a Border you can retune, reorder or remove. If they would rather shapes arrive bare, that is a one line change afterwards.",
+    "resolved": "2026-09-08T13:56:53.460Z"
+  }
 }
