@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2050,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T17:15:20.207Z",
-  "updated": "2026-09-08T17:15:20.210Z",
+  "updated": "2026-09-08T17:44:46.052Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-08 with two throwaway walks against the probe.\n\nBorder: draw a rectangle, press Switch in Border, draw a second rectangle, dump the panel. First box: Twist/Reorder/Switch(Border, off)/Remove/Color/Position/Slider all present. Second box: only Fill switch, Fill colour, Effects header and Add Effect. No Border row.\n\nShadow, same shape of test (add Shadow, switch it off, draw a second box): second box dump shows Switch | Shadow, off and Remove | Shadow. The row survives. So this is Border-only.\n\nCause is EditorState+LayersPanel.swift rememberable(_:shape:): annotationStyles.setStrokeWidth(edge.isOn ? edge.width : 0, forShape: shape) collapses off into width 0, and AnnotationStyles.arrivingStyle(forShape:) guards `d.strokeWidth > 0` before synthesising the border, so off means no row and the width is lost with it. Collapsing off to 0 was deliberate (the comment cites the 2026-09-06 report that a box came back outlined); the vanished row is the unchosen side effect.\n\nOne fix that needs no model change: in rememberable, when the edge is OFF leave the border effect IN the remembered style.effects instead of removing it, and still setStrokeWidth(0) so arrivingStyle does not synthesise a second one. On stays as it is today (lifted to the tool, row synthesised). Worth checking the Position memory too: Add Effect > Border makes a plain BorderEffect() (Outside), so LayerEffects.swift:490 ignores annotationStyles.strokePosition(forShape:).\n\nNOTE this is SHARED code (EditorState+LayersPanel.swift, not under Releases/), so it changes Current as well as Next. That is why the walk-repair task on 2026-09-08 did not fix it and recorded todays behaviour instead: parts-off-is-remembered step 18 now expects NO Border row, and effects-remembered step 63 the same, both with notes pointing at this task. Those two walks must be updated when this lands.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-08T17:15:20.209Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T17:44:46.051Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T18:10:00.000Z",
+      "note": "Adversarial review before building. The proposal is sound and is the shortest version: today the switch and the cross both mean 'the next box gets no border', so one of the two gestures is a lie, and a first-time user has no way to tell them apart. Keeping the row on a switch-off gives the pair distinct meanings (switch = park it, cross = be rid of it) and matches every other effect, so there is nothing new to learn. The one real cost is a dimmed row somebody who never wants borders has to cross off once; the cross is on the row, so that is one press. No decision needed."
+    },
+    {
+      "t": "2026-09-08T18:10:00.000Z",
+      "note": "Reproduced against the probe before changing anything, with a new walk asserting the wanted behaviour: Scripts/playtest.sh Scripts/playtest/border-off-keeps-its-row-walk.json failed at step 28 with 'no control called \"Switch\" in \"Border\" is in the panel to read; the ones that are: none'."
+    },
+    {
+      "t": "2026-09-08T18:10:00.000Z",
+      "note": "Fixed in PhotonzCore rather than the app layer: the rule is pure and belongs beside its mirror. New AnnotationStyles.remember(_:forShape:) holds all of it, with 9 tests written first in AnnotationStylesTests (red before, green after). EditorState+LayersPanel.captureStyleDefault now just calls it and the private rememberable() is gone. Off keeps the border in the remembered effects and still arms the tool with width 0, so no second ring is synthesised."
+    },
+    {
+      "t": "2026-09-08T18:10:00.000Z",
+      "note": "Verified in the app, not just in tests. The walk now runs 62 steps to the end. Pixels checked in the document renders: the second box paints no line at all, and one press on its row brings back a 20pt ring outside the edge, the same one the first box had. Real window captures (Screen Recording was granted) show the dimmed Border row carrying Color, Position Outside and Width 20 pt."
+    },
+    {
+      "t": "2026-09-08T18:10:00.000Z",
+      "note": "Acceptance 4: parts-off-is-remembered-walk (61 steps) and effects-remembered-walk (93 steps) both updated to claim the new behaviour and both run to the end. parts-off now gets its line back with the switch rather than the plus, and effects-remembered asserts the position survives too, which it did not before."
+    },
+    {
+      "t": "2026-09-08T18:10:00.000Z",
+      "note": "Ran the wider walk set (48 walks touching borders, outlines, colour, fill, effects, labels): 43 passed, 5 failed. Checked those 5 against the pre-change code with the work stashed and they fail identically, so they are stale, not regressions. Filed as five-stale-walks-still-ask-for-the-outline-that."
+    },
+    {
+      "t": "2026-09-08T18:10:00.000Z",
+      "note": "Shared code, so Current and Next both have this; neither file is forked under Releases/, so there is nothing to port by hand. Full suite green at 4906 tests. Audit written to queue/audits/2026-09-08-border-off-keeps-its-row.json with two real screenshots."
     }
-  ]
+  ],
+  "started": "2026-09-08T17:44:46.050Z"
 }

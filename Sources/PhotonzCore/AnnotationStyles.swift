@@ -165,6 +165,66 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         shapes[shape.rawValue, default: .standard(for: shape)].layerStyle = style
     }
 
+    /// Remember a shape somebody just styled, so the NEXT one of that kind
+    /// arrives looking like it. The mirror of `arrivingStyle(forShape:)`:
+    /// whatever goes in here comes back out of there.
+    ///
+    /// ## The edge is the only part that moves
+    ///
+    /// A box's edge is a Border in its Effects list, and the tool holds that
+    /// edge as its own width, colour and position — the two things it has
+    /// always held (`OutlineRetirement.swift`). So a border left ON is lifted
+    /// OUT of the remembered effects and onto the tool, and `arrivingStyle`
+    /// puts it back; remembering it in both places would hand the next box two
+    /// rings.
+    ///
+    /// ## Off is a row that is off, not the absence of a row
+    ///
+    /// A border SWITCHED OFF stays in the remembered effects, off, with every
+    /// number still on it, and the tool's own width goes to 0 so no second one
+    /// is synthesised over the top. The next box comes out with no line — which
+    /// is what the user asked for on 2026-09-06, when taking a box's outline
+    /// off and drawing another brought the outline back — and with the row
+    /// sitting there, one press from the line it had.
+    ///
+    /// That is what the switch means on every other effect: switch a shadow
+    /// off, draw another shape, and the shadow row is still there holding its
+    /// numbers. Until 2026-09-08 a border collapsed off into "no border",
+    /// which lost the row and the width and position with it, so the only way
+    /// back to a line was the plus and a standard new one. Removing the row
+    /// with the cross is still the way to be rid of it for good: that is the
+    /// whole difference between the cross and the switch.
+    public mutating func remember(_ style: LayerStyle, forShape shape: AnnotationShape) {
+        guard shape.arrivesWithABorder else {
+            setLayerStyle(style, forShape: shape)
+            return
+        }
+        guard let index = style.borderEffectIndex,
+              let edge = style.effects[index].border else {
+            // No ring at all: the next one comes out bare.
+            setStrokeWidth(0, forShape: shape)
+            setLayerStyle(style, forShape: shape)
+            return
+        }
+        setStrokePosition(edge.position, forShape: shape)
+        // The colour only when it really moved: arming a paint is also how the
+        // tool lets go of a saved colour it is holding, and an opacity drag has
+        // no business doing that.
+        if !edge.paint.draws(sameAs: paint(forShape: shape)) {
+            setPaint(edge.paint, forShape: shape)
+        }
+        guard edge.isOn else {
+            // Off: the row stays put, and the tool arms no edge of its own.
+            setStrokeWidth(0, forShape: shape)
+            setLayerStyle(style, forShape: shape)
+            return
+        }
+        setStrokeWidth(edge.width, forShape: shape)
+        var lifted = style
+        lifted.effects.remove(at: index)
+        setLayerStyle(lifted, forShape: shape)
+    }
+
     public mutating func setStrokeWidth(_ width: CGFloat, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].strokeWidth = width
     }

@@ -1,0 +1,29 @@
+{
+  "feature": "Switching a border off keeps its row",
+  "epic": "ui-building",
+  "summary": "Switch a box's border off and the next box you draw still carries the Border row, switched off, holding the width, colour and side it had. One press brings back the line you had, instead of a trip to the plus for a standard new one.",
+  "setup": "Photonz Dev. This is shared code, so it behaves the same in Current and Next, and there is no flag to turn on.",
+  "try": [
+    { "do": "Press R and drag out a rectangle." },
+    { "do": "In Effects, open the Border row and drag Width up to about 20 pt." },
+    { "do": "Set that row's Position to Outside, so the ring is unmistakably yours." },
+    { "do": "Press the Border row's switch to turn the line off." },
+    { "do": "Press R and drag out a second rectangle beside the first.", "shot": "2026-09-08-border-off-second-box.png" },
+    { "do": "Read the Border row on the new box: it is there, dimmed, still 20 pt and still Outside." },
+    { "do": "Press that switch once and watch the line come back at the width and side you set.", "shot": "2026-09-08-border-off-one-press-back.png" },
+    { "do": "Now press the X on the Border row instead, draw another rectangle, and see that removing still means gone." }
+  ],
+  "evaluate": [
+    "When the new box arrives with a dimmed Border row you never asked for, does it read as a line waiting to be switched on, or as clutter?",
+    "Is the difference between the switch and the X obvious enough that you would reach for the right one?",
+    "After turning the border back on, is the ring the one you set, or does anything about it feel reset?",
+    "If you never want borders again, does pressing the X once feel like enough to be rid of them?",
+    "Does an off Border row belong open, showing Colour, Position and Width, or should it collapse until you switch it on?"
+  ],
+  "rough": [
+    "The screenshots here are real window captures, not offscreen renders: Screen Recording was granted to the probe for this run.",
+    "The off row stays twisted open, showing Colour, Position and Width greyed out. That matches every other switched-off effect, so it was left alone, but it is the most likely thing to feel like clutter and it is the last question above.",
+    "A border arrives painted in the shape's stroke colour, which on a red box is red on red and hard to see until you move it Outside. That is older behaviour, untouched here, and it made this feature awkward to demonstrate.",
+    "Five walks in Scripts/playtest were already failing before this work and still are: border-color, corner-radius-rounds, effect-colour, ellipse-border, outline-position. They were checked against the pre-change code and fail identically, so they are stale rather than broken by this. Filed as its own task."
+  ]
+}

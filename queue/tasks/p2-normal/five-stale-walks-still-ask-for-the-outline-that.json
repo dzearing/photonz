@@ -1,0 +1,27 @@
+{
+  "id": "five-stale-walks-still-ask-for-the-outline-that",
+  "title": "Five stale walks still ask for the outline that moved into Effects",
+  "goal": "Five of the scripted walks that drive the app still reach for controls that moved when a shape edge became a Border effect, so they stop partway through and stop telling anyone whether borders, corner radius and effect colour still work. Get them asking for what the app actually shows now.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T18:06:02.560Z",
+  "updated": "2026-09-08T18:06:02.563Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-08 on the pre-change code (git stash of the border-row work), so these are stale rather than caused by it. Command:\n\n  Scripts/playtest-all.sh border-color corner-radius-rounds effect-colour ellipse-border outline-position\n\nOutput:\n  border-color-walk           7s  FAILED  step 26 (type): no text field has the keyboard (first responder is CanvasNSView)\n  corner-radius-rounds-walk   3s  FAILED  step 8 (press): no control called \"Slider\" in \"Border\" is in the panel; the ones that are: Color (Border 1, Color, Border), Color (Border 2, Color, Border)\n  effect-colour-walk          4s  FAILED  step 8 (press): same as above\n  ellipse-border-walk         3s  FAILED  step 10 (press): same as above\n  outline-position-walk       4s  FAILED  step 14 (panelMenu): no menu called \"Position\" is in the window; the ones that are: 100%, Add Effect, Color, Border (Inside)\n\nThree of them share one cause: a shape now ARRIVES holding a Border, so the walk step Add Effect > Border makes a SECOND one and the rows become Border 1 and Border 2, which no step names. Either drop the Add Effect step and tune the row the shape came with, or name Border 1. outline-position-walk looks for a Position menu that is now on the Border row itself. border-color-walk is a different fault: a type step lands with the canvas holding the keyboard.\n\nThe same run reported 43 other walks passing, so the harness itself is fine.",
+  "acceptance": [
+    "Scripts/playtest-all.sh border-color corner-radius-rounds effect-colour ellipse-border outline-position reports 5 passed, 0 failed",
+    "Each walk still makes the same claim it was written to make, rather than being trimmed down to whatever passes",
+    "Running the same command a second time gives the same answer"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T18:06:02.562Z",
+      "note": "created (manual)"
+    }
+  ]
+}

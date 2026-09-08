@@ -206,3 +206,152 @@ struct AnnotationStylesTests {
         #expect(styles.arrowheadScale(forShape: .arrow) == 2.0)
     }
 }
+
+// MARK: - Remembering a styled shape as its tool's default
+
+/// What the next box of this kind arrives wearing, after the last one was
+/// styled. The one interesting case is a border that was switched OFF: it has
+/// to stay a row on the next shape rather than vanishing, exactly as a
+/// switched-off shadow does, so one press brings back the line you had instead
+/// of a standard new one from the plus.
+@Suite("AnnotationStyles remembering")
+struct AnnotationStylesRememberingTests {
+
+    private func boxStyle(border: BorderEffect?) -> LayerStyle {
+        var style = LayerStyle()
+        if let border { style.effects.append(.border(border)) }
+        return style
+    }
+
+    // A border switched off is remembered as a row that is off, NOT as no
+    // border at all: the next box carries it, switched off, with every number
+    // it had. Reported 2026-09-08.
+    @Test func aBorderSwitchedOffStaysARowOnTheNextShape() {
+        var styles = AnnotationStyles()
+        var edge = BorderEffect(width: 9, colorHex: "#0A84FF", position: .inside)
+        edge.isOn = false
+        styles.remember(boxStyle(border: edge), forShape: .rectangle)
+
+        let arriving = styles.arrivingStyle(forShape: .rectangle)
+        #expect(arriving.borderEffects.count == 1)
+        let kept = arriving.borderEffects.first
+        #expect(kept?.isOn == false)
+        #expect(kept?.width == 9)
+        #expect(kept?.position == .inside)
+        #expect(kept?.colorHex == "#0A84FF")
+    }
+
+    // ...and it still paints nothing, which is the behaviour the user asked
+    // for on 2026-09-06: take the line off a box and the next box is bare.
+    @Test func aBorderSwitchedOffDrawsNoLineOnTheNextShape() {
+        var styles = AnnotationStyles()
+        var edge = BorderEffect(width: 9, position: .inside)
+        edge.isOn = false
+        styles.remember(boxStyle(border: edge), forShape: .rectangle)
+
+        #expect(styles.arrivingStyle(forShape: .rectangle).paintedBorders.isEmpty)
+        // And no stroke of the shape's own sneaks back in either.
+        #expect(styles.content(for: .rectangle)?.strokeWidth == 0)
+    }
+
+    // Switching it back on is one press, and what comes back is the line that
+    // was there: same width, same side of the edge.
+    @Test func switchingTheRememberedRowBackOnRestoresTheLineItHad() {
+        var styles = AnnotationStyles()
+        var edge = BorderEffect(width: 9, position: .inside)
+        edge.isOn = false
+        styles.remember(boxStyle(border: edge), forShape: .rectangle)
+
+        var arriving = styles.arrivingStyle(forShape: .rectangle)
+        guard let index = arriving.borderEffectIndex else { Issue.record("no row"); return }
+        arriving.effects[index].border?.isOn = true
+        #expect(arriving.paintedBorders.count == 1)
+        #expect(arriving.paintedBorders.first?.width == 9)
+        #expect(arriving.paintedBorders.first?.position == .inside)
+    }
+
+    // A border left ON is lifted onto the tool and put back by
+    // `arrivingStyle`, so the next box wears ONE ring rather than two.
+    @Test func aBorderLeftOnArrivesOnceAndKeepsItsWidthAndSide() {
+        var styles = AnnotationStyles()
+        styles.remember(boxStyle(border: BorderEffect(width: 7, position: .center)),
+                        forShape: .rectangle)
+
+        let arriving = styles.arrivingStyle(forShape: .rectangle)
+        #expect(arriving.borderEffects.count == 1)
+        #expect(arriving.borderEffects.first?.isOn == true)
+        #expect(arriving.borderEffects.first?.width == 7)
+        #expect(arriving.borderEffects.first?.position == .center)
+    }
+
+    // Taking the row off with the cross still means gone for good: that is the
+    // whole difference between removing and switching off.
+    @Test func aBorderRemovedWithTheCrossIsNotOnTheNextShape() {
+        var styles = AnnotationStyles()
+        styles.remember(boxStyle(border: nil), forShape: .rectangle)
+
+        #expect(styles.arrivingStyle(forShape: .rectangle).borderEffects.isEmpty)
+    }
+
+    // Everything else in the list rides along either way.
+    @Test func theRestOfTheEffectsListIsRememberedWithTheBorderOffOrOn() {
+        for on in [true, false] {
+            var styles = AnnotationStyles()
+            var edge = BorderEffect(width: 5)
+            edge.isOn = on
+            var style = LayerStyle()
+            style.effects.append(.shadow(ShadowStyle(kind: .drop)))
+            style.effects.append(.border(edge))
+            styles.remember(style, forShape: .rectangle)
+
+            let arriving = styles.arrivingStyle(forShape: .rectangle)
+            #expect(arriving.shadows.count == 1)
+            #expect(arriving.borderEffects.count == 1)
+            #expect(arriving.borderEffects.first?.isOn == on)
+        }
+    }
+
+    // Per kind of shape: switching a box's border off leaves the oval alone.
+    @Test func switchingABoxBorderOffLeavesTheOvalAlone() {
+        var styles = AnnotationStyles()
+        var edge = BorderEffect(width: 9, position: .inside)
+        edge.isOn = false
+        styles.remember(boxStyle(border: edge), forShape: .rectangle)
+
+        let oval = styles.arrivingStyle(forShape: .ellipse)
+        let pristine = AnnotationStyles().arrivingStyle(forShape: .ellipse)
+        #expect(oval.borderEffects.count == 1)
+        #expect(oval.borderEffects.first?.isOn == true)
+        #expect(oval.borderEffects == pristine.borderEffects)
+    }
+
+    // The row is still there after a relaunch: what the tool remembers is
+    // written to prefs, so quitting with the border off must not be the same
+    // as never having had one.
+    @Test func theSwitchedOffRowSurvivesARelaunch() throws {
+        var styles = AnnotationStyles()
+        var edge = BorderEffect(width: 9, position: .center)
+        edge.isOn = false
+        styles.remember(boxStyle(border: edge), forShape: .rectangle)
+
+        let data = try JSONEncoder().encode(styles)
+        let reopened = try JSONDecoder().decode(AnnotationStyles.self, from: data)
+        let arriving = reopened.arrivingStyle(forShape: .rectangle)
+        #expect(arriving.borderEffects.count == 1)
+        #expect(arriving.borderEffects.first?.isOn == false)
+        #expect(arriving.borderEffects.first?.width == 9)
+        #expect(arriving.borderEffects.first?.position == .center)
+    }
+
+    // A line and an arrow ARE their stroke, so there is no edge to lift out of
+    // them and the style is remembered whole.
+    @Test func shapesThatAreTheirOwnStrokeAreRememberedWhole() {
+        for shape in [AnnotationShape.line, .arrow, .highlight] {
+            var styles = AnnotationStyles()
+            var style = LayerStyle()
+            style.effects.append(.border(BorderEffect(width: 3)))
+            styles.remember(style, forShape: shape)
+            #expect(styles.arrivingStyle(forShape: shape).borderEffects.count == 1)
+        }
+    }
+}
