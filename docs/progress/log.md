@@ -13005,3 +13005,42 @@ Next: the invisible-border task is the open follow-up. Open question for the
 user there is what colour a first border should be, since "a darker shade of
 the fill", "a fixed ink" and "the last border colour you used" are all
 defensible and only one of them is what they want.
+
+## 2026-09-08 — What colour a shape's first border should be (decision filed)
+
+Ran `a-shape-s-border-arrives-the-same-colour-as-its`. Reproduced it on the
+probe before touching anything: a fresh box arrives with Fill on and an
+Effects > Border row reading Inside, 4 pt, and the render is one flat colour.
+The earlier evidence sampled the scanline at y=300, which is the box's own top
+edge; scanning at y=380, through the middle, is the honest test. It gives
+`0:#FFFFFF 340:#FF543E 560:#FFFFFF` — no rim at all — while the same scan with
+the border painted a deeper shade gives
+`340:#BD1D00 344:#FF543E 556:#BD1D00 560:#FFFFFF`. So the ring is a real 4 px
+ring and only its colour was hiding it. Nothing is copying the fill onto the
+border at draw time: `ShapeDefaults.standard(for:)` seeds a box's fill and its
+outline as the one shape colour, and `arrivingStyle(forShape:)` hands the
+Border that same paint.
+
+Did not fix it. The equal colours are deliberate — switch Fill off and you get
+an outline box in the shape colour — and the decision resolved earlier the same
+day (`outline-leaves-appearance-…`) chose its option on the promise that
+"nothing you draw changes". Seeding a visible rim changes what every new shape
+looks like, so it is the user's call, not a silent default change.
+
+Filed the decision with four options: a deeper shade of the fill (recommended),
+a near-black edge whatever the fill, no edge until you ask for one, and leave
+it (marked as declining). Three of them carry a real app picture rather than a
+mock-up: the probe drew the box and the Border colour was picked through the
+panel, then the renders were cropped into `queue/audits/2026-09-08-border-seed-*.png`
+and referenced from the brief, which the dashboard serves through `/audits/`.
+The "no edge" picture is a window capture of the panel with an empty Effects
+list, since that option's difference is in the panel rather than the canvas.
+
+Next: the answer decides a one-line change in `ShapeDefaults.standard(for:)`
+(plus a darken-or-lighten helper with tests if the shade option wins). The
+memory rule needs nothing: `AnnotationStyles.remember()` already lifts a
+border's colour onto the tool. Acceptance still wants a walk proving the pixel
+under the border differs from the pixel inside the fill; write it once the
+direction is known, and revisit `corner-radius-rounds-walk` and
+`ellipse-border-walk`, which currently darken the ring by hand to have anything
+to photograph.
