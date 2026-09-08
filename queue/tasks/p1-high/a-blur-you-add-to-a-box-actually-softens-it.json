@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-08T04:04:29.971Z",
-  "updated": "2026-09-08T05:00:42.000Z",
+  "updated": "2026-09-08T05:01:15.166Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe on 2026-09-07 while finishing removing-or-switching-off-an-effect-is-remembere. Two walks, each drawing a shape, rendering the document, adding a Blur from the Effects plus, and rendering again:\n\n  Scripts/playtest.sh /tmp/pz/blurcheck.json    (rectangle)\n  Scripts/playtest.sh /tmp/pz/blurcheck2.json   (arrow, then ellipse)\n\nComparing the two renders with PIL:\n  rectangle before -> after diff bbox: None          (nothing changed at all)\n  arrow     before -> after diff bbox: (84, 84, 316, 266)   (paints, and spreads past the drawn line)\n  ellipse   before -> after diff bbox: (350, 100, 500, 250) (exactly the drag box: the halo is cut off)\n\nThe walk also asserted the panel agrees the blur is on (expect control Switch in Blur reads \"Blur, on\"), so this is the renderer and not the model.\n\nDiagnosis: DocumentRenderer.swift:777 does image = blurred(image, radius: layer.style.blurRadius) on the layer raster, and blurred() clamps to the extent before blurring so the edges do not fade to transparent. A rectangle annotation raster is solid edge to edge, so clamp + blur + crop back to the same extent returns the identical image. The layer needs room around it before the blur, the way LayerStyle.padding (Layer.swift:972, blurRadius * 3) already implies, and the crop afterwards has to keep that room.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-08T05:00:42.000Z",
       "note": "Audit: queue/audits/2026-09-07-blur-softens-a-shape.json with two probe window captures."
+    },
+    {
+      "t": "2026-09-08T05:01:15.165Z",
+      "note": "Blur now softens a shape edges and all and spreads past its edge; DocumentRenderer.blurred gained fadesEdges and moved after corners/border in both the leaf and group paths. Verified on the probe (rectangle edge ramps, ellipse halo reaches 20pt past its box on all four sides, switching off restores the render exactly) and by 5 new tests in BlurSoftensShapeTests; Scripts/test.sh green at 4700 tests. Audit: queue/audits/2026-09-07-blur-softens-a-shape.json"
     }
   ],
-  "started": "2026-09-08T04:48:44.793Z"
+  "started": "2026-09-08T04:48:44.793Z",
+  "completed": "2026-09-08T05:01:15.166Z"
 }
