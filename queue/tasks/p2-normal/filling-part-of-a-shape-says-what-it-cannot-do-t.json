@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T01:19:35.670Z",
-  "updated": "2026-09-08T12:09:06.685Z",
+  "updated": "2026-09-08T12:36:46.955686Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-08 with Scripts/playtest.sh Scripts/playtest/cut-says-what-it-cannot-do-walk.json, stage 4a-fill-region: a rectangle picked with a marquee over its left half, then Option Backspace. Log reads layers 2 (unchanged), canUndo unchanged, and copied still holding the PREVIOUS message (\"Cannot delete a piece ...\") rather than raising one of its own, i.e. the key did nothing and said nothing. Cause: EditorState.fillSelectedLayer(useBackground:) does `if let target = regionTargetID() { fillRegion(...) }` and RegionTarget.id returns nil for a picked layer that cannot be sliced. Fix is the same shape as the cut one: RegionSliceRefusal needs a third Action case and fillSelectedLayer needs the same early raiseCanvasNotice. The bucket click path (fillLayer(at:hit:useBackground:)) has a pointer and different semantics, so decide separately whether it speaks.",
@@ -27,6 +27,39 @@
     {
       "t": "2026-09-08T12:09:06.684Z",
       "note": "seq 1920 -> 10"
+    },
+    {
+      "t": "2026-09-08T12:28:16.886Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T12:36:46.955686Z",
+      "note": "Reproduced before touching anything. Scripts/playtest/fill-says-what-it-cannot-do-walk.json, stage 3-fill-refused: rectangle picked, marquee over its left half, Option Backspace. log.json read layers 2 and copied 'none' \u2014 the key did nothing and said nothing. The renders confirm the two controls already worked: with no marquee the whole rectangle went black, and a marquee on a real picture filled the corner."
+    },
+    {
+      "t": "2026-09-08T12:36:46.955686Z",
+      "note": "Adversarial review before building. (1) A first-time user marquees half a rectangle and expects half of it to change colour; silence leaves them with no idea which half of what they did was wrong. (2) Recolouring the whole shape instead would be the same lie Command X used to tell, and the user already approved refusing for cut and delete, so no decision card is needed. (3) The shared sentence 'a piece taken out' is wrong for fill: nothing is taken out. It needed one phrase of its own, 'a piece filled in', and the way out had to be the true one, which is that clearing the marquee recolours the whole shape (verified in the walk). (4) Shortest version wins: one Action case plus one early return, no new notice type, no new flag. (5) The task left the paint bucket to me: clicked inside the same marquee it had the identical silence, so a key that explains itself beside a click that does not is worse than either. It speaks, with the same words. A click OUTSIDE the marquee stays silent, since that is a miss and not a refusal."
+    },
+    {
+      "t": "2026-09-08T12:36:46.955686Z",
+      "note": "Built test-first in PhotonzCore: RegionSliceRefusal.Action gained .fill, title 'Cannot fill a piece', way out 'Clear the marquee to fill the whole layer.', and a pieceClause so fill says 'a piece filled in' where cut and delete say 'a piece taken out'. Six new/extended tests including one that pins every key refusing the same layers for the same reason. Suite: 4831 tests, all green."
+    },
+    {
+      "t": "2026-09-08T12:36:46.955686Z",
+      "note": "App wiring in EditorState+Regions.swift: a new regionSliceRefusal(action:) helper holds the flag check and the picked-layer lookup in one place; fillSelectedLayer raises it before the regionTargetID branch, the bucket raises it after the region.contains check, and deleteRegion now uses the same helper instead of its own copy. Flag copy in FeatureCatalog updated to name all three keys and the bucket."
+    },
+    {
+      "t": "2026-09-08T12:36:46.955686Z",
+      "note": "Verified in the real app, not just in tests. Same walk after the change: stage 3-fill-refused and stage 3a-bucket-refused both read 'Cannot fill a piece \u00b7 Only a picture can have a piece filled in. Turn it into a picture from the Layer menu, then try again.', layers still 2. Controls unchanged: stage 5 render shows the whole rectangle black with no marquee, stage 7 shows the corner of a real picture filled. Screen Recording was granted, so the audit carries two real window captures."
+    },
+    {
+      "t": "2026-09-08T12:36:46.955686Z",
+      "note": "Review of the built thing: the pill is legible and lands in the same spot as the cut and delete refusals. One roughness I did not fix, recorded in the audit: the pill lives 3 seconds, so clearing the marquee and filling inside that window succeeds under a pill that still reads 'Cannot fill a piece'. It predates this change and Backspace has the same gap, so it belongs to the family rather than to this task."
+    },
+    {
+      "t": "2026-09-08T12:36:46.955686Z",
+      "note": "Audit written: queue/audits/2026-09-08-fill-over-a-marquee.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-08T12:28:16.885Z"
 }

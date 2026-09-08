@@ -12620,3 +12620,45 @@ carry the command would be one step instead of three, but it would be the first
 pill in the app with an action in it.
 
 Next: the queue's own order.
+
+## 2026-09-08 — Option Backspace was the last key in the family still going quiet
+
+⌘X and ⌫ over a marquee they cannot honour had both learned to say so. ⌥⌫ had
+not: a marquee over half a rectangle and a press of it did nothing at all and
+said nothing, so the person was left looking at a marquee over a result they
+never got. Reproduced first, before touching anything, with a new walk
+(`Scripts/playtest/fill-says-what-it-cannot-do-walk.json`): stage
+`3-fill-refused` read `layers 2` and `copied "none"`.
+
+It now says, on the same pill and in the same shape of sentence:
+
+> **Cannot fill a piece**  Only a picture can have a piece filled in. Turn it
+> into a picture from the Layer menu, then try again.
+
+The one phrase that is not shared is deliberate. Cut and delete say "a piece
+taken out"; ⌥⌫ puts colour INTO the marquee and takes nothing out of anything,
+so it says "a piece filled in". A line that describes the wrong verb is a line
+you have to stop and reread, which is the whole cost the refusal was meant to
+save. The way out is the true one: with the marquee cleared, ⌥⌫ really does
+recolour the whole shape, which the walk photographs.
+
+The task left one call to the runner: whether the paint bucket should speak too.
+It should. Clicked inside the same marquee it had the identical silence, and a
+key that explains itself sitting next to a click that does not is worse than
+either alone. A click OUTSIDE the marquee stays quiet, because that one is a
+miss rather than a refusal.
+
+`RegionSliceRefusal.Action` gained `.fill` (PhotonzCore, test-first), and the
+flag check plus picked-layer lookup that ⌫ had inline moved into one
+`regionSliceRefusal(action:)` helper that all three call sites now share, so
+the keys cannot drift into saying different things about the same layer.
+`Scripts/test.sh` green, 4831 tests. Screen Recording was granted, so the audit
+carries two real window captures rather than offscreen renders:
+`queue/audits/2026-09-08-fill-over-a-marquee.json`.
+
+Left rough, and written into the audit rather than fixed here: the pill lives
+3 seconds, so clearing the marquee and filling inside that window succeeds
+under a pill that still reads "Cannot fill a piece". ⌫ has the same gap, so it
+belongs to the family rather than to this task.
+
+Next: the queue's own order.

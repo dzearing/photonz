@@ -1,0 +1,28 @@
+{
+  "feature": "Filling part of a shape says what it cannot do",
+  "epic": "ui-building",
+  "summary": "Draw a marquee over half a rectangle or a piece of text and press Option Backspace, and the canvas now says in one line why nothing was filled and what to do instead. It used to do nothing at all and say nothing, while Command X and Backspace over the very same marquee already explained themselves.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is Say when a piece cannot be taken out or filled in, on by default.",
+  "try": [
+    { "do": "Press R and drag out a rectangle on a blank canvas." },
+    { "do": "Press V and click the rectangle to pick it." },
+    { "do": "Press M and drag a marquee over its left half." },
+    { "do": "Press Option Backspace.", "shot": "2026-09-08-fill-over-a-marquee-1-key-refused-sc.png" },
+    { "do": "Pick the paint bucket and click inside the same marquee.", "shot": "2026-09-08-fill-over-a-marquee-2-bucket-refused-sc.png" },
+    { "do": "Press Escape to clear the marquee, then press Option Backspace again: the whole rectangle takes the color." },
+    { "do": "Drop a screenshot on the canvas, pick it, marquee a corner and press Option Backspace: that corner really does fill." }
+  ],
+  "evaluate": [
+    "Does the line tell you enough to get unstuck without opening a menu to find out what it means?",
+    "Is Turn it into a picture the way out you would actually want here, or would you rather Option Backspace just recolored the whole shape?",
+    "Does the pill at the bottom of the canvas catch your eye when you were looking at the marquee up in the corner?",
+    "Should the paint bucket speak here at all, or is a click that does nothing quieter and better than a sentence?",
+    "Do the three lines read as one family when you press Command X, Backspace and Option Backspace over the same marquee?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both shots above are real captures of the window, not offscreen renders.",
+    "The pill lives for 3 seconds. Clear the marquee and fill inside that window and the successful fill happens under a pill that still reads Cannot fill a piece. It is brief and it predates this change (Backspace has the same gap), but it is the one place the line can be out of date.",
+    "The sentence differs from cut and delete by one phrase: a piece filled in rather than a piece taken out. Nothing is taken out by Option Backspace, and saying so would have been the easier copy but the wrong one.",
+    "I extended this past the key to the paint bucket clicked inside the marquee, which had the identical silence. The task left that call to me. If you would rather the bucket stayed quiet, say so on the fourth question above."
+  ]
+}

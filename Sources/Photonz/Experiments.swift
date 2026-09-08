@@ -413,10 +413,10 @@ extension Experiments {
     /// every layer flattened together (`CopyRoute`).
     var copyPicksYourLayerEnabled: Bool { isEnabled(FeatureCatalog.copyPicksYourLayerFlag) }
 
-    /// `next-cut-says-what-it-cannot-do`: whether ⌘X and ⌫ refuse, out loud,
-    /// when the marquee is over a layer no piece can be taken out of
-    /// (`RegionSliceRefusal`). Off, cut silently takes the whole layer and ⌫
-    /// silently does nothing.
+    /// `next-cut-says-what-it-cannot-do`: whether ⌘X, ⌫, ⌥⌫ and the bucket
+    /// refuse, out loud, when the marquee is over a layer no piece can be
+    /// taken out of or filled in (`RegionSliceRefusal`). Off, cut silently
+    /// takes the whole layer and the rest silently do nothing.
     var cutSaysWhatItCannotDoEnabled: Bool {
         isEnabled(FeatureCatalog.cutSaysWhatItCannotDoFlag)
     }

@@ -116,7 +116,16 @@ extension EditorState {
         // While a pixel region exists the bucket fills THE REGION, not the
         // layer — and clicks outside it do nothing (Photoshop).
         if selectionTargetsPixels, let region = selection {
-            guard region.contains(point), let target = regionTargetID(preferring: hit) else { return }
+            guard region.contains(point) else { return }
+            // Inside the marquee the bucket is asking for the same thing ⌥⌫
+            // asks for, so it gets the same answer rather than going quiet
+            // where the key explains itself. A click OUTSIDE the marquee is
+            // still silent: that one is not a refusal, it is a miss.
+            if let refusal = regionSliceRefusal(action: .fill) {
+                raiseCanvasNotice(.regionSliceRefused(refusal))
+                return
+            }
+            guard let target = regionTargetID(preferring: hit) else { return }
             fillRegion(hex: useBackground ? backgroundFillHex : foregroundFillHex, into: target)
             return
         }
@@ -129,14 +138,36 @@ extension EditorState {
 
     /// ⌥⌫ — fill the selected layer with the foreground (or background)
     /// color; with a pixel region active, fill the region instead.
+    ///
+    /// A marquee over something no piece can be filled in — a shape, a piece of
+    /// text, a picture that has been cropped or turned — is REFUSED, out loud
+    /// (`RegionSliceRefusal`), the same as ⌘X and ⌫ over the very same marquee.
+    /// It used to fall off the end of the region branch and do nothing at all,
+    /// so this was the one key in the family that still went quiet.
     func fillSelectedLayer(useBackground: Bool) {
         let hex = useBackground ? backgroundFillHex : foregroundFillHex
         if selectionTargetsPixels, selection != nil {
+            if let refusal = regionSliceRefusal(action: .fill) {
+                raiseCanvasNotice(.regionSliceRefused(refusal))
+                return
+            }
             if let target = regionTargetID() { fillRegion(hex: hex, into: target) }
             return
         }
         guard let id = selectedLayerID else { return }
         fillLayer(id: id, hex: hex)
+    }
+
+    /// The refusal the picked layer would raise for a region op, or nil when
+    /// it can be sliced, the flag is off, or nothing is picked (a marquee with
+    /// no pick still has the Background to land on, so there is nothing to
+    /// refuse). One place, so the three keys and the bucket cannot drift into
+    /// saying different things about the same layer.
+    func regionSliceRefusal(action: RegionSliceRefusal.Action) -> RegionSliceRefusal? {
+        guard Experiments.shared.cutSaysWhatItCannotDoEnabled,
+              let picked = pickedLayerID, let layer = document?.layer(id: picked)
+        else { return nil }
+        return RegionSliceRefusal.refusal(for: layer, action: action)
     }
 
     // MARK: - Region-targeted ops (17.5)
@@ -198,9 +229,7 @@ extension EditorState {
         // A picked layer no piece can be taken out of takes the op nowhere
         // else (`RegionTarget`), so this used to be a key that did nothing and
         // said nothing. Say which it was instead (`RegionSliceRefusal`).
-        if Experiments.shared.cutSaysWhatItCannotDoEnabled,
-           let picked = pickedLayerID, let layer = document?.layer(id: picked),
-           let refusal = RegionSliceRefusal.refusal(for: layer, action: .erase) {
+        if let refusal = regionSliceRefusal(action: .erase) {
             raiseCanvasNotice(.regionSliceRefused(refusal))
             return
         }

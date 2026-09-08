@@ -25,6 +25,31 @@ struct RegionSliceRefusalTests {
         // it must keep working without a word on screen.
         #expect(RegionSliceRefusal.refusal(for: picture(frame), action: .cut) == nil)
         #expect(RegionSliceRefusal.refusal(for: picture(frame), action: .erase) == nil)
+        #expect(RegionSliceRefusal.refusal(for: picture(frame), action: .fill) == nil)
+    }
+
+    @Test func aShapeRefusesTheFillKeyToo() {
+        // The gap this closed: ⌘X and ⌫ both had an answer for a marquee over
+        // a rectangle and ⌥⌫ did not, so the family disagreed about the same
+        // marquee over the same layer.
+        let refusal = RegionSliceRefusal.refusal(for: box(frame), action: .fill)
+        #expect(refusal?.reason == .canBecomeAPicture)
+        #expect(refusal?.action == .fill)
+    }
+
+    @Test func everyKeyRefusesTheSameLayersForTheSameReason() {
+        // One rule for all three keys: what refuses and why can never depend
+        // on which of them was pressed, only on the layer.
+        var cropped = picture(frame)
+        cropped.crop = CGRect(x: 0, y: 0, width: 0.5, height: 1)
+        let layers = [picture(frame), box(frame), cropped,
+                      Layer(name: "Width", content: .measure(MeasureContent()), frame: frame)]
+        for layer in layers {
+            let reasons = [RegionSliceRefusal.Action.cut, .erase, .fill].map {
+                RegionSliceRefusal.refusal(for: layer, action: $0)?.reason
+            }
+            #expect(Set(reasons.map { String(describing: $0) }).count == 1)
+        }
     }
 
     @Test func aShapeRefusesButSaysItCanBecomeAPicture() {
@@ -73,6 +98,7 @@ struct RegionSliceRefusalTests {
     @Test func theTitleNamesTheKeyThatWasPressed() {
         #expect(RegionSliceRefusal(action: .cut, reason: .notPixels).title == "Cannot cut a piece out")
         #expect(RegionSliceRefusal(action: .erase, reason: .notPixels).title == "Cannot delete a piece")
+        #expect(RegionSliceRefusal(action: .fill, reason: .notPixels).title == "Cannot fill a piece")
     }
 
     @Test func theDetailSaysWhyAndWhatToDoInstead() {
@@ -80,12 +106,28 @@ struct RegionSliceRefusalTests {
         #expect(cut.detail == "Only a picture can have a piece taken out. Clear the marquee to cut the whole layer.")
         let erase = RegionSliceRefusal(action: .erase, reason: .notPixels)
         #expect(erase.detail.hasSuffix("Clear the marquee to delete the whole layer."))
+        // ⌥⌫ over a shape used to be the one key in the family that still did
+        // nothing and said nothing. Its way out is the true one: with the
+        // marquee gone, ⌥⌫ recolors the whole shape.
+        let fill = RegionSliceRefusal(action: .fill, reason: .notPixels)
+        #expect(fill.detail == "Only a picture can have a piece filled in. Clear the marquee to fill the whole layer.")
+    }
+
+    @Test func fillingSaysFilledInWhereCuttingSaysTakenOut() {
+        // Same sentence, same two halves, one verb apart: nothing is taken out
+        // of a layer by ⌥⌫, so the words must not say it is.
+        for reason in [RegionSliceRefusal.Reason.notPixels, .canBecomeAPicture] {
+            let fill = RegionSliceRefusal(action: .fill, reason: reason).detail
+            #expect(fill.contains("filled in"))
+            #expect(!fill.contains("taken out"))
+            #expect(RegionSliceRefusal(action: .cut, reason: reason).detail.contains("taken out"))
+        }
     }
 
     @Test func aShapeIsToldHowToBecomeAPicture() {
         // The half that was missing: the person is holding a marquee over a
         // rectangle and needs to know a picture is one command away.
-        for action in [RegionSliceRefusal.Action.cut, .erase] {
+        for action in [RegionSliceRefusal.Action.cut, .erase, .fill] {
             let detail = RegionSliceRefusal(action: action, reason: .canBecomeAPicture).detail
             #expect(detail.contains("Turn it into a picture"))
             #expect(detail.contains("Layer menu"))
@@ -96,10 +138,12 @@ struct RegionSliceRefusalTests {
         let detail = RegionSliceRefusal(action: .cut, reason: .adjustedPicture).detail
         #expect(detail.contains("cropped or turned"))
         #expect(!detail.contains("Only a picture"))
+        let fill = RegionSliceRefusal(action: .fill, reason: .adjustedPicture).detail
+        #expect(fill == "This picture is cropped or turned. Clear the marquee to fill the whole layer.")
     }
 
     @Test func nothingItSaysUsesAnEmDash() {
-        for action in [RegionSliceRefusal.Action.cut, .erase] {
+        for action in [RegionSliceRefusal.Action.cut, .erase, .fill] {
             for reason in [RegionSliceRefusal.Reason.notPixels, .adjustedPicture, .canBecomeAPicture] {
                 let refusal = RegionSliceRefusal(action: action, reason: reason)
                 #expect(!refusal.title.contains("—"))

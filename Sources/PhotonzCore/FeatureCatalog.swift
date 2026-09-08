@@ -503,8 +503,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: cutSaysWhatItCannotDoFlag,
-                    title: "Say when a piece cannot be taken out",
-                    description: "A marquee only takes a piece out of a picture. Drag one over half a rectangle or a piece of text and press Command X and, before this, the whole shape vanished onto the clipboard with nothing on screen to say why; Backspace did nothing at all, just as quietly. On, both keys refuse and the canvas says so in one line at the bottom: what did not happen, why, and that clearing the marquee cuts or deletes the whole layer instead. A picture that has been cropped or turned gets its own line, since it is pixels and the crop is what is in the way. Cutting a piece out of a plain picture is untouched, and so is cutting with no marquee up, which still takes the whole layer. Off means cut silently takes the lot and Backspace silently does nothing.",
+                    title: "Say when a piece cannot be taken out or filled in",
+                    description: "A marquee only works on a piece of a picture. Drag one over half a rectangle or a piece of text and press Command X and, before this, the whole shape vanished onto the clipboard with nothing on screen to say why; Backspace and Option Backspace did nothing at all, just as quietly. On, all three keys refuse and the canvas says so in one line at the bottom: what did not happen, why, and that clearing the marquee cuts, deletes or fills the whole layer instead. The paint bucket clicked inside the marquee says the same thing rather than going quiet where the key explains itself. A picture that has been cropped or turned gets its own line, since it is pixels and the crop is what is in the way. Taking a piece out of a plain picture and filling one are untouched, and so is working with no marquee up, which still acts on the whole layer. Off means cut silently takes the lot and the other two silently do nothing.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
