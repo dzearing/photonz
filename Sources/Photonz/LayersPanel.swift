@@ -3821,7 +3821,14 @@ struct TextInspector: View {
                     SelectionMenu(label: "Size",
                                   reading: selection.number { $0.fontSize },
                                   options: sizes(selection),
-                                  title: { "\(Int($0)) pt" },
+                                  // Padded out to three digits, so every size
+                                  // takes the same room and the box holds one
+                                  // width whatever the list picked up. The
+                                  // padding is invisible; `spoken` is the same
+                                  // words without it, for the sentence a
+                                  // hover says.
+                                  title: { TextStyles.sizeTitle($0) },
+                                  spoken: { TextStyles.sizeWords($0) },
                                   help: help("size", selection.count)) {
                         editorState.setTextStyle(ids: ids, fontSize: $0)
                     }
@@ -3965,6 +3972,11 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
     let reading: StyleReading<Value>
     let options: [Value]
     let title: (Value) -> String
+    /// The same value in the words a SENTENCE wants, when the words in the box
+    /// are not those: the Size menu pads its numbers out with blank so every
+    /// size takes the same room, and a hover must not read that blank back.
+    /// Nil wherever the box already says exactly what it means.
+    var spoken: ((Value) -> String)?
     /// What this menu is, in words, for anyone who hovers it. The caption above
     /// the menu says the same thing without being asked. When the box is too
     /// narrow for what it is showing, the full value is said here first.
@@ -3977,6 +3989,11 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
     /// The words the box is showing, when it is showing a value at all.
     private var shownTitle: String? {
         reading.isMixed ? nil : reading.value.map(title)
+    }
+
+    /// The same value as a sentence would say it, which is what a hover reads.
+    private var saidTitle: String? {
+        reading.isMixed ? nil : reading.value.map(spoken ?? title)
     }
 
     /// Whether the box had to shorten them.
@@ -4028,7 +4045,7 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
         // `panelHelp`, not `.help`, so the sentence a shortened name puts in
         // front is something a walk can read back. It is the same text either
         // way; the probe simply keeps a copy of it.
-        .panelHelp(MenuTip.text(about: help, showing: shownTitle, isClipped: isClipped))
+        .panelHelp(MenuTip.text(about: help, showing: saidTitle, isClipped: isClipped))
     }
 }
 

@@ -13173,3 +13173,45 @@ extra markers do not disturb layout. Audit
 `2026-09-08-panel-tooltip-readout` with a real window capture.
 
 Next: back to the queue.
+
+## 2026-09-08 — The Size menu holds one width
+
+The Size menu in the Text section changed width with what it was showing, and
+shoved Weight along the row each time. Reproduced in the real app before
+touching anything, with the panel's own numbers: the Size box is 68pt wide at a
+preset, 72.5pt once a label carries a size the list does not have, and 72.5pt
+again when two picked labels disagree and the menu grows a Mixed row. The Weight
+box's left edge moved 1146 → 1150.5 with it. The second case is the one the
+complaint did not name and the one that happens without importing anything.
+
+The fix the task proposed — measure the widest size and hold that width from the
+start — does not work. A menu control refuses a frame WIDER than its own
+content: hosted the real control, dumped its frames, and a `.frame(width: 100)`
+around a picker whose list needs 68 leaves the button at 68. Width can only be
+held by making the widest ROW constant. Nor is adding a three-digit preset
+enough: digits are proportional in the menu font, so "111 pt" needs 70pt and
+"888 pt" needs 76pt.
+
+So every size title now carries invisible blank after it out to three digits.
+The blank is U+2007 FIGURE SPACE, which is exactly one digit wide — one, two and
+three digit sizes measure 62, 69 and 76pt bare, and every padded one measures
+76pt, with Mixed at 72pt underneath. It goes after the unit, so the closed box
+still reads flush left and the open menu is the same plain list of numbers it
+always was. `TextStyles.sizeTitle` / `sizeWords` / `unpadded` in PhotonzCore
+carry it; `SelectionMenu` gained `spoken` so a hover reads the size without the
+padding, and `PlaytestPanelMenu.readable` strips it wherever a walk reads a
+control back, so `expect ... reads "128 pt"` and `choose: "24 pt"` still work on
+the words a person sees. The toolbar's own size picker was padded the same way.
+
+`panel` steps now record each menu's width and left edge, because "the box holds
+one width" is a claim about numbers and two pictures of a 3pt shift look
+identical. After the change all four stages read 75pt wide at x 1070.0, with
+Weight at 1153.0.
+
+`Scripts/test.sh` green at 4927. New walk `size-menu-one-width-walk.json`; four
+existing walks that drive the Size menu rerun green. Audit
+`2026-09-08-size-menu-one-width` with four real window captures. A size of
+1000pt or more still outgrows the box by 7pt and is spelled out rather than
+shortened.
+
+Next: back to the queue.

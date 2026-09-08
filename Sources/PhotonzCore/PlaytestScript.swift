@@ -655,6 +655,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// The same menus set the other way, so a walk can put the picked labels
     /// into a known state whatever the last walk left the new-text default at.
     case setTextSizeLarge, setTextWeightRegular
+    /// Put the picked labels at a size of three digits
+    /// (`TextStyles.threeDigitSizeForPlaytest`). The Size menu offers seven
+    /// sizes, all of two digits, and picks a bigger one up only once a label
+    /// already wears it, so this is the only way a walk can see the box hold a
+    /// number as wide as it will ever have to hold.
+    case setTextSizeThreeDigits
     /// Put the picked labels into a family whose name is too long for the Font
     /// menu's box (`TextStyles.longNameForPlaytest`). The menu only offers a
     /// family once a label already wears it, so there is no route to this state

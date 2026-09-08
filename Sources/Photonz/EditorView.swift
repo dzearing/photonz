@@ -2213,7 +2213,10 @@ struct EditorView: View {
                     get: { selectedTextContent?.fontSize ?? editorState.textStyles.fontSize },
                     set: { editorState.setTextFontSize($0) })) {
                     ForEach(fontMenuSizes, id: \.self) { size in
-                        Text("\(Int(size)) pt").tag(size)
+                        // Padded out to three digits like the dock's Size menu,
+                        // so a size carried in by an opened document cannot
+                        // stretch the box and shove Weight along the row.
+                        Text(TextStyles.sizeTitle(size)).tag(size)
                     }
                 }
                 Picker("Weight", selection: Binding(

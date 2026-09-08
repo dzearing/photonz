@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/size-menu-one-width",
+  "seed": "The Size menu in the Text section is held to ONE width. A Mac pop-up takes its size from the widest row in its list, not from the one showing, and the Size list is not fixed: it picks up any size the picked labels already wear, and it grows a Mixed row when they disagree. So the box used to change width twice over, once on an imported three digit size and once on any two labels whose sizes differ, shoving the Weight menu beside it each time. Every size row is now padded out to three digits with blank that draws as nothing, so every row takes the same room. This walk reads the Size box's width and the Weight box's left edge at three sizes, at a three digit size no menu can reach by hand, and with two labels picked whose sizes differ. All four readings must be the same numbers.",
+  "setup": {
+    "forget": ["text", "panel", "shapes"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 300] },
+    { "do": "type", "text": "Use your account" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Position & Size section" },
+    { "do": "press", "control": "Appearance section" },
+    { "do": "press", "control": "Effects section" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "describe", "stage": "1-a-preset-size",
+      "note": "one label picked at 24 pt, a size off the menu's own list. This is the reading everything else is compared against: how wide the Size box is, and where the left edge of the Weight box beside it sits." },
+    { "do": "expect", "menu": "Size", "reads": "24 pt" },
+    { "do": "panel", "stage": "1-a-preset-size" },
+    { "do": "snapshot", "name": "size-one-width-1-preset" },
+
+    { "do": "action", "action": "setTextSizeThreeDigits" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-three-digit-size",
+      "note": "THE TEST: the same label at 128 pt, a size the menu offers only because the label already wears it. The number must be spelled out in full, the Size box must be the same width as it was at 24 pt, and the Weight box must not have moved a point." },
+    { "do": "expect", "menu": "Size", "reads": "128 pt" },
+    { "do": "panel", "stage": "2-three-digit-size" },
+    { "do": "snapshot", "name": "size-one-width-2-three-digits" },
+
+    { "do": "panelMenu", "menu": "Size", "shot": "size-one-width-3-menu-open", "choose": "24 pt" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-back-to-a-preset",
+      "note": "the open menu must read as a plain list of numbers, 128 pt among them with a tick, and picking 24 pt off it must work by those words alone." },
+    { "do": "expect", "menu": "Size", "reads": "24 pt" },
+    { "do": "panel", "stage": "3-back-to-a-preset" },
+
+    { "do": "click", "at": [200, 312] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "setTextSizeThreeDigits" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [180, 145] },
+    { "do": "click", "at": [200, 312], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-mixed",
+      "note": "the everyday case the complaint did not name: two labels picked whose sizes differ, so the menu grows a Mixed row and reads Mixed. That row used to be wider than any number on the list and moved the box on its own. Same width, same Weight edge." },
+    { "do": "expect", "menu": "Size", "reads": "Mixed" },
+    { "do": "panel", "stage": "4-mixed" },
+    { "do": "snapshot", "name": "size-one-width-4-mixed" }
+  ]
+}

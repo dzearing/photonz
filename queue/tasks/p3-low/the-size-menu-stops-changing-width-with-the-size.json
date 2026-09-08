@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T02:32:30.357Z",
-  "updated": "2026-09-08T12:09:07.189Z",
+  "updated": "2026-09-08T19:46:07.236Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left out of the Font menu width task (2026-09-07) on purpose: the fix there shortens a too-long title with an ellipsis, which is fine for a family name and useless for a number. So this one needs a different answer, most likely measuring the widest size the menu could ever show (three digits plus the unit) and holding that width from the start, which costs a few points of width on every document. See queue/audits/2026-09-07-font-menu-one-width.json and MenuMetrics in Sources/Photonz/MenuMetrics.swift.",
@@ -30,6 +30,31 @@
     {
       "t": "2026-09-08T12:09:07.188Z",
       "note": "seq 70 -> 60"
+    },
+    {
+      "t": "2026-09-08T19:46:07.235Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T19:53:59.942799Z",
+      "note": "Reproduced against the real control, before building. NSPopUpButton (small, menu font) intrinsic widths: presets alone 69pt; presets + an off-list \"128 pt\" 73pt; presets + \"888 pt\" 76pt; the list with the word Mixed in it 72pt. So the box moves in TWO everyday cases, not one: the imported off-list size the task names, and simply picking two labels whose sizes differ, which puts Mixed in the list and shifts Weight 3pt with no imported document anywhere."
+    },
+    {
+      "t": "2026-09-08T19:53:59.942799Z",
+      "note": "The fix the note proposed cannot work as written: a SwiftUI menu Picker refuses a frame WIDER than its content. Hosted the real control and dumped frames: with .frame(width: 100) around a picker whose list needs 68, the SwiftUIPopupButton stays 68 wide; only the layout slot grows. Width can only be held by making the widest ITEM constant. And digits are proportional in the menu font (\"111 pt\" 70pt, \"888 pt\" 76pt), so adding a three digit preset would not hold it either."
+    },
+    {
+      "t": "2026-09-08T19:53:59.942799Z",
+      "note": "Plan: pad every size title to three digit slots with U+2007 FIGURE SPACE, which measures exactly one digit (62/69/76pt for one/two/three digits, and a padded \"8 pt\" is 76pt too). Every title then measures 76pt, Mixed (72pt) is under it, so the list max is constant. Trailing pad, so the closed box stays flush left and the open menu reads exactly as it does today. Cost: the Size box is 76pt instead of 69pt always, and a size of 1000pt or more (four digits, 83pt) still grows it."
+    },
+    {
+      "t": "2026-09-08T20:06:37.281611Z",
+      "note": "Shown broken in the app first: ran the new walk against a build with the old titles. Size box 68pt at 24 pt, 72.5pt at 128 pt, 72.5pt at Mixed; Weight's left edge 1146 -> 1150.5. After the change all four stages read Size 75pt wide at x 1070.0 and Weight at x 1153.0."
+    },
+    {
+      "t": "2026-09-08T20:06:37.281611Z",
+      "note": "Shipped: TextStyles.sizeTitle/sizeWords/unpadded in PhotonzCore (10 new tests), the dock's Size menu and the toolbar's size picker use them, SelectionMenu gained `spoken` so a hover says a size without the padding, PlaytestPanelMenu.readable strips it wherever a walk reads a control back, and a `panel` step now records each menu's width and left edge. Both surfaces are shared files, so Next has the change by construction. Scripts/test.sh green at 4927; type-menu-labels, mixed-one-look, selection-type-and-shape and font-menu-one-width walks rerun green."
     }
-  ]
+  ],
+  "started": "2026-09-08T19:46:07.234Z"
 }

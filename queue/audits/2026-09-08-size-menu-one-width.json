@@ -1,0 +1,31 @@
+{
+  "feature": "The Size menu holds one width",
+  "epic": "ui-building",
+  "summary": "The Size menu in the Text section now stays the same width whatever it is showing, so the Weight menu beside it never moves. Before this, a size an opened document brought with it, and even picking two labels whose sizes differ, made the box grow and shove the row along.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. Both cases below happen on an ordinary blank canvas; no imported document needed for the second one.",
+  "try": [
+    { "do": "Pick the text tool, click a blank canvas, type \"Sign in\" and press Command-Return." },
+    { "do": "Type a second label somewhere below it the same way." },
+    { "do": "Switch to the select tool, click the first label, and read the Size and Weight menus in the Text section.", "shot": "size-one-width-1-preset-sc.png" },
+    { "do": "Open the Size menu and run through 14 pt, 96 pt and back, watching the Weight box beside it." },
+    { "do": "Click the second label, set it to a different size, then click the first and shift-click the second so both are picked.", "shot": "size-one-width-4-mixed-sc.png" },
+    { "do": "Read the Size menu now showing Mixed: same box, same Weight box, nothing shifted." },
+    { "do": "Open a document made elsewhere whose text is at a size the menu does not offer, such as 128 pt, and pick that label.", "shot": "size-one-width-2-three-digits-sc.png" },
+    { "do": "Open the Size menu on it: every size is a plain number and the odd one has a tick.", "shot": "size-one-width-3-menu-open-sc.png" }
+  ],
+  "evaluate": [
+    "At 24 pt there is now a digit's worth of empty space between the number and the arrows. Does that read as a box holding room for bigger numbers, or as a box that does not fit what it holds?",
+    "The Size box is 7pt wider than it was, so the Weight box starts 7pt further right. Does the Text section still read as one tidy row of three menus?",
+    "Nothing moves now when you switch sizes or pick two labels that disagree. Is the stillness noticeable, or was the old shift too small to have bothered you?",
+    "The Size box's right edge still stops short of the Weight box's right edge above and below it. Does that step bother you enough to want the section laid out differently?",
+    "A size past 999 pt is the one case that still widens the box. Do you ever set text that big?"
+  ],
+  "rough": [
+    "The complaint named the imported off-list size. Measured in the real app, that was only half of it: the menu grows a Mixed row when the picked labels disagree, and that row was wider than any number on the list, so the box moved on an everyday two-label selection with nothing imported anywhere. The walk reads both cases.",
+    "The fix the task proposed, measuring the widest size and holding that width from the start, does not work: a menu control refuses a frame wider than its own content. Hosted the real control and dumped its frames to check. The only way to hold one width is to make every row take the same room, so each size now carries invisible blank after it out to three digits.",
+    "Digits are not all the same width in the menu font, so even two three-digit sizes would have drawn different boxes. That is why the blank is a figure space, which is exactly one digit wide.",
+    "A size of 1000 pt or more has four digits and still outgrows the box by 7pt. It is spelled out in full anyway: a size shortened to \"102...\" is a number nobody can read, which is worse than a box that grew. Holding a fourth digit would have cost 7pt of panel width on every document forever.",
+    "Screen Recording was granted for this run, so all four pictures are real captures of the window. The dock in them is scrolled to the Text section; that is the probe's own state, not a change to the app.",
+    "Numbers behind the claim, read out of the panel at each stage. Before: Size box 68pt wide at 24 pt, 72.5pt at 128 pt and 72.5pt at Mixed, with the Weight box's left edge moving 1146 to 1150.5. After: 75pt and 1153.0 in all four states."
+  ]
+}

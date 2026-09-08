@@ -19,6 +19,7 @@
 // is.
 #if PHOTONZ_PLAYTEST
 import AppKit
+import PhotonzCore
 import ScreenCaptureKit
 
 /// A block to run on the main thread in whatever run loop mode is current,
@@ -80,8 +81,17 @@ enum PlaytestPanelMenu {
     /// What the button says, which is the name a walk uses for it. A menu drawn
     /// as an icon says nothing, and reads as its accessibility label instead.
     @MainActor static func title(of button: NSPopUpButton) -> String {
-        if !button.title.isEmpty { return button.title }
+        if !button.title.isEmpty { return readable(button.title) }
         return button.accessibilityLabel() ?? button.accessibilityTitle() ?? ""
+    }
+
+    /// What a row of a menu SAYS, which is not always the string it was built
+    /// from: the Size menu pads its numbers out with blank so every size takes
+    /// the same room in the box, and that blank draws as nothing. A walk reads
+    /// and names a control by what a person sees, so the padding comes off
+    /// here, in the one place every reading passes through.
+    static func readable(_ title: String) -> String {
+        TextStyles.unpadded(title)
     }
 
     /// What a walk calls this menu, and what it is showing right now.

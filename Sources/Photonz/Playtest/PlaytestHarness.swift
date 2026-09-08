@@ -1105,6 +1105,14 @@ private final class Run {
             case .setTextSizeLarge:
                 let ids = editor.textSelection.layerIDs
                 if !ids.isEmpty { editor.setTextStyle(ids: ids, fontSize: 40) }
+            case .setTextSizeThreeDigits:
+                // The one size the menu cannot be put into by hand: it offers
+                // seven, all of two digits, and takes a bigger one only from a
+                // label that already wears it.
+                let ids = editor.textSelection.layerIDs
+                if !ids.isEmpty {
+                    editor.setTextStyle(ids: ids, fontSize: TextStyles.threeDigitSizeForPlaytest)
+                }
             case .setTextWeightRegular:
                 let ids = editor.textSelection.layerIDs
                 if !ids.isEmpty { editor.setTextStyle(ids: ids, weight: .regular) }
@@ -2207,7 +2215,12 @@ private final class Run {
         let head = naming.detail.isEmpty ? naming.name : "\(naming.name) (\(naming.detail))"
         let box = button.convert(button.bounds, to: nil)
         let said = PlaytestPanelHelp.tip(at: CGPoint(x: box.midX, y: box.midY), in: surface)
-        return head + (said.map { " says \"\($0)\"" } ?? " says nothing")
+        // How wide the box is and where its left edge sits, in the window. "The
+        // box holds one width" and "the menu beside it does not move" are claims
+        // about numbers, and two pictures of a 3pt shift look identical, so the
+        // numbers are written down rather than left to the eye.
+        let geometry = " \(round2(box.width))pt wide at x \(round2(box.minX))"
+        return head + geometry + (said.map { " says \"\($0)\"" } ?? " says nothing")
     }
 
     private static func outlinePanel(_ inventory: [String: Any]) -> String {
@@ -2601,8 +2614,12 @@ private final class Run {
         // Everything below runs INSIDE the menu's own event loop.
         let hop = PlaytestTrackingHop {
             let menu = button.menu
-            reading.rows = menu?.items.map(\.title) ?? []
-            reading.dimmed = menu?.items.filter { !$0.isEnabled }.map(\.title) ?? []
+            // Read as a person reads them: a size row is padded out with blank
+            // so every size takes the same room in the box, and that blank is
+            // no part of what the row says.
+            reading.rows = menu?.items.map { PlaytestPanelMenu.readable($0.title) } ?? []
+            reading.dimmed = menu?.items.filter { !$0.isEnabled }
+                .map { PlaytestPanelMenu.readable($0.title) } ?? []
             if let shotURL, let menuWindow = PlaytestPanelMenu.openMenuWindow() {
                 // The menu has to STAY up while its picture is taken, so the
                 // main thread waits here rather than letting the walk carry on
@@ -2623,7 +2640,9 @@ private final class Run {
                 reading.problem = "the menu opened but showed in no window this app can see, so there is no picture"
             }
             if let choose {
-                if let index = menu?.items.firstIndex(where: { $0.title == choose }) {
+                if let index = menu?.items.firstIndex(where: {
+                    PlaytestPanelMenu.readable($0.title) == choose
+                }) {
                     if menu?.items[index].isEnabled == true {
                         menu?.performActionForItem(at: index)
                         reading.chose = choose
