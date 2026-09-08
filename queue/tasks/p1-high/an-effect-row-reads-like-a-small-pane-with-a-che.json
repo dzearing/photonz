@@ -1,0 +1,36 @@
+{
+  "id": "an-effect-row-reads-like-a-small-pane-with-a-che",
+  "title": "An effect row reads like a small pane, with a chevron, an eye and a lit title",
+  "goal": "An effect row wears a tick where the panel's other rows would have a chevron, and its title looks the same weight as the settings underneath it, so a row and its contents run together. Make an effect read like a small version of a panel section: a chevron on the left that folds its settings away, a title lit up the way a section title is but a size smaller, and the switch moved to the right as an eye beside the remove cross, matching how a layer is shown and hidden everywhere else in the app.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T13:59:43.121Z",
+  "updated": "2026-09-08T13:59:43.159Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-08 with two screenshots of a Border row. The treatment to echo is already in the file: a panel section header draws a chevron at 10 point bold and its title with subheadline semibold (Sources/Photonz/LayersPanel.swift, the CollapsibleSection body around line 1500), so an effect header wants the same but one step smaller, and the runner should take the values from there rather than inventing new ones. The row today is built in EffectsListInspector.swift around line 89, with the switch in the ColorPartLayout.switchWidth column; moving it to the right means the row's columns change, so check the alignment work that lines the settings rule up under the left column, since the left column becomes the chevron. The eye to copy is the layer row's visibility button (LayersPanel.swift around line 2240), which uses eye and eye slash at 11 point with a tertiary tint when off. Note this partly reverses the-tick-comes-before-the-name-on-every-row-that, which asked for the tick to lead the row; that request is satisfied differently here, since the leading control becomes a chevron and the switch becomes an eye, so read that task and close or fold it rather than leaving the two fighting.",
+  "acceptance": [
+    "An effect row has a chevron on its left; pressing it folds the effect's settings away and pressing again brings them back, and the state is remembered per effect while the layer stays picked",
+    "The effect's name is drawn like a panel section title, in the same weight and colour, one size smaller, so it is clearly the header of what sits under it",
+    "The tick is gone from the left; switching the effect on and off is an eye at the right of the row, beside the remove cross, drawn and behaving like the eye on a layer row",
+    "An effect switched off reads as off at a glance, and its settings can still be opened and changed while it is off",
+    "The remove cross and the reorder grip keep their places and their behaviour",
+    "Appearance's rows keep whatever they have today unless the audit argues they should follow, in which case they follow rather than diverge",
+    "The whole row is reachable from the keyboard and every control has a name a screen reader can read",
+    "Audit written under queue/audits/ with an effect open, folded, and switched off, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T13:59:43.123Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-08T13:59:43.158Z",
+      "note": "seq 260 -> 2"
+    }
+  ]
+}
