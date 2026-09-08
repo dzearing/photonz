@@ -47,7 +47,7 @@ enum PlaytestHarness {
     fileprivate static var knownEditors: [EditorState] { editors }
 
     /// The editors that are open and ready to be driven, oldest first.
-    fileprivate static var readyEditors: [EditorState] {
+    static var readyEditors: [EditorState] {
         editors.filter { $0.document != nil && $0.hostWindow != nil && $0.viewport != nil }
     }
 }
@@ -1918,7 +1918,11 @@ private final class Run {
             guard let match = boxes.first(where: { labels($0).contains(where: matches) }) else {
                 return (false, "", boxes.compactMap { labels($0).first }.filter { !$0.isEmpty })
             }
-            return (true, match.stringValue, [])
+            // While a field is being typed into, the words live in the window's
+            // field editor and the control still holds the value it had before
+            // the caret arrived. Read the editor when there is one, or a walk
+            // can never claim what a `key` step just typed.
+            return (true, match.currentEditor()?.string ?? match.stringValue, [])
         case .menu:
             let menus = try panelWindows().compactMap(\.contentView).flatMap { surface -> [(String, String)] in
                 let fields = Self.findAll(PanelTargetView.self, in: surface)
@@ -3589,6 +3593,19 @@ private final class Run {
             let matcher = Self.matchingEvent(key, flags: flags, down: down) ?? event
             if type == .keyUp {
                 window.sendEvent(event)
+            } else if Self.isTyping(in: window, flags: flags, typed: event.charactersIgnoringModifiers) {
+                // A letter typed into a field is TYPING, never a shortcut, and
+                // the real app decides that before any key equivalent is
+                // offered: measured on 2026-09-08 in a probe that was active
+                // and key, T, X and ⇧M all went into the panel's W box and
+                // none of the Text tool, the fill swap or the selection cycle
+                // ran, while the very same presses fired all three with
+                // nothing focused. Offering the key equivalents by hand skips
+                // that rule, which is how a walk came to report that typing
+                // into an inspector field switched tools. `ShortcutDiag`
+                // (`--shortcut-diag`) is the run that settled it.
+                window.sendEvent(event)
+                takenBy = "the field being typed in"
             } else if window.performKeyEquivalent(with: matcher) {
                 takenBy = "window"
             } else if NSApp.mainMenu?.performKeyEquivalent(with: matcher) == true {
@@ -3605,6 +3622,38 @@ private final class Run {
             }
         }
         return takenBy
+    }
+
+    /// Whether this press is somebody typing rather than a shortcut, by the
+    /// same rule the real app applies: a text field's editor has the keyboard,
+    /// the press carries nothing but shift, and it would put a character in the
+    /// box.
+    ///
+    /// Three conditions and each one earns its place.
+    ///
+    /// ⌘C over a field IS the shortcut in the real app, so a press carrying
+    /// command, option or control goes on being offered to the key equivalents.
+    /// Shift is the exception, because shift is how a capital letter gets into
+    /// a name field rather than a way of asking for a command: measured on
+    /// 2026-09-08 in an active, key probe, ⇧M with the panel's W box holding
+    /// the keyboard put an "M" in the box and left the selection tool alone,
+    /// exactly as plain T and X did, while the same press with nothing focused
+    /// cycled the selection tool.
+    ///
+    /// ⏎ and ⎋ are shortcuts even mid-edit: a sheet with a text field in it
+    /// answers Return with its default button while the caret is still in the
+    /// box, which is what makes a dialog answerable without reaching for the
+    /// mouse. Only a press that would INSERT something is typing, so Return,
+    /// Tab, Escape, the arrows, delete and the function keys are all left
+    /// alone — every one of them is a control character or sits in the
+    /// function-key block, and none of them is a letter a tool answers to.
+    private static func isTyping(in window: NSWindow, flags: NSEvent.ModifierFlags,
+                                typed: String?) -> Bool {
+        guard flags.subtracting(.shift).isEmpty else { return false }
+        guard (window.firstResponder as? NSTextView)?.isFieldEditor == true else { return false }
+        guard let typed, typed.unicodeScalars.count == 1, let scalar = typed.unicodeScalars.first
+        else { return false }
+        return !CharacterSet.controlCharacters.contains(scalar) && !(0xF700...0xF8FF).contains(scalar.value)
     }
 
     /// One key press, carrying what the keyboard would really have typed.

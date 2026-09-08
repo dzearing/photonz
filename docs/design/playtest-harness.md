@@ -555,6 +555,64 @@ selection latency (numbers from 2026-09-03 in its commit).
   `{ "do": "action", "action": "undo" }`, and watch `layers` and `canRedo` in
   the log). It cannot prove ⌘Z is wired to it. `Scripts/playtest/undo-shortcut-walk.json`
   walks the whole story end to end.
+- **A letter typed into a panel field is typing, and a walk sees that now.**
+  A plain letter pressed while one of the right hand panel's boxes has the
+  keyboard goes into the box. It does not fire the tool letter that character
+  also carries: T does not pick up the Text tool and X does not swap the fill
+  colours. `Scripts/playtest/typing-in-a-field-walk.json` is the walk that
+  holds it, and it ends by letting the field go and pressing T again, so it
+  also proves the shortcut still works where it should.
+
+  Holding shift changes nothing: ⇧M puts a capital M in the box and leaves the
+  selection tool alone, even though ⇧M cycles it everywhere else.
+
+  A walk used to report the opposite, and that was the walk being wrong, not
+  the app. Fixed on 2026-09-08. AppKit decides "typing, not a shortcut" before
+  any key equivalent is offered, and a `key` step was offering them by hand and
+  skipping that rule. It now applies the same rule: a field editor holding the
+  keyboard, nothing but shift held, and a press that would put a character in
+  the box means the press is typing, and the log line says `taken by the field
+  being typed in`.
+
+  Three conditions, and the last two are the ones a walk trips over. A press
+  carrying command, option or control is untouched, because ⌘C over a field
+  really is the shortcut. Shift is not one of those: shift is how a capital
+  letter gets into a name field, so it counts as typing. ⏎ and ⎋ are shortcuts
+  even mid-edit: a sheet with a text field in it answers Return with its
+  default button while the caret is still in the box, so Return, Tab, Escape,
+  the arrows, delete and the function keys all go on being offered to the key
+  equivalents. Only a letter, a digit or a mark is typing.
+
+  This was settled on the real app rather than argued: `--shortcut-diag` (below)
+  ran it in a probe that was active with its window key, and the same presses
+  that fired the Text tool, the fill swap and the selection cycle with nothing
+  focused went into the W box and fired none of them once the box had the
+  keyboard.
+- **`--shortcut-diag` answers "is this a shortcut or is this typing" on the real
+  app.** A walk cannot: it never gets the front, and it offers key equivalents
+  by hand. This launches normally instead, brings the app forward, puts the
+  keyboard in the panel's W box and presses the key three ways — through
+  `NSApplication.sendEvent` the way the run loop hands over a real press,
+  through CoreGraphics into our own process, and the way the harness does it —
+  then says for each one whether the letter landed in the box and whether the
+  shortcut ran. It presses each key with nothing focused first, as the control
+  that proves the press can fire the shortcut at all. It covers T, X and ⇧M, so
+  it answers for a plain letter and for a shifted one.
+
+  ```bash
+  Scripts/build-app.sh --probe
+  open -a "$PWD/dist/Photonz Probe.app" \
+    "$PWD/Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png" --args --shortcut-diag
+  cat /tmp/photonz-shortcut-diag.txt
+  ```
+
+  It quits the probe when it is done, and its first line says whether the app
+  actually got the front: if it did not, throw the reading away. The
+  CoreGraphics press has never arrived in any run so far, so read that line as
+  "no answer", not as "no shortcut". Lives in
+  `Sources/Photonz/Playtest/ShortcutDiag.swift`, probe only.
+  **It takes the front, so it is the one thing here a person sitting at the
+  machine will notice.**
 - **A `menus` step reads titles exactly and dimming only loosely.** Reading
   our OWN menu bar needs no permission, so titles, order, shortcuts and
   submenus are exact and an audit can quote them. What is greyed out is a

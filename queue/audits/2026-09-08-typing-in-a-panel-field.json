@@ -1,0 +1,28 @@
+{
+  "feature": "Typing into a panel field",
+  "epic": "ui-building",
+  "summary": "A walk reported that typing in the right hand panel switched tools: T picked up the Text tool, X swapped the fill colours. The app was never doing that. Letters go into the box, the tool stays where it was, and the scripted runner that said otherwise has been fixed so no later run repeats the claim.",
+  "setup": "Photonz Dev, any screenshot open, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open a screenshot and click the Canvas row in the Layers list, so the panel shows W and H." },
+    { "do": "Click into the W box and type the letter t." },
+    { "do": "Look at the tool bar: the arrow should still be lit, not the Text tool.", "shot": "2026-09-08-typing-in-a-field.png" },
+    { "do": "Type x, then hold shift and type m, so the box reads txM." },
+    { "do": "Check the fill colours in the tool bar did not swap and the selection tool did not change." },
+    { "do": "Press Escape to let the box go, then press t on its own.", "shot": "2026-09-08-letter-picks-the-tool.png" },
+    { "do": "The Text tool picks up, which is the shortcut still doing its job." }
+  ],
+  "evaluate": [
+    "Did every letter you typed land in the box, with nothing jumping under you?",
+    "After Escape, did the box go back to the size it had rather than keeping your letters?",
+    "Does pressing t with the box let go feel instant, or does letting go take a beat?",
+    "The W box happily holds txM while you type. Is showing your letters in a size box right, or should it refuse anything that is not a number?"
+  ],
+  "rough": [
+    "There is nothing new to look at in the app: this run answered a question and fixed the test runner. The pictures are real screen captures of the probe, not renders.",
+    "The scripted runner was pressing keys in a way the system never does, offering every press to the shortcuts before anything could decide it was typing. Two false bug reports came out of that. It now applies the real rule, and Scripts/playtest/typing-in-a-field-walk.json fails if that ever regresses.",
+    "Shift counts as typing, which is measured rather than assumed: a capital M goes in the box even though shift M cycles the selection tool everywhere else. Command, option and control still count as shortcuts, so command C over a field is still copy.",
+    "Return, Escape, Tab, the arrows and delete are deliberately left as shortcuts even while you are typing, because a dialog has to stay answerable from the keyboard. If one of those turns out to be wrong mid edit, it is a separate question from this one.",
+    "The CoreGraphics way of pressing a key never arrived in any diagnostic run, in this one or the last. That line in the output means no answer, not no shortcut."
+  ]
+}
