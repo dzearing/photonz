@@ -109,6 +109,8 @@ public enum FeatureCatalog {
 
     public static let selectionUndoFlag = "next-undo-puts-back-your-marquee"
 
+    public static let marqueeIntentFlag = "next-a-box-says-what-it-picks"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -212,6 +214,15 @@ public enum FeatureCatalog {
                     name: grabCueFlag,
                     title: "Every handle says what it does",
                     description: "Rest the pointer on any handle around a selected object and it says what a press would do before you press it. An open hand over the parts that drag on their own (an arrow\'s caption, either end of a line, a measurement\'s number and its two feet), and a closed hand while you drag one. The matching resize arrows over the eight handles round a layer, round the canvas, or round the crop box. A curved arrow over the knob that turns it. Over a screen it says which of the two drags you are about to get: the hand means the screen itself travels, and it is on the screen's name at all times and on the screen's own surface once the screen is picked, while empty room that would sweep a band keeps the plain arrow.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: marqueeIntentFlag,
+                    title: "A box says what it picks",
+                    description: "There are two boxes you can draw on the picture and they used to look the same. One picks up the layers it encloses, so delete takes those layers away; the other picks a piece of the picture to work on, so delete clears pixels out of the layer you already had. Now they look different, from the moment you start dragging. A box that has caught nothing keeps the familiar crawling dashes. The moment it goes right round something, it stops crawling, its edge becomes one unbroken blue line, and the inside washes blue over what it is about to pick up. Shrink it back off and the dashes come straight back. A box that landed goes on wearing the look it had while you drew it.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

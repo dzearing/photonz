@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/a-box-says-what-it-picks",
+  "setup": { "forget": ["shapes", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 90], "to": [340, 150], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [140, 220], "to": [300, 280], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "click", "at": [200, 120] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "0-a-box-picked", "note": "one box picked, so the band drawn next has a layer to become a piece of" },
+
+    { "do": "drag", "from": [500, 420], "to": [820, 640], "steps": 12, "hold": "picks-pixels-mid-drag" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-picks-pixels", "note": "a band thrown round empty canvas: it has caught nothing, so it is picking a piece of the picture. Crawling black dashes on white, nothing washed inside" },
+    { "do": "snapshot", "name": "picks-pixels-landed" },
+
+    { "do": "drag", "from": [80, 50], "to": [250, 380], "steps": 12, "hold": "crossing-but-not-catching" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-crossing-only", "note": "THE TEST for the rule: this band CROSSES both boxes but goes right round neither, so it is still picking pixels and must still wear the ants" },
+
+    { "do": "drag", "from": [80, 50], "to": [520, 380], "steps": 12, "hold": "picks-layers-mid-drag" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-picks-layers", "note": "THE TEST: the same gesture, drawn far enough to go right round both boxes. Mid-drag it has already stopped crawling, closed to one unbroken blue line and washed blue inside. Compare picks-layers-mid-drag against picks-pixels-mid-drag" },
+    { "do": "snapshot", "name": "picks-layers-landed" }
+  ]
+}

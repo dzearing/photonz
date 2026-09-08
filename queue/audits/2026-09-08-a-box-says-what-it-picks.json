@@ -1,0 +1,28 @@
+{
+  "feature": "A box says what it picks",
+  "epic": "ui-building",
+  "summary": "There are two boxes you can draw over the picture and they used to look identical: one picks up the layers it encloses, the other picks a piece of the picture to work on. Now the box tells you which one you are drawing, while you are still drawing it.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is A box says what it picks (next-a-box-says-what-it-picks) and it is on by default.",
+  "try": [
+    { "do": "Open a blank canvas and draw two rectangles near the top left, with a gap between them." },
+    { "do": "Press V for the select tool, then click one rectangle to pick it." },
+    { "do": "Drag a box across empty canvas at the bottom right, and STOP with the button still down. Look at it.", "shot": "2026-09-08-a-box-says-what-it-picks-pixels.png" },
+    { "do": "Let go, then press delete. It clears pixels out of the rectangle you had picked, which is what the box said it would do." },
+    { "do": "Press Command Z. Now drag a box from above and left of both rectangles down past the bottom right of both, and again STOP with the button down.", "shot": "2026-09-08-a-box-says-what-it-picks-layers.png" },
+    { "do": "Without letting go, drag back left until the box cuts through the rectangles instead of containing them. The ants come back." },
+    { "do": "Drag right again until both are inside, let go, and press delete. Both rectangles go." }
+  ],
+  "evaluate": [
+    "At the moment the box goes right round both rectangles, do you notice it change without having been told to watch for it?",
+    "Does the blue wash tell you what would be picked up, or does it get in the way of seeing the artwork underneath?",
+    "Once you let go, is the unbroken blue line enough to remember which kind of box you drew, now that the wash has gone?",
+    "Is the ants-to-blue flip a pleasant snap, or does it feel twitchy when you drag near the edge of a layer?",
+    "Does the solid blue box read as a selection, or does it get confused with the faint blue box around a group you are standing inside?"
+  ],
+  "rough": [
+    "The wash only exists while the button is down. The first build left it up after the release and it was a blue film lying over the artwork until you happened to click somewhere, which is the wrong thing to do to a screenshot you are redlining. The landed box carries the difference on its line alone, which is a quieter signal than the wash.",
+    "Mid-sweep INSIDE a group there are now two blue things at once: the solid hairline around the room you are picking in, and the solid line around the band. The wash distinguishes them and the band moves with your pointer, but they are the same color and both unbroken, and that is worth looking at.",
+    "A box only counts a layer as caught when it goes right ROUND it. That is the existing rule, not a new one, but the new look makes it visible for the first time and it may read as the box being fussy rather than as the rule being honest. The third picture in the walk is exactly this case.",
+    "Both screenshots are real screen captures from the probe, which held the Screen Recording grant for this run."
+  ]
+}

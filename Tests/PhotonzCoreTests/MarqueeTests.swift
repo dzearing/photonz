@@ -184,3 +184,76 @@ struct BareCanvasPressTests {
         #expect(picked == [a, b, c])
     }
 }
+
+@Suite("MarqueeIntent")
+struct MarqueeIntentTests {
+    let a = UUID(), b = UUID()
+
+    // MARK: Mid-sweep
+
+    @Test func aBandThatHasCaughtSomethingPicksLayers() {
+        #expect(MarqueeIntent.sweeping(caught: [a]) == .picksLayers)
+        #expect(MarqueeIntent.sweeping(caught: [a, b]) == .picksLayers)
+    }
+
+    @Test func aBandThatHasCaughtNothingPicksPixels() {
+        // The band out over empty canvas has said WHERE and not WHAT, so it is
+        // on its way to becoming a piece of the picture.
+        #expect(MarqueeIntent.sweeping(caught: []) == .picksPixels)
+    }
+
+    @Test func theLookFollowsTheSameRuleTheSelectionDoes() {
+        // The whole point: what the band looks like and what letting go of it
+        // does are decided by one call, so they can never disagree.
+        for caught in [[], [a], [a, b]] {
+            #expect((MarqueeIntent.sweeping(caught: caught) == .picksLayers)
+                    == BareCanvasPress.sweepDecidesSelection(caught: caught))
+        }
+    }
+
+    @Test func shiftDoesNotChangeWhatTheBandIs() {
+        // ⇧ decides whether the catch joins what was already picked, not
+        // whether the band is picking layers at all.
+        #expect(MarqueeIntent.sweeping(caught: []) == .picksPixels)
+        #expect(MarqueeIntent.sweeping(caught: [b]) == .picksLayers)
+    }
+
+    // MARK: At rest
+
+    @Test func aLandedBandKeepsTheLookItHadWhileItWasDrawn() {
+        #expect(MarqueeIntent.resting(targetsPixels: false) == .picksLayers)
+        #expect(MarqueeIntent.resting(targetsPixels: true) == .picksPixels)
+    }
+
+    // MARK: What each look is
+
+    @Test func onlyThePixelBandMarches() {
+        // Crawling ants are the picture-editing idiom, so the band that is not
+        // choosing pixels must not wear them.
+        #expect(MarqueeIntent.picksPixels.marches)
+        #expect(!MarqueeIntent.picksLayers.marches)
+    }
+
+    @Test func onlyTheLayerBandIsFilledAndOnlyWhileYouDrawIt() {
+        // The wash inside the band is the part you see without looking.
+        #expect(MarqueeIntent.picksLayers.isFilled(whileDrawing: true))
+        #expect(!MarqueeIntent.picksPixels.isFilled(whileDrawing: true))
+    }
+
+    @Test func theWashComesOffWhenYouLetGo() {
+        // A wash left up would be a blue film over the picture until the next
+        // click. The band that landed says what it is with its line instead.
+        #expect(!MarqueeIntent.picksLayers.isFilled(whileDrawing: false))
+        #expect(!MarqueeIntent.picksPixels.isFilled(whileDrawing: false))
+    }
+
+    @Test func theTwoLooksNeverAgreeOnAnything() {
+        // Two bands that differed in only one small way would be two bands you
+        // have to compare. Mid-sweep these differ in fill, in dash and in
+        // motion; once landed the dash and the motion carry it on alone.
+        #expect(MarqueeIntent.picksLayers.marches != MarqueeIntent.picksPixels.marches)
+        #expect(MarqueeIntent.picksLayers.isFilled(whileDrawing: true)
+                != MarqueeIntent.picksPixels.isFilled(whileDrawing: true))
+        #expect(MarqueeIntent.picksLayers.isDashed != MarqueeIntent.picksPixels.isDashed)
+    }
+}

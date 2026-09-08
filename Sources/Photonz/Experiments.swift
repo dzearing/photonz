@@ -209,6 +209,12 @@ extension Experiments {
     /// only in the Next release's catalog, so Current always reads false.
     var grabCueEnabled: Bool { isEnabled(FeatureCatalog.grabCueFlag) }
 
+    /// `next-a-box-says-what-it-picks`: whether a rubber band on the canvas
+    /// shows, while it is being drawn, whether it is picking up layers or
+    /// picking a piece of the picture. Exists only in the Next release's
+    /// catalog, so Current always reads false and both boxes keep the ants.
+    var marqueeIntentEnabled: Bool { isEnabled(FeatureCatalog.marqueeIntentFlag) }
+
     /// `next-tool-options`: whether the Crop tool and the Magic Wand keep their
     /// options off the floating tool bar (D15) — crop aspect in the crop
     /// button's flyout, crop actions on the canvas, wand tolerance in the

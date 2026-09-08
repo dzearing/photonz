@@ -1527,15 +1527,9 @@ final class CanvasNSView: NSView {
             layer?.addSublayer(cropLayer)
         }
 
-        selectionBaseLayer.strokeColor = CGColor(gray: 1, alpha: 1)
-        selectionAntsLayer.strokeColor = CGColor(gray: 0, alpha: 1)
-        selectionAntsLayer.lineDashPattern = [4, 4]
-        let crawl = CABasicAnimation(keyPath: "lineDashPhase")
-        crawl.fromValue = 0
-        crawl.toValue = 8
-        crawl.duration = 0.4
-        crawl.repeatCount = .infinity
-        selectionAntsLayer.add(crawl, forKey: "marchingAnts")
+        // The band's two looks live in `applyMarqueeBandStyle`; it starts on
+        // the ants, which is what a band with nothing caught wears.
+        applyMarqueeBandStyle(.picksPixels)
 
         // The new space a canvas drag is adding: filled, never stroked. The
         // dashed boundary on top is the outline; this is the paint.

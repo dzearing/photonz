@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 1900,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-07T23:41:19.493Z",
-  "updated": "2026-09-07T23:41:19.494Z",
+  "updated": "2026-09-08T11:16:31.671Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised in the audit queue/audits/2026-09-07-marquee-keeps-your-layer.json on 2026-09-07. The rule now lives in BareCanvasPress.sweepDecidesSelection (Sources/PhotonzCore/Marquee.swift): a band takes over the selection only when it catches something, and a band that caught nothing becomes a pixel region on the layer already picked. Honest, but invisible. The mid-sweep chrome already knows which it is (CanvasDisplay refreshMultiSelectOutline reads the same call), so the drawing side has the answer in hand.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-07T23:41:19.494Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T11:16:31.670Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T11:40:46.647057Z",
+      "note": "Adversarial review before building. The mock had nothing to say here, so the question was what the two boxes should BE. Rejected: a count badge or a word on the band (acceptance says without reading anything, and text on a moving band is chrome in the way of the next one). Rejected: color alone (a black dashed band going blue is a difference you have to look for). Built instead: the two boxes wear two idioms people already know. Caught nothing = Photoshop marching ants, which is exactly what it is about to become. Caught something = a Finder style object rubber band, unbroken and washed. Three differences at once (motion, dash, fill) so it reads at the edge of vision."
+    },
+    {
+      "t": "2026-09-08T11:40:46.647057Z",
+      "note": "PhotonzCore first: MarqueeIntent in Sources/PhotonzCore/Marquee.swift, derived from the SAME BareCanvasPress.sweepDecidesSelection call that decides the behavior, so the look can never lie. 10 tests in Tests/PhotonzCoreTests/MarqueeTests.swift. App side: CanvasDisplay.applyMarqueeBandStyle, fed from refreshMarqueeDisplay; refreshMultiSelectOutlines now takes the caught list instead of recomputing it. Behind next-a-box-says-what-it-picks (releases [.next], on by default in Next) so Current keeps the ants."
+    },
+    {
+      "t": "2026-09-08T11:40:46.647057Z",
+      "note": "Adversarial review of the built thing, in the probe. First cut left the blue wash up after the button came up: a blue film lying over the artwork until you happened to click elsewhere, which is the exact chrome acceptance item 3 forbids, and bad for a redlining tool where the capture's colors are the work. Made the wash live only (MarqueeIntent.isFilled(whileDrawing:)); the landed box carries the difference on its line instead. Second pass caught the landed layer box rendering BLACK, because the un-washed branch was also resetting the stroke: color and dash now come from the intent, only the fill asks whether you are still drawing."
+    },
+    {
+      "t": "2026-09-08T11:40:46.647057Z",
+      "note": "Verified in Photonz Probe with Screen Recording granted. Scripts/playtest/a-box-says-what-it-picks-walk.json photographs all three states mid-drag in ONE document: caught nothing (crawling black dashes), crossing two boxes but containing neither (still the ants, which is the rule made visible), and round both (still blue line, blue wash, both boxes outlined). Scripts/test.sh green, 4809 tests."
     }
-  ]
+  ],
+  "started": "2026-09-08T11:16:31.669Z"
 }

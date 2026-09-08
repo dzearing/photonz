@@ -127,3 +127,62 @@ extension Geometry {
         return CGRect(x: minX, y: minY, width: width, height: height)
     }
 }
+
+/// What a rubber band is about to do, which is the one thing it has to look
+/// like.
+///
+/// Two boxes you can draw over the picture mean opposite things. One picks up
+/// the layers it encloses, so ⌫ takes those layers away; the other picks a
+/// piece of the picture to work on, so ⌫ clears pixels out of the layer that
+/// was already picked. Which one you have is decided, live, by whether the box
+/// has caught anything (`BareCanvasPress.sweepDecidesSelection`) — and until
+/// this existed the two were drawn identically, so the only way to find out
+/// was to let go and see what happened (raised in the audit
+/// `2026-09-07-marquee-keeps-your-layer.json`).
+///
+/// The look is derived from the SAME call that decides the behavior, so the
+/// box can never lie about what it is going to do.
+public enum MarqueeIntent: Equatable, Sendable {
+    /// The box has caught layers: letting go picks them up.
+    case picksLayers
+    /// The box has caught nothing: letting go leaves it as a piece of the
+    /// picture, on whatever was already picked.
+    case picksPixels
+
+    /// What the box on screen right now would do if it were let go.
+    public static func sweeping(caught: [UUID]) -> MarqueeIntent {
+        BareCanvasPress.sweepDecidesSelection(caught: caught) ? .picksLayers : .picksPixels
+    }
+
+    /// What the box that has already landed did. `targetsPixels` is the flag
+    /// the editor keeps for exactly this distinction, so a box that is still
+    /// on screen after the button came up goes on saying what it said while
+    /// it was being drawn.
+    public static func resting(targetsPixels: Bool) -> MarqueeIntent {
+        targetsPixels ? .picksPixels : .picksLayers
+    }
+
+    /// Whether the boundary crawls. Marching ants have meant "these pixels"
+    /// for thirty years, so only the pixel box marches; a box that is holding
+    /// layers stands still, the way every object rubber band on this platform
+    /// does.
+    public var marches: Bool { self == .picksPixels }
+
+    /// Whether the boundary is broken into dashes. Ants are dashes by
+    /// definition; the layer box is one unbroken line, which is the difference
+    /// you can see at the very edge of your vision.
+    public var isDashed: Bool { self == .picksPixels }
+
+    /// Whether the inside is washed with color: the part of the difference you
+    /// notice without looking for it, and the same cue the Finder gives for
+    /// "these items".
+    ///
+    /// Only the layer box washes, and only WHILE YOU ARE STILL DRAWING IT. The
+    /// wash is the box saying "this is what I would take", which is a question
+    /// only a box in flight is asking. Left up after the button comes up it
+    /// would be a blue film lying over your picture until you happened to
+    /// click somewhere else, which is the one thing a box must not do to the
+    /// picture you are working on; and by then the blue outline round each
+    /// layer it caught is already saying what it took.
+    public func isFilled(whileDrawing: Bool) -> Bool { self == .picksLayers && whileDrawing }
+}

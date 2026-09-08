@@ -12532,3 +12532,50 @@ setting moves.
 
 Next: the queue's own order. Option Backspace, which fills a marquee, is still
 silent over a shape and has its own task waiting.
+
+## 2026-09-08 — a box now says what it picks, while you are drawing it
+
+Two boxes you can draw over the picture mean opposite things. One picks up the
+layers it encloses, so Delete takes those layers away. The other picks a piece
+of the picture to work on, so Delete clears pixels out of the layer you already
+had. Which one you get is decided live, by whether the box has caught anything
+(`BareCanvasPress.sweepDecidesSelection`, landed 2026-09-07), and both were
+drawn identically: the only way to find out was to let go and see what happened.
+The audit `2026-09-07-marquee-keeps-your-layer.json` called that honest but
+invisible, and this is that.
+
+The box now changes as you draw it. Caught nothing: the familiar crawling black
+dashes on a white line, which is exactly what it is about to become. The moment
+it goes right ROUND something it stops crawling, closes into one unbroken blue
+line, and washes the inside blue over what it would take. Shrink it back off and
+the dashes return. Three differences at once — motion, dash and fill — because
+one alone is a thing you have to look for and this has to be a thing you notice.
+Both looks are idioms people already have: Photoshop's marching ants for pixels,
+the Finder's object rubber band for things.
+
+`PhotonzCore` first. `MarqueeIntent` derives the look from the SAME call that
+decides the behavior, so the box can never lie about what it is going to do; ten
+tests. The app side is `CanvasDisplay.applyMarqueeBandStyle`, fed from
+`refreshMarqueeDisplay`, and `refreshMultiSelectOutlines` now takes the caught
+list rather than recomputing it. Behind `next-a-box-says-what-it-picks`, Next
+only and on by default there, so Current keeps the ants.
+
+Two things the review on the real app caught, both worth remembering:
+
+- The first cut left the blue wash up after the button came up. In the probe
+  that is a blue film lying over the artwork until you happen to click somewhere
+  else, which is the wrong thing to do to a capture you are redlining. The wash
+  belongs to the gesture and now comes off on release; the line the box landed
+  on carries the difference on.
+- Taking the wash away made the landed box render BLACK, because the un-washed
+  branch was also resetting the stroke. Color and dash come from the intent now;
+  only the fill asks whether you are still drawing. Worth saying because the
+  offscreen render would not have shown it — the screen capture did.
+
+`Scripts/playtest/a-box-says-what-it-picks-walk.json` photographs all three
+states mid-drag in one document: caught nothing, crossing two boxes but
+containing neither (still the ants, which is the rule made visible), and round
+both. `Scripts/test.sh` green, 4809 tests; the thirteen marquee and band walks
+all pass. Audit: `queue/audits/2026-09-08-a-box-says-what-it-picks.json`.
+
+Next: the queue's own order.

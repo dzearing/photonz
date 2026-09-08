@@ -560,7 +560,81 @@ extension CanvasNSView {
             selectionBaseLayer.isHidden = true
             selectionAntsLayer.isHidden = true
         }
-        refreshMultiSelectOutlines(marqueeRect: marqueeRect)
+        // What the band on screen is: the one thing about it that nothing else
+        // says. A region tool always picks pixels whatever it has crossed, a
+        // live arrow band asks what it has caught so far, and a band that has
+        // already landed keeps the answer it landed on.
+        let caught: [UUID]
+        if let document, marquee != nil, let rect = marqueeRect, regionDrag == nil {
+            caught = document.layerIDs(fullyInside: rect, inside: marqueeContext)
+        } else {
+            caught = []
+        }
+        let intent: MarqueeIntent
+        if regionDrag != nil || regionOutlineDrag != nil || regionContentDrag != nil {
+            intent = .picksPixels
+        } else if marquee != nil {
+            intent = .sweeping(caught: caught)
+        } else {
+            intent = .resting(targetsPixels: selectionTargetsPixels)
+        }
+        applyMarqueeBandStyle(Experiments.shared.marqueeIntentEnabled ? intent : .picksPixels,
+                              whileDrawing: marquee != nil)
+        refreshMultiSelectOutlines(caught: caught, sweeping: marquee != nil && marqueeRect != nil)
+    }
+
+    /// The two looks a rubber band wears, and the whole of how you can tell
+    /// them apart.
+    ///
+    /// A box that has caught nothing is on its way to becoming a piece of the
+    /// picture, so it wears marching ants: crawling black dashes on a white
+    /// line, thirty years of meaning "these pixels". A box that has gone right
+    /// round something is about to pick those layers up, so it stops dead,
+    /// closes its dashes into one unbroken blue line, and washes the space
+    /// inside it blue over what it is about to take. That is three differences
+    /// at once — motion, dash and fill — because one alone is a thing you have
+    /// to look for, and this has to be a thing you notice.
+    ///
+    /// The wash belongs to the gesture and comes off the moment you let go, so
+    /// nothing is left lying over your picture; the line the box landed on
+    /// carries the difference from then on.
+    ///
+    /// The blue is the same blue every picked layer already wears, so the band
+    /// joins the family of what is picked rather than introducing a fourth
+    /// color; the wash is what keeps it from reading as the solid hairline
+    /// around the group you are standing in, which is a wall and not a catch.
+    func applyMarqueeBandStyle(_ intent: MarqueeIntent, whileDrawing: Bool = false) {
+        selectionAntsLayer.lineDashPattern = intent.isDashed ? [4, 4] : nil
+        selectionAntsLayer.strokeColor = intent == .picksLayers
+            ? NSColor.systemBlue.withAlphaComponent(0.9).cgColor
+            : CGColor(gray: 0, alpha: 1)
+        // The white line under the boundary is what makes black dashes legible
+        // on a dark screenshot as well as a light one. An unbroken line covers
+        // it exactly, so the layer band pays nothing for keeping it.
+        selectionBaseLayer.strokeColor = CGColor(gray: 1, alpha: 1)
+        // The base layer carries the wash as well, so the fill is under the
+        // boundary and the two are one path that can never come apart.
+        selectionBaseLayer.fillColor = intent.isFilled(whileDrawing: whileDrawing)
+            ? NSColor.systemBlue.withAlphaComponent(0.14).cgColor : nil
+        setAntsCrawling(intent.marches)
+    }
+
+    /// Starts or stops the crawl, and only when it is actually changing: adding
+    /// the animation afresh on every refresh would restart its phase on every
+    /// mouse move, which is a band standing still while you drag it.
+    private func setAntsCrawling(_ crawling: Bool) {
+        guard crawling else {
+            selectionAntsLayer.removeAnimation(forKey: "marchingAnts")
+            selectionAntsLayer.lineDashPhase = 0
+            return
+        }
+        guard selectionAntsLayer.animation(forKey: "marchingAnts") == nil else { return }
+        let crawl = CABasicAnimation(keyPath: "lineDashPhase")
+        crawl.fromValue = 0
+        crawl.toValue = 8
+        crawl.duration = 0.4
+        crawl.repeatCount = .infinity
+        selectionAntsLayer.add(crawl, forKey: "marchingAnts")
     }
 
     /// An outline around every layer in the multi-selection, so what is picked
@@ -571,7 +645,7 @@ extension CanvasNSView {
     /// committed sweep, a ⇧-click on the canvas, a row click in the list. It
     /// does NOT hang off the rubber band: a ⇧-click selection has no band, and
     /// before this it drew nothing at all.
-    private func refreshMultiSelectOutlines(marqueeRect: CGRect?) {
+    private func refreshMultiSelectOutlines(caught: [UUID], sweeping: Bool) {
         // The region tools select pixels rather than layers, so their in-flight
         // shape never outlines anything.
         guard let viewport, let document, regionDrag == nil else {
@@ -583,13 +657,12 @@ extension CanvasNSView {
         // empty canvas, both leave what was already picked outlined rather
         // than blinking it out while the button is down.
         let captured: Set<UUID>
-        if marquee != nil, let rect = marqueeRect {
+        if sweeping {
             // With ⇧ the band adds, so mid-sweep it outlines the layers it has
             // taken in AND the ones already picked: what you let go on is what
             // you saw.
-            captured = marqueePress.selection(
-                afterSweeping: document.layerIDs(fullyInside: rect, inside: marqueeContext),
-                startingFrom: pickedLayerIDs)
+            captured = marqueePress.selection(afterSweeping: caught,
+                                              startingFrom: pickedLayerIDs)
         } else {
             captured = multiSelectedLayerIDs
         }

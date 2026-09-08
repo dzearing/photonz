@@ -537,6 +537,25 @@ Nesting needs a way in and a way out, and both keys are already busy.
   selection and letting go is what puts you back at the top. A click on bare
   canvas that lets go still steps you back out, whether one piece was picked or
   five (2026-09-05: it used to step out only for one).
+- **A box says what it picks** (2026-09-08, `next-a-box-says-what-it-picks`).
+  Two boxes you can draw over the picture mean opposite things — one picks up
+  the layers it encloses, so delete takes those layers away; the other picks a
+  piece of the picture, so delete clears pixels out of the layer you already
+  had — and they were drawn identically, so the only way to find out which you
+  had was to let go and see what happened. Now the box changes as you draw it.
+  Caught nothing: the familiar crawling black dashes on a white line. The
+  moment it goes right ROUND something it stops crawling, closes into one
+  unbroken blue line, and washes the inside blue over what it would take;
+  shrink it back off and the dashes return. Three differences at once, because
+  one alone is something you have to look for. The wash belongs to the gesture
+  and comes off when you let go, so nothing is left lying over your picture,
+  while the line the box landed on carries the difference on. Crossing a layer
+  is not catching it: a box that cuts through two layers without containing
+  either still wears the ants, which is the rule made visible. The look is
+  derived from the SAME call that decides the behavior
+  (`MarqueeIntent.sweeping(caught:)` over `BareCanvasPress.sweepDecidesSelection`),
+  so the box can never lie about what it is going to do. Walk:
+  `Scripts/playtest/a-box-says-what-it-picks-walk.json`.
 
 ## The flag each step ships behind
 
@@ -553,6 +572,7 @@ other Next flag in the catalog. Current never sees any of them.
 | 7 | `next-starter-components` | the Library holds only components you authored |
 | 8 | `next-styles` | fills are raw values only, no Library styles section |
 | 9 | none | it is an audit of everything above |
+| a box says what it picks | `next-a-box-says-what-it-picks` | both boxes wear the marching ants, as Current does |
 | picker | `next-color-picker` | the color rows open the picker the app shipped with, and shadow, backdrop and the measurement rows open the system color panel |
 
 Three rules that go with them:
