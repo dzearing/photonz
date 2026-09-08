@@ -1,0 +1,26 @@
+{
+  "feature": "Undo a sweep-and-delete",
+  "epic": "ui-building",
+  "summary": "Sweeping a band round a few things and pressing Delete is now one press of Command Z to get them all back. It used to take two: the first press handed back only the dotted outline and left your work deleted, which looked exactly like undo refusing to help.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Open a new document and drop two screenshots onto it, well apart." },
+    { "do": "Press V for the pointer, then drag a band across empty canvas so it fully surrounds both." },
+    { "do": "Press Delete. Both go, and the band comes down." },
+    { "do": "Press Command Z once.", "shot": "2026-09-08-sweep-delete-undo-1.png" },
+    { "do": "Check the Layers list: both rows are back, in the order they were." },
+    { "do": "Press Command Shift Z to redo. Both go again, in one press." },
+    { "do": "Press Command Z once more, then click one of the pictures and drag it, to be sure the pictures that came back are really usable." }
+  ],
+  "evaluate": [
+    "Does one press feel like enough, or did you instinctively reach for a second?",
+    "Coming back, the dotted band is on screen again but nothing is picked. Does an empty band read as leftover clutter, or as a useful place marker?",
+    "Should the two pictures come back already picked, so you can immediately move them or delete them again?",
+    "Do the pictures land in exactly the spots and the stacking order you remember?"
+  ],
+  "rough": [
+    "The band comes back around the restored pictures but they are not picked again, so pressing Delete straight after the undo does nothing. That is how undoing a delete has always behaved here, so it was left alone rather than changed on a bug fix, but it is the one part of the flow that still feels short.",
+    "Stacking a marquee band still has the same two-press problem this fixed for deleting: one Command Z gives back only the band and leaves the stack made. Reproduced with the probe and filed as its own p1 rather than folded in here.",
+    "Verified live: the screenshot above is a real window capture from the probe app, not an offscreen render."
+  ]
+}

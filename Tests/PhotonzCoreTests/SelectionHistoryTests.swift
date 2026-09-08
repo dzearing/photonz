@@ -13,6 +13,14 @@ struct SelectionHistoryTests {
         History(document: PhotonzDocument(canvasSize: CGSize(width: 100, height: 100)))
     }
 
+    /// A picture-sized layer of the kind a rubber band sweeps up.
+    private func sweptLayer(_ name: String) -> Layer {
+        let frame = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let annotation = AnnotationContent(shape: .rectangle, start: .zero,
+                                           end: CGPoint(x: frame.width, y: frame.height))
+        return Layer(name: name, content: .annotation(annotation), frame: frame)
+    }
+
     private func region(_ x: CGFloat, _ y: CGFloat) -> SelectionSnapshot {
         SelectionSnapshot(region: SelectionRegion.rect(CGRect(x: x, y: y, width: 10, height: 10)),
                           targetsPixels: true)
@@ -166,6 +174,67 @@ struct SelectionHistoryTests {
         history.recordSelectionChange(from: region(0, 0))
         history.undo()
         #expect(history.selection == region(0, 0))
+    }
+
+    // MARK: - A sweep that deletes what it caught
+
+    /// Sweeping a band round two pictures and pressing ⌫ removes both and
+    /// drops the band. The band goes because it no longer describes anything,
+    /// so it has to ride WITH the delete: one ⌘Z brings the pictures back and
+    /// hands the outline back with them.
+    ///
+    /// Recorded the other way round (the clear as a step of its own, on top of
+    /// the delete) the first press gave back only the outline and left the two
+    /// pictures deleted, which reads as undo refusing to bring your work back
+    /// (reported 2026-09-08, `deleteLayers`). `bandThenClearAsItsOwnStepBuriesTheDelete`
+    /// below is that shape, kept so the cost of getting it wrong is written down.
+    @Test func aSweepDeleteHandsBackThePicturesAndTheBandInOnePress() {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
+                                                        layers: [sweptLayer("left"), sweptLayer("right")]))
+        let band = region(80, 80)
+        history.syncSelection(band) // the band the sweep left on screen
+        let ids = Set(history.current.layers.map(\.id))
+
+        history.perform { $0.removeLayers(ids: ids) }
+        history.syncSelection(SelectionSnapshot()) // the delete consumed it: no step of its own
+        #expect(history.current.layers.isEmpty)
+        #expect(history.selection.region == nil)
+
+        history.undo()
+        #expect(history.current.layers.map(\.name) == ["left", "right"])
+        #expect(history.selection == band)
+    }
+
+    @Test func bandThenClearAsItsOwnStepBuriesTheDelete() {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
+                                                        layers: [sweptLayer("left"), sweptLayer("right")]))
+        let band = region(80, 80)
+        history.syncSelection(band)
+        let ids = Set(history.current.layers.map(\.id))
+
+        history.perform { $0.removeLayers(ids: ids) }
+        history.syncSelection(SelectionSnapshot())
+        history.recordSelectionChange(from: band) // the mistake: a second step
+
+        history.undo()
+        #expect(history.selection == band)          // the outline is back...
+        #expect(history.current.layers.isEmpty)     // ...and the pictures are still gone
+        history.undo()
+        #expect(history.current.layers.count == 2)  // only the second press reaches them
+    }
+
+    @Test func aSweepDeleteRedoesInOnePressToo() {
+        var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800),
+                                                        layers: [sweptLayer("left"), sweptLayer("right")]))
+        history.syncSelection(region(80, 80))
+        let ids = Set(history.current.layers.map(\.id))
+        history.perform { $0.removeLayers(ids: ids) }
+        history.syncSelection(SelectionSnapshot())
+
+        history.undo()
+        history.redo()
+        #expect(history.current.layers.isEmpty)
+        #expect(history.selection.region == nil)
     }
 
     @Test func undoEndsTheRunSoTheNextNudgeStandsAlone() {

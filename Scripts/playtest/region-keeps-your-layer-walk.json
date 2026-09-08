@@ -60,6 +60,8 @@
     { "do": "describe", "stage": "5b-sweep-then-delete", "note": "THE CONTROL: delete after a band that CAUGHT layers still removes them, which is the sweep-a-mess-and-clear-it gesture" },
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5c-sweep-delete-undone", "note": "THE TEST: ONE undo brings both pictures back, band and all. The band clearing rides with the delete, so it must not cost a second press (2026-09-08)" },
+    { "do": "snapshot", "name": "region-5-sweep-undone" },
 
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.4 },

@@ -601,13 +601,20 @@ extension EditorState {
 
     /// Batch delete (⌫ over a marquee that captured layers): all of them go in
     /// ONE undo step, then the marquee clears.
+    ///
+    /// The band that caught them no longer describes anything, so it rides
+    /// with the edit rather than being a step of its own — the same as
+    /// grouping. Recording it separately cost the sweep a second ⌘Z: the
+    /// first press handed back the outline with the pictures still gone,
+    /// which reads as undo refusing to bring your work back (reported
+    /// 2026-09-08).
     func deleteLayers(ids: [UUID]) {
         guard !ids.isEmpty else { return }
         discardDragPreview()
         let idSet = Set(ids)
         if let selected = selectedLayerID, idSet.contains(selected) { selectedLayerID = nil }
         perform { $0.removeLayers(ids: idSet) }
-        setSelection(nil)
+        setSelection(nil, captureLayers: false, recording: false)
     }
 
     func duplicateLayer(id: UUID) {

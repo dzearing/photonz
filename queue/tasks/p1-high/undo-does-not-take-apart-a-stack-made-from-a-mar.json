@@ -1,0 +1,27 @@
+{
+  "id": "undo-does-not-take-apart-a-stack-made-from-a-mar",
+  "title": "Undo does not take apart a stack made from a marquee band",
+  "goal": "Drop two pictures, draw a marquee band round both, and stack them: they become one stack, which is what you asked for. Press Undo once and the stack is still there, only the band comes back. It takes a second press to get your two separate pictures back, so the first Undo looks like it did nothing.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 250,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T11:00:24.080Z",
+  "updated": "2026-09-08T11:00:24.083Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-08 with the probe, same shape as the marquee-delete undo bug fixed the same day (task undo-does-not-bring-back-pictures-deleted-with-a).\n\nWalk (written to Scripts/playtest/tmp-stack-undo-walk.json, run and then removed):\n  blank 1200x800, dropImage x2, tool select, drag 80,80 -> 1150,500, action stackSelection, action undo, action undo\n\n  Scripts/playtest.sh Scripts/playtest/tmp-stack-undo-walk.json --no-build\n\nState per step out of log.json:\n  [10 1-band-caught-both] layers: 3  region: 80,80 1070x420  sel: [probe, probe 2]\n  [13 2-stacked]          layers: 2  region: none            sel: [Group]\n  [16 3-one-undo]         layers: 2  region: 80,80 1070x420  sel: [Group]   <- stack still there\n  [19 4-two-undos]        layers: 3  region: 80,80 1070x420  sel: []        <- only now\n\nCAUSE, same one line: Sources/Photonz/EditorState+Layout.swift stackSelection() ends with setSelection(nil, captureLayers: false), which RECORDS the band coming down as its own undo step on top of the edit. groupSelection/ungroupSelection right above it pass recording: false so the band rides with the edit; deleteLayers was fixed to do the same on 2026-09-08. gridSelection may share it: check every command that clears the band after a perform.\n\nThe core contract is pinned in Tests/PhotonzCoreTests/SelectionHistoryTests.swift (aSweepDeleteHandsBackThePicturesAndTheBandInOnePress, bandThenClearAsItsOwnStepBuriesTheDelete).",
+  "acceptance": [
+    "After stacking two pictures caught in a marquee band, one Undo takes the stack apart and leaves the two pictures where they were",
+    "The band that caught them comes back with the same press, not a press of its own",
+    "A walk covers stack-from-a-band and its undo"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T11:00:24.082Z",
+      "note": "created (manual)"
+    }
+  ]
+}
