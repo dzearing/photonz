@@ -11731,3 +11731,45 @@ place, and whether an outside ring on a canvas-filling picture should be cut off
 by the canvas edge.
 
 Next: the queue picks the next task.
+
+## 2026-09-07 — A marquee keeps the layer you picked
+
+The user reported that picking a layer and then drawing a marquee let go of the
+layer, so pressing delete to clear those pixels had nothing to act on. The task
+notes blamed the marquee tool. Reproducing it first said otherwise: the M tool
+already kept the pick and already cleared the picked layer alone. The gesture at
+fault was the POINTER's own band, which called `onSelectLayer(nil)` on the press,
+before it knew whether the gesture was a click or a box.
+
+What changed: a band now decides the selection only when it CATCHES something
+(`BareCanvasPress.sweepDecidesSelection(caught:)`). A band thrown round empty
+canvas has said WHERE and not WHAT, so the pick survives and the band becomes a
+pixel region on it; a band thrown round layers still picks them up, so the
+sweep-a-mess-and-clear-it gesture is untouched. The press keeps its hands off the
+selection entirely now, and a plain click deselects on the way back up.
+
+Second half, found while probing rather than in the report: the region family
+disagreed about which layer a region meant. The bucket preferred the layer under
+the pointer over the layer you picked, and with a shape picked, delete fell
+through to the locked Background and painted a layer nobody chose (invisible only
+because that background was white). New `RegionTarget` in PhotonzCore owns the
+one rule: the picked layer if it can be sliced, nothing at all if it cannot, and
+only with no pick does the pointer's layer or the Background answer. Delete, both
+fills and the region move all come through it.
+
+Verified on the probe with `Scripts/playtest/region-keeps-your-layer-walk.json`,
+84 steps, and by pixels rather than by eye: after the delete the whole render
+differs while the right half is byte-identical, and one undo gives the start
+render back byte for byte.
+
+One rule is still two: copy reaches the same layer by its own route
+(`CopyRoute` plus the `copyPicksYourLayerEnabled` flag). Same answer today,
+checked on the probe, worth folding into `RegionTarget` when copy is next
+touched.
+
+Audit: `queue/audits/2026-09-07-marquee-keeps-your-layer.json`, two real window
+captures. Two roughs filed at p2: nothing on screen tells a box that picks layers
+from a box that picks pixels, and delete over a box with a shape picked now does
+nothing without saying why.
+
+Next: the queue picks the next task.
