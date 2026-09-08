@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2020,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T14:58:03.179Z",
-  "updated": "2026-09-08T16:50:50.896Z",
+  "updated": "2026-09-08T16:51:37.695Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fallout from outline-leaves-appearance-and-an-effect-s-colour (2026-09-08). A layer ring on a text layer has always been baked into the text raster as a glyph outline (DocumentRenderer, .text case, TextRasterizer.TextOutline). When the Outline row retired, every border on a label became that glyph outline and DocumentRenderer stops calling borderEffects for text, so the box a Border used to draw round a label (added 2026-09-07) is gone. Likely shape: a per-border choice of what it follows, i.e. widen RingShape to include the letters and let the row pick, or a separate setting in the Text section.",
@@ -34,7 +34,12 @@
     {
       "t": "2026-09-08T16:50:50.895Z",
       "note": "Second review, on the probe with real captures (Scripts/playtest/label-border-follows-walk.json). What works: a border arrives on the letters exactly as before, the row reads 'Follows Letters', switching it to Box puts a rectangle round the label and brings the Position row with it, and a second border arrives on the letters so both are on at once. What is rough and went into the audit: the grip between a letter border and a box border changes nothing you can see, since a letter outline is baked into the words and a box ring is laid over them afterwards; and the box hugs the words tight because a label's frame is snug, so a roomier bordered label wants padding on a text layer, which is separate work. One thing the walk taught: with the Follows popup on screen a Border row holds three menus, and the two that had no row name of their own would both have answered to 'Border', so Follows carries its own playtest field name."
+    },
+    {
+      "t": "2026-09-08T16:51:37.693Z",
+      "note": "A label's Border row now asks what the ring follows: Letters, baked round each letter as before, or Box, drawn round the label's frame, and a label can wear one of each at once. Letters stays the default and is what a border saved before today opens as, so no document changes. PhotonzCore/BorderFollows.swift, DocumentRenderer, EffectsListInspector. Verified by Scripts/test.sh green at 4880 (11 new tests, including the pixels for both rings and a saved label opening unchanged) and walked on the probe with real captures: queue/audits/2026-09-08-label-border-follows.json."
     }
   ],
-  "started": "2026-09-08T16:32:46.936Z"
+  "started": "2026-09-08T16:32:46.936Z",
+  "completed": "2026-09-08T16:51:37.694Z"
 }
