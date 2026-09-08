@@ -11851,3 +11851,35 @@ Audit: `queue/audits/2026-09-07-grid-settings-narrow.json`, three real window
 captures.
 
 Next: the queue picks the next task.
+
+## 2026-09-07 — A layer row let go where it cannot land is put down
+
+A row picked up in the layers list and let go somewhere it could not land was
+never put down: the only thing that let go of it was a drop landing on a row.
+Escape, a release out over the picture and a release outside the window all left
+the row in the list's hand, and the next colour carried over a row was read as
+that row coming back, so the list drew a reorder line for a colour.
+
+Reproduced on the probe before touching anything: with nothing picked up, a
+colour over a row is refused; after picking a row up and walking away without a
+word, the same colour over the same row is answered as a reorder, and the screen
+capture shows the blue line.
+
+Fixed by moving the row and its landing off `LayersListView`'s `@State` and onto
+`EditorState` as `LayerRowInHand` (PhotonzCore, pure, tested first), which
+carries the same idle deadline `PanelDropMarking` uses. The one watch that
+already settled the panel's mark now settles the held row too, so there is no
+second timer. The hand itself is `@ObservationIgnored` because its deadline is
+pushed out on every frame of a drag; the list reads two published values that
+change only when the drop line does, so a drag costs the redraws it always did.
+
+Verified on the probe with `Scripts/playtest/row-put-down-walk.json`: three
+abandonments each end with the list holding no row, a colour over a row after
+each draws no line, and a real reorder still lands. `panel-mark-walk.json` still
+green, so a file arriving after a row drag still gets the file answer. 4622 tests
+pass. Audit: `queue/audits/2026-09-07-row-put-down.json`.
+
+The harness gained a `rowInHand()` readout, printed by `dragOver` and `dragRow`,
+because nothing on screen says what the list is holding once the line has gone.
+
+Next: back to the queue.
