@@ -1,0 +1,28 @@
+{
+  "feature": "The tick leads every row it belongs to",
+  "epic": "ui-building",
+  "summary": "In Appearance and in Effects, the switch that turns a row on now sits first, at the left edge, with the name beside it. Everything else in both lists lines up in one column of names behind it, including the settings that hang under a row.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: the Appearance and Effects lists are on by default.",
+  "try": [
+    { "do": "Draw a rectangle with R, then press V to go back to the pointer.", "shot": "2026-09-08-tick-leads-1-appearance-sc.png" },
+    { "do": "Read the Appearance list top to bottom: Opacity, Fill, Outline, Corner Radius." },
+    { "do": "Click the plus on the Effects header and add a Shadow, then add a Blur.", "shot": "2026-09-08-tick-leads-2-effects-sc.png" },
+    { "do": "Follow the thin rule down beside the Shadow settings up to the tick it hangs from." },
+    { "do": "Click the Blur tick to switch it off, then on again." },
+    { "do": "Draw an arrow with A and press V, then look at Appearance again.", "shot": "2026-09-08-tick-leads-3-arrow-sc.png" }
+  ],
+  "evaluate": [
+    "Reaching for the switch: is it now where your hand goes first, without reading the name?",
+    "Do Appearance and Effects read as one list with one shape, or still as two?",
+    "Does the rule under a row look like it hangs from that row's tick?",
+    "Opacity and Corner Radius have no tick and start in the name column with an empty space to their left. Does that read as tidy or as a hole?",
+    "On an arrow, where no row has a tick at all, the whole list is inset by that empty column. Is holding the column worth it so the swatch does not jump when you switch between an arrow and a rectangle?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the real window, not an offscreen render.",
+    "The task notes guessed the order had been reversed by the afternoon's work on 2026-09-07. It had not. The morning audit shot 2026-09-07-appearance-list-two-effects.png already shows the tick after the name, and the name has led since the row got its columns on 2026-09-06 in c72ed55b. So this is a first fix, not a regression.",
+    "I moved the settings under a row 9 points right, so Softness starts where Shadow starts. Before this change they sat left of the names above them, which read as a child less indented than its parent. It costs those sliders 9 points of track.",
+    "The note that appears under a row when a colour cannot reach a part now starts under the name rather than under the tick. I could not get that note on screen in the scripted walk, so it is right by construction and by the shared number, not by a picture.",
+    "The old colour rows behind the switched-off Appearance flag still read name first. They are the Current release's rows, so this change deliberately stopped at the boundary."
+  ]
+}

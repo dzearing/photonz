@@ -33,7 +33,13 @@ struct PartsInspector: View {
         VStack(alignment: .leading, spacing: 16) {
             // Opacity leads, always. It is the one thing EVERY layer has,
             // whatever it is made of, so it is the row that never moves.
+            //
+            // It is a label over a track rather than a tick and a name, so it
+            // has no tick to lead with; it steps in by the width of the tick
+            // column all the same, so its name starts in the same place Fill's
+            // and Outline's do and the list reads as one column.
             opacity
+                .padding(.leading, ColorPartLayout.nameLeading)
             ForEach(rows) { row in
                 PartRowView(row: row)
             }
@@ -41,6 +47,8 @@ struct PartsInspector: View {
             // has none, so it shows no row rather than a slider that does
             // nothing to what you have picked.
             if !corners.isEmpty {
+                // Another label over a track, stepped in to the same name
+                // column as everything above it.
                 VStack(alignment: .leading, spacing: 2) {
                     CornerRadiusRow(selection: corners)
                     if let note = corners.note {
@@ -50,6 +58,7 @@ struct PartsInspector: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                .padding(.leading, ColorPartLayout.nameLeading)
             }
             if let caption {
                 Text(caption)
@@ -121,20 +130,13 @@ private struct PartRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
-                Text(row.title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-                    .frame(width: ColorPartLayout.labelWidth,
-                           height: ColorPartLayout.rowHeight, alignment: .leading)
-                // Always this wide, blank or not, so every colour in the list
-                // starts at the same left edge whether its part has a switch.
-                Group {
-                    if row.hasSwitch { partSwitch } else { Color.clear }
+                // The tick and then the name, in that order, from the one place
+                // the panel's columns live. A part with nothing to switch — a
+                // line's ink, a letter's ink — still holds the tick column open,
+                // so its name starts on the same line as everybody else's.
+                PanelRowHead(title: row.title) {
+                    if row.hasSwitch { partSwitch }
                 }
-                .frame(width: ColorPartLayout.switchWidth,
-                       height: ColorPartLayout.rowHeight, alignment: .leading)
                 if isOn {
                     colorControl
                 } else if let paint = incoming?.landing?.paint {
@@ -158,10 +160,16 @@ private struct PartRowView: View {
             // aims at the row's NAME. Nothing is drawn here at rest.
             .modifier(OffPartColorDrop(row: row, active: !isOn, incoming: $incoming))
             if let note = row.reachNote {
+                // Under the NAME it is about, not under the tick. The tick is
+                // the row's leading column now, so a note left at the row's
+                // own edge would start a whole column left of the word it
+                // explains and read as belonging to the list rather than to
+                // this row.
                 Text(note)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, ColorPartLayout.nameLeading)
             }
             if showsSettings {
                 OwnedSettings(owner: row.title) {
@@ -271,21 +279,37 @@ struct OwnedSettings<Content: View>: View {
     let owner: String
     @ViewBuilder var content: Content
 
-    /// How far in the settings sit. Enough for the rule to read as a bracket
-    /// down the side of them, not so far that the numbers leave the column
-    /// every other readout in the panel lines up in.
-    static var step: CGFloat { 10 }
+    /// How thick the bracket is. Named because the offsets below have to take
+    /// half of it back to centre the rule on the tick, and the whole of it back
+    /// to land the settings in the panel's one column of names.
+    static var ruleWidth: CGFloat { 2 }
+
+    /// How far in the rule itself sits: hung on the tick of the row above it.
+    /// The tick is that row's leading column now, so its middle is
+    /// `ColorPartLayout.tickCenter` in and the rule only has to give back half
+    /// its own width to sit exactly under it. One number, read by both lists,
+    /// so neither can drift from the other.
+    static var ruleLeading: CGFloat { ColorPartLayout.tickCenter - ruleWidth / 2 }
+
+    /// How far the settings sit from the rule. Not a taste: it is whatever
+    /// lands them in the SAME column the row names are in, so Softness starts
+    /// where Shadow starts and Width starts where Outline starts. The panel
+    /// then has exactly two left edges — the ticks, and everything else — and
+    /// the rule reads as a bracket in the gap between them. Before this the
+    /// settings sat nine points LEFT of the names above them, which read as a
+    /// child less indented than its parent.
+    static var settingsGap: CGFloat { ColorPartLayout.nameLeading - ruleLeading - ruleWidth }
 
     var body: some View {
-        HStack(alignment: .top, spacing: Self.step - 3) {
+        HStack(alignment: .top, spacing: Self.settingsGap) {
             // The bracket. It runs the full height of what it owns, so two
             // shadows one under the other never blur into one block.
             RoundedRectangle(cornerRadius: 1)
                 .fill(.quaternary)
-                .frame(width: 2)
+                .frame(width: Self.ruleWidth)
             VStack(alignment: .leading, spacing: 6) { content }
         }
-        .padding(.leading, 1)
+        .padding(.leading, Self.ruleLeading)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(owner) settings")
     }

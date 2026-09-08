@@ -85,16 +85,11 @@ private struct EffectRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
-                Text(row.title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-                    .frame(width: ColorPartLayout.labelWidth,
-                           height: ColorPartLayout.rowHeight, alignment: .leading)
-                effectSwitch
-                    .frame(width: ColorPartLayout.switchWidth,
-                           height: ColorPartLayout.rowHeight, alignment: .leading)
+                // The tick and then the name, in that order, from the one place
+                // the panel's columns live. Every effect row here and every part
+                // row in Appearance reads the same way because neither of them
+                // arranges the two itself.
+                PanelRowHead(title: row.title) { effectSwitch }
                 if row.isOn {
                     colorControl
                 } else if let paint = incoming?.landing?.paint {
@@ -114,10 +109,16 @@ private struct EffectRowView: View {
             }
             .modifier(OffEffectColorDrop(row: row, active: !row.isOn, incoming: $incoming))
             if let note = row.reachNote {
+                // Under the NAME it is about, not under the tick. The tick is
+                // the row's leading column now, so a note left at the row's
+                // own edge would start a whole column left of the word it
+                // explains and read as belonging to the list rather than to
+                // this row.
                 Text(note)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, ColorPartLayout.nameLeading)
             }
             if row.isOn {
                 OwnedSettings(owner: row.title) { settings }

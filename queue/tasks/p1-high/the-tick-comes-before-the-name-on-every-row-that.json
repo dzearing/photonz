@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-08T04:59:46.419Z",
-  "updated": "2026-09-08T05:06:28.208Z",
+  "updated": "2026-09-08T05:48:37.867263Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-07 with a screenshot, saying they asked for this before. An earlier screenshot the same day did show the tick first, so this reversed during that day's work; the row was touched by four commits between noon and half past four, so find which and say so rather than assuming. Today EffectsListInspector.swift line 89 lays the row out as the title at ColorPartLayout.labelWidth then the switch at switchWidth, so the name comes first. The widths live in ColorStylePanel.swift lines 221 and 225 and are shared with the Appearance list, so put the ORDER there too rather than swapping two views and leaving the next list to guess. Note this interacts with an-effect-s-tick-sits-over-the-rule-that-marks-i, which lines the settings rule up under the tick: once the tick is the left column that alignment becomes simple, so whichever lands second should check the other still holds.",
@@ -34,7 +34,49 @@
     {
       "t": "2026-09-08T05:06:28.208Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T05:31:50.802Z",
+      "note": "runner failed (exit 1, attempt 1): API Error: Can't reach the API server \u2014 check your internet or DNS (ENOTFOUND)"
+    },
+    {
+      "t": "2026-09-08T05:32:23.037Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T05:48:37.867263Z",
+      "note": "Adversarial review before building: the ask is right and the shortest version is one shared row head, not two swapped HStacks. Cut nothing else. Checked the risk a first-time user would hit: with the tick at the left edge, a row with no tick would start its name a column further left than its neighbours, so tickless rows have to hold the column open or the list goes ragged."
+    },
+    {
+      "t": "2026-09-08T05:48:37.867263Z",
+      "note": "Checked the notes' claim that the order reversed during 2026-09-07. It did not. queue/audits/2026-09-07-appearance-list-two-effects.png, from the 08:46 commit b90ea5c7, already shows the tick AFTER the name, and `git show c72ed55b:Sources/Photonz/PartsInspector.swift` (2026-09-06 12:40, the commit that gave the row its columns) lays out Text then switch. So none of the four afternoon commits did this; the name has led since the row existed."
+    },
+    {
+      "t": "2026-09-08T05:48:37.867263Z",
+      "note": "Built: one PanelRowHead in ColorStylePanel.swift is now the only thing that orders a tick against a name, and both EffectsListInspector and PartsInspector ask it for a head instead of arranging two views. Tickless rows pass EmptyView and keep the column. Opacity and Corner Radius, which are a label over a track rather than a tick and a name, step in by ColorPartLayout.nameLeading."
+    },
+    {
+      "t": "2026-09-08T05:48:37.867263Z",
+      "note": "Adversarial review of the built thing, on a real capture: two things were out of column. The settings under a row sat 9 points LEFT of the names above them, a child less indented than its parent; and a row's reach note started under the tick rather than under the name it explains. Fixed both by deriving OwnedSettings.settingsGap from nameLeading, so the panel now has exactly two left edges. Dropped a readoutLeading constant that nothing used."
+    },
+    {
+      "t": "2026-09-08T05:48:37.867263Z",
+      "note": "Verified on the real app, not by reading: Scripts/playtest.sh Scripts/playtest/tick-leads-walk.json, status ok, Screen Recording granted so the shots are the real window. Measured the captures pixel by pixel. Ticks at 0, the settings rule at 6 (centred on the 14 wide tick), and every name in both lists at 24.5 to 26 (the spread is glyph bearing). Appearance and Effects agree, and the arrow, whose rows have no tick at all, still starts its names at 24 with its swatch in the same column as a rectangle's. Scripts/test.sh green, 4700 tests."
+    },
+    {
+      "t": "2026-09-08T05:48:37.867263Z",
+      "note": "Acceptance item 4 is met, which also answers the blocked sibling an-effect-s-tick-sits-over-the-rule-that-marks-i: its decision card offered 'the tick leads the row' as option a, and the user filing this task chose that in effect. The rule now hangs under the tick. Not touching that task's status from here."
+    },
+    {
+      "t": "2026-09-08T05:48:37.867263Z",
+      "note": "Audit: queue/audits/2026-09-08-tick-leads.json with three real captures."
     }
   ],
-  "started": "2026-09-08T05:06:28.207Z"
+  "started": "2026-09-08T05:32:23.037Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-08T05:31:50.801Z",
+    "exit": 1,
+    "message": "API Error: Can't reach the API server \u2014 check your internet or DNS (ENOTFOUND)"
+  }
 }

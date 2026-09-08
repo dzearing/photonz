@@ -213,15 +213,20 @@ struct ColorStyleControl: View {
 /// the right edge, and the swatch therefore moved whenever the name beside it
 /// changed length — two rows in one section, one wearing a saved name and one
 /// not, put their swatches in two different places. So the row is columns now:
-/// the label, the switch that turns the color on and off, the color, the menu.
+/// the switch that turns the row on and off, the label, the color, the menu.
 /// Every one of them is a fixed width, so the swatches line up down the
 /// section whatever any row happens to be wearing.
+///
+/// The ORDER lives here too, in `PanelRowHead`, and not in the lists. Reported
+/// by the user on 2026-09-07: the tick is what the row is for, so it belongs
+/// first. Both lists ask for a head rather than laying two views out
+/// themselves, so a list added later cannot come out the other way round.
 enum ColorPartLayout {
     /// Wide enough for the longest part name the inspector uses.
     static let labelWidth: CGFloat = 68
-    /// The switch column, left blank in rows with nothing to switch, so a row
-    /// that has a checkbox and a row that does not still agree on where the
-    /// color goes.
+    /// The switch column, FIRST in the row and left blank in rows with nothing
+    /// to switch, so a row that has a checkbox and a row that does not still
+    /// agree on where the name and the color go.
     static let switchWidth: CGFloat = 16
     /// Wide enough for the 18pt swatch and for the word Mixed.
     static let readoutWidth: CGFloat = 52
@@ -229,6 +234,74 @@ enum ColorPartLayout {
     /// sits half a line above its neighbour.
     static let rowHeight: CGFloat = 20
     static let spacing: CGFloat = 8
+
+    /// The ink a small checkbox actually draws, which is narrower than the
+    /// column it sits in and leading aligned inside it. Measured off a probe
+    /// capture on 2026-09-07 rather than guessed: 14 wide in a 16 wide column.
+    static let tickWidth: CGFloat = 14
+
+    /// How far in the middle of the tick sits, from the row's leading edge.
+    /// The switch column is first, so this is half the ink and nothing else.
+    /// `OwnedSettings` hangs its rule on it, which is the whole reason the
+    /// number is shared instead of typed twice.
+    static var tickCenter: CGFloat { tickWidth / 2 }
+
+    /// How far in the NAME column starts, now that the tick leads. A row in one
+    /// of the lists that is not a tick-and-name row at all — the Opacity slider,
+    /// the Corner Radius slider, which wear their label over a full width track
+    /// — steps in by this much so the whole list has one column of names and no
+    /// row looks ragged beside its neighbour.
+    static var nameLeading: CGFloat { switchWidth + spacing }
+
+}
+
+/// The head of every row in the panel's two lists: the tick, then the name.
+///
+/// The tick is what the row is FOR — it is the thing you reach for over and
+/// over, to see the shape with the effect and without it — so it leads, and the
+/// name reads after it the way a checkbox and its label read everywhere else on
+/// the Mac. Before this the name came first and the tick sat 68 points in,
+/// which put it nowhere near the rule that marks the row's settings and made
+/// you hunt down the list for the one control you use most.
+///
+/// Both columns are fixed and their widths add up the same either way round,
+/// so the color, the grip and the cross after it do not move.
+struct PanelRowHead<Switch: View>: View {
+    /// The row's own word: Outline, Fill, Blur, Shadow 2.
+    let title: String
+    /// The tick, where the row has one. Rows with nothing to switch pass an
+    /// `EmptyView` and still keep the column, so their names start on the same
+    /// line as everybody else's.
+    @ViewBuilder var switchControl: Switch
+
+    var body: some View {
+        HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
+            // ALWAYS this wide, blank or not. The empty rectangle is what
+            // holds the column open: a frame put straight on a view that draws
+            // nothing reserves nothing, and a row with no tick then starts its
+            // name a whole column to the left of every other row. That is
+            // exactly what an arrow's ink row did the first time this was
+            // built, on 2026-09-08, and again the day the columns arrived.
+            Color.clear
+                .frame(width: ColorPartLayout.switchWidth,
+                       height: ColorPartLayout.rowHeight)
+                .overlay(alignment: .leading) { switchControl }
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(width: ColorPartLayout.labelWidth,
+                       height: ColorPartLayout.rowHeight, alignment: .leading)
+        }
+    }
+}
+
+extension PanelRowHead where Switch == EmptyView {
+    /// A row with nothing to switch. It still holds the tick column open.
+    init(title: String) {
+        self.init(title: title) { EmptyView() }
+    }
 }
 
 /// One labelled color row: what it paints, the switch that turns it on and off

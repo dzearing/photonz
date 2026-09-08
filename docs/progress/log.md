@@ -12052,3 +12052,32 @@ Audit: `queue/audits/2026-09-07-effects-remembered.json`, three real window
 captures. No renderer change, so no perf note.
 
 Next: back to the queue.
+
+## 2026-09-08 — The tick comes before the name
+
+The switch now leads every row it belongs to, in both panel lists. One
+`PanelRowHead` in `ColorStylePanel.swift` is the only place a tick is ordered
+against a name; `EffectsListInspector` and `PartsInspector` both ask it for a
+head rather than arranging two views, so a list added later cannot come out the
+other way round. Rows with nothing to switch pass an `EmptyView` and still hold
+the column open, and the two rows that are a label over a track (Opacity, Corner
+Radius) step in by `ColorPartLayout.nameLeading`.
+
+Two things the reorder knocked out of column, found on a real capture and
+fixed: the settings hanging under a row sat 9 points left of the names above
+them, and a row's reach note started under the tick rather than under its name.
+`OwnedSettings.settingsGap` is now derived from `nameLeading`, so the panel has
+exactly two left edges — the ticks at 0, everything else at 24 — with the rule
+at 6, centred on the tick.
+
+The task notes guessed the order had been reversed by the 2026-09-07 afternoon
+work. It had not: the 08:46 audit shot that day already shows the tick after the
+name, and the name has led since the row got its columns on 2026-09-06.
+
+Verified with `Scripts/playtest/tick-leads-walk.json` on the probe app with
+Screen Recording granted, measured pixel by pixel; `Scripts/test.sh` green.
+Audit: `queue/audits/2026-09-08-tick-leads.json`.
+
+Next: the blocked sibling `an-effect-s-tick-sits-over-the-rule-that-marks-i` is
+now moot — its decision offered "the tick leads the row" and that is what
+shipped.
