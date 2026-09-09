@@ -13861,3 +13861,37 @@ bug, so it is filed as its own question rather than fixed here:
 `find-out-what-corner-radius-should-say-over-a-gr`. Open question for the user
 in the audit: the copy lost the Corner Radius slider and got a typed field two
 sections down, and whether that trade is right is theirs to say.
+
+## 2026-09-09 — A saved text style can be let go on a row in the layers list
+
+The picture was the only place a saved text style could be put down; aiming at
+the row in the Layers list, which is the other obvious place, did nothing and
+said nothing about why (flagged in the rough list of
+`queue/audits/2026-09-09-text-style-drag.json`).
+
+The row now asks the document the same question the picture asks
+(`PhotonzDocument.textStyleRowDrop` builds the same `TextStyleDrop.Target` and
+reads the same answer), so the two surfaces cannot drift into promising
+different things. It rings in accent when it will take the style and in red
+dashes when it will not, and one line sits at whichever end of the list the
+aimed row is not near, saying what letting go would do or why it would do
+nothing. `TextStyleDrop.Target` gained `isLocked`: a locked layer is invisible
+to the canvas hit test and unmissable in a list, and refusing it matches the
+Text section, which will not dress a locked layer either. `StyleRowMarking`
+(core, tested) is the layer-row twin of `PanelDropMarking`, so a drag that ends
+without reporting itself cannot leave a row ringed forever.
+
+Walks gained `dragTile` with `onto`, a row in the layers list, as the
+alternative to `to`, a point on the picture;
+`Scripts/playtest/text-style-row-drop-walk.json` drives six cases.
+
+What is next: the COLOUR half was deliberately not built. A layer row supplies
+no part for a colour to land on — a shape has a fill and an outline, text has
+its own colour, a screenshot has neither — so which part a drop paints is a
+product judgment. Filed as
+`a-saved-colour-dropped-on-a-layer-row-paints-the` with the question written
+out; whoever takes it should open a decision before building.
+
+Open question for the user, in the audit: the line does not follow the pointer
+the way the canvas one does, and it covers a row at the far end of the list
+while it shows.
