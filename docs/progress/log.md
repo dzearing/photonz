@@ -13655,3 +13655,36 @@ Next: `corner-radius-folds-like-an-effect-with-its-chev` moves the Corner
 Radius chevron to the front of its row, which gives it the same shape an effect
 has and needs nothing here to change. A full sweep was requested, since the
 section header moved in every walk's picture.
+
+## 2026-09-09 — The panel keeps room for the effect you just opened
+
+Reproduced first: in a 1280x600 window with a Border and a Shadow both open,
+`effects-open-into-view-walk` read `Effects 175/444 needs 175` and showed 175
+points of a 277 point Shadow. 175 is exactly the room the BORDER needs, because
+`DockHeightBudget.paneListFloor` measured down to the first open pane in the
+list rather than to the one you pressed.
+
+The floor now takes the pane you opened and measures around it: a peek at the
+entry above, that pane whole, a peek at the one below. Told nothing it behaves
+exactly as before, and the two are capped differently on purpose — reaching an
+open pane from the top of the list pays for panes nobody asked to see and still
+stops at `floorShareOfDock`, while the pane you pressed may claim up to the
+whole dock, which is what a 277 point shadow in a 568 point dock needs.
+`EditorState.openedEffectRow` remembers which one that is for as long as it
+stays open, since the reveal request is cleared the moment the panel has run it.
+
+`expectInView` gained `"whole": true`, because the plain step PASSED on the
+broken app: "175 of 277, which is all the room there is" is a pass when 175 is
+all the room the panel kept. The new walk
+`effects-room-for-the-one-you-opened-walk` uses it and was checked against the
+fix disabled, where it fails naming the 102 points that were cut off.
+
+Open question for the user, asked in the audit rather than guessed at: the
+effect above the one you opened keeps a sliver of its last row, not its heading,
+because both headings and both sets of settings do not fit. Whether opening one
+effect should fold the others is the alternative.
+
+Next: `dock-picked-first-walk` fails on picking a text layer — its Text section
+lands below the fold and nothing scrolls to it. It fails identically on a clean
+build of main, so it predates this work and is filed as
+`picking-a-piece-of-text-brings-its-text-section`.
