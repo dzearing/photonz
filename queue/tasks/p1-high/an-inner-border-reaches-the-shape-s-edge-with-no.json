@@ -5,17 +5,17 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:11:39.106Z",
-  "updated": "2026-09-09T15:48:36.723Z",
+  "updated": "2026-09-09T16:29:37.838Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reported by the user on 2026-09-09 with a magnified screenshot: a red fill showing faintly along the outer edge of a black inner border. Where to look, from a read of Sources/PhotonzRender/DocumentRenderer.swift: the ring is built in ringed at line 988 as an outer rounded rectangle with an inner one punched out of it (the flat path around lines 1011 to 1023), then composited OVER the layer image. So the fill is still painted underneath, and the ring only covers it as well as its own antialiased edge allows; two antialiased edges meeting at the same boundary do not sum to full coverage, which is exactly the hairline seen. Two candidate fixes to weigh and record: draw the ring so its outer edge is the shape's own outer edge and the fill is clipped to the ring's inner edge rather than painted to the boundary, or composite the ring with the fill already cut back. The first is likely right because it keeps one antialiased outer edge for the whole shape rather than two stacked. Note the generator used is CIFilter.roundedRectangleGenerator (line 1323), so whatever is chosen has to work with that rather than assume a path stroke.\n\nUPDATED 2026-09-09 by the user, with a second magnified screenshot (green background, black outside border, red fill): \u201ci complained earlier about fill color bleeding through the outside of an inner border. This also applies to the inside of an outer border.\u201d So this is one bug with two faces, not two bugs. Wherever the ring is composited OVER what is already painted, the ring\u2019s antialiased edge and the edge underneath it do not sum to full coverage, and a hairline of whatever is underneath shows through: the FILL on the outer edge of an inner border, the BACKGROUND on the inner edge of an outside border. Fix it once at the compositing level rather than nudging geometry per position, and verify all three positions (inside, centred, outside) in the same pass.",
+  "notes": "Reported by the user on 2026-09-09 with a magnified screenshot: a red fill showing faintly along the outer edge of a black inner border. Where to look, from a read of Sources/PhotonzRender/DocumentRenderer.swift: the ring is built in ringed at line 988 as an outer rounded rectangle with an inner one punched out of it (the flat path around lines 1011 to 1023), then composited OVER the layer image. So the fill is still painted underneath, and the ring only covers it as well as its own antialiased edge allows; two antialiased edges meeting at the same boundary do not sum to full coverage, which is exactly the hairline seen. Two candidate fixes to weigh and record: draw the ring so its outer edge is the shape's own outer edge and the fill is clipped to the ring's inner edge rather than painted to the boundary, or composite the ring with the fill already cut back. The first is likely right because it keeps one antialiased outer edge for the whole shape rather than two stacked. Note the generator used is CIFilter.roundedRectangleGenerator (line 1323), so whatever is chosen has to work with that rather than assume a path stroke.\n\nUPDATED 2026-09-09 by the user, with a second magnified screenshot (green background, black outside border, red fill): “i complained earlier about fill color bleeding through the outside of an inner border. This also applies to the inside of an outer border.” So this is one bug with two faces, not two bugs. Wherever the ring is composited OVER what is already painted, the ring’s antialiased edge and the edge underneath it do not sum to full coverage, and a hairline of whatever is underneath shows through: the FILL on the outer edge of an inner border, the BACKGROUND on the inner edge of an outside border. Fix it once at the compositing level rather than nudging geometry per position, and verify all three positions (inside, centred, outside) in the same pass.",
   "acceptance": [
     "Reproduce BOTH first and record the numbers in the log: sample the pixels across the edge of a filled rectangle with an inner border, and across the inner edge of one with an outside border, and say how wide each leaking band is and what colour it is",
-    "With an inner border, no pixel outside the border\u2019s inner edge carries any of the fill colour, checked by sampling rather than by eye, at one hundred percent and at several zooms",
+    "With an inner border, no pixel outside the border’s inner edge carries any of the fill colour, checked by sampling rather than by eye, at one hundred percent and at several zooms",
     "With an outside border, no pixel between the border and the fill carries any of the background colour, checked the same way",
     "The outside of the shape stays properly antialiased against the background, so removing the leaks does not leave a hard jagged edge",
     "A shape with a rounded corner behaves the same all the way round the corner, where the curves are closest together",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-09T16:40:00.000Z",
       "note": "Audit: queue/audits/2026-09-09-border-seam.json, with a ten times magnified before and after of all three positions round a corner, and a real screen capture from the probe."
+    },
+    {
+      "t": "2026-09-09T16:29:37.836Z",
+      "note": "Rings are now laid on the picture and share each pixel by area (DocumentRenderer.laid), and their silhouettes are drawn through Core Graphics so they measure the same edge the shape does (roundedRectMask). Inner, centred and outside borders all leak nothing at 1x and at 1.5x/2x/2.75x/4x, on round and square corners, verified by pixel sampling in the new BorderSeamRenderTests; full suite 5485 green, six border playtest walks pass. Audit at queue/audits/2026-09-09-border-seam.json with 10x magnified before/after. Two follow-ups filed: the oval outside border residual, and confining the cost to the band."
     }
   ],
-  "started": "2026-09-09T15:48:36.721Z"
+  "started": "2026-09-09T15:48:36.721Z",
+  "completed": "2026-09-09T16:29:37.837Z"
 }

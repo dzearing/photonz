@@ -13989,3 +13989,34 @@ a parallel mode lock, and a free placement lands exactly where it always did.
 
 Next: the audit's three rough notes are for the user to react to. The one worth
 watching is that nothing on screen announces the key, at either moment.
+
+## 2026-09-09 — A border meets the fill and the edge cleanly
+
+The user's two magnified screenshots were one bug: a ring was composited OVER
+the picture underneath it, and where the ring's soft edge lands on a soft edge
+in the picture the two coverages multiply rather than meet. That leaves a
+quarter pixel of the FILL showing outside an inner border, and a quarter pixel
+of nothing (so, of the BACKGROUND) inside an outside border. Measured before
+the change: 32% and 62% of a pixel, two pixels wide round each corner.
+
+A ring is now LAID on the picture — the pixel is shared out by area, with the
+picture underneath taken to fill its share from the inside out — and the ring's
+silhouettes are DRAWN through Core Graphics rather than generated, because
+sharing a pixel by area only works if both sides measure the same edge and the
+generator disagreed with the shape rasterizer by up to 9/255 on a 20pt corner.
+
+- `Sources/PhotonzRender/DocumentRenderer.swift` — `laid`, `roundedRectMask`,
+  `coverage`, `clampedDifference`, `stencil`, `paintOpacity`.
+- `Tests/PhotonzRenderTests/BorderSeamRenderTests.swift` — the invariant a
+  person sees: no pixel carries some of the fill and some of the background.
+- Audit: `queue/audits/2026-09-09-border-seam.json`, with a ten times magnified
+  before and after of all three positions and a real capture from the probe.
+
+Perf note: interactive edit on the 12MP/10-layer document 5.5ms → 6.4ms, full
+render 38.2 → 36.9ms, export at 2x 96 → 118ms, edit inside a styled group of
+five 35.8 → 45.9ms. All inside budget.
+
+Next: two follow-ups. An oval's OUTSIDE border still keeps a faint trace of the
+background round its diagonals, because its ring is a stroke whose inner
+boundary genuinely is not an oval. And the new correction runs over the whole
+layer when it only matters inside the band.
