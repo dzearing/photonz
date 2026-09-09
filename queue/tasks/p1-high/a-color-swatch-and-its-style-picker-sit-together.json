@@ -1,0 +1,34 @@
+{
+  "id": "a-color-swatch-and-its-style-picker-sit-together",
+  "title": "A color swatch and its style picker sit together, not across a gap",
+  "goal": "In the panels, a color row shows the color chip and, next to it, the little palette button that opens saved styles. Right now that palette button sits far to the right of the chip, so the two read as unrelated controls instead of one color control. Put the picker a standard small gap from the chip so they read as belonging together, on every row that has one.",
+  "epic": "app-polish",
+  "priority": "p1-high",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T13:15:52.144Z",
+  "updated": "2026-09-09T13:16:19.899Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words, with a screenshot of the Fill row: \"colors that have style pickers in the various panes should have the style picker closer to the swatch. like some standard gap away. it feels far away right now which makes it feel disconnected.\"\n\nSuspected cause (found by reading, NOT reproduced in a running app): Sources/Photonz/ColorStylePanel.swift:224 ColorPartLayout reserves readoutWidth = 52 for the color column, while the swatch itself is 18x18 (ColorStylePanel.swift:804, :826, :1192). ColorStyleRow's body (ColorStylePanel.swift:~493-500) puts the readout in .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading) and then ColorStyleControl right after it with spacing ColorPartLayout.spacing (= EditorChromeLayout.panelRowGap). So there is roughly 34pt of empty reserved column plus the row gap between the chip and the palette button. That matches the screenshot.\n\nTrap a naive fix hits: readoutWidth is not arbitrary. Its comment says it is wide enough for the 18pt swatch AND for the word Mixed, and the column exists so the picker starts in the same place on every row of the section. Simply deleting the minWidth makes the picker slide left and right whenever a row flips between a chip and the word Mixed, or when a part is absent. The same constant is used by PartsInspector.swift:295, EffectsListInspector.swift:182, and LandingSwatch (PartsInspector.swift:295-296), so changing the number moves several panels at once - check all of them, and check the drag-landing swatch too.\n\nSensible shape of the fix (runner's call, but justify it in the audit): keep a shared column so rows agree, but size it to the chip plus one standard gap rather than to the word Mixed - e.g. let Mixed have its own narrower treatment or let it truncate - so the picker sits a normal gap from the chip while rows still line up. Whatever is chosen, measure the resulting gap and put the number in the audit.\n\nNot confirmed: whether the toolbar swatches (EditorView.swift:1350+) have the same gap, and whether the Next release has forked any of these files. Check Sources/Photonz/Releases/ before assuming a single shared fix reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "On every color row that has a style picker (Fill, Outline, Text, effect colors, part rows), the gap between the right edge of the color chip and the left edge of the palette button is one standard panel gap, not a reserved column of dead space.",
+    "The measured gap is captured as a number in the audit, from a probe/offscreen render, not eyeballed.",
+    "Rows still line up with one another vertically: a row that says Mixed and a row showing a chip do not make the picker jump left and right by a visible amount as the selection changes.",
+    "Try path: open a shape, open the panel, look at the Fill row; the chip and the palette button read as one control.",
+    "Walks that cover the panels still pass (Scripts/playtest-all.sh --no-build on the touched walks).",
+    "An audit under queue/audits/ records before/after measurements and anything rough is filed as a follow-up."
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T13:15:52.146Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T13:16:19.898Z",
+      "note": "seq 260 -> 11"
+    }
+  ]
+}

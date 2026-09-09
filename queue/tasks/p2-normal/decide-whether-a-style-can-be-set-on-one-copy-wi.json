@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 160,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:43:16.924Z",
-  "updated": "2026-09-09T12:23:41.234Z",
+  "updated": "2026-09-09T13:13:32.550Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the wording fix landed 2026-09-09 (Sources/PhotonzCore/TextStyleDrop.swift, CopyPiece). A copy can already own its colour, its size, its room, its opacity and its wording; a text style would be one more of the same family, but styles are the one thing that reach a copy from OUTSIDE the component (the Library shelf), so it is not obviously the same shape. Building it means a new kind of instance override plus a way back on the panel, so it should not start before the card is answered.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-09-09T12:23:41.233Z",
       "note": "seq 150 -> 160"
+    },
+    {
+      "t": "2026-09-09T13:13:32.549Z",
+      "note": "decision \"Should one copy of a component be able to wear its own text style?\" resolved: A copy can wear its own style"
     }
   ]
 }
