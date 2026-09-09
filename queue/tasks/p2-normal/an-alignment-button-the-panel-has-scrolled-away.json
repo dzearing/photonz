@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2160,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T00:36:12.784Z",
-  "updated": "2026-09-09T00:36:12.787Z",
+  "updated": "2026-09-09T05:09:56.895Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "PRE-EXISTING, not caused by the unit-word change: reproduced at the pre-change baseline by stashing every source and walk change (git stash push --include-untracked) and running the walk unmodified. Both runs fail identically.\n\n  $ Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json\n  \"error\" : \"step 45 (press): the control \\\"align center\\\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on. Scroll to it with a scrollPanel step first.\"\n  \"status\" : \"failed\"\n\nFound on 2026-09-09 while reverifying the walks that asserted the old unit word; that walk needed its 48 pt / 32 pt menu rows updating to px, and once past step 17 it reached step 45. Step 41 already scrolls the Text section by 400 and step 43 opens the Size menu, so the suspicion is the dock is left scrolled after the menu closes. Filed p2 because it is a broken walk in the loop is own harness, not the focus feature, and the cause is not confirmed.",
+  "notes": "PRE-EXISTING, not caused by the unit-word change: reproduced at the pre-change baseline by stashing every source and walk change (git stash push --include-untracked) and running the walk unmodified. Both runs fail identically.\n\n  $ Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json\n  \"error\" : \"step 45 (press): the control \\\"align center\\\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on. Scroll to it with a scrollPanel step first.\"\n  \"status\" : \"failed\"\n\nFound on 2026-09-09 while reverifying the walks that asserted the old unit word; that walk needed its 48 pt / 32 pt menu rows updating to px, and once past step 17 it reached step 45. Step 41 already scrolls the Text section by 400 and step 43 opens the Size menu, so the suspicion is the dock is left scrolled after the menu closes. Filed p2 because it is a broken walk in the loop is own harness, not the focus feature, and the cause is not confirmed.\n\nRESOLVED 2026-09-08. Not a panel bug. The Arrange section that arrives with a second layer is real content and the dock is honestly taller than the window, which docs/design/playtest-harness.md already names under `scrollPanel` (\"as the alignment buttons do the moment a second layer is picked and an Arrange section arrives\"). So the walk scrolls to it, with `reveal` rather than a distance, per the harness doc's own guidance. Why it has to is written into the walk's seed prose so the next reader does not have to rediscover it.",
   "acceptance": [
     "Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json finishes with status ok",
     "Whatever the answer is, it is written down: either the panel keeps the control reachable, or the walk scrolls to it and says in a note why it has to"
@@ -21,6 +21,27 @@
     {
       "t": "2026-09-09T00:36:12.786Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T05:09:56.894Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T05:19:24.012859Z",
+      "note": "Reproduced: step 45 press \"align center\" in Across fails. Cause found by inserting a `panel` step in front of it: the row is at window y -95, below the dock's fold, and it is there from the moment the second layer is picked, not from any leftover scroll. Picking a second layer adds the Arrange section (align layers to each other), which pushes the Text section's own Across row about 245pt down."
+    },
+    {
+      "t": "2026-09-09T05:19:24.012859Z",
+      "note": "Fix: the walk scrolls to what it presses. Every press in the two-picked half now has a `reveal` in front of it instead of a hand-tuned scrollPanel number, and the four Mixed controls are set in the order they sit in the dock, top down (Corner Radius, Size, Across, W), so the dock is already at the bottom for the lower snapshot and one `reveal` back up to the Appearance header frames the top one. Same swap in the one-picked half, where a -400/+400 sandwich around the Corner Radius press did nothing."
+    },
+    {
+      "t": "2026-09-09T05:19:24.012859Z",
+      "note": "Second, separate defect the fix uncovered: with the walk finally reaching the end, Corner Radius still read Mixed at the finish, which its own describe says must not happen. Not an app bug: a press lands in the MIDDLE of a control and a Mixed corner radius already wears its knob near the middle, so the press was a click exactly where the knob sat and nothing moved. Isolated it with a diagnostic walk: press at 50% -> \"mixed x2\", press with across 0.75 -> \"24 x2\". The walk now aims that one press three quarters along, and the finish reads 24 px on both layers."
+    },
+    {
+      "t": "2026-09-09T05:19:24.012859Z",
+      "note": "Verified: Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json --no-build finishes status ok, 59 steps. segment-tooltips-walk, the only other walk that multi-picks and presses in Across, still passes. Scripts/test.sh green (5264 tests). No source changed, walk JSON only."
     }
-  ]
+  ],
+  "started": "2026-09-09T05:09:56.893Z"
 }

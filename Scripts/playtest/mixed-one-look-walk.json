@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/mixed-one-look",
-  "seed": "Two labels are typed on a blank canvas. One is made bigger, given a corner radius, centred and repainted, so that picking both makes every kind of control in the dock answer Mixed at once: a menu, a slider, a field and a segmented row of pictures. The dock is taller than the window, so the walk photographs it in two halves, top then bottom, which together are the only way to see whether the word reads the same way in all four. It starts from the text settings a fresh machine would have, because it changes the remembered size on its way through. Then a value is set from each Mixed control in turn, to prove a control saying Mixed is still a control: what you choose reaches every picked layer and the word goes away, and the same two halves are photographed again to show it.",
+  "seed": "Two labels are typed on a blank canvas. One is made bigger, given a corner radius, centred and repainted, so that picking both makes every kind of control in the dock answer Mixed at once: a menu, a slider, a field and a segmented row of pictures. The dock is taller than the window, so the walk photographs it in two halves, top then bottom, which together are the only way to see whether the word reads the same way in all four. It starts from the text settings a fresh machine would have, because it changes the remembered size on its way through. Then a value is set from each Mixed control in turn, to prove a control saying Mixed is still a control: what you choose reaches every picked layer and the word goes away, and the same two halves are photographed again to show it.\n\nEvery one of those four is scrolled to with a reveal rather than a distance, and it has to be: picking the second layer adds an Arrange section to the dock, which pushes the Text section's own Across row a couple of hundred points below the fold, so the alignment buttons a person would have to scroll to are exactly what this walk has to scroll to as well. The four are set in the order they sit in the dock, top down (Corner Radius, Size, Across, W), so the dock is already at the bottom when the lower half is photographed and one reveal back up to Opacity frames the top half.\n\nThe second pull on Corner Radius is aimed three quarters along on purpose. A press lands in the middle of a control, and a Mixed corner radius already wears its knob near the middle, so a press there is a person clicking exactly where the knob is: nothing moves and the row goes on saying Mixed. Aiming past it is what makes this the fourth Mixed control the walk actually sets.",
   "setup": {
     "forget": [
       "text"
@@ -108,9 +108,9 @@
       "seconds": 0.6
     },
     {
-      "do": "scrollPanel",
-      "row": "Text section",
-      "by": -400
+      "do": "reveal",
+      "control": "Slider",
+      "in": "Corner Radius"
     },
     {
       "do": "wait",
@@ -124,15 +124,6 @@
     {
       "do": "wait",
       "seconds": 0.6
-    },
-    {
-      "do": "scrollPanel",
-      "row": "Text section",
-      "by": 400
-    },
-    {
-      "do": "wait",
-      "seconds": 0.4
     },
     {
       "do": "action",
@@ -203,13 +194,23 @@
       "name": "2-mixed-dock-lower"
     },
     {
-      "do": "scrollPanel",
-      "row": "Text section",
-      "by": 400
+      "do": "reveal",
+      "control": "Slider",
+      "in": "Corner Radius"
     },
     {
       "do": "wait",
       "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius",
+      "across": 0.75
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
     },
     {
       "do": "panelMenu",
@@ -221,6 +222,15 @@
       "seconds": 0.8
     },
     {
+      "do": "reveal",
+      "control": "align center",
+      "in": "Across"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
       "do": "press",
       "control": "align center",
       "in": "Across"
@@ -228,6 +238,15 @@
     {
       "do": "wait",
       "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "W",
+      "in": "Position & Size"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "focus",
@@ -246,31 +265,12 @@
       "seconds": 0.8
     },
     {
-      "do": "scrollPanel",
-      "row": "Text section",
-      "by": -400
-    },
-    {
-      "do": "wait",
-      "seconds": 0.4
-    },
-    {
-      "do": "press",
-      "control": "Slider",
-      "in": "Corner Radius"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.6
-    },
-    {
       "do": "snapshot",
       "name": "3-after-setting-lower"
     },
     {
-      "do": "scrollPanel",
-      "row": "Text section",
-      "by": 400
+      "do": "reveal",
+      "control": "Appearance section"
     },
     {
       "do": "wait",
