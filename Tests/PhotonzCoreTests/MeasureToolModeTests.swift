@@ -237,4 +237,79 @@ struct MeasureToolModeTests {
         #expect(MeasureBuilder.clearingHeadOffset(content: content, from: roomy.0, to: roomy.1,
                                                   canvas: canvas) > 0)
     }
+
+    // MARK: - The number keeps clear of the edge it measures
+
+    /// The bug this rule exists for: a Size click on a button put the width
+    /// number 11 px under the button's bottom edge, whatever the label size,
+    /// because the standoff was half the chip plus a fixed 11. On a 2x capture
+    /// that is five points of air under a twenty point pill, so the number read
+    /// as part of the button rather than as a note about it.
+    @Test func aModePlacedNumberKeepsRealAirBetweenItselfAndWhatItMeasures() {
+        var width = MeasureContent(mode: .horizontal, decimals: 0)
+        width.start = CGPoint(x: 171, y: 816)
+        width.end = CGPoint(x: 419, y: 816)
+        width.headOffset = MeasureBuilder.clearingHeadOffset(content: width, from: width.start,
+                                                             to: width.end)
+        let widthChip = width.labelRect(chipSize: width.estimatedLabelSize)
+        #expect(widthChip.minY - width.start.y >= width.subjectClearance,
+                "only \(widthChip.minY - width.start.y) px under the edge it measures")
+
+        // A vertical caliper reaches further, because the pill is wider than it
+        // is tall, but the AIR it leaves is the same: the number is the same
+        // distance from the edge whichever side of the element it sits on.
+        var height = MeasureContent(mode: .vertical, decimals: 0)
+        height.start = CGPoint(x: 419, y: 756)
+        height.end = CGPoint(x: 419, y: 816)
+        height.headOffset = MeasureBuilder.clearingHeadOffset(content: height, from: height.start,
+                                                              to: height.end)
+        let heightChip = height.labelRect(chipSize: height.estimatedLabelSize)
+        #expect(heightChip.minX - height.start.x >= height.subjectClearance)
+        #expect(abs((heightChip.minX - height.start.x) - (widthChip.minY - width.start.y)) < 0.5,
+                "the air differs by orientation")
+    }
+
+    /// All four sides, not two. An element close to the bottom or the right of
+    /// the picture turns its caliper round to the free side, and the air on
+    /// that side is the same air it would have had on the other one.
+    @Test func theAirIsTheSameWhicheverSideTheCaliperTurnsTo() {
+        let canvas = CGSize(width: 1000, height: 800)
+
+        // A width caliper on an element hard against the bottom: the head goes
+        // UP, so the number stands off the element's TOP edge.
+        var width = MeasureContent(mode: .horizontal, decimals: 0)
+        width.start = CGPoint(x: 300, y: 790)
+        width.end = CGPoint(x: 540, y: 790)
+        width.headOffset = MeasureBuilder.clearingHeadOffset(content: width, from: width.start,
+                                                             to: width.end, canvas: canvas)
+        #expect(width.headOffset < 0, "the head stayed pointing off the picture")
+        let up = width.labelRect(chipSize: width.estimatedLabelSize)
+        #expect(width.start.y - up.maxY >= width.subjectClearance,
+                "only \(width.start.y - up.maxY) px above the edge it measures")
+
+        // And a height caliper on an element hard against the right: the head
+        // goes LEFT, standing off the element's own left edge by the same air.
+        var height = MeasureContent(mode: .vertical, decimals: 0)
+        height.start = CGPoint(x: 990, y: 300)
+        height.end = CGPoint(x: 990, y: 360)
+        height.headOffset = MeasureBuilder.clearingHeadOffset(content: height, from: height.start,
+                                                              to: height.end, canvas: canvas)
+        #expect(height.headOffset < 0)
+        let left = height.labelRect(chipSize: height.estimatedLabelSize)
+        #expect(height.start.x - left.maxX >= height.subjectClearance)
+    }
+
+    /// And it scales with the label-size slider, so cranking the number up does
+    /// not eat the gap it is supposed to keep.
+    @Test func theAirGrowsWithTheNumber() {
+        func air(labelScale: CGFloat) -> CGFloat {
+            var c = MeasureContent(mode: .horizontal, decimals: 0, labelScale: labelScale)
+            c.start = CGPoint(x: 100, y: 400)
+            c.end = CGPoint(x: 340, y: 400)
+            c.headOffset = MeasureBuilder.clearingHeadOffset(content: c, from: c.start, to: c.end)
+            return c.labelRect(chipSize: c.estimatedLabelSize).minY - c.start.y
+        }
+        #expect(air(labelScale: 3) > air(labelScale: 1))
+        #expect(air(labelScale: 1) > 11, "still only the old fixed eleven pixels")
+    }
 }

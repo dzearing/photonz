@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:18:02.444Z",
-  "updated": "2026-09-08T22:18:02.447Z",
+  "updated": "2026-09-09T00:39:47.317Z",
   "deps": [],
   "blockedBy": [],
   "notes": "FROM AN AUDIT ROUGH LINE, not filed until now: queue/audits/2026-09-08-distance-three-clicks.json, which says the 123 px readout under Save Changes sits right against the button bottom edge rather than clear of it, that it is the readout placer rule and unchanged by that work, and that it is worth a look on its own.\n\nThe placer is the code that steers a readout around what is beside it. Sources/Photonz/CanvasMeasure.swift is where the readout is drawn; the placement rule and its clearances are the thing to read first, and there is an existing steering rule for gap readouts noted in queue/audits/2026-09-08-gap-between-drawn-shapes.json (the pill sits over the two shapes when the gap is narrow, because it steers around the shapes beside it). Same placer, so fix the clearance once rather than per mode.\n\nNot reproduced by me this pass, only read out of the audit and its picture, so it is p2 rather than p1. Reproduce it first: open a screenshot in the probe, Measure in Size mode, click an element, and look at the gap between the digits and the edge before changing anything. If the clearance is already there, close this as the bug not existing and say so.\n\nFlag: next-measure-modes (FeatureCatalog.measureModesFlag), on by default in Next. This is the user primary use of the app, so judge it by eye on a real capture, not by a number in a test.",
@@ -24,6 +24,35 @@
     {
       "t": "2026-09-08T22:18:02.446Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-09T00:39:47.316Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T00:44:55.444416Z",
+      "note": "REPRODUCED on the probe with a real screen capture (/tmp/photonz-playtest/size-clearance-repro/size-button-sc.png). Size mode on the Save Changes button: the 124 px width pill's top edge sits 11 document px below the button's bottom edge, and the 30 px height pill's left edge sits 11 px right of the button's right edge. On this 2x capture that is 5.5 points of air under a 21 pt tall pill, so it reads as glued to the button. Cause is MeasureBuilder.clearingHeadOffset: reach = half the chip + chipLineGap(5) + 6, and the chip centres on the head line, so the air left is always exactly 11, whatever the label size. Not the planner ranking: .onLine is rank 0 and free, because the chip never actually intersects the element."
+    },
+    {
+      "t": "2026-09-09T00:44:55.444581Z",
+      "note": "Adversarial review before building. The mock is not involved; this is a defect in a shipped rule. Shortest version that delivers the value: one clearance constant that scales with the label-size slider, used by the standoff AND by the planner when it charges a spot for sitting on what the measurement describes, so the fallback placements are honest too. No new UI, no flag, no setting. Rejected: charging by how close a spot is (needs a new avoidance weight for one caller), and a per-mode fix (the same rule serves Size, Gap and the hover preview). Risk accepted: every mode-placed caliper's legs get longer, which the capture says is an improvement, since at 11 px the legs are so short the caliper reads as a rounded box glued to the element."
+    },
+    {
+      "t": "2026-09-09T01:00:39.041631Z",
+      "note": "SHIPPED. MeasureContent.subjectClearance (half the pill's own height) is the air a mode-placed caliper leaves between its number and the edge it measures, and MeasureBuilder.clearingHeadOffset now stands off by half the chip plus that, rounded up to a whole pixel. Was a flat 11 px whatever the label size; is now 22 px at the default and grows with the label-size slider. Size mode, Gap mode and the hover preview all go through that one function, so it is fixed once."
+    },
+    {
+      "t": "2026-09-09T01:00:39.041739Z",
+      "note": "Tried and dropped: a clearance halo in MeasureLabelPlanner, charging any spot inside the air as if it were on the subject. Two of the repo's own placement tests caught why it is wrong: it also fires on a caliper whose head YOU placed with the third click, and moves your number away from the spot you just pointed at. The three-click flow exists to let you park the number, so the planner must obey it. The standoff is the right lever because it only applies where the app chose the head itself. MeasureCalloutClearanceTests.noCaliperAnywhereOnTheCaptureParksItsNumberOnWhatItsFeetLandedOn also failed under the halo: pushing every sideways candidate out by the air removed the just-clear fallback, so a boxed-in number went back to sitting ON its subject. Net diff is now two constants and a comment."
+    },
+    {
+      "t": "2026-09-09T01:00:39.041740Z",
+      "note": "Verified. Scripts/test.sh green, 5140 tests. New walk Scripts/playtest/number-keeps-clear-walk.json covers both the roomy case and the tight case (a shape jammed into the bottom-right corner, where the numbers turn round to the free side and stay whole on the picture). Existing walks distance-three-clicks, gap-between-drawn-shapes, size-measures-a-drawn-shape and guides-catch-marks all still pass. Judged by eye on real screen captures before and after, not by a number: queue/audits/2026-09-08-number-keeps-clear-1-button.png."
+    },
+    {
+      "t": "2026-09-09T01:00:39.041742Z",
+      "note": "Honest finding for whoever reads this next: the picture in the audit that FILED this task (2026-09-08-distance-three-clicks.png) is a Distance measurement, not a Size one. There the walk's third click parked the number 24 px under the button and the pill centres on the click, so half of it grew back toward the button. The app obeyed the click, so that is not a defect, and it is untouched by this change. Filed as its own open question: parking-a-distance-number-puts-your-click-at-its. The Size and Gap clearance the task describes WAS broken at 11 px and is what got fixed."
     }
-  ]
+  ],
+  "started": "2026-09-09T00:39:47.315Z"
 }

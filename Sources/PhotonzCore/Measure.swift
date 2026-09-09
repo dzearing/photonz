@@ -480,6 +480,25 @@ extension MeasureContent {
     /// floor the drawn pill can spill out of.
     public var labelMinPillWidth: CGFloat { labelPillHeight * Self.labelBadgeAspect }
 
+    /// The clear space a readout keeps between itself and the edge it is
+    /// measuring, in the modes that place their own caliper: the element in
+    /// Size mode, the two elements a Gap is between. A caliper you placed by
+    /// hand keeps whatever space your own click asked for.
+    ///
+    /// Half the pill's own height, so it is a proportion of the number rather
+    /// than a number of pixels. A capture is usually 2x, and the standoff used
+    /// to be a flat 11 px — five points of daylight under a twenty point pill,
+    /// which read as the number being part of the button rather than a note
+    /// about it (the audit that filed this called it "hard against the edge").
+    /// Tying it to the pill also means the label-size slider cannot outgrow it:
+    /// crank the number up and the air grows with it.
+    ///
+    /// Pill height, not width, so a vertical measurement's number stands off
+    /// its element's side by exactly as much as a horizontal one stands off the
+    /// bottom. The chip is wider than it is tall, so the vertical caliper still
+    /// REACHES further; what stays equal is the air, which is the part you see.
+    public var subjectClearance: CGFloat { labelPillHeight / 2 }
+
     /// A generous estimate of the chip's footprint, used by the builder to
     /// reserve frame space. Sized from the raw-pixel magnitude (an upper bound on
     /// digit count across units), so it stays stable when the unit/scale changes.
@@ -544,8 +563,9 @@ public enum MeasureBuilder {
 
     /// The perpendicular reach a caliper needs so its readout sits CLEAR of the
     /// thing it measures, rather than on top of it. The chip centers on the head
-    /// line, so the head has to stand off by at least half the chip's cross-axis
-    /// extent, plus the gap the head line already leaves and a little margin.
+    /// line, so the head has to stand off by half the chip's cross-axis extent
+    /// — which only gets the pill's near edge back to the element — plus
+    /// `subjectClearance`, which is the air you actually see.
     ///
     /// Modes that measure something they can see (the size of an element, the
     /// space between two of them) place their own calipers, so they use this
@@ -567,8 +587,11 @@ public enum MeasureBuilder {
         probe.end = end
         let chip = probe.estimatedLabelSize
         let half = (content.mode == .horizontal ? chip.height : chip.width) / 2
+        // Rounded up to a whole pixel, so the air is never a rounding error
+        // short of the clearance and a horizontal caliper's gap reads the same
+        // as a vertical one's rather than a fifth of a pixel off it.
         let reach = max(MeasureContent.defaultHeadOffset,
-                        half + MeasureContent.chipLineGap + 6)
+                        (half + probe.subjectClearance).rounded(.up))
         guard let canvas else { return reach }
         let feet = content.mode == .horizontal ? start.y : start.x
         let limit = content.mode == .horizontal ? canvas.height : canvas.width

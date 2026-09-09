@@ -343,6 +343,61 @@ struct MeasureCalloutClearanceTests {
         #expect(!hRect.intersects(rect))
     }
 
+    // MARK: - Size mode: the number keeps AIR, not just distinctness
+
+    /// Off the element is not enough. The Save Changes button's two numbers
+    /// used to land 11 px off it — five points of air on a 2x capture, under a
+    /// twenty point pill — and the audit that filed this read them as part of
+    /// the button rather than as notes about it. So each number keeps a real
+    /// clear space, on whichever side of the element it sits.
+    @Test func theTwoNumbersOfAButtonKeepClearSpaceFromIt() {
+        guard let button = element(at: CGPoint(x: 292, y: 786)) else {
+            Issue.record("no button detected on the capture")
+            return
+        }
+        let pair = elementSize(button, neighbors: neighbors(of: button))
+        for c in [pair.width, pair.height] {
+            let chip = c.labelRect(chipSize: c.estimatedLabelSize)
+            #expect(!chip.intersects(button.insetBy(dx: -c.subjectClearance,
+                                                    dy: -c.subjectClearance)),
+                    "the \(c.mode) number crowds the button: \(chip) vs \(button)")
+        }
+    }
+
+    /// The clear space holds on ALL FOUR sides, which is what a redliner sees
+    /// as they work down a screenshot: an element with room around it has its
+    /// width number below and its height number to the right, and each keeps
+    /// the same air whichever edge it is standing off.
+    @Test func theClearSpaceIsTheSameOnEverySide() {
+        let box = CGRect(x: 400, y: 400, width: 248, height: 60)
+        let pair = elementSize(box)
+        let width = pair.width.labelRect(chipSize: pair.width.estimatedLabelSize)
+        let height = pair.height.labelRect(chipSize: pair.height.estimatedLabelSize)
+        let below = width.minY - box.maxY
+        let right = height.minX - box.maxX
+        #expect(below >= pair.width.subjectClearance, "only \(below) px below the box")
+        #expect(right >= pair.height.subjectClearance, "only \(right) px right of the box")
+        #expect(abs(below - right) < 0.5, "the air differs by side: \(below) vs \(right)")
+    }
+
+    /// The tight case: an element flush with the bottom-right corner of the
+    /// picture has no margin to stand off into. The number cannot keep its air
+    /// there, so what it must do instead is stay whole and on the picture —
+    /// a readable number beats a well-spaced one that is half off the image.
+    @Test func anElementWithNowhereClearToGoStillLandsSomewhereReadable() {
+        let bounds = CGRect(origin: .zero, size: Self.canvas)
+        for rect in [CGRect(x: 1340, y: 900, width: 100, height: 60),
+                     CGRect(x: 0, y: 0, width: 120, height: 44),
+                     CGRect(x: 660, y: 940, width: 200, height: 20)] {
+            let pair = elementSize(rect)
+            for c in [pair.width, pair.height] {
+                let chip = c.labelRect(chipSize: c.estimatedLabelSize)
+                #expect(bounds.contains(chip),
+                        "\(rect) \(c.mode): the number hangs off the picture: \(chip)")
+            }
+        }
+    }
+
     // MARK: - Distance and Gap: the number stays off what the feet landed on
 
     /// A hand-drawn caliper placed the way `EditorState.addMeasure` places it:

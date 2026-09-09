@@ -1,0 +1,27 @@
+{
+  "feature": "A measurement number keeps clear of the edge it measures",
+  "epic": "measure-redline",
+  "summary": "Measure a button with Size mode and the two numbers now stand off it with real air, instead of sitting a hair under its bottom edge and a hair off its right edge. The air is half the number's own height, so it grows when you grow the label.",
+  "setup": "Photonz Dev, Experiments window, release Next. Measure modes is on by default, nothing to turn on.",
+  "try": [
+    { "do": "Open a screenshot of some UI." },
+    { "do": "Press I, then pick Size in the mode picker." },
+    { "do": "Click the primary button on the screenshot.", "shot": "2026-09-08-number-keeps-clear-1-button.png" },
+    { "do": "Look at the gap between the width number and the button's bottom edge, and between the height number and its right edge. They should read as the same gap." },
+    { "do": "Select one of the two measurements and drag the Label size slider up. The gap grows with the number." },
+    { "do": "Now press R, drag a rectangle into the very bottom-right corner of the picture, press Escape, then press I and Size-click it.", "shot": "2026-09-08-number-keeps-clear-2-tight.png" },
+    { "do": "Check both numbers are whole and still on the picture. With no room to stand off into they turn round to the free side instead." }
+  ],
+  "evaluate": [
+    "Does the number read as a note about the button now, rather than as part of it?",
+    "Is half the number's own height the right amount of air, or does it want more?",
+    "The caliper's two legs are twice as long as they were. Does that read as a caliper, or as clutter?",
+    "In the corner case the numbers jump to the other side of the shape. Is that where you would look for them?",
+    "Do the width and height numbers still read as a pair, now that they are further apart?"
+  ],
+  "rough": [
+    "The picture that filed this was a DISTANCE measurement, not a Size one: three clicks, and the third click is where you park the number. There the app puts the number exactly where you clicked, so it is as close to the button as you asked for. What made it look wrong is that your click becomes the CENTRE of the pill, so half the pill grows back toward the thing you were measuring. That is untouched by this change and is filed on its own as an open question.",
+    "Gap mode's number still straddles both shapes when the gap is narrower than the pill, which no amount of standoff fixes. That is the known rough line from the gap audit, not something this changed.",
+    "The tight-case picture is hard to read because a new rectangle's default fill is the same red family as the default measure ink, so the caliper's lines disappear into the shape. Both pictures are real screen captures of the probe app, not offscreen renders."
+  ]
+}
