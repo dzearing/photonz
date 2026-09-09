@@ -1,0 +1,37 @@
+{
+  "id": "picking-a-mode-from-a-tool-s-flyout-picks-that-t",
+  "title": "Picking a mode from a tool's flyout picks that tool up too",
+  "goal": "Press and hold a tool that has modes - Measure, Crop - and choose one from the list, and the mode changes but the tool is not picked up: you are still holding whatever you were holding before. Choosing something out of a tool's own list should put that tool in your hand, in that mode, in one move. Choosing the mode that is already ticked should pick the tool up as well, because from a person's side that press said the same thing.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T15:50:12.044Z",
+  "updated": "2026-09-09T15:50:12.082Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-09: \"if i long press on a tool to reveal menu of sub options (like ruler measure tool options), i select another sub tool and it changes the mode of the tool but doesn't select it, should have selected it.\"\n\nCause, found by reading (NOT yet reproduced in a running app - reproduce first): Sources/Photonz/ToolModeButton.swift builds its flyout as a Picker bound to $selection (the `modeMenu` property, around line 145). Picking a row writes the mode and nothing else. `activate()` is wired ONLY to the menu's `primaryAction:` (line ~188), which is the plain click on the button. So the flyout can change a tool's mode without that tool ever coming into hand. The binding's own doc comment at line 49 says it outright: \"The live mode. Writing it switches modes; it is never used to activate.\" That comment records the old intent and must be updated with the change, not left contradicting the code.\n\nToolGroupButton next door already does the right thing: each of its menu rows is a Button calling `activate(tool)` (ToolGroupButton.swift:~136). So the two flyouts in the same tool bar behave differently, which is the drift to remove.\n\nTrap a naive fix hits: adding an activate call to the Picker's binding setter does NOT fix the already-ticked case. SwiftUI only writes the binding when the selection CHANGES, so with Measure out of hand and its mode already Distance, picking Distance writes nothing and the press does nothing at all - the worst version of this bug, because the list closes and the app looks broken. The robust shape is to drop the Picker and use explicit Buttons the way ToolGroupButton does, each one activating the tool and setting its mode, with the live row marked (checkmark or a Label with a tick) so the list still says where you are.\n\nOrdering trap for Crop: EditorView.swift:1830 wires Crop's selection to editorState.setCropAspect, and the code comment there explains that switching lock REFITS the crop rect, which is why Crop deliberately does not cycle on its key. Setting the aspect while a different tool is in hand may refit against a rect that is not live yet. Decide and test the order - pick the tool up first, then set the mode - and say in the audit which one is right and why.\n\nCrop's footer (the Resize Image row, EditorView.swift:~1838, passed as `footer:`) is a command, not a mode. It must keep its current behaviour.\n\nThis is a miss in the shipped task 'tool-modes-move-into-a-flyout-on-the-tool-button' (done, p0, seq 3), which moved the modes into the button but never made the list activate its tool.\n\nBoth flyouts sit behind flags (measureModesEnabled, toolOptionsEnabled, toolGroupsEnabled in Experiments.swift), so check which release actually shows them and confirm per CLAUDE.md that the change reaches Next.",
+  "acceptance": [
+    "With a different tool in hand, press and hold Measure, pick Gap: Measure is now the tool in hand AND its mode is Gap, in one move",
+    "The same with Crop and its aspect locks",
+    "Picking the mode that is ALREADY live still picks the tool up, so a press that appears to do nothing cannot happen",
+    "With the tool already in hand, picking a mode changes the mode and leaves everything else alone, exactly as it does today",
+    "The row that is live still reads as live in the list, so the flyout says which mode you are in before you choose",
+    "A footer row that is a COMMAND rather than a mode (Crop's Resize Image) still does only its command and does not pick the tool up",
+    "Crop specifically: picking an aspect from the flyout while another tool is in hand does not leave a half-applied crop or refit a rect against stale state; check the order the tool and the aspect are set in",
+    "A playtest walk covers picking a mode from the flyout with a different tool in hand, for both Measure and Crop",
+    "Audit under queue/audits/ and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T15:50:12.046Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T15:50:12.081Z",
+      "note": "seq 270 -> 9"
+    }
+  ]
+}

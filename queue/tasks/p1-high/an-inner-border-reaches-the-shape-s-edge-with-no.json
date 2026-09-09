@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:11:39.106Z",
-  "updated": "2026-09-09T13:16:17.019Z",
+  "updated": "2026-09-09T15:48:36.723Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-09 with a magnified screenshot: a red fill showing faintly along the outer edge of a black inner border. Where to look, from a read of Sources/PhotonzRender/DocumentRenderer.swift: the ring is built in ringed at line 988 as an outer rounded rectangle with an inner one punched out of it (the flat path around lines 1011 to 1023), then composited OVER the layer image. So the fill is still painted underneath, and the ring only covers it as well as its own antialiased edge allows; two antialiased edges meeting at the same boundary do not sum to full coverage, which is exactly the hairline seen. Two candidate fixes to weigh and record: draw the ring so its outer edge is the shape's own outer edge and the fill is clipped to the ring's inner edge rather than painted to the boundary, or composite the ring with the fill already cut back. The first is likely right because it keeps one antialiased outer edge for the whole shape rather than two stacked. Note the generator used is CIFilter.roundedRectangleGenerator (line 1323), so whatever is chosen has to work with that rather than assume a path stroke.\n\nUPDATED 2026-09-09 by the user, with a second magnified screenshot (green background, black outside border, red fill): “i complained earlier about fill color bleeding through the outside of an inner border. This also applies to the inside of an outer border.” So this is one bug with two faces, not two bugs. Wherever the ring is composited OVER what is already painted, the ring’s antialiased edge and the edge underneath it do not sum to full coverage, and a hairline of whatever is underneath shows through: the FILL on the outer edge of an inner border, the BACKGROUND on the inner edge of an outside border. Fix it once at the compositing level rather than nudging geometry per position, and verify all three positions (inside, centred, outside) in the same pass.",
@@ -35,6 +35,11 @@
     {
       "t": "2026-09-09T13:16:17.018Z",
       "note": "user extended: same seam on the inside of an outside border"
+    },
+    {
+      "t": "2026-09-09T15:48:36.722Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-09T15:48:36.721Z"
 }

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 9,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:06:52.628Z",
-  "updated": "2026-09-09T15:44:31.950284Z",
+  "updated": "2026-09-09T15:44:38.154Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09. BorderEffect (Sources/PhotonzCore/LayerEffects.swift line 119 onwards) carries width, paint and position and no offset, and its coding keys are at line 167 so adding one needs a default of zero for old documents. The place the geometry lives is BorderPosition.outset(width:) (BorderPosition.swift line 38), which returns 0, half the width, or the width, and its own comment says this one number is the whole of what the renderer needs: the bitmap grows by it, the ring is pushed out by it, and the layer's reach grows by it. So the offset belongs in that same number rather than being applied at the drawing site, or the reach and the clipping will not follow. Note the renderer's ringed function already takes an outset and grows a rounded rect by it, which grows the radius by the same amount, which is exactly the parallel rounding wanted here, so the corner behaviour should come out right if the offset goes through the outset. Inside is the awkward direction: outset returns 0 for inside today, and an inside offset moves the ring further IN, which the current single non negative number cannot express, so say how that is represented rather than leaving it to the drawing code.",
@@ -76,7 +76,12 @@
     {
       "t": "2026-09-09T15:44:31.950284Z",
       "note": "audit queue/audits/2026-09-09-border-offset.json with three real screen captures."
+    },
+    {
+      "t": "2026-09-09T15:44:38.152Z",
+      "note": "A border now carries an Offset beside its Width: an inside ring moves that far further in, an outside one that far further out, and Center says plainly that it has none while keeping the number. Geometry is one signed number (BorderPosition.ringOutset) so the reach, the clipping and the corner rounding all follow. 13 new core tests, 8 new render tests, full suite 5477 green; verified on the probe with real screen captures. Audit at queue/audits/2026-09-09-border-offset.json. Committed 86e26375."
     }
   ],
-  "started": "2026-09-09T15:23:17.440Z"
+  "started": "2026-09-09T15:23:17.440Z",
+  "completed": "2026-09-09T15:44:38.153Z"
 }
