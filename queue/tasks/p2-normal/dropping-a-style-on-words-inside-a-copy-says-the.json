@@ -5,18 +5,18 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:42:19.819Z",
-  "updated": "2026-09-09T11:29:12.661Z",
+  "updated": "2026-09-09T11:45:11.856Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-09-text-style-drag.json: \"Text inside a copy of a component reads as the copy rather than as text, so a style dropped on it is refused with is not text. That is the same rule every click on a copy follows, but the sentence is misleading there.\"\n\nThe sentence is Sources/PhotonzCore/TextStyleDrop.swift:93. The target resolution that makes a copy answer instead of its piece is Sources/Photonz/CanvasGroups.swift componentPiece, and Sources/PhotonzCore/ComponentInstances.swift.\n\nThis is a wording and honesty fix. Changing the RULE so a style can land on a piece inside a copy is a bigger question (it would be a sixth kind of override) and is not in scope; if the runner thinks it should be, file it as a follow-up with a card rather than building it.",
   "acceptance": [
     "Aiming a text style at words inside a copy says what is really going on, in words that do not contradict what is on screen, and points at the way to do it if there is one",
     "Aiming at something that genuinely is not text is unchanged",
-    "To see it: Scripts/probe-app.sh, place a copy of the starter Button component, save a text style, and drag its tile over the copy\u2019s label",
+    "To see it: Scripts/probe-app.sh, place a copy of the starter Button component, save a text style, and drag its tile over the copy’s label",
     "anything left rough is filed as a follow-up task",
     "audit written under queue/audits/"
   ],
@@ -48,7 +48,12 @@
     {
       "t": "2026-09-09T11:44:48.455334Z",
       "note": "Follow-ups filed. (1) 'A button grows when a style makes its words bigger' (p2, ui-layout): REPRODUCED by the new walk, the pill stays 78 px wide while its words go from 11 px to 32 px, renders 2-copy.png and 5-copy-follows.png. (2) 'Decide whether a style can be set on one copy without detaching it' (p2, ui-components), blocked on a decision card with a brief at queue/decisions/decide-whether-a-style-can-be-set-on-one-copy-wi-should-one-copy-of-a-component-b.md, so nobody builds the sixth kind of override before the user has answered. Audit: queue/audits/2026-09-09-style-on-a-copy.json with two real window captures."
+    },
+    {
+      "t": "2026-09-09T11:45:11.854Z",
+      "note": "The refusal over a copy's words now reads 'Label comes from Button. Set Heading on the original, or detach this copy.' (PhotonzCore TextStyleDrop.CopyPiece + textStyleCopyPiece, wired in CanvasTextStyleDrop). Verified by 6 new core tests, the full suite (5344 green), and a new walk style-on-a-copy-walk.json that reads the sentence back and proves the way out; text-style and copy walks unchanged. Audit queue/audits/2026-09-09-style-on-a-copy.json with two real captures. Two follow-ups filed, one of them behind a decision card. Pushed as 982e6c64."
     }
   ],
-  "started": "2026-09-09T11:29:12.659Z"
+  "started": "2026-09-09T11:29:12.659Z",
+  "completed": "2026-09-09T11:45:11.855Z"
 }
