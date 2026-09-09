@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T01:04:07.113Z",
-  "updated": "2026-09-09T02:06:42.876Z",
+  "updated": "2026-09-09T02:07:07.472Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-08. Today CornerRadiusRow (Sources/Photonz/LayersPanel.swift line 3624) keeps its own open state in cornersOpen, draws its chevron inside the row after the name rather than at the leading edge, and indents the four corner fields with a plain leading pad of 16 instead of using OwnedSettings, which is the rule view the effects and parts lists share (PartsInspector.swift line 268). So the work is to adopt the shared pieces rather than restyle this one: leading chevron, shared rule, same name treatment. Note the row is shared between releases and only the new panel grows the chevron at all, gated on Experiments.shapePartsEnabled at line 3654, so keep that gate rather than changing what the old panel shows. Coordinate with an-effect-row-reads-like-a-small-pane-with-a-che, which defines the chevron, title and rule treatment this row is being asked to match, and with panel-content-sits-twelve-points-from-each-edge, which sets where the leading column starts; this should follow whatever those settle rather than pick its own numbers.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-09T02:06:42.876Z",
       "note": "Acceptance item six, the other rows that open: Padding’s four sides and the size Limits in the Layout section still use the old mid-row chevron and a plain 20pt indent. Left alone on purpose, since that section draws its labels at callout against Appearance’s caption, so the effect heading font cannot be copied across without deciding what a Layout heading should weigh. Named in the audit and filed as the-two-rows-in-layout-that-open-look-nothing-li."
+    },
+    {
+      "t": "2026-09-09T02:07:07.470Z",
+      "note": "The Corner Radius row is a small pane now: the chevron is the leftmost thing on it, in the same column and at the same size as an effect's, the name is lit and semibold the way an effect's is, chevron and name are one press, and the four corner fields sit behind the same rule an effect's settings sit behind, hung under the chevron that opened them. The slider and the closed row's readout are untouched. The chevron itself is one shared view (PanelFoldChevron) that the effect row now draws too, so the two cannot drift. Only the new panel opens; the old one keeps its plain label. Verified in numbers: a new panelStart step reads the row at inset 14 and its settings at 38, the same pair the Border effect reads in the same capture. Scripts/test.sh green, 5144 tests; 40 walks rerun, the two failures reproduce without this change and are already filed. Full sweep requested because the row grew taller. Audit: queue/audits/2026-09-08-corner-radius-folds.json. Pushed as 48e28422."
     }
   ],
-  "started": "2026-09-09T01:49:17.204Z"
+  "started": "2026-09-09T01:49:17.204Z",
+  "completed": "2026-09-09T02:07:07.471Z"
 }
