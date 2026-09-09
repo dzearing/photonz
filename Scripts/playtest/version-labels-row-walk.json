@@ -1,72 +1,306 @@
 {
   "out": "/tmp/photonz-playtest/version-labels-row",
   "seed": "Four versions of one button standing side by side. Every version of a component carries the component's name, so a label reading \"Button . Disabled\" on every drawing repeats the useless word four times and is two and a half times the width of the drawing it names. This walk photographs the row at 100% and at 50%, and then double clicks one of the labels to prove the word you can read is the word you type over.",
-  "setup": { "forget": ["panel", "groups"] },
+  "setup": {
+    "forget": [
+      "panel",
+      "groups"
+    ]
+  },
   "steps": [
-    { "do": "blank", "canvasWidth": 2000, "canvasHeight": 1400, "width": 1320, "height": 920 },
-    { "do": "action", "action": "showComponentShelf" },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "dragTile", "tile": "Button", "to": [900, 650], "space": "document" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "action", "action": "zoomToFit" },
-    { "do": "pinch", "to": 1.0, "steps": 12 },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "one-alone", "note": "one Button with the whole canvas around it: it wears its own name, exactly as it always did" },
-    { "do": "snapshot", "name": "labels-0-one-alone" },
-
-    { "do": "click", "at": [875, 621], "space": "document", "count": 2 },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "type", "text": "Primary" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "component-renamed", "note": "one drawing, so the word above it is the COMPONENT's name and double clicking it renames the component, exactly as it always did" },
-    { "do": "snapshot", "name": "labels-0b-component-renamed" },
-    { "do": "expect", "row": "Primary", "present": true },
-
-    { "do": "click", "at": [900, 650], "space": "document" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "addComponentVersion" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "type", "text": "Disabled" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 1.0 },
-
-    { "do": "press", "control": "Default" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "action", "action": "addComponentVersion" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "type", "text": "Loading" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 1.0 },
-
-    { "do": "press", "control": "Default" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "action", "action": "addComponentVersion" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "type", "text": "Pressed" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 1.2 },
-
-    { "do": "action", "action": "zoomToFit" },
-    { "do": "pinch", "to": 1.0, "steps": 12 },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "four-at-hundred", "note": "four drawings in a row at 100%: four labels on one line, each above its own drawing" },
-    { "do": "snapshot", "name": "labels-1-four-at-hundred" },
-
-    { "do": "click", "at": [985, 621], "space": "document", "count": 2 },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "renaming", "note": "the field is open over the SECOND drawing's label, and it should be holding the word that was on screen there" },
-    { "do": "snapshot", "name": "labels-2-renaming" },
-    { "do": "type", "text": "Off" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "panel", "stage": "renamed" },
-    { "do": "describe", "stage": "renamed", "note": "the VERSION is now called Off; the component is still called Button" },
-    { "do": "snapshot", "name": "labels-3-renamed" },
-
-    { "do": "pinch", "to": 0.5, "steps": 16 },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "four-at-fifty", "note": "the same four at 50%, where the drawings are half as wide and the labels are not" },
-    { "do": "snapshot", "name": "labels-4-four-at-fifty" }
+    {
+      "do": "blank",
+      "canvasWidth": 2000,
+      "canvasHeight": 1400,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        900,
+        650
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "pinch",
+      "to": 1.0,
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "one-alone",
+      "note": "one Button with the whole canvas around it: it wears its own name, exactly as it always did"
+    },
+    {
+      "do": "snapshot",
+      "name": "labels-0-one-alone"
+    },
+    {
+      "do": "click",
+      "at": [
+        875,
+        621
+      ],
+      "space": "document",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Primary"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "component-renamed",
+      "note": "one drawing, so the word above it is the COMPONENT's name and double clicking it renames the component, exactly as it always did"
+    },
+    {
+      "do": "snapshot",
+      "name": "labels-0b-component-renamed"
+    },
+    {
+      "do": "expect",
+      "row": "Primary",
+      "present": true
+    },
+    {
+      "do": "click",
+      "at": [
+        900,
+        650
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "type",
+      "text": "Disabled"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Default"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "type",
+      "text": "Loading"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Default"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "type",
+      "text": "Pressed"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "pinch",
+      "to": 1.0,
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "four-at-hundred",
+      "note": "four drawings in a row at 100%: four labels on one line, each above its own drawing"
+    },
+    {
+      "do": "snapshot",
+      "name": "labels-1-four-at-hundred"
+    },
+    {
+      "do": "click",
+      "at": [
+        985,
+        621
+      ],
+      "space": "document",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "renaming",
+      "note": "the field is open over the SECOND drawing's label, and it should be holding the word that was on screen there"
+    },
+    {
+      "do": "snapshot",
+      "name": "labels-2-renaming"
+    },
+    {
+      "do": "type",
+      "text": "Off"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "panel",
+      "stage": "renamed"
+    },
+    {
+      "do": "describe",
+      "stage": "renamed",
+      "note": "the VERSION is now called Off; the component is still called Button"
+    },
+    {
+      "do": "snapshot",
+      "name": "labels-3-renamed"
+    },
+    {
+      "do": "pinch",
+      "to": 0.5,
+      "steps": 16
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "four-at-fifty",
+      "note": "the same four at 50%, where the drawings are half as wide and the labels are not"
+    },
+    {
+      "do": "snapshot",
+      "name": "labels-4-four-at-fifty"
+    },
+    {
+      "do": "pinch",
+      "to": 1.0,
+      "steps": 16
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "move",
+      "at": [
+        920,
+        660
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "hovered",
+      "note": "the pointer is resting on the FIRST drawing, which nobody has picked. It spells out the component it is a version of, Primary \u00b7 Default, on a plate over the row; the other three keep the short word they wear at rest. That is the only place on the canvas the component's name appears once a component has more than one drawing"
+    },
+    {
+      "do": "snapshot",
+      "name": "labels-5-hovered"
+    }
   ]
 }

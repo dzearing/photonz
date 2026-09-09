@@ -56,48 +56,82 @@ extension CanvasNSView {
         // Where a name goes is decided once, for every chip in the strip at
         // the top of the boxes, so a component in a screen's corner sits on a
         // clear line instead of over the screen's name.
-        for chip in canvasNameChips() where chip.kind != .screen {
-            let strip = CanvasNameLabels.box(forFrameRect: chip.label.frameRect)
+        //
+        // The drawing you are looking at goes on LAST, over everything else in
+        // the strip: it is the only one wider than the room the row gave it, so
+        // it is the only one that can land on a neighbour, and it has to be the
+        // one on top when it does.
+        let chips = canvasNameChips().filter { $0.kind != .screen }
+        for chip in chips where !chip.spelledOut { drawNameChip(chip) }
+        for chip in chips where chip.spelledOut { drawNameChip(chip) }
+    }
 
-            // The mark stays put through a rename: it says what kind of thing
-            // this is, and that does not change while you are typing.
-            let glyph = CAShapeLayer()
-            let box = CGRect(x: strip.minX,
-                             y: strip.minY + (strip.height - Self.componentGlyphSize) / 2,
-                             width: Self.componentGlyphSize, height: Self.componentGlyphSize)
-            // One diamond for a copy, not the original's four: a different
-            // shape rather than a different weight, so it still reads at ten
-            // points.
-            glyph.path = chip.kind == .component
-                ? ComponentGlyph.path(in: box)
-                : ComponentGlyph.instancePath(in: box)
-            glyph.fillColor = ComponentGlyph.cgColor
-            glyph.frame = layer?.bounds ?? strip
-            componentChromeLayer.addSublayer(glyph)
+    /// One chip drawn into the strip: its mark, and the word it is saying right
+    /// now, on a plate when the word only appeared because you are looking.
+    private func drawNameChip(_ chip: CanvasNameChip) {
+        let strip = CanvasNameLabels.box(forFrameRect: chip.label.frameRect)
+        let renaming = chip.layer.id == canvasRenameID
 
-            // The component being renamed has a field standing where its name
-            // was, so nothing is drawn under it.
-            if chip.layer.id == canvasRenameID { continue }
-
-            // A copy of the first version wears its mark and nothing else: a
-            // screen built out of twelve ordinary buttons would otherwise
-            // carry twelve labels all saying the same word.
-            guard let word = chip.word else { continue }
-
-            // The component violet at rest, the selection accent when the word
-            // is live: the mark in front of it goes on saying "component", so
-            // the word is free to say "selected, or under your pointer" the
-            // same way a screen's name does. Neither is a theme label color:
-            // this text sits on top of whatever picture is open.
-            // A copy's version is a caption rather than a handle, so it stays
-            // in the component violet however the copy is picked and the
-            // accent goes on meaning "this word answers a click".
-            let ink = chip.kind == .component && isNameLabelLive(chip.layer.id)
-                ? NSColor.controlAccentColor.cgColor
-                : ComponentGlyph.cgColor
-            componentChromeLayer.addSublayer(nameTextLayer(
-                word, color: ink, frame: CanvasNameLabels.box(for: chip.label)))
+        // A name that is only there because you are looking gets something to
+        // be read against. Where the names sit was decided by what they say at
+        // REST, so this one is wider than the room it was given and may reach
+        // over a neighbour's mark; a plate under it means it lands as a chip on
+        // top rather than as a smear.
+        if chip.spelledOut, !renaming, let word = chip.word {
+            let text = CanvasNameLabels.box(for: chip.label)
+            let plate = CALayer()
+            plate.frame = CGRect(x: strip.minX - 4, y: strip.minY - 1,
+                                 width: (text.minX - strip.minX) + Self.captionWidth(word) + 8,
+                                 height: strip.height + 2)
+            plate.cornerRadius = 4
+            // Resolved through the canvas's own appearance rather than
+            // whatever happens to be current: a light plate behind violet
+            // letters in a dark app would be a flare on the picture.
+            var backing = NSColor.controlBackgroundColor.withAlphaComponent(0.92).cgColor
+            effectiveAppearance.performAsCurrentDrawingAppearance {
+                backing = NSColor.controlBackgroundColor.withAlphaComponent(0.92).cgColor
+            }
+            plate.backgroundColor = backing
+            componentChromeLayer.addSublayer(plate)
         }
+
+        // The mark stays put through a rename: it says what kind of thing
+        // this is, and that does not change while you are typing.
+        let glyph = CAShapeLayer()
+        let box = CGRect(x: strip.minX,
+                         y: strip.minY + (strip.height - Self.componentGlyphSize) / 2,
+                         width: Self.componentGlyphSize, height: Self.componentGlyphSize)
+        // One diamond for a copy, not the original's four: a different shape
+        // rather than a different weight, so it still reads at ten points.
+        glyph.path = chip.kind == .component
+            ? ComponentGlyph.path(in: box)
+            : ComponentGlyph.instancePath(in: box)
+        glyph.fillColor = ComponentGlyph.cgColor
+        glyph.frame = layer?.bounds ?? strip
+        componentChromeLayer.addSublayer(glyph)
+
+        // The component being renamed has a field standing where its name was,
+        // so nothing is drawn under it.
+        guard !renaming else { return }
+
+        // A copy of the first version wears its mark and nothing else, until
+        // you look at it: a screen built out of twelve ordinary buttons would
+        // otherwise carry twelve labels all saying the same word.
+        guard let word = chip.word else { return }
+
+        // The component violet at rest, the selection accent when the word is
+        // live: the mark in front of it goes on saying "component", so the word
+        // is free to say "selected, or under your pointer" the same way a
+        // screen's name does. Neither is a theme label color: this text sits on
+        // top of whatever picture is open.
+        // A copy's version is a caption rather than a handle, so it stays in the
+        // component violet however the copy is picked and the accent goes on
+        // meaning "this word answers a click".
+        let ink = chip.kind == .component && isNameLabelLive(chip.layer.id)
+            ? NSColor.controlAccentColor.cgColor
+            : ComponentGlyph.cgColor
+        componentChromeLayer.addSublayer(nameTextLayer(
+            word, color: ink, frame: CanvasNameLabels.box(for: chip.label)))
     }
 
     /// The one word of canvas chrome above a drawing, drawn the same way for a

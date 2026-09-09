@@ -1,0 +1,27 @@
+{
+  "id": "the-field-that-opens-on-a-spelled-out-name-says",
+  "title": "The field that opens on a spelled out name says which word it is renaming",
+  "goal": "On the canvas, a component drawing you have picked now reads its whole name, like \"Save button · Disabled\". Double clicking it opens a box holding only \"Disabled\", because that is what gets renamed. Somebody who just read the longer words can reasonably expect to be renaming all of them.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2390,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T11:27:56.619Z",
+  "updated": "2026-09-09T11:27:56.622Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Landed 2026-09-09 with the spelled-out canvas name (queue/audits/2026-09-09-copy-names.json). The word drawn is CanvasNameChip.word (live caption); the rename target is still canvasRenameVersion(of:) in Sources/Photonz/CanvasNames.swift, which reads the RESTING caption. Cheapest honest fix is probably to open the field over just the version part of the words, so the box lines up with the letters it will replace.",
+  "acceptance": [
+    "Double clicking a drawing that is saying both a component name and a version makes clear, before anything is typed, which of the two words the typing will replace",
+    "Renaming from that box still changes the version and not the component, or if it changes both the panel and the Library agree afterwards",
+    "A drawing wearing only one word renames exactly as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T11:27:56.621Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -382,6 +382,70 @@ struct CanvasNameCaptionTests {
         #expect(caption.name == "Button")
         #expect(caption.version == nil)
     }
+
+    @Test("A caption prints the one word it has")
+    func captionPrintsItsWord() {
+        #expect(CanvasNameLabels.Caption(name: "Home", version: nil).word == "Home")
+        #expect(CanvasNameLabels.Caption(name: nil, version: "Disabled").word == "Disabled")
+        #expect(CanvasNameLabels.Caption(name: nil, version: nil).word == nil)
+    }
+}
+
+/// What a drawing says while it is the one you are looking at: pointer resting
+/// on it, or picked. At rest a copy of a component wears a bare mark and no
+/// words at all, which is right for a screen built out of twelve buttons and
+/// wrong for the one button you are asking about.
+@Suite("The name on the drawing you are looking at")
+struct CanvasLiveCaptionTests {
+
+    @Test("A copy you are looking at says which component it came from")
+    func liveCopySaysItsComponent() {
+        let caption = CanvasNameLabels.caption(name: "Save button", version: nil,
+                                               isCopy: true, isLive: true)
+        #expect(caption.name == "Save button")
+        #expect(caption.word == "Save button")
+    }
+
+    @Test("A copy at rest still says nothing")
+    func restingCopyStaysQuiet() {
+        #expect(CanvasNameLabels.caption(name: "Save button", version: nil, isCopy: true).word == nil)
+    }
+
+    @Test("A version you are looking at says whose version it is")
+    func liveVersionSaysItsComponent() {
+        // The trade the version labels made was the component name: four
+        // drawings reading Default, Disabled, Loading, Pressed never say what
+        // they are four versions OF. Looking at one is when you want that.
+        let caption = CanvasNameLabels.caption(name: "Save button", version: "Disabled",
+                                               isCopy: false, isLive: true)
+        #expect(caption.name == "Save button")
+        #expect(caption.version == "Disabled")
+        #expect(caption.word == "Save button \u{00B7} Disabled")
+    }
+
+    @Test("A copy of an odd version you are looking at says both")
+    func liveCopyOfAVersionSaysBoth() {
+        #expect(CanvasNameLabels.caption(name: "Save button", version: "Disabled",
+                                         isCopy: true, isLive: true).word
+                == "Save button \u{00B7} Disabled")
+    }
+
+    @Test("A drawing that already said its name says exactly the same thing")
+    func lookingAtAPlainComponentChangesNothing() {
+        // A component with one drawing has always worn its name. Looking at it
+        // must not make the word jump or grow, or every hover on the canvas
+        // would twitch.
+        let resting = CanvasNameLabels.caption(name: "Save button", version: nil, isCopy: false)
+        let live = CanvasNameLabels.caption(name: "Save button", version: nil,
+                                            isCopy: false, isLive: true)
+        #expect(resting == live)
+    }
+
+    @Test("An empty version stays out of the words even when you are looking")
+    func liveEmptyVersionIsStillNoVersion() {
+        #expect(CanvasNameLabels.caption(name: "Save button", version: "",
+                                         isCopy: true, isLive: true).word == "Save button")
+    }
 }
 
 /// Four versions of one component in a row: the case the whole caption rule

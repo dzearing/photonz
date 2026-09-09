@@ -1127,6 +1127,12 @@ final class CanvasNSView: NSView {
     /// The name under the pointer, a screen's or a component's. It tints, which
     /// is the only thing telling anyone the name can be clicked at all.
     var hoveredNameLabelID: UUID?
+    /// The component drawing the pointer is resting ON, as opposed to its name.
+    /// That drawing spells its whole name out above itself while you look at
+    /// it, which is how a copy wearing a bare mark says which component it came
+    /// from without every copy on a screen shouting it at once
+    /// (`CanvasNameLabels.caption`).
+    var lookedAtComponentID: UUID?
 
     /// In-progress layer move.
     struct MoveDrag {

@@ -444,7 +444,7 @@
     {
       "do": "describe",
       "stage": "6-three-copies",
-      "note": "three copies off the shelf, all following the original. The last one is picked, and its knobs read the original's own numbers rather than sitting empty. Appearance has no Corner Radius row of its own here: this copy is rounded by its knob, so there is one number for the roundness and it is the one the button is wearing"
+      "note": "three copies off the shelf, all following the original. The last one is picked, so that one says which component it came from; the two nobody is looking at wear their bare mark, which is what keeps a screen built out of a dozen buttons quiet. The picked one's knobs read the original's own numbers rather than sitting empty. Appearance has no Corner Radius row of its own here: this copy is rounded by its knob, so there is one number for the roundness and it is the one the button is wearing"
     },
     {
       "do": "snapshot",

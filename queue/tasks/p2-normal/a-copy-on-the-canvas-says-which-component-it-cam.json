@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:42:00.386Z",
-  "updated": "2026-09-09T09:46:09.220Z",
+  "updated": "2026-09-09T10:55:52.920Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This is the trade queue/audits/2026-09-08-version-labels.json named itself and asked to be argued with: \"A component with two or more drawings no longer shows its name anywhere on the canvas... This is the deliberate trade and it is the first thing to argue with.\" Reproduced on 2026-09-09 in queue/manager/shots/2026-09-09-0238-three-copies.png: the two originals carry Default and Disabled, the three copies below them carry a bare diamond each.\n\nPutting a name back is not a new control, it is restoring something the width fix took away, so no decision card. If the runner concludes the honest answer is no label at all, dropping the naked marker is an acceptable outcome and should be said plainly in the audit.\n\nWidth is the constraint that caused this: read the 2026-09-08 work before re-adding a long string.",
@@ -28,6 +28,39 @@
     {
       "t": "2026-09-09T09:46:09.219Z",
       "note": "seq 2290 -> 10"
+    },
+    {
+      "t": "2026-09-09T10:55:52.919Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T11:28:12.680069Z",
+      "note": "Argued with the trade first. Printing the component name on every copy is the thing the 2026-09-08 width fix removed, and it is wrong for a UI tool: a screen made of twelve buttons would wear twelve identical labels, each wider than the button under it. Dropping the marker is also wrong: the diamond is the only thing on the canvas saying a drawing is a copy at all. So the name came back as something you summon."
+    },
+    {
+      "t": "2026-09-09T11:28:12.680069Z",
+      "note": "Built: a component drawing spells out its whole identity while it is the one you are looking at (pointer resting on it, or picked) and goes back to its short word when you are not. A copy says \"Save button\"; a version says \"Save button \\u00b7 Disabled\", which also gives the original back the component name the width fix took off it."
+    },
+    {
+      "t": "2026-09-09T11:28:12.680069Z",
+      "note": "Exactly one drawing spells out at a time, and pointing beats having picked. First cut let hover and selection both bloom and two plates butted together reading \"Primary \\u00b7 Default\" \"Primary \\u00b7 Off\" as one long bar saying Primary twice, which is the very shape the short labels exist to avoid. A box selection would have printed it a dozen times."
+    },
+    {
+      "t": "2026-09-09T11:28:12.680069Z",
+      "note": "Positions are still worked out from the RESTING captions, so nothing in the row moves when a name grows; the grown one draws last, on a plate, so it is the legible one where it overlaps. Panning and pinching now re-read what the pointer is on, so a name does not hang over a drawing that slid out from under it."
+    },
+    {
+      "t": "2026-09-09T11:28:12.680069Z",
+      "note": "Core rule is in CanvasNameLabels.caption(isLive:) with tests (Tests/PhotonzCoreTests/CanvasNameLabelTests.swift, suite \"The name on the drawing you are looking at\"). App: CanvasNames.swift (chips, lookedAtComponent, spelledOutComponentID), CanvasComponents.swift (drawNameChip + plate), CanvasZoom.swift (re-read on pan/zoom)."
+    },
+    {
+      "t": "2026-09-09T11:28:12.680069Z",
+      "note": "Verified: Scripts/test.sh 5338 tests green. Walks re-run against a freshly built probe: 15 component walks, 6 version walks, 5 frame walks, all pass. path-6-three-copies-sc.png shows the picked copy reading \"Save button\" with the other two on bare marks; labels-5-hovered-sc.png (new stage on version-labels-row-walk) shows a hovered original reading \"Primary \\u00b7 Default\" at 100% with none of the four labels covering another. At 50% the row is unchanged from the 2026-09-08 fix."
+    },
+    {
+      "t": "2026-09-09T11:28:12.680069Z",
+      "note": "Audit queue/audits/2026-09-09-copy-names.json. Follow-up filed: the-field-that-opens-on-a-spelled-out-name-says (the rename box holds only the version while the label reads both words)."
     }
-  ]
+  ],
+  "started": "2026-09-09T10:55:52.918Z"
 }

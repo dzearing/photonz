@@ -1,0 +1,30 @@
+{
+  "feature": "A drawing says which component it is while you look at it",
+  "epic": "ui-components",
+  "summary": "Point at a copy of a component, or pick it, and the mark above it spells out the component's name. Let go and it goes back to the bare mark, so three Save buttons in a row still read as three quiet buttons rather than three labels all saying Save button.",
+  "setup": "Photonz Dev, Experiments window, release Next, Components on. Draw a box, Layer > Make Component, name it Save button.",
+  "try": [
+    { "do": "Put three copies of the component on the canvas from the Library shelf." },
+    { "do": "Look at the row: each copy wears one small violet diamond and no words." },
+    { "do": "Rest the pointer on the middle copy. It says Save button above itself." },
+    { "do": "Move the pointer off it. The words go, the diamond stays." },
+    { "do": "Click the last copy. It says Save button and keeps saying it.", "shot": "2026-09-09-copy-names-picked-sc.png" },
+    { "do": "On the original, press Add beside Versions and name a second version Disabled." },
+    { "do": "Rest the pointer on the first drawing of that pair: it says Save button · Default.", "shot": "2026-09-09-copy-names-hovered-sc.png" },
+    { "do": "Move the pointer off it: it goes back to saying just Default." }
+  ],
+  "evaluate": [
+    "Pointing at a copy to learn its name: is that where your hand already is, or would you rather the name were always printed?",
+    "The name arrives on a small dark plate while every resting label is plain violet text. Does the plate read as a temporary answer, or as a tooltip that does not belong on the canvas?",
+    "Only ONE drawing spells its name out at a time, and pointing at something beats having picked something. Does the picked one losing its words while you point elsewhere read as correct or as a glitch?",
+    "A picked copy says its name in violet; a picked original says it in the selection blue, because only the original's word answers a click. Does that colour difference tell you anything, or does it just look inconsistent?",
+    "Two copies of one component that show different versions read Save button · Default and Save button · Disabled when you point at each. Is the version worth the extra width there, or is the name enough?"
+  ],
+  "rough": [
+    "A copy nobody is pointing at still says nothing, and that is the deliberate part. Printing the name on every copy is what the 2026-09-08 version-labels work removed: a screen built out of twelve buttons wears twelve identical labels, each wider than the button under it, and the row climbs into a staircase. So the name came back as something you summon rather than something you read. If you want it printed on every copy anyway, that is a real answer and this is the line to disagree with.",
+    "Where the labels sit is still worked out from what they say AT REST, so the one you are looking at can reach over a neighbour's mark. It draws last and on a plate so it is always the legible one, but it can cover a neighbour's short word while you point.",
+    "Double clicking a spelled-out original still renames the VERSION, so a label reading Save button · Disabled opens a field holding just Disabled. Filed as a follow-up.",
+    "Panning or pinching now re-reads what the pointer is on, so a name does not go on hanging over a drawing that slid away. Switching tools from the keyboard without moving the pointer still leaves the name up until the next mouse move; the hover tint has always behaved that way.",
+    "Both screenshots are real screen captures: the probe held the Screen Recording grant for these runs."
+  ]
+}

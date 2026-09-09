@@ -133,8 +133,8 @@ public enum CanvasNameLabels {
 
     // MARK: What a name says
 
-    /// The words above one drawing: its name, or which version it is, never
-    /// both.
+    /// The words above one drawing: its name, or which version it is, or —
+    /// while it is the drawing you are looking at — both.
     public struct Caption: Hashable, Sendable {
         /// The name of the thing, when the thing is worth naming here.
         public let name: String?
@@ -144,6 +144,14 @@ public enum CanvasNameLabels {
         public init(name: String?, version: String?) {
             self.name = name
             self.version = version
+        }
+
+        /// The one line printed above the drawing, nil for a drawing with
+        /// nothing to say. Name first, because the name is the thing and the
+        /// version is which one of it.
+        public var word: String? {
+            let parts = [name, version].compactMap { $0 }.filter { !$0.isEmpty }
+            return parts.isEmpty ? nil : parts.joined(separator: " \u{00B7} ")
         }
     }
 
@@ -167,8 +175,20 @@ public enum CanvasNameLabels {
     /// A copy never carries a name, version or no version: a screen built out
     /// of twelve buttons would otherwise wear twelve labels all saying the
     /// same word.
-    public static func caption(name: String, version: String?, isCopy: Bool) -> Caption {
-        if let version, !version.isEmpty { return Caption(name: nil, version: version) }
+    ///
+    /// **Unless it is the drawing you are looking at.** Both of those trades
+    /// buy a quiet canvas by taking the name off the picture, and they are the
+    /// right trade for the twelve buttons you are not thinking about and the
+    /// wrong one for the single button you are pointing at. So a drawing that
+    /// is live — the pointer resting on it, or picked — says its whole
+    /// identity: the component's name, and after it which version this one is
+    /// when the component has more than one. It costs width only while you are
+    /// looking, so a row at rest is exactly as tidy as it was.
+    public static func caption(name: String, version: String?, isCopy: Bool,
+                               isLive: Bool = false) -> Caption {
+        let version = (version?.isEmpty == false) ? version : nil
+        if isLive { return Caption(name: name, version: version) }
+        if let version { return Caption(name: nil, version: version) }
         return Caption(name: isCopy ? nil : name, version: nil)
     }
 

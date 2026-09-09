@@ -36,14 +36,22 @@ extension CanvasNSView {
         let layer: Layer
         let label: CanvasNameLabel
         let kind: Kind
-        /// What this chip says: the layer's name, or which version of its
-        /// component the drawing is, never both
+        /// What this chip says when nobody is looking at it: the layer's name,
+        /// or which version of its component the drawing is, never both
         /// (`CanvasNameLabels.caption`).
         let caption: CanvasNameLabels.Caption
+        /// What it says while it IS the drawing you are looking at: the
+        /// component's name, and which version this one is when there is more
+        /// than one.
+        let liveCaption: CanvasNameLabels.Caption
+        /// Whether it is saying the longer thing right now. Only ever true when
+        /// the two differ, so a screen and a plain component never change a
+        /// pixel when you point at them.
+        let spelledOut: Bool
 
         /// The one word printed above the drawing, nil for a copy of the first
-        /// version, which wears its mark and nothing else.
-        var word: String? { caption.name ?? caption.version }
+        /// version nobody is looking at, which wears its mark and nothing else.
+        var word: String? { (spelledOut ? liveCaption : caption).word }
     }
 
     /// How wide `word` prints in the name font, zero for nothing to print.
@@ -76,19 +84,22 @@ extension CanvasNSView {
             guard layer.isVisible, let bounds = document.canvasBounds(of: layer.id),
                   bounds.width > 0, bounds.height > 0 else { return }
             let rect = viewRect(forDocRect: bounds, in: viewport)
-            let caption = CanvasNameLabels.caption(name: layer.name,
-                                                   version: kind == .screen ? nil : versions[layer.id],
+            let version = kind == .screen ? nil : versions[layer.id]
+            let caption = CanvasNameLabels.caption(name: layer.name, version: version,
                                                    isCopy: kind == .copyMark)
+            let live = CanvasNameLabels.caption(name: layer.name, version: version,
+                                                isCopy: kind == .copyMark, isLive: true)
             chips.append(CanvasNameChip(layer: layer,
                                         label: CanvasNameLabel(id: layer.id, frameRect: rect,
-                                                               textWidth: Self.captionWidth(caption.name ?? caption.version),
+                                                               textWidth: Self.captionWidth(caption.word),
                                                                leadingInset: inset,
                                                                // A version is the word that tells
                                                                // two drawings apart, so a small box
                                                                // widens its caption rather than
                                                                // cutting it off.
                                                                fitsWholeText: caption.version != nil),
-                                        kind: kind, caption: caption))
+                                        kind: kind, caption: caption, liveCaption: live,
+                                        spelledOut: false))
         }
         if framesEnabled, document.hasFrames {
             for frame in document.frames {
@@ -106,9 +117,29 @@ extension CanvasNSView {
                     ? Self.componentGlyphSize : Self.componentMarkInset,
                    kind: .copyMark)
         }
+        // Where the names sit is worked out from what they say AT REST, so the
+        // one you are looking at growing its word never shuffles the rest of
+        // the row out from under your pointer. It draws over its neighbours on
+        // its own plate instead.
         let stacked = CanvasNameLabels.stacked(chips.map(\.label))
-        return zip(chips, stacked).map {
-            CanvasNameChip(layer: $0.layer, label: $1, kind: $0.kind, caption: $0.caption)
+        return zip(chips, stacked).map { chip, placed in
+            guard chip.liveCaption != chip.caption, isNameSpelledOut(chip.layer.id) else {
+                return CanvasNameChip(layer: chip.layer, label: placed, kind: chip.kind,
+                                      caption: chip.caption, liveCaption: chip.liveCaption,
+                                      spelledOut: false)
+            }
+            // The letters start after the mark with a little air, even on a
+            // copy whose bare diamond needed none, and the whole name prints
+            // rather than being cut back to the width of the drawing: a name
+            // that appeared because you looked at it and then said "Save b…"
+            // would be worse than the diamond it replaced.
+            let label = CanvasNameLabel(id: placed.id, frameRect: placed.frameRect,
+                                        textWidth: Self.captionWidth(chip.liveCaption.word),
+                                        leadingInset: Self.componentMarkInset,
+                                        fitsWholeText: true)
+            return CanvasNameChip(layer: chip.layer, label: label, kind: chip.kind,
+                                  caption: chip.caption, liveCaption: chip.liveCaption,
+                                  spelledOut: true)
         }
     }
 
@@ -128,14 +159,45 @@ extension CanvasNSView {
         return CanvasNameLabels.hit(at: viewPoint, labels: labels)
     }
 
-    /// Tints the name the pointer is resting on. Nothing else on the canvas
-    /// says a name is more than a caption, so this is the whole invitation.
+    /// The component drawing a point on the canvas belongs to: the copy itself,
+    /// or the main component the piece under the pointer is part of. Nil out on
+    /// bare canvas and on everything that is not a component, which is every
+    /// screenshot anybody has taken.
+    ///
+    /// A copy answers for its own insides already, so the walk up the tree is
+    /// for an ORIGINAL: pointing at the word on a button lands on the text
+    /// layer, and the thing you are looking at is the button.
+    func lookedAtComponent(at viewPoint: CGPoint) -> UUID? {
+        guard componentsEnabled, tool == .select, canvasNameField == nil,
+              let viewport, let document,
+              !markedComponents.isEmpty || !markedComponentInstances.isEmpty
+        else { return nil }
+        let point = viewport.documentPoint(fromView: viewPoint)
+        guard let hit = document.canvasHitTest(point, zoom: viewport.zoom) else { return nil }
+        var step: UUID? = hit.id
+        while let id = step, let layer = document.layer(id: id) {
+            if layer.isComponentInstance || layer.isMainComponent { return id }
+            step = document.parentID(of: id)
+        }
+        return nil
+    }
+
+    /// Tints the name the pointer is resting on, and spells out the name of the
+    /// component drawing it is resting on. Nothing else on the canvas says a
+    /// name is more than a caption, so the tint is the whole invitation; the
+    /// spelled-out name is the answer to "which component is this one".
     func refreshNameLabelHover(at viewPoint: CGPoint?) {
+        let looked = viewPoint.flatMap { lookedAtComponent(at: $0) }
+        let previous = lookedAtComponentID
+        // Set before the labels are asked anything: the drawing you are looking
+        // at has a wider name than the one it wears at rest, and the click that
+        // name answers has to be the one a person can see.
+        lookedAtComponentID = looked
         let hit = viewPoint.flatMap { point -> UUID? in
             guard tool == .select, canvasNameField == nil else { return nil }
             return nameLabelHit(at: point)
         }
-        guard hit != hoveredNameLabelID else { return }
+        guard hit != hoveredNameLabelID || looked != previous else { return }
         hoveredNameLabelID = hit
         refreshFrameChrome()
         refreshComponentChrome()
@@ -146,6 +208,31 @@ extension CanvasNSView {
     func isNameLabelLive(_ id: UUID) -> Bool {
         id == selectedLayerID || multiSelectedLayerIDs.contains(id) || id == hoveredNameLabelID
     }
+
+    /// The ONE drawing saying its whole name rather than the short word it
+    /// wears at rest: the one your pointer is resting on, or, when the pointer
+    /// is not on anything, the one you have picked.
+    ///
+    /// Exactly one, because the name it spells out is the component's and every
+    /// drawing of that component carries the same one. Two of them side by side
+    /// print "Primary · Default" hard against "Primary · Off" and read as one
+    /// long bar saying Primary twice, which is the very shape the short labels
+    /// exist to avoid. A whole box selection would print it a dozen times.
+    ///
+    /// Pointing at something wins over having picked something: whatever you
+    /// picked a moment ago, the drawing under your hand right now is the one
+    /// you are asking about.
+    var spelledOutComponentID: UUID? {
+        if let lookedAtComponentID { return lookedAtComponentID }
+        if let hoveredNameLabelID { return hoveredNameLabelID }
+        // A band swept round a dozen buttons picked all of them and asked
+        // about none of them.
+        guard multiSelectedLayerIDs.count <= 1 else { return nil }
+        return selectedLayerID
+    }
+
+    /// Whether this drawing is the one saying its whole name.
+    func isNameSpelledOut(_ id: UUID) -> Bool { id == spelledOutComponentID }
 
     /// Which version this drawing is, when the word above it says the version
     /// rather than the component's name.

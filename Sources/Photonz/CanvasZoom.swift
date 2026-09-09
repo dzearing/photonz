@@ -17,12 +17,18 @@ extension CanvasNSView {
         let scale: CGFloat = event.hasPreciseScrollingDeltas ? 1 : 10
         commit(viewport.panned(by: CGPoint(x: event.scrollingDeltaX * scale,
                                            y: event.scrollingDeltaY * scale)))
+        // The picture moved under a pointer that did not, so what the pointer
+        // is resting on has changed without a single mouse move. A component
+        // that went on spelling its name out after it slid away from under the
+        // pointer would be answering a question nobody is asking any more.
+        refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
     }
 
     /// Pinch zooms around the cursor.
     override func magnify(with event: NSEvent) {
-        pinch(magnification: event.magnification,
-              anchorInView: convert(event.locationInWindow, from: nil))
+        let anchor = convert(event.locationInWindow, from: nil)
+        pinch(magnification: event.magnification, anchorInView: anchor)
+        refreshNameLabelHover(at: anchor)
     }
 
     /// One nudge of a pinch: the zoom moves by `magnification`, keeping the
