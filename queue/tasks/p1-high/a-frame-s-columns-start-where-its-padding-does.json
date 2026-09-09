@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T16:20:48.624Z",
-  "updated": "2026-09-09T16:57:13.100Z",
+  "updated": "2026-09-09T16:57:35.036Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-09: \"i have padding of 12 on all sides in a frame. i say show columns, but the columns do not have 12 padding on all sides. additionally i put some rects in it, they do not align with the red column shown. i think the column is off.\"\n\nCause, confirmed by reading (not yet reproduced in the app - reproduce first and record the numbers). The column arithmetic is not wrong; it is measuring from a DIFFERENT number than the frame's padding. Two independent values describe the same edge:\n1. GroupLayout.padding (Sources/PhotonzCore/GroupLayout.swift:101), a GroupPadding with four sides (:413), which is what insets the frame's contents.\n2. FrameColumns.margin (Sources/PhotonzCore/FrameColumns.swift:62), a single number defaulting to 32 (:44), which is what the columns are measured from: bands(inWidth:) at :106 computes content = width - margin * 2.\nNothing links them. So padding 12 with the default margin puts the columns at 32 and the laid-out rects at 12, which is exactly the misalignment reported.\n\nThree separate consequences, all from the same root, and the fix must cover all three:\n- The columns start at the wrong x.\n- There is no vertical inset at ALL. bands(in screen:) at FrameColumns.swift:126 builds each band as y: screen.minY, height: screen.height, so the bands run the full height of the frame whatever the padding is. That is why the user says the columns do not have 12 on all sides: they cannot have any top or bottom inset today.\n- Margin is ONE number applied to both sides equally, while GroupPadding has four. So even typing 12 into Margin cannot match padding that differs per side.\n\nRecommended shape, but the runner owns the call and must justify it in the audit: make the columns derive their inset from the frame's padding and retire the separate Margin field, because two numbers for one edge is the bug rather than a symptom of it. The migration question is the real work: documents already carry a margin, and FrameColumns is Codable and saved with the document. Decide and record whether an existing margin is dropped, kept as a fallback for a frame with no padding, or written into the frame's padding on load; whichever is chosen, an existing document must not silently move its columns under somebody without that being a deliberate, stated migration.\n\nThe drawing and the snapping read the same arithmetic, so fixing it once fixes both: the chrome is CanvasColumnChrome.swift:51 calling columns.bands(in: box), and the drag pull is PhotonzDocument.columnBands(excluding:) at FrameColumns.swift:178 calling the same thing. Do not fix one of them.\n\nAlso check EditorState+Frames.swift:341, which reports the column width shown in the Columns section footnote via bands(inWidth:); it has to keep agreeing with what is drawn after the change, or the panel will print a width the canvas does not have.\n\nBuilt by two tasks that are already done ('a-screen-can-show-the-column-grid-you-are-design' and 'the-columns-section-and-the-show-columns-menu-ro'), neither of which connected columns to padding.\n\nCheck Sources/Photonz/Releases/ before assuming one change reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -57,7 +57,12 @@
     {
       "t": "2026-09-09T16:57:13.100Z",
       "note": "Also fixed a walk that was already failing on main before this change (confirmed by stashing my work and rerunning it): columns-follow-the-screen-walk pressed Show columns without scrolling to it, and the dock has grown a section since it was written. It uses the reveal step now. Column walks 4/4, frame walks 5/5, padding walks 4/4, Scripts/test.sh 5497 tests green."
+    },
+    {
+      "t": "2026-09-09T16:57:35.034Z",
+      "note": "Columns are drawn inside the screen's padding now, per side and top to bottom; Margin stays only as the fallback for a screen with no room at its edges, so no saved document moved. Verified off real probe captures (first band and the laid-out rectangle share a pixel at padding 12; both move exactly 42px at padding 40) plus new core tests and a new walk. Audit: queue/audits/2026-09-09-columns-follow-padding.json. Committed be8712aa and pushed."
     }
   ],
-  "started": "2026-09-09T16:30:37.777Z"
+  "started": "2026-09-09T16:30:37.777Z",
+  "completed": "2026-09-09T16:57:35.035Z"
 }
