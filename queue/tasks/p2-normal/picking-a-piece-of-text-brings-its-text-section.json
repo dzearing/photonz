@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2250,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T07:04:02.931Z",
-  "updated": "2026-09-09T08:41:58.886726Z",
+  "updated": "2026-09-09T08:42:18.954Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-09 on BOTH the working tree and a clean build of main (stashed changes, rebuilt, same failure), so it is not from the pane-floor work landed that day.\n\nCommand: Scripts/playtest-all.sh --no-build dock-picked-first\nOutput: dock-picked-first-walk  16s  FAILED  step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s\n\nThe log at the step before shows why: with the text layer picked the dock runs Layers 6-169, Appearance 169-341, Effects 341-525, Measurements 525-612, Text 760-958, Position & Size 958-1093 in a 688 point viewport, so Text starts 72 points below the fold and nothing scrolled to it. Effects is drawn 299 of its natural 299, so the height budget is not squeezing anything here: the missing piece is a reveal for the section the picked layer brings up, like the one the Library shelf and an opened effect already have (LayersPanel.applyLibraryReveal, applyEffectReveal).",
@@ -36,7 +36,7 @@
     },
     {
       "t": "2026-09-09T08:41:58.886726Z",
-      "note": "Implementation. Sources/Photonz/LayersPanel.swift: requestPickedReveal / applyPickedReveal / pickedSection, fired from .onChange on selectedLayerID and multiSelectedLayerIDs. Waits Self.pickRevealDelay (0.24s, same as the effect reveal) so the section \u2014 built a pass after the click by PanelSectionArrival \u2014 and the lists above it have settled before being measured, and a pickPass counter drops the wait when a newer pick has arrived (click three rows fast, only the third moves the dock). The decision itself is DockReveal.action, already in PhotonzCore and tested, so .none/.top/.bottom is not re-derived here. Probe: recordPickedReveal + a new 'pickReveal' line in the walk state, next to 'effectReveal', so a walk can read what the dock did in words."
+      "note": "Implementation. Sources/Photonz/LayersPanel.swift: requestPickedReveal / applyPickedReveal / pickedSection, fired from .onChange on selectedLayerID and multiSelectedLayerIDs. Waits Self.pickRevealDelay (0.24s, same as the effect reveal) so the section — built a pass after the click by PanelSectionArrival — and the lists above it have settled before being measured, and a pickPass counter drops the wait when a newer pick has arrived (click three rows fast, only the third moves the dock). The decision itself is DockReveal.action, already in PhotonzCore and tested, so .none/.top/.bottom is not re-derived here. Probe: recordPickedReveal + a new 'pickReveal' line in the walk state, next to 'effectReveal', so a walk can read what the dock did in words."
     },
     {
       "t": "2026-09-09T08:41:58.886726Z",
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-09T08:41:58.886726Z",
       "note": "Audit: queue/audits/2026-09-09-dock-picked-first-reveal.json, with two real screen captures beside it (Screen Recording was granted this run)."
+    },
+    {
+      "t": "2026-09-09T08:42:18.952Z",
+      "note": "Picking a layer now scrolls the dock to that layer's own section. Sources/Photonz/LayersPanel.swift (requestPickedReveal/applyPickedReveal/pickedSection, 0.24s settle, DockReveal.action for the do-nothing case), probe line 'pickReveal'. Verified: dock-picked-first-walk passes end to end (was failing at step 47), dock/panel/text/callout walk families green, Scripts/test.sh green. Audit: queue/audits/2026-09-09-dock-picked-first-reveal.json. Full sweep requested."
     }
   ],
-  "started": "2026-09-09T08:26:32.062Z"
+  "started": "2026-09-09T08:26:32.062Z",
+  "completed": "2026-09-09T08:42:18.953Z"
 }
