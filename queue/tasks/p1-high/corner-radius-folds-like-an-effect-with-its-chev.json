@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T01:04:07.113Z",
-  "updated": "2026-09-09T01:04:07.151Z",
+  "updated": "2026-09-09T02:06:42.876Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-08. Today CornerRadiusRow (Sources/Photonz/LayersPanel.swift line 3624) keeps its own open state in cornersOpen, draws its chevron inside the row after the name rather than at the leading edge, and indents the four corner fields with a plain leading pad of 16 instead of using OwnedSettings, which is the rule view the effects and parts lists share (PartsInspector.swift line 268). So the work is to adopt the shared pieces rather than restyle this one: leading chevron, shared rule, same name treatment. Note the row is shared between releases and only the new panel grows the chevron at all, gated on Experiments.shapePartsEnabled at line 3654, so keep that gate rather than changing what the old panel shows. Coordinate with an-effect-row-reads-like-a-small-pane-with-a-che, which defines the chevron, title and rule treatment this row is being asked to match, and with panel-content-sits-twelve-points-from-each-edge, which sets where the leading column starts; this should follow whatever those settle rather than pick its own numbers.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-09-09T01:04:07.150Z",
       "note": "seq 260 -> 4"
+    },
+    {
+      "t": "2026-09-09T01:49:17.205Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T01:52:05.713Z",
+      "note": "Adversarial review before building. Both tasks this one had to follow are done, so the shapes are settled: an effect heading is PanelFoldChevron-in-the-tick-column plus a footnote semibold lit title (EffectsListInspector.foldControl), and its settings hang on OwnedSettings whose rule sits at ColorPartLayout.tickCenter. Three judgements. (1) The slider does NOT move behind the rule. An effect header carries no controls, but this row is a slider row: the track is the \"make all four the same\" control and it has to be there when the row is closed, so moving it on open would make the layout jump. Rule holds the four fields only. (2) The title becomes footnote semibold primary, which makes Corner Radius heavier than Opacity and the part names right above it. That is the point of the change - a row that opens is drawn as a small pane - and Corner Radius is the last row in Appearance so it cannot falsely claim ownership of anything below it. Named in the audit for the user to judge. (3) Two other rows in the dock open the same way, Padding four sides and Width/Height Limits in the Layout section, and both use the old mid-row chevron with a plain 20pt indent. They are drawn on a different type scale (callout, not caption) and live in an inspector with no OwnedSettings, so converting them is its own task rather than a rider on this one. Filed separately and named in the audit."
+    },
+    {
+      "t": "2026-09-09T02:06:42.875Z",
+      "note": "Built. The chevron came out of both rows and into one view, PanelFoldChevron in PanelSectionLook.swift: the empty rectangle that holds the leading column open plus the 9pt semibold glyph, rotating a quarter turn. EffectRowView now draws it instead of its own copy, so the two cannot drift. CornerRadiusRow grew a heading: the shared chevron, then the name in PanelSectionLook.EffectRow.titleFont in the primary ink, chevron and name one press with a spring the same length as an effect’s. The four corner fields lost their 16pt pad and went into OwnedSettings(owner: \"Corner Radius\"), with 4pt on top so the gap between the slider and the rule matches an effect’s gap between heading and rule. The name shrinks before it truncates the way an effect’s does. canOpenCorners still gates the whole treatment, so the old panel keeps the plain caption label it has always had: a heading that opens nothing would be a promise that panel does not keep."
+    },
+    {
+      "t": "2026-09-09T02:06:42.876Z",
+      "note": "Verified in numbers, not by eye. Added a panelStart step to each-corner-on-its-own-walk at the opened stage: the Corner Radius row reads inset 14 and its settings read inset 38, which is the same pair the Border effect two rows below reads (14 and 38) in the same capture. So the chevron is in the panel’s leading column and the rule hangs under it exactly where an effect’s does. panel-start-margin and panel-start-narrow still report every heading and row at 14."
+    },
+    {
+      "t": "2026-09-09T02:06:42.876Z",
+      "note": "Walks: corner 5, panel 18, effect 10, parts 3, plus one-unit-word, selection-outline-rounds, dock-fits-the-window, outline-width, panel-start-narrow, panel-edge-narrow. All pass except two that reproduce identically without this change and are already filed: panel-controls-walk (Revert Opacity, reverting-a-copy-of-a-component-s-own-opacity) and mixed-one-look-walk (step 45 align center out of reach, an-alignment-button-the-panel-has-scrolled-away, whose notes record the same step 45 and the same message from a stashed baseline). The walk’s word for this gesture went from \"Each corner\" to \"Twist\", the word an effect’s twist and a layer group’s twist already answer to; it was the only walk using the old name. Scripts/test.sh green, 5144 tests. Asked for a full sweep because the row grew from a caption label into a 20pt heading, so everything below it in the Appearance section sits a few points lower and the scroll-sensitive walks are worth the whole set."
+    },
+    {
+      "t": "2026-09-09T02:06:42.876Z",
+      "note": "Adversarial review of the built thing, on the running probe. Two things kept and named in the audit rather than fixed. The fold state stays in the view rather than moving to EditorState, so it is NOT dropped when you pick another layer: an effect’s fold belongs to that effect, but opening the corners is a way of working, and closing them on every selection change would undo that choice each time you drew the next card. The acceptance asked for it to be remembered while the layer stays picked, and it is, and then some. Second, the reach note under Corner Radius still sits below the four fields when the row is open, so it reads as if it belonged to Bottom Left; it sat there before this change and moving it is a shape change the task said not to make. Both are questions in the audit."
+    },
+    {
+      "t": "2026-09-09T02:06:42.876Z",
+      "note": "Acceptance item six, the other rows that open: Padding’s four sides and the size Limits in the Layout section still use the old mid-row chevron and a plain 20pt indent. Left alone on purpose, since that section draws its labels at callout against Appearance’s caption, so the effect heading font cannot be copied across without deciding what a Layout heading should weigh. Named in the audit and filed as the-two-rows-in-layout-that-open-look-nothing-li."
     }
-  ]
+  ],
+  "started": "2026-09-09T01:49:17.204Z"
 }

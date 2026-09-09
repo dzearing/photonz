@@ -1,0 +1,28 @@
+{
+  "feature": "Corner radius folds like an effect",
+  "epic": "ui-building",
+  "summary": "The Corner Radius row now opens the way an effect does: a chevron at the leading edge, the name lit beside it, and the four corner fields folded away behind the same vertical rule an effect's settings sit behind. The panel has one picture for a row that opens instead of two.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Draw a rectangle so Appearance has a Corner Radius row.",
+  "try": [
+    { "do": "Draw a rectangle with R and press V to pick it." },
+    { "do": "Look at Corner Radius in Appearance: the chevron is the leftmost thing on the row, in the tick column beside Fill's tick.", "shot": "2026-09-08-corner-radius-folds-closed.png" },
+    { "do": "Drag the Corner Radius slider to round all four corners." },
+    { "do": "Click the words Corner Radius, not just the chevron, to open the four corners.", "shot": "2026-09-08-corner-radius-folds-open.png" },
+    { "do": "Compare the rule down the left of the four corners with the rule down the left of the Border effect below it." },
+    { "do": "Type 0 into Bottom Right and Bottom Left, then close the row again with the chevron." },
+    { "do": "Read the number at the end of the closed row: it says 34/34/0/0, the four corners it could not fit in one number." }
+  ],
+  "evaluate": [
+    "Does the row read as a small pane that opens, the way the Border effect below it does?",
+    "Corner Radius is now the heaviest name in Appearance, heavier than Opacity and Fill above it. Does that read as a helpful signal that this row opens, or as a section header claiming everything under it?",
+    "The slider stayed put under the name rather than moving behind the rule when you open the row. Does the slider still read as the way to give all four corners the same number?",
+    "The four corners stay open when you pick a different layer. Is that what you want, or should they close again the way an effect's settings do?",
+    "Is the chevron a big enough target, given pressing the name works too?"
+  ],
+  "rough": [
+    "Two rows in the Layout section still open the old way: Padding's four sides and the size Limits both put a small chevron after the word and nudge their rows in by 20 with no rule. They were left alone deliberately, because that section draws its labels a size larger than Appearance does and copying the effect heading across is a look decision rather than a swap. Filed as the-two-rows-in-layout-that-open-look-nothing-li.",
+    "The reach note under Corner Radius (the sentence that says only some of what you picked can be rounded) still sits below the four corner fields when the row is open, so it reads as if it belonged to Bottom Left. It sat there before this change too. Not fixed.",
+    "Opening the corners does not scroll them into view if the dock has to grow past its floor. Same as an effect, which has its own open task for this.",
+    "The scripted walk's word for this gesture changed from Each corner to Twist, so it answers to the same word an effect's twist and a layer group's twist answer to."
+  ]
+}

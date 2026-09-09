@@ -40,3 +40,36 @@ enum PanelSectionLook {
         static let offSettingsOpacity: Double = 0.6
     }
 }
+
+/// The chevron that folds a small pane open, sitting in the panel's shared
+/// leading column.
+///
+/// One view rather than one per row, because the column is load bearing: the
+/// rule `OwnedSettings` draws down the side of a pane's settings hangs on
+/// `ColorPartLayout.tickCenter`, so a chevron drawn anywhere else leaves the
+/// rule pointing at nothing. An effect's twist and the Corner Radius row's
+/// twist are the same glyph at the same size in the same place because they
+/// are literally the same view.
+struct PanelFoldChevron: View {
+    /// Whether what it opens is hidden right now. Folded points right; open
+    /// points down, by a quarter turn rather than a swap, so the animation is
+    /// the one the layers list already does.
+    let isFolded: Bool
+
+    var body: some View {
+        // ALWAYS this wide. The empty rectangle is what holds the column open,
+        // the same way `PanelRowHead` holds it open for a row with no tick, so
+        // every name in the panel starts on one line.
+        Color.clear
+            .frame(width: ColorPartLayout.switchWidth,
+                   height: ColorPartLayout.rowHeight)
+            .overlay(alignment: .leading) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: PanelSectionLook.EffectRow.chevronSize,
+                                  weight: PanelSectionLook.EffectRow.chevronWeight))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(isFolded ? 0 : 90))
+                    .frame(width: ColorPartLayout.tickWidth)
+            }
+    }
+}

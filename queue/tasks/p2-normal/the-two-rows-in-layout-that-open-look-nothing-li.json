@@ -1,0 +1,28 @@
+{
+  "id": "the-two-rows-in-layout-that-open-look-nothing-li",
+  "title": "The two rows in Layout that open look nothing like the ones in Appearance",
+  "goal": "In the Layout section, Padding and the size Limits open into more rows the way Corner Radius and an effect do, but they are drawn the old way: a small chevron sitting after the word instead of in front of it, and the rows they open are simply nudged in rather than held behind the rule that says which row owns them. Someone reading the panel top to bottom meets two different pictures for the same idea.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2190,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T02:04:55.976Z",
+  "updated": "2026-09-09T02:04:55.979Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while doing corner-radius-folds-like-an-effect-with-its-chev, which converted the Corner Radius row and left these two behind on purpose. Sources/Photonz/ArrangementInspector.swift line 471 (padding) and line 735 (the shared row helper's chevron, used for Limits) both draw Image(systemName: open ? chevron.down : chevron.right) at caption2 semibold in a 12x12 frame, placed after the Text, and the rows they open are indented with number(..., indent: 20). The pieces to adopt are PanelFoldChevron (Sources/Photonz/PanelSectionLook.swift) and OwnedSettings (Sources/Photonz/PartsInspector.swift line 299), which is exactly what CornerRadiusRow now uses. The reason it was NOT done in the same task: ArrangementInspector draws its labels at .callout while Appearance is on .caption, so the effect heading font (footnote semibold) cannot be copied across without deciding what the Layout section's heading weight should be, and that is a look decision rather than a mechanical swap. Walks to rerun: anything pressing Each side or Limits.",
+  "acceptance": [
+    "Padding's chevron and the size Limits chevron are the leftmost thing on their row, the same glyph and size as an effect's",
+    "The four padding sides and the limit rows sit behind the owning rule rather than a plain indent, and the rule lines up under the chevron",
+    "The Layout section keeps its own type scale: nothing else in that section changes size or moves",
+    "Every walk that presses Each side or Limits still passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T02:04:55.978Z",
+      "note": "created (manual)"
+    }
+  ]
+}

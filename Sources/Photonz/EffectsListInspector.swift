@@ -302,21 +302,7 @@ private struct EffectRowView: View {
             }
         } label: {
             HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
-                // ALWAYS this wide. The empty rectangle is what holds the
-                // column open, the same way `PanelRowHead` holds it open for a
-                // row with no tick, so every name in the panel starts on one
-                // line.
-                Color.clear
-                    .frame(width: ColorPartLayout.switchWidth,
-                           height: ColorPartLayout.rowHeight)
-                    .overlay(alignment: .leading) {
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: PanelSectionLook.EffectRow.chevronSize,
-                                          weight: PanelSectionLook.EffectRow.chevronWeight))
-                            .foregroundStyle(.secondary)
-                            .rotationEffect(.degrees(isFolded ? 0 : 90))
-                            .frame(width: ColorPartLayout.tickWidth)
-                    }
+                PanelFoldChevron(isFolded: isFolded)
                 Text(row.title)
                     .font(PanelSectionLook.EffectRow.titleFont)
                     // Lit when it is drawing, quiet when it is not, so a

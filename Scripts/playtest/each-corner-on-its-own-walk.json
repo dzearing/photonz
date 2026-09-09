@@ -80,7 +80,7 @@
     },
     {
       "do": "press",
-      "control": "Each corner",
+      "control": "Twist",
       "in": "Corner Radius"
     },
     {
@@ -91,6 +91,15 @@
       "do": "describe",
       "stage": "3-opened",
       "note": "the chevron opened the one number into four"
+    },
+    {
+      "do": "describe",
+      "stage": "3-opened",
+      "note": "the four corners are behind the same rule an effect's settings sit behind, so their leading edge is the panel's one subsection indent, 38, and the row itself still starts on the 14pt margin"
+    },
+    {
+      "do": "panelStart",
+      "stage": "3-opened"
     },
     {
       "do": "panel",
@@ -151,7 +160,7 @@
     },
     {
       "do": "press",
-      "control": "Each corner",
+      "control": "Twist",
       "in": "Corner Radius"
     },
     {

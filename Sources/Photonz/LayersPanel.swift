@@ -3645,10 +3645,17 @@ struct CornerRadiusRow: View {
     /// under the knob.
     private var showsMixed: Bool { draft == nil && selection.reading.isMixed }
 
-    /// Whether the four corners are showing. Closed until somebody opens them,
-    /// the way Padding's four sides are: one number is the common case, and
-    /// four always-on rows would be the panel telling you it has run out of
-    /// space for the thing you actually came here for.
+    /// Whether the four corners are showing. Closed until somebody opens them:
+    /// one number is the common case, and four always-on rows would be the
+    /// panel telling you it has run out of space for the thing you actually
+    /// came here for.
+    ///
+    /// Held by the view rather than by the editor, which is the one place this
+    /// row deliberately parts company with an effect. An effect's fold belongs
+    /// to that effect, so it is dropped when you pick something else; opening
+    /// the corners is a way of WORKING — you are setting corners today — and
+    /// closing them again on every selection change would undo that choice
+    /// each time you drew the next card.
     @State private var cornersOpen = false
 
     /// Whether the four corners can be opened at all. This row is shared with
@@ -3687,24 +3694,7 @@ struct CornerRadiusRow: View {
         let ids = selection.layerIDs
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 6) {
-                Text("Corner Radius").font(.caption).foregroundStyle(.secondary)
-                // The same twist-open Padding uses for its four sides, beside
-                // the word it opens rather than in front of it, so the row
-                // still starts where every other row starts.
-                if canOpenCorners {
-                    Button { cornersOpen.toggle() } label: {
-                        Image(systemName: cornersOpen ? "chevron.down" : "chevron.right")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 12, height: 12)
-                            .contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                    .panelHelp(cornersOpen
-                        ? "Hide the four corners and keep the rounding they were given."
-                        : "Round each of the four corners on its own.")
-                    .playtestControl("Each corner", detail: "Corner Radius")
-                }
+                heading
                 if let only = selection.soleStyleRoundedID {
                     InstanceStyleRevert(layerID: only, field: .cornerRadius)
                 }
@@ -3732,12 +3722,68 @@ struct CornerRadiusRow: View {
                 ? "These corners are set apart. Pulling this gives all four the same."
                 : "How round every corner of the picked layers is.")
             if cornersOpen, canOpenCorners {
-                ForEach(CornerRadii.Corner.allCases, id: \.self) { corner in
-                    cornerRow(corner, ids: ids)
+                // Behind the same rule an effect's settings sit behind, hung on
+                // the chevron that opened them. Before this the four corners
+                // were a plain 16pt pad, which said "these are further in" and
+                // nothing else: which row they belonged to was left for you to
+                // work out from the order.
+                OwnedSettings(owner: "Corner Radius") {
+                    ForEach(CornerRadii.Corner.allCases, id: \.self) { corner in
+                        cornerRow(corner, ids: ids)
+                    }
                 }
+                // The outer stack is tight so the slider hugs its label; an
+                // effect keeps a full gap between its heading and its rule, so
+                // this makes up the difference rather than moving everything.
+                .padding(.top, 4)
             }
         }
         .playtestField("Corner Radius")
+    }
+
+    /// The name, and the chevron that opens the four corners in front of it.
+    ///
+    /// Drawn as an effect's heading is drawn — the shared `PanelFoldChevron` in
+    /// the panel's leading column, then the name lit and semibold — because
+    /// that is what this row now is: a small pane with settings folded under
+    /// it. Chevron and name are ONE press, the way a section header and an
+    /// effect both are, since a 9pt glyph on its own is a mean target.
+    ///
+    /// Only the new panel opens at all (`canOpenCorners`), and where it cannot
+    /// the row keeps the plain label it has always had: a heading that opens
+    /// nothing would be a promise the old panel does not keep.
+    @ViewBuilder
+    private var heading: some View {
+        if canOpenCorners {
+            Button {
+                withAnimation(.spring(duration: 0.2)) { cornersOpen.toggle() }
+            } label: {
+                HStack(spacing: ColorPartLayout.spacing) {
+                    PanelFoldChevron(isFolded: !cornersOpen)
+                    Text("Corner Radius")
+                        .font(PanelSectionLook.EffectRow.titleFont)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        // Shrinks before it truncates, the same way an effect's
+                        // name does, because this is the longest name in the
+                        // panel and the dock can be dragged narrow.
+                        .minimumScaleFactor(0.85)
+                        .frame(height: ColorPartLayout.rowHeight, alignment: .leading)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .panelHelp(cornersOpen
+                ? "Hide the four corners and keep the rounding they were given."
+                : "Round each of the four corners on its own.")
+            .accessibilityLabel("Corner Radius")
+            .accessibilityValue(cornersOpen ? "corners showing" : "corners hidden")
+            // The same word an effect's twist and a layer group's twist answer
+            // to, so the one gesture has one name across the app.
+            .playtestControl("Twist", detail: cornersOpen ? "open" : "shut")
+        } else {
+            Text("Corner Radius").font(.caption).foregroundStyle(.secondary)
+        }
     }
 
     /// One corner's own number, typed rather than dragged: you come here to say
@@ -3750,7 +3796,6 @@ struct CornerRadiusRow: View {
             Text(corner.title)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .padding(.leading, 16)
             Spacer(minLength: 8)
             LayoutNumberField(
                 title: corner.title,
