@@ -1,15 +1,15 @@
 {
   "id": "the-panel-file-is-split-so-the-dock-and-its-sect",
   "title": "The panel file is split so the dock and its sections are separate work",
-  "goal": "One file holds the whole right hand panel: how it shares out its height, how it scrolls to what you picked, the layers list, the rows in that list, the measure tool settings, the measurements list, the effects rows and every unit word. It is 5,017 lines and 123 of the last week\u2019s commits touched it. Every feature in the current focus edits it, so every feature waits on it.",
+  "goal": "One file holds the whole right hand panel: how it shares out its height, how it scrolls to what you picked, the layers list, the rows in that list, the measure tool settings, the measurements list, the effects rows and every unit word. It is 5,017 lines and 123 of the last week’s commits touched it. Every feature in the current focus edits it, so every feature waits on it.",
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "repo",
   "created": "2026-09-09T09:42:41.176Z",
-  "updated": "2026-09-09T12:54:21.792956Z",
+  "updated": "2026-09-09T12:55:00.082Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Held back twice on purpose (manager passes 2026-09-04 and 2026-09-08) so capability work went first. It has now grown from about 4,000 lines to 5,017 in one day, and the height-sharing code in it is what three open decision cards are all arguing about, so the next round of panel work will be easier to reason about after this than before it.\n\nSources/Photonz/LayersPanel.swift, 5,017 lines / 256KB. Seams already marked in the file: InspectorPanel plus its height budget and its three reveal routines (lines 70-1200), the section id enum and drop delegates (1316-1690), CollapsibleSection and the resize handles (1691-2013), the layers list and its rows (2014-2843), the per-tool inspectors (2844-3065), the measurements list (3066-3264), the effects and shadow inspectors (3265 on).\n\nThe app already has a precedent for this: \"The canvas splits its drawing and its gestures into their own files\" landed 2026-09-06, and the CanvasView/CanvasDisplay/CanvasPointerDrags/CanvasMeasure split is the shape to copy. Keep Swift 6 strict concurrency clean and do not introduce a @preconcurrency anywhere.\n\nPROMOTED to p1-high by the 2026-09-09 triage pass, after being held back twice.\n\nWhy now, in numbers rather than taste. The file is 5,017 lines and grew about a thousand of them in one day. Of the 59 tasks finished in the last 24 hours, the large majority are panel work, and four separate tasks in that day were spent repairing scripted walks that the panel's own churn had broken. Three of the questions now waiting on the dashboard, on where a picked thing's settings go, on what gives way when the panel runs out of room, and on the room an open effect keeps, are all arguing about the height code inside this one file. Whichever way those answers go, the work lands here.\n\nThe one thing that must not happen: this is a move, not a rewrite. The acceptance list says so and it is the whole risk.",
@@ -76,7 +76,12 @@
     {
       "t": "2026-09-09T12:54:21.792956Z",
       "note": "Docs updated to point at the new files: tools.md (CornerRadiusRow), ui-building.md (the Shadow switch), next-measure.md (the measurements copy), UX-PATTERNS.md (the reach note and the Shadow switch). Audit at queue/audits/2026-09-09-panel-file-split.json with a real screen capture."
+    },
+    {
+      "t": "2026-09-09T12:55:00.080Z",
+      "note": "LayersPanel.swift (5,158 lines) is now twelve files, largest 1,310. Provably a move: 4,890 non-blank lines in and out, only difference is 12 declarations that lost 'private' to cross a file boundary. Verified with swift build (clean, no warnings), Scripts/test.sh (5,365 tests), and the panel (18), dock (3) and layers (6) walk groups all green. Audit at queue/audits/2026-09-09-panel-file-split.json. Two follow-ups filed. Commit f7224467, pushed."
     }
   ],
-  "started": "2026-09-09T12:28:56.411Z"
+  "started": "2026-09-09T12:28:56.411Z",
+  "completed": "2026-09-09T12:55:00.081Z"
 }
