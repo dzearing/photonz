@@ -1,0 +1,28 @@
+{
+  "id": "drag-a-shapes-corner-to-round-it",
+  "title": "Drag a shapes corner to round it",
+  "goal": "Rounding one corner of a shape means typing a number into the panel. Photoshop and every drawing tool let you grab a small handle just inside a corner and pull it, watching the curve follow your hand. Give a picked shape that handle, one per corner, so rounding is something you do on the canvas rather than something you type.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2150,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T00:06:42.470Z",
+  "updated": "2026-09-09T00:06:42.473Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the audit for each-corner-of-a-shape-can-be-rounded-on-its-own (queue/audits/2026-09-08-each-corner-rounded.json, rough item 2). The model is already there: PhotonzCore/CornerRadii.swift with per corner numbers, and PhotonzDocument.setCornerRadius(layerIDs:corner:to:) writes one corner. What is missing is the canvas handle. Handles live in Sources/Photonz/CanvasDisplay.swift beside the eight resize handles; the outline itself already curves per corner via SelectionOutlineShape.path(box:cornerRadii:). Flag: next-shape-parts.",
+  "acceptance": [
+    "A picked shape with corners shows a small handle just inside each of its four corners",
+    "Dragging one handle rounds that corner alone and the shape follows the hand live",
+    "Holding a modifier while dragging one handle rounds all four together",
+    "Letting go records one undo step, and the panel Corner Radius rows show what was dragged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T00:06:42.472Z",
+      "note": "created (manual)"
+    }
+  ]
+}

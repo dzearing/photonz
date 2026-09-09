@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:17:33.994Z",
-  "updated": "2026-09-08T23:43:56.635Z",
+  "updated": "2026-09-09T00:06:42.509Z",
   "deps": [],
   "blockedBy": [],
   "notes": "CAPABILITY GAP. Sources/PhotonzCore/CornerRadiusSelection.swift carries one radius per layer, and the panel draws it as a single slider (visible in queue/manager/shots/2026-09-08-2215-versions.png, Appearance, Corner Radius 18 pt). Nothing in PhotonzCore models a per corner radius.\n\nThis finishes a control the user already uses rather than adding a new surface, so it needs no decision card. What DOES need care is that it must not cost the common case: the single number stays the default face and opening it into four is a deliberate act, the same shape as GroupPadding in Sources/PhotonzCore/GroupLayout.swift, which is one number that opens into four sides. Copy that model, its Codable behaviour and its panel treatment rather than inventing a second idiom.\n\nEverything that reads the radius has to follow: the fill, the ring (Sources/PhotonzCore/RingShape.swift), the selection outline (SelectionOutlineShape.swift, which learned to follow a rounded shape on 2026-09-08), and clipping. Sources/PhotonzCore/CornerRadiusSelection.swift already knows which layers have corners at all, so the row keeps hiding itself where there are none.\n\nFlag: next-shape-parts (FeatureCatalog.shapePartsFlag), on by default in Next.",
@@ -35,16 +35,21 @@
     },
     {
       "t": "2026-09-09T00:55:00.000Z",
-      "note": "Built. Model: CornerRadii in PhotonzCore, the same bargain GroupPadding makes with a group's four sides \u2014 one number is the way in, four underneath, and it SAVES as a single number while they agree so an older document is byte for byte what it was. AnnotationContent and LayerStyle both store it under the key one radius always wrote, so the file format did not fork. Two corners on one edge that would cross are scaled down together by the CSS rule, which collapses to exactly today's min(r, min(w,h)/2) when all four agree. Renderer: one path builder (CornerRadii.path) now serves the shape's fill, its stroke, the mask cut out of a picture or a group, every ring in the Effects list, and the outline round a picked layer. The mask generator keeps the one-filter Core Image fast path whenever the four agree, so a 12 megapixel composite does not start baking bitmaps because per corner rounding exists; only a shape whose corners actually differ pays for a drawn mask."
+      "note": "Built. Model: CornerRadii in PhotonzCore, the same bargain GroupPadding makes with a group's four sides — one number is the way in, four underneath, and it SAVES as a single number while they agree so an older document is byte for byte what it was. AnnotationContent and LayerStyle both store it under the key one radius always wrote, so the file format did not fork. Two corners on one edge that would cross are scaled down together by the CSS rule, which collapses to exactly today's min(r, min(w,h)/2) when all four agree. Renderer: one path builder (CornerRadii.path) now serves the shape's fill, its stroke, the mask cut out of a picture or a group, every ring in the Effects list, and the outline round a picked layer. The mask generator keeps the one-filter Core Image fast path whenever the four agree, so a 12 megapixel composite does not start baking bitmaps because per corner rounding exists; only a shape whose corners actually differ pays for a drawn mask."
     },
     {
       "t": "2026-09-09T00:56:00.000Z",
-      "note": "Post-build review on the probe (Screen Recording granted, real window captures). Fixed one honesty bug found by looking at it: with the four rows OPEN and uneven, the readout still said '34 pt', which claims all four are 34 while the rows underneath say otherwise. It says Mixed there now, and holds the four numbers only when they are SHUT and there is nowhere else to read them \u2014 which is exactly what Padding's single field does. Verified live: the shape, its border, the selection outline round it and the shape drawn as a live drag preview all follow the four; the next rectangle drawn arrives wearing them. Left rough and recorded in the audit: pulling the one slider while the corners disagree still flattens them, and there is no way to drag a corner on the canvas."
+      "note": "Post-build review on the probe (Screen Recording granted, real window captures). Fixed one honesty bug found by looking at it: with the four rows OPEN and uneven, the readout still said '34 pt', which claims all four are 34 while the rows underneath say otherwise. It says Mixed there now, and holds the four numbers only when they are SHUT and there is nowhere else to read them — which is exactly what Padding's single field does. Verified live: the shape, its border, the selection outline round it and the shape drawn as a live drag preview all follow the four; the next rectangle drawn arrives wearing them. Left rough and recorded in the audit: pulling the one slider while the corners disagree still flattens them, and there is no way to drag a corner on the canvas."
     },
     {
       "t": "2026-09-09T00:57:00.000Z",
       "note": "Release scope: CornerRadiusRow is shared with the panel the release before the Appearance/Effects split uses, so the chevron and the four rows are gated on Experiments.shared.shapePartsEnabled (next-shape-parts, Next only, on by default). The honest READOUT is not gated: a card drawn in Next and opened in Current shows 34/34/0/0 rather than a single number that is not true."
+    },
+    {
+      "t": "2026-09-09T00:06:42.507Z",
+      "note": "Corner Radius opens into four numbers via a chevron beside its label, the way Padding opens into four sides. New CornerRadii in PhotonzCore (Codable as a single number while the four agree, so older documents open and re-save unchanged); one path builder now drives the shape fill, its stroke, the mask on a picture or group, every Effects border, the selection outline and the live drawing preview. Compositor keeps its one-filter mask for the uniform case, so the common path costs what it always cost. Panel control gated on next-shape-parts (Next only); the readout reads four corners honestly in both releases. 5115 tests green including 20 new CornerRadii tests, 16 per-corner model tests and 6 render tests that composite a real document and read the pixel in from each corner. Tried live on the probe with real window captures; audit at queue/audits/2026-09-08-each-corner-rounded.json."
     }
   ],
-  "started": "2026-09-08T23:43:56.633Z"
+  "started": "2026-09-08T23:43:56.633Z",
+  "completed": "2026-09-09T00:06:42.508Z"
 }
