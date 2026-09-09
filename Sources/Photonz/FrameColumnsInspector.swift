@@ -9,8 +9,11 @@ import SwiftUI
 /// app now has two things a person could call a grid and the surest way to tell
 /// them apart is that each has its own place with its own words:
 ///
-/// - **Columns** is here, on a screen. A count, a gutter and a margin, saved
-///   with the document, and the only one of the two that pulls at a drag.
+/// - **Columns** is here, on a screen. A count and a gutter, saved with the
+///   document, drawn inside the room that screen keeps at its edges, and the
+///   only one of the two that pulls at a drag. A screen that keeps no room has
+///   a margin of its own here; one that has padding has no second number,
+///   because the padding is the inset.
 /// - **Grid** is in the Canvas section. A spacing across the whole canvas, kept
 ///   between launches rather than in the document, and it never pulls.
 ///
@@ -47,8 +50,21 @@ struct FrameColumnsInspector: View {
                 numberRow(FrameColumnsCopy.gutter, suffix: DocumentUnit.word, value: Double(columns.gutter)) {
                     editorState.setFrameColumnGutter(CGFloat($0))
                 }
-                numberRow(FrameColumnsCopy.margin, suffix: DocumentUnit.word, value: Double(columns.margin)) {
-                    editorState.setFrameColumnMargin(CGFloat($0))
+                if editorState.columnsTargetPadding == .none {
+                    // Only a screen that keeps no room at its edges has a
+                    // margin of its own. The moment it has padding, that is
+                    // the one inset it has, and a second number here would be
+                    // a number that does nothing.
+                    numberRow(FrameColumnsCopy.margin, suffix: DocumentUnit.word,
+                              value: Double(columns.margin)) {
+                        editorState.setFrameColumnMargin(CGFloat($0))
+                    }
+                    .panelHelp(FrameColumnsCopy.marginCaption)
+                } else {
+                    Text(FrameColumnsCopy.followsPadding(editorState.columnsTargetPadding))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 // What the three numbers actually come out as. It is the thing
                 // a person is really working out in their head while they type
@@ -127,6 +143,21 @@ enum FrameColumnsCopy {
     }
 
     static let noRoom = "These numbers leave no room for a column on this screen, so nothing is drawn."
+
+    /// Why there is a margin here at all, on a screen that keeps no room at
+    /// its edges. Give the screen padding and this row goes away, because the
+    /// padding is then the only inset it has.
+    static let marginCaption = "This screen keeps no room at its edges, so the columns use this margin. "
+        + "Give it padding in Layout and they follow the padding instead."
+
+    /// What stands in for the Margin row once the screen has padding: one
+    /// inset, named, and where to change it.
+    static func followsPadding(_ padding: GroupPadding) -> String {
+        let room = padding.uniform.map { "\(DocumentUnit.text($0)) on every side" }
+            ?? padding.inWords
+        return "The columns start where this screen's padding does, \(room). "
+            + "Change Padding in Layout to move them."
+    }
 
     /// Whose columns the section is showing, for its header, when the screen
     /// is not the thing selected: "on Home". With the screen itself picked the

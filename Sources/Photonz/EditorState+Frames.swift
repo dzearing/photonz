@@ -331,13 +331,28 @@ extension EditorState {
         setFrameColumns(columns)
     }
 
+    /// The room the screen the section is showing keeps inside its own edges.
+    /// The columns are drawn inside it, so the section reads it to say where
+    /// they start rather than offering a second number for the same edge.
+    var columnsTargetPadding: GroupPadding {
+        columnsTargetFrame?.columnPadding ?? .none
+    }
+
+    /// The inset the columns on that screen are actually drawn inside: the
+    /// screen's padding, or their own margin on a screen that keeps no room.
+    var columnsTargetInset: GroupPadding? {
+        columnsTargetSettings?.inset(inside: columnsTargetPadding)
+    }
+
     /// How wide one column comes out on the screen the section is showing, or
     /// nil when the numbers leave no room for one. The panel prints it, because
     /// "what is a column actually going to be" is the question a person is
-    /// really asking when they type a gutter.
+    /// really asking when they type a gutter. Measured inside the same room the
+    /// canvas draws inside, so the panel can never print a width the screen
+    /// does not have.
     var columnsTargetColumnWidth: CGFloat? {
         guard let id = columnsTargetFrameID, let columns = columnsTargetSettings,
               let width = document?.canvasBounds(of: id)?.width else { return nil }
-        return columns.bands(inWidth: width).first?.width
+        return columns.bands(inWidth: width, padding: columnsTargetPadding).first?.width
     }
 }

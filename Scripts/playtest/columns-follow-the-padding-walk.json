@@ -1,0 +1,58 @@
+{
+  "out": "/tmp/photonz-playtest/columns-follow-the-padding-walk",
+  "seed": "A screen with 12 points of room at its edges, showing its columns. The columns must start where the padding does, on all four sides, and the box the screen lays out at that padding must begin on the first column exactly. Before this they were measured from a second number, the Columns section's own Margin, which nobody had connected to the padding: 32 out of the box, and no top or bottom inset at all.",
+  "setup": {
+    "forget": ["grid", "shapes", "tools", "panel"]
+  },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "frame" },
+    { "do": "drag", "from": [200, 180], "to": [1000, 780] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [320, 320], "to": [560, 440] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "click", "at": [850, 700] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "12" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-padded", "note": "the screen keeps 12 at its edges and has laid its box out there; no columns yet" },
+
+    { "do": "reveal", "control": "Show columns" },
+    { "do": "press", "control": "Show columns" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-columns-on", "note": "THE TEST: the columns report an inset of 12/12/12/12, not the 32 the Margin used to give, and the box the screen laid out at 12 starts on the first column" },
+    { "do": "panel", "stage": "columns-on" },
+    { "do": "snapshot", "name": "padding-1-columns-at-12" },
+
+    { "do": "focus", "field": "Padding" },
+    { "do": "type", "text": "40" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-padding-moved", "note": "the room changed to 40 and the columns moved with it, with no second number to update" },
+    { "do": "snapshot", "name": "padding-2-columns-at-40" },
+
+    { "do": "reveal", "control": "Each side" },
+    { "do": "press", "control": "Each side" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "focus", "field": "Left" },
+    { "do": "type", "text": "12" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-uneven-room", "note": "room that differs per side: 12 on the left, 40 everywhere else, and the columns honour each side" },
+    { "do": "panel", "stage": "uneven-room" },
+    { "do": "snapshot", "name": "padding-3-uneven" }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 7,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T16:20:48.624Z",
-  "updated": "2026-09-09T16:20:48.664Z",
+  "updated": "2026-09-09T16:57:13.100Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-09: \"i have padding of 12 on all sides in a frame. i say show columns, but the columns do not have 12 padding on all sides. additionally i put some rects in it, they do not align with the red column shown. i think the column is off.\"\n\nCause, confirmed by reading (not yet reproduced in the app - reproduce first and record the numbers). The column arithmetic is not wrong; it is measuring from a DIFFERENT number than the frame's padding. Two independent values describe the same edge:\n1. GroupLayout.padding (Sources/PhotonzCore/GroupLayout.swift:101), a GroupPadding with four sides (:413), which is what insets the frame's contents.\n2. FrameColumns.margin (Sources/PhotonzCore/FrameColumns.swift:62), a single number defaulting to 32 (:44), which is what the columns are measured from: bands(inWidth:) at :106 computes content = width - margin * 2.\nNothing links them. So padding 12 with the default margin puts the columns at 32 and the laid-out rects at 12, which is exactly the misalignment reported.\n\nThree separate consequences, all from the same root, and the fix must cover all three:\n- The columns start at the wrong x.\n- There is no vertical inset at ALL. bands(in screen:) at FrameColumns.swift:126 builds each band as y: screen.minY, height: screen.height, so the bands run the full height of the frame whatever the padding is. That is why the user says the columns do not have 12 on all sides: they cannot have any top or bottom inset today.\n- Margin is ONE number applied to both sides equally, while GroupPadding has four. So even typing 12 into Margin cannot match padding that differs per side.\n\nRecommended shape, but the runner owns the call and must justify it in the audit: make the columns derive their inset from the frame's padding and retire the separate Margin field, because two numbers for one edge is the bug rather than a symptom of it. The migration question is the real work: documents already carry a margin, and FrameColumns is Codable and saved with the document. Decide and record whether an existing margin is dropped, kept as a fallback for a frame with no padding, or written into the frame's padding on load; whichever is chosen, an existing document must not silently move its columns under somebody without that being a deliberate, stated migration.\n\nThe drawing and the snapping read the same arithmetic, so fixing it once fixes both: the chrome is CanvasColumnChrome.swift:51 calling columns.bands(in: box), and the drag pull is PhotonzDocument.columnBands(excluding:) at FrameColumns.swift:178 calling the same thing. Do not fix one of them.\n\nAlso check EditorState+Frames.swift:341, which reports the column width shown in the Columns section footnote via bands(inWidth:); it has to keep agreeing with what is drawn after the change, or the panel will print a width the canvas does not have.\n\nBuilt by two tasks that are already done ('a-screen-can-show-the-column-grid-you-are-design' and 'the-columns-section-and-the-show-columns-menu-ro'), neither of which connected columns to padding.\n\nCheck Sources/Photonz/Releases/ before assuming one change reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -33,6 +33,31 @@
     {
       "t": "2026-09-09T16:20:48.663Z",
       "note": "seq 270 -> 7"
+    },
+    {
+      "t": "2026-09-09T16:30:37.778Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T16:36:34.413Z",
+      "note": "Reproduced in PhotonzCore with numbers. Frame 800x600 at (200,180), layout row with padding 12 all round, columns switched on (12 x gutter 24, margin 32). First band (232,180,39,600): left inset 32, right inset 32, top inset 0, bottom inset 0. Expected 12 on all four sides. Padding and margin are two unconnected numbers, and there is no vertical inset at all."
+    },
+    {
+      "t": "2026-09-09T16:57:13.100Z",
+      "note": "Adversarial review before building. The Margin field came from web design-grid habit, but a frame in this app already has an inset (its padding), so Margin is a second name for the same edge and that duplication IS the bug. Shortest version that fixes the report: the columns take their inset from the padding, per side, top and bottom included, and the Margin row disappears from the panel the moment a screen has padding. Rejected: reading the WORKING padding (the room a screen's contents happen to have when nobody typed one), because guides would then jump every time a rectangle is dragged. Rejected: retiring margin outright, because a saved document would silently move its columns; kept as the fallback for a screen with no room at its edges, which also leaves edge-to-edge columns reachable by typing 0."
+    },
+    {
+      "t": "2026-09-09T16:57:13.100Z",
+      "note": "Decision on the existing Margin, for the audit: kept, not retired and not migrated. Documents are untouched. A screen with padding never uses it and never shows the field; a screen with no padding uses it exactly as before. That is what makes 'existing documents do not shift under people' true literally rather than approximately."
+    },
+    {
+      "t": "2026-09-09T16:57:13.100Z",
+      "note": "Verified on the real app, not by eye. New walk Scripts/playtest/columns-follow-the-padding-walk.json: the describe line reports inset 12/12/12/12, then 40/40/40/40 after typing 40 into Padding, then 40/40/40/12 after setting Left to 12. Sampled the probe screen captures: with padding 12 the first band's left edge and the laid-out rectangle's left edge are both x=90 (delta 0) and their tops are 394 and 393. Going to padding 40 moves the first band left, the rectangle left and the band top by exactly +42px each (28pt at 75% zoom on a 2x capture) and pulls the last band's right edge in by exactly 42px. Uneven room puts the left back at 90 while the right and top stay where 40 put them."
+    },
+    {
+      "t": "2026-09-09T16:57:13.100Z",
+      "note": "Also fixed a walk that was already failing on main before this change (confirmed by stashing my work and rerunning it): columns-follow-the-screen-walk pressed Show columns without scrolling to it, and the dock has grown a section since it was written. It uses the reveal step now. Column walks 4/4, frame walks 5/5, padding walks 4/4, Scripts/test.sh 5497 tests green."
     }
-  ]
+  ],
+  "started": "2026-09-09T16:30:37.777Z"
 }

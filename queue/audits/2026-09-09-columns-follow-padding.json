@@ -1,0 +1,29 @@
+{
+  "feature": "A screen's columns start where its padding does",
+  "epic": "ui-building",
+  "summary": "Give a screen room at its edges and its columns are now drawn inside that room, on all four sides, so a box the screen lays out at its padding begins exactly on the first column. The Columns section no longer offers a Margin of its own on a screen that has padding, because the padding is the one inset it has.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on: frames and arranging both come on already.",
+  "try": [
+    { "do": "Draw a screen with the frame tool, about 800 by 600." },
+    { "do": "Draw a rectangle inside it, anywhere." },
+    { "do": "Click the empty part of the screen to pick the screen itself, then press Shift Command S so it arranges its contents." },
+    { "do": "In Layout, type 12 into Padding and press Return. The rectangle moves in to 12." },
+    { "do": "In Columns, tick Show columns.", "shot": "2026-09-09-columns-padding-12.png" },
+    { "do": "Look along the top left corner: the first column and the rectangle start on the same line, across and down." },
+    { "do": "Type 40 into Padding. The columns move with it, and there is no second number to update." },
+    { "do": "Open Each side under Padding and set Left back to 12: the columns follow each side on its own.", "shot": "2026-09-09-columns-padding-uneven.png" }
+  ],
+  "evaluate": [
+    "With padding of 12, does the first column look like it starts exactly where the rectangle does, or can you still see daylight between them?",
+    "Now that the columns are inset from the top and bottom too, do they read as the screen's layout, or did the full height version tell you more?",
+    "Losing the Margin field on a padded screen: does the sentence that replaces it tell you enough about where the columns come from, or do you want to type the number here as well as in Layout?",
+    "On a screen with no padding the Margin field is still there. Is that a helpful leftover or a second number you would rather not see at all?",
+    "Does the red wash reading over the rectangle rather than behind it make the alignment harder to judge?"
+  ],
+  "rough": [
+    "Margin is kept, not retired. On a screen that keeps no room at its edges the columns still use it, and the field is still in the Columns section; the moment the screen has padding the field goes away and a sentence takes its place. That choice is what keeps every document anybody has already saved drawing its columns exactly where it drew them yesterday: nothing is migrated, nothing moves, and a screen that wants columns hard against its edges can still have them by typing 0 into Margin.",
+    "The Layout section shows a Padding number for a screen that was never given a layout, read off where its contents already sit. The columns do NOT follow that one, because guides that jump when you drag a rectangle would be worse than guides that wait. So a screen you have never arranged can show Padding 40 in Layout while its columns sit on their own margin. Typing anything into Padding settles it. Worth watching for a report.",
+    "The bands are drawn over the screen and its contents, so the rectangle under the first column reads a shade pinker than it is. That is how the overlay has always drawn and it is deliberate, but it is most noticeable exactly where you are now looking, at a box that lines up with a column.",
+    "Both pictures here are real screen captures from the probe app, not renders."
+  ]
+}

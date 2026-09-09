@@ -62,7 +62,7 @@ struct FrameColumnsTests {
     func evenBands() {
         let columns = FrameColumns(count: 4, gutter: 20, margin: 20)
         // 400 wide, 40 of margin, 60 of gutter, 300 over four columns = 75.
-        let bands = columns.bands(inWidth: 400)
+        let bands = columns.bands(inWidth: 400, padding: .none)
         #expect(bands.count == 4)
         #expect(bands[0] == FrameColumns.Band(start: 20, end: 95))
         #expect(bands[1] == FrameColumns.Band(start: 115, end: 190))
@@ -76,7 +76,7 @@ struct FrameColumnsTests {
         // margin. Each column is 85.666… wide, which is not a number anyone
         // wants to type into a width field.
         let columns = FrameColumns(count: 12, gutter: 24, margin: 32)
-        let bands = columns.bands(inWidth: 1440)
+        let bands = columns.bands(inWidth: 1440, padding: .none)
         #expect(bands.count == 12)
         for band in bands {
             #expect(band.start == band.start.rounded())
@@ -94,7 +94,7 @@ struct FrameColumnsTests {
     @Test("Every band is separated by the gutter and none of them overlap")
     func bandsAreOrdered() {
         let columns = FrameColumns(count: 7, gutter: 13, margin: 11)
-        let bands = columns.bands(inWidth: 913)
+        let bands = columns.bands(inWidth: 913, padding: .none)
         for (left, right) in zip(bands, bands.dropFirst()) {
             #expect(left.end < right.start)
             #expect(right.start - left.end == 13)
@@ -103,25 +103,25 @@ struct FrameColumnsTests {
 
     @Test("One column with no gutter is the content area itself")
     func singleColumn() {
-        let bands = FrameColumns(count: 1, gutter: 0, margin: 40).bands(inWidth: 500)
+        let bands = FrameColumns(count: 1, gutter: 0, margin: 40).bands(inWidth: 500, padding: .none)
         #expect(bands == [FrameColumns.Band(start: 40, end: 460)])
     }
 
     @Test("Numbers that leave no room draw nothing rather than drawing backwards")
     func impossibleLayoutsDrawNothing() {
         // Margins wider than the screen.
-        #expect(FrameColumns(count: 4, gutter: 8, margin: 300).bands(inWidth: 400).isEmpty)
+        #expect(FrameColumns(count: 4, gutter: 8, margin: 300).bands(inWidth: 400, padding: .none).isEmpty)
         // Gutters wider than what is left.
-        #expect(FrameColumns(count: 12, gutter: 200, margin: 0).bands(inWidth: 400).isEmpty)
+        #expect(FrameColumns(count: 12, gutter: 200, margin: 0).bands(inWidth: 400, padding: .none).isEmpty)
         // A screen with no width at all.
-        #expect(FrameColumns(count: 4).bands(inWidth: 0).isEmpty)
+        #expect(FrameColumns(count: 4).bands(inWidth: 0, padding: .none).isEmpty)
     }
 
     @Test("The bands sit inside the screen, in canvas coordinates")
     func bandsInCanvasSpace() {
         let columns = FrameColumns(count: 2, gutter: 20, margin: 20)
         let screen = CGRect(x: 100, y: 250, width: 240, height: 600)
-        let rects = columns.bands(in: screen)
+        let rects = columns.bands(in: screen, padding: .none)
         #expect(rects.count == 2)
         #expect(rects[0] == CGRect(x: 120, y: 250, width: 90, height: 600))
         #expect(rects[1] == CGRect(x: 230, y: 250, width: 90, height: 600))
@@ -131,10 +131,10 @@ struct FrameColumnsTests {
     func hiddenColumnsHaveNoBands() {
         var columns = FrameColumns(count: 12)
         columns.isVisible = false
-        #expect(columns.bands(in: CGRect(x: 0, y: 0, width: 1440, height: 1024)).isEmpty)
+        #expect(columns.bands(in: CGRect(x: 0, y: 0, width: 1440, height: 1024), padding: .none).isEmpty)
         // ...but the numbers are still there, waiting to be switched back on.
         #expect(columns.count == 12)
-        #expect(!columns.bands(inWidth: 1440).isEmpty)
+        #expect(!columns.bands(inWidth: 1440, padding: .none).isEmpty)
     }
 
     // MARK: A screen carrying them
@@ -232,6 +232,144 @@ struct FrameColumnsTests {
         var doc = PhotonzDocument(canvasSize: CGSize(width: 1200, height: 800))
         doc.addLayer(leaf("Shot", CGRect(x: 0, y: 0, width: 1200, height: 800)))
         #expect(doc.columnBands(excluding: []).isEmpty)
+    }
+
+    // MARK: The frame's own padding is the inset
+
+    /// A frame with a row layout, padding on all four sides, and columns
+    /// switched on: the everyday case the report came from.
+    private func paddedScreen(_ padding: GroupPadding,
+                              size: CGSize = CGSize(width: 800, height: 600),
+                              origin: CGPoint = CGPoint(x: 200, y: 180),
+                              columns: FrameColumns = FrameColumns(count: 4, gutter: 20, margin: 32))
+        -> (doc: PhotonzDocument, id: UUID) {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 2000, height: 1400))
+        let screen = doc.addFrame(name: "Home", origin: origin, size: size)
+        doc.updateGroupLayout(id: screen.id) { layout in
+            layout.kind = .stack
+            layout.direction = .row
+            layout.gap = 12
+            layout.padding = padding
+        }
+        doc.setFrameColumns(id: screen.id, columns)
+        return (doc, screen.id)
+    }
+
+    @Test("A frame's padding is where its columns start")
+    func paddingIsTheInset() {
+        // 800 wide, 12 of padding either side, 60 of gutter, 692 over four.
+        let bands = FrameColumns(count: 4, gutter: 20, margin: 32)
+            .bands(inWidth: 800, padding: GroupPadding(12))
+        #expect(bands.count == 4)
+        #expect(bands.first?.start == 12)
+        #expect(bands.last?.end == 788)
+    }
+
+    @Test("Padding that differs per side is honoured per side")
+    func asymmetricPaddingIsHonoured() {
+        let bands = FrameColumns(count: 4, gutter: 20, margin: 32)
+            .bands(inWidth: 800, padding: GroupPadding(top: 8, right: 24, bottom: 16, left: 12))
+        #expect(bands.first?.start == 12)
+        #expect(bands.last?.end == 776)
+    }
+
+    @Test("The columns are inset from the top and the bottom too")
+    func paddingInsetsTheBandsVertically() {
+        let screen = CGRect(x: 100, y: 250, width: 800, height: 600)
+        let rects = FrameColumns(count: 4, gutter: 20)
+            .bands(in: screen, padding: GroupPadding(top: 8, right: 12, bottom: 16, left: 12))
+        #expect(rects.first?.minY == 258)
+        #expect(rects.first?.maxY == 834)
+        #expect(rects.first?.minX == 112)
+        #expect(rects.last?.maxX == 888)
+    }
+
+    @Test("A frame with no padding is drawn exactly as it always was")
+    func noPaddingKeepsTheMargin() {
+        let columns = FrameColumns(count: 4, gutter: 20, margin: 20)
+        #expect(columns.bands(inWidth: 400, padding: .none)
+            == [FrameColumns.Band(start: 20, end: 95), FrameColumns.Band(start: 115, end: 190),
+                FrameColumns.Band(start: 210, end: 285), FrameColumns.Band(start: 305, end: 380)])
+        // Full height, the way a screen with no room at its edges has always
+        // drawn them.
+        let rects = columns.bands(in: CGRect(x: 0, y: 0, width: 400, height: 300), padding: .none)
+        #expect(rects.first?.minY == 0)
+        #expect(rects.first?.height == 300)
+    }
+
+    @Test("Padding that leaves no room draws nothing rather than drawing backwards")
+    func paddingWithNoRoomDrawsNothing() {
+        // Nothing across.
+        #expect(FrameColumns(count: 4, gutter: 8)
+            .bands(inWidth: 200, padding: GroupPadding(120)).isEmpty)
+        // Nothing down: padding taller than the screen.
+        #expect(FrameColumns(count: 4, gutter: 8)
+            .bands(in: CGRect(x: 0, y: 0, width: 800, height: 40),
+                   padding: GroupPadding(24)).isEmpty)
+    }
+
+    @Test("Room typed as a negative number is no room at all")
+    func negativePaddingIsNoRoom() {
+        let columns = FrameColumns(count: 2, gutter: 20, margin: 32)
+        #expect(columns.bands(inWidth: 400, padding: GroupPadding(-40))
+            == columns.bands(inWidth: 400, padding: .none))
+    }
+
+    // MARK: A screen carrying padding
+
+    @Test("A screen's columns are drawn inside the padding it was given")
+    func aScreenDrawsInsideItsPadding() throws {
+        let (doc, id) = paddedScreen(GroupPadding(12))
+        let box = try #require(doc.canvasBounds(of: id))
+        let bands = try #require(doc.layer(id: id)).columnBands(inCanvas: box)
+        #expect(bands.first?.minX == box.minX + 12)
+        #expect(bands.last?.maxX == box.maxX - 12)
+        #expect(bands.first?.minY == box.minY + 12)
+        #expect(bands.first?.maxY == box.maxY - 12)
+    }
+
+    @Test("Changing the padding moves the columns, with no second number to update")
+    func paddingMovesTheColumns() throws {
+        var (doc, id) = paddedScreen(GroupPadding(12))
+        doc.updateGroupLayout(id: id) { $0.padding = GroupPadding(24) }
+        let box = try #require(doc.canvasBounds(of: id))
+        let bands = try #require(doc.layer(id: id)).columnBands(inCanvas: box)
+        #expect(bands.first?.minX == box.minX + 24)
+        #expect(bands.last?.maxX == box.maxX - 24)
+    }
+
+    @Test("A box the screen lays out at its padding starts exactly where the first column does")
+    func aLaidOutBoxLandsOnTheFirstColumn() throws {
+        var (doc, id) = paddedScreen(GroupPadding(12))
+        _ = doc.addLayer(leaf("Box", CGRect(x: 0, y: 0, width: 120, height: 80)), toGroup: id)
+        doc.reflowLayouts()
+
+        let screen = try #require(doc.layer(id: id))
+        let box = try #require(doc.canvasBounds(of: id))
+        let laidOut = try #require(doc.canvasBounds(of: screen.children[0].id))
+        let bands = screen.columnBands(inCanvas: box)
+        #expect(laidOut.minX == bands.first?.minX)
+        #expect(laidOut.minY == bands.first?.minY)
+    }
+
+    @Test("What a drag pulls to is what is drawn, padding and all")
+    func theSnapAgreesWithThePicture() throws {
+        let (doc, id) = paddedScreen(GroupPadding(top: 8, right: 24, bottom: 16, left: 12))
+        let box = try #require(doc.canvasBounds(of: id))
+        let drawn = try #require(doc.layer(id: id)).columnBands(inCanvas: box)
+        #expect(doc.columnBands(excluding: []) == drawn)
+        #expect(drawn.first?.minX == box.minX + 12)
+    }
+
+    @Test("A screen given no layout at all draws the columns it always did")
+    func aScreenWithNoLayoutIsUntouched() throws {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 2000, height: 1400))
+        let screen = doc.addFrame(origin: .zero, size: CGSize(width: 400, height: 300))
+        doc.setFrameColumns(id: screen.id, FrameColumns(count: 4, gutter: 20, margin: 20))
+        let box = try #require(doc.canvasBounds(of: screen.id))
+        let bands = try #require(doc.layer(id: screen.id)).columnBands(inCanvas: box)
+        #expect(bands.first?.minX == 20)
+        #expect(bands.first?.height == 300)
     }
 
     // MARK: Saving

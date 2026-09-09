@@ -43,12 +43,14 @@ extension CanvasNSView {
         // wrong on one of them.
         var drawn: [CAShapeLayer] = []
         for frame in document.frames {
-            guard frame.isVisible, let columns = frame.columns, columns.isVisible,
+            guard frame.isVisible, frame.columns?.isVisible == true,
                   let box = document.canvasBounds(of: frame.id) else { continue }
             // A screen scrolled out of the window draws nothing at all.
             guard viewRect(forDocRect: box, in: viewport).intersects(bounds) else { continue }
             let path = CGMutablePath()
-            for band in columns.bands(in: box) {
+            // The screen's own bands, room at its edges and all, from the one
+            // place a drag reads them too.
+            for band in frame.columnBands(inCanvas: box) {
                 let rect = viewRect(forDocRect: band, in: viewport).intersection(bounds)
                 guard !rect.isNull, rect.width >= 0.5, rect.height >= 0.5 else { continue }
                 // Whole view points, so a band's edge sits on a device pixel
@@ -139,7 +141,12 @@ extension CanvasNSView {
         guard !showing.isEmpty else { return "no screen is showing columns" }
         let names = showing.map { frame -> String in
             let columns = frame.columns ?? FrameColumns()
-            return "\(frame.name) \(columns.count)×\(Int(columns.gutter))/\(Int(columns.margin))"
+            // The inset the bands are actually drawn inside, which is the
+            // screen's room at its edges wherever it has any: a walk asserting
+            // on this is asserting on what is on screen.
+            let inset = columns.inset(inside: frame.columnPadding)
+            return "\(frame.name) \(columns.count)×\(Int(columns.gutter))"
+                + " inset \(inset.shorthand)"
         }.joined(separator: " · ")
         let drawn = columnChromeLayer.isHidden ? "nothing drawn" : "drawn"
         let pull = document.columnBands(excluding: []).count

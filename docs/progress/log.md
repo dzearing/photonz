@@ -14020,3 +14020,50 @@ Next: two follow-ups. An oval's OUTSIDE border still keeps a faint trace of the
 background round its diagonals, because its ring is a stroke whose inner
 boundary genuinely is not an oval. And the new correction runs over the whole
 layer when it only matters inside the band.
+
+## 2026-09-09 — A screen's columns start where its padding does
+
+Reported by the user: "i have padding of 12 on all sides in a frame. i say show
+columns, but the columns do not have 12 padding on all sides. additionally i put
+some rects in it, they do not align with the red column shown."
+
+Reproduced first, in PhotonzCore, before touching anything. A screen 800x600
+arranging its contents with 12 of padding, columns switched on: the first band
+came out 32 in from the left and 32 in from the right, and 0 from the top and
+bottom, because the bands were measured from `FrameColumns.margin` (32 out of
+the box) and `bands(in:)` built every band as the full height of the screen.
+Two numbers described one edge and nothing connected them.
+
+A screen now has ONE inset and it is its padding. `FrameColumns.inset(inside:)`
+answers with the screen's own room, per side, and falls back to `margin` only
+for a screen that keeps no room at all — which is what such a screen has always
+drawn, so no saved document moved and nothing was migrated. `bands(inWidth:)`
+and `bands(in:)` both take that padding now, so the compiler found every call
+site; the drawing and the drag pull go through one new `Layer.columnBands(inCanvas:)`
+and cannot disagree.
+
+The Columns section drops its Margin row the moment the screen has padding and
+says where the inset comes from instead; a screen with no padding keeps the
+field, with a tooltip saying why.
+
+- `Sources/PhotonzCore/FrameColumns.swift` — `inset(inside:)`, both `bands`,
+  `Layer.columnPadding`, `Layer.columnBands(inCanvas:)`, `columnBands(excluding:)`.
+- `Sources/Photonz/FrameColumnsInspector.swift`, `EditorState+Frames.swift`,
+  `CanvasColumnChrome.swift` — the panel, the column width footnote, the drawing,
+  and a `columns` describe line that now reports the inset a walk can assert on.
+- `Scripts/playtest/columns-follow-the-padding-walk.json` — new walk: 12 all
+  round, then 40, then 40 with a left of 12.
+- Measured off the real captures: with padding 12 the first band's left edge and
+  the laid-out rectangle's left edge are the same pixel; going to 40 moves the
+  first band, the rectangle and the band tops by exactly 42px (28pt at 75%) and
+  pulls the last band's right edge in by the same 42.
+- Audit: `queue/audits/2026-09-09-columns-follow-padding.json`.
+
+Also fixed `columns-follow-the-screen-walk`, which had been failing on main since
+the dock grew a section: it pressed Show columns without scrolling to it. It uses
+`reveal` now, which scrolls as far as it takes.
+
+Next: a screen nobody has arranged shows a Padding in Layout read off where its
+contents already sit, and the columns deliberately do not follow that one. If
+that reads as the same bug to anyone, the answer is to make that reading commit
+rather than to make guides chase the contents.

@@ -19,7 +19,7 @@ struct ColumnSnappingTests {
     /// 608/784, 804/980, and the middles are 108, 304, 500, 696 and 892.
     private let screen = CGRect(x: 0, y: 0, width: 1000, height: 800)
     private var bands: [CGRect] {
-        FrameColumns(count: 5, gutter: 20, margin: 20).bands(in: screen)
+        FrameColumns(count: 5, gutter: 20, margin: 20).bands(in: screen, padding: .none)
     }
     private let canvas = CGSize(width: 2000, height: 1200)
 

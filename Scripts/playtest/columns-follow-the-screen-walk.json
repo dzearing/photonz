@@ -27,6 +27,7 @@
     { "do": "menus", "stage": "layer-menu-with-box", "menu": "Layer" },
     { "do": "describe", "stage": "3-menu-row-with-box", "note": "the Layer menu's Show Columns must be live with the box picked, which it already was: this is the half that used to work alone" },
 
+    { "do": "reveal", "control": "Show columns" },
     { "do": "press", "control": "Show columns" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "4-switched-on-from-the-box", "note": "switched on without ever picking the screen: twelve bands on the screen and three numbers in the panel" },

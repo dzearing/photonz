@@ -11,7 +11,7 @@ import Foundation
 /// pulls at anything. Two different ideas, two different words, two different
 /// places to set them: Columns on a selected screen, Grid on the canvas.
 ///
-/// Two things are worth knowing about the numbers:
+/// Three things are worth knowing about the numbers:
 ///
 /// - **The edges land on whole points.** Twelve columns across 1440 with a 24
 ///   gutter and a 32 margin gives a column 85.666… wide, and a tool for
@@ -20,6 +20,12 @@ import Foundation
 ///   outer two edges stay exactly on the margins. What is drawn and what a
 ///   drag lands on are the same rounded number, so you always land on a line
 ///   you can see.
+/// - **They are drawn inside the screen's own room.** A screen has ONE inset
+///   from its edge: the padding it keeps for its contents. The columns start
+///   where that padding starts, on all four sides, so a box the screen lays
+///   out at its padding lands on the first column exactly. A screen that keeps
+///   no room falls back to the columns' own `margin`, which is what every
+///   screen drawn before this had.
 /// - **Switching them off leaves the numbers alone.** `isVisible` is the whole
 ///   switch: no bands are described, so nothing is drawn and nothing pulls,
 ///   and the count, gutter and margin are still there when it goes back on.
@@ -57,7 +63,14 @@ public struct FrameColumns: Hashable, Codable, Sendable {
     public var count: Int
     /// The gap between two neighbouring columns, in document points.
     public var gutter: CGFloat
-    /// The gap between the screen's edge and the first column, on both sides.
+    /// The gap between the screen's edge and the first column, on both sides,
+    /// for a screen that has no room of its own at its edges.
+    ///
+    /// A screen with padding does not use this at all: one screen has ONE
+    /// inset from its edge, and the columns are drawn inside the padding the
+    /// screen was given (`inset(inside:)`). This is what is left for a screen
+    /// that has none, which is every screen drawn before there was any, so
+    /// nothing anybody has already made moves.
     public var margin: CGFloat
 
     public init(isVisible: Bool = true,
@@ -96,17 +109,34 @@ public struct FrameColumns: Hashable, Codable, Sendable {
         return FrameColumns()
     }
 
+    /// The room the columns are drawn inside on a screen padded like this.
+    ///
+    /// A screen has ONE inset from its edge and it is the padding, so the
+    /// columns start where the screen's contents start: give a screen 12 all
+    /// round and the first column begins at 12, on all four sides, whatever
+    /// any other number says. A screen with no room at its edges — nothing
+    /// typed, or zero typed — falls back to the columns' own `margin`, which
+    /// is what such a screen has always drawn, so switching this on moved
+    /// nobody's columns under them.
+    public func inset(inside padding: GroupPadding) -> GroupPadding {
+        let room = padding.used
+        guard room == .none else { return room }
+        return GroupPadding(top: 0, right: margin, bottom: 0, left: margin)
+    }
+
     /// Where the columns fall across a screen this wide, measured from its left
-    /// edge. Empty when the numbers leave no room for a column at all, which is
-    /// a screen with nothing drawn on it rather than columns drawn backwards.
+    /// edge and inside the room the screen keeps at its edges. Empty when the
+    /// numbers leave no room for a column at all, which is a screen with
+    /// nothing drawn on it rather than columns drawn backwards.
     ///
     /// This ignores `isVisible` on purpose: it is the arithmetic, and a panel
     /// showing a column width while the overlay is off is still telling the
-    /// truth. What honours the switch is `bands(in:)`, which is what the canvas
-    /// and the snapping both read.
-    public func bands(inWidth width: CGFloat) -> [Band] {
+    /// truth. What honours the switch is `bands(in:padding:)`, which is what
+    /// the canvas and the snapping both read.
+    public func bands(inWidth width: CGFloat, padding: GroupPadding) -> [Band] {
         guard width.isFinite, width > 0 else { return [] }
-        let content = width - margin * 2
+        let room = inset(inside: padding)
+        let content = width - room.horizontal
         let gutters = gutter * CGFloat(count - 1)
         let available = content - gutters
         // Every column needs at least a point of its own, or there is nothing
@@ -115,24 +145,41 @@ public struct FrameColumns: Hashable, Codable, Sendable {
         let columnWidth = available / CGFloat(count)
         let step = columnWidth + gutter
         return (0..<count).map { index in
-            let start = margin + CGFloat(index) * step
+            let start = room.left + CGFloat(index) * step
             return Band(start: start.rounded(), end: (start + columnWidth).rounded())
         }
     }
 
-    /// The same columns as boxes on the canvas: as tall as the screen, at the
-    /// x positions the arithmetic gave. Empty while the columns are switched
-    /// off, so one check covers the drawing and the pulling alike.
-    public func bands(in screen: CGRect) -> [CGRect] {
+    /// The same columns as boxes on the canvas: inside the screen's padding on
+    /// all four sides, at the x positions the arithmetic gave. Empty while the
+    /// columns are switched off, so one check covers the drawing and the
+    /// pulling alike, and empty when the room at the top and bottom leaves no
+    /// height to draw — a column with no height is nothing to aim at.
+    public func bands(in screen: CGRect, padding: GroupPadding) -> [CGRect] {
         guard isVisible else { return [] }
-        return bands(inWidth: screen.width).map { band in
-            CGRect(x: screen.minX + band.start, y: screen.minY,
-                   width: band.width, height: screen.height)
+        let room = inset(inside: padding)
+        let height = screen.height - room.vertical
+        guard height >= 1 else { return [] }
+        return bands(inWidth: screen.width, padding: padding).map { band in
+            CGRect(x: screen.minX + band.start, y: screen.minY + room.top,
+                   width: band.width, height: height)
         }
     }
 }
 
 public extension Layer {
+    /// The room this screen keeps inside its own edges, which is what its
+    /// columns are drawn inside. A screen nobody has given a layout keeps no
+    /// room, and its columns fall back to their own margin.
+    var columnPadding: GroupPadding { group?.layout?.usedPadding ?? .none }
+
+    /// Every column this screen draws, as boxes on the canvas, given where the
+    /// screen sits. The ONE place the drawing and the snapping both read, so a
+    /// column can never be drawn in one place and pull from another.
+    func columnBands(inCanvas box: CGRect) -> [CGRect] {
+        columns?.bands(in: box, padding: columnPadding) ?? []
+    }
+
     /// The column layout this screen is designed to, or nil for a screen
     /// nobody has given one — which is every screen made before this existed.
     /// Only a frame ever holds one.
@@ -188,9 +235,9 @@ public extension PhotonzDocument {
         func collect(_ list: [Layer], origin: CGPoint) {
             for layer in list {
                 guard layer.isVisible, !travelling.contains(layer.id) else { continue }
-                if let columns = layer.columns, columns.isVisible {
+                if layer.columns?.isVisible == true {
                     let box = layer.frame.offsetBy(dx: origin.x, dy: origin.y)
-                    bands.append(contentsOf: columns.bands(in: box))
+                    bands.append(contentsOf: layer.columnBands(inCanvas: box))
                 }
                 if layer.isGroup {
                     collect(layer.children,
