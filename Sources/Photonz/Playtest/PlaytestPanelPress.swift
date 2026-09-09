@@ -179,16 +179,40 @@ enum PlaytestPanelPress {
     /// "Shadow, there is something to carry" and stopped a walk on 2026-09-07.
     /// So a row may only lend its name to something its OWN scrolling area
     /// holds too: the same area, or the row sits in one further out.
+    ///
+    /// And a row further out has to be judged against where the control is
+    /// really DRAWN, not against the frame it would fill if nothing cut it
+    /// off. Only a row in the control's own scrolling area moves when that
+    /// area scrolls; a row outside it stays put, so once the control has slid
+    /// out of its own little window the two overlap by coincidence and nothing
+    /// more. That is how a Border row scrolled up out of the Effects list came
+    /// to answer as "Border, Corner Radius" and let a walk assert a switch in
+    /// Appearance's Corner Radius row -- a row that has no switch at all -- and
+    /// pass.
     @MainActor static func fields(of view: NSView, among fields: [PanelTargetView]) -> [String] {
         let box: CGRect = view.convert(view.bounds, to: nil)
-        let holding: Set<ObjectIdentifier> = Set(scrollAreas(of: view))
+        let areas: [ObjectIdentifier] = scrollAreas(of: view)
+        let holding: Set<ObjectIdentifier> = Set(areas)
+        // What is left of the control once every scroller above it has had its
+        // cut: empty when it has scrolled clean out of the list it lives in.
+        let showing: CGRect = view.convert(view.visibleRect, to: nil)
         var around: [(name: String, frame: CGRect)] = []
         for field in fields {
             let frame: CGRect = field.convert(field.bounds, to: nil)
-            guard frame.contains(box) else { continue }
             // The row's own scrolling area has to hold this too. A row that
             // sits outside every scroller cuts nothing off, so it keeps its say.
-            if let nearest = scrollAreas(of: field).first, !holding.contains(nearest) { continue }
+            let nearest = scrollAreas(of: field).first
+            if let nearest, !holding.contains(nearest) { continue }
+            if nearest == areas.first {
+                // Same scroller, so the two move as one and the whole frame
+                // counts, showing or not. That is what lets a walk name a
+                // control the dock has scrolled away and then scroll to it.
+                guard frame.contains(box) else { continue }
+            } else {
+                // A row further out. Only the visible part of the control can
+                // honestly be said to sit in it.
+                guard !showing.isEmpty, frame.contains(showing) else { continue }
+            }
             around.append((field.name, frame))
         }
         around.sort { first, second in

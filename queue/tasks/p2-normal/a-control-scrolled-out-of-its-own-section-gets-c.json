@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2270,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T08:25:10.631Z",
-  "updated": "2026-09-09T08:25:10.634Z",
+  "updated": "2026-09-09T09:33:05.966536Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-09.\n\nRepro: Scripts/playtest.sh /tmp/diag-leak.json --no-build (walk saved at /tmp/diag-leak.json; it draws a box, adds a Shadow, switches all three off, shuts both twists, reopens Border then Shadow, dumps the panel, then asserts expect {control: Switch, in: Corner Radius, present: true}).\n\nOutput: status ok, and [28 expect] the control \"Switch\" in \"Corner Radius\" is in the panel, as claimed. The Appearance section's Corner Radius row has no switch at all.\n\nWhat happens: reopening the Shadow scrolls the Effects list inside itself to keep the opened effect in view, which slides the Border row up above the Effects header. Its window frame then lands inside the Appearance section's Corner Radius field frame. The panel dump shows it as \"Border, Corner Radius, off\" at y=548 with inWindow false (see /tmp/photonz-playtest/diag-parts/panel-E-shadow-open.json).\n\nCause: PlaytestPanelPress.fields(of:among:) at Sources/Photonz/Playtest/PlaytestPanelPress.swift:182 scopes a control to a field purely by window-rect containment. Its guard (line 191) only requires that the field's nearest clip view be somewhere in the control's own clip chain, which is true here because both share the outer dock clip. A control that has scrolled outside its own nearest clip view's visible rect should not pick up field names it has merely drifted under.",
@@ -21,6 +21,31 @@
     {
       "t": "2026-09-09T08:25:10.633Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T09:03:23.448Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T09:33:05.966536Z",
+      "note": "Reproduced on main before touching anything: Scripts/playtest.sh /tmp/diag-leak.json printed status ok and \"[28 expect] the control \\\"Switch\\\" in \\\"Corner Radius\\\" is in the panel, as claimed\". The panel dump showed the scrolled-away Border row as \"Border, Corner Radius, off\"."
+    },
+    {
+      "t": "2026-09-09T09:33:05.966536Z",
+      "note": "Fix in PlaytestPanelPress.fields(of:among:): a row in the control's OWN nearest scrolling area still lends its name by whole-frame containment (so a control the dock scrolled away keeps its name and a walk can scroll to it), but a row further out is now judged against the control's clipped visibleRect, and lends nothing when that is empty. Only rows in the same scroller move with the control; anything further out overlaps by coincidence once the control has slid out of its little window."
+    },
+    {
+      "t": "2026-09-09T09:33:05.966536Z",
+      "note": "Regression walk added: Scripts/playtest/scrolled-row-keeps-its-own-name-walk.json. Proven to bite: FAILED on stashed main (\"the control called \\\"Switch\\\" in \\\"Corner Radius\\\" is in the panel, and this step says it should not be\"), ok with the fix. The Border row now dumps as \"Border, off\" and keeps its own inner rows (\"Border, Width\", \"Border, Color\")."
+    },
+    {
+      "t": "2026-09-09T09:33:05.966536Z",
+      "note": "Verified: Scripts/test.sh 5291 tests in 439 suites passed. Walk batches all green with the fix: parts (3), effect (13), dock+section (4), layout+settings (11). The effect batch flaked twice mid-investigation (effects-room-for-the-one-you-opened, glow-effect, appearance-effects \"no done.json\") but each flaked in a different place across six runs and two of those runs were fully green, so the flake is pre-existing and not this change."
+    },
+    {
+      "t": "2026-09-09T09:33:05.966536Z",
+      "note": "Sweep requested, since this touches how every panel control gets its row names."
     }
-  ]
+  ],
+  "started": "2026-09-09T09:03:23.447Z"
 }

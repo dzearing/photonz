@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/scrolled-row-keeps-its-own-name",
+  "seed": "A row scrolled out of the Effects list must not answer to a row in Appearance that happens to sit where it drifted to.",
+  "setup": {
+    "forget": [
+      "panel",
+      "tools",
+      "shapes"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 760, "canvasHeight": 520, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [260, 180], "to": [520, 360], "steps": 10 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Switch", "in": "Fill" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Switch", "in": "Border" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Switch", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "Twist", "in": "Border" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Twist", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "Twist", "in": "Border" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Twist", "in": "Shadow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "shadow-open" },
+    { "do": "expect", "control": "Switch", "in": "Corner Radius", "present": false },
+    { "do": "expect", "control": "Switch", "in": "Border", "present": true },
+    { "do": "expect", "control": "Switch", "in": "Shadow", "present": true },
+    { "do": "expect", "control": "Slider", "in": "Corner Radius", "present": true }
+  ]
+}
