@@ -20,6 +20,7 @@ extension CanvasNSView {
         captionPreviewLayer.isHidden = true
         captionPreviewLayer.contents = nil
         captionPreviewKey = nil
+        hideMeasureReadoutPreview()
     }
 
     /// What the zoom tool's drag box previews with: a box in the callout's

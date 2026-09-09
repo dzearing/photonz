@@ -372,6 +372,60 @@ public enum MeasureRasterizer {
                                  minWidth: minWidth)
     }
 
+    /// The exact size this measurement's readout draws at, glyphs measured.
+    /// `MeasureContent.estimatedLabelSize` is the RESERVATION (an upper bound
+    /// taken from a digit count, so the frame can be sized without measuring
+    /// text); this is the pill itself, for chrome that has to put a real
+    /// readout somewhere before the layer exists. Zero when there is no
+    /// readout to draw.
+    public static func chipFootprint(for measure: MeasureContent, pixelScale: CGFloat) -> CGSize {
+        guard measure.showLabel else { return .zero }
+        return chipFootprint(for: measure.chipText(pixelScale: pixelScale),
+                             fontSize: measure.labelPointSize,
+                             padding: measure.labelPadding,
+                             minWidth: measure.labelMinPillWidth)
+    }
+
+    /// JUST the readout pill, on its own transparent bitmap, for chrome that
+    /// has to show a live number the composite cannot. Placing a caliper draws
+    /// its squared U as a vector preview, which has no way to draw type: the
+    /// number it shows while you aim the third click is this bitmap, moved.
+    /// Baked once per placement — by the time the head is being aimed the span
+    /// is already fixed, so only where the pill lands changes.
+    ///
+    /// Returns the image and the bitmap's size in DOCUMENT POINTS. The pill is
+    /// centred in it with `chipRenderPadding` all round, so the border's
+    /// overhang is inside the picture rather than clipped at its edge.
+    public static func readoutPill(_ measure: MeasureContent, pixelScale: CGFloat,
+                                   scale: CGFloat = 1) -> (image: CGImage, size: CGSize)? {
+        guard measure.showLabel, scale > 0, scale.isFinite else { return nil }
+        let text = measure.chipText(pixelScale: pixelScale)
+        guard !text.isEmpty else { return nil }
+        let chip = chipFootprint(for: measure, pixelScale: pixelScale)
+        let slack = measure.chipRenderPadding
+        let size = CGSize(width: chip.width + 2 * slack, height: chip.height + 2 * slack)
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
+        guard width >= 1, height >= 1,
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            return nil
+        }
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: scale, y: -scale)
+        let ink = RGBA(hex: measure.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        let tone = RGBA(hex: measure.chipColorHex) ?? RGBA(r: 1, g: 1, b: 1)
+        drawPill(text, at: CGPoint(x: size.width / 2, y: size.height / 2), chipSize: chip,
+                 fontSize: measure.labelPointSize, borderWidth: measure.strokeWidth,
+                 fill: CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
+                               alpha: min(max(measure.chipOpacity, 0), 1)),
+                 border: CGColor(srgbRed: ink.r, green: ink.g, blue: ink.b, alpha: ink.a),
+                 textColorHex: measure.textColorHex, in: context)
+        return context.makeImage().map { ($0, size) }
+    }
+
     /// One caliper leg: `foot → (rounded corner at head) → toward` (the head-line
     /// cut edge, or the head midpoint when there's no chip gap).
     private static func drawLeg(foot: CGPoint, head: CGPoint, toward: CGPoint, in context: CGContext) {

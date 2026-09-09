@@ -697,6 +697,23 @@ final class CanvasNSView: NSView {
     /// The baked pill bitmap's size in document points (the pill plus room for
     /// its shadow), so it can be scaled to the zoom it is shown at.
     var captionPreviewSize: CGSize?
+    /// The readout held over a caliper being placed. A Distance caliper's last
+    /// click parks the number, and the vector preview under it draws the
+    /// squared U but has no way to draw type — so where the number would land
+    /// was something you found out by landing it. Same trick as
+    /// `captionPreviewLayer`: a bitmap, baked once per placement, moved.
+    let measureReadoutPreviewLayer = CALayer()
+    /// What `measureReadoutPreviewLayer.contents` was baked from: the words,
+    /// the ink and the resolution, none of which change while the head moves.
+    var measureReadoutPreviewKey: String?
+    /// The baked bitmap's size, and the pill's own size inside it, both in
+    /// document points — one scales the layer, the other places it.
+    var measureReadoutPreviewSize: (bitmap: CGSize, chip: CGSize)?
+    /// What the caliper being placed has its feet ON, read once per placement:
+    /// the readout steers off those elements, and the pointer wanders for a
+    /// hundred events without the answer being able to change.
+    var measurePlacementSubjectCache: (foot1: CGPoint, foot2: CGPoint,
+                                       mode: MeasureMode, subjects: [CGRect])?
     /// A just-created zoom callout flying from its source box to its placed
     /// frame: the magnified sprite, plus the source outline and leader lines
     /// fading in underneath it.
@@ -1527,6 +1544,10 @@ final class CanvasNSView: NSView {
         // the round cap at the tail, so the arrow runs into the label.
         captionPreviewLayer.isHidden = true
         annotationPreviewLayer.addSublayer(captionPreviewLayer)
+        // Over the squared U for the same reason: the pill covers the head bar
+        // it sits on, exactly as the committed raster draws it.
+        measureReadoutPreviewLayer.isHidden = true
+        annotationPreviewLayer.addSublayer(measureReadoutPreviewLayer)
         layer?.addSublayer(annotationPreviewLayer)
 
         calloutFlightLeaderLayer.fillColor = nil

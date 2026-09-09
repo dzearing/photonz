@@ -641,6 +641,99 @@ extension CanvasNSView {
         return readout
     }
 
+    /// The number you are parking, shown while you are still aiming at where to
+    /// park it.
+    ///
+    /// A Distance caliper's third click sets how far the readout stands off the
+    /// line it measured, and the canvas used to draw only the thin squared U
+    /// while you aimed: the pill arrived on the commit, centred on the head
+    /// line, so half of it grew back toward whatever you had just measured and
+    /// the first you saw of that was after it landed. The real pill, under the
+    /// pointer, makes the whole footprint something you aim rather than
+    /// discover.
+    ///
+    /// Baked once per placement — the span is already fixed by the time the
+    /// head is being aimed, so only the position changes per mouse move — and
+    /// planned the way the commit plans it, so nothing jumps on the click
+    /// (UX-PATTERNS D14).
+    private func layoutMeasureReadoutPreview(foot1: CGPoint, foot2: CGPoint, mode: MeasureMode,
+                                             headOffset: CGFloat, viewport: Viewport) {
+        var content = measureContent ?? MeasureContent()
+        content.mode = mode
+        content.start = foot1
+        content.end = foot2
+        content.headOffset = headOffset
+        guard content.showLabel, let document else {
+            hideMeasureReadoutPreview()
+            return
+        }
+        let pixelScale = document.pixelScale
+        // Baked at the resolution it is about to be shown at, like the hover
+        // calipers: a pill blown up from a document-sized bitmap is soft on a
+        // zoomed-in canvas, and the number is the part you have to read.
+        let bake = max(1, viewport.zoom * (window?.backingScaleFactor ?? 2))
+        let key = "\(content.chipText(pixelScale: pixelScale))|\(content.labelScale)|"
+            + "\(content.strokeWidth)|\(content.strokeColorHex)|\(content.chipColorHex)|"
+            + "\(content.textColorHex)|\(content.chipOpacity)|\(bake)"
+        if key != measureReadoutPreviewKey {
+            guard let baked = MeasureRasterizer.readoutPill(content, pixelScale: pixelScale,
+                                                            scale: bake) else {
+                hideMeasureReadoutPreview()
+                return
+            }
+            measureReadoutPreviewLayer.contents = baked.image
+            measureReadoutPreviewLayer.contentsScale = bake
+            measureReadoutPreviewKey = key
+            measureReadoutPreviewSize = (baked.size,
+                                         MeasureRasterizer.chipFootprint(for: content,
+                                                                         pixelScale: pixelScale))
+        }
+        guard let sizes = measureReadoutPreviewSize else {
+            hideMeasureReadoutPreview()
+            return
+        }
+        content.apply(MeasureLabelPlanner.plan(
+            for: content, canvas: viewport.documentSize,
+            avoiding: placedReadoutRects(),
+            describing: placementSubjects(foot1: foot1, foot2: foot2, mode: mode)))
+        measureReadoutPreviewLayer.bounds = CGRect(
+            origin: .zero, size: CGSize(width: sizes.bitmap.width * viewport.zoom,
+                                        height: sizes.bitmap.height * viewport.zoom))
+        measureReadoutPreviewLayer.position =
+            viewport.viewPoint(fromDocument: content.labelPosition(chipSize: sizes.chip))
+        measureReadoutPreviewLayer.isHidden = false
+    }
+
+    /// Takes the parked-readout preview off the canvas and forgets its bitmap,
+    /// so the next placement bakes its own number rather than flashing the last
+    /// one.
+    func hideMeasureReadoutPreview() {
+        measureReadoutPreviewLayer.isHidden = true
+        measureReadoutPreviewLayer.contents = nil
+        measureReadoutPreviewKey = nil
+        measureReadoutPreviewSize = nil
+        measurePlacementSubjectCache = nil
+    }
+
+    /// What the caliper being placed has its feet on, so its readout keeps off
+    /// those elements and not just off its own thin line — the same answer
+    /// `EditorState.caliperSubjects` gives the commit. Detection costs
+    /// milliseconds and the feet cannot move while the head is being aimed, so
+    /// it is read once per placement.
+    private func placementSubjects(foot1: CGPoint, foot2: CGPoint, mode: MeasureMode) -> [CGRect] {
+        if let cached = measurePlacementSubjectCache,
+           cached.foot1 == foot1, cached.foot2 == foot2, cached.mode == mode {
+            return cached.subjects
+        }
+        let scale = max(1, document?.pixelScale ?? 1)
+        let found = ElementBounds.subjects(from: foot1, to: foot2, mode: mode,
+                                           in: edgeMap, luma: lumaField,
+                                           minElement: max(10, 10 * scale),
+                                           textGap: AlignmentScan.visibleGap * scale)
+        measurePlacementSubjectCache = (foot1, foot2, mode, found)
+        return found
+    }
+
     /// Every readout already on the canvas, in document space — what a hovered
     /// preview steers around, same as a committed measurement does.
     private func placedReadoutRects() -> [CGRect] {
@@ -654,6 +747,7 @@ extension CanvasNSView {
         refreshMeasureHoverReadout(modifierFlags: modifierFlags)
         guard tool == .measure, let viewport else {
             snapDotLayer.isHidden = true
+            hideMeasureReadoutPreview()
             return
         }
         let cursor = hoverPoint.map { viewport.documentPoint(fromView: $0) }
@@ -677,14 +771,17 @@ extension CanvasNSView {
             snapDotLayer.isHidden = dots.isEmpty
             annotationPreviewLayer.isHidden = true
             annotationPreviewHeadLayer.path = nil
+            hideMeasureReadoutPreview()
             CATransaction.commit()
             return
         }
 
         switch measurePlacement {
         case nil:
+            hideMeasureReadoutPreview()
             if let cursor { addDot(snapMeasureAnchor(cursor, modifiers: modifierFlags)) }
         case .firstPlaced(let foot1):
+            hideMeasureReadoutPreview()
             addDot(foot1)
             if let cursor {
                 let (foot2, _) = snapMeasureSecondFoot(from: foot1, to: cursor, modifiers: modifierFlags)
@@ -697,8 +794,13 @@ extension CanvasNSView {
             if let cursor {
                 let off = measureHeadOffset(mode: mode, foot1: foot1, point: cursor)
                 let g = MeasureContent.caliperGeometry(mode: mode, start: foot1, end: foot2, headOffset: off)
-                addDot(g.labelAnchor)
+                // No dot on the head: the readout itself is parked there now,
+                // and a dot under it sat in the middle of the number.
                 previewPoints = g.path
+                layoutMeasureReadoutPreview(foot1: foot1, foot2: foot2, mode: mode,
+                                            headOffset: off, viewport: viewport)
+            } else {
+                hideMeasureReadoutPreview()
             }
         }
 
@@ -729,3 +831,4 @@ extension CanvasNSView {
         CATransaction.commit()
     }
 }
+

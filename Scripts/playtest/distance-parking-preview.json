@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/distance-parking-preview",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+
+    { "do": "click", "at": [234, 786] },
+    { "do": "move", "at": [480, 786] },
+    { "do": "click", "at": [480, 786] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "move", "at": [357, 840] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 0, "note": "still aiming the third click: nothing has landed" },
+    { "do": "snapshot", "name": "aiming" },
+    { "do": "describe", "stage": "1-aiming", "note": "The number is shown under the pointer while the third click is still being aimed" },
+
+    { "do": "click", "at": [357, 840] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectMeasures", "count": 1 },
+    { "do": "snapshot", "name": "parked" },
+    { "do": "describe", "stage": "2-parked", "note": "Where it landed: it must be exactly where the preview showed it" }
+  ]
+}
