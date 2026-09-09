@@ -90,6 +90,32 @@ extension CanvasNSView {
         var readout: MeasureReadoutPlacement?
         var originalReadout: MeasureReadoutPlacement
         var current: CGPoint
+        /// True once the pointer has actually moved this handle, so `current`
+        /// is a landing rather than the point the press happened to land on.
+        /// The grab has a few pixels of tolerance around the dot, so before the
+        /// first move `current` is near the foot but not on it.
+        var moved = false
+        /// The line ⇧ is holding this foot on: latched the moment the key goes
+        /// down, dropped the moment it comes up. Nil for a free drag and for
+        /// every head drag (⇧ does not hold a readout).
+        var heldLine: MeasureLineHold?
+        /// The two feet as they are DRAWN right now — this drag's if it has
+        /// moved, the caliper's as placed if the press has not travelled yet.
+        /// This is what "the line it is on at that moment" is read from, so
+        /// pressing ⇧ halfway through a drag holds where the caliper has got
+        /// to, not where it began.
+        func liveFeet() -> (start: CGPoint, end: CGPoint) {
+            guard moved else { return (originalStart, originalEnd) }
+            let p = params()
+            return (p.start, p.end)
+        }
+        /// The foot that is NOT being dragged, as it is drawn right now. A held
+        /// drag promises the other end does not move, so that is the foot the
+        /// held line runs through.
+        func fixedFoot() -> CGPoint {
+            let feet = liveFeet()
+            return handle == .footA ? feet.end : feet.start
+        }
         /// The caliper's (start, end, headOffset) with this drag applied, plus
         /// where the drag put the number when it moved it at all.
         func params() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat,

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 7,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:01:32.564Z",
-  "updated": "2026-09-09T13:01:32.606Z",
+  "updated": "2026-09-09T15:10:00.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pair with holding-shift-while-placing-a-caliper-locks-the, filed the same day: shift while PLACING locks the direction, shift while ADJUSTING holds the line. They are the same gesture at two moments and must end up one idea rather than two meanings for one key; whichever lands second makes them agree. Asked for by the user on 2026-09-09. The handle drag is in Sources/Photonz/CanvasPointerDrags.swift around line 659: the head branch snaps through snapMeasureHead and the foot branch windows edge candidates by the span from the opposite foot, and neither reads the shift modifier at all, so shift does nothing on a caliper today. Note the same file already constrains other drags with shift, so take the existing convention rather than inventing one, and check what shift means for an annotation drag so the two agree. The projection itself belongs in PhotonzCore beside the other measure maths rather than in the view. One decision to make explicitly and record: for a caliper whose two feet define the line, holding shift should almost certainly slide the dragged foot along the line through both feet, but for a measurement in a fixed direction, the horizontal or vertical modes, the held line is the mode's axis instead; say which rule applies in each mode.",
@@ -31,6 +31,51 @@
     {
       "t": "2026-09-09T13:01:32.605Z",
       "note": "seq 260 -> 7"
+    },
+    {
+      "t": "2026-09-09T14:41:28.598Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "ADVERSARIAL REVIEW, before building. (a) There is no diagonal caliper and there cannot be one: MeasureContent keeps a measurement's two feet level and MeasureMode has exactly two cases, horizontal and vertical. So the acceptance item asking for a diagonal caliper held straight cannot be met literally; the equivalent was built instead, the projection maths is written for any angle and IS tested on a 45 degree line, and the two possible readings of \"the line it is on\" (through both feet vs the mode's axis) are proved to agree for every caliper the app can draw. (b) The drift the user reported is real and is in params(): dragging footA in horizontal mode sets the OPPOSITE foot's y to the pointer's y, so the whole measuring line rides the hand onto a different row. Reproduced in a walk: a caliper on row 500 came out on row 560. (c) Shift was completely unread on the caliper handle path, so nothing is taken away; the only shift already on this file's drags means a live constraint (45 degrees for an annotation) or preserve-aspect for a resize, which is the same family of meaning. (d) The shortest version that delivers the value is one small pure type plus about fifteen lines of plumbing, and that is what was built: no new cue, no new state machine, no head-drag behaviour."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "Core first, red then green: Tests/PhotonzCoreTests/MeasureLineHoldTests.swift (15 tests) written against nothing, then Sources/PhotonzCore/MeasureLineHold.swift. It carries the whole decision, not just the maths: project() puts a point on the line, holding() is the press/release latch, landing() is the snap-then-hold rule including putting out a guide that was not honoured. The view layer only plumbs."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "Wired into the foot drag in Sources/Photonz/CanvasPointerDrags.swift (the measureHandleDrag branch of mouseDragged). MeasureHandleDrag gained heldLine, a moved flag and liveFeet()/fixedFoot(), so the line is read from the caliper as it is DRAWN at that moment rather than from the press point, which sits up to nine pixels off the dot."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "The playtest drag step could not press or release a key mid drag, so no walk could check two of the acceptance items. Added \"halfway\" to the step: the modifiers in force for the second half of the travel. Three decoding tests, docs updated, and it is inert for every existing walk (the later flags default to the first ones)."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "VERIFIED in the probe app, Scripts/playtest/caliper-held-straight-walk.json, six claims read out of the walk's own state dump. Caliper placed on row 500 from x 600 to x 800. Free drag with the hand drifting 60 down: feet (600,560) to (900,560), the drift. Same drag with shift: (600,500) to (900,500), only the length changed. Shift pressed halfway: (600,530) to (900,530), the row it had got to, not the one it started on. Shift released halfway: (600,560) to (900,560), finishes at the pointer with no jump. The other foot held: (500,500) to (800,500). Held drag with command let go, pointer stopped at (805,815): the foot caught the first measurement's foot line at x 800 with the guide lit, and the row stayed 790, so magnets still catch and only on the held line."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "Scripts/test.sh green, 5443 tests in 458 suites. Walks re-run: measure (7), caliper (3), redline (3), snap-hold (2), arrow-tip (2), all pass. A full sweep was requested rather than run, because the drag step is shared by every walk."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "ADVERSARIAL REVIEW, on the built thing. Two things stay rough and are in the audit for the user to judge: there is no visible sign the drag is held (you only see the far end stop moving), and nothing in the app says the key exists. The tooltip that says \"Hold Command to drag free\" is where it belongs, but the paired placing task lands next and should write one sentence covering both moments rather than two half sentences, so it was left there deliberately."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "Convention handed to holding-shift-while-placing-a-caliper-locks-the in its notes, and written up in docs/design/next-measure.md section 8c: shift holds the direction the measurement is going in, live not latched, magnets asked first and the hold last, command still frees the magnets."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "Not changed and worth knowing: a press on a foot handle that never travels still commits params() on mouse up, so a click on the dot can nudge that foot by up to nine pixels over the zoom. It predates this work and is untouched here."
+    },
+    {
+      "t": "2026-09-09T15:10:00.000Z",
+      "note": "Audit: queue/audits/2026-09-09-caliper-held-straight.json with two real window captures (Screen Recording was granted for the run)."
     }
-  ]
+  ],
+  "started": "2026-09-09T14:41:28.597Z"
 }

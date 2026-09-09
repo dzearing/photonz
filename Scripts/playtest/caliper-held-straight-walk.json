@@ -1,0 +1,68 @@
+{
+  "out": "/tmp/photonz-playtest/caliper-held-straight",
+  "seed": "Adjusting how long a measurement is used to move what it was measuring across: dragging one foot carried the whole measuring line onto wherever the pointer happened to be, so a caliper measuring straight across a row drifted off that row the moment you made it longer. Holding shift now holds the caliper on the line it is on, so the foot slides along that line and the other end does not move. This walk places one caliper and adjusts it four ways: free, held, held from halfway through the drag, and let go of halfway through.",
+  "setup": { "forget": ["shapes", "measure", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [600, 500], "modifiers": ["command"] },
+    { "do": "click", "at": [800, 500], "modifiers": ["command"] },
+    { "do": "click", "at": [800, 440], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "describe", "stage": "1-placed", "note": "THE SETUP: a caliper measuring straight across row y 500, feet at x 600 and x 800" },
+
+    { "do": "drag", "from": [800, 500], "to": [900, 560], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-free", "note": "WHAT IT DOES WITHOUT THE KEY: the pointer wandered 60 down while pulling the foot 100 right, and the whole measuring line came with it. Both feet are now on row 560, so the caliper is measuring across a different row than the one it was placed on" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "drag", "from": [800, 500], "to": [900, 560], "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-held", "note": "THE CLAIM: the same wandering drag with shift held. The dragged foot lands at (900, 500) and the other foot has not moved, so only the length changed" },
+    { "do": "snapshot", "name": "caliper-held-straight" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "drag", "from": [800, 500], "to": [900, 560], "modifiers": ["command"], "halfway": ["command", "shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-pressed-halfway", "note": "THE SECOND CLAIM: shift pressed with the button already down, halfway along. It takes the line the caliper is on AT THAT MOMENT, which is row 530, not the row 500 it started on, so both feet end on 530 and the foot still travels to x 900" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "drag", "from": [800, 500], "to": [900, 560], "modifiers": ["command", "shift"], "halfway": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-let-go-halfway", "note": "THE THIRD CLAIM: shift let go of halfway along hands the drag straight back to the pointer with no jump, so the foot finishes where the pointer actually is, at (900, 560)" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [600, 500], "to": [500, 430], "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-other-foot", "note": "THE FOURTH CLAIM: the same key holds the OTHER foot too. The left foot slides out to x 500 on row 500 and the right foot stays at (800, 500)" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "escape" },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [380, 790], "modifiers": ["command"] },
+    { "do": "click", "at": [440, 790], "modifiers": ["command"] },
+    { "do": "click", "at": [440, 740], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "describe", "stage": "7-second-caliper", "note": "A second caliper lower down the picture, both feet placed free of the magnets at x 380 and x 440 on row 790. The first one is still there with a foot at x 800, which is a line this one can catch" },
+    { "do": "drag", "from": [440, 790], "to": [805, 815], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-held-and-snapped", "note": "THE FIFTH CLAIM: with shift held and command let go, the magnets still work. The pointer stopped at (805, 815) and the foot was pulled onto the first caliper's foot line at x 800, a point that lies ON the held row, while the row itself is untouched at 790" },
+    { "do": "snapshot", "name": "caliper-held-and-snapped" }
+  ]
+}

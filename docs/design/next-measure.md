@@ -548,6 +548,52 @@ offers their feet and head lines precisely, and a caliper's bounding box is not
 something anyone aims at. Covers the first foot, the second foot and a foot
 dragged on a placed caliper; ⌘ frees all three, as before.
 
+## 8c. Holding a caliper on its line — ⇧ (shipped)
+
+No mock: this came from the user (2026-09-09). Adjusting how long a measurement
+was moved what it was measuring across. Dragging one foot carries the whole
+measuring line onto wherever the pointer went — `MeasureHandleDrag.params()`
+levels the opposite foot onto the dragged one — so a caliper measuring straight
+across a row drifted off that row the moment you made it longer, and nothing on
+the caliper path read ⇧ at all.
+
+**One key, one idea, at both moments of a measurement's life.** ⇧ holds the
+direction the caliper is measuring in: while ADJUSTING a placed one it holds the
+line it is already on, and while PLACING one it holds the direction it is
+currently going (`holding-shift-while-placing-a-caliper-locks-the`, which lands
+second and inherits this rule rather than adding a second meaning for the key).
+Either way the pointer is free to travel anywhere and only where it lands ALONG
+the held line is taken.
+
+Which line is "the line it is on" has two readings — the line through both feet,
+or the axis the mode names — and for every caliper this app can draw they are
+the SAME line: `MeasureContent` keeps a measurement's two feet level and the
+only modes are horizontal and vertical, so a caliper is always axis aligned.
+`MeasureLineHold` keeps the two apart anyway (`init(mode:through:)` for the
+mode's axis, `init(mode:through:and:)` for the line two feet define) so the day
+a measurement may sit at an angle, holding it straight already means sliding
+along that angle.
+
+- **Live, not latched at the press.** The key is read on every move, the same
+  live constraint ⇧ already is for a drawn annotation. Pressing it halfway
+  through takes the line the caliper has got to BY THEN, not the one it started
+  on, and letting go hands the drag straight back to the pointer with no jump.
+- **The line runs through the foot that is NOT moving**, because that is what a
+  held drag promises: the other end does not move.
+- **The magnets still work.** They are asked exactly what a free drag asks them
+  and then the held line has the last word: an edge ALONG the line still
+  catches, one that would pull the foot off the line is not taken, and its
+  yellow guide goes out with it rather than claiming a landing that is not
+  drawn. ⌘ still frees the magnets entirely, and the two keys compose — free of
+  the magnets, still on the line.
+- **The head is untouched.** ⇧ holds a FOOT; the readout chip is not a measured
+  point and dragging it has its own two axes.
+
+Walk: `Scripts/playtest/caliper-held-straight-walk.json` (free, held, pressed
+halfway, let go halfway, the other foot, and a held drag that still catches
+another measurement's foot line). The walk presses and releases the key with the
+button down through the playtest `drag` step's `halfway` field.
+
 ## 9. Alignment checks — `next-measure-align` (decision D1: resolved)
 
 Mock: `redline.html` dashed guide spanning four left edges with an `aligned`

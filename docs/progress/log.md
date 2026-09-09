@@ -13934,3 +13934,31 @@ without a rewrite. Filed as `the-panel-keeps-its-height-sharing-in-a-file-of`
 before the change, alone after it, and in the group on a re-run, so it is filed
 as a flake to look into (`find-out-why-the-lazy-rows-walk-sometimes-cannot`,
 p2) rather than a break.
+
+## 2026-09-09 — Holding shift keeps a caliper straight
+
+Adjusting how long a measurement was used to change what it was measuring
+across: dragging one end carried the whole measuring line onto wherever the
+pointer had drifted, so a caliper measuring straight across a row came out on a
+different row the moment you made it longer. Shift now holds the caliper on the
+line it is on, so the end you have hold of slides along that line and the other
+end does not move.
+
+- `MeasureLineHold` in PhotonzCore carries the whole decision, not just the
+  projection: the press/release latch, and the rule that the magnets are asked
+  first and the held line has the last word (a guide that was not honoured goes
+  out with it). 15 tests, written before the code.
+- The key is live, read every move: pressing it partway takes the line the
+  caliper has got to by then, letting it go hands the drag back to the pointer.
+  Command still frees the magnets, and the two keys compose.
+- The playtest `drag` step gained `halfway`, the modifiers in force for the
+  second half of the travel, so a walk can press or release a key with the
+  button still down. That is what `caliper-held-straight-walk.json` uses to
+  check the two mid-drag rules.
+- Design write-up: `docs/design/next-measure.md` §8c. The paired task (shift
+  while PLACING a caliper) inherits the convention rather than inventing a
+  second meaning for the key; its notes now say so.
+
+Next: the placing half of the same gesture. Found and filed on the way, with a
+reproduction: a click on a measurement's end, with no drag at all, moves it and
+changes the reading (100 px became 98 px from one click).

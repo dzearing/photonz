@@ -1,0 +1,29 @@
+{
+  "id": "clicking-a-measurement-end-does-not-move-it",
+  "title": "Clicking a measurement end does not move it",
+  "goal": "Clicking one end of a placed measurement, just to take hold of it, quietly changes the measurement. The end jumps under the pointer and the whole measuring line comes with it, so a reading you had lined up carefully is a different number afterwards and nothing tells you. A click that does not travel should leave the measurement exactly as it was.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 260,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T15:03:31.418Z",
+  "updated": "2026-09-09T15:03:31.421Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-09 with a playtest walk on the probe build. A caliper was placed with the magnets off at feet (600, 500) to (800, 500), reading 100 px. One click at (795, 504), five points off the right foot dot, no drag: feet became (600, 504) to (795, 504), reading 98 px. Both ends moved and the number changed, from a click. Walk used: /tmp/foot-click.json (steps: open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, key i, distance mode, three command-clicks to place, key v, describe, click at [795, 504] with command, describe).\n\nWhy: the handle grab has about nine points of tolerance around the dot (Sources/Photonz/CanvasPointerDrags.swift, mouseDown, the measureHandleDrag branch) and seeds MeasureHandleDrag with current = the press point rather than the handle point. mouseUp then commits drag.params() unconditionally (same file, the measureHandleDrag branch of mouseUp), and params() puts the dragged foot at current and levels the opposite foot onto it. So a press that never travels still commits the press point.\n\nThe fix wants the same shape the caption drag already has a few lines below in mouseUp: it measures how far the thing actually travelled and calls onCaptionPlaceCancel() when it did not, so no history step is taken and the render settles back. A foot drag should do the equivalent, and the head/readout drag needs the same treatment since it commits the same way. There is now a moved flag on MeasureHandleDrag, set on the first mouse-moved event, which is most of the answer already.\n\nFound while building holding-shift-while-dragging-a-caliper-end-keeps; it predates that work and was deliberately left alone there to keep that change small.",
+  "acceptance": [
+    "A press and release on a measurement end with no travel leaves both ends and the reading exactly as they were",
+    "A press and release on the readout chip with no travel leaves the number where it was placed",
+    "Dragging an end still works exactly as it does now, including the shift hold and the magnets",
+    "No undo step is added by a click that changed nothing",
+    "A walk proves it: place a measurement, click one of its ends slightly off the dot, and read the feet back unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T15:03:31.420Z",
+      "note": "created (manual)"
+    }
+  ]
+}

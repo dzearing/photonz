@@ -459,10 +459,16 @@ private final class Run {
                 + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
-        case .drag(let from, let to, let steps, let modifiers, let hold, let wobble):
+        case .drag(let from, let to, let steps, let modifiers, let halfway, let hold, let wobble):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
+            // A key pressed or let go of with the button still down. The press
+            // and the first half of the travel carry `modifiers`, the second
+            // half carries `halfway`, and the release carries whatever was in
+            // force at the end — which is how a hand actually uses a live
+            // constraint like ⇧.
+            let laterFlags = halfway.map { eventFlags($0) } ?? flags
             // A hand is not a ruler: `wobble` shakes the pointer as it travels,
             // mostly BACK AND FORTH ALONG the line it is walking, which is the
             // tremor a magnet's reach actually chatters on, plus half as much
@@ -484,7 +490,8 @@ private final class Run {
                 let sway = wobble * shake[(i + 3) % shake.count] / 2
                 let p = CGPoint(x: a.x + (b.x - a.x) * t + along.x * shiver + across.x * sway,
                                 y: a.y + (b.y - a.y) * t + along.y * shiver + across.y * sway)
-                if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: flags) { canvas.mouseDragged(with: event) }
+                let moveFlags = t > 0.5 ? laterFlags : flags
+                if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: moveFlags) { canvas.mouseDragged(with: event) }
                 guides.record(canvas.liveSnapGuides)
                 gridLines.record(canvas.liveGridSnapLines)
                 await sleep(0.02)
@@ -500,10 +507,18 @@ private final class Run {
             // The pointer's shape WHILE the button is down: the only moment a
             // closed-hand grab cue exists, and a walk cannot photograph it.
             let heldCursor = Self.cursorName()
-            if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: flags) { canvas.mouseUp(with: event) }
+            if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: laterFlags) { canvas.mouseUp(with: event) }
             await sleep(0.05)
+            var keys = ""
+            if let later = halfway {
+                func spell(_ list: [PlaytestModifier]) -> String {
+                    let names: [String] = list.map { $0.rawValue }
+                    return names.isEmpty ? "none" : names.joined(separator: "+")
+                }
+                keys = ", keys " + spell(modifiers) + " then " + spell(later)
+            }
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held), "
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys), "
                      + "cursor while down \(heldCursor), \(guides.reading), \(gridLines.reading)",
                  state: describe())
 

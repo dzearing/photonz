@@ -1,0 +1,30 @@
+{
+  "feature": "Holding shift keeps a caliper straight",
+  "epic": "measure-redline",
+  "summary": "Hold Shift while dragging one end of a measurement and it stays on the line it is on: that end slides along the line, the other end does not move, so you change how long it is without changing what it is measuring across.",
+  "setup": "Photonz Dev, any screenshot open. The canvas is shared code, so it is there in both releases; nothing to switch on.",
+  "try": [
+    { "do": "Press I, then click one side of something, click the other side, and click once more to park the number." },
+    { "do": "Press V to go back to Select. The measurement's two ends show as small circles." },
+    { "do": "Drag one end outward and let your hand drift up or down on the way. The whole measuring line follows your hand off the row it was measuring." },
+    { "do": "Undo." },
+    { "do": "Do the same drifting drag again with Shift held. The end slides along the line, the other end stays exactly where it was, and the number counts up live.", "shot": "2026-09-09-caliper-held-straight-held-sc.png" },
+    { "do": "Start another Shift drag and let Shift go partway through. It carries on from where your pointer actually is, with no jump." },
+    { "do": "Start a plain drag, drift well off the row, then press Shift partway through. It holds the row it has drifted onto, not the row it started on." },
+    { "do": "With Shift held, drag an end toward another measurement's end. It still catches that line, because that point is on the row you are held to. Command still drags free of every magnet.", "shot": "2026-09-09-caliper-held-straight-snapped-sc.png" }
+  ],
+  "evaluate": [
+    "Pressing Shift partway through holds the row the measurement has drifted onto, not the row it was placed on. Is that the one you wanted, or should Shift put it back where it started?",
+    "Can you tell it is being held? The only sign is that the other end does not move, and the line stays level.",
+    "Is Shift the key your hand reached for, or did you expect this somewhere else?",
+    "Should Shift do anything while you are dragging the NUMBER, or is holding the two ends enough?",
+    "Does letting Shift go partway through feel like a handover or like a slip?"
+  ],
+  "rough": [
+    "There is no visible sign the drag is held. Nothing lights up, nothing says Shift: you only see that the far end has stopped moving. That is honest but quiet, and if it reads as nothing happening it wants a mark of its own.",
+    "Nothing in the app tells you the key exists. The Measure tool's options tooltip says \"Hold Command to drag free\" and this belongs beside it, but the paired task (Shift while PLACING a measurement) lands next and should write one sentence covering both moments rather than two half sentences.",
+    "Shift does nothing while dragging the readout chip. That drag moves the number two ways at once and holding one of them is a different idea; left alone rather than guessed at.",
+    "The task asked for a test with a diagonal caliper. There is no such thing in the app: a measurement's two feet are always kept level and the only modes are horizontal and vertical, so the line through both feet and the mode's own axis are the same line and cannot disagree. The maths in PhotonzCore is written for any angle and IS tested on a 45 degree line, so a free-angle measurement would already be held at its own angle.",
+    "Screen Recording was granted for this run, so both pictures are real window captures, not offscreen renders."
+  ]
+}

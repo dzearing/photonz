@@ -662,13 +662,28 @@ extension CanvasNSView {
             // HEAD is the label position, not a measured point, so the picture's
             // edges have no say over it — but the other readouts do: it lines up
             // with the chips around it. ⌘ drags either one free.
+            //
+            // ⇧ holds a FOOT on the line the caliper is on, so the end you have
+            // hold of slides along that line and nothing else moves: you change
+            // how long the measurement is without changing what it is measuring
+            // across. It is read on every move rather than latched at the press
+            // — the same live constraint ⇧ already is for a drawn annotation —
+            // so pressing it halfway through takes the line the caliper has got
+            // to by then, and letting go hands the drag straight back to the
+            // pointer. The two keys compose and each still means one thing: ⌘
+            // ignores the magnets, ⇧ holds the line.
             let held = snapHold(freeing: event.modifierFlags.contains(.command))
+            if drag.handle != .head {
+                drag.heldLine = MeasureLineHold.holding(
+                    drag.heldLine, shiftDown: event.modifierFlags.contains(.shift),
+                    mode: drag.mode, fixedFoot: drag.fixedFoot())
+            }
             if drag.handle == .head {
                 snapGuide = snapMeasureHead(&drag, pointer: p, zoom: viewport.zoom,
                                             snapping: !held.isFree, holding: held)
                 snapHold.caught(x: snapGuide?.x, y: snapGuide?.y)
             } else if held.isFree {
-                drag.current = p
+                drag.current = drag.heldLine?.project(p) ?? p
                 snapGuide = nil
             } else {
                 trackDragMotion(p)
@@ -684,10 +699,17 @@ extension CanvasNSView {
                                       layerLines: drag.layerLines,
                                       holding: held),
                     raw: p)
-                drag.current = snap.point
-                snapGuide = (snap.guideX, snap.guideY)
-                snapHold.caught(x: snap.guideX, y: snap.guideY)
+                // The magnets are asked exactly what a free drag asks them,
+                // and then the held line has the last word: an edge ALONG the
+                // line still catches, one that would pull the foot off it is
+                // not taken and its guide does not light.
+                let landing = MeasureLineHold.landing(snapped: snap.point, guideX: snap.guideX,
+                                                      guideY: snap.guideY, on: drag.heldLine)
+                drag.current = landing.point
+                snapGuide = (landing.guideX, landing.guideY)
+                snapHold.caught(x: landing.guideX, y: landing.guideY)
             }
+            drag.moved = true
             measureHandleDrag = drag
             // Live re-render so the measured value updates as the handle moves.
             let (start, end, off, readout) = drag.params()

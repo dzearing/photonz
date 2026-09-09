@@ -901,8 +901,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// a hand that is not a ruler. It is what a walk uses to prove a snap does
     /// not flicker under an unsteady hand, and the drag reports how often the
     /// guides came and went.
+    /// `halfway` is the modifiers in force for the SECOND half of the travel,
+    /// when they differ from the first: a key pressed or let go of with the
+    /// button still down. `["shift"]` against no modifiers presses it midway,
+    /// `[]` against `modifiers: ["shift"]` lets it go midway. Nil means the
+    /// keys never change, which is every other drag.
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
-              modifiers: [PlaytestModifier], hold: String?, wobble: CGFloat)
+              modifiers: [PlaytestModifier], halfway: [PlaytestModifier]?,
+              hold: String?, wobble: CGFloat)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -1402,7 +1408,9 @@ public enum PlaytestStep: Sendable, Equatable {
         case "drag":
             let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps
             self = .drag(from: try f.point("from"), to: try f.point("to"), steps: max(1, steps),
-                         modifiers: try f.modifiers(), hold: try f.optionalString("hold"),
+                         modifiers: try f.modifiers(),
+                         halfway: try f.optionalModifiers("halfway"),
+                         hold: try f.optionalString("hold"),
                          wobble: CGFloat(try f.optionalNumber("wobble") ?? 0))
         case "type":
             self = .type(try f.string("text"))
@@ -1680,11 +1688,19 @@ public enum PlaytestStep: Sendable, Equatable {
         }
 
         func modifiers() throws -> [PlaytestModifier] {
-            guard let raw = fields["modifiers"] else { return [] }
-            guard let names = raw as? [String] else { throw invalid("modifiers", "must be a list of command, shift, option, control") }
+            try optionalModifiers("modifiers") ?? []
+        }
+
+        /// The same list under any name, and nil when the walk did not write
+        /// the field at all. The difference matters for a field whose whole
+        /// job is to say "and then no keys at all": an empty list is an
+        /// instruction, a missing one is silence.
+        func optionalModifiers(_ field: String) throws -> [PlaytestModifier]? {
+            guard let raw = fields[field] else { return nil }
+            guard let names = raw as? [String] else { throw invalid(field, "must be a list of command, shift, option, control") }
             return try names.map { name in
                 guard let modifier = PlaytestModifier(rawValue: name) else {
-                    throw invalid("modifiers", "\"\(name)\" is not a modifier; use command, shift, option, control")
+                    throw invalid(field, "\"\(name)\" is not a modifier; use command, shift, option, control")
                 }
                 return modifier
             }
