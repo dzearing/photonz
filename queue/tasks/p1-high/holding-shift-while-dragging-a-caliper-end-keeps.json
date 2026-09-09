@@ -1,0 +1,36 @@
+{
+  "id": "holding-shift-while-dragging-a-caliper-end-keeps",
+  "title": "Holding shift while dragging a caliper end keeps it straight",
+  "goal": "Dragging one end of a measurement moves it wherever the pointer goes, so a caliper that was measuring straight across drifts off square the moment you adjust its length. Holding shift should hold the line it is on: the end you are dragging slides along the caliper's own direction and nothing else moves, so you change how long it is without changing what it is measuring across.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T13:01:32.564Z",
+  "updated": "2026-09-09T13:01:32.606Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-09. The handle drag is in Sources/Photonz/CanvasPointerDrags.swift around line 659: the head branch snaps through snapMeasureHead and the foot branch windows edge candidates by the span from the opposite foot, and neither reads the shift modifier at all, so shift does nothing on a caliper today. Note the same file already constrains other drags with shift, so take the existing convention rather than inventing one, and check what shift means for an annotation drag so the two agree. The projection itself belongs in PhotonzCore beside the other measure maths rather than in the view. One decision to make explicitly and record: for a caliper whose two feet define the line, holding shift should almost certainly slide the dragged foot along the line through both feet, but for a measurement in a fixed direction, the horizontal or vertical modes, the held line is the mode's axis instead; say which rule applies in each mode.",
+  "acceptance": [
+    "Holding shift while dragging either end of a measurement keeps the caliper on the line it was on, changing only its length",
+    "Letting shift go mid drag returns to the free drag from where the pointer actually is, with no jump",
+    "Pressing shift mid drag picks up the line the caliper is on at that moment, not the one it started on, and the audit says which reading was taken and why",
+    "The reading updates live while constrained, so the number always matches what is drawn",
+    "Shift keeps whatever it already does elsewhere in a measure drag, and the audit says what that was, so nothing is quietly taken away",
+    "Snapping still applies while constrained, catching only points that lie on the held line, and Command still frees it entirely",
+    "Core logic covered by tests in PhotonzCore written before the change, including a diagonal caliper held straight",
+    "Audit written under queue/audits/ with a caliper lengthened with and without shift, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T13:01:32.566Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T13:01:32.605Z",
+      "note": "seq 260 -> 7"
+    }
+  ]
+}
