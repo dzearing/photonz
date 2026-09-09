@@ -108,8 +108,10 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// nil = no fill.
     public func fillPaint(forShape shape: AnnotationShape) -> Paint? { defaults(forShape: shape).fill }
 
-    /// Corner radius new rectangles start with.
-    public func cornerRadius(forShape shape: AnnotationShape) -> CGFloat { defaults(forShape: shape).cornerRadius }
+    /// The four corners new rectangles start with. Draw a card with a rounded
+    /// top and the next rectangle arrives with one, which is the whole point of
+    /// remembering it: a segmented control is three shapes in a row.
+    public func cornerRadii(forShape shape: AnnotationShape) -> CornerRadii { defaults(forShape: shape).cornerRadii }
 
     /// Caption text size (image pixels) new arrows start with.
     public func captionFontSize(forShape shape: AnnotationShape) -> CGFloat { defaults(forShape: shape).captionFontSize }
@@ -315,8 +317,8 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         return colorStyleID(forShape: shape, slot: slot)
     }
 
-    public mutating func setCornerRadius(_ radius: CGFloat, forShape shape: AnnotationShape) {
-        shapes[shape.rawValue, default: .standard(for: shape)].cornerRadius = radius
+    public mutating func setCornerRadii(_ radii: CornerRadii, forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].cornerRadii = radii
     }
 
     public mutating func setCaptionFontSize(_ size: CGFloat, forShape shape: AnnotationShape) {
@@ -399,7 +401,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
             : (tool.usesStrokeWidth ? d.strokeWidth : AnnotationContent.defaultStrokeWidth)
         var content = AnnotationContent(shape: shape, strokeWidth: width, colorHex: d.colorHex,
                                         arrowheadScale: d.arrowheadScale,
-                                        cornerRadius: d.cornerRadius, fillColorHex: d.fillColorHex,
+                                        cornerRadii: d.cornerRadii, fillColorHex: d.fillColorHex,
                                         captionFontSize: d.captionFontSize)
         // The whole paint, not just the flat color it stands for: an armed
         // tool's gradient reaches the new shape here, which is the one place
@@ -476,8 +478,8 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         get { fill?.hex }
         set { fill = newValue.map { Paint(hex: $0) } }
     }
-    /// Corner radius for rectangles; 0 = sharp.
-    public var cornerRadius: CGFloat
+    /// The four corners new rectangles start with; square everywhere = sharp.
+    public var cornerRadii: CornerRadii
     /// Non-destructive effects (shadow/opacity/blur/border/corner) new objects
     /// of this shape inherit.
     public var layerStyle: LayerStyle
@@ -503,21 +505,21 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
     }
 
     public init(paint: Paint, strokeWidth: CGFloat, arrowheadScale: CGFloat,
-                fill: Paint? = nil, cornerRadius: CGFloat = 0,
+                fill: Paint? = nil, cornerRadius: CornerRadii = .none,
                 layerStyle: LayerStyle = LayerStyle(),
                 captionFontSize: CGFloat = AnnotationContent.captionFontSizeDefault) {
         self.paint = paint
         self.strokeWidth = strokeWidth
         self.arrowheadScale = arrowheadScale
         self.fill = fill
-        self.cornerRadius = cornerRadius
+        self.cornerRadii = cornerRadius
         self.layerStyle = layerStyle
         self.captionFontSize = captionFontSize
     }
 
     /// The flat way in, which is every default the app had before gradients.
     public init(colorHex: String, strokeWidth: CGFloat, arrowheadScale: CGFloat,
-                fillColorHex: String? = nil, cornerRadius: CGFloat = 0,
+                fillColorHex: String? = nil, cornerRadius: CornerRadii = .none,
                 layerStyle: LayerStyle = LayerStyle(),
                 captionFontSize: CGFloat = AnnotationContent.captionFontSizeDefault) {
         self.init(paint: Paint(hex: colorHex), strokeWidth: strokeWidth,
@@ -535,7 +537,9 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         case paint = "colorHex"
         case strokeWidth, arrowheadScale
         case fill = "fillColorHex"
-        case cornerRadius, layerStyle, captionFontSize, colorStyles
+        // The four corners keep the key one radius always wrote.
+        case cornerRadii = "cornerRadius"
+        case layerStyle, captionFontSize, colorStyles
         case arrowheadStyle, captionRoundness
     }
 
@@ -548,8 +552,9 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
             ?? AnnotationStyles.defaultArrowheadScale
         // `fillColorHex` postdates per-shape prefs; absent = no fill.
         fill = try c.decodeIfPresent(Paint.self, forKey: .fill)
-        // `cornerRadius` postdates per-shape prefs; absent = sharp.
-        cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
+        // `cornerRadius` postdates per-shape prefs; absent = sharp. Either
+        // shape: one number, or four corners that disagree.
+        cornerRadii = try c.decodeIfPresent(CornerRadii.self, forKey: .cornerRadii) ?? .none
         // `layerStyle` postdates per-shape prefs.
         layerStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .layerStyle) ?? LayerStyle()
         // `captionFontSize` postdates captions themselves.

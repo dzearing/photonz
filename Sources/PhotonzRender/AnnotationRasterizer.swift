@@ -138,13 +138,14 @@ public enum AnnotationRasterizer {
             let inside = fillBox(annotation, box: box, pad: pad)
             let path: CGPath
             let fillPath: CGPath
-            if annotation.cornerRadius > 0, !stroke.isEmpty {
+            if annotation.cornerRadii.isRound, !stroke.isEmpty {
                 // Round the stroke itself (clamped to a capsule at most), so the
-                // border follows the corners rather than being clipped off.
-                let radius = min(annotation.cornerRadius, min(stroke.width, stroke.height) / 2)
-                path = CGPath(roundedRect: stroke, cornerWidth: radius,
-                              cornerHeight: radius, transform: nil)
-                fillPath = roundedFill(inside, sameShapeAs: stroke, radius: radius)
+                // border follows the corners rather than being clipped off, and
+                // corner by corner, so a card with a rounded top keeps its
+                // square foot and the border round it does too.
+                let radii = annotation.cornerRadii.fitted(in: stroke.size)
+                path = radii.path(in: stroke)
+                fillPath = roundedFill(inside, sameShapeAs: stroke, radii: radii)
             } else {
                 path = CGPath(rect: stroke, transform: nil)
                 fillPath = CGPath(rect: inside, transform: nil)
@@ -191,13 +192,12 @@ public enum AnnotationRasterizer {
     /// rather than parallel to it: a corner half a width in from another corner
     /// is half a width tighter.
     private static func roundedFill(_ rect: CGRect, sameShapeAs stroke: CGRect,
-                                    radius: CGFloat) -> CGPath {
+                                    radii: CornerRadii) -> CGPath {
         guard !rect.isEmpty else { return CGPath(rect: rect, transform: nil) }
         let difference = (rect.width - stroke.width) / 2
-        let fillRadius = max(0, min(radius + difference, min(rect.width, rect.height) / 2))
-        guard fillRadius > 0 else { return CGPath(rect: rect, transform: nil) }
-        return CGPath(roundedRect: rect, cornerWidth: fillRadius,
-                      cornerHeight: fillRadius, transform: nil)
+        // Only a corner that IS round grows with the gap between the two boxes:
+        // a square corner stays square however far out the fill reaches.
+        return radii.grown(by: difference).path(in: rect)
     }
 
     /// JUST the caption pill, on its own transparent bitmap, for chrome that

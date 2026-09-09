@@ -97,7 +97,7 @@ extension LayerStyle {
     public func magnified(by scale: CGFloat) -> LayerStyle {
         guard scale > 0, scale != 1, scale.isFinite else { return self }
         var style = self
-        style.cornerRadius = cornerRadius * scale
+        style.cornerRadii = cornerRadii.scaled(by: scale)
         style.borderWidth = borderWidth * scale
         // Every entry in the list, through the list itself rather than through
         // `blurRadius` and `shadows`. Those two reach a blur and a shadow and

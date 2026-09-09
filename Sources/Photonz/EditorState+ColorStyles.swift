@@ -315,26 +315,63 @@ extension EditorState {
     }
 
     /// Live drag on that row: rounds every picked layer without recording an
-    /// undo step, each of them the way it rounds.
+    /// undo step, each of them the way it rounds. Pulling the ONE slider gives
+    /// every corner the same number, which is what it has always meant.
     func previewCornerRadius(ids: [UUID], _ radius: CGFloat) {
+        previewCornerRadii(ids: ids, CornerRadii(radius))
+    }
+
+    /// The same, with a corner of its own on each corner: what the four opened
+    /// rows write.
+    func previewCornerRadii(ids: [UUID], _ radii: CornerRadii) {
         guard !ids.isEmpty, var doc = document else { return }
         // This row does not go through the layer-style preview, so anything a
         // previous drag left there would be read back as the current look.
         stylePreview = nil
         discardDragPreview()
-        doc.setCornerRadius(layerIDs: ids, to: radius)
+        doc.setCornerRadii(layerIDs: ids, to: radii)
         submit(doc)
     }
 
     /// Letting go of it: ONE undo step, however many layers the pull reached,
     /// plus the corners the next rectangle you draw starts with.
     func commitCornerRadius(ids: [UUID], _ radius: CGFloat) {
+        commitCornerRadii(ids: ids, CornerRadii(radius))
+    }
+
+    /// The same, corner by corner. The next rectangle you draw starts with the
+    /// four you just set, so a segmented control is three shapes in a row
+    /// rather than three shapes and twelve numbers.
+    func commitCornerRadii(ids: [UUID], _ radii: CornerRadii) {
         guard !ids.isEmpty, let doc = document else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { $0.setCornerRadius(layerIDs: ids, to: radius) }
+        perform { $0.setCornerRadii(layerIDs: ids, to: radii) }
         if ids.contains(where: { doc.layer(id: $0)?.annotation?.shape == .rectangle }) {
-            annotationStyles.setCornerRadius(radius, forShape: .rectangle)
+            annotationStyles.setCornerRadii(radii, forShape: .rectangle)
+            saveAnnotationStyles()
+        }
+        rememberStyleDefault(of: ids)
+    }
+
+    /// ONE corner of every picked layer, live, leaving its other three alone.
+    func previewCornerRadius(ids: [UUID], corner: CornerRadii.Corner, _ radius: CGFloat) {
+        guard !ids.isEmpty, var doc = document else { return }
+        stylePreview = nil
+        discardDragPreview()
+        doc.setCornerRadius(layerIDs: ids, corner: corner, to: radius)
+        submit(doc)
+    }
+
+    /// ...and letting go of it: ONE undo step.
+    func commitCornerRadius(ids: [UUID], corner: CornerRadii.Corner, _ radius: CGFloat) {
+        guard !ids.isEmpty, let doc = document else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { $0.setCornerRadius(layerIDs: ids, corner: corner, to: radius) }
+        if let shaped = ids.first(where: { doc.layer(id: $0)?.annotation?.shape == .rectangle }),
+           let radii = document?.layer(id: shaped)?.roundedCornerRadii {
+            annotationStyles.setCornerRadii(radii, forShape: .rectangle)
             saveAnnotationStyles()
         }
         rememberStyleDefault(of: ids)

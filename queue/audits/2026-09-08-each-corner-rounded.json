@@ -1,0 +1,30 @@
+{
+  "feature": "Each corner of a shape can be rounded on its own",
+  "epic": "ui-building",
+  "summary": "Corner Radius opens into four numbers, so a shape can be round on some corners and square on others. A card with a rounded top and a square foot, a segmented control with round ends, a speech bubble: drawn as one shape now rather than faked with a second shape laid over the first.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Appearance is what it is, Effects is what you add\" is on by default, which is what puts the chevron on the row.",
+  "try": [
+    { "do": "Press R and drag out a rectangle." },
+    { "do": "Pull the Corner Radius slider about a third of the way up. All four corners round, exactly as before." },
+    { "do": "Click the chevron beside the words Corner Radius." },
+    { "do": "Type 0 into Bottom Right and press Return, then 0 into Bottom Left and press Return.", "shot": "2026-09-08-each-corner-rounded-1.png" },
+    { "do": "Click the chevron again to shut the four. The readout now says 34/34/0/0 rather than a single number." },
+    { "do": "Press R and drag out a second rectangle beside the first.", "shot": "2026-09-08-each-corner-rounded-2.png" },
+    { "do": "Add a Border under Effects and check it hugs the rounded top and the square foot alike." },
+    { "do": "Undo back to a square box, then pull the one slider again to check nothing about the common case changed." }
+  ],
+  "evaluate": [
+    "Is the chevron beside Corner Radius findable, or would you have gone hunting in a menu for per corner rounding?",
+    "Are Top Left, Top Right, Bottom Right, Bottom Left in the order your hand expects, or would you rather read down the left side and then the right?",
+    "With the four shut, does 34/34/0/0 tell you what you need, or would you rather it said something in words?",
+    "The next rectangle you draw arrives wearing the four corners you last set. Is that the help it is meant to be, or a surprise when you wanted a plain box?",
+    "Four typed fields rather than four sliders: right call for something you set once, or do you want to drag a corner?"
+  ],
+  "rough": [
+    "The slider is still one number, so while the corners disagree, pulling it flattens all four to the same. It is one undo step and the readout warns by saying 34/34/0/0 rather than a number, but a slider is easier to knock than a text field is. Padding's single field behaves the same way, so this is consistent rather than special, but it is the thing most likely to annoy.",
+    "There is no way to drag a corner on the canvas itself. Every per corner edit is typed in the panel.",
+    "The four rows do not open themselves when the corners disagree. That is deliberate, copied from Padding, which stopped auto-opening on 2026-09-04 because the rows ate the panel; the shut readout carries the four numbers instead.",
+    "Zoom callout corners, measurement pills and arrow caption pills still carry one radius each. They have no user-facing corner control, so four numbers there would be code nobody can reach.",
+    "The four numbers are only offered in Next. The release before the Appearance and Effects split keeps its single slider, but it READS four corners honestly: a card drawn in Next and opened there shows 34/34/0/0 rather than a single number that is not true."
+  ]
+}

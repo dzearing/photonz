@@ -17,19 +17,23 @@ import Foundation
 /// square.
 public enum SelectionOutlineShape {
 
-    /// `box` in document points, `cornerRadius` the curve at its corners, and
-    /// `transform` everything between there and the screen — the layer's own
-    /// rotate/skew and the camera, in one go, so a turned shape's outline
-    /// curves with it.
+    /// `box` in document points, `cornerRadii` the curve at each of its four
+    /// corners, and `transform` everything between there and the screen — the
+    /// layer's own rotate/skew and the camera, in one go, so a turned shape's
+    /// outline curves with it.
+    ///
+    /// One path builder for all of it (`CornerRadii.path`), which clamps
+    /// rounding past fully round exactly as the rasterizer does, so the outline
+    /// never bulges outside the box.
+    public static func path(box: CGRect, cornerRadii: CornerRadii,
+                            transform: CGAffineTransform = .identity) -> CGPath {
+        cornerRadii.path(in: box, transform: transform)
+    }
+
+    /// The same, from one number: every corner the same.
     public static func path(box: CGRect, cornerRadius: CGFloat,
                             transform: CGAffineTransform = .identity) -> CGPath {
-        var transform = transform
-        // Rounding past fully round is fully round, exactly as the rasterizer
-        // clamps it, so the outline never bulges outside the box.
-        let radius = min(cornerRadius, min(box.width, box.height) / 2)
-        guard radius > 0 else { return CGPath(rect: box, transform: &transform) }
-        return CGPath(roundedRect: box, cornerWidth: radius, cornerHeight: radius,
-                      transform: &transform)
+        path(box: box, cornerRadii: CornerRadii(cornerRadius), transform: transform)
     }
 }
 
@@ -40,8 +44,14 @@ extension Layer {
     ///
     /// Only a layer with corners has one to curve: an ellipse, a line and an
     /// arrow answer nought, so they are marked exactly as they always were.
+    public func selectionOutlineRadii(box: CGRect) -> CornerRadii {
+        guard hasCorners else { return .none }
+        return boxCornerRadii(boxSize: box.size)
+    }
+
+    /// The same, as one number.
     public func selectionOutlineRadius(box: CGRect) -> CGFloat {
-        guard hasCorners else { return 0 }
-        return boxCornerRadius(boxSize: box.size)
+        let radii = selectionOutlineRadii(box: box)
+        return radii.uniform ?? radii.largest
     }
 }

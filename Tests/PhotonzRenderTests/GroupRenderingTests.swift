@@ -160,7 +160,7 @@ struct GroupRenderingTests {
         let store = ImageStore()
         func render(radius: CGFloat) -> CGImage {
             let doc = document(store, [
-                group("Card", at: CGPoint(x: 40, y: 40), style: LayerStyle(cornerRadius: radius), [
+                group("Card", at: CGPoint(x: 40, y: 40), style: LayerStyle(cornerRadius: CornerRadii(radius)), [
                     patch(store, "A", CGRect(x: 0, y: 0, width: 40, height: 40), r: 0, g: 0, b: 255),
                     patch(store, "B", CGRect(x: 20, y: 20, width: 40, height: 40), r: 0, g: 0, b: 255)
                 ])

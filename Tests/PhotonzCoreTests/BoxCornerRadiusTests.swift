@@ -21,7 +21,7 @@ struct BoxCornerRadiusTests {
         var annotation = AnnotationContent(shape: .rectangle, strokeWidth: stroke,
                                            start: .zero,
                                            end: CGPoint(x: size.width, y: size.height),
-                                           cornerRadius: radius, fillColorHex: "#FF0000")
+                                           cornerRadii: CornerRadii(radius), fillColorHex: "#FF0000")
         annotation.strokePosition = position
         return annotation
     }

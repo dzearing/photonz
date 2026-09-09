@@ -45,15 +45,24 @@ struct AnnotationFillTests {
 
     @Test func stylesRememberCornerRadiusAndSeedNewRectangles() throws {
         var styles = AnnotationStyles()
-        #expect(styles.cornerRadius(forShape: .rectangle) == 0, "sharp by default")
+        #expect(!styles.cornerRadii(forShape: .rectangle).isRound, "sharp by default")
 
-        styles.setCornerRadius(14, forShape: .rectangle)
-        #expect(styles.content(for: .rectangle)?.cornerRadius == 14,
+        styles.setCornerRadii(14, forShape: .rectangle)
+        #expect(styles.content(for: .rectangle)?.cornerRadii == 14,
                 "the next rectangle reuses the last-touched radius")
 
         let decoded = try JSONDecoder().decode(AnnotationStyles.self,
                                                from: JSONEncoder().encode(styles))
-        #expect(decoded.cornerRadius(forShape: .rectangle) == 14)
+        #expect(decoded.cornerRadii(forShape: .rectangle) == 14)
+
+        // ...and the four a card with a rounded top was given, so a segmented
+        // control is three shapes in a row rather than twelve typed numbers.
+        let top = CornerRadii(topLeft: 8, topRight: 8, bottomRight: 0, bottomLeft: 0)
+        styles.setCornerRadii(top, forShape: .rectangle)
+        #expect(styles.content(for: .rectangle)?.cornerRadii == top)
+        let again = try JSONDecoder().decode(AnnotationStyles.self,
+                                             from: JSONEncoder().encode(styles))
+        #expect(again.cornerRadii(forShape: .rectangle) == top)
     }
 
     @Test func stylesRememberFillPerShapeAndSeedNewContent() throws {

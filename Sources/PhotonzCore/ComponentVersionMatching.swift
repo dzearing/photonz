@@ -177,7 +177,7 @@ extension Layer {
             // drawn between: those are the drawing, not the look.
             to.strokeWidth = from.strokeWidth
             to.paint = from.paint
-            to.cornerRadius = from.cornerRadius
+            to.cornerRadii = from.cornerRadii
             to.fill = from.fill
             to.arrowheadScale = from.arrowheadScale
             to.caption = from.caption

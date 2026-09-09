@@ -114,10 +114,22 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// dot, a hollow dot, or nothing at all. The solid head is what every arrow
     /// had before there was a choice, so it is what an older document opens as.
     public var arrowheadStyle: ArrowheadStyle
-    /// Rectangle-only: corner radius (layer-local units). 0 = sharp corners. The
-    /// rasterizer draws a rounded-rect stroke, so the border follows the corners
-    /// instead of being clipped away by a layer-level rounded mask.
-    public var cornerRadius: CGFloat
+    /// Rectangle-only: how round each of the four corners is (layer-local
+    /// units). Square everywhere = sharp corners. The rasterizer draws a
+    /// rounded stroke, so the border follows the corners instead of being
+    /// clipped away by a layer-level rounded mask.
+    ///
+    /// One number is still the common case and still the way in
+    /// (`CornerRadii`); four is what draws a card with a rounded top and a
+    /// square bottom without laying a second shape over the first.
+    public var cornerRadii: CornerRadii
+    /// The one number all four corners are, for everything that only ever
+    /// wanted even corners. Reading it while they disagree gives the roundest;
+    /// writing it makes all four the same.
+    public var cornerRadius: CGFloat {
+        get { cornerRadii.uniform ?? cornerRadii.largest }
+        set { cornerRadii = CornerRadii(newValue) }
+    }
     /// Rectangle/ellipse-only: what the inside is painted with. Nil = no fill
     /// (the classic outline-only redline). Highlight ignores it (its color IS
     /// the fill).
@@ -157,7 +169,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
 
     public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30",
                 start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1,
-                cornerRadius: CGFloat = 0, fillColorHex: String? = nil,
+                cornerRadii: CornerRadii = .none, fillColorHex: String? = nil,
                 caption: String? = nil, captionFontSize: CGFloat = Self.captionFontSizeDefault) {
         self.shape = shape
         self.strokeWidth = strokeWidth
@@ -166,7 +178,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.end = end
         self.arrowheadScale = arrowheadScale
         self.arrowheadStyle = .standard
-        self.cornerRadius = cornerRadius
+        self.cornerRadii = cornerRadii
         self.fill = fillColorHex.map { Paint(hex: $0) }
         self.caption = caption
         self.captionFontSize = captionFontSize
@@ -183,7 +195,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case shape, strokeWidth, strokePosition
         case paint = "colorHex"
-        case start, end, arrowheadScale, arrowheadStyle, cornerRadius
+        case start, end, arrowheadScale, arrowheadStyle
+        // The four corners keep the key one radius always wrote, and
+        // `CornerRadii` reads either shape out of it.
+        case cornerRadii = "cornerRadius"
         case fill = "fillColorHex"
         case caption, captionFontSize, captionRoundness
         case captionOffset, captionGrowth, captionPinned
@@ -208,8 +223,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         // drawn before it ended in the solid triangle and still does.
         arrowheadStyle = try c.decodeIfPresent(ArrowheadStyle.self, forKey: .arrowheadStyle)
             ?? .standard
-        // `cornerRadius` postdates AnnotationContent too.
-        cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
+        // `cornerRadius` postdates AnnotationContent too, and reads either
+        // shape: the single number every document written before there were
+        // four corners holds, or the four a card with a rounded top needs.
+        cornerRadii = try c.decodeIfPresent(CornerRadii.self, forKey: .cornerRadii) ?? .none
         // `fillColorHex` postdates both; legacy shapes are outline-only.
         fill = try c.decodeIfPresent(Paint.self, forKey: .fill)
         // Captions postdate everything above; legacy arrows are caption-free.
@@ -758,7 +775,17 @@ public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
 /// Non-destructive per-layer styling, applied at render time.
 public struct LayerStyle: Hashable, Codable, Sendable {
     public var opacity: Double
-    public var cornerRadius: CGFloat
+    /// How round each corner of the mask cut out of this layer is. A picture, a
+    /// frame or a group rounds by being masked rather than by curving an
+    /// outline it draws, and this is that mask's four corners (`CornerRadii`).
+    public var cornerRadii: CornerRadii
+    /// The one number all four corners are, for everything that only ever
+    /// wanted even corners. Reading it while they disagree gives the roundest;
+    /// writing it makes all four the same.
+    public var cornerRadius: CGFloat {
+        get { cornerRadii.uniform ?? cornerRadii.largest }
+        set { cornerRadii = CornerRadii(newValue) }
+    }
     /// Everything somebody ADDED to this layer, in the order it paints: the
     /// Effects list, top of the list nearest the eye.
     ///
@@ -899,7 +926,7 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         }
     }
 
-    public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CGFloat = 0,
+    public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CornerRadii = .none,
                 borderWidth: CGFloat = 0, borderColorHex: String = "#000000", shadow: ShadowStyle? = nil,
                 blendMode: BlendMode = .normal) {
         self.init(opacity: opacity, blurRadius: blurRadius, cornerRadius: cornerRadius,
@@ -907,21 +934,21 @@ public struct LayerStyle: Hashable, Codable, Sendable {
                   shadows: shadow.map { [$0] } ?? [], blendMode: blendMode)
     }
 
-    public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CGFloat = 0,
+    public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CornerRadii = .none,
                 borderWidth: CGFloat = 0, borderColorHex: String = "#000000",
                 shadows: [ShadowStyle], blendMode: BlendMode = .normal) {
         self.opacity = opacity
-        self.cornerRadius = cornerRadius
+        self.cornerRadii = cornerRadius
         self.effects = LayerStyle.effects(blurRadius: blurRadius, shadows: shadows)
         self.blendMode = blendMode
         appendRing(width: borderWidth, colorHex: borderColorHex)
     }
 
-    public init(opacity: Double = 1, cornerRadius: CGFloat = 0,
+    public init(opacity: Double = 1, cornerRadius: CornerRadii = .none,
                 borderWidth: CGFloat = 0, borderColorHex: String = "#000000",
                 effects: [LayerEffect], blendMode: BlendMode = .normal) {
         self.opacity = opacity
-        self.cornerRadius = cornerRadius
+        self.cornerRadii = cornerRadius
         self.effects = effects
         self.blendMode = blendMode
         appendRing(width: borderWidth, colorHex: borderColorHex)
@@ -963,7 +990,9 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         opacity = try c.decodeIfPresent(Double.self, forKey: .opacity) ?? 1
-        cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
+        // Either shape: the single number every older document holds, or four
+        // corners that disagree (`CornerRadii`).
+        cornerRadii = try c.decodeIfPresent(CornerRadii.self, forKey: .cornerRadius) ?? .none
         blendMode = try c.decodeIfPresent(BlendMode.self, forKey: .blendMode) ?? .normal
         if let list = try c.decodeIfPresent([LayerEffect].self, forKey: .effects) {
             effects = list
@@ -1009,7 +1038,7 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(opacity, forKey: .opacity)
         try c.encode(blurRadius, forKey: .blurRadius)
-        try c.encode(cornerRadius, forKey: .cornerRadius)
+        try c.encode(cornerRadii, forKey: .cornerRadius)
         // The ring nearest the eye, written where a ring has always been
         // written, so a file saved today still draws an edge in a build from
         // before the retirement. Nothing here reads it back: `ringIsAnEffect`
@@ -1081,7 +1110,7 @@ extension LayerStyle {
     /// during a resize — the stroke would stretch, the blur/shadow would bloat —
     /// so a resize of a layer with any of it must re-render the frame instead.
     var hasNoFixedSizeDecoration: Bool {
-        cornerRadius == 0 && blurRadius == 0
+        !cornerRadii.isRound && blurRadius == 0
             && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
     }
 
@@ -1090,7 +1119,7 @@ extension LayerStyle {
     /// like this is a container rather than an object, so its children can draw
     /// straight onto the canvas and grouping changes no pixels.
     public var isPlain: Bool {
-        opacity >= 1 && blurRadius <= 0 && cornerRadius <= 0
+        opacity >= 1 && blurRadius <= 0 && !cornerRadii.isRound
             && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
             && blendMode == .normal
     }

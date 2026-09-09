@@ -539,7 +539,7 @@ extension EditorState {
         let targets = annotationRestyleTargets(ids, in: doc)
         guard !targets.isEmpty else { return }
         rememberAnnotationDefaults(targets, in: doc, strokeWidth: strokeWidth,
-                                   arrowheadScale: arrowheadScale, cornerRadius: nil)
+                                   arrowheadScale: arrowheadScale, cornerRadii: nil)
         discardDragPreview()
         for id in targets {
             doc.updateLayer(id: id) {
@@ -569,7 +569,8 @@ extension EditorState {
             }
         }
         rememberAnnotationDefaults(targets, in: doc, strokeWidth: strokeWidth,
-                                   arrowheadScale: arrowheadScale, cornerRadius: cornerRadius)
+                                   arrowheadScale: arrowheadScale,
+                                   cornerRadii: cornerRadius.map { CornerRadii($0) })
         saveAnnotationStyles()
     }
 
@@ -584,7 +585,7 @@ extension EditorState {
         let targets = annotationRestyleTargets(ids, in: doc)
         guard !targets.isEmpty else { return }
         rememberAnnotationDefaults(targets, in: doc, strokeWidth: width,
-                                   arrowheadScale: nil, cornerRadius: nil)
+                                   arrowheadScale: nil, cornerRadii: nil)
         // This row writes the layer's LOOK as well as its shape, so anything a
         // previous style drag left in the preview would be read back over it.
         stylePreview = nil
@@ -603,7 +604,7 @@ extension EditorState {
         discardDragPreview()
         perform { $0.setOutlineWidth(layerIDs: targets, to: width) }
         rememberAnnotationDefaults(targets, in: doc, strokeWidth: width,
-                                   arrowheadScale: nil, cornerRadius: nil)
+                                   arrowheadScale: nil, cornerRadii: nil)
         saveAnnotationStyles()
     }
 
@@ -615,13 +616,13 @@ extension EditorState {
     /// What the next object of each picked kind starts at.
     private func rememberAnnotationDefaults(_ ids: [UUID], in doc: PhotonzDocument,
                                             strokeWidth: CGFloat?, arrowheadScale: CGFloat?,
-                                            cornerRadius: CGFloat?) {
+                                            cornerRadii: CornerRadii?) {
         for shape in Set(ids.compactMap { doc.layer(id: $0)?.annotation?.shape }) {
             if let strokeWidth, shape != .highlight {
                 annotationStyles.setStrokeWidth(strokeWidth, forShape: shape)
             }
             if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
-            if let cornerRadius { annotationStyles.setCornerRadius(cornerRadius, forShape: shape) }
+            if let cornerRadii { annotationStyles.setCornerRadii(cornerRadii, forShape: shape) }
         }
     }
 

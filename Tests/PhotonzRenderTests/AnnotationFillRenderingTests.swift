@@ -23,7 +23,7 @@ struct AnnotationFillRenderingTests {
     private func rasterize(_ shape: AnnotationShape, fill: String?,
                            cornerRadius: CGFloat = 0) -> CGImage {
         var content = AnnotationContent(shape: shape, strokeWidth: 4, colorHex: "#FF0000",
-                                        cornerRadius: cornerRadius, fillColorHex: fill)
+                                        cornerRadii: CornerRadii(cornerRadius), fillColorHex: fill)
         content.start = CGPoint(x: 10, y: 10)
         content.end = CGPoint(x: 110, y: 90)
         return AnnotationRasterizer.rasterize(content, size: CGSize(width: 120, height: 100))!

@@ -36,7 +36,7 @@ extension CanvasNSView {
         let radius = ZoomCalloutContent(sourceRect: docBox, shape: calloutShape)
             .effectiveCornerRadius(boxSize: docBox.size, styleRadius: scaled)
         return AnnotationContent(shape: .rectangle, strokeWidth: max(1, style.borderWidth / 2),
-                                 colorHex: style.borderColorHex, cornerRadius: radius)
+                                 colorHex: style.borderColorHex, cornerRadii: CornerRadii(radius))
     }
 
     /// What the frame tool's drag previews with: a hairline rectangle, so what
@@ -172,13 +172,9 @@ extension CanvasNSView {
             let inset = box.insetBy(dx: lineWidth / 2, dy: lineWidth / 2)
             if inset.width > 0, inset.height > 0 {
                 if content.shape == .rectangle {
-                    let radius = min(content.cornerRadius * viewport.zoom,
-                                     min(inset.width, inset.height) / 2)
-                    if radius > 0 {
-                        path.addRoundedRect(in: inset, cornerWidth: radius, cornerHeight: radius)
-                    } else {
-                        path.addRect(inset)
-                    }
+                    // Corner by corner, so a shape drawn with a rounded top
+                    // previews as the shape it will be rather than as a box.
+                    path.addPath(content.cornerRadii.scaled(by: viewport.zoom).path(in: inset))
                 } else {
                     path.addEllipse(in: inset)
                 }

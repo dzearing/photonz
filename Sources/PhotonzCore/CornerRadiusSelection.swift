@@ -19,8 +19,12 @@ public struct CornerRadiusSelection: Hashable, Sendable {
 
     public struct Member: Hashable, Sendable {
         public let id: UUID
-        /// How round this layer is right now, whichever way it rounds.
-        public let radius: CGFloat
+        /// How round each of this layer's four corners is right now, whichever
+        /// way it rounds.
+        public let radii: CornerRadii
+        /// The same as one number, for the slider: the one all four are, or the
+        /// roundest of them while they disagree.
+        public var radius: CGFloat { radii.uniform ?? radii.largest }
         /// Half its short edge: where its corners are already fully round.
         public let limit: CGFloat
         /// True when this layer rounds by having its corners masked off, which
@@ -28,9 +32,9 @@ public struct CornerRadiusSelection: Hashable, Sendable {
         /// instead, which is part of the shape rather than part of the look.
         public let roundsViaStyle: Bool
 
-        public init(id: UUID, radius: CGFloat, limit: CGFloat, roundsViaStyle: Bool) {
+        public init(id: UUID, radii: CornerRadii, limit: CGFloat, roundsViaStyle: Bool) {
             self.id = id
-            self.radius = radius
+            self.radii = radii
             self.limit = limit
             self.roundsViaStyle = roundsViaStyle
         }
@@ -51,6 +55,35 @@ public struct CornerRadiusSelection: Hashable, Sendable {
 
     /// The layers a drag in this row rounds, in the order they were given.
     public var layerIDs: [UUID] { members.map(\.id) }
+
+    /// What the four opened rows show: the corners they all wear, or that they
+    /// differ.
+    public var radii: StyleReading<CornerRadii> {
+        guard let first = members.first?.radii else {
+            return StyleReading(value: nil, isMixed: false)
+        }
+        let mixed = members.dropFirst().contains { $0.radii != first }
+        return StyleReading(value: mixed ? nil : first, isMixed: mixed)
+    }
+
+    /// What ONE opened corner row shows across everything picked.
+    public func corner(_ corner: CornerRadii.Corner) -> StyleReading<Double> {
+        guard let first = members.first.map({ Double($0.radii[corner]) }) else {
+            return StyleReading(value: nil, isMixed: false)
+        }
+        let mixed = members.dropFirst().contains { Double($0.radii[corner]) != first }
+        return StyleReading(value: mixed ? nil : first, isMixed: mixed)
+    }
+
+    /// Whether anything picked has a corner rounded differently from the rest
+    /// of its own. What the closed row shows the four numbers for rather than
+    /// a single one that would not be true.
+    public var hasUnevenCorners: Bool { members.contains { !$0.radii.isUniform } }
+
+    /// The four numbers the closed readout shows when there is one set of them
+    /// to show, so a corner typed while the rows were open is still readable
+    /// once they are shut.
+    public var shorthand: String? { radii.value.map(\.shorthand) }
 
     /// What the row shows: the number they all wear, or that they differ.
     public var reading: StyleReading<Double> {
@@ -133,7 +166,7 @@ extension PhotonzDocument {
             let bounds = layer.localBounds
             members.append(CornerRadiusSelection.Member(
                 id: id,
-                radius: displayedCornerRadius(of: layer, style: style(layer)),
+                radii: displayedCornerRadii(of: layer, style: style(layer)),
                 limit: max(1, min(bounds.width, bounds.height) / 2),
                 roundsViaStyle: !layer.roundsItsOwnOutline))
         }
@@ -147,16 +180,16 @@ extension PhotonzDocument {
     /// second slider left behind: reading zero there would be a row denying
     /// what is plainly on the canvas, so it reads the mask, and the first nudge
     /// moves that rounding onto the outline where it belongs.
-    private func displayedCornerRadius(of layer: Layer, style: LayerStyle) -> CGFloat {
-        layer.roundedCornerRadius(style: style)
+    private func displayedCornerRadii(of layer: Layer, style: LayerStyle) -> CornerRadii {
+        layer.roundedCornerRadii(style: style)
     }
 
     /// One pull, every picked layer, each rounded the way it rounds. Returns
     /// how many took it, so a caller can tell a no-op from an edit. Locked
     /// layers are left exactly as they are.
     @discardableResult
-    public mutating func setCornerRadius(layerIDs: [UUID], to radius: CGFloat) -> Int {
-        let radius = max(0, radius)
+    public mutating func setCornerRadii(layerIDs: [UUID], to radii: CornerRadii) -> Int {
+        let radii = radii.used
         var changed = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
@@ -165,7 +198,30 @@ extension PhotonzDocument {
             // row exists to end (`ComponentNumberKnob.swift`, which is where a
             // number knob on a copy rounds from too, so the two can never
             // disagree).
-            updateLayer(id: id) { $0.setRoundedCorners(radius) }
+            updateLayer(id: id) { $0.setRoundedCorners(radii) }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// The one slider: every corner of every picked layer the same. Opening the
+    /// four is the deliberate act, so the number that is always there goes on
+    /// meaning what it always meant, and pulling it flattens a shape whose
+    /// corners had been set apart — in ONE undo step, like any other pull.
+    @discardableResult
+    public mutating func setCornerRadius(layerIDs: [UUID], to radius: CGFloat) -> Int {
+        setCornerRadii(layerIDs: layerIDs, to: CornerRadii(max(0, radius)))
+    }
+
+    /// ONE corner of every picked layer, leaving its other three alone. What an
+    /// opened corner row writes.
+    @discardableResult
+    public mutating func setCornerRadius(layerIDs: [UUID], corner: CornerRadii.Corner,
+                                         to radius: CGFloat) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked else { continue }
+            updateLayer(id: id) { $0.setRoundedCorner(corner, to: radius) }
             changed += 1
         }
         return changed
@@ -191,17 +247,24 @@ extension AnnotationContent {
     ///
     /// `size` is the shape's box in the same unit its numbers are stated in,
     /// which is document points.
-    public func boxCornerRadius(in size: CGSize) -> CGFloat {
-        guard shape == .rectangle, cornerRadius > 0 else { return 0 }
+    public func boxCornerRadii(in size: CGSize) -> CornerRadii {
+        guard shape == .rectangle, cornerRadii.isRound else { return .none }
         let outset = strokeOutset
         let inset = strokeWidth / 2 - outset
         let path = CGSize(width: size.width - 2 * inset, height: size.height - 2 * inset)
-        guard path.width > 0, path.height > 0 else { return 0 }
+        guard path.width > 0, path.height > 0 else { return .none }
         // Rounding past fully round is fully round, exactly as the rasterizer
         // clamps it, so a shape pulled thin does not grow a curve wider than it
-        // is.
-        let radius = min(cornerRadius, min(path.width, path.height) / 2)
-        return max(0, radius + strokeWidth / 2 - outset)
+        // is. A SQUARE corner stays square: growing it by half a line would
+        // make a lozenge of a sharp box.
+        return cornerRadii.fitted(in: path).grown(by: strokeWidth / 2 - outset)
+    }
+
+    /// The same, as one number, for everything that only ever wanted even
+    /// corners.
+    public func boxCornerRadius(in size: CGSize) -> CGFloat {
+        let radii = boxCornerRadii(in: size)
+        return radii.uniform ?? radii.largest
     }
 }
 
@@ -220,8 +283,15 @@ extension Layer {
     ///
     /// `boxSize` is the layer's box in the unit the shape's own numbers are
     /// stated in, which is document points.
+    public func boxCornerRadii(boxSize: CGSize) -> CornerRadii {
+        let own = annotation?.boxCornerRadii(in: boxSize) ?? .none
+        return own.isRound ? own : style.cornerRadii
+    }
+
+    /// The same, as one number, for everything that only ever wanted even
+    /// corners.
     public func boxCornerRadius(boxSize: CGSize) -> CGFloat {
-        let own = annotation?.boxCornerRadius(in: boxSize) ?? 0
-        return own > 0 ? own : style.cornerRadius
+        let radii = boxCornerRadii(boxSize: boxSize)
+        return radii.uniform ?? radii.largest
     }
 }

@@ -3636,18 +3636,73 @@ struct CornerRadiusRow: View {
     /// under the knob.
     private var showsMixed: Bool { draft == nil && selection.reading.isMixed }
 
+    /// Whether the four corners are showing. Closed until somebody opens them,
+    /// the way Padding's four sides are: one number is the common case, and
+    /// four always-on rows would be the panel telling you it has run out of
+    /// space for the thing you actually came here for.
+    @State private var cornersOpen = false
+
+    /// Whether the four corners can be opened at all. This row is shared with
+    /// the release that came before Appearance and Effects split, and setting a
+    /// corner on its own belongs to the new panel, so only it grows the
+    /// chevron. Both releases READ four corners honestly, because a document is
+    /// a document: a card drawn with a rounded top opened in either one shows
+    /// the four numbers rather than a single one that is not true.
+    private var canOpenCorners: Bool { Experiments.shared.shapePartsEnabled }
+
+    /// What the readout says when there is no single number to say.
+    ///
+    /// With the corners CLOSED, the four numbers themselves — `16/16/0/0` —
+    /// because the readout is then the only place on screen a corner set on its
+    /// own can be read. Two layers rounded differently have no four numbers in
+    /// common either, so that case is the house word. This is exactly what
+    /// Padding's single field does, on purpose (`ArrangementInspector.swift`).
+    private var readout: String {
+        if showsMixed { return LayerStyleSelection.mixedText }
+        guard selection.hasUnevenCorners else { return points(knob) }
+        // OPEN, the four numbers are on the rows underneath, so saying them
+        // again up here would be noise — and saying one of them would be a
+        // claim that is not true. CLOSED, this is the only place left on screen
+        // where a corner set on its own can be read, so it holds the four.
+        guard !(cornersOpen && canOpenCorners), let shorthand = selection.shorthand else {
+            return LayerStyleSelection.mixedText
+        }
+        return shorthand
+    }
+
+    /// True while the readout is standing in for something rather than saying a
+    /// number, so it is drawn the one strength every other Mixed is drawn at.
+    private var readoutIsMixed: Bool { readout == LayerStyleSelection.mixedText }
+
     var body: some View {
         let ids = selection.layerIDs
         VStack(alignment: .leading, spacing: 2) {
-            HStack {
+            HStack(spacing: 6) {
                 Text("Corner Radius").font(.caption).foregroundStyle(.secondary)
+                // The same twist-open Padding uses for its four sides, beside
+                // the word it opens rather than in front of it, so the row
+                // still starts where every other row starts.
+                if canOpenCorners {
+                    Button { cornersOpen.toggle() } label: {
+                        Image(systemName: cornersOpen ? "chevron.down" : "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 12, height: 12)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .panelHelp(cornersOpen
+                        ? "Hide the four corners and keep the rounding they were given."
+                        : "Round each of the four corners on its own.")
+                    .playtestControl("Each corner", detail: "Corner Radius")
+                }
                 if let only = selection.soleStyleRoundedID {
                     InstanceStyleRevert(layerID: only, field: .cornerRadius)
                 }
-                Spacer()
-                Text(showsMixed ? LayerStyleSelection.mixedText : points(knob))
+                Spacer(minLength: 8)
+                Text(readout)
                     .font(.caption.monospacedDigit())
-                    .foregroundStyle(MixedLook.style(showsMixed, otherwise: .secondary))
+                    .foregroundStyle(MixedLook.style(readoutIsMixed, otherwise: .secondary))
             }
             Slider(value: Binding(
                 get: { knob },
@@ -3663,8 +3718,40 @@ struct CornerRadiusRow: View {
             .controlSize(.small)
             .disabled(ids.isEmpty)
             .playtestControl("Slider", detail: "Corner Radius")
+            .help(selection.hasUnevenCorners
+                ? "These corners are set apart. Pulling this gives all four the same."
+                : "How round every corner of the picked layers is.")
+            if cornersOpen, canOpenCorners {
+                ForEach(CornerRadii.Corner.allCases, id: \.self) { corner in
+                    cornerRow(corner, ids: ids)
+                }
+            }
         }
         .playtestField("Corner Radius")
+    }
+
+    /// One corner's own number, typed rather than dragged: you come here to say
+    /// "the top two, sixteen, the bottom two, nothing", and four more knobs
+    /// would be four more things to nudge by accident.
+    @ViewBuilder
+    private func cornerRow(_ corner: CornerRadii.Corner, ids: [UUID]) -> some View {
+        let reading = selection.corner(corner)
+        HStack(spacing: 6) {
+            Text(corner.title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.leading, 16)
+            Spacer(minLength: 8)
+            LayoutNumberField(
+                title: corner.title,
+                value: reading.value.map { CGFloat($0) },
+                placeholder: reading.isMixed ? MixedValue.text : "",
+                help: "How round the \(corner.spoken) corner is."
+            ) { value in
+                editorState.commitCornerRadius(ids: ids, corner: corner, value)
+            }
+        }
+        .playtestField(corner.title)
     }
 }
 

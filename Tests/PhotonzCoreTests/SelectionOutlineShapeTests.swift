@@ -19,7 +19,7 @@ struct SelectionOutlineShapeTests {
         var annotation = AnnotationContent(shape: .rectangle, strokeWidth: stroke,
                                            start: .zero,
                                            end: CGPoint(x: box.width, y: box.height),
-                                           cornerRadius: radius, fillColorHex: "#FF0000")
+                                           cornerRadii: CornerRadii(radius), fillColorHex: "#FF0000")
         annotation.strokePosition = position
         return Layer(name: "Rectangle", content: .annotation(annotation), frame: box)
     }
@@ -27,7 +27,7 @@ struct SelectionOutlineShapeTests {
     private func shape(_ kind: AnnotationShape) -> Layer {
         let annotation = AnnotationContent(shape: kind, strokeWidth: 4, start: .zero,
                                            end: CGPoint(x: box.width, y: box.height),
-                                           cornerRadius: 0, fillColorHex: "#FF0000")
+                                           cornerRadii: 0, fillColorHex: "#FF0000")
         return Layer(name: "\(kind)", content: .annotation(annotation), frame: box)
     }
 

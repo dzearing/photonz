@@ -1,0 +1,208 @@
+{
+  "out": "/tmp/photonz-playtest/each-corner-on-its-own",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        320,
+        260
+      ],
+      "to": [
+        600,
+        460
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-square",
+      "note": "a rectangle, square on all four corners"
+    },
+    {
+      "do": "panel",
+      "stage": "1-square"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-square"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius",
+      "across": 0.35
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-all-four",
+      "note": "the one slider still rounds all four, which is the way in"
+    },
+    {
+      "do": "panel",
+      "stage": "2-all-four"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-all-four"
+    },
+    {
+      "do": "render",
+      "name": "2-canvas-all-four"
+    },
+    {
+      "do": "press",
+      "control": "Each corner",
+      "in": "Corner Radius"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-opened",
+      "note": "the chevron opened the one number into four"
+    },
+    {
+      "do": "panel",
+      "stage": "3-opened"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-opened"
+    },
+    {
+      "do": "focus",
+      "field": "Bottom Right"
+    },
+    {
+      "do": "type",
+      "text": "0"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Bottom Left"
+    },
+    {
+      "do": "type",
+      "text": "0"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-rounded-top",
+      "note": "the bottom two corners set to nothing: a card with a rounded top and a square foot"
+    },
+    {
+      "do": "panel",
+      "stage": "4-rounded-top"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-rounded-top"
+    },
+    {
+      "do": "render",
+      "name": "4-canvas-rounded-top"
+    },
+    {
+      "do": "press",
+      "control": "Each corner",
+      "in": "Corner Radius"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-closed",
+      "note": "shut again: the readout says the four numbers rather than a single one that is not true"
+    },
+    {
+      "do": "panel",
+      "stage": "5-closed"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-closed"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        640,
+        260
+      ],
+      "to": [
+        820,
+        460
+      ],
+      "hold": "6-drawing"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-next-shape",
+      "note": "the next rectangle arrives wearing the same four corners, so a segmented control is shapes in a row rather than numbers typed again"
+    },
+    {
+      "do": "render",
+      "name": "6-canvas-next-shape"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-next-shape"
+    }
+  ]
+}

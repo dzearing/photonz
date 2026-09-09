@@ -150,28 +150,48 @@ extension Layer {
     /// nought there would deny what is plainly on the canvas.
     /// `style` is passed in so a caller previewing a drag reads what is on
     /// screen rather than what is on disk.
+    public func roundedCornerRadii(style: LayerStyle) -> CornerRadii {
+        guard roundsItsOwnOutline else { return style.cornerRadii }
+        let own = annotation?.cornerRadii ?? .none
+        return own.isRound ? own : style.cornerRadii
+    }
+
+    /// The same, as one number, for everything that only ever wanted even
+    /// corners.
     func roundedCornerRadius(style: LayerStyle) -> CGFloat {
-        guard roundsItsOwnOutline else { return style.cornerRadius }
-        let own = annotation?.cornerRadius ?? 0
-        return own > 0 ? own : style.cornerRadius
+        let radii = roundedCornerRadii(style: style)
+        return radii.uniform ?? radii.largest
     }
 
     /// How round this layer is, as it stands.
+    public var roundedCornerRadii: CornerRadii { roundedCornerRadii(style: style) }
     var roundedCornerRadius: CGFloat { roundedCornerRadius(style: style) }
 
     /// Rounds this layer the way it rounds: a rectangle by curving its own
     /// outline, everything else by masking its picture. The other number goes to
     /// nought, because two radii fighting over one rectangle is the thing the
     /// one Corner Radius row exists to end (`CornerRadiusSelection.swift`).
-    mutating func setRoundedCorners(_ radius: CGFloat) {
-        let radius = max(0, radius)
+    mutating func setRoundedCorners(_ radii: CornerRadii) {
+        let radii = radii.used
         guard roundsItsOwnOutline, var annotation else {
-            style.cornerRadius = radius
+            style.cornerRadii = radii
             return
         }
-        annotation.cornerRadius = radius
+        annotation.cornerRadii = radii
         content = .annotation(annotation)
-        style.cornerRadius = 0
+        style.cornerRadii = .none
+    }
+
+    /// The same, from one number: every corner the same.
+    mutating func setRoundedCorners(_ radius: CGFloat) {
+        setRoundedCorners(CornerRadii(max(0, radius)))
+    }
+
+    /// One corner, leaving the other three exactly as they are.
+    mutating func setRoundedCorner(_ corner: CornerRadii.Corner, to radius: CGFloat) {
+        var radii = roundedCornerRadii
+        radii[corner] = max(0, radius)
+        setRoundedCorners(radii)
     }
 
     /// Sets the one line round this shape, folding away any border ring the old

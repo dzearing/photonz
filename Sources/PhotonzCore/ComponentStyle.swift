@@ -68,7 +68,7 @@ extension LayerStyle {
         var fields: Set<LayerStyleField> = []
         if a.opacity != b.opacity { fields.insert(.opacity) }
         if a.blurRadius != b.blurRadius { fields.insert(.blur) }
-        if a.cornerRadius != b.cornerRadius { fields.insert(.cornerRadius) }
+        if a.cornerRadii != b.cornerRadii { fields.insert(.cornerRadius) }
         if a.borderWidth != b.borderWidth { fields.insert(.border) }
         if a.borderColorHex != b.borderColorHex { fields.insert(.borderColor) }
         if a.shadow != b.shadow { fields.insert(.shadow) }
@@ -84,7 +84,7 @@ extension LayerStyle {
         switch field {
         case .opacity: style.opacity = other.opacity
         case .blur: style.blurRadius = other.blurRadius
-        case .cornerRadius: style.cornerRadius = other.cornerRadius
+        case .cornerRadius: style.cornerRadii = other.cornerRadii
         case .border: style.borderWidth = other.borderWidth
         case .borderColor: style.borderColorHex = other.borderColorHex
         // Every shadow the layer throws is ONE thing a person means by

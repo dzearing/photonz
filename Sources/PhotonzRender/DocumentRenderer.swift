@@ -536,8 +536,8 @@ public final class DocumentRenderer: @unchecked Sendable {
                                     contentScale: contentScale, magnifyNearest: magnifyNearest)
             .cropped(to: buffer)
 
-        image = rounded(image, box: box, radius: layer.style.cornerRadius)
-        image = borderEffects(image, box: box, radius: layer.style.cornerRadius,
+        image = rounded(image, box: box, radii: layer.style.cornerRadii)
+        image = borderEffects(image, box: box, radii: layer.style.cornerRadii,
                               borders: layer.boxBorders)
         // Blurring a group blurs the card it makes — surface, corner and ring
         // as one — and its halo escapes the group's box the way its shadow
@@ -800,12 +800,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         // it out (capsule on non-square boxes); everything else takes the
         // style's radius. The extent here is already frame-sized, so the radius
         // is in box space.
-        let maskRadius: CGFloat
+        let maskRadii: CornerRadii
         if case .zoomCallout(let callout) = layer.content {
-            maskRadius = callout.effectiveCornerRadius(boxSize: image.extent.size,
-                                                       styleRadius: layer.style.cornerRadius)
+            // A callout's circle is one number by construction, so it stays one.
+            maskRadii = CornerRadii(callout.effectiveCornerRadius(
+                boxSize: image.extent.size, styleRadius: layer.style.cornerRadius))
         } else {
-            maskRadius = layer.style.cornerRadius
+            maskRadii = layer.style.cornerRadii
         }
         // ...and what a RING round the box follows, which is not the same
         // question. A rectangle rounds by curving the outline it draws rather
@@ -819,8 +820,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         // after — so like `contentOutset` above they are restated in output
         // pixels here. The style's radius already is, having been magnified
         // with the frame it sits on.
-        let shapeRadius = (layer.annotation?.boxCornerRadius(in: boxInPoints) ?? 0) * contentScale
-        let ringRadius = shapeRadius > 0 ? shapeRadius : maskRadius
+        let shapeRadii = (layer.annotation?.boxCornerRadii(in: boxInPoints) ?? .none)
+            .scaled(by: contentScale)
+        let ringRadii = shapeRadii.isRound ? shapeRadii : maskRadii
         // ...and WHAT it follows, which on an ellipse is not a rectangle at
         // all: a border added to an oval used to come out as a square frame
         // round it (reported on the probe, 2026-09-08).
@@ -836,13 +838,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         let box = contentOutset > 0
             ? image.extent.insetBy(dx: contentOutset, dy: contentOutset)
             : image.extent
-        image = rounded(image, box: box, radius: maskRadius, keepingOutside: contentOutset > 0)
+        image = rounded(image, box: box, radii: maskRadii, keepingOutside: contentOutset > 0)
         // Every ring round this layer's BOX, in the order the Effects list
         // holds them. On a label that is only the borders whose row says they
         // follow its frame: the ones following the letters were baked into the
         // words above, and drawing those again as a box would put a frame round
         // a label nobody asked for (`BorderFollows.swift`).
-        image = borderEffects(image, box: box, radius: ringRadius, shape: ringShape,
+        image = borderEffects(image, box: box, radii: ringRadii, shape: ringShape,
                               borders: layer.boxBorders)
 
         // Style: blur, after the paint rather than before it, so the softness
@@ -929,10 +931,10 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// the picture bigger than the box in the first place; everywhere else the
     /// rounded corner is what clips, which is what makes a rounded group clip
     /// what it holds.
-    private func rounded(_ image: CIImage, box: CGRect, radius: CGFloat,
+    private func rounded(_ image: CIImage, box: CGRect, radii: CornerRadii,
                          keepingOutside: Bool = false) -> CIImage {
-        guard radius > 0 else { return image }
-        let mask = roundedRectImage(rect: box, radius: radius, color: .white)
+        guard radii.isRound else { return image }
+        let mask = roundedRectImage(rect: box, radii: radii, color: .white)
         guard keepingOutside, !image.extent.isInfinite,
               !image.extent.insetBy(dx: 0.5, dy: 0.5).contains(box.insetBy(dx: -0.5, dy: -0.5))
         else {
@@ -963,12 +965,12 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// Painted from the FOOT of the list upwards, so the entry nearest the top
     /// ends up nearest the eye — the same rule the shadows follow, and the
     /// whole meaning of the grip on the row.
-    private func borderEffects(_ image: CIImage, box: CGRect, radius: CGFloat,
+    private func borderEffects(_ image: CIImage, box: CGRect, radii: CornerRadii,
                                shape: RingShape = .box, borders: [BorderEffect]) -> CIImage {
         guard !borders.isEmpty else { return image }
         var result = image
         for border in borders.reversed() {
-            result = ringed(result, box: box, radius: radius, shape: shape, width: border.width,
+            result = ringed(result, box: box, radii: radii, shape: shape, width: border.width,
                             outset: border.outset, paint: border.paint)
         }
         return result
@@ -983,7 +985,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// outside puts the ring's INNER edge on the box. An outside ring therefore
     /// makes the picture bigger, which is why the result is cropped to what the
     /// two of them cover rather than back to the layer's own box.
-    private func ringed(_ image: CIImage, box: CGRect, radius: CGFloat, shape: RingShape,
+    private func ringed(_ image: CIImage, box: CGRect, radii: CornerRadii, shape: RingShape,
                         width: CGFloat, outset: CGFloat, paint: Paint) -> CIImage {
         let outerRect = outset > 0 ? box.insetBy(dx: -outset, dy: -outset) : box
         // An oval has no corners to round, so it is drawn as an oval rather
@@ -999,20 +1001,20 @@ public final class DocumentRenderer: @unchecked Sendable {
         // answer for a corner that IS round and the wrong one for a corner that
         // is not: it turned an 11pt ring round a sharp button into a lozenge
         // (found on the probe, 2026-09-07).
-        let outerRadius = radius > 0 ? radius + outset : 0
+        let outerRadii = radii.grown(by: outset)
         // A flat ring is generated in its own colour, which is one filter and
         // no bitmap. A gradient one is generated white and the ramp poured
         // through it, because a box's edge can be a gradient — it was the
         // shape's own stroke before the Outline row left Appearance, and a
         // gradient edge somebody drew must not flatten (`OutlineRetirement`).
         let flat = !paint.isGradient
-        let outer = roundedRectImage(rect: outerRect, radius: outerRadius,
+        let outer = roundedRectImage(rect: outerRect, radii: outerRadii,
                                      color: flat ? ciColor(hex: paint.hex) : .white)
         let innerRect = outerRect.insetBy(dx: width, dy: width)
         var ring = outer
         if !innerRect.isNull, !innerRect.isEmpty {
             let inner = roundedRectImage(rect: innerRect,
-                                         radius: max(0, outerRadius - width),
+                                         radii: outerRadii.grown(by: -width),
                                          color: .white)
             ring = outer.applyingFilter("CISourceOutCompositing",
                                         parameters: [kCIInputBackgroundImageKey: inner])
@@ -1323,6 +1325,41 @@ public final class DocumentRenderer: @unchecked Sendable {
         filter.radius = Float(radius)
         filter.color = color
         return (filter.outputImage ?? CIImage.empty()).cropped(to: rect)
+    }
+
+    /// The same slab, with a corner of its own on each of its four corners.
+    ///
+    /// Four corners that AGREE go straight through the generator above, which
+    /// is one filter and no bitmap: the common case costs exactly what it
+    /// always cost, and a 12 megapixel composite does not start baking masks
+    /// because per-corner rounding exists. Only a shape whose corners actually
+    /// differ pays for a drawn one.
+    ///
+    /// `radii` is stated in the DOCUMENT's top-left space; the extent it is
+    /// drawn into is Core Image's bottom-left, so the pairs swap over.
+    private func roundedRectImage(rect: CGRect, radii: CornerRadii, color: CIColor) -> CIImage {
+        let fitted = radii.fitted(in: rect.size)
+        if let uniform = fitted.uniform {
+            return roundedRectImage(rect: rect, radius: uniform, color: color)
+        }
+        let width = Int(rect.width.rounded()), height = Int(rect.height.rounded())
+        guard width > 0, height > 0,
+              let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return roundedRectImage(rect: rect, radius: fitted.largest, color: color) }
+        let local = CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height))
+        context.setFillColor(CGColor(red: color.red, green: color.green,
+                                     blue: color.blue, alpha: color.alpha))
+        context.addPath(fitted.flippedVertically.path(in: local))
+        context.fillPath()
+        guard let bitmap = context.makeImage() else {
+            return roundedRectImage(rect: rect, radius: fitted.largest, color: color)
+        }
+        return CIImage(cgImage: bitmap)
+            .transformed(by: CGAffineTransform(translationX: rect.minX, y: rect.minY))
+            .cropped(to: rect)
     }
 
     private func ciColor(hex: String, alpha: Double = 1) -> CIColor {

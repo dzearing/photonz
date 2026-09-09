@@ -83,7 +83,7 @@ struct AnnotationRenderingTests {
         // border is NOT gone — it curves through the corner region.
         let output = renderAnnotation(AnnotationContent(shape: .rectangle, strokeWidth: 4, colorHex: "#FF0000",
                                                         start: CGPoint(x: 20, y: 20), end: CGPoint(x: 80, y: 80),
-                                                        cornerRadius: 18))
+                                                        cornerRadii: 18))
         #expect(isRed(pixel(output, x: 50, y: 21)), "top edge still stroked after rounding")
         #expect(isRed(pixel(output, x: 21, y: 50)), "left edge still stroked after rounding")
         #expect(isWhite(pixel(output, x: 21, y: 21)), "the extreme corner is rounded away")

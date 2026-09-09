@@ -13480,3 +13480,33 @@ nothing tells you a group is overflowing before you go looking in the Layout
 section, and that is true of any group with a size of its own, not only a
 wrapping row. Not in this slice: wrapping a column into columns, and sharing
 leftover height between the lines (they pack from the top on purpose).
+
+## 2026-09-08 — Each corner of a shape can be rounded on its own
+
+Corner Radius opens into four numbers. A card with a rounded top and a square
+foot, a segmented control with round ends, a speech bubble: one shape now,
+rather than a second shape laid over the first to fake it.
+
+- `CornerRadii` in PhotonzCore, copying the bargain `GroupPadding` makes with a
+  group's four sides: one number is the way in, four underneath, and it saves as
+  a single number while they agree, so an older document is byte for byte what
+  it was. Both `AnnotationContent` and `LayerStyle` store it under the key one
+  radius always wrote, so the file format did not fork.
+- Two corners on one edge that would cross are scaled down together by the rule
+  a browser uses, which collapses to exactly the old `min(r, min(w,h)/2)` when
+  all four agree.
+- One path builder now serves the shape's fill and stroke, the mask cut out of a
+  picture or a group, every ring in the Effects list, and the outline round a
+  picked layer. Perf note: the compositor keeps its one-filter Core Image mask
+  whenever the four corners agree, so only a shape whose corners actually differ
+  bakes a drawn mask; the common case costs what it always cost.
+- Panel: a chevron beside Corner Radius opens the four, the way Padding's four
+  sides open. Gated on `next-shape-parts`, so the release before the
+  Appearance/Effects split keeps its single slider — but it still READS four
+  corners honestly, showing `34/34/0/0` rather than a number that is not true.
+- Audit: `queue/audits/2026-09-08-each-corner-rounded.json`, with real window
+  captures from `Scripts/playtest/each-corner-on-its-own-walk.json`.
+
+Next: the queue. Open question in the audit — pulling the one slider while the
+corners disagree still flattens all four, and there is no way to drag a corner
+on the canvas.

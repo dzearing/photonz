@@ -48,7 +48,7 @@ struct RoundedBorderRenderTests {
                                            colorHex: "#FF0000",
                                            start: .zero,
                                            end: CGPoint(x: box.width, y: box.height),
-                                           cornerRadius: radius, fillColorHex: "#FF0000")
+                                           cornerRadii: CornerRadii(radius), fillColorHex: "#FF0000")
         annotation.strokePosition = position
         return Layer(name: "Box", content: .annotation(annotation), frame: box, style: style)
     }

@@ -22,7 +22,7 @@ struct CornerRadiusSelectionTests {
         content.cornerRadius = radius
         var layer = Layer(name: "Rectangle", content: .annotation(content),
                           frame: CGRect(x: 0, y: 0, width: size, height: size),
-                          style: LayerStyle(cornerRadius: styleRadius))
+                          style: LayerStyle(cornerRadius: CornerRadii(styleRadius)))
         layer.isLocked = locked
         return layer
     }
@@ -31,7 +31,7 @@ struct CornerRadiusSelectionTests {
                          locked: Bool = false) -> Layer {
         var layer = Layer(name: "Shot", content: .image(ImageRef(pixelSize: CGSize(width: size, height: size))),
                           frame: CGRect(x: 0, y: 0, width: size, height: size),
-                          style: LayerStyle(cornerRadius: styleRadius))
+                          style: LayerStyle(cornerRadius: CornerRadii(styleRadius)))
         layer.isLocked = locked
         return layer
     }

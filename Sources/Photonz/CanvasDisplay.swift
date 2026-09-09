@@ -682,7 +682,7 @@ extension CanvasNSView {
             let box = inkBox(of: layer)
             outlines.addPath(SelectionOutlineShape.path(
                 box: box,
-                cornerRadius: layer.selectionOutlineRadius(box: box),
+                cornerRadii: layer.selectionOutlineRadii(box: box),
                 transform: inkTransform(of: layer)
                     .concatenating(CGAffineTransform(translationX: shift.x, y: shift.y))
                     .concatenating(viewport.documentToView)))
@@ -868,7 +868,7 @@ extension CanvasNSView {
             // square frame corners, which is where a drag grabs.
             layerOutlineLayer.path = SelectionOutlineShape.path(
                 box: box,
-                cornerRadius: selectedLayer.selectionOutlineRadius(box: box),
+                cornerRadii: selectedLayer.selectionOutlineRadii(box: box),
                 transform: docToHandle.concatenating(viewport.documentToView))
             layerOutlineLayer.isHidden = false
         }
