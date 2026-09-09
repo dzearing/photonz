@@ -1469,6 +1469,24 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectOneUnit"))
     }
 
+    // The same shape of claim about the panel's NUMBERS: on 2026-09-09 a
+    // capture caught a picked copy of a button reading Corner Radius 0 in
+    // Appearance and Corner radius 18 in the Component section under it, over a
+    // button that was plainly round. It takes no arguments for the same reason
+    // its neighbour does not: naming the rows to check is how the next row goes
+    // unchecked.
+    @Test("An expectOneNumberPerName step needs nothing said about it")
+    func expectOneNumberPerNameTakesNoFields() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectOneNumberPerName" } ] }
+        """)
+        guard case .expectOneNumberPerName = script.steps[0] else {
+            Issue.record("expectOneNumberPerName"); return
+        }
+        #expect(script.steps[0].name == "expectOneNumberPerName")
+        #expect(PlaytestStep.names.contains("expectOneNumberPerName"))
+    }
+
     /// Zero is as much of the point as any other number: it is how a walk says
     /// nothing should have landed here.
     @Test func expectMeasuresTakesZero() throws {

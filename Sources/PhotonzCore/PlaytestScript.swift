@@ -1172,6 +1172,24 @@ public enum PlaytestStep: Sendable, Equatable {
     /// rather than a walk listing the rows it happens to know about: a row
     /// added next month is covered the day it arrives.
     case expectOneUnit
+    /// CLAIMS that no two rows in the right hand panel wear the same name and
+    /// read different numbers, and fails the run naming them and what each one
+    /// says.
+    ///
+    /// One name, one number. It did not always hold: on 2026-09-09 a capture
+    /// caught a picked copy of a button showing Corner Radius 0 in Appearance,
+    /// slider at the far left, and Corner radius 18 in the Component section
+    /// under it, over a button that was plainly round. Both were true of
+    /// different layers and nothing on screen said which was which
+    /// (`InstanceRounding.swift`).
+    ///
+    /// A row inside another row keeps its owner's name in front of its own, so
+    /// a shadow's Opacity and the layer's own Opacity are two different names
+    /// and are allowed to differ, which is exactly what the bracket round a
+    /// part's settings says on screen. Like `expectOneUnit` this asks the panel
+    /// itself rather than a walk listing the rows it happens to know about, so a
+    /// row added next month is covered the day it arrives.
+    case expectOneNumberPerName
     /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
     /// down the list). A list that builds only the rows you can see has to be
     /// scrolled to prove the rest arrive, and that is not something a click can
@@ -1251,7 +1269,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectInView", "expectMeasures", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectInView", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
@@ -1299,6 +1317,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectSectionFits: "expectSectionFits"
         case .expectInView: "expectInView"
         case .expectOneUnit: "expectOneUnit"
+        case .expectOneNumberPerName: "expectOneNumberPerName"
         case .expectPicked: "expectPicked"
         case .scrollPanel: "scrollPanel"
         case .reveal: "reveal"
@@ -1545,6 +1564,8 @@ public enum PlaytestStep: Sendable, Equatable {
                                  whole: try f.optionalFlag("whole") ?? false)
         case "expectOneUnit":
             self = .expectOneUnit
+        case "expectOneNumberPerName":
+            self = .expectOneNumberPerName
         case "expectPicked":
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")

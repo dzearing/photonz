@@ -68,6 +68,17 @@ struct PartsInspector: View {
                 }
                 .panelStartProbe(.row, owner: "Corner Radius")
             }
+            // Where the row would have been, when a copy handed its roundness
+            // to a knob. A row that simply vanishes is a hole in the panel, so
+            // the section names the control that owns the number and where it
+            // is, the way the Layout section names Edit Original.
+            if let rounding = editorState.instanceRoundingNote {
+                Text(rounding)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .panelStartProbe(.row, owner: "Rounding note")
+            }
             if let caption {
                 Text(caption)
                     .font(.caption2)

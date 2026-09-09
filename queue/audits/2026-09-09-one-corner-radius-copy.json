@@ -1,0 +1,47 @@
+{
+  "feature": "One Corner Radius on a copy",
+  "epic": "ui-components",
+  "summary": "Picking a copy of a component no longer shows two rows called Corner Radius holding different numbers. The copy's roundness is the knob its original exposes, and Appearance says in one line where that knob is instead of offering a second slider that read 0 over a round button.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-components and next-shape-parts are on by default.",
+  "try": [
+    {
+      "do": "Draw a rectangle, round it to 18, put a text layer on it and group the two."
+    },
+    {
+      "do": "Press Option Command K to make the group a component, and name it Save button."
+    },
+    {
+      "do": "In the Component section press Add and choose Rectangle, Corner radius. Press Return to keep the name it arrives with."
+    },
+    {
+      "do": "Drag the Save button tile off the Library shelf onto the canvas twice."
+    },
+    {
+      "do": "Click one of the copies and read the Appearance section.",
+      "shot": "2026-09-09-one-corner-radius-copy-1.png"
+    },
+    {
+      "do": "Type Cancel into Label in the Component section and press Return."
+    },
+    {
+      "do": "Type 4 into Corner radius in the Component section and press Return.",
+      "shot": "2026-09-09-one-corner-radius-copy-2.png"
+    },
+    {
+      "do": "Press the way back arrow beside Corner radius to put the copy on 18 again."
+    }
+  ],
+  "evaluate": [
+    "Reading the panel over a picked copy, is it now obvious which number is the roundness you can see?",
+    "You lost the Corner Radius SLIDER on a copy and got a typed field two sections down. Do you miss dragging it?",
+    "Does the line \"This copy is rounded by its Corner radius knob, in the Component section below\" send you to the right place, or would you rather the row simply were not there and nothing were said?",
+    "The line sits under Opacity with a full gap above it. Does it read as a note about the section, or as a row that lost its control?",
+    "If the knob had been named Roundness, would the line naming it Roundness still make sense to you?"
+  ],
+  "rough": [
+    "Pick the ORIGINAL rather than a copy and Appearance still reads Corner Radius 0 px over the same round button, because a group's own box is not what is rounded. Only one row is on screen there so nothing disagrees, but the number is still not the one you can see. Filed as find-out-what-corner-radius-should-say-over-a-gr.",
+    "A copy can no longer be given a rounded outer mask of its own from the panel while its original exposes a rounding. That mask cut nothing anybody could see on any component with room inside its edges, which is all of them so far, but it was a durable setting and it is gone from the panel.",
+    "The Appearance row is HIDDEN rather than rewired. Making the slider itself turn the knob was the other option and would have kept the drag; it was not taken because a component can expose two roundings and one slider cannot stand for both.",
+    "Screenshots here are real window captures from a playtest run (Screen Recording was granted), not offscreen renders."
+  ]
+}

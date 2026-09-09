@@ -13812,3 +13812,52 @@ the Add Effect button's accessibility label at step 11, appearance-effects with
 no done.json), each in a different place across six runs, with two fully green
 runs of the same batch. If the sweep shows them again they are worth a task of
 their own.
+
+## 2026-09-09 — one Corner Radius on a copy, and it is the knob
+
+A picked copy of a component said how round it was twice, in two different
+numbers: Appearance read **Corner Radius 0 px** with its slider at the far
+left, the Component section under it read **Corner radius 18**, and the button
+on the canvas was plainly round. Reproduced on a probe build of `f4c7b579` with
+`component-whole-path-walk`; the capture is
+`path-6-three-copies-sc.png`, and the walk's own `describe` prints
+`cornerRadius "0 x1"` for the picked copy over a tree where the copy group is
+392x152 and the rectangle inside it is 360x120.
+
+Both numbers were true, of different layers. Appearance was reading the copy's
+own outer mask; the knob turns the rectangle inside. The outer mask is the one
+nobody can see: a component that keeps any room inside its edges holds
+everything it draws in off them, so a curve cut at the copy's boundary passes
+through empty space.
+
+A copy whose original exposes a rounding is now left out of the Appearance row
+and Appearance says once where the number went: "This copy is rounded by its
+Corner radius knob, in the Component section below." A copy with no rounding
+knob keeps the ordinary row; a knob on some other number takes nothing away;
+an ordinary shape picked beside a copy still rounds and still says it is
+speaking for one of two; the release before Appearance and Effects split is
+untouched. `PhotonzCore/InstanceRounding.swift` holds the rule and the
+sentence, `InstanceRoundingTests` covers it, and the panel asks for it through
+`cornerRadiusSelection(skippingKnobbedCopies:)`.
+
+The claim is now made about the whole panel rather than this one row. The new
+walk step **`expectOneNumberPerName`** fails a run when two rows wear one name
+over different numbers and names both, reading the sliders through the
+`panelReadout` markers and the typing boxes through accessibility. A row inside
+another row keeps its owner's name in front of its own, so a shadow's Opacity
+and the layer's own are two names and may differ. Proven to bite: with the fix
+backed out it fails with `"Corner Radius" reads "0 px" and "Corner radius"
+reads "18"`. `component-whole-path-walk` makes the claim twice.
+
+Full suite green (5305 tests). Walk batches green: component (15), copy (8),
+corner (6), round (4), parts (3), appearance (3), panel-start (2). Audit:
+`queue/audits/2026-09-09-one-corner-radius-copy.json`, with two real window
+captures.
+
+Next: the ORIGINAL still reads Corner Radius 0 px over the same round button,
+because a group's own box is not what is rounded. Only one row is on screen
+there so nothing disagrees, and it is ordinary group behaviour rather than this
+bug, so it is filed as its own question rather than fixed here:
+`find-out-what-corner-radius-should-say-over-a-gr`. Open question for the user
+in the audit: the copy lost the Corner Radius slider and got a typed field two
+sections down, and whether that trade is right is theirs to say.

@@ -1,0 +1,27 @@
+{
+  "id": "find-out-what-corner-radius-should-say-over-a-gr",
+  "title": "Find out what Corner Radius should say over a group whose contents are round",
+  "goal": "Pick a group, or the original of a component, that holds a rounded box inside it. The panel says Corner Radius 0 with the slider at the far left while the thing on the canvas is visibly round. The number is true of the group box, which is invisible, and it may be the wrong thing to be showing.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2360,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T10:19:55.263Z",
+  "updated": "2026-09-09T10:19:55.266Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen while fixing two-rows-called-corner-radius-on-one-copy-hold-d, on a probe build of that fix. Reproduce: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build, and look at path-4-knobs-sc.png: the original Save button is picked, Appearance reads Corner Radius 0 px with its slider at minimum, and the button under it is drawn with an 18pt curve. The walks describe at 4-knobs prints cornerRadius 0 x1 for the picked group.\n\nThis is NOT the copy bug that was just fixed: there is only one row here (the original section lists its knobs by name, not by value), so nothing on screen disagrees with anything else. It is the softer question of whether a group should show its own mask at all when nothing is painted to its edges. Layer.spendsRoom in LayerPlacement.swift is the nearby precedent: room is not offered as a knob when nothing can show it. The corner mask wants a geometric version of the same test, and the risk of hiding the row is that it is jumpy, appearing and disappearing as the contents are moved. Could easily be a decision card for the user rather than a fix. Files: Sources/PhotonzCore/CornerRadiusSelection.swift (hasCorners), Sources/Photonz/PartsInspector.swift.",
+  "acceptance": [
+    "A written answer to whether Corner Radius over a group should read the group box, read what is drawn, or not be there at all",
+    "If the answer is a change, the panel makes it and a walk claims it",
+    "Picking a plain rounded rectangle is unaffected"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T10:19:55.265Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -875,6 +875,9 @@ private final class Run {
         case .expectOneUnit:
             note(number, step.name, try checkOneUnit(), state: describe())
 
+        case .expectOneNumberPerName:
+            note(number, step.name, try checkOneNumberPerName(), state: describe())
+
         case .scrollPanel(let row, let by):
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
@@ -2281,6 +2284,87 @@ private final class Run {
             found += PlaytestPanelReadout.values(in: content)
         }
         return found.filter { !$0.isEmpty }
+    }
+
+    /// Every number the panel is showing WITH the name of the row it sits on,
+    /// so two rows can be compared rather than two loose numbers.
+    ///
+    /// A row inside another row is named for both, owner first: a shadow's
+    /// Opacity is "Shadow \u{25B8} Opacity" and the layer's own is "Opacity",
+    /// which is what the bracket round a part's settings says on screen. Rows
+    /// are found by containment, exactly the way a press finds which row a
+    /// control is in, so nothing has to be instrumented twice.
+    private func namedPanelReadings() throws -> [(name: String, reads: String)] {
+        var found: [(name: String, reads: String)] = []
+        for window in try panelWindows() {
+            guard let content = window.contentView else { continue }
+            let rows = Self.findAll(PanelTargetView.self, in: content)
+                .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+            // The sliders and the plain readouts, which say their number out
+            // loud to the probe and nothing at all to accessibility.
+            for anchor in PlaytestPanelReadout.anchors(in: content) {
+                let owners = PlaytestPanelPress.fields(of: anchor, among: rows)
+                guard !owners.isEmpty else { continue }
+                found.append((owners.joined(separator: " \u{25B8} "), anchor.text))
+            }
+            // ...and the boxes a person types into, which name themselves.
+            for box in Self.findAll(NSTextField.self, in: content)
+            where !box.isHiddenOrHasHiddenAncestor {
+                let name = [box.accessibilityLabel(), box.placeholderString]
+                    .compactMap { $0 }.first { !$0.isEmpty }
+                guard let name, !box.stringValue.isEmpty else { continue }
+                // A typing box IS its row, so its own name already carries
+                // whatever the row is called; only rows OUTSIDE it are owners.
+                let owners = PlaytestPanelPress.fields(of: box, among: rows)
+                    .filter { $0.caseInsensitiveCompare(name) != .orderedSame }
+                found.append(((owners + [name]).joined(separator: " \u{25B8} "), box.stringValue))
+            }
+        }
+        return found
+    }
+
+    /// The number a readout is showing, or nil where it is showing a word.
+    /// "18", "0 px" and "18 pt" are all the same claim about how round
+    /// something is; "Mixed" and "Pill" are not numbers at all.
+    private static func number(in reading: String) -> Double? {
+        var digits = ""
+        for character in reading {
+            if character.isNumber || character == "." || (digits.isEmpty && character == "-") {
+                digits.append(character)
+            } else if !digits.isEmpty {
+                break
+            } else if character != " " {
+                return nil
+            }
+        }
+        return Double(digits)
+    }
+
+    /// One name, one number. Fails naming both rows and what each is saying, so
+    /// the fix is the pair rather than a hunt.
+    private func checkOneNumberPerName() throws -> String {
+        var byName: [String: [(name: String, reads: String, number: Double)]] = [:]
+        for reading in try namedPanelReadings() {
+            guard let value = Self.number(in: reading.reads) else { continue }
+            byName[reading.name.lowercased(), default: []]
+                .append((reading.name, reading.reads, value))
+        }
+        let clashes = byName.values
+            .filter { rows in rows.contains { $0.number != rows[0].number } }
+            .sorted { ($0.first?.name ?? "") < ($1.first?.name ?? "") }
+        guard clashes.isEmpty else {
+            let said = clashes.map { rows in
+                rows.map { "\"\($0.name)\" reads \"\($0.reads)\"" }.joined(separator: " and ")
+            }
+            throw Failure(description: "the panel is saying one name over two different numbers: "
+                + said.joined(separator: "; ")
+                + "; a person reading the panel cannot tell which of them the thing "
+                + "they are looking at is wearing")
+        }
+        let counted = byName.values.filter { $0.count > 1 }.count
+        return "no two rows in the panel wear one name over different numbers, across "
+            + "\(byName.count) named readouts"
+            + (counted == 0 ? "" : ", \(counted) of which are said in more than one place")
     }
 
     /// One space, one word. Fails naming the readout that disagrees, quoted the

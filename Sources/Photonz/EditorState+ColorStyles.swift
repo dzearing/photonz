@@ -539,11 +539,24 @@ extension EditorState {
     /// The Corner Radius the Appearance panel shows: only the picked layers that
     /// HAVE corners. An ellipse has none, so it brings no row rather than a
     /// slider that does nothing to what you have picked.
+    ///
+    /// A copy whose original exposes a rounding is left out too: that copy is
+    /// rounded by its knob, three rows down in the Component section, and its
+    /// own outer mask cuts nothing anybody can see. Two rows called Corner
+    /// Radius reading 0 and 18 over one round button is what this leaves behind
+    /// (`InstanceRounding.swift`).
     var corneredRadiusSelection: CornerRadiusSelection {
         guard let document = cornerReadingDocument else {
             return CornerRadiusSelection(members: [], selectionCount: 0)
         }
-        return document.cornerRadiusSelection(layerIDs: colorStyleTargetIDs, cornersOnly: true)
+        return document.cornerRadiusSelection(layerIDs: colorStyleTargetIDs, cornersOnly: true,
+                                              skippingKnobbedCopies: true)
+    }
+
+    /// What Appearance says in place of the Corner Radius row it handed over to
+    /// a copy's knob, or nil when it handed nothing over.
+    var instanceRoundingNote: String? {
+        document?.instanceRoundingNote(layerIDs: colorStyleTargetIDs)
     }
 
     /// The Kind popup on one entry: behind the layer, or cast into it.

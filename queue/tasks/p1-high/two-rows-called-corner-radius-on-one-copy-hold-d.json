@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:41:27.989Z",
-  "updated": "2026-09-09T09:46:09.146Z",
+  "updated": "2026-09-09T09:47:58.970Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found by the 2026-09-09 manager pass in a real window capture, queue/manager/shots/2026-09-09-0238-three-copies.png, taken by running component-whole-path-walk (181 steps, status ok) on a probe build of HEAD 13e2b970.\n\nWhat is on screen: Appearance shows Corner Radius 0 px with the slider at minimum; Component shows Version Default, Label Save, Corner radius 18; the three copies on the canvas are drawn with an ~18pt radius.\n\nBoth numbers are probably true of different layers: Appearance is reading the instance GROUP’s own radius, the knob drives the rounded rectangle inside it. That is the bug, not the excuse: the group’s radius is not a thing anyone can see, so the row is either dead or lying. Look at Sources/Photonz/LayersPanel.swift (the Appearance section rows) and Sources/Photonz/ComponentPanel.swift (the knob rows), plus Sources/PhotonzCore/ComponentProperties.swift for how a number knob resolves.\n\nWatch two nearby rules while fixing: docs/design/ui-building.md says a copy is not asked to decide what its original decides (landed 2026-09-04), and the panel’s one-unit-word rule from 2026-09-09 (expectOneUnit) already polices unit spellings, so an assertion of this shape has somewhere to live.",
+  "notes": "Found by the 2026-09-09 manager pass in a real window capture, queue/manager/shots/2026-09-09-0238-three-copies.png, taken by running component-whole-path-walk (181 steps, status ok) on a probe build of HEAD 13e2b970.\n\nWhat is on screen: Appearance shows Corner Radius 0 px with the slider at minimum; Component shows Version Default, Label Save, Corner radius 18; the three copies on the canvas are drawn with an ~18pt radius.\n\nBoth numbers are probably true of different layers: Appearance is reading the instance GROUP\u2019s own radius, the knob drives the rounded rectangle inside it. That is the bug, not the excuse: the group\u2019s radius is not a thing anyone can see, so the row is either dead or lying. Look at Sources/Photonz/LayersPanel.swift (the Appearance section rows) and Sources/Photonz/ComponentPanel.swift (the knob rows), plus Sources/PhotonzCore/ComponentProperties.swift for how a number knob resolves.\n\nWatch two nearby rules while fixing: docs/design/ui-building.md says a copy is not asked to decide what its original decides (landed 2026-09-04), and the panel\u2019s one-unit-word rule from 2026-09-09 (expectOneUnit) already polices unit spellings, so an assertion of this shape has somewhere to live.",
   "acceptance": [
     "Ships behind next-components, which is on by default in Next. To see it today: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build, and look at path-6-three-copies-sc.png in the output folder, or in the app make a button a component with a corner radius knob, place a copy, and pick the copy",
     "The panel shows one number for the roundness a person can see on the copy; if a second row stays it says in its own words what it rounds, and reads a number that matches what is drawn",
@@ -28,6 +28,15 @@
     {
       "t": "2026-09-09T09:46:09.145Z",
       "note": "seq 260 -> 10"
+    },
+    {
+      "t": "2026-09-09T09:47:58.969Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T09:55:59.483776Z",
+      "note": "Reproduced on a probe build of HEAD f4c7b579: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build. path-6-three-copies-sc.png shows Appearance Corner Radius 0 px with the slider at minimum and Component Corner radius 18, on a copy drawn with an 18pt curve. The walk's own describe at 6-three-copies prints cornerRadius \"0 x1\" for the picked copy and a tree where the copy group is 392x152 while the Rectangle inside it is 360x120, so the group's own mask is inset 16pt on every side and cuts nothing that is drawn."
     }
-  ]
+  ],
+  "started": "2026-09-09T09:47:58.968Z"
 }

@@ -47,10 +47,16 @@ enum PlaytestPanelReadout {
     /// Hidden ones are left out, so a collapsed section reads as absent rather
     /// than as a row still claiming a value.
     @MainActor static func values(in content: NSView) -> [String] {
-        var found: [String] = []
+        anchors(in: content).map(\.text)
+    }
+
+    /// The markers themselves, so a caller that needs to know WHERE a readout
+    /// sits — which row it is in — can measure them.
+    @MainActor static func anchors(in content: NSView) -> [ReadoutAnchorView] {
+        var found: [ReadoutAnchorView] = []
         func walk(_ view: NSView) {
             if !view.isHiddenOrHasHiddenAncestor, let anchor = view as? ReadoutAnchorView {
-                found.append(anchor.text)
+                found.append(anchor)
             }
             for sub in view.subviews { walk(sub) }
         }

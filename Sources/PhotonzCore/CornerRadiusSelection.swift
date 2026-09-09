@@ -155,14 +155,23 @@ extension PhotonzDocument {
     /// Appearance panel's rule that the row is there only where there are
     /// corners to round. The count of everything picked is kept either way, so
     /// the row can still say how many layers it is speaking for.
+    ///
+    /// `skippingKnobbedCopies` leaves out a copy whose original exposes a
+    /// rounding, because that copy's roundness is the knob in the Component
+    /// section and its own outer mask cuts nothing anybody can see
+    /// (`InstanceRounding.swift`). Asked for by the panel that has a Component
+    /// section to hand the number to; the release before it asks for the row
+    /// exactly as it always did.
     public func cornerRadiusSelection(layerIDs: [UUID],
                                       cornersOnly: Bool = false,
+                                      skippingKnobbedCopies: Bool = false,
                                       style: (Layer) -> LayerStyle = { $0.style })
     -> CornerRadiusSelection {
         var members: [CornerRadiusSelection.Member] = []
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
             guard !cornersOnly || layer.hasCorners else { continue }
+            guard !skippingKnobbedCopies || !roundingIsAKnob(layerID: id) else { continue }
             let bounds = layer.localBounds
             members.append(CornerRadiusSelection.Member(
                 id: id,

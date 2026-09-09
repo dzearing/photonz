@@ -2300,3 +2300,6 @@
 {"t":"2026-09-09T09:46:09.367Z","ev":"task_resequenced","id":"the-panel-file-is-split-so-the-dock-and-its-sect","from":2330,"to":60}
 {"t":"2026-09-09T09:46:18.677Z","ev":"task_resequenced","id":"folding-an-effect-shut-in-a-short-window-does-no","from":2280,"to":50}
 {"t":"2026-09-09T09:47:21.016Z","ev":"manager","filed":9,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-09-09-0246.md"}
+{"t":"2026-09-09T09:47:58.929Z","ev":"manager_pass","exit":0,"ready":9}
+{"t":"2026-09-09T09:47:58.971Z","ev":"task_started","id":"two-rows-called-corner-radius-on-one-copy-hold-d","title":"Two rows called Corner Radius on one copy hold different numbers","priority":"p1-high"}
+{"t":"2026-09-09T10:19:55.267Z","ev":"task_created","id":"find-out-what-corner-radius-should-say-over-a-gr","priority":"p2-normal","title":"Find out what Corner Radius should say over a group whose contents are round"}

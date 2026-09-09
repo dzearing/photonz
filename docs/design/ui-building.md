@@ -3463,3 +3463,53 @@ floor by dragging the edge down onto it instead of asserting it.
 
 Not in this slice: a visible cue on the edge at rest. The resize arrows appear
 on hover and nothing is drawn along the outline itself.
+
+## Landed: one Corner Radius on a copy, and it is the knob (Next, `next-components`, 2026-09-09)
+
+Pick a copy of a Save button and the panel said how round it was twice, in two
+different numbers. Appearance read **Corner Radius 0 px** with its slider at the
+far left; the Component section under it read **Corner radius 18**; the button on
+the canvas was plainly round. Nobody reading the panel could tell which number
+the thing they were looking at was wearing. Caught by the manager pass on a real
+window capture, `queue/manager/shots/2026-09-09-0238-three-copies.png`.
+
+Both numbers were true, of different layers. Appearance was reading the copy's
+OWN outer mask; the knob turns the rounded rectangle inside it. And the outer
+mask is the one nobody can see: a component that keeps any room inside its edges
+holds everything it draws in off them, so a curve cut at the copy's own boundary
+passes through empty space. The copy in the capture is 392x152 with a 360x120
+rectangle inside it, 16 points clear on every side.
+
+- **A copy whose original exposes a rounding is left out of the Appearance row.**
+  Its roundness is the knob, named by whoever exposed it, in the Component
+  section with the copy's other dials. The same rule the Layout section already
+  follows: the panel leaves out whatever the Component section under it already
+  hands over (`numberKnobsOnTheCopyItself`).
+- **A copy whose original exposes NO rounding keeps the ordinary row.** Then the
+  outer mask is the only rounding on offer and nothing else is claiming the
+  number. A knob on some other number takes nothing away either: a thickness
+  knob has nothing to say about how round anything is.
+- **The section says once where the number went**, rather than leaving a hole
+  where a row used to be: "This copy is rounded by its Corner radius knob, in
+  the Component section below." It names the knob in the author's own words,
+  because that is the word on the row a person is being sent to.
+- **An ordinary shape picked beside a copy still rounds**, and the row says out
+  loud that it is speaking for one of the two, exactly as it always did.
+- **The release before Appearance and Effects split is untouched.** It asks for
+  the row without this rule and gets what it always got.
+
+`PhotonzCore/InstanceRounding.swift` is the rule and the sentence, tested in
+`InstanceRoundingTests`. The panel asks for it through
+`cornerRadiusSelection(skippingKnobbedCopies:)`.
+
+A walk now holds the whole panel to it rather than to this one row: the new
+`expectOneNumberPerName` step fails a run when two rows wear one name over
+different numbers, and names both. `component-whole-path-walk` makes the claim
+twice, over a fresh copy and again over a copy whose rounding has been turned
+down to 4 while the original stays at 18.
+
+Still rough: pick the ORIGINAL and Appearance reads Corner Radius 0 px over the
+same round button, because a group's own box is not what is rounded. That is
+ordinary group behaviour rather than this bug (there is only one row, and the
+original's section lists its knobs by name rather than by value), and it is
+filed as its own question.
