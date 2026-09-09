@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2220,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T02:47:25.499Z",
-  "updated": "2026-09-09T02:47:25.502Z",
+  "updated": "2026-09-09T08:04:34.621Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08), and verified against a clean tree (git stash of Sources, Tests and Scripts/playtest, rebuild, rerun) so neither is caused by that work.\n\n1. Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json -> step 63 (press): no control called \"Revert Opacity\" is in the panel. The panel it lists has no Appearance section at all: Layers, Effects, Component, Position & Size, Layout, Library.\n\n2. Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json -> step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s. The log reads dockViewport 688 with dockSections [\"Layers 6-169\",\"Appearance 169-341\",\"Effects 341-503\",\"Measurements 503-590\",\"Text 738-936\",\"Position & Size 936-1071\"], so the Text section starts 50pt below the bottom of the dock and the walk waits for it to be in view.\n\nBoth look like the sections above them have grown since the walks were written.",
+  "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08), and verified against a clean tree (git stash of Sources, Tests and Scripts/playtest, rebuild, rerun) so neither is caused by that work.\n\n1. Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json -> step 63 (press): no control called \"Revert Opacity\" is in the panel. The panel it lists has no Appearance section at all: Layers, Effects, Component, Position & Size, Layout, Library.\n\n2. Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json -> step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s. The log reads dockViewport 688 with dockSections [\"Layers 6-169\",\"Appearance 169-341\",\"Effects 341-503\",\"Measurements 503-590\",\"Text 738-936\",\"Position & Size 936-1071\"], so the Text section starts 50pt below the bottom of the dock and the walk waits for it to be in view.\n\nBoth look like the sections above them have grown since the walks were written.\n\nUPDATE 2026-09-09 (runner): panel-controls-walk is green, fixed by 64ac9f3c. dock-picked-first-walk still red; root cause is the section ORDER, not the walk. Verified fix in hand (v5 migration moving pickedSections before .effects in InspectorPanel.loadOrder, guarded by Experiments.shared.shapePartsEnabled, next to orderVersionLookUnderLayers) — makes the walk pass at 1200x720. Waiting on the decision because it reverses part of the user's 2026-09-07 ask.",
   "acceptance": [
     "panel-controls-walk runs green, or its claim is rewritten to match what the panel now does and the change is explained",
     "dock-picked-first-walk runs green, or the same",
@@ -22,6 +22,55 @@
     {
       "t": "2026-09-09T02:47:25.501Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T07:51:20.866Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "Both walks reproduced on a clean tree (only queue/ files modified, HEAD 81f22e97), probe build, Screen Recording granted."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "panel-controls-walk: PASSES now, twice in a row, 75 steps, status ok. It was fixed by 64ac9f3c \"Give a copy of a component its Opacity row back\" (2026-09-08 23:08), which landed after this task was filed: Appearance is now shown whenever anything unlocked is picked, so the Revert Opacity control the walk presses at step 63 exists again. Nothing to do."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "dock-picked-first-walk: still FAILS, step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s. Reproduced 4 times."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "Root cause, measured rather than guessed. With Text picked the dock reports viewport 688 and sections Layers 6-169, Appearance 169-341, Effects 341-673, Measurements 673-760, Text 760-958, Position & Size 958-1093. About 1090pt of sections in a 688pt dock. The Text section starts 72pt below the fold, so not even its header shows."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "Not a fresh regression from yesterday's effect-reveal work. Ran the numbers with the open-pane floor removed (Effects at its 112pt base floor) and Text still lands at 573-771 against a 688 viewport. The cause is the 2026-09-07 order change (orderVersionLookUnderLayers, Appearance and Effects directly under Layers), which puts ~340pt of always-there sections between the layers list and the picked section."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "Also fails at 1200x960 (viewport 928, Text 760-958, 30pt over). There the open-pane floor IS the whole gap: Effects claims 299pt for a Shadow nobody opened, within its documented 45% cap. Without that floor the water line gives Layers 126 / Effects 126 and Text lands 601-799, in view."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "Ruled out on my own: scrolling the dock to the picked section on selection. To put Text (760-958) whole in a 688 viewport the dock has to scroll 270pt, which carries the whole Layers list off the top of the panel. Clicking a layer must not scroll away the list you clicked in."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "Prototyped the fix and verified it rather than theorising: added a v5 order migration moving the picked sections before .effects. dock-picked-first-walk then passes end to end, 76 steps, status ok, at 1200x720. Measured: Text 341-539, Measurement 305-584, Zoom Callout 305-419, Arrow 289-498, all whole in a 688 viewport, and the Effects header on screen in every case. Prototype reverted, not committed; the exact change is in the decision brief."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "Blocked on a decision rather than shipped, because the fix demotes Effects below the picked section and that partly reverses what the user asked for on 2026-09-07 (\"Appearance and Effects directly under Layers, both within reach without scrolling\"). Two of their own asks collide; they should pick. Decision two-panel-walks-are-failing-on-main-pick-a-piece-of-text-in-a-short, with a brief and two probe captures."
+    },
+    {
+      "t": "2026-09-09T08:04:25.324834Z",
+      "note": "Adversarial review of the walk's own claim: \"the picked section is whole on screen without anyone scrolling\" is not achievable at 1200x720 under the current order at ANY list floor, so rewriting the walk to keep passing would have meant blessing a state where the Text settings have no heading on screen. That is the exact failure the 2026-09-06 \"Put what you picked first\" decision was made to stop, so the walk is right and the panel is wrong."
+    },
+    {
+      "t": "2026-09-09T08:04:34.619Z",
+      "note": "panel-controls-walk is green (fixed by 64ac9f3c). dock-picked-first-walk reproduces every run; root cause is the 2026-09-07 section order, not the walk, and the verified fix reverses part of that ask, so it is a decision."
     }
-  ]
+  ],
+  "started": "2026-09-09T07:51:20.865Z"
 }

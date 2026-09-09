@@ -1,0 +1,52 @@
+{
+  "id": "two-panel-walks-are-failing-on-main-pick-a-piece-of-text-in-a-short",
+  "taskId": "two-panel-walks-are-failing-on-main",
+  "question": "Pick a piece of text in a short window and its own settings are off the bottom of the panel. What should give?",
+  "context": "The dock is asked for about 1090 points of sections in a 688 point panel, so something has to be below the fold. Measured on the probe at 1200 by 720 with a marked-up screenshot: Layers, Appearance, Effects, Measurements fill the panel and the Text section starts 72 points past the bottom edge. Same at 1200 by 960. Two of your own asks collide here: put what you picked first (6 September) and Appearance and Effects directly under Layers (7 September).",
+  "options": [
+    {
+      "id": "a",
+      "label": "What you picked goes above Effects",
+      "summary": "The panel reads Layers, Appearance, then the section named after the thing you picked, then Effects. Pick a piece of text and its Style, Font, Size, Weight and alignment rows are all on screen; Effects starts right under them and you scroll for its sliders.",
+      "pros": [
+        "The settings for the thing you just clicked are always whole on screen, at every window size tried",
+        "Opacity and Fill stay directly under Layers, one glance from the list, which is what you asked for on 7 September",
+        "Effects keeps its heading on screen, so you can always see it is there and open it"
+      ],
+      "cons": [
+        "When a layer carries an open shadow, the shadow sliders are below the fold and need a short scroll"
+      ],
+      "mitigation": "Effects is a list you scroll inside anyway once it holds more than one effect, so the scroll is one you already do; its heading and its plus button stay in place."
+    },
+    {
+      "id": "b",
+      "label": "What you picked goes first, above everything",
+      "summary": "The panel reads Layers, then the section named after the thing you picked, then Appearance, then Effects. The strongest version of put what you picked first: click text and the text settings are the very next thing under the list.",
+      "pros": [
+        "What you clicked is unmissable, right under the row you clicked",
+        "The picked settings are whole on screen at every window size"
+      ],
+      "cons": [
+        "Opacity and Fill move down by the height of a whole section, so on a plain rectangle they sit lower than they do today",
+        "Where Opacity lives now depends on what you picked, so it moves around as you click between layers"
+      ],
+      "mitigation": "For a plain shape nothing changes at all, since a rectangle has no section of its own."
+    },
+    {
+      "id": "c",
+      "label": "Leave the panel as it is",
+      "summary": "Appearance and Effects stay directly under Layers. In a short window, picking text or a zoom callout leaves its own settings off the bottom of the panel with no heading showing, and you scroll down to find them.",
+      "pros": [
+        "Nothing moves; Opacity, Fill and the effects list stay exactly where you put them on 7 September"
+      ],
+      "cons": [
+        "Pick a piece of text in a 720 point tall window and there is nothing on screen saying text settings exist at all",
+        "This is the same thing you asked to have fixed on 6 September, back again from the other direction"
+      ],
+      "mitigation": "In a tall window the settings do fit, so this only bites when the window is short."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-09T08:03:37.325Z"
+}
