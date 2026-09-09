@@ -1,0 +1,34 @@
+{
+  "id": "hide-a-name-or-an-email-in-a-screenshot-before-y",
+  "title": "Hide a name or an email in a screenshot before you hand it over",
+  "goal": "A redline goes out with a real screen in it: somebody’s name, their email, an account number, a customer logo. Photonz has no way to cover any of it. You can blur a shape you drew, which blurs the shape, not the picture under it. Everyone who shares screenshots hides something in them first, and today that means finishing the job somewhere else.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2340,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T09:43:02.237Z",
+  "updated": "2026-09-09T09:43:42.704Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "BLOCKED on its decision card until the user answers: this adds a visible tool nobody asked for, and the manager rule after the 2026-09-02 capture loupe is that competitor-parity controls get a card first.\n\nWhy it is a small piece of work despite being a new tool. The renderer already composites a layer against the picture beneath it: Sources/PhotonzRender/DocumentRenderer.swift line 647, \"backdrop is the composite of all visible layers below this one\", which is how a zoom callout magnifies live rather than baking a copy. A cover reads the same backdrop and blurs or pixelates it instead of magnifying it, so it is the zoom callout seam with a different filter.\n\nWhat exists today, checked on 2026-09-09: EffectKind in Sources/PhotonzCore/LayerEffects.swift is blur, shadow, border, glow, and blur is applied to the layer’s own image (DocumentRenderer.swift:856). Nothing in Sources matches pixelate, redact or spotlight. Sources/PhotonzCore/Tools.swift has no cover tool.\n\nThe export question in the acceptance matters more than it looks: a blur that is only a view-time effect can be undone by anyone who gets the document, which for this feature is the whole point of it.\n\nCleanShot X ships this as two things, secure blur and pixelate, and it is one of the features its reviews lead with (docs/plan/competitive-cleanshot.md).",
+  "acceptance": [
+    "Drag out a box over part of a capture and what is under it stops being readable, without changing the picture underneath, so it can be moved, resized and undone like any other layer",
+    "Ships behind its own flag in Next, off by default until it is tried; the flag name goes in the audit",
+    "It survives an export and a copy to the clipboard: what leaves the app is covered, and the original pixels are not recoverable from the exported file",
+    "To see it: Scripts/probe-app.sh with a screenshot open, pick the tool, drag a box over some words, then move the box and watch it keep covering",
+    "anything left rough is filed as a follow-up task",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T09:43:02.239Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-09T09:43:42.702Z",
+      "note": "Adds a visible tool nobody asked for, so it waits on its decision card."
+    }
+  ]
+}

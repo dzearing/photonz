@@ -1,0 +1,33 @@
+{
+  "id": "a-copy-on-the-canvas-says-which-component-it-cam",
+  "title": "A copy on the canvas says which component it came from",
+  "goal": "Place copies of a component that has more than one version and each one gets a small marker on the canvas with no words next to it. Three copies of a Save button read as three anonymous dots. The name is in the layers list and the panel, but not where you are looking.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T09:42:00.386Z",
+  "updated": "2026-09-09T09:46:09.220Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "This is the trade queue/audits/2026-09-08-version-labels.json named itself and asked to be argued with: \"A component with two or more drawings no longer shows its name anywhere on the canvas... This is the deliberate trade and it is the first thing to argue with.\" Reproduced on 2026-09-09 in queue/manager/shots/2026-09-09-0238-three-copies.png: the two originals carry Default and Disabled, the three copies below them carry a bare diamond each.\n\nPutting a name back is not a new control, it is restoring something the width fix took away, so no decision card. If the runner concludes the honest answer is no label at all, dropping the naked marker is an acceptable outcome and should be said plainly in the audit.\n\nWidth is the constraint that caused this: read the 2026-09-08 work before re-adding a long string.",
+  "acceptance": [
+    "A copy on the canvas is labelled with something a person can read, or the marker is dropped rather than left saying nothing",
+    "Labels still do not cover each other or run into the drawing beside them at 50 percent zoom, which is what the 2026-09-08 version-labels work fixed",
+    "To see it: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build, and look at path-6-three-copies-sc.png",
+    "anything left rough is filed as a follow-up task",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T09:42:00.388Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-09T09:46:09.219Z",
+      "note": "seq 2290 -> 10"
+    }
+  ]
+}

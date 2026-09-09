@@ -1,0 +1,33 @@
+{
+  "id": "a-saved-style-can-be-dropped-on-a-row-in-the-lay",
+  "title": "A saved style can be dropped on a row in the layers list, not only on the picture",
+  "goal": "You can drag a saved colour or a text style out of the Library and let go of it on the canvas. Aiming at the row in the layers list, which is the other obvious place to drop it, does nothing at all and says nothing about why.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T09:42:00.426Z",
+  "updated": "2026-09-09T09:46:09.293Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-09-text-style-drag.json: \"A style can only be let go of on the picture. There is no dropping one on a row in the layers list, which would be the other obvious place to aim.\"\n\nThe answer logic is already written and shared: Sources/PhotonzCore/TextStyleDrop.swift and Sources/PhotonzCore/ColorDrop.swift both hand back a lands/note/letsGoOf answer. This task is a second drop target reading the same answer, not a second set of rules. Canvas side: Sources/Photonz/CanvasTextStyleDrop.swift. Layers list side: Sources/Photonz/LayersPanel.swift, which already accepts a dragged layer row, so it has a drop path to extend.\n\nDo both kinds in one sitting if they share the target resolution; if they do not, do the text style first and file the colour one as a follow-up.",
+  "acceptance": [
+    "Letting go of a saved colour or a text style on a layer row applies it to that layer, with the same sentence the canvas drop shows and the same single undo step",
+    "A row that cannot take the style says why, in the same words the canvas refusal uses",
+    "To see it: Scripts/probe-app.sh, save a text style, then drag its Library tile onto a text layer row in the Layers section",
+    "anything left rough is filed as a follow-up task",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T09:42:00.428Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-09T09:46:09.292Z",
+      "note": "seq 2300 -> 30"
+    }
+  ]
+}

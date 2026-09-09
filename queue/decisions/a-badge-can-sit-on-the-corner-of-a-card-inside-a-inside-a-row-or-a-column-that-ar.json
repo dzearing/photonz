@@ -1,0 +1,55 @@
+{
+  "id": "a-badge-can-sit-on-the-corner-of-a-card-inside-a-inside-a-row-or-a-column-that-ar",
+  "taskId": "a-badge-can-sit-on-the-corner-of-a-card-inside-a",
+  "question": "Inside a row or a column that arranges itself, should one piece be able to step out of the line and be placed by hand?",
+  "context": "Auto layout in Photonz can already take exactly one piece out of the line: the surface, which is the background behind everything else in a group. There is no way to take a piece out and put it in FRONT. That is what an overlay badge, a corner dot or a New ribbon needs. Today the workaround is to nest the card inside a second group that arranges nothing, which works but adds an invisible group to the layers list.",
+  "options": [
+    {
+      "id": "a",
+      "label": "A piece can step out and float in front",
+      "summary": "The placement control gains one more answer, next to the one that makes a piece the surface behind the rest. Pick it and that piece leaves the line, sits in front of everything, and stays where you drag it. The row arranges itself as though the piece were not there.",
+      "pros": [
+        "A badge, a dot or an overlay label goes where you want it in one step",
+        "Reuses the surface machinery, which already takes one piece out of the line",
+        "One idea with two directions, behind and in front, instead of two unrelated features"
+      ],
+      "cons": [
+        "A piece placed by hand does not move when the row does, so it can end up somewhere odd after a resize",
+        "One more answer in a control that already has several"
+      ],
+      "mitigation": "Hold the piece against the corner of its container the way the placement rules already hold a piece against an edge, so a resize carries it."
+    },
+    {
+      "id": "b",
+      "label": "Leave it to nesting",
+      "summary": "Nothing changes. To float a badge on a card, wrap the card in a group that arranges nothing and put the badge in there beside it. That works today. Choosing this retires the task.",
+      "declines": true,
+      "pros": [
+        "No new answer in the placement control",
+        "One way to do it, and it already works"
+      ],
+      "cons": [
+        "Three steps and an extra group in the layers list for something other tools do with one switch",
+        "The extra group is invisible on the canvas, so the tree stops matching what you see"
+      ],
+      "mitigation": "None; it is the cost of the choice."
+    },
+    {
+      "id": "c",
+      "label": "Let a drag decide it",
+      "summary": "No control at all. Drag a piece out of the line with a key held and it stays where you dropped it; drag it back into the line and it rejoins. The panel says which it is but does not ask.",
+      "pros": [
+        "Nothing new to find in the panel",
+        "Reads as direct manipulation, which is how the rest of the canvas works"
+      ],
+      "cons": [
+        "An invisible key is a feature nobody discovers",
+        "Harder to say what a piece is doing when the only way to change it is a gesture"
+      ],
+      "mitigation": "Show the state as a line in the Layout section even though it is set by dragging."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-09T09:45:57.711Z"
+}

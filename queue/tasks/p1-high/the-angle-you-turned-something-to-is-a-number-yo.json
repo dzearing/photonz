@@ -1,0 +1,34 @@
+{
+  "id": "the-angle-you-turned-something-to-is-a-number-yo",
+  "title": "The angle you turned something to is a number you can read and type",
+  "goal": "You can turn a shape by dragging the knob above it, but nothing anywhere tells you what angle it landed on, and there is no way to type 45 or to put it back to straight except undo. Anyone laying out a screen or writing down a spec needs the number, not just the gesture.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T09:41:41.437Z",
+  "updated": "2026-09-09T09:46:09.184Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Verified by reading the code on 2026-09-09. Rotation is fully real: Sources/PhotonzCore/LayerTransform.swift holds rotation, skew and both flips, Sources/PhotonzCore/TransformDrag.swift does the maths, Sources/Photonz/CanvasPointerDrags.swift:349 drives the knob, and Sources/PhotonzRender/DocumentRenderer.swift:858 composites it. The only thing missing is a readout: Sources/Photonz/GeometryInspector.swift has X, Y, W and H and no angle, and grep finds no Rotation or Angle row anywhere in Sources/Photonz.\n\nThis is finishing a gesture that already ships, not a new feature, so no decision card. Follow the pattern the geometry fields already set (docs/design/ui-building.md, \"Landed: typed position and size\"), including the arrow-key stepping and the refusal sentence when a number is clamped.\n\nOne thing NOT in scope, filed separately if it matters: Sources/Photonz/CanvasGroups.swift:82 says a group never offers the rotate knob because groups translate and nothing else. Do not try to make groups turn in this task; just make the field say so honestly.",
+  "acceptance": [
+    "The Position and Size section reads back the angle of whatever is picked, and a typed angle turns it, in the same shape as the X, Y, W and H fields beside it",
+    "Typing 0 puts a turned layer back to straight, and one undo takes back a typed angle in one step",
+    "A mixed selection and a layer that cannot turn (a group, a locked layer) each read the way the section already handles those cases, rather than showing a live field with nothing behind it",
+    "To see it: Scripts/probe-app.sh, draw a rectangle, drag the knob above it, and read the angle in the panel; then type 45 and watch it turn",
+    "anything left rough is filed as a follow-up task",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T09:41:41.439Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-09T09:46:09.183Z",
+      "note": "seq 270 -> 20"
+    }
+  ]
+}

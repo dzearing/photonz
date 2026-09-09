@@ -1,0 +1,33 @@
+{
+  "id": "dropping-a-style-on-words-inside-a-copy-says-the",
+  "title": "Dropping a style on words inside a copy says they are not text",
+  "goal": "Drag a text style onto the label inside a copy of a component and the app refuses it with \"Save button is not text\". The thing under the pointer plainly is text. The rule that a copy answers as a whole is fine; the sentence explaining it is not, because it tells the person something they can see is false.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T09:42:19.819Z",
+  "updated": "2026-09-09T09:46:09.256Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-09-text-style-drag.json: \"Text inside a copy of a component reads as the copy rather than as text, so a style dropped on it is refused with is not text. That is the same rule every click on a copy follows, but the sentence is misleading there.\"\n\nThe sentence is Sources/PhotonzCore/TextStyleDrop.swift:93. The target resolution that makes a copy answer instead of its piece is Sources/Photonz/CanvasGroups.swift componentPiece, and Sources/PhotonzCore/ComponentInstances.swift.\n\nThis is a wording and honesty fix. Changing the RULE so a style can land on a piece inside a copy is a bigger question (it would be a sixth kind of override) and is not in scope; if the runner thinks it should be, file it as a follow-up with a card rather than building it.",
+  "acceptance": [
+    "Aiming a text style at words inside a copy says what is really going on, in words that do not contradict what is on screen, and points at the way to do it if there is one",
+    "Aiming at something that genuinely is not text is unchanged",
+    "To see it: Scripts/probe-app.sh, place a copy of the starter Button component, save a text style, and drag its tile over the copy’s label",
+    "anything left rough is filed as a follow-up task",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T09:42:19.821Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-09T09:46:09.255Z",
+      "note": "seq 2320 -> 20"
+    }
+  ]
+}

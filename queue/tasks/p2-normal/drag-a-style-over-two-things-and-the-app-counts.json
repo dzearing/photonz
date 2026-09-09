@@ -1,0 +1,34 @@
+{
+  "id": "drag-a-style-over-two-things-and-the-app-counts",
+  "title": "Drag a style over two things and the app counts them at you",
+  "goal": "Carry a saved colour or a text style over two selected layers and the line under the pointer reads \"Paints Fill on all 2 of them with Danger\" or \"Sets all 2 of them in Heading\". That is a machine counting, not a person talking. Two things are both, and the sentence should sound like somebody said it.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T09:42:19.780Z",
+  "updated": "2026-09-09T09:46:09.330Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-09-text-style-drag.json, which asked for it to be fixed across both places rather than in one and left wrong in the other.\n\nExact strings, read on 2026-09-09: Sources/PhotonzCore/ColorDrop.swift:206 \"Paints \\(target.part) on all \\(target.reaches) of them with \\(colour)\" and Sources/PhotonzCore/TextStyleDrop.swift:102 \"Sets \\(who) in \\(style.name)\" where who is \"all \\(target.reaches) of them\". Sources/Photonz/EffectsListInspector.swift:382 has a third of the same shape (\"Stops it drawing on all N of them\"); include it if the extraction reaches, and say so either way.\n\nHouse copy rules apply: plain short human language, no em dashes.",
+  "acceptance": [
+    "The colour drop and the text style drop both read as plain English for two, and both still name the count for three or more",
+    "The two sentences are built from one place rather than fixed twice, so they cannot drift apart again",
+    "Existing tests that pin these sentences are updated, and the walk that photographs the drop line still passes",
+    "To see it: Scripts/probe-app.sh, select two text layers, and drag a text style tile over them",
+    "anything left rough is filed as a follow-up task",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T09:42:19.782Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-09T09:46:09.329Z",
+      "note": "seq 2310 -> 40"
+    }
+  ]
+}

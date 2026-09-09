@@ -1,0 +1,68 @@
+{
+  "id": "hide-a-name-or-an-email-in-a-screenshot-before-y-a-redline-you-hand-over-often-ha",
+  "taskId": "hide-a-name-or-an-email-in-a-screenshot-before-y",
+  "question": "A redline you hand over often has a real name or email in it. Should Photonz be able to cover part of a picture, and how hard should that cover be?",
+  "context": "Photonz can capture a screen, measure it and write a spec on it, but not cover anything in it. Blur exists as an effect on a shape you drew, which softens the shape, not the picture beneath. Sharing a screenshot with somebody else’s name in it is the ordinary last step of the workflow this app is for.",
+  "options": [
+    {
+      "id": "a",
+      "label": "A cover you drag out, baked on export",
+      "summary": "A tool in the bar. Drag a box over the part you want hidden and it goes soft or blocky. You can move it, resize it and undo it while you work. When the picture leaves Photonz, as an export or a copy, the hidden pixels are gone from what leaves, so nobody can lift the box off and read underneath.",
+      "pros": [
+        "Safe to send: what leaves the app cannot be undone by whoever gets it",
+        "Still a layer while you work, so it moves and resizes with everything else",
+        "Uses the machinery the zoom callout already has, so it is a small build"
+      ],
+      "cons": [
+        "The saved Photonz file still holds the original underneath, so the file itself is not safe to hand over, only the export",
+        "Two behaviours to explain: live while editing, baked on the way out"
+      ],
+      "mitigation": "Say it once, in the tool tip: covers are baked into anything you export or copy. If the file itself needs to be safe too, that is a second, later switch."
+    },
+    {
+      "id": "b",
+      "label": "A cover that is only ever a layer",
+      "summary": "Same tool and same drag, but the cover stays a layer everywhere, including in what you export. Simpler to build and to explain, and it always stays editable.",
+      "pros": [
+        "One behaviour, no baking step, nothing surprising",
+        "Always adjustable, in any document, forever"
+      ],
+      "cons": [
+        "An exported PNG is fine, but anyone you hand the Photonz FILE to can drag the box away and read the name under it",
+        "Invites people to think something is hidden when it is only covered"
+      ],
+      "mitigation": "Only matters when the document file itself is shared, which is rarer than sharing a picture."
+    },
+    {
+      "id": "c",
+      "label": "Redact by cutting instead of covering",
+      "summary": "No new tool. Use the marquee you already have plus a command that replaces the pixels inside it with a solid block, straight away, in the picture. One step, no layer, undo is the way back.",
+      "pros": [
+        "No new tool in the bar, so nothing new to learn or make room for",
+        "The pixels really are gone the moment you do it, in every copy of the file"
+      ],
+      "cons": [
+        "Not adjustable: get the box slightly wrong and it is undo and redraw",
+        "Photoshop-style destructive editing, which is the opposite of how everything else in Photonz works"
+      ],
+      "mitigation": "Undo covers the mistake case, and the marquee is already precise."
+    },
+    {
+      "id": "d",
+      "label": "Do not build this",
+      "summary": "Photonz stays a capture, measure and redline tool, and hiding things stays a job for whatever you already use. Choosing this retires the task.",
+      "declines": true,
+      "pros": [
+        "No new tool competing for room in the bar",
+        "Keeps the focus on measuring and handing off"
+      ],
+      "cons": [
+        "A redline with a real customer name in it cannot be sent from Photonz, so the flow leaves the app right at the end"
+      ],
+      "mitigation": "None; it is the cost of the choice."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-09T09:43:24.767Z"
+}
