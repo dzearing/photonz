@@ -81,16 +81,25 @@ public enum TextStyleDrop {
         /// at the copy, so `isText` is false and `name` is the copy's name;
         /// this is what the words themselves are.
         public var copyPiece: CopyPiece?
+        /// Whether this text is locked. The one case a ROW meets that the
+        /// picture never does: the canvas hit test walks straight past a
+        /// locked layer, so a style can only ever be aimed at one in the
+        /// layers list. Locked means there what it means everywhere else —
+        /// the Text section will not dress a locked layer either — so it is a
+        /// refusal, and one worth naming, because the layer plainly IS text
+        /// and "not text" would be a lie.
+        public var isLocked: Bool
 
         public init(name: String?, isText: Bool, wearingID: UUID? = nil,
                     wearingName: String? = nil, reaches: Int = 1,
-                    copyPiece: CopyPiece? = nil) {
+                    copyPiece: CopyPiece? = nil, isLocked: Bool = false) {
             self.name = name
             self.isText = isText
             self.wearingID = wearingID
             self.wearingName = wearingName
             self.reaches = reaches
             self.copyPiece = copyPiece
+            self.isLocked = isLocked
         }
     }
 
@@ -143,6 +152,14 @@ public enum TextStyleDrop {
             return Answer(lands: false,
                           note: "\(subject) is not text, so it cannot wear \(style.name).")
         }
+        guard !target.isLocked else {
+            // Named, and for the same reason a shape is: the sentence has to
+            // say which of the two things is in the way, and a padlock two
+            // rows up is not what somebody carrying a style is looking at.
+            let subject = name.isEmpty ? "That" : name
+            return Answer(lands: false,
+                          note: "\(subject) is locked, so it cannot wear \(style.name).")
+        }
         guard target.wearingID != style.id else {
             return Answer(lands: false, note: "This text is already \(style.name).")
         }
@@ -179,5 +196,73 @@ extension PhotonzDocument {
             component: mainComponent(componentID: piece.componentID)?.name
                 ?? layer(id: piece.instance)?.name ?? "",
             canDetach: !piece.isNested)
+    }
+}
+
+// MARK: - Letting a style go on a row in the layers list
+
+extension PhotonzDocument {
+
+    /// What letting a saved text style go on a ROW in the layers list would do,
+    /// and which layers it would reach.
+    ///
+    /// The picture was the only place a style could be put down, and the row is
+    /// the other obvious place to aim: the list is where a layer is named,
+    /// picked and reordered, so it is where somebody expects to be able to
+    /// dress it too.
+    ///
+    /// This is a second drop TARGET, not a second set of rules. It works out
+    /// the same `Target` the canvas works out and hands it to the same
+    /// `answer`, so the sentence a row says and the sentence the picture says
+    /// are the same sentence, and what lands is the same thing.
+    ///
+    /// Two differences, and both come from the row being a NAME rather than a
+    /// picture of the words. A locked layer is invisible to the canvas hit test
+    /// and unmissable in the list, so a row can be aimed at one and has to
+    /// refuse it. And nothing here can be a piece of a copy: a copy's row never
+    /// opens, because its contents belong to its original, so the words inside
+    /// one have no row to aim at in the first place.
+    ///
+    /// - Parameter picked: what is selected right now. Aiming at a row that is
+    ///   part of the selection reaches every picked piece of text, the way the
+    ///   canvas drop does; aiming at a row nobody picked reaches only that row,
+    ///   because the pointer named it.
+    public func textStyleRowDrop(_ style: TextStyleDrop.SavedStyle, onRow id: UUID,
+                                 picked: Set<UUID> = [])
+    -> (answer: TextStyleDrop.Answer, layerIDs: [UUID]) {
+        // A row that is not there any more — deleted mid-drag, or a list
+        // rebuilt out from under the pointer — is pointing at nothing, and
+        // gets the signpost bare canvas gets rather than a refusal about a
+        // layer nobody can see.
+        guard let layer = layer(id: id) else {
+            return (TextStyleDrop.answer(dropping: style,
+                                         on: TextStyleDrop.Target(name: nil, isText: false)), [])
+        }
+        guard layer.textTreatment != nil else {
+            return (TextStyleDrop.answer(dropping: style,
+                                         on: TextStyleDrop.Target(name: layer.name,
+                                                                  isText: false)), [])
+        }
+        guard !layer.isLocked else {
+            return (TextStyleDrop.answer(dropping: style,
+                                         on: TextStyleDrop.Target(name: layer.name, isText: true,
+                                                                  isLocked: true)), [])
+        }
+        var reached = [id]
+        if picked.contains(id) {
+            let crowd = allLayers
+                .filter { picked.contains($0.id) && $0.textTreatment != nil && !$0.isLocked }
+                .map(\.id)
+            if crowd.count > 1 { reached = crowd }
+        }
+        // A crowd where some already wear the style still has work to do, so
+        // the no-op refusal only speaks for the one row being named.
+        let target = TextStyleDrop.Target(
+            name: layer.name, isText: true,
+            wearingID: reached.count > 1 ? nil : layer.textStyleID,
+            wearingName: reached.count > 1 ? nil
+                : layer.textStyleID.flatMap { textStyle(id: $0)?.name },
+            reaches: reached.count)
+        return (TextStyleDrop.answer(dropping: style, on: target), reached)
     }
 }

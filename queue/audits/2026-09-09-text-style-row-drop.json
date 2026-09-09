@@ -1,0 +1,31 @@
+{
+  "feature": "A saved text style let go on a row in the layers list",
+  "epic": "ui-components",
+  "summary": "A saved text style can now be dropped on a row in the Layers list, not only on the words on the picture. The row rings while you hold it there, one line under the list says what letting go would do, and a row that cannot take it says why instead of doing nothing quietly.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs \"Save a color as a style and reuse it\" and \"Drag a color from one swatch to another\", both on by default.",
+  "try": [
+    { "do": "Type two headings with the Text tool: press T, click, type, press Command Return. Do it twice." },
+    { "do": "Draw a rectangle anywhere with R." },
+    { "do": "Click the first heading, set Font Georgia and Size 32 pt in the Text section, then open the Style menu and choose Save as Style. Name it Heading and press Return." },
+    { "do": "Click an empty part of the canvas so nothing is picked." },
+    { "do": "Press and hold on the Ag tile on the Library's Styles shelf and drag it up over the Layers list, reading the line under the list as you cross each row.", "shot": "2026-09-09-text-style-row-drop-refused.png" },
+    { "do": "Let go on the row for the second heading.", "shot": "2026-09-09-text-style-row-drop-lands.png" },
+    { "do": "Press Command Z once." },
+    { "do": "Lock that row with its padlock, carry the tile onto it again, then unlock it." }
+  ],
+  "evaluate": [
+    "The row is the other obvious place to aim a style. Is it where your hand goes first, or is the picture still where you would try?",
+    "The sentence sits at one end of the list, and jumps to the other end when the row you are aiming at is near it, so it never covers the row it is about. Does it read as helpful, or does the jump feel restless?",
+    "The line is the same sentence the picture says, word for word: \"Sets this text in Heading\". Is the same wording right in a list, where the row already carries a name, or should a row drop say the name?",
+    "A locked row refuses with \"Text 2 is locked, so it cannot wear Heading\". Is refusing right, or should dropping a style on a locked row just work?",
+    "Aiming at a row that is part of what you have picked sets every picked piece of text, the same rule the canvas drop follows. Does that read the same way in a list, where you can SEE which rows are picked?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures here are real window captures taken by a scripted walk (Scripts/playtest/text-style-row-drop-walk.json), not offscreen renders.",
+    "The one thing no walk can prove is the same one the canvas drop could not prove: a real drag has to START. AppKit only begins a drag session from an event that came off a real device, so the walk hands the payload to the row's own drop delegate instead. If the tile will not come away in your hand, say so and it is a small fix.",
+    "The sentence does not follow the pointer the way the canvas one does. A sentence will not fit in a row this narrow, so it sits at the top or the bottom of the list, whichever end the aimed row is not near. That means it covers a row at the far end while it is showing.",
+    "The colour half was NOT built. A saved colour dropped on a row still does nothing, because a row is not a colour well: a shape has a fill and an outline, text has its own colour, a screenshot has neither, and silently choosing one of them is a product judgment rather than plumbing. Filed as its own task, \"A saved colour dropped on a layer row paints the part it names\", with the question written out.",
+    "A row for a copy of a component refuses with \"Save button is not text\". On the picture that sentence was a lie over readable words and was fixed to name the piece and its original; in the list it is true, because the row IS the copy and a copy's row never opens. It is still less helpful than it could be, and could say \"set it on the original\" instead.",
+    "\"Sets all 2 of them in Heading\" is still clumsy English. It matches the canvas drop and the colour drop word for word, so it was left matching rather than fixed in one place and left wrong in two others."
+  ]
+}

@@ -184,10 +184,11 @@ extension EditorState {
     /// drag. A scripted walk carries a drag with no button down at all, which
     /// is why both also get a grace period rather than going the instant the
     /// button reads up.
-    private func startPanelDropWatch() {
+    func startPanelDropWatch() {
         guard panelDropWatch == nil else { return }
         panelDropWatch = Task { @MainActor [weak self] in
-            while let self, self.panelDropMarking.offer != nil || self.panelRowInHand.isHolding {
+            while let self, self.panelDropMarking.offer != nil || self.panelRowInHand.isHolding
+                    || self.styleRowMarking.drop != nil {
                 try? await Task.sleep(for: .milliseconds(250))
                 guard !Task.isCancelled else { break }
                 let inTheAir = NSEvent.pressedMouseButtons != 0
@@ -195,6 +196,9 @@ extension EditorState {
                 self.panelDropMarking.settle(dragInTheAir: inTheAir, at: now)
                 if self.panelRowInHand.settle(dragInTheAir: inTheAir, at: now) {
                     self.publishRowInHand()
+                }
+                if self.styleRowMarking.settle(dragInTheAir: inTheAir, at: now) {
+                    self.publishStyleRowDrop()
                 }
             }
             self?.panelDropWatch = nil

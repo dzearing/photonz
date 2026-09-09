@@ -50,6 +50,36 @@ enum TextStyleDrag {
         guard let data = pasteboard.data(forType: pasteboardType) else { return nil }
         return try? JSONDecoder().decode(TextStyleDrop.SavedStyle.self, from: data)
     }
+
+    /// The style on the drag pasteboard right now, nil when what is in the air
+    /// is not one.
+    ///
+    /// The DRAG pasteboard rather than the carrier a drop hands over, for the
+    /// reason `ColorDrag.payloadInFlight` gives: a carrier gives up its bytes
+    /// asynchronously and a row has to answer on the frame the pointer arrives.
+    /// A ring that appears two frames late flickers as the pointer runs down a
+    /// list, and a drop let go of before the answer came back would land
+    /// nothing.
+    @MainActor static func payloadInFlight() -> TextStyleDrop.SavedStyle? {
+        payload(on: dragPasteboard())
+    }
+
+    /// The board a drag in flight is written on. A scripted walk cannot start a
+    /// real drag session — AppKit only begins one from an event that came off a
+    /// real device — so a probe build lets the harness stand a board in its
+    /// place, which is the same board the destination would have read.
+    @MainActor private static func dragPasteboard() -> NSPasteboard {
+        #if PHOTONZ_PLAYTEST
+        if let board = playtestPasteboard { return board }
+        #endif
+        return NSPasteboard(name: .drag)
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// Set by the harness for the length of one scripted style drag, and put
+    /// back to nil the moment it ends.
+    @MainActor static var playtestPasteboard: NSPasteboard?
+    #endif
 }
 
 /// The style under the pointer while a drag travels.

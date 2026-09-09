@@ -811,9 +811,14 @@ private final class Run {
         case .dragOver(let carry, let at, let hold, let leave):
             try await dragOver(carry, at: at, hold: hold, leave: leave, number: number)
 
-        case .dragTile(let tile, let to, let hold, let expect, let says):
-            try await dragTile(tile, to: to, hold: hold, expect: expect, says: says,
-                               number: number)
+        case .dragTile(let tile, let to, let onto, let hold, let expect, let says):
+            if let onto {
+                try await dragTile(tile, ontoRow: onto, hold: hold, expect: expect, says: says,
+                                   number: number)
+            } else if let to {
+                try await dragTile(tile, to: to, hold: hold, expect: expect, says: says,
+                                   number: number)
+            }
 
         case .dragRow(let row, let onto, let zone, let hold):
             try await dragRow(row, onto: onto, zone: zone, hold: hold, number: number)
@@ -3196,6 +3201,89 @@ private final class Run {
         note(number, "dragTile",
              "\"\(name)\" carrying \(types) held over \(short(at.point)) \(at.space.rawValue) "
                 + "= view \(short(viewPoint)): the picture \(takes ? "took it" : "refused it")"
+                + (sentence.map { ", saying \"\($0)\"" } ?? "")
+                + ", drop \(landed ? "landed" : "did not land")\(held)",
+             state: describe())
+    }
+
+    /// Picks a saved text style up off the Library shelf and lets it go on a ROW
+    /// in the layers list, through the same drop delegate a pointer drives.
+    ///
+    /// The row is the other obvious place to aim a style, and it answers with
+    /// two things a walk can read: whether the row lights up, and the one line
+    /// at the foot of the panel that says what letting go would do — or why it
+    /// would not.
+    ///
+    /// A walk cannot start a real drag session, so the board the style rides on
+    /// is stood in the drag pasteboard's place for the length of the step,
+    /// which is exactly the board a destination under a real pointer reads.
+    private func dragTile(_ name: String, ontoRow: String, hold: String?,
+                          expect: PlaytestColorDropExpectation, says: String?,
+                          number: Int) async throws {
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let source = try panelTarget(name, kind: .tile)
+        let destination = try panelTarget(ontoRow, kind: .row)
+        guard let payload = source.payload else {
+            throw Failure(description: "the tile \"\(name)\" cannot be picked up")
+        }
+        let board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "style")
+        TextStyleDrag.playtestPasteboard = board
+        defer { TextStyleDrag.playtestPasteboard = nil }
+        let frame = destination.convert(destination.bounds, to: nil)
+        let windowPoint = CGPoint(x: frame.midX, y: frame.midY)
+        guard let dropView = PlaytestPanelDrag.destination(at: windowPoint, in: content,
+                                                           marker: destination) else {
+            throw Failure(description: "nothing at the row \"\(ontoRow)\" takes drops")
+        }
+        let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
+        _ = dropView.draggingEntered(info)
+        var operation: NSDragOperation = []
+        for _ in 0..<3 {
+            operation = dropView.draggingUpdated(info)
+            await sleep(0.06)
+        }
+        // The line the panel is saying about this drag, read while it is still
+        // in the air: it is the whole of what a refusal owes somebody.
+        let sentence = editor?.layerRowStyleDrop?.answer.note
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        if let says {
+            guard let sentence else {
+                throw Failure(description: "the panel said nothing about the tile "
+                    + "\"\(name)\" over the row \"\(ontoRow)\", and the walk expected "
+                    + "\"\(says)\"")
+            }
+            guard sentence.localizedCaseInsensitiveContains(says) else {
+                throw Failure(description: "the panel said \"\(sentence)\" about the tile "
+                    + "\"\(name)\" over the row \"\(ontoRow)\", and the walk expected "
+                    + "\"\(says)\"")
+            }
+        }
+        let lightsUp = operation != []
+        if lightsUp != (expect == .takes) {
+            dropView.draggingExited(info)
+            throw Failure(description: "the row \"\(ontoRow)\" "
+                + (lightsUp ? "lit up" : "stayed dark") + " for the tile \"\(name)\""
+                + (sentence.map { ", saying \"\($0)\"" } ?? "")
+                + ", and the walk expected it to \(expect.rawValue)")
+        }
+        var landed = false
+        if lightsUp {
+            landed = dropView.performDragOperation(info)
+        } else {
+            dropView.draggingExited(info)
+        }
+        await sleep(0.4)
+        note(number, "dragTile",
+             "\"\(name)\" let go on the row \"\(ontoRow)\": the row "
+                + (lightsUp ? "lit up" : "stayed dark")
                 + (sentence.map { ", saying \"\($0)\"" } ?? "")
                 + ", drop \(landed ? "landed" : "did not land")\(held)",
              state: describe())

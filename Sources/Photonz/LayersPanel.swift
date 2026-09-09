@@ -1500,6 +1500,48 @@ private struct PanelDropAffordance: View {
     }
 }
 
+/// The one line the panel says while a saved text style is held over a row.
+///
+/// The ring on the row already says yes or no at the pointer. This says WHY,
+/// which is the half a ring cannot carry: this is not text, it is locked, it is
+/// already wearing that name. It is the same sentence the picture says while a
+/// style is over the words, worked out in the same place, so the two surfaces
+/// can never drift into promising different things.
+///
+/// It sits at one END of the list rather than under the pointer, which is the
+/// one way it differs from the canvas: a sentence does not fit in a row this
+/// narrow. Which end is whichever one the aimed row is NOT near, so it is a
+/// glance away from the row it is about and never drawn over it.
+private struct StyleRowDropNote: View {
+    let drop: StyleRowDrop?
+
+    @ViewBuilder
+    var body: some View {
+        if let drop {
+            Text(drop.answer.note)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .frame(maxWidth: .infinity)
+                // Accent for a style that lands, a plain dark plate for one
+                // that does not: the colour repeats what the ring on the row
+                // says, so a glance is enough and reading is only needed for
+                // the why.
+                .background {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(drop.lands ? Color.accentColor : Color.black.opacity(0.78))
+                }
+                .shadow(color: .black.opacity(0.25), radius: 4, y: 1)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .transition(.opacity)
+        }
+    }
+}
+
 /// Takes a picture let go on a dock section the way the rest of the window
 /// does.
 ///
@@ -1574,6 +1616,12 @@ private struct LayerCanvasRowHeightKey: PreferenceKey {
 /// A drop is one document mutation, so a drag is one undo step, and every
 /// layer keeps its place on the canvas.
 private struct LayerRowDropDelegate: DropDelegate {
+    /// Everything a layer row answers for: a row being carried up or down the
+    /// list (which travels as its id in plain text), a picture arriving from
+    /// outside, and a saved text style off the Library shelf.
+    static let acceptedTypes: [UTType] =
+        [.text] + FileDrop.types + [UTType(TextStyleDrag.typeIdentifier) ?? .data]
+
     let row: LayerPanelRow
     let rowHeight: CGFloat
     let editorState: EditorState
@@ -1613,7 +1661,35 @@ private struct LayerRowDropDelegate: DropDelegate {
         dragging != nil && !FileDrop.isAboutAFile(info)
     }
 
+    /// The saved text style in the air right now, nil for every other drag.
+    /// Read off the drag pasteboard rather than out of the carrier the drop
+    /// hands over, because a row has to answer on the frame the pointer
+    /// arrives: a carrier gives up its bytes asynchronously, and a ring that
+    /// appears two frames late flickers as the pointer runs down a list.
+    ///
+    /// Asked FIRST, before anything else about the drag: a style is the app's
+    /// own pasteboard type, so it can never be mistaken for a file, and a row
+    /// left stale in the list's hand by a drag that ended without saying so
+    /// must not turn a style into a reorder.
+    private func styleInFlight() -> TextStyleDrop.SavedStyle? {
+        editorState.textStyleInFlight()
+    }
+
+    /// Says what this row would do with the style over it, and answers the
+    /// pointer the same thing. A row that cannot take it shows the no-entry
+    /// sign and STILL says why, because a list that quietly refuses is exactly
+    /// what this was built to stop.
+    private func offerStyle(_ style: TextStyleDrop.SavedStyle) -> DropOperation {
+        let drop = editorState.textStyleRowDrop(style, onRow: row.id)
+        editorState.sayTextStyleRowDrop(drop)
+        return drop.lands ? .copy : .forbidden
+    }
+
     func dropEntered(info: DropInfo) {
+        if let style = styleInFlight() {
+            _ = offerStyle(style)
+            return
+        }
         guard carriesARow(info) else {
             offerFile(info)
             return
@@ -1622,6 +1698,11 @@ private struct LayerRowDropDelegate: DropDelegate {
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
+        if let style = styleInFlight() { return DropProposal(operation: offerStyle(style)) }
+        return rowOrFileUpdate(info)
+    }
+
+    private func rowOrFileUpdate(_ info: DropInfo) -> DropProposal? {
         // Nothing was picked up in the list, so this is a file coming in from
         // outside. A row answers for one because nothing behind it can, and it
         // answers the way the rest of the window does: a picture is taken, and
@@ -1636,6 +1717,10 @@ private struct LayerRowDropDelegate: DropDelegate {
     }
 
     func dropExited(info: DropInfo) {
+        // Said either way: a style that left this row for the next one has
+        // already spoken for the new row, and this goodbye is ignored, which is
+        // what stops the ring blinking off at every row edge.
+        editorState.endTextStyleRowDrop(from: row.id)
         guard carriesARow(info) else {
             editorState.endPanelDrop(from: row.id)
             return
@@ -1646,6 +1731,9 @@ private struct LayerRowDropDelegate: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        if let style = styleInFlight() {
+            return editorState.dropTextStyle(style, onRow: row.id)
+        }
         guard carriesARow(info) else {
             let landing = fileLanding(info)
             editorState.endPanelDrop(from: row.id)
@@ -2117,6 +2205,15 @@ struct LayersListView: View {
             } action: { _, row in
                 firstVisibleRow = row
             }
+            // The one line the list says while a saved style is over a row:
+            // what letting go there would do, and why it would do nothing when
+            // it would do nothing. Over the list rather than at the foot of the
+            // whole panel, so it is a glance from the row it is about.
+            .overlay(alignment: styleNoteEdge(displays, viewport: viewport)) {
+                StyleRowDropNote(drop: editorState.layerRowStyleDrop)
+                    .allowsHitTesting(false)
+            }
+            .animation(.easeOut(duration: 0.12), value: editorState.layerRowStyleDrop)
 
             // What the list costs BESIDES the rows. These do not scroll with
             // the list — a grab bar that scrolled away would be a grab bar you
@@ -2141,6 +2238,16 @@ struct LayersListView: View {
             editorState.layerAwaitingRename = nil
             beginRename(id: layer.id, name: layer.name)
         }
+    }
+
+    /// Which end of the list the one line about a style sits at: the end the
+    /// aimed row is NOT near, so the sentence is close enough to read in the
+    /// same glance and never draws over the very row it is about.
+    private func styleNoteEdge(_ displays: [LayerRowDisplay], viewport: CGFloat) -> Alignment {
+        guard let id = editorState.layerRowStyleDrop?.rowID,
+              let index = displays.firstIndex(where: { $0.id == id }) else { return .bottom }
+        let fromTop = CGFloat(index - firstVisibleRow) * (rowHeight + LayerListMetrics.spacing)
+        return fromTop > viewport / 2 ? .top : .bottom
     }
 
     /// The inspector shows no per-layer sections for a multi-selection, so
@@ -2203,6 +2310,11 @@ struct LayersListView: View {
         // this view's: a drag that ends without reporting itself must still be
         // put down, and only something outside the list can notice that.
         let target = editorState.layerRowLanding ?? editorState.panelDropLanding
+        // A saved style is aimed at ONE row, so only that row wears a mark. It
+        // never happens at the same time as a reorder or a file: a style is the
+        // app's own pasteboard type and nothing else in the air can look like
+        // one.
+        let styleDrop = editorState.layerRowStyleDrop
         return LazyVStack(spacing: LayerListMetrics.spacing) {
             ForEach(displays) { display in
                 LayersRow(display: display,
@@ -2212,6 +2324,7 @@ struct LayersListView: View {
                           offersMakeComponent: canMakeComponent && display.isSelected,
                           offersDetachInstance: canDetachInstance && display.isSelected,
                           drop: target?.targetID == display.id ? target : nil,
+                          styleDrop: styleDrop?.rowID == display.id ? styleDrop : nil,
                           draftName: renamingLayerID == display.id ? renameText : nil,
                           rowHeight: rowHeight,
                           editorState: editorState,
@@ -2456,6 +2569,10 @@ private struct LayersRow: View, Equatable {
     let offersDetachInstance: Bool
     /// Where a drag hovering over THIS row would land, nil when none is.
     let drop: LayerDrop?
+    /// What a saved text style held over THIS row would do, nil when none is.
+    /// The row is the other obvious place to aim one, so the row has to answer
+    /// before the pointer is let go.
+    let styleDrop: StyleRowDrop?
     /// The draft name while this row is being renamed, nil the rest of the
     /// time. It is here so the row being typed into redraws on every keystroke
     /// and no other row does.
@@ -2480,6 +2597,7 @@ private struct LayersRow: View, Equatable {
             && a.offersMakeComponent == b.offersMakeComponent
             && a.offersDetachInstance == b.offersDetachInstance
             && a.drop == b.drop
+            && a.styleDrop == b.styleDrop
             && a.draftName == b.draftName
             && a.rowHeight == b.rowHeight
     }
@@ -2523,7 +2641,10 @@ private struct LayersRow: View, Equatable {
         #endif
         content
             .onDrag(pickUp)
-            .onDrop(of: [.text] + FileDrop.types, delegate: LayerRowDropDelegate(
+            // One drop destination for everything a row can be handed, because
+            // SwiftUI gives the drag to the innermost target and stops there: a
+            // second `onDrop` on the same row would simply hide the first.
+            .onDrop(of: LayerRowDropDelegate.acceptedTypes, delegate: LayerRowDropDelegate(
                 row: panelRow, rowHeight: rowHeight, editorState: editorState))
             .playtestTarget(display.name, kind: .row,
                             detail: rowDetail,
@@ -2598,6 +2719,26 @@ private struct LayersRow: View, Equatable {
             if drop == .inside(id) {
                 RoundedRectangle(cornerRadius: 8)
                     .strokeBorder(Color.accentColor, lineWidth: 2)
+            }
+        }
+        // A saved style held over this row. The two answers are drawn so they
+        // are told apart at a glance rather than read: the accent ring the list
+        // already uses for "this one takes it", and the red dashes the panel
+        // already uses for "this cannot use what you are holding". The WHY is
+        // one line at the foot of the panel, since a sentence will not fit in a
+        // row this narrow.
+        .overlay {
+            if let styleDrop {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(styleDrop.lands ? Color.accentColor : Color.red.opacity(0.55),
+                                  style: StrokeStyle(lineWidth: 2,
+                                                     dash: styleDrop.lands ? [] : [5, 4]))
+                    .background {
+                        if styleDrop.lands {
+                            RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.12))
+                        }
+                    }
+                    .allowsHitTesting(false)
             }
         }
         .contentShape(Rectangle())

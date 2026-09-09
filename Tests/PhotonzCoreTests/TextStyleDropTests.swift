@@ -201,3 +201,158 @@ struct TextStyleDropOnACopyTests {
         #expect(doc.textStyleCopyPiece(at: CGPoint(x: 100, y: 55)) == nil)
     }
 }
+
+/// Letting a saved text style go on a ROW in the layers list.
+///
+/// The picture was the only place a style could be put down, and the row is the
+/// other obvious place to aim: the list is where a layer is named, picked and
+/// reordered, so it is where somebody expects to be able to dress it too.
+///
+/// The rules are not a second set. The row works out the same `Target` the
+/// canvas works out and reads the same answer back, so the sentence a row says
+/// and the sentence the picture says are the same sentence, and a drop that
+/// lands on a row lands exactly what a drop on the words would have.
+struct TextStyleRowDropTests {
+
+    private func text(_ name: String, _ string: String = "Hello") -> Layer {
+        Layer(name: name, content: .text(TextContent(string: string)),
+              frame: CGRect(x: 0, y: 0, width: 120, height: 30))
+    }
+
+    private func box(_ name: String) -> Layer {
+        Layer(name: name,
+              content: .annotation(AnnotationContent(shape: .rectangle, start: .zero,
+                                                     end: CGPoint(x: 80, y: 40))),
+              frame: CGRect(x: 0, y: 0, width: 80, height: 40))
+    }
+
+    private func treatment(_ size: CGFloat) -> TextTreatment {
+        TextTreatment(fontName: "Georgia", fontSize: size, weight: .regular, colorHex: "#111111")
+    }
+
+    /// A document holding these layers and one saved style called Heading.
+    private func doc(_ layers: [Layer]) -> (doc: PhotonzDocument, style: TextStyleDrop.SavedStyle) {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600), layers: layers)
+        let id = doc.addTextStyle(name: "Heading", treatment: treatment(32))
+        return (doc, TextStyleDrop.SavedStyle(id: id, name: "Heading"))
+    }
+
+    @Test func aTextRowTakesTheStyle() {
+        let c = doc([text("Title")])
+        let id = c.doc.layers[0].id
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: id)
+        #expect(drop.answer.lands)
+        #expect(drop.answer.note == "Sets this text in Heading.")
+        #expect(drop.layerIDs == [id])
+    }
+
+    /// The very sentence the canvas says, because it is the very same answer.
+    @Test func aShapeRowRefusesInTheCanvasWords() {
+        let c = doc([box("Card")])
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: c.doc.layers[0].id)
+        #expect(!drop.answer.lands)
+        #expect(drop.answer.note == "Card is not text, so it cannot wear Heading.")
+        #expect(drop.layerIDs.isEmpty)
+    }
+
+    /// A row nobody can point at any more — the list rebuilt under the pointer,
+    /// the layer was deleted mid-drag — is the same as pointing at nothing, and
+    /// says the same signpost the bare canvas says.
+    @Test func aRowThatIsNotThereSaysWhereAStyleGoes() {
+        let c = doc([text("Title")])
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: UUID())
+        #expect(!drop.answer.lands)
+        #expect(drop.answer.note == "Drop this on a piece of text to set it in Heading.")
+    }
+
+    /// A locked layer is the one case a row meets that the picture never does:
+    /// the canvas hit test walks straight past a locked layer, so a style can
+    /// only ever be aimed at one here. Locked means what it means everywhere
+    /// else in the app — the Text section will not dress a locked layer either
+    /// — so the row refuses, and says which of the two things is in the way.
+    @Test func aLockedTextRowRefusesAndSaysSo() {
+        var c = doc([text("Title")])
+        let id = c.doc.layers[0].id
+        c.doc.updateLayer(id: id) { $0.isLocked = true }
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: id)
+        #expect(!drop.answer.lands)
+        #expect(drop.answer.note == "Title is locked, so it cannot wear Heading.")
+        #expect(drop.layerIDs.isEmpty)
+    }
+
+    /// A hidden layer is not a protected one: hiding is about what you can see,
+    /// and the Text section dresses a hidden layer without complaint. So does
+    /// a drop.
+    @Test func aHiddenTextRowStillTakesTheStyle() {
+        var c = doc([text("Title")])
+        let id = c.doc.layers[0].id
+        c.doc.updateLayer(id: id) { $0.isVisible = false }
+        #expect(c.doc.textStyleRowDrop(c.style, onRow: id).answer.lands)
+    }
+
+    /// The canvas rule, in the list: aiming at a row that is part of what you
+    /// have picked reaches every picked piece of text, and aiming at a row
+    /// nobody picked reaches only that row.
+    @Test func aDropOnAPickedRowReachesEveryPickedTextRow() {
+        let c = doc([text("One"), text("Two"), box("Card")])
+        let ids = c.doc.layers.map(\.id)
+        let picked: Set<UUID> = [ids[0], ids[1], ids[2]]
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: ids[0], picked: picked)
+        #expect(drop.answer.lands)
+        #expect(drop.answer.note == "Sets all 2 of them in Heading.")
+        #expect(Set(drop.layerIDs) == Set([ids[0], ids[1]]))
+    }
+
+    @Test func aDropOnARowNobodyPickedReachesOnlyThatRow() {
+        let c = doc([text("One"), text("Two")])
+        let ids = c.doc.layers.map(\.id)
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: ids[1], picked: [ids[0]])
+        #expect(drop.layerIDs == [ids[1]])
+        #expect(drop.answer.note == "Sets this text in Heading.")
+    }
+
+    /// A locked row inside the picked crowd is not dressed, and is not counted
+    /// in the number the sentence promises.
+    @Test func aLockedRowInTheCrowdIsNotCounted() {
+        var c = doc([text("One"), text("Two"), text("Three")])
+        let ids = c.doc.layers.map(\.id)
+        c.doc.updateLayer(id: ids[2]) { $0.isLocked = true }
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: ids[0], picked: Set(ids))
+        #expect(drop.answer.note == "Sets all 2 of them in Heading.")
+        #expect(Set(drop.layerIDs) == Set([ids[0], ids[1]]))
+    }
+
+    /// A row already wearing the style has nothing to do, and says so rather
+    /// than lighting up and writing an undo step for nothing.
+    @Test func aRowAlreadyWearingItDoesNotLightUp() {
+        var c = doc([text("Title")])
+        let id = c.doc.layers[0].id
+        _ = c.doc.bindTextStyle(layerIDs: [id], styleID: c.style.id)
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: id)
+        #expect(!drop.answer.lands)
+        #expect(drop.answer.note == "This text is already Heading.")
+    }
+
+    /// The name being given up is said before it is given up, exactly as it is
+    /// on the picture.
+    @Test func aRowWearingAnotherNameSaysWhatItLetsGoOf() {
+        var c = doc([text("Title")])
+        let id = c.doc.layers[0].id
+        let caption = c.doc.addTextStyle(name: "Caption", treatment: treatment(12))
+        _ = c.doc.bindTextStyle(layerIDs: [id], styleID: caption)
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: id)
+        #expect(drop.answer.lands)
+        #expect(drop.answer.note == "Sets this text in Heading and lets go of Caption.")
+    }
+
+    /// A row inside a group is reached by name like any other: the list shows
+    /// it, so a style can be aimed at it.
+    @Test func aRowInsideAGroupTakesTheStyle() {
+        var c = doc([text("One"), box("Card")])
+        let ids = c.doc.layers.map(\.id)
+        _ = c.doc.groupLayers(ids: Set(ids), name: "Panel")
+        let drop = c.doc.textStyleRowDrop(c.style, onRow: ids[0])
+        #expect(drop.answer.lands)
+        #expect(drop.layerIDs == [ids[0]])
+    }
+}

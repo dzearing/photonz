@@ -965,9 +965,25 @@ final class EditorState {
     /// list draws. Written only by `publishRowInHand`.
     var layerRowLanding: LayerDrop?
 
-    /// The tick that keeps `panelDropMarking` and `panelRowInHand` honest,
-    /// running only while there is a mark to take away or a row to put down.
-    /// See `startPanelDropWatch`.
+    /// The mark ONE row in the layers list wears while a saved text style is
+    /// held over it, and the deadline that takes it away when the drag ends
+    /// without telling anyone. A style aimed at a row lights up that row and
+    /// not the whole panel, which is why it is its own mark rather than the
+    /// panel's. See `StyleRowMarking`.
+    ///
+    /// Not watched: the deadline in it is pushed out on every frame of a drag.
+    /// The list reads `layerRowStyleDrop` instead, which changes only when the
+    /// picture does.
+    @ObservationIgnored var styleRowMarking = StyleRowMarking()
+
+    /// The row a style is over and what letting go there would do, which is
+    /// what the row's ring and the line at the foot of the panel draw. Written
+    /// only by `publishStyleRowDrop`.
+    var layerRowStyleDrop: StyleRowDrop?
+
+    /// The tick that keeps `panelDropMarking`, `panelRowInHand` and
+    /// `styleRowMarking` honest, running only while there is a mark to take
+    /// away or a row to put down. See `startPanelDropWatch`.
     @ObservationIgnored var panelDropWatch: Task<Void, Never>?
 
     /// The group the pointer is currently INSIDE, or nil for the canvas.

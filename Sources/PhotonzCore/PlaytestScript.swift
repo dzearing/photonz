@@ -1001,14 +1001,18 @@ public enum PlaytestStep: Sendable, Equatable {
     /// not, be wearing a checkmark, so the step is a test and not only a
     /// picture.
     case rightClick(on: String, shot: String?, choose: String?, ticked: [String], unticked: [String])
-    /// Pick a tile up off the Library shelf by its name, hold it over a point
-    /// on the picture, and let go there. `hold` names a picture taken while it
-    /// is still in hand, which is the only moment the landing outline exists.
-    /// `expect` says whether the picture should take it, so a walk can prove a
-    /// refusal is a refusal rather than reading one as a broken step, and
-    /// `says` is the words the canvas has to be saying while it is held, which
-    /// is the whole of what a refusal owes somebody.
-    case dragTile(tile: String, to: PlaytestPoint, hold: String?,
+    /// Pick a tile up off the Library shelf by its name and let go of it
+    /// somewhere: `to` a point on the picture, or `onto` a row in the layers
+    /// list, which is the other place a saved style can be put down. Exactly
+    /// one of the two.
+    ///
+    /// `hold` names a picture taken while it is still in hand, which is the
+    /// only moment the landing outline exists. `expect` says whether the target
+    /// should take it, so a walk can prove a refusal is a refusal rather than
+    /// reading one as a broken step, and `says` is the words the app has to be
+    /// saying while it is held, which is the whole of what a refusal owes
+    /// somebody.
+    case dragTile(tile: String, to: PlaytestPoint?, onto: String?, hold: String?,
                   expect: PlaytestColorDropExpectation, says: String?)
     /// Pick a row up in the layers list by its name and let go of it on
     /// another row: above it, below it, or inside it when that row is a group.
@@ -1463,7 +1467,21 @@ public enum PlaytestStep: Sendable, Equatable {
             } else {
                 try f.enumValue("expect", PlaytestColorDropExpectation.self)
             }
-            self = .dragTile(tile: try f.string("tile"), to: try f.point("to"),
+            let onto = try f.optionalString("onto")
+            guard onto == nil || fields["to"] == nil else {
+                throw PlaytestScriptError.invalidField(
+                    index: index, step: name, field: "onto",
+                    reason: "is a row in the layers list, and cannot be given with \"to\", "
+                        + "which is a point on the picture")
+            }
+            guard onto != nil || fields["to"] != nil else {
+                throw PlaytestScriptError.invalidField(
+                    index: index, step: name, field: "to",
+                    reason: "is missing; a tile is let go either \"to\" a point on the picture "
+                        + "or \"onto\" a row in the layers list")
+            }
+            self = .dragTile(tile: try f.string("tile"),
+                             to: onto == nil ? try f.point("to") : nil, onto: onto,
                              hold: try f.optionalString("hold"), expect: landing,
                              says: try f.optionalString("says"))
         case "dragRow":

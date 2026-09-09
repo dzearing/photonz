@@ -5,18 +5,19 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:42:00.426Z",
-  "updated": "2026-09-09T09:46:09.293Z",
+  "updated": "2026-09-09T11:45:42.152Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-09-text-style-drag.json: \"A style can only be let go of on the picture. There is no dropping one on a row in the layers list, which would be the other obvious place to aim.\"\n\nThe answer logic is already written and shared: Sources/PhotonzCore/TextStyleDrop.swift and Sources/PhotonzCore/ColorDrop.swift both hand back a lands/note/letsGoOf answer. This task is a second drop target reading the same answer, not a second set of rules. Canvas side: Sources/Photonz/CanvasTextStyleDrop.swift. Layers list side: Sources/Photonz/LayersPanel.swift, which already accepts a dragged layer row, so it has a drop path to extend.\n\nDo both kinds in one sitting if they share the target resolution; if they do not, do the text style first and file the colour one as a follow-up.",
   "acceptance": [
-    "Letting go of a saved colour or a text style on a layer row applies it to that layer, with the same sentence the canvas drop shows and the same single undo step",
+    "Letting go of a saved text style on a layer row applies it to that layer, with the same sentence the canvas drop shows and the same single undo step",
     "A row that cannot take the style says why, in the same words the canvas refusal uses",
     "To see it: Scripts/probe-app.sh, save a text style, then drag its Library tile onto a text layer row in the Layers section",
+    "The colour half is filed as a follow-up, because a row is not a colour well and which part a colour would paint is a product judgment, not plumbing",
     "anything left rough is filed as a follow-up task",
     "audit written under queue/audits/"
   ],
@@ -28,6 +29,39 @@
     {
       "t": "2026-09-09T09:46:09.292Z",
       "note": "seq 2300 -> 30"
+    },
+    {
+      "t": "2026-09-09T11:45:42.151Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T12:10:00.000Z",
+      "note": "Adversarial review before building. The row IS the obvious second target and the audit's own rough list asked for it, so the idea stands. Two things the mock-free version had to answer that the canvas never meets: a LOCKED text layer (the canvas hit test walks past one, a row cannot) and where the sentence goes (a sentence does not fit in a row this narrow). Cut: no travelling chip change, no thumbnail preview, no second set of rules. Shortest version that delivers the value is one drop target reading the answer the canvas already reads."
+    },
+    {
+      "t": "2026-09-09T12:20:00.000Z",
+      "note": "Core first, tests first. PhotonzDocument.textStyleRowDrop builds the same TextStyleDrop.Target the canvas builds and reads the same answer, so the sentences cannot drift. Target gained isLocked with its own refusal (\"Title is locked, so it cannot wear Heading\"). StyleRowMarking is the layer-row twin of PanelDropMarking, with the same idle deadline, because a mark nobody ever took away has gone wrong twice here. 19 new core tests."
+    },
+    {
+      "t": "2026-09-09T12:40:00.000Z",
+      "note": "App side: LayerRowDropDelegate now takes the text style pasteboard type and asks TextStyleDrag.payloadInFlight() FIRST, so a stale row in the list's hand can never turn a style into a reorder. The row rings accent (lands) or red dashes (refuses); one line under the list says what letting go would do, at whichever end of the list the aimed row is NOT near, so it never covers the row it is about."
+    },
+    {
+      "t": "2026-09-09T12:55:00.000Z",
+      "note": "Walk step: dragTile gained \"onto\", a row in the layers list, as the alternative to \"to\", a point on the picture. New walk Scripts/playtest/text-style-row-drop-walk.json drives six cases end to end (box row, low row, text row, already wearing it, locked row, a picked crowd) and reads the sentence back each time."
+    },
+    {
+      "t": "2026-09-09T13:10:00.000Z",
+      "note": "Adversarial review of the built thing, on the probe. First build put the sentence at the foot of the whole panel: correct, stable, and a very long way from the row you are aiming at. Moved it into the bounded list area and made it flip ends, which is a glance from the row. Verified in real window captures."
+    },
+    {
+      "t": "2026-09-09T13:20:00.000Z",
+      "note": "Colour half NOT built, per this task's own notes: the two do not share a target resolution. A layer row supplies no part for a colour to land on (fill? outline? text?), which is a product judgment. Filed as a-saved-colour-dropped-on-a-layer-row-paints-the with the question written out."
+    },
+    {
+      "t": "2026-09-09T13:25:00.000Z",
+      "note": "Verified: Scripts/test.sh 5365 tests green; 38 affected walks green (every walk using dragTile, dragRow or dragOver, run in three batches, none of the whole sweep). Audit at queue/audits/2026-09-09-text-style-row-drop.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-09T11:45:42.150Z"
 }

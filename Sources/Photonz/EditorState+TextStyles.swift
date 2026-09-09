@@ -297,3 +297,83 @@ extension PhotonzDocument {
         }
     }
 }
+
+// MARK: - Letting a style go on a row in the layers list
+
+/// The other obvious place to aim a saved text style: the row in the layers
+/// list, not only the words on the picture.
+///
+/// The list is where a layer is named, picked and reordered, so it is where
+/// somebody expects to be able to dress it too. Until this existed, aiming
+/// there did nothing at all and said nothing about why, which is the one thing
+/// the canvas drop was built not to do.
+///
+/// The rules are not a second set: the row hands the document the same question
+/// the picture asks (`PhotonzDocument.textStyleRowDrop`) and draws the answer it
+/// gets back, so the sentence a row says is the sentence the picture says and a
+/// drop lands the same single undo step.
+extension EditorState {
+
+    /// Whether a style can be carried out of the Library at all. The same two
+    /// switches the shelf tile reads, so a tile that cannot be picked up is
+    /// never met by a row that would have taken it.
+    var textStyleDropEnabled: Bool {
+        Experiments.shared.colorStylesEnabled && Experiments.shared.colorDragEnabled
+    }
+
+    /// The saved style being carried right now, nil for every other drag —
+    /// a row on its way up the list, a picture from the Finder, a colour.
+    func textStyleInFlight() -> TextStyleDrop.SavedStyle? {
+        guard textStyleDropEnabled else { return nil }
+        return TextStyleDrag.payloadInFlight()
+    }
+
+    /// What letting this style go on this row would do, and which layers it
+    /// would reach.
+    func textStyleRowDrop(_ style: TextStyleDrop.SavedStyle, onRow id: UUID) -> StyleRowDrop {
+        guard let document else {
+            return StyleRowDrop(
+                rowID: id,
+                answer: TextStyleDrop.answer(dropping: style,
+                                             on: TextStyleDrop.Target(name: nil, isText: false)),
+                layerIDs: [])
+        }
+        let reading = document.textStyleRowDrop(style, onRow: id, picked: actionableLayerIDs)
+        return StyleRowDrop(rowID: id, answer: reading.answer, layerIDs: reading.layerIDs)
+    }
+
+    /// The row under the pointer says what letting go on it would do. Called on
+    /// every frame of a drag, so an unchanged answer only pushes the deadline
+    /// that takes the mark away out.
+    func sayTextStyleRowDrop(_ drop: StyleRowDrop) {
+        styleRowMarking.say(drop, at: CACurrentMediaTime())
+        publishStyleRowDrop()
+        startPanelDropWatch()
+    }
+
+    /// The style has left this row, or landed on it.
+    func endTextStyleRowDrop(from rowID: UUID) {
+        styleRowMarking.end(from: rowID)
+        publishStyleRowDrop()
+    }
+
+    /// Copies out the one thing the list draws, and only when it has changed.
+    /// The mark itself is not watched because it also carries the deadline,
+    /// which is pushed out on every frame of a drag: watching it would redraw
+    /// the whole list sixty times a second to record what time it is.
+    func publishStyleRowDrop() {
+        if layerRowStyleDrop != styleRowMarking.drop { layerRowStyleDrop = styleRowMarking.drop }
+    }
+
+    /// Lands a style let go on a row, in ONE step. The very reading the row
+    /// answered the pointer with, so nothing can slip past a refusal and land
+    /// anyway.
+    @discardableResult
+    func dropTextStyle(_ style: TextStyleDrop.SavedStyle, onRow id: UUID) -> Bool {
+        let drop = textStyleRowDrop(style, onRow: id)
+        endTextStyleRowDrop(from: id)
+        guard drop.lands, !drop.layerIDs.isEmpty else { return false }
+        dropTextStyle(styleID: style.id, onLayers: drop.layerIDs)
+        return true
+    }
+}

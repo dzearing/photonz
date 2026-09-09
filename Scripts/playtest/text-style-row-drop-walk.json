@@ -1,0 +1,110 @@
+{
+  "out": "/tmp/photonz-playtest/text-style-row-drop",
+  "seed": "A saved text style let go on a ROW in the layers list. The picture was the only place a style could be put down, and aiming at the row, which is the other obvious place, did nothing at all and said nothing about why. This walk saves a style off one heading, then carries the tile onto rows: a text row, the same row twice, a box, a locked row, and a crowd of picked rows, checking the ring the row wears and the line the panel says in each place.",
+  "setup": {
+    "forget": ["text", "panel", "shapes", "color", "tools"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [520, 380], "to": [760, 500], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 300] },
+    { "do": "type", "text": "Create account" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Font", "choose": "Georgia" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Size", "choose": "32 px" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Weight", "choose": "Bold" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Style", "choose": "Save as Style" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "type", "text": "Heading" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "click", "at": [840, 90] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-nothing-picked", "note": "nothing picked, so every drop below is AIMED at a row rather than steered by a selection" },
+    { "do": "snapshot", "name": "1-shelf-and-list" },
+
+    {
+      "do": "dragTile", "tile": "Heading", "onto": "Rectangle",
+      "expect": "refuses", "says": "is not text",
+      "hold": "2-over-a-box-row"
+    },
+    { "do": "wait", "seconds": 0.4 },
+
+    {
+      "do": "dragTile", "tile": "Heading", "onto": "Background",
+      "expect": "refuses", "says": "is not text",
+      "hold": "2b-over-a-low-row"
+    },
+    { "do": "wait", "seconds": 0.4 },
+
+    {
+      "do": "dragTile", "tile": "Heading", "onto": "Text 2",
+      "expect": "takes", "says": "Sets this text in Heading",
+      "hold": "3-over-a-text-row"
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-dressed", "note": "THE TEST: the second heading was never selected and was never touched on the picture, and is now set in Heading, box re-measured so nothing clips" },
+    { "do": "snapshot", "name": "3-dressed-by-a-row-drop" },
+    { "do": "render", "name": "3-canvas" },
+
+    {
+      "do": "dragTile", "tile": "Heading", "onto": "Text 2",
+      "expect": "refuses", "says": "This text is already Heading",
+      "hold": "4-already-wearing-it"
+    },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-undone", "note": "ONE undo puts the row drop back, exactly as one undo puts a canvas drop back" },
+    { "do": "render", "name": "5-canvas" },
+
+    { "do": "press", "control": "Lock", "in": "Text 2" },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "dragTile", "tile": "Heading", "onto": "Text 2",
+      "expect": "refuses", "says": "is locked",
+      "hold": "6-over-a-locked-row"
+    },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Lock", "in": "Text 2" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "click", "at": [180, 145] },
+    { "do": "click", "at": [200, 315], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "dragTile", "tile": "Heading", "onto": "Text 2",
+      "expect": "takes", "says": "Sets all 2 of them in Heading",
+      "hold": "7-over-two-picked-rows"
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "7-a-crowd", "note": "aiming at a row that is part of what you have picked reaches every picked piece of text, the same rule the picture drop follows" },
+    { "do": "render", "name": "7-canvas" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "8-undone", "note": "and one undo puts the crowd back too, in one step" },
+    { "do": "render", "name": "8-canvas" }
+  ]
+}

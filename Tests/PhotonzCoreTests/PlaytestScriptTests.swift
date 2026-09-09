@@ -924,12 +924,14 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragTile", "tile": "Button", "to": [400, 300], "hold": "over-canvas" } ] }
         """)
-        guard case .dragTile(let tile, let to, let hold, let expect, let says) = script.steps[0] else {
+        guard case .dragTile(let tile, let to, let onto, let hold, let expect, let says)
+                = script.steps[0] else {
             Issue.record("dragTile"); return
         }
         #expect(tile == "Button")
-        #expect(to.point == CGPoint(x: 400, y: 300))
-        #expect(to.space == .document)
+        #expect(to?.point == CGPoint(x: 400, y: 300))
+        #expect(to?.space == .document)
+        #expect(onto == nil)
         #expect(hold == "over-canvas")
         // A walk that says nothing about the answer is asking for the ordinary
         // one: the picture takes it. Every walk written before a tile could be
@@ -947,7 +949,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "dragTile", "tile": "Heading", "to": [400, 300],
                        "expect": "refuses", "says": "is not text" } ] }
         """)
-        guard case .dragTile(_, _, _, let expect, let says) = script.steps[0] else {
+        guard case .dragTile(_, _, _, _, let expect, let says) = script.steps[0] else {
             Issue.record("dragTile"); return
         }
         #expect(expect == .refuses)
@@ -958,11 +960,48 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragTile", "tile": "Button", "to": [40, 30], "space": "view" } ] }
         """)
-        guard case .dragTile(_, let to, let hold, _, _) = script.steps[0] else {
+        guard case .dragTile(_, let to, _, let hold, _, _) = script.steps[0] else {
             Issue.record("dragTile"); return
         }
-        #expect(to.space == .view)
+        #expect(to?.space == .view)
         #expect(hold == nil)
+    }
+
+    /// The row in the layers list is the other place a saved style can be put
+    /// down, so a walk names it instead of a point on the picture. The two are
+    /// alternatives: a step that gives both, or neither, is a walk that has not
+    /// said where the tile goes.
+    @Test func aWalkCanDragATileOntoARowInTheLayersList() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragTile", "tile": "Heading", "onto": "Title",
+                       "expect": "refuses", "says": "is locked" } ] }
+        """)
+        guard case .dragTile(let tile, let to, let onto, _, let expect, let says)
+                = script.steps[0] else {
+            Issue.record("dragTile"); return
+        }
+        #expect(tile == "Heading")
+        #expect(to == nil)
+        #expect(onto == "Title")
+        #expect(expect == .refuses)
+        #expect(says == "is locked")
+    }
+
+    @Test func aTileDragCannotBeAimedAtBothAPointAndARow() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "dragTile", "tile": "Heading", "to": [400, 300],
+                           "onto": "Title" } ] }
+            """)
+        }
+    }
+
+    @Test func aTileDragHasToSayWhereItGoes() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "dragTile", "tile": "Heading" } ] }
+            """)
+        }
     }
 
     @Test func aWalkCanDragOneLayerRowOntoAnother() throws {
