@@ -1827,42 +1827,56 @@ private final class Run {
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
         var moved = 0.0
+        var stuck = ""
         // Six rounds is generous: each one closes the whole measured gap, and
         // the rounds after the first are for the row heights that changed
         // under it. A dock that has not arrived in six is not going to.
         for _ in 0..<6 {
             let current = try pressTarget(name, in: row)
             if Self.isInReach(current) { break }
-            guard let clip = Self.scrollableClip(for: current, in: content) else {
+            // Each scrolling area around the control, innermost first, paired
+            // with the strip of window it could actually park the control in.
+            // The strip is what a section on its own cannot tell you: a list
+            // inside the dock scrolls by itself and can run past the bottom of
+            // the window, so a control down there is inside its own list and
+            // still unpressable. Measuring against the list alone reported
+            // nothing to do and scrolled 0pt, which is why a reveal into the
+            // Effects list used to have to be written as a wheel turn of 120.
+            let reaches = Self.scrollReaches(for: current, in: content)
+            guard !reaches.isEmpty else {
                 throw Failure(description: "the control \"\(name)\" is out of reach and nothing "
                     + "around it scrolls, so no step could bring it in. It may be off the window "
                     + "itself: make the window taller, or open the section it is in.")
             }
-            let seen = clip.convert(clip.bounds, to: nil)
-            // Two points of daylight, so a control resting exactly on the edge
-            // is not left one rounding error short of reachable.
-            let margin = 2.0
-            // A window's coordinates run bottom up, so something FURTHER DOWN
-            // the list has the SMALLER y, and reaching it means going down the
-            // list, which the wheel writes as a negative number.
-            let by: Double = if current.box.minY < seen.minY {
-                -(seen.minY - current.box.minY + margin)
-            } else if current.box.maxY > seen.maxY {
-                current.box.maxY - seen.maxY + margin
-            } else {
-                // Inside the scrolling area but out of reach anyway: the
-                // window's own edge is cutting it off, and no scroll fixes it.
-                0
+            // The innermost thing holding it turns first, because that is the
+            // one a person would put the pointer over. When it is already
+            // showing that stretch of its own length, or has no more to give,
+            // the section around it takes the turn instead.
+            var round = 0.0
+            var asked = false
+            for (clip, reach) in reaches {
+                let by = Self.gap(from: current.box, into: reach)
+                guard by != 0 else { continue }
+                asked = true
+                round = Self.scrollClip(clip, by: by)
+                if round > 0.5 { break }
             }
-            guard by != 0 else { break }
-            moved += Self.scrollClip(clip, by: by)
+            moved += round
+            guard round > 0.5 else {
+                stuck = asked
+                    ? "everything around it is already scrolled as far as it goes"
+                    : "it is already inside the part of the window a press can reach, so "
+                        + "something other than a scroll is covering or cutting it"
+                break
+            }
             await sleep(0.35)
         }
         let landed = try pressTarget(name, in: row)
         guard Self.isInReach(landed) else {
             throw Failure(description: "scrolled \(Int(moved))pt and \"\(name)\" is still not "
-                + "where a person could press it. It is off the window rather than below the "
-                + "fold: the window may be too short for the section it is in.")
+                + "where a person could press it"
+                + (stuck.isEmpty ? "" : ": " + stuck)
+                + ". The window may be too short for the section it is in.")
         }
         note(number, "reveal",
              "\"\(landed.name)\"\(landed.detail.isEmpty ? "" : " in \(landed.detail)") "
@@ -1871,32 +1885,75 @@ private final class Run {
              state: describe())
     }
 
-    /// The scrolling area the control is inside, by geometry rather than by
-    /// hierarchy: a press target is a point and a box, not a view, so there is
-    /// no `enclosingScrollView` to ask.
+    /// Two points of daylight, so a control resting exactly on the edge is not
+    /// left one rounding error short of reachable.
+    private static let revealMargin = 2.0
+
+    /// Every scrolling area the control is inside, outermost first: the dock
+    /// before the Effects list that sits inside the dock.
+    ///
+    /// By geometry rather than by hierarchy: a press target is a point and a
+    /// box, not a view, so there is no `enclosingScrollView` to ask.
     ///
     /// A control that needs revealing is by definition NOT where the clip view
     /// is, so the two boxes do not overlap and asking whether they do finds
     /// nothing. What holds instead is the SCROLLED length: the control sits
     /// somewhere in the document the clip is a window onto, so its box lands
-    /// inside that document's own bounds. The narrowest such document wins, so
-    /// a list inside the dock is chosen over the dock itself.
-    private static func scrollableClip(for target: PlaytestPressTarget, in content: NSView) -> NSClipView? {
-        var found: [NSClipView] = []
-        func walk(_ view: NSView) {
+    /// inside that document's own bounds.
+    private static func scrollableClips(for target: PlaytestPressTarget, in content: NSView) -> [NSClipView] {
+        var found: [(clip: NSClipView, depth: Int)] = []
+        func walk(_ view: NSView, _ depth: Int) {
             if let scroll = view as? NSScrollView, !scroll.contentView.isHidden,
                let document = scroll.documentView {
                 let whole = document.convert(document.bounds, to: nil)
+                let box = target.box.isEmpty
+                    ? CGRect(origin: target.point, size: CGSize(width: 1, height: 1))
+                    : target.box
                 // Grown a little across, because a row can hang a point or two
                 // outside the column it is laid out in.
-                if whole.insetBy(dx: -4, dy: 0).contains(target.box.isEmpty ? CGRect(origin: target.point, size: .init(width: 1, height: 1)) : target.box) {
-                    found.append(scroll.contentView)
+                if whole.insetBy(dx: -4, dy: 0).contains(box) {
+                    found.append((scroll.contentView, depth))
                 }
             }
-            for sub in view.subviews where !sub.isHidden && sub.alphaValue > 0 { walk(sub) }
+            for sub in view.subviews where !sub.isHidden && sub.alphaValue > 0 { walk(sub, depth + 1) }
         }
-        walk(content)
-        return found.min { $0.bounds.width < $1.bounds.width }
+        walk(content, 0)
+        // Shallowest first. Depth rather than width, because a list can be
+        // exactly as wide as the dock it sits in and still be the inner one.
+        return found.sorted { $0.depth < $1.depth }.map(\.clip)
+    }
+
+    /// Each scrolling area around the control paired with the strip of window
+    /// it could park the control in, innermost first.
+    ///
+    /// The strip is the window narrowed by that area and by every one outside
+    /// it. An area with nothing left of it is dropped: a list that has itself
+    /// been carried off the window shows no part of its own length, so turning
+    /// its wheel only slides the control along a strip nobody can see, and the
+    /// section around it is the one that has to move. Dropping those is also
+    /// what keeps a scrolling area that merely happens to be long enough, and
+    /// is nowhere near the control, from narrowing the answer down to nothing.
+    private static func scrollReaches(for target: PlaytestPressTarget,
+                                      in content: NSView) -> [(clip: NSClipView, reach: CGRect)] {
+        var region = content.convert(content.bounds, to: nil)
+        var pairs: [(clip: NSClipView, reach: CGRect)] = []
+        for clip in scrollableClips(for: target, in: content) {
+            region = region.intersection(clip.convert(clip.bounds, to: nil))
+            pairs.append((clip, region))
+        }
+        return pairs.reversed().filter { !$0.reach.isNull && !$0.reach.isEmpty }
+    }
+
+    /// How far the wheel has to turn to bring `box` inside `reach`, and which
+    /// way round. Zero when it is already there.
+    ///
+    /// A window's coordinates run bottom up, so something FURTHER DOWN the
+    /// list has the SMALLER y, and reaching it means going down the list,
+    /// which the wheel writes as a negative number.
+    private static func gap(from box: CGRect, into reach: CGRect) -> Double {
+        if box.minY < reach.minY { return -(reach.minY - box.minY + revealMargin) }
+        if box.maxY > reach.maxY { return box.maxY - reach.maxY + revealMargin }
+        return 0
     }
 
     /// Scrolls one clip view and answers how far it actually went. The wheel
@@ -1904,10 +1961,14 @@ private final class Run {
     /// takes the wheel keeps its own momentum and edges honest.
     @discardableResult
     private static func scrollClip(_ clip: NSClipView, by points: Double) -> Double {
-        guard let scrollView = clip.enclosingScrollView else { return 0 }
+        // A distance is worked out from rectangles, and a rectangle that came
+        // back empty carries infinity: turning that into a wheel count used to
+        // bring the whole run down instead of failing the step.
+        guard points.isFinite, let scrollView = clip.enclosingScrollView else { return 0 }
+        let turn = Int32(min(max(points.rounded(), -30_000), 30_000))
         let start = clip.bounds.origin.y
         if let wheel = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
-                               wheel1: Int32(points.rounded()), wheel2: 0, wheel3: 0),
+                               wheel1: turn, wheel2: 0, wheel3: 0),
            let event = NSEvent(cgEvent: wheel) {
             scrollView.scrollWheel(with: event)
         }
@@ -1916,7 +1977,14 @@ private final class Run {
         // not, which is the same direction the wheel means by a negative
         // number. Same reasoning as `scroll(from:by:)`.
         let step = clip.isFlipped ? -points : points
-        clip.scroll(to: CGPoint(x: clip.bounds.origin.x, y: start + step))
+        // Held inside its own ends, so a list already scrolled to the bottom
+        // reports honestly that it did not move rather than shoving its
+        // content past the edge. A reveal reads that answer to decide the
+        // section around it has to take the turn instead.
+        var proposed = clip.bounds
+        proposed.origin.y = start + step
+        let allowed = clip.constrainBoundsRect(proposed)
+        clip.scroll(to: CGPoint(x: clip.bounds.origin.x, y: allowed.origin.y))
         scrollView.reflectScrolledClipView(clip)
         return abs(clip.bounds.origin.y - start)
     }

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2210,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T02:47:15.352Z",
-  "updated": "2026-09-09T02:47:15.355Z",
+  "updated": "2026-09-09T07:07:59.690Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08). Reproduction: put {\"do\": \"reveal\", \"control\": \"Switch\", \"in\": \"Border\"} in Scripts/playtest/effect-row-is-a-small-pane-walk.json before step 21, then Scripts/playtest.sh Scripts/playtest/effect-row-is-a-small-pane-walk.json --no-build. It fails with: step 21 (reveal): scrolled 0pt and \"Switch\" is still not where a person could press it. It is off the window rather than below the fold: the window may be too short for the section it is in. The Border was inside the Effects list own scroller at the time, one wheel turn away. The walk now uses {\"do\": \"scrollPanel\", \"row\": \"Shadow\", \"by\": 120} instead, which works but hard-codes a distance.\n\nThe reveal step is in Sources/Photonz/Playtest/PlaytestHarness.swift (search for func reveal and scrollClip); scrollPanel gets there because it turns the wheel over a point inside the inner list, which is what reveal has to learn to do.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-09T02:47:15.354Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T07:07:59.689Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T07:40:00.000Z",
+      "note": "Adversarial review before building: the mock-free version of this is not a new step type. Walk authors already write `reveal`, and adding a second word for `reveal, but inside a section` would make them guess which one to reach for. The shortest thing that delivers the value is to make the existing `reveal` measure against the strip of window a press can actually land in, rather than against the length of the section holding the control. No new vocabulary."
+    },
+    {
+      "t": "2026-09-09T07:40:00.000Z",
+      "note": "Reproduced first, exactly as the notes said. Put {\"do\":\"reveal\",\"control\":\"Switch\",\"in\":\"Border\"} in place of the scrollPanel step and ran the walk: 'step 21 (reveal): scrolled 0pt and \"Switch\" is still not where a person could press it.'"
+    },
+    {
+      "t": "2026-09-09T07:40:00.000Z",
+      "note": "Root cause. reveal measured the control against the clip view it sits in (`seen`), so a control sitting inside the Effects list's own length looked like there was nothing to do, even though the list runs past the bottom of the window. Now reveal builds the list of scrolling areas around the control, pairs each with the window narrowed by it and by every one outside it, and turns the innermost one that could actually park the control there."
+    },
+    {
+      "t": "2026-09-09T07:40:00.000Z",
+      "note": "Second adversarial review, on the real app, caught a regression my first pass introduced: two walks (out-of-view-mark, container-too-small) stopped dead. Not a hang, a crash. The Layers list in those walks is carried ENTIRELY off the window by the dock around it, so intersecting the window with every scrolling area gave CGRect.null, whose infinite edges turned into an infinite wheel count and a Swift runtime trap. Fixed by dropping any scrolling area with nothing left of it (there is nothing its own wheel could do) and by refusing a non-finite distance in scrollClip. scrollClip also holds a list inside its own ends now, so a list already at the bottom reports honestly that it did not move and the section around it takes the turn."
+    },
+    {
+      "t": "2026-09-09T07:40:00.000Z",
+      "note": "Verified: all 11 walks with a reveal step pass, Scripts/test.sh passes (5278 tests). The reveal log now reads '\"Switch\" in Border, on brought into reach by scrolling 73pt' and, asked a second time, '\"Switch\" in Border, on was already where a person could press it'. effect-row-is-a-small-pane uses reveal again instead of scrollPanel by 120."
+    },
+    {
+      "t": "2026-09-09T07:40:00.000Z",
+      "note": "No audit written: this is walk-writing machinery, not something a person can open the app and try. No sweep requested either, since only the reveal step changed and every walk that uses one was run."
     }
-  ]
+  ],
+  "started": "2026-09-09T07:07:59.688Z"
 }
