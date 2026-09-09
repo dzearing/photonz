@@ -716,7 +716,8 @@ and a picture's ring are one Outline part with one Width (see above), and both
 are what the layer IS rather than something added. The *offset* border the user
 asked about — an inner one and an outer one as two rows — is an Effects entry,
 and it was built on 2026-09-07 once the renderer could draw outside a layer's
-edge at all. See "Outline in Appearance, Border in Effects" below.
+edge at all; it took a real Offset on 2026-09-09. See "Outline in Appearance,
+Border in Effects" below.
 
 ### A part's settings are visibly owned
 
@@ -828,10 +829,33 @@ So the question "how thick is this shape's edge" has one answer and one control,
 and "put a second ring round this" has somewhere to go. A border sits over the
 outline, and the shadows are cast from the layer wearing both.
 
-**Position, not a distance.** A border carries the same Inside · Center ·
-Outside popup the Outline row carries, and no number for how far off the edge to
-float. Two outside borders of different widths already stack into a real
-two-colour double ring, so nothing needs a distance to be worth adding twice.
+**Position, and then a distance.** A border carries the same Inside · Center ·
+Outside popup the Outline row carries, and under its Width an **Offset**: how
+far the ring stands AWAY from the edge it sits against, in points.
+
+It shipped without one on 2026-09-07, on the argument that two outside borders
+of different widths already stack into a real two-colour double ring. The user
+asked for the offset on 2026-09-09 and the argument was wrong: rings that all
+start on the same edge can only ever be a thicker band. The gap is what makes
+the pair read as two rings, a tight line on the edge and a second standing off
+it, which is the whole reason to add a border twice.
+
+- **Nought is where every ring has always sat**, so nothing already drawn moves,
+  and a file written before this opens with no offset at all.
+- **Inside moves the ring further IN, outside further OUT.** Ten on an inside
+  ring is ten points in from the inside edge; ten on an outside one is ten
+  points out from the outside edge.
+- **Centred has no offset.** It straddles the edge with half the line on either
+  side, so there is no side to measure from. The row is not there rather than
+  being there greyed out, and one line of small print says so, and says the
+  number is kept for when the ring goes back to Inside or Outside.
+- **It is the same one signed number the renderer already had.**
+  `BorderPosition.ringOutset(width:offset:)` says where the ring's outer edge
+  sits relative to the layer's edge, positive past it and negative inside it,
+  and the renderer grows the box by exactly that — corner radius and all, which
+  is what keeps an offset ring parallel to a rounded shape. What makes ROOM
+  reads `outset`, the same number clamped at nought, so an outside offset grows
+  the layer's reach and an inside one asks for nothing.
 
 ### Glow: the halo that lights instead of darkening
 

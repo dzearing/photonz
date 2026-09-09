@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:06:52.628Z",
-  "updated": "2026-09-09T13:06:52.672Z",
+  "updated": "2026-09-09T15:44:31.950284Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09. BorderEffect (Sources/PhotonzCore/LayerEffects.swift line 119 onwards) carries width, paint and position and no offset, and its coding keys are at line 167 so adding one needs a default of zero for old documents. The place the geometry lives is BorderPosition.outset(width:) (BorderPosition.swift line 38), which returns 0, half the width, or the width, and its own comment says this one number is the whole of what the renderer needs: the bitmap grows by it, the ring is pushed out by it, and the layer's reach grows by it. So the offset belongs in that same number rather than being applied at the drawing site, or the reach and the clipping will not follow. Note the renderer's ringed function already takes an outset and grows a rounded rect by it, which grows the radius by the same amount, which is exactly the parallel rounding wanted here, so the corner behaviour should come out right if the offset goes through the outset. Inside is the awkward direction: outset returns 0 for inside today, and an inside offset moves the ring further IN, which the current single non negative number cannot express, so say how that is represented rather than leaving it to the drawing code.",
@@ -32,6 +32,51 @@
     {
       "t": "2026-09-09T13:06:52.671Z",
       "note": "seq 260 -> 9"
+    },
+    {
+      "t": "2026-09-09T15:23:17.441Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "adversarial review before building: the mock-free ask holds up. Two borders that all start on the same edge can only ever be a thicker band, so the gap IS the feature. Cut nothing. The one thing the ask left open was the inside direction, and the answer is that the geometry number becomes signed: BorderPosition.ringOutset(width:offset:) says where the ring's OUTER edge sits relative to the layer's edge, negative for an inside offset, and outset stays that clamped at nought so everything that makes ROOM is unchanged. Rejected: applying the offset at the drawing site, which would leave the reach and the clipping behind."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "rejected rolling Position and Offset into one signed number. Two controls that each mean one thing read more plainly than one that flips meaning at zero, and Position is already the word the Outline row uses."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "tests first: Tests/PhotonzCoreTests/BorderOffsetTests.swift (13 tests, signed geometry, reach at a large outside offset, old files, encode omits a zero offset, magnification) and eight new render tests in Tests/PhotonzRenderTests/BorderEffectRenderTests.swift that read pixels either side of the box. Full suite 5477 tests green."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "core: BorderEffect.offset (default 0, decodeIfPresent ?? 0, encoded only when non-zero so an older build reads what it always read), BorderEffect.offsetRange 0...40, ringOutset/outset/appliesOffset; BorderPosition.ringOutset + appliesOffset; offset scaled in DocumentMagnification. Renderer takes border.ringOutset and grows or shrinks the rounded rect by it, so the corner radius follows either way; a ring offset so far in that no box is left is skipped rather than handing a null rect to a filter."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "panel: BorderOffsetRow in EffectsListInspector, a LayerStyleSlider identical to Width. Hidden when the position is Center (and, like Position, when a label's ring follows its letters); in its place one line of small print, 'Center straddles the edge. The 16 px offset comes back on Inside or Outside.', so a number set on Outside is plainly parked rather than silently doing nothing. Shared file, no Next fork, so both releases have it."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "'typed and dragged like its width' turned out to be a trap: no slider in Effects takes a typed number, Width included. Offset matches Width exactly. Filed type-a-number-into-any-effects-slider-not-just-d at p2 to fix all of them at once."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "adversarial review of the built thing, on the probe with Screen Recording granted: the centred note ran to three lines at panel width and was rewritten to two. Verified in real captures that the Offset row reads as a peer of Width, an outside offset leaves clear air between shape and ring, an inside one moves it in, a rounded box keeps parallel corners, and a tight ring plus an offset ring draw as two rings."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "new walk Scripts/playtest/border-offset-walk.json. Adding the row made 'Slider in Border' ambiguous; eleven presses across nine walks retargeted to 'Slider in Border, Width'. All twelve border/effect walks pass. A full sweep is requested for the walks I did not touch."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "docs/design/shape-parts.md: the 'Position, not a distance' section said outright that no offset was needed. Rewritten as 'Position, and then a distance' with why that was wrong."
+    },
+    {
+      "t": "2026-09-09T15:44:31.950284Z",
+      "note": "audit queue/audits/2026-09-09-border-offset.json with three real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-09T15:23:17.440Z"
 }

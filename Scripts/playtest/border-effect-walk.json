@@ -78,7 +78,7 @@
     {
       "do": "press",
       "control": "Slider",
-      "in": "Border",
+      "in": "Border, Width",
       "across": 0.3
     },
     {
@@ -148,7 +148,7 @@
     {
       "do": "press",
       "control": "Slider",
-      "in": "Border 2",
+      "in": "Border 2, Width",
       "across": 0.12
     },
     {

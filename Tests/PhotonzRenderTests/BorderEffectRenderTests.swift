@@ -169,4 +169,100 @@ struct BorderEffectRenderTests {
         let below = pixel(image, Int(box.midX), Int(box.maxY) + 8 + 16)
         #expect(below.a > 200 && below.r < 60 && below.g < 60 && below.b < 60)
     }
+
+    // MARK: Standing off the edge
+
+    @Test("An outside border with an offset stands clear of the shape, with a gap")
+    func outsideOffsetStandsOff() {
+        // Six thick, ten out: ink from ten to sixteen past the edge, clear air
+        // between the shape and the ring. That gap is the whole point of the
+        // offset — it is what makes a second ring read as a ring rather than as
+        // a thicker first one.
+        let image = render([filledBox([.border(BorderEffect(width: 6, colorHex: "#00FF00",
+                                                            position: .outside, offset: 10))])])
+        #expect(isGreen(pixel(image, Int(box.minX) - 13, Int(box.midY))))
+        #expect(isGreen(pixel(image, Int(box.maxX) + 13, Int(box.midY))))
+        #expect(isGreen(pixel(image, Int(box.midX), Int(box.minY) - 13)))
+        // The gap is empty...
+        #expect(pixel(image, Int(box.minX) - 5, Int(box.midY)).a < 20)
+        // ...nothing reaches past the ring...
+        #expect(pixel(image, Int(box.minX) - 20, Int(box.midY)).a < 20)
+        // ...and the shape itself is untouched.
+        let inside = pixel(image, Int(box.minX) + 4, Int(box.midY))
+        #expect(inside.r > 180 && inside.g < 80)
+    }
+
+    @Test("An inside border with an offset moves that far further in")
+    func insideOffsetMovesIn() {
+        let image = render([filledBox([.border(BorderEffect(width: 6, colorHex: "#00FF00",
+                                                            position: .inside, offset: 10))])])
+        // Ink from ten to sixteen INSIDE the edge...
+        #expect(isGreen(pixel(image, Int(box.minX) + 13, Int(box.midY))))
+        #expect(isGreen(pixel(image, Int(box.maxX) - 13, Int(box.midY))))
+        // ...the band nearest the edge is the shape again...
+        let atEdge = pixel(image, Int(box.minX) + 4, Int(box.midY))
+        #expect(atEdge.r > 180 && atEdge.g < 80)
+        // ...and nothing at all escapes the box.
+        #expect(pixel(image, Int(box.minX) - 4, Int(box.midY)).a < 20)
+    }
+
+    @Test("A tight ring and an offset ring draw as two separate rings")
+    func twoRingsWithAGapBetween() {
+        let image = render([filledBox([
+            .border(BorderEffect(width: 4, colorHex: "#00FF00", position: .outside)),
+            .border(BorderEffect(width: 4, colorHex: "#0000FF", position: .outside, offset: 10))
+        ])])
+        // The tight one hugs the edge...
+        #expect(isGreen(pixel(image, Int(box.minX) - 2, Int(box.midY))))
+        // ...a gap...
+        #expect(pixel(image, Int(box.minX) - 7, Int(box.midY)).a < 20)
+        // ...then the one standing off it, in its own colour.
+        #expect(isBlue(pixel(image, Int(box.minX) - 12, Int(box.midY))))
+        #expect(pixel(image, Int(box.minX) - 20, Int(box.midY)).a < 20)
+    }
+
+    @Test("A centred border ignores an offset, because it has no side to stand off")
+    func centreIgnoresTheOffset() {
+        let image = render([filledBox([.border(BorderEffect(width: 8, colorHex: "#00FF00",
+                                                            position: .center, offset: 20))])])
+        // Straddling the edge exactly as it would with no offset at all.
+        #expect(isGreen(pixel(image, Int(box.minX) - 2, Int(box.midY))))
+        #expect(isGreen(pixel(image, Int(box.minX) + 2, Int(box.midY))))
+        #expect(pixel(image, Int(box.minX) - 22, Int(box.midY)).a < 20)
+    }
+
+    @Test("An offset ring round a rounded box stays parallel to it")
+    func offsetCornersStayRound() {
+        var style = LayerStyle()
+        style.cornerRadius = 24
+        style.effects = [.border(BorderEffect(width: 8, colorHex: "#00FF00",
+                                              position: .outside, offset: 10))]
+        let layer = Layer(name: "Box",
+                          content: .annotation(AnnotationContent(shape: .rectangle, strokeWidth: 0,
+                                                                 colorHex: "#FF0000", start: .zero,
+                                                                 end: CGPoint(x: box.width,
+                                                                              y: box.height),
+                                                                 fillColorHex: "#FF0000")),
+                          frame: box, style: style)
+        let image = render([layer])
+        // On the flat of the edge the ring is where the offset put it...
+        #expect(isGreen(pixel(image, Int(box.minX) - 14, Int(box.midY))))
+        // ...the corner has grown with the ring, so the arc runs through here...
+        #expect(isGreen(pixel(image, Int(box.minX) - 3, Int(box.minY) - 3)))
+        // ...and the square corner of the ring's own box is empty, which it
+        // would not be if the offset had squared the corner off.
+        #expect(pixel(image, Int(box.minX) - 16, Int(box.minY) - 16).a < 20)
+    }
+
+    @Test("A shape wearing an offset ring is not clipped at its own frame")
+    func nothingClipsTheOffsetRing() {
+        // The reach has to grow with the offset or the far side of the ring is
+        // cut off at the layer's box. Thirty out and four thick: ink at
+        // thirty-two, nothing at thirty-eight.
+        let image = render([filledBox([.border(BorderEffect(width: 4, colorHex: "#00FF00",
+                                                            position: .outside, offset: 30))])])
+        #expect(isGreen(pixel(image, Int(box.minX) - 32, Int(box.midY))))
+        #expect(isGreen(pixel(image, Int(box.midX), Int(box.minY) - 32)))
+        #expect(pixel(image, Int(box.minX) - 38, Int(box.midY)).a < 20)
+    }
 }

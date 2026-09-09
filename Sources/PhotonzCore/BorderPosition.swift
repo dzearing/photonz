@@ -29,19 +29,48 @@ public enum BorderPosition: String, Hashable, Codable, Sendable, CaseIterable {
         }
     }
 
+    /// Whether a ring in this position has an edge to stand off from.
+    ///
+    /// Inside and outside each sit against one side of the layer's edge, so
+    /// "ten points further in" and "ten points further out" both mean
+    /// something. Centred straddles the edge with half the line on each side:
+    /// there is no side to measure from, so no offset is offered for it and
+    /// none is applied (`BorderEffect.offset`).
+    public var appliesOffset: Bool { self != .center }
+
+    /// Where the ring's OUTER edge sits relative to the layer's edge, signed:
+    /// positive is past the edge, negative is inside it.
+    ///
+    /// This one number is the whole of the geometry. The ring is drawn as a
+    /// box grown by it with a smaller one cut out, so growing it also grows
+    /// the corner radius by the same amount, which is what keeps an offset
+    /// ring parallel to a rounded shape instead of going square.
+    ///
+    /// It has to be SIGNED because an inside offset moves the ring further in,
+    /// which a non-negative reach cannot say. Anything asking how much room to
+    /// make reads `outset` instead, which is this clamped at nought: a ring
+    /// drawn further in never asks the canvas for more space.
+    public func ringOutset(width: CGFloat, offset: CGFloat = 0) -> CGFloat {
+        guard width > 0 else { return 0 }
+        // An offset below nought would be a second way of saying the position,
+        // so it is not one: the control never offers it and the geometry
+        // ignores it.
+        let stand = max(0, offset)
+        switch self {
+        case .inside: return -stand
+        case .center: return width / 2
+        case .outside: return width + stand
+        }
+    }
+
     /// How far a line of `width` reaches PAST the layer edge in this position.
     ///
-    /// This one number is the whole of what the renderer needs: the bitmap a
-    /// shape is drawn into grows by it on every side, the ring round everything
-    /// else is pushed out by it, and a layer's reach grows by it so a group, a
-    /// frame or a drag preview makes room.
-    public func outset(width: CGFloat) -> CGFloat {
-        guard width > 0 else { return 0 }
-        switch self {
-        case .inside: return 0
-        case .center: return width / 2
-        case .outside: return width
-        }
+    /// What everything that makes ROOM reads: the bitmap a shape is drawn into
+    /// grows by it on every side, and a layer's reach grows by it so a group, a
+    /// frame or a drag preview makes room. Never below nought, because a ring
+    /// pushed inwards takes no extra room.
+    public func outset(width: CGFloat, offset: CGFloat = 0) -> CGFloat {
+        max(0, ringOutset(width: width, offset: offset))
     }
 }
 

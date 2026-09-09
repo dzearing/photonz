@@ -422,6 +422,9 @@ private struct EffectRowView: View {
             // you are on changes what a width even means, so it is asked first.
             BorderPositionRow(row: row)
             BorderWidthRow(row: row)
+            // ...and then how far off that edge it stands, which only means
+            // something once you know which side of the edge you are on.
+            BorderOffsetRow(row: row)
         case .glow:
             // Which side of the edge the light is on, then how far it reaches,
             // how gently it stops, and how strong it is. Four things and no
@@ -615,6 +618,87 @@ private struct BorderWidthRow: View {
                          format: points) { style, v in
             style.updateBorderEffect(at: index) { $0.width = CGFloat(v) }
         }
+    }
+}
+
+/// How far one added ring stands AWAY from the edge it sits against.
+///
+/// Nought puts it right on that edge, which is where every ring the app has
+/// ever drawn sits. Ten moves an inside ring ten points further in and an
+/// outside one ten points further out, and that gap is what makes two rings on
+/// one shape worth having: a tight line on the edge and a second standing off
+/// it (`BorderPosition.swift`).
+///
+/// Centred straddles the edge with half the line on either side, so there is no
+/// side to measure from. Rather than a slider that does nothing, the row goes
+/// and one line of small print says why — and, when a number is being held from
+/// an earlier Inside or Outside, that it is being kept rather than thrown away.
+private struct BorderOffsetRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    /// What the picked rings say about where they sit. Nil when they disagree.
+    private var position: BorderPosition? {
+        let borders = editorState.layerStyleSelection.borders(at: row.index)
+        let reading = borders.reading { $0.borderEffect(at: row.index)?.position ?? .outside }
+        return reading.isMixed ? nil : reading.value
+    }
+
+    /// Whether this ring has a side of an edge to stand off from at all. A ring
+    /// following a label's LETTERS has no inside and no outside, exactly as the
+    /// Position popup above it has none to offer (`BorderFollows.swift`).
+    private var isAboutAnEdge: Bool {
+        let borders = editorState.layerStyleSelection.borders(at: row.index)
+        guard borders.hasLettersEverywhere else { return true }
+        let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
+        return !reading.isMixed && reading.value == .box
+    }
+
+    var body: some View {
+        if isAboutAnEdge {
+            // Rings that disagree about where they sit still get the slider: it
+            // means something on every one of them that is not centred.
+            if position == .center { centerNote } else { slider }
+        }
+    }
+
+    @ViewBuilder private var slider: some View {
+        let borders = editorState.layerStyleSelection.borders(at: row.index)
+        let index = row.index
+        let low = Double(BorderEffect.offsetRange.lowerBound)
+        let high = Double(BorderEffect.offsetRange.upperBound)
+        let range = low...high
+        LayerStyleSlider(layerIDs: borders.layerIDs, label: "Offset",
+                         reading: borders.number { $0.borderEffect(at: index)?.offset ?? 0 },
+                         range: range,
+                         format: points) { style, v in
+            style.updateBorderEffect(at: index) { $0.offset = CGFloat(v) }
+        }
+    }
+
+    /// Why the Offset row is not here, in the place it would have been.
+    @ViewBuilder private var centerNote: some View {
+        let borders = editorState.layerStyleSelection.borders(at: row.index)
+        let index = row.index
+        let held = borders.number { $0.borderEffect(at: index)?.offset ?? 0 }
+        let kept = (held.isMixed ? nil : held.value).map { CGFloat($0) } ?? 0
+        // Short, because it sits under the Width for as long as the ring is
+        // centred: two lines of small print explaining a missing row is a row
+        // of its own. It says the number is kept, so nobody has to guess
+        // whether switching to Center threw it away.
+        let words = kept > 0
+            ? "Center straddles the edge. The \(points(Double(kept))) offset "
+                + "comes back on Inside or Outside."
+            : "Center straddles the edge, so it has no offset."
+        Text(words)
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .panelReadout(words)
+            // Its own name, so a walk can ask for it the way it asks for any
+            // other row inside a border: `{"field": "Offset", "in": "Border"}`.
+            .playtestField("Offset")
     }
 }
 

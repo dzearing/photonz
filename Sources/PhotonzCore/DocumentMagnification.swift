@@ -130,6 +130,10 @@ extension LayerEffect {
             return .shadow(shadow)
         case .border(var border):
             border.width *= scale
+            // How far the ring stands off the edge is a distance like any
+            // other: at 2x it has to be twice as far, or an offset ring lands
+            // on the shape at one magnification and off it at another.
+            border.offset *= scale
             return .border(border)
         case .glow(var glow):
             glow.radius *= scale

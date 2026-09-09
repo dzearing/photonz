@@ -10,7 +10,7 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
 
-    { "do": "press", "control": "Slider", "in": "Border", "across": 0.5 },
+    { "do": "press", "control": "Slider", "in": "Border, Width", "across": 0.5 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "panelMenu", "menu": "Border", "choose": "Outside" },
     { "do": "wait", "seconds": 0.6 },
@@ -38,7 +38,7 @@
       "note": "THE CLAIM: the box drawn after the border was switched off carries a Border row of its own, switched off, still Outside, still at the width the last one was set to. It paints no line, which is what the user asked for on 2026-09-06, and it is one press from the line it had rather than a trip to the plus." },
     { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, off" },
     { "do": "expect", "control": "Position", "in": "Border", "reads": "Border, Outside" },
-    { "do": "expect", "control": "Slider", "in": "Border", "present": true },
+    { "do": "expect", "control": "Slider", "in": "Border, Width", "present": true },
     { "do": "panel", "stage": "3-second-box" },
     { "do": "render", "name": "border-off-3-second-box-doc" },
     { "do": "snapshot", "name": "border-off-3-second-box" },

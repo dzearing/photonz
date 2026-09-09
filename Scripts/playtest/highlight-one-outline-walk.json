@@ -18,7 +18,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "2-ring-on", "note": "ONE Border row, and a real ring round the highlight the moment it lands. Two rows here would be the old bug back." },
     { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, on" },
-    { "do": "expect", "control": "Slider", "in": "Border", "present": true },
+    { "do": "expect", "control": "Slider", "in": "Border, Width", "present": true },
     { "do": "panel", "stage": "border-added" },
     { "do": "snapshot", "name": "highlight-2-ring-on" },
     { "do": "render", "name": "highlight-2-ring-on-doc" },
@@ -33,7 +33,7 @@
     { "do": "wait", "seconds": 0.9 },
     { "do": "describe", "stage": "4-rectangle-picked", "note": "the regression check: a rectangle offers Fill in Appearance and the Border it came out of the tool wearing in Effects, that Border carrying the switch and the width." },
     { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, on" },
-    { "do": "expect", "control": "Slider", "in": "Border", "present": true },
+    { "do": "expect", "control": "Slider", "in": "Border, Width", "present": true },
     { "do": "panel", "stage": "rectangle" },
     { "do": "snapshot", "name": "highlight-4-rectangle" }
   ]

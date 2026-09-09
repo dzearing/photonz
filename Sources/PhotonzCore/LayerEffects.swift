@@ -136,6 +136,17 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     /// Which side of the layer's edge it sits on. This is the whole of what
     /// makes an inner border and an outer border two different things.
     public var position: BorderPosition
+    /// How far the ring stands AWAY from the edge it sits against, in document
+    /// points. Nought puts it right on that edge, which is where every border
+    /// drawn before this one sits.
+    ///
+    /// This is what makes two rings on one shape worth having: a tight one on
+    /// the edge and a second standing ten points off it. Inside, ten moves the
+    /// ring ten points further in from the inside edge; outside, ten points
+    /// further out. Centred straddles the edge and has no side to measure
+    /// from, so the number is kept but not applied and no control is offered
+    /// for it (`BorderPosition.appliesOffset`).
+    public var offset: CGFloat = 0
     /// What the ring goes round on a LABEL: its letters, or the box the words
     /// sit in (`BorderFollows.swift`). Nothing but a label has letters, so on
     /// every other layer the ring follows the box whatever this says.
@@ -150,27 +161,36 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     /// How far the Width slider goes, matching the outline's own range so one
     /// ring cannot reach somewhere the other cannot.
     public static let widthRange: ClosedRange<CGFloat> = 0...40
+    /// How far the Offset slider goes. The same range the width carries, so a
+    /// ring can stand as far off the edge as it can be thick and the two rows
+    /// read as one pair rather than as two unrelated scales.
+    public static let offsetRange: ClosedRange<CGFloat> = 0...40
 
     public init(width: CGFloat = BorderEffect.startingWidth,
                 colorHex: String = "#000000",
                 position: BorderPosition = .outside,
+                offset: CGFloat = 0,
                 follows: BorderFollows = .letters,
                 isOn: Bool = true) {
         self.width = width
         self.paint = Paint(hex: colorHex)
         self.position = position
+        self.offset = offset
         self.follows = follows
         self.isOn = isOn
     }
 
     private enum CodingKeys: String, CodingKey {
-        case width, colorHex, paint, position, follows, isOn
+        case width, colorHex, paint, position, offset, follows, isOn
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         width = try c.decode(CGFloat.self, forKey: .width)
         position = try c.decodeIfPresent(BorderPosition.self, forKey: .position) ?? .outside
+        // A file written before the offset existed says nothing, and every ring
+        // in it sat right on its edge, so that is what it opens as.
+        offset = try c.decodeIfPresent(CGFloat.self, forKey: .offset) ?? 0
         // A file written before the choice existed says nothing, and every
         // border it holds on a label was drawn round the letters, so that is
         // what it opens as (`BorderFollows.swift`).
@@ -193,6 +213,9 @@ public struct BorderEffect: Hashable, Codable, Sendable {
         try c.encode(colorHex, forKey: .colorHex)
         if paint.isGradient { try c.encode(paint, forKey: .paint) }
         try c.encode(position, forKey: .position)
+        // Only when it stands off the edge, so a border written today opens in
+        // an older build drawing exactly where it has always drawn.
+        if offset != 0 { try c.encode(offset, forKey: .offset) }
         // Only the answer that is not the ordinary one, so a label bordered
         // today opens in an older build drawing exactly what it drew before.
         if follows != .letters { try c.encode(follows, forKey: .follows) }
@@ -202,9 +225,18 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     /// Whether this entry puts anything on the canvas.
     public var paints: Bool { isOn && width > 0 }
 
-    /// How far it reaches PAST the layer's edge. Zero for an inside ring, which
-    /// is why an inner border never makes a layer take up more room.
-    public var outset: CGFloat { position.outset(width: width) }
+    /// Where this ring's outer edge sits relative to the layer's edge, signed.
+    /// What DRAWS it: the renderer grows the box by it, corners and all.
+    public var ringOutset: CGFloat { position.ringOutset(width: width, offset: offset) }
+
+    /// How far it reaches PAST the layer's edge. Zero for an inside ring
+    /// however far it is offset, which is why an inner border never makes a
+    /// layer take up more room.
+    public var outset: CGFloat { max(0, ringOutset) }
+
+    /// Whether the offset means anything where this ring sits. Centred has no
+    /// side of the edge to stand off from, so it does not.
+    public var appliesOffset: Bool { position.appliesOffset }
 }
 
 /// Which way a glow is thrown: out past the layer's edge, or in from it.

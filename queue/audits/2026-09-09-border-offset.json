@@ -1,0 +1,28 @@
+{
+  "feature": "A border can stand off the edge it sits against",
+  "epic": "ui-building",
+  "summary": "A border now has an Offset as well as a Width, so a ring can sit away from the edge instead of always on it. Two borders on one shape can be a tight line and a second ring standing clear of it.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Draw any rectangle, open Effects, and its Border is already there.",
+  "try": [
+    { "do": "Draw a rectangle with R, then set the Border's Position to Outside." },
+    { "do": "Give the Border a colour that is not the fill's, so you can see the ring." },
+    { "do": "Drag the new Offset slider under Width to about 16 px.", "shot": "2026-09-09-border-offset-1.png" },
+    { "do": "Set Position to Center and read the line that replaces the Offset row.", "shot": "2026-09-09-border-offset-2.png" },
+    { "do": "Set Position back to Inside and watch the ring move that far in from the edge instead." },
+    { "do": "Set it to Outside, drag Corner Radius up, and check the offset ring stays parallel to the rounded box." },
+    { "do": "Add a second Border from the plus and leave its Offset at nought.", "shot": "2026-09-09-border-offset-3.png" }
+  ],
+  "evaluate": [
+    "Does Offset sitting directly under Width read as part of the same idea, or does it want to be up beside Position?",
+    "Is 40 px far enough to stand a ring off a big shape, or does the slider run out too soon?",
+    "When you switch to Center, does the line of small print answer the question you actually had?",
+    "Does an inside offset moving the ring further IN match what you expected the number to do?",
+    "Is a slider the right control here, or do you want to type the number the way X and Y take one?"
+  ],
+  "rough": [
+    "Offset is dragged, not typed, because Width is dragged and not typed: no slider anywhere in Effects takes a typed number. If you want typing, it should arrive on all of them at once, and it is filed as its own task.",
+    "Centred keeps the number you set on Inside or Outside rather than throwing it away, and says so. That costs two lines of small print under the Width for as long as the ring is centred.",
+    "The slider stops at 40 px, matching Width. A ring standing off a very large shape may want more room than that.",
+    "Position is still Inside, Center or Outside on the popup, and Offset is a separate row. Rolling them into one signed number was not tried: two controls that each mean one thing read more plainly than one that flips meaning at zero."
+  ]
+}

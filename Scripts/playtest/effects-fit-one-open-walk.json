@@ -50,7 +50,7 @@
     {
       "do": "expect",
       "control": "Slider",
-      "in": "Border",
+      "in": "Border, Width",
       "present": true
     },
     {

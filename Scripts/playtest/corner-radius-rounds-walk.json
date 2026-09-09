@@ -7,7 +7,7 @@
     { "do": "key", "key": "r" },
     { "do": "drag", "from": [340, 300], "to": [560, 460] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Slider", "in": "Border", "across": 0.3 },
+    { "do": "press", "control": "Slider", "in": "Border, Width", "across": 0.3 },
     { "do": "wait", "seconds": 0.5 },
     { "do": "panelMenu", "menu": "Border", "choose": "Outside" },
     { "do": "wait", "seconds": 0.6 },

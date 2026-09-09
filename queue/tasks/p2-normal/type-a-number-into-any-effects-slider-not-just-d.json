@@ -1,0 +1,28 @@
+{
+  "id": "type-a-number-into-any-effects-slider-not-just-d",
+  "title": "Type a number into any Effects slider, not just drag it",
+  "goal": "Every setting in the Effects list is a slider you drag: a shadow blur, a border width, a border offset, a glow size. There is nowhere to type an exact number, so a border offset of exactly 12 is a matter of nudging the knob until the readout says 12. Let the readout beside each slider be typed into, the way X and Y in Position and Size already are.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2300,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T15:43:59.616Z",
+  "updated": "2026-09-09T15:43:59.619Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while adding the border Offset row on 2026-09-09: the task asked for it typed and dragged like its Width, and Width turned out not to be typeable either. LayerStyleSlider (Sources/Photonz/InspectorControls.swift line 49) draws the readout as a Text with .panelReadout; making it editable there fixes every Effects row at once, and the Appearance sliders that use the same view.",
+  "acceptance": [
+    "Clicking the number beside any Effects slider lets you type a new one and press return",
+    "The number typed is clamped to the same range the slider covers, and a nonsense entry leaves the old number alone",
+    "Typing a number records one undo step, the same as dragging the slider does",
+    "Every effect kind is covered: shadow, border, glow and blur"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T15:43:59.618Z",
+      "note": "created (manual)"
+    }
+  ]
+}

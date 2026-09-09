@@ -971,7 +971,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         var result = image
         for border in borders.reversed() {
             result = ringed(result, box: box, radii: radii, shape: shape, width: border.width,
-                            outset: border.outset, paint: border.paint)
+                            outset: border.ringOutset, paint: border.paint)
         }
         return result
     }
@@ -985,9 +985,19 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// outside puts the ring's INNER edge on the box. An outside ring therefore
     /// makes the picture bigger, which is why the result is cropped to what the
     /// two of them cover rather than back to the layer's own box.
+    ///
+    /// `outset` is SIGNED, because a border can also stand off the edge going
+    /// the other way: an inside ring offset ten points is drawn ten points
+    /// further in, which is an outset of minus ten (`BorderPosition`). Pushing
+    /// the pair in shrinks the corner radius by the same amount, exactly as
+    /// pushing it out grows it, so an offset ring stays parallel to a rounded
+    /// shape either way.
     private func ringed(_ image: CIImage, box: CGRect, radii: CornerRadii, shape: RingShape,
                         width: CGFloat, outset: CGFloat, paint: Paint) -> CIImage {
-        let outerRect = outset > 0 ? box.insetBy(dx: -outset, dy: -outset) : box
+        let outerRect = outset == 0 ? box : box.insetBy(dx: -outset, dy: -outset)
+        // A ring offset so far in that there is no box left to hug is nothing
+        // to draw rather than a null rect handed to a filter.
+        guard !outerRect.isNull, outerRect.width > 0, outerRect.height > 0 else { return image }
         // An oval has no corners to round, so it is drawn as an oval rather
         // than as a rounded rect that would have to be a capsule to come close
         // and a square everywhere else (`RingShape.swift`).
