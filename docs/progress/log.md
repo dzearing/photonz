@@ -13510,3 +13510,39 @@ rather than a second shape laid over the first to fake it.
 Next: the queue. Open question in the audit — pulling the one slider while the
 corners disagree still flattens all four, and there is no way to drag a corner
 on the canvas.
+
+## 2026-09-09 — One unit word in the panel
+
+The right hand panel measured one space and called it two things: a capture
+caught Corner Radius reading "18 pt" and a border "4 pt" two rows above
+Position and Size saying "px from the top left", with Thickness and Label size
+one under the other saying pt and px. Everything now reads px, which is what
+`MeasureUnit` had already decided for the caliper readouts, so the pt spellings
+were drift rather than a real distinction.
+
+The fix is one place rather than nine string literals: `DocumentUnit` in
+PhotonzCore is where a length gets written for a person to read, and the style
+rows, Thickness, Label size, Corner Radius, the Effects Border Width, the
+stroke slider, Frame columns, the canvas grid and the type Size menu all go
+through it. Type size moving from pt to px was a judgment call, flagged in the
+audit for the user to push back on.
+
+The panel also polices itself now. `expectOneUnit` is a new playtest step that
+reads back every readout the panel is showing and fails naming any row that
+spells the unit differently. It takes no arguments on purpose, so a row added
+later is covered the day it arrives. Slider numbers are SwiftUI `Text` and
+publish nothing to accessibility, so `PanelReadoutProbe` plants invisible
+markers behind them, the same trick `panelHelp` uses for tooltips.
+
+Verified on the real app with three window captures, 5134 tests green (written
+first), ten walks rerun. Fourteen existing walks asserted the old word and were
+updated. Audit: `queue/audits/2026-09-09-one-unit-word.json`. Commit 6b0835ef.
+
+Also filed: `mixed-one-look-walk` fails at step 45 on an align-center button
+the dock has scrolled under its own edge. Reproduced at the pre-change baseline
+so it is not a regression from this work; filed at p2 with the command and its
+output.
+
+Next: whatever the queue has at the top. The open question here is the one in
+the audit, whether type size should read px alongside everything else or go
+back to pt.
