@@ -52,7 +52,7 @@
     },
     {
       "do": "press",
-      "control": "16 pt"
+      "control": "16 px"
     },
     {
       "do": "wait",

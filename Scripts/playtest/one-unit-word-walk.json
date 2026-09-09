@@ -1,0 +1,204 @@
+{
+  "out": "/tmp/photonz-playtest/one-unit-word",
+  "seed": "The right hand panel measures one space, so it says one word for it. The walk draws a rectangle with a border and reads Corner Radius, the border's Width and the Position and Size rows back; then it draws a captioned arrow and reads Thickness and Label size, which used to sit one under the other saying pt and px. Every stage asks the panel itself rather than naming rows, so a row added later is checked the day it arrives.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 980
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        560,
+        460
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius",
+      "across": 0.35
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-shape",
+      "note": "a rectangle with a rounded corner and a border: Corner Radius, the border Width and the Position and Size rows are all on screen at once"
+    },
+    {
+      "do": "expectOneUnit"
+    },
+    {
+      "do": "panel",
+      "stage": "1-shape"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-shape"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        150
+      ],
+      "to": [
+        420,
+        240
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "captionField",
+      "timeout": 3
+    },
+    {
+      "do": "type",
+      "text": "Gap is 12"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-label",
+      "note": "a captioned arrow: Thickness and Label size are the two rows that used to disagree, one under the other"
+    },
+    {
+      "do": "expectOneUnit"
+    },
+    {
+      "do": "panel",
+      "stage": "2-label"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-label"
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Grid Settings"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-grid",
+      "note": "the grid's own settings open over the panel: its spacing measures the same space the layers do, so it says the same word"
+    },
+    {
+      "do": "expectOneUnit"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-grid"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        520
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-text",
+      "note": "a text layer: its Size menu says a length too, and a type size sits beside a gap in a spec, so it says the same word"
+    },
+    {
+      "do": "expectOneUnit"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Size",
+      "shot": "4-size-menu"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-text"
+    }
+  ]
+}

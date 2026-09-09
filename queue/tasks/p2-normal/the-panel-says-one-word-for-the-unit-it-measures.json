@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:17:48.199Z",
-  "updated": "2026-09-08T22:17:48.202Z",
+  "updated": "2026-09-09T00:07:14.229Z",
   "deps": [],
   "blockedBy": [],
   "notes": "FOUND 2026-09-08 in a real window capture: queue/manager/shots/2026-09-08-2215-versions.png. Corner Radius 18 pt and border Width 4 pt sit above Position and Size, whose foot line reads px from the top left.\n\nIn code, one file spells it both ways within thirty lines: Sources/Photonz/LayersPanel.swift:3481 formats Thickness as pt and :3498 formats Label size as px, in the same ShapeSettingRow switch. LayersPanel.swift:3304 has a points() helper that writes pt; the export dialog, the new canvas dialog and the Library all write px.\n\nDecide the word rather than papering over it. The document is measured in one space and a screenshot is 2x, so if px and pt genuinely mean different things here the fix is to SAY which is which, not to unify blindly. Read Sources/PhotonzCore/ElementBounds.swift and CanvasMeasure.swift for what the canvas readouts already say, and follow them, because the measure readout is the number a redliner copies into a spec.\n\nThis is a copy and consistency change, not a new control, so no decision card. Flag: next-geometry-fields (FeatureCatalog.geometryFieldsFlag) covers Position and Size; the shape rows ride next-shape-parts.",
@@ -24,6 +24,31 @@
     {
       "t": "2026-09-08T22:17:48.201Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-09T00:07:14.228Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T00:10:19.281179Z",
+      "note": "Adversarial review before building. (1) The word is not a coin flip: PhotonzCore already DECIDED it. MeasureUnit.suffix is \"px\" with a written rationale (CSS treats px as a logical unit; the Logical vs Actual mode carries the device-pixel distinction, not the unit word), and LayerGeometry.unitSuffix forwards to it explicitly \"so the two surfaces never disagree\". Position and Size, the caliper readouts and the spec list all already read px. So the pt spellings are drift away from a standing decision, and unifying on pt would contradict it. No decision card needed, as the task says. (2) A find-and-replace is the WRONG shape. The unit is written out as an independent string literal in nine places, which is exactly how it drifted; replacing the literals leaves the tenth free to drift next month. Fix: one formatter in core that every length readout calls. (3) Where pt genuinely means something else, leave it. PlaytestHarness log lines say a window is 1234x800 pt and its bitmap 2468x1600 px at 2x: that is a real points-vs-backing-pixels distinction, and nobody but an agent reads log.json. Capture/RectSelection.swift:183 is the same, a log line. Out of scope, deliberately. (4) Font size is the one real judgment call. TextStyles.sizeWords says \"24 pt\" while the Label size row two sections away says \"24 px\", so today the app already spells ONE concept two ways. Going px matches CSS, Figma and the app's own Label size row. Doing it, and flagging it in the audit as the line to push back on. (5) Shortest version that delivers the value: one core type, every readout routed through it, tests on the core and a walk that reads the real panel back."
+    },
+    {
+      "t": "2026-09-09T00:36:34.911564Z",
+      "note": "Built it. New DocumentUnit in PhotonzCore is the one place a length is written for a person, and the one word is px, taken straight from MeasureUnit so the panel and the caliper cannot part company. Everything routed through it: the style rows (Border, Blur, Shadow Size and Distance), Thickness, Label size, Corner Radius, the Effects Border Width, the stroke width slider, Frame columns gutter and margin, the canvas grid spacing, its cell button and its live-spacing chip, and the type Size menu. 5134 tests green, and the tests were written first: DocumentUnitTests asserts the word, the rounding, and one test per surface, so a surface that starts spelling it differently fails by name."
+    },
+    {
+      "t": "2026-09-09T00:36:34.911564Z",
+      "note": "Adversarial review on the real app, not on the diff. Ran the probe and looked at real window captures (Screen Recording was granted). Stage 1 is the exact scenario the task described: Corner Radius 27 px, the border Width 4 px and \"px from the top left\" now all agree in one screenful. Stage 2 is the other half: Thickness 4 px and Label size 20 px, the two rows that sat one under the other saying different words. Stage 4 shows the Size menu reading 14 px to 96 px, still one column wide. Nothing feels clumsy because nothing moved: px and pt are the same width, so no row reflowed."
+    },
+    {
+      "t": "2026-09-09T00:36:34.911564Z",
+      "note": "Acceptance 3 needed more than a walk with the right strings in it. First attempt read the panel through the accessibility tree and came back with the X/Y/W/H boxes and the tool bar but no slider numbers at all: a slider's readout is a SwiftUI Text and publishes nothing. So PanelReadoutProbe plants an invisible marker behind each readout, exactly the way panelHelp already does for tooltips, and the new expectOneUnit step reads them back. It takes NO arguments on purpose: it asks the panel what it is showing rather than making a walk list the rows it knows about, so a row added next month is checked the day it arrives, and it fails rather than passes when the panel is showing no length at all. Proved the guard bites by putting pt back on one row and rerunning: \"the panel is measuring one space in more than one word: \\\"0 pt\\\" says pt; \\\"4 pt\\\" says pt; the app's word is px\". Then reverted. Scripts/playtest/one-unit-word-walk.json checks four stages."
+    },
+    {
+      "t": "2026-09-09T00:36:34.911564Z",
+      "note": "Fourteen existing walks asserted the old word in a reads, choose or control field and would have started failing; all updated and rerun. One of them, mixed-one-look-walk, fails further on at step 45 for an unrelated reason (an align-center button the dock has scrolled under its own edge). Reproduced that at the pre-change baseline by stashing every change and running it unmodified: it fails identically, so it is pre-existing. Filed as an-alignment-button-the-panel-has-scrolled-away at p2 with the command and the output, not as a regression."
     }
-  ]
+  ],
+  "started": "2026-09-09T00:07:14.227Z"
 }

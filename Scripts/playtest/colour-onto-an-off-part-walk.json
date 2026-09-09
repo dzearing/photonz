@@ -20,7 +20,7 @@
       "hold": "offpart-2-in-flight", "expect": "takes" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "2-landed",
-      "note": "letting go both gave the box a line and painted it: selectedColors must read stroke #B0184A and the Border switch must read on at 4 pt" },
+      "note": "letting go both gave the box a line and painted it: selectedColors must read stroke #B0184A and the Border switch must read on at 4 px" },
     { "do": "snapshot", "name": "offpart-3-landed" },
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.6 },

@@ -31,11 +31,11 @@
 
     { "do": "panelMenu", "menu": "Font", "choose": "Georgia" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "panelMenu", "menu": "Size", "choose": "32 pt" },
+    { "do": "panelMenu", "menu": "Size", "choose": "32 px" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "panelMenu", "menu": "Weight", "choose": "Bold" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "2-set-up", "note": "the first heading set up by hand: Georgia, 32 pt, Bold" },
+    { "do": "describe", "stage": "2-set-up", "note": "the first heading set up by hand: Georgia, 32 px, Bold" },
     { "do": "snapshot", "name": "2-set-up-by-hand" },
 
     { "do": "panelMenu", "menu": "Style", "shot": "3-style-menu" },
@@ -69,16 +69,16 @@
     { "do": "panel", "stage": "6-the-style-itself" },
     { "do": "snapshot", "name": "6-the-style-itself" },
 
-    { "do": "panelMenu", "menu": "Size", "choose": "48 pt" },
+    { "do": "panelMenu", "menu": "Size", "choose": "48 px" },
     { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "7-edited-once", "note": "THE TEST: one edit to the style, and both headings are 48 pt, each box re-measured so nothing clips" },
+    { "do": "describe", "stage": "7-edited-once", "note": "THE TEST: one edit to the style, and both headings are 48 px, each box re-measured so nothing clips" },
     { "do": "panel", "stage": "7-edited-once" },
     { "do": "snapshot", "name": "7-both-followed" },
     { "do": "render", "name": "7-canvas" },
 
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "8-undone", "note": "ONE undo takes the whole thing back. Undo is asked for as a menu action rather than as command Z, because a synthesized chord does not reach the Edit menu of an app that is not in front (see undo-shortcut-walk): the style is 32 pt again and so are both headings" },
+    { "do": "describe", "stage": "8-undone", "note": "ONE undo takes the whole thing back. Undo is asked for as a menu action rather than as command Z, because a synthesized chord does not reach the Edit menu of an app that is not in front (see undo-shortcut-walk): the style is 32 px again and so are both headings" },
     { "do": "snapshot", "name": "8-one-undo" },
     { "do": "render", "name": "8-canvas" }
   ]

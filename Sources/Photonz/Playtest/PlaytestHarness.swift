@@ -868,6 +868,9 @@ private final class Run {
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
+        case .expectOneUnit:
+            note(number, step.name, try checkOneUnit(), state: describe())
+
         case .scrollPanel(let row, let by):
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
@@ -2093,6 +2096,71 @@ private final class Run {
             ? "\(title) is drawn whole, all \(points(room.natural)) of it"
             : "\(title) is shortened to \(points(room.drawn)) of \(points(room.natural)) and scrolls, "
                 + "past its first open entry at \(points(needs))"
+    }
+
+    /// Every readout the right hand panel is SHOWING, in the words a person
+    /// reads off the screen.
+    ///
+    /// Read through accessibility rather than from the views, because a slider's
+    /// number is a SwiftUI `Text` and there is no `NSTextField` to ask. What
+    /// accessibility hands back is what a screen reader would say, which is as
+    /// close to "what is on screen" as this process can get, and it covers a row
+    /// nobody thought to instrument.
+    private func panelReadouts() throws -> [String] {
+        var found: [String] = []
+        var seen = Set<ObjectIdentifier>()
+        func walk(_ element: Any, depth: Int) {
+            guard depth < 60, let object = element as? NSObject else { return }
+            guard seen.insert(ObjectIdentifier(object)).inserted else { return }
+            if let reachable = object as? NSAccessibilityProtocol {
+                for words in [reachable.accessibilityValue() as? String,
+                              reachable.accessibilityLabel()] {
+                    if let words, !words.isEmpty { found.append(words) }
+                }
+                for child in reachable.accessibilityChildren() ?? [] {
+                    walk(child, depth: depth + 1)
+                }
+            }
+            // A view that publishes no accessibility children of its own still
+            // has subviews, and a SwiftUI hosting view is exactly that: walk
+            // both so a readout cannot hide in the gap between the two trees.
+            if let view = object as? NSView {
+                for subview in view.subviews where !subview.isHiddenOrHasHiddenAncestor {
+                    walk(subview, depth: depth + 1)
+                }
+            }
+        }
+        for window in try panelWindows() {
+            guard let content = window.contentView else { continue }
+            walk(content, depth: 0)
+            // And the readouts that publish nothing to accessibility at all:
+            // every slider's number is one of those. See `PanelReadoutProbe`.
+            found += PlaytestPanelReadout.values(in: content)
+        }
+        return found.filter { !$0.isEmpty }
+    }
+
+    /// One space, one word. Fails naming the readout that disagrees, quoted the
+    /// way it is written on screen, so the fix is the row rather than a hunt.
+    private func checkOneUnit() throws -> String {
+        let readouts = try panelReadouts()
+        let strays = DocumentUnit.strays(in: readouts)
+        let saying = readouts.filter { $0.contains(DocumentUnit.word) }
+        guard strays.isEmpty else {
+            let named = strays.map { "\"\($0.text)\" says \($0.word)" }
+            throw Failure(description: "the panel is measuring one space in more than one word: "
+                + named.joined(separator: "; ")
+                + "; the app's word is \(DocumentUnit.word), and "
+                + (saying.isEmpty ? "nothing else in the panel is using it"
+                                  : "these are using it: " + saying.joined(separator: ", ")))
+        }
+        guard !saying.isEmpty else {
+            throw Failure(description: "no readout in the panel is saying a length at all, so there "
+                + "is nothing here to agree or disagree; the panel is showing "
+                + "\(readouts.count) readouts: \(readouts.joined(separator: " | "))")
+        }
+        return "every length in the panel says \(DocumentUnit.word), across \(saying.count) "
+            + "readouts: " + saying.joined(separator: ", ")
     }
 
     private func checkPanel(_ thing: PlaytestPanelThing, named: String, inRow: String?,

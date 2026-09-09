@@ -35,10 +35,10 @@ struct CanvasGridTests {
     }
 
     @Test func theSpacingReadsAsANumberWithItsUnit() {
-        #expect(CanvasGridSettings(spacing: 4).spacingText == "4 pt")
-        #expect(CanvasGridSettings(spacing: 12).spacingText == "12 pt")
+        #expect(CanvasGridSettings(spacing: 4).spacingText == "4 px")
+        #expect(CanvasGridSettings(spacing: 12).spacingText == "12 px")
         // Half points survive: a grid actually sitting on 7.5 must not say 8.
-        #expect(CanvasGridSettings(spacing: 7.5).spacingText == "7.5 pt")
+        #expect(CanvasGridSettings(spacing: 7.5).spacingText == "7.5 px")
     }
 
     @Test func aNumberThatIsNotANumberStillReadsAsZero() {

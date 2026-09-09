@@ -26,7 +26,7 @@
 
     { "do": "drag", "from": [700, 653], "to": [1000, 880], "steps": 12 },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "3-scaled", "note": "dragging the bottom right handle out should have scaled BOTH pieces: the rectangle wider and taller, the text moved out with it and still 24 pt" },
+    { "do": "describe", "stage": "3-scaled", "note": "dragging the bottom right handle out should have scaled BOTH pieces: the rectangle wider and taller, the text moved out with it and still 24 px" },
     { "do": "snapshot", "name": "resize-3-scaled" },
     { "do": "render", "name": "resize-3-scaled-doc" },
 

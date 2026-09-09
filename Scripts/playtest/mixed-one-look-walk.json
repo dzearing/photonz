@@ -92,7 +92,7 @@
     {
       "do": "panelMenu",
       "menu": "Size",
-      "choose": "48 pt"
+      "choose": "48 px"
     },
     {
       "do": "wait",
@@ -153,7 +153,7 @@
     {
       "do": "describe",
       "stage": "1-first-label-changed",
-      "note": "the first label is 48 pt, rounded and centred; the second is untouched"
+      "note": "the first label is 48 px, rounded and centred; the second is untouched"
     },
     {
       "do": "click",
@@ -214,7 +214,7 @@
     {
       "do": "panelMenu",
       "menu": "Size",
-      "choose": "32 pt"
+      "choose": "32 px"
     },
     {
       "do": "wait",

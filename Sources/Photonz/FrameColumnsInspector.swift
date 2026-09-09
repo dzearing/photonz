@@ -44,10 +44,10 @@ struct FrameColumnsInspector: View {
                 numberRow(FrameColumnsCopy.count, suffix: "", value: Double(columns.count)) {
                     editorState.setFrameColumnCount(Int($0.rounded()))
                 }
-                numberRow(FrameColumnsCopy.gutter, suffix: "pt", value: Double(columns.gutter)) {
+                numberRow(FrameColumnsCopy.gutter, suffix: DocumentUnit.word, value: Double(columns.gutter)) {
                     editorState.setFrameColumnGutter(CGFloat($0))
                 }
-                numberRow(FrameColumnsCopy.margin, suffix: "pt", value: Double(columns.margin)) {
+                numberRow(FrameColumnsCopy.margin, suffix: DocumentUnit.word, value: Double(columns.margin)) {
                     editorState.setFrameColumnMargin(CGFloat($0))
                 }
                 // What the three numbers actually come out as. It is the thing
@@ -101,6 +101,10 @@ struct FrameColumnsInspector: View {
             Spacer(minLength: 0)
         }
         .playtestField(label)
+        // The number is in a box and its unit is beside it, so a walk reading
+        // the row back has to be handed the two together to see the pair a
+        // person reads.
+        .panelReadout(suffix.isEmpty ? "" : "\(Int(value.rounded())) \(suffix)")
     }
 }
 
@@ -119,7 +123,7 @@ enum FrameColumnsCopy {
     static let menuItem = MenuToggleNames.showColumns
 
     static func columnWidth(_ points: Int) -> String {
-        "Each column comes out \(points) pt wide. Dragging pulls to the column edges; hold Command to drag free."
+        "Each column comes out \(DocumentUnit.text(CGFloat(points))) wide. Dragging pulls to the column edges; hold Command to drag free."
     }
 
     static let noRoom = "These numbers leave no room for a column on this screen, so nothing is drawn."

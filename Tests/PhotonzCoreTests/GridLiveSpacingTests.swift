@@ -67,14 +67,14 @@ struct GridLiveSpacingTests {
     // MARK: How it reads
 
     @Test func theChipReadsOneNumberWhenTheGridYouSetIsTheGridYouSee() {
-        #expect(settings(16).spacingChipText(atZoom: 1) == "16 pt")
-        #expect(settings(4).spacingChipText(atZoom: 4) == "4 pt")
+        #expect(settings(16).spacingChipText(atZoom: 1) == "16 px")
+        #expect(settings(4).spacingChipText(atZoom: 4) == "4 px")
     }
 
     @Test func theChipReadsBothNumbersWhenTheyDisagree() {
         // Left of the arrow the grid you set, right of it the grid you see.
-        #expect(settings(4).spacingChipText(atZoom: 1) == "4 \u{2192} 32 pt")
-        #expect(settings(4).spacingChipText(atZoom: 0.25) == "4 \u{2192} 256 pt")
+        #expect(settings(4).spacingChipText(atZoom: 1) == "4 \u{2192} 32 px")
+        #expect(settings(4).spacingChipText(atZoom: 0.25) == "4 \u{2192} 256 px")
     }
 
     @Test func theChipNeverCarriesAnEmDash() {

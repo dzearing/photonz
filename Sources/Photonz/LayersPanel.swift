@@ -3354,8 +3354,9 @@ struct ShadowColorWell: View {
 }
 
 /// How a style row writes a length. One place, so Blur and Size and Distance
-/// cannot drift apart.
-func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
+/// cannot drift apart, and it says the app's one unit word rather than a word
+/// of its own: a 24 here and a 24 on the caliper are the same distance.
+func points(_ value: Double) -> String { DocumentUnit.text(CGFloat(value)) }
 
 /// The revert arrow belongs to ONE layer's override of its component, so it is
 /// offered only when the section is speaking for one layer. Over a selection
@@ -3426,9 +3427,11 @@ struct LayerStyleSlider: View {
                     InstanceStyleRevert(layerID: only, field: field)
                 }
                 Spacer()
-                Text(reading.isMixed ? LayerStyleSelection.mixedText : format(knob))
+                let showing = reading.isMixed ? LayerStyleSelection.mixedText : format(knob)
+                Text(showing)
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(MixedLook.style(reading.isMixed, otherwise: .secondary))
+                    .panelReadout(showing)
             }
             Slider(value: Binding(
                 get: { knob },
@@ -3532,7 +3535,7 @@ struct AnnotationInspector: View {
             ShapeSlider(layerIDs: ids, label: "Thickness",
                         reading: selection.outlineWidth,
                         range: AnnotationStyles.strokeWidthRange,
-                        format: { "\(Int($0.rounded())) pt" },
+                        format: { DocumentUnit.text($0) },
                         preview: { editorState.previewOutlineWidth(ids: $0, $1) },
                         commit: { editorState.commitOutlineWidth(ids: $0, $1) })
                 .panelHelp(Experiments.shared.shapePartsEnabled
@@ -3549,7 +3552,7 @@ struct AnnotationInspector: View {
             ShapeSlider(layerIDs: ids, label: "Label size",
                         reading: selection.number { $0.captionFontSize },
                         range: MeasureContent.labelSizeRangePx,
-                        format: { "\(Int($0.rounded())) px" },
+                        format: { DocumentUnit.text($0) },
                         preview: { editorState.previewCaptionFontSize(ids: $0, $1) },
                         commit: { editorState.commitCaptionFontSize(ids: $0, $1) })
         case .labelCorners:
@@ -3703,6 +3706,7 @@ struct CornerRadiusRow: View {
                 Text(readout)
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(MixedLook.style(readoutIsMixed, otherwise: .secondary))
+                    .panelReadout(readout)
             }
             Slider(value: Binding(
                 get: { knob },
@@ -3790,8 +3794,10 @@ struct ShapeSlider: View {
             HStack {
                 Text(label).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Text(showsMixed ? LayerStyleSelection.mixedText : format(knob))
+                let showing = showsMixed ? LayerStyleSelection.mixedText : format(knob)
+                Text(showing)
                     .font(.caption.monospacedDigit())
+                    .panelReadout(showing)
                     .foregroundStyle(MixedLook.style(showsMixed, otherwise: .secondary))
             }
             Slider(value: Binding(
@@ -4216,7 +4222,7 @@ private struct SelectionMenu<Value: Hashable & Sendable>: View {
             .accessibilityLabel(label)
         }
         // The caption names the row, and the row names the menu for a walk.
-        // A menu wears its own value — "24 pt" one moment, "48 pt" the next —
+        // A menu wears its own value — "24 px" one moment, "48 px" the next —
         // so a walk that named it by its words would stop working the first
         // time it used it.
         .playtestField(label)
@@ -4344,7 +4350,7 @@ struct MeasureInspector: View {
                                    }
                                })
                             .controlSize(.small)
-                        Text("\(Int(px.rounded())) px")
+                        Text(DocumentUnit.text(px))
                             .font(.caption).monospacedDigit().foregroundStyle(.secondary)
                             .frame(width: 38, alignment: .trailing)
                     }
@@ -4706,7 +4712,7 @@ struct CollageInspector: View {
                         .font(.caption).controlSize(.small)
                 }
                 field("Spacing") {
-                    Stepper("\(Int(c.gutter)) px", value: Binding(
+                    Stepper(DocumentUnit.text(CGFloat(c.gutter)), value: Binding(
                         get: { Int(c.gutter) },
                         set: { value in editorState.updateCollage(layerID: layer.id) { $0.gutter = CGFloat(value) } }),
                         in: 0...200, step: 4)

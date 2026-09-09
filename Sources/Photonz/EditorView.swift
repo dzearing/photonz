@@ -755,7 +755,7 @@ struct EditorView: View {
     /// canvas over to place where it starts and pin guides onto it.
     ///
     /// It got here by losing things. It used to read the grid's unit and the
-    /// cell together ("4 \u{2192} 32 pt"), park a slider on the bar beside them, and
+    /// cell together ("4 \u{2192} 32 px"), park a slider on the bar beside them, and
     /// spell out Adjust Grid in words, which is a row of numbers and sentences
     /// permanently in front of the picture, saying more while you work than
     /// anybody needs. The cell is now one number behind one button.
@@ -2272,7 +2272,8 @@ struct EditorView: View {
             HStack {
                 Label("Width", systemImage: "lineweight").labelStyle(.titleOnly)
                 Spacer()
-                Text("\(Int(value.rounded())) pt").monospacedDigit().foregroundStyle(.secondary)
+                Text(DocumentUnit.text(value)).monospacedDigit().foregroundStyle(.secondary)
+                    .panelReadout(DocumentUnit.text(value))
             }
             .font(.callout)
             Slider(value: Binding(

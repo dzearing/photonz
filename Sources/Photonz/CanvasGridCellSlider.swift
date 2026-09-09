@@ -43,7 +43,7 @@ struct CanvasGridSizeButton: View {
                 .foregroundStyle(isTooFine ? AnyShapeStyle(.tertiary) : AnyShapeStyle(Color.primary))
                 .lineLimit(1)
                 // One fixed width for every size it can read, so nothing in the
-                // bar shifts when the cell goes from "Auto" to "12 pt".
+                // bar shifts when the cell goes from "Auto" to "12 px".
                 .frame(width: 40, height: 18)
                 .contentShape(.rect)
         }
@@ -165,7 +165,7 @@ struct CanvasGridCellSlider: View {
 
     private func label(at index: Int) -> String {
         index == 0 ? CanvasGridCopy.automaticCell
-                   : "\(CanvasGridNumber.text(stops[index])) pt"
+                   : DocumentUnit.text(digits: CanvasGridNumber.text(stops[index]))
     }
 
     /// The middle of a stop's row, measured from the top of the control. Stop

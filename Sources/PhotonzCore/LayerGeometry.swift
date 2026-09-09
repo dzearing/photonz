@@ -53,9 +53,10 @@ public enum LayerGeometryField: String, CaseIterable, Hashable, Sendable {
 /// direction the canvas size fields grow.
 public enum LayerGeometry {
 
-    /// The unit word beside the numbers. Deliberately the measure readouts'
-    /// suffix, so the two surfaces never disagree about what a number means.
-    public static var unitSuffix: String { MeasureUnit.pixels.suffix }
+    /// The unit word beside the numbers. The app's one word for a document
+    /// length, so no two surfaces disagree about what a number means: see
+    /// `DocumentUnit`.
+    public static var unitSuffix: String { DocumentUnit.word }
 
     /// The smallest a typed width or height may make a layer: below one point
     /// there is nothing left to see or grab. Some layers stop sooner than this

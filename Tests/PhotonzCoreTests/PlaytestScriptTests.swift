@@ -1375,6 +1375,23 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectMeasures"))
     }
 
+    // The panel measures one space and used to say two words for it: on
+    // 2026-09-08 a capture caught Corner Radius reading "18 pt" two rows above
+    // Position and Size saying "px from the top left". `expectOneUnit` is the
+    // step that holds the panel to one word, and it takes no arguments on
+    // purpose: naming the rows to check is how the next row goes unchecked.
+    @Test("An expectOneUnit step needs nothing said about it")
+    func expectOneUnitTakesNoFields() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectOneUnit" } ] }
+        """)
+        guard case .expectOneUnit = script.steps[0] else {
+            Issue.record("expectOneUnit"); return
+        }
+        #expect(script.steps[0].name == "expectOneUnit")
+        #expect(PlaytestStep.names.contains("expectOneUnit"))
+    }
+
     /// Zero is as much of the point as any other number: it is how a walk says
     /// nothing should have landed here.
     @Test func expectMeasuresTakesZero() throws {

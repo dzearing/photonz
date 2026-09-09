@@ -1133,6 +1133,20 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// The section is named the way the dock names it: "Effects", "Layers".
     case expectSectionFits(section: String)
+    /// CLAIMS that every readout in the right hand panel spells the unit the
+    /// same way, and fails the run naming the row that does not.
+    ///
+    /// The panel measures ONE space — where a layer sits, how wide it is, how
+    /// round its corners are, how thick its outline is — so it says one word
+    /// for it. It did not always: on 2026-09-08 a capture caught Corner Radius
+    /// reading "18 pt" and a border "4 pt" two rows above Position and Size
+    /// saying "px from the top left", and a person redlining a screenshot had
+    /// to work out which of two units their number was in.
+    ///
+    /// A unit word is nobody's job to remember, so this asks the panel itself
+    /// rather than a walk listing the rows it happens to know about: a row
+    /// added next month is covered the day it arrives.
+    case expectOneUnit
     /// Turn the wheel over a panel that scrolls, by `by` points (negative goes
     /// down the list). A list that builds only the rows you can see has to be
     /// scrolled to prove the rest arrive, and that is not something a click can
@@ -1202,7 +1216,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectMeasures", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectMeasures", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
@@ -1248,6 +1262,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
         case .expectSectionFits: "expectSectionFits"
+        case .expectOneUnit: "expectOneUnit"
         case .expectPicked: "expectPicked"
         case .scrollPanel: "scrollPanel"
         case .reveal: "reveal"
@@ -1482,6 +1497,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectMeasures(count: Int(howMany))
         case "expectSectionFits":
             self = .expectSectionFits(section: try f.string("section"))
+        case "expectOneUnit":
+            self = .expectOneUnit
         case "expectPicked":
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")

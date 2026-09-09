@@ -101,7 +101,7 @@ struct CanvasGridControls: View {
                     .help(CanvasGridCopy.linesCaption)
                 }
                 numberRow(CanvasGridCopy.spacing, caption: CanvasGridCopy.spacingCaption,
-                          suffix: "pt", value: Double(grid.spacing),
+                          suffix: DocumentUnit.word, value: Double(grid.spacing),
                           note: grid.liveSpacingNote(atZoom: editorState.zoom),
                           set: { editorState.setCanvasGridSpacing(CGFloat($0)) })
                 numberRow(CanvasGridCopy.majorEvery, caption: CanvasGridCopy.majorEveryCaption,
@@ -197,6 +197,9 @@ struct CanvasGridControls: View {
                                                          coarse: coarse)))
                     })
             Text(suffix).font(.caption2).foregroundStyle(.tertiary)
+                // The number is in a box and its unit is beside it, so a walk
+                // reading the row back is handed the two together.
+                .panelReadout("\(Int(value.rounded())) \(suffix)")
         }
     }
 }

@@ -25,7 +25,7 @@
 
     { "do": "press", "control": "Cell" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "press", "control": "16 pt" },
+    { "do": "press", "control": "16 px" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.4 },

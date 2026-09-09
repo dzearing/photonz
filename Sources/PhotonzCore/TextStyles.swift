@@ -89,7 +89,7 @@ public struct TextStyles: Equatable, Codable, Sendable {
     /// The same words with nothing padding them, for anything that says a size
     /// in a sentence rather than drawing it in a box.
     public static func sizeWords(_ size: CGFloat) -> String {
-        "\(Int(size)) pt"
+        DocumentUnit.text(digits: String(Int(size)))
     }
 
     /// What a padded title says, for anything reading a control back: a walk

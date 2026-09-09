@@ -322,7 +322,7 @@ public enum EditorChromeLayout {
     /// bar ever gets with no tools inline — 473pt, measured — plus the chip,
     /// which is under 115pt with its glyph, its spacing and its chevron. The
     /// chip's number carries two spacings when the zoom has coarsened the grid
-    /// ("4 → 32 pt"), and 56pt of fixed, monospaced digits is what that costs:
+    /// ("4 → 32 px"), and 56pt of fixed, monospaced digits is what that costs:
     /// at the 620pt threshold the budget is 588 and the bar with the chip on it
     /// is 587.
     public static let gridChipMinCanvasWidth: CGFloat = zoomSliderMinCanvasWidth

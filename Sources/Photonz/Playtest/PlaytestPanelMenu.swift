@@ -96,7 +96,7 @@ enum PlaytestPanelMenu {
 
     /// What a walk calls this menu, and what it is showing right now.
     ///
-    /// A menu wears its own value — "24 pt", "Top" — so naming it by what it
+    /// A menu wears its own value — "24 px", "Top" — so naming it by what it
     /// says is naming it by something that changes the moment the walk uses
     /// it. The row it sits on does not change, so that is its name, and its
     /// value goes in the detail, the same promise every other control in the

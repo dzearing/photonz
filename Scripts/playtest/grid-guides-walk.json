@@ -76,7 +76,7 @@
     },
     {
       "do": "press",
-      "control": "16 pt"
+      "control": "16 px"
     },
     {
       "do": "wait",
@@ -85,7 +85,7 @@
     {
       "do": "describe",
       "stage": "2c-cell-16",
-      "note": "cell 16: the button reads 16 pt and the grid draws 16s"
+      "note": "cell 16: the button reads 16 px and the grid draws 16s"
     },
     {
       "do": "snapshot",

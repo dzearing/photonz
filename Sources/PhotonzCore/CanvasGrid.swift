@@ -120,7 +120,7 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
 
     /// The spacing as it was TYPED, with its unit. This is what the Spacing
     /// field holds; what the canvas is drawing right now is `liveSpacing`.
-    public var spacingText: String { "\(CanvasGridNumber.text(spacing)) pt" }
+    public var spacingText: String { DocumentUnit.text(digits: CanvasGridNumber.text(spacing)) }
 
     // Stored settings outlive the shape of this type, so a blob written before
     // a field existed still reads back, and a number edited by hand into
@@ -225,7 +225,7 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     public func spacingChipText(atZoom zoom: CGFloat) -> String {
         let live = liveSpacing(atZoom: zoom)
         guard abs(live - spacing) > 1e-9 else { return spacingText }
-        return "\(CanvasGridNumber.text(spacing)) \u{2192} \(CanvasGridNumber.text(live)) pt"
+        return DocumentUnit.text(digits: "\(CanvasGridNumber.text(spacing)) \u{2192} \(CanvasGridNumber.text(live))")
     }
 
     /// Whether the cell follows the zoom rather than being pinned to a size
@@ -243,7 +243,7 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
     /// the button's tooltip.
     public var cellButtonText: String {
         cellIsAutomatic ? CanvasGridCopy.automaticCell
-                        : "\(CanvasGridNumber.text(Self.clamped(minimumCell: minimumCell))) pt"
+                        : DocumentUnit.text(digits: CanvasGridNumber.text(Self.clamped(minimumCell: minimumCell)))
     }
 
     /// The size button's tooltip: what the button is for, plus the one thing
@@ -258,7 +258,7 @@ public struct CanvasGridSettings: Equatable, Sendable, Codable {
         let base = cellIsAutomatic ? CanvasGridCopy.cellAutomaticHelp : CanvasGridCopy.cellHelp
         if cellIsTooFineToDraw(atZoom: zoom) { return base + " " + CanvasGridCopy.cellTooFineHelp }
         guard !cellIsAutomatic, abs(live - minimumCell) > 1e-9 else { return base }
-        return base + " The spacing is coarser, so it draws \(CanvasGridNumber.text(live)) pt lines."
+        return base + " The spacing is coarser, so it draws \(DocumentUnit.text(digits: CanvasGridNumber.text(live))) lines."
     }
 
     /// Whether the size somebody chose is finer than this zoom can draw, so the
@@ -811,8 +811,8 @@ public enum CanvasGridCopy {
         let pull = snaps ? ", and a drag lands on those" : ""
         // Two lines in the popover, not three: the first says what is on
         // screen, the second says how to get what was asked for.
-        return "Showing \(liveText) pt lines at this zoom" + pull
-            + ". Zoom in for \(setText) pt."
+        return "Showing \(DocumentUnit.text(digits: liveText)) lines at this zoom" + pull
+            + ". Zoom in for \(DocumentUnit.text(digits: setText))."
     }
 
     /// What the button that opens all of this is called, on the View menu.

@@ -1,0 +1,26 @@
+{
+  "id": "an-alignment-button-the-panel-has-scrolled-away",
+  "title": "An alignment button the panel has scrolled away from cannot be pressed",
+  "goal": "One of the scripted walks stops partway through because it tries to press the Across align-center button and the button is not somewhere a person could click: the right hand panel has scrolled it under its own edge. Either the panel should keep a control it is showing reachable, or the walk needs to scroll to it first. Right now the walk gives up and the rest of what it was checking never runs.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2160,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T00:36:12.784Z",
+  "updated": "2026-09-09T00:36:12.787Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "PRE-EXISTING, not caused by the unit-word change: reproduced at the pre-change baseline by stashing every source and walk change (git stash push --include-untracked) and running the walk unmodified. Both runs fail identically.\n\n  $ Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json\n  \"error\" : \"step 45 (press): the control \\\"align center\\\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on. Scroll to it with a scrollPanel step first.\"\n  \"status\" : \"failed\"\n\nFound on 2026-09-09 while reverifying the walks that asserted the old unit word; that walk needed its 48 pt / 32 pt menu rows updating to px, and once past step 17 it reached step 45. Step 41 already scrolls the Text section by 400 and step 43 opens the Size menu, so the suspicion is the dock is left scrolled after the menu closes. Filed p2 because it is a broken walk in the loop is own harness, not the focus feature, and the cause is not confirmed.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/mixed-one-look-walk.json finishes with status ok",
+    "Whatever the answer is, it is written down: either the panel keeps the control reachable, or the walk scrolls to it and says in a note why it has to"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T00:36:12.786Z",
+      "note": "created (manual)"
+    }
+  ]
+}

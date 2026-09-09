@@ -1,0 +1,27 @@
+{
+  "feature": "One unit word in the panel",
+  "epic": "ui-building",
+  "summary": "The right hand panel measured one space and called it two things: Corner Radius said 18 pt while Position and Size said px from the top left, and Thickness said pt with Label size right under it saying px. Every length in the app now reads px, the same word the caliper hands you.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: this is the wording of rows that were already there.",
+  "try": [
+    { "do": "Draw a rectangle with the R tool.", "shot": "2026-09-09-one-unit-word-1.png" },
+    { "do": "Pull the Corner Radius slider, and read the number beside it." },
+    { "do": "Read the Width under Border in Effects, then the grey line under Position and Size. All three say px." },
+    { "do": "Press A and drag an arrow, type a caption, press Command Return.", "shot": "2026-09-09-one-unit-word-2.png" },
+    { "do": "Read Thickness and Label size, one under the other. They used to say pt and px." },
+    { "do": "Press T, click the canvas, type a word, then open the Size menu in the Text section.", "shot": "2026-09-09-one-unit-word-3.png" },
+    { "do": "Turn the grid on and open Grid Settings on the tool bar; Spacing says px too." }
+  ],
+  "evaluate": [
+    "Reading 27 px on Corner Radius and 27 px on a caliper, do they now land in your head as the same distance?",
+    "Type size is the change worth arguing about: does 24 px in the Size menu read right to you, or do you want type in pt even though everything around it is px?",
+    "The Position and Size fields still carry no unit in the box, only the grey line under all four. Is that line enough, or do you want px beside X and W?",
+    "Anywhere left in the app where you still see two words for one distance?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so all three pictures are real window captures, not offscreen renders.",
+    "Type size moved from pt to px on my judgment, not a decision card. The app already said Label size in px two sections away, so it was spelling one concept two ways; px also matches CSS and Figma. If you want type in pt, that is one line to change back and it is worth telling me.",
+    "Log lines in the playtest harness still say pt, deliberately: there a window really is measured in points and its bitmap in device pixels, and only an agent reads them.",
+    "The panel now polices itself. A new playtest step, expectOneUnit, reads back every readout the panel is showing and fails naming any row that spells the unit differently, so this cannot quietly drift back. It only sees readouts wearing the panelReadout marker, so a brand new kind of control could still slip past until someone adds it."
+  ]
+}

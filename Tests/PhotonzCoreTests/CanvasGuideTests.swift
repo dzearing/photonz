@@ -323,7 +323,7 @@ import Testing
     /// rather than showing a number that changes as the canvas is zoomed.
     @Test func theSizeButtonReadsTheCellOrSaysAutomatic() {
         var settings = CanvasGridSettings(isVisible: true, spacing: 4, minimumCell: 16)
-        #expect(settings.cellButtonText == "16 pt")
+        #expect(settings.cellButtonText == "16 px")
         settings.minimumCell = CanvasGridCellStops.automatic
         #expect(settings.cellButtonText == CanvasGridCopy.automaticCell)
     }

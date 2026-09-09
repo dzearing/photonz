@@ -96,7 +96,7 @@
       "do": "panelMenu",
       "menu": "Size",
       "shot": "2-size-menu",
-      "choose": "48 pt"
+      "choose": "48 px"
     },
     {
       "do": "wait",
@@ -105,7 +105,7 @@
     {
       "do": "describe",
       "stage": "2-resized",
-      "note": "the first label is now 48 pt, the second still 24 pt"
+      "note": "the first label is now 48 px, the second still 24 px"
     },
     {
       "do": "click",

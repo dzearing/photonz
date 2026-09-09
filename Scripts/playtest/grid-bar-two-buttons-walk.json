@@ -84,7 +84,7 @@
     },
     {
       "do": "press",
-      "control": "16 pt"
+      "control": "16 px"
     },
     {
       "do": "wait",
@@ -93,7 +93,7 @@
     {
       "do": "describe",
       "stage": "4-sixteen",
-      "note": "cell 16: the knob moved to 16, the grid draws 16s and the button reads 16 pt"
+      "note": "cell 16: the knob moved to 16, the grid draws 16s and the button reads 16 px"
     },
     {
       "do": "snapshot",

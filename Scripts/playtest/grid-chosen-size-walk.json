@@ -55,7 +55,7 @@
     },
     {
       "do": "press",
-      "control": "4 pt"
+      "control": "4 px"
     },
     {
       "do": "wait",
@@ -64,7 +64,7 @@
     {
       "do": "describe",
       "stage": "2-slider-on-four",
-      "note": "THE SLIDER: a track with nine stops and one number under it reading 4 pt. No column of loose numbers beside the track."
+      "note": "THE SLIDER: a track with nine stops and one number under it reading 4 px. No column of loose numbers beside the track."
     },
     {
       "do": "snapshot",
@@ -160,7 +160,7 @@
     },
     {
       "do": "press",
-      "control": "16 pt"
+      "control": "16 px"
     },
     {
       "do": "wait",
@@ -177,7 +177,7 @@
     {
       "do": "describe",
       "stage": "7-sixteen-at-100",
-      "note": "Sixteen points chosen: one grid at sixteen, bold every eighth line, and the button reads 16 pt."
+      "note": "Sixteen points chosen: one grid at sixteen, bold every eighth line, and the button reads 16 px."
     },
     {
       "do": "snapshot",
@@ -210,7 +210,7 @@
     },
     {
       "do": "press",
-      "control": "4 pt"
+      "control": "4 px"
     },
     {
       "do": "wait",

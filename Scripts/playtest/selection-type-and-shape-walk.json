@@ -144,7 +144,7 @@
     {
       "do": "describe",
       "stage": "1-three-at-40",
-      "note": "three labels, all 40pt regular: a known starting point whatever the last walk left behind"
+      "note": "three labels, all 40px regular: a known starting point whatever the last walk left behind"
     },
     {
       "do": "click",
@@ -188,7 +188,7 @@
     {
       "do": "describe",
       "stage": "3-first-is-14",
-      "note": "the first label alone set to 14pt, so the three now really do disagree"
+      "note": "the first label alone set to 14px, so the three now really do disagree"
     },
     {
       "do": "drag",
@@ -226,7 +226,7 @@
     {
       "do": "describe",
       "stage": "5-all-14",
-      "note": "one size pick: all three are 14pt and the row reads a number again"
+      "note": "one size pick: all three are 14px and the row reads a number again"
     },
     {
       "do": "snapshot",
@@ -247,7 +247,7 @@
     {
       "do": "describe",
       "stage": "6-one-undo",
-      "note": "ONE undo puts all three back: the first is 14pt again and the other two are 40pt"
+      "note": "ONE undo puts all three back: the first is 14px again and the other two are 40px"
     },
     {
       "do": "action",
@@ -354,7 +354,7 @@
     {
       "do": "describe",
       "stage": "9-two-square-boxes",
-      "note": "two boxes, both 3pt and square: a known starting point whatever the last walk left behind"
+      "note": "two boxes, both 3px and square: a known starting point whatever the last walk left behind"
     },
     {
       "do": "click",
@@ -389,7 +389,7 @@
     {
       "do": "describe",
       "stage": "10-one-box-thick",
-      "note": "the first box alone pulled to 9pt, so the two shapes now disagree"
+      "note": "the first box alone pulled to 9px, so the two shapes now disagree"
     },
     {
       "do": "drag",

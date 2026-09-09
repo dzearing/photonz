@@ -68,7 +68,7 @@
     {
       "do": "describe",
       "stage": "2-wide",
-      "note": "320 wide: the fill should have grown to 320 and the word should still be dead centre, still 14 pt"
+      "note": "320 wide: the fill should have grown to 320 and the word should still be dead centre, still 14 px"
     },
     {
       "do": "snapshot",

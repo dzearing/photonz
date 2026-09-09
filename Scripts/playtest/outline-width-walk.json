@@ -17,13 +17,13 @@
 
     { "do": "action", "action": "dragThickness" },
     { "do": "wait", "seconds": 0.7 },
-    { "do": "describe", "stage": "2-thicker", "note": "one pull on Thickness and the line round the box is 9pt" },
+    { "do": "describe", "stage": "2-thicker", "note": "one pull on Thickness and the line round the box is 9px" },
     { "do": "snapshot", "name": "outline-2-thicker" },
     { "do": "render", "name": "box-at-nine" },
 
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "2b-undone", "note": "one undo puts the whole pull back: the line is 3pt again" },
+    { "do": "describe", "stage": "2b-undone", "note": "one undo puts the whole pull back: the line is 3px again" },
     { "do": "render", "name": "box-back-at-three" },
     { "do": "action", "action": "redo" },
     { "do": "wait", "seconds": 0.6 },
@@ -44,7 +44,7 @@
 
     { "do": "action", "action": "borderSelection" },
     { "do": "wait", "seconds": 0.7 },
-    { "do": "describe", "stage": "5-frame-bordered", "note": "the frame takes a 4pt border, and the Border color row appears in the Color section" },
+    { "do": "describe", "stage": "5-frame-bordered", "note": "the frame takes a 4px border, and the Border color row appears in the Color section" },
     { "do": "snapshot", "name": "outline-5-frame-bordered" },
     { "do": "render", "name": "frame-bordered" },
 
