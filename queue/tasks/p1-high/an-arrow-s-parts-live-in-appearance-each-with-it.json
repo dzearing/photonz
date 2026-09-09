@@ -1,0 +1,37 @@
+{
+  "id": "an-arrow-s-parts-live-in-appearance-each-with-it",
+  "title": "An arrow's parts live in Appearance, each with its own colour",
+  "goal": "An arrow has a line, a head and a caption pill, and the pill has a fill, an edge and its text. Right now one colour drives the line and the head together, the pill's colours are worked out from that colour rather than chosen, and the settings are split between Appearance and a separate arrow pane. Put an arrow's parts in Appearance like every other shape's parts: the line, the head, and the pill's fill, edge and text, each switchable where that makes sense and each with a colour set the way every other colour in the app is set. Fold the separate arrow pane in, so one section says how the thing looks.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T12:57:53.360Z",
+  "updated": "2026-09-09T12:57:53.401Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-09. What the model has today, from Sources/PhotonzCore/Layer.swift: an annotation carries ONE colorHex (line 99) used for the shaft and the head, an optional fillColorHex (line 139) for a closed shape's interior, and the caption pill has no colours of its own at all: captionChipColor (line 329) darkens colorHex by 0.55 and keeps darkening until white text reads on it, and captionBorderWidth (line 357) is derived from strokeWidth. So giving the pill its own fill, edge and text colours is a model change, not just a panel change, and it needs a migration that turns an existing arrow's derived colours into stored ones so nothing shifts on opening. The colour slots that exist are fill, stroke, text, border and shadow (ColorStyles.swift line 26 onwards), which is nearly enough but does not distinguish a line from a head, so the parts model in LayerParts.swift is where the new parts belong rather than a sixth slot. The separate arrow section is the .annotation case in the inspector (Sources/Photonz/AnnotationInspector.swift, listed in InspectorSections.swift); folding it in means the shape settings that are not colours, the head style, the thickness, the caption roundness, need homes in Appearance too, so say where each went. This is the same principle as the Appearance and Effects split already agreed: Appearance says what the thing is made of.",
+  "acceptance": [
+    "Appearance lists an arrow's parts: the line, the head, and the caption pill's fill, its edge and its text",
+    "Each of those has its own colour, chosen the same way every other colour in the app is chosen, including using and saving named colours",
+    "Setting the line's colour no longer changes the head, and setting the head's no longer changes the line",
+    "The pill's colours are chosen rather than derived from the line's colour, and the audit says what an existing arrow's pill becomes so nothing changes appearance on opening",
+    "There is no separate arrow section: everything that was in it is in Appearance, and the audit lists where each control went",
+    "An arrow with no caption shows no pill parts, so the section never offers settings for something that is not there",
+    "The white text on a dark pill that the old derivation guaranteed is not silently lost: if a chosen pair would be unreadable the audit says how that is handled",
+    "Core logic covered by tests in PhotonzCore written before the change, including an arrow saved before this opening unchanged",
+    "Audit written under queue/audits/ with an arrow with and without a caption, and a line and head in different colours, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T12:57:53.362Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T12:57:53.400Z",
+      "note": "seq 260 -> 5"
+    }
+  ]
+}
