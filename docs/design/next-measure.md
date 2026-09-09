@@ -486,7 +486,7 @@ action, **Copy Measurement** (`copyMeasurement(id:)`, the same call the
 measurement row's context menu and the Measure menu make), with the exact
 line it will copy rendered under it in tertiary monospace, live from the
 document (`MeasureSpecList.specLine`) so a rename, recolor or unit change
-updates it in place. `LayersPanel.swift` → `copySection`, still behind
+updates it in place. `MeasurementsListView.swift` → `copySection`, still behind
 `next-measure-panel`.
 
 

@@ -2371,3 +2371,6 @@
 {"t":"2026-09-09T12:25:11.795Z","ev":"task_created","id":"a-fix-to-the-loop-itself-reaches-the-loop-that-i","priority":"p2-normal","title":"A fix to the loop itself reaches the loop that is running"}
 {"t":"2026-09-09T12:25:11.834Z","ev":"task_resequenced","id":"a-fix-to-the-loop-itself-reaches-the-loop-that-i","from":2280,"to":15}
 {"t":"2026-09-09T12:28:20.691Z","ev":"digest","file":"2026-09-09.md"}
+{"t":"2026-09-09T12:28:56.414Z","ev":"task_started","id":"the-panel-file-is-split-so-the-dock-and-its-sect","title":"The panel file is split so the dock and its sections are separate work","priority":"p1-high"}
+{"t":"2026-09-09T12:53:53.862Z","ev":"task_created","id":"find-out-why-the-lazy-rows-walk-sometimes-cannot","priority":"p2-normal","title":"Find out why the lazy rows walk sometimes cannot find the Background layer"}
+{"t":"2026-09-09T12:54:02.610Z","ev":"task_created","id":"the-panel-keeps-its-height-sharing-in-a-file-of","priority":"p3-low","title":"The panel keeps its height sharing in a file of its own"}

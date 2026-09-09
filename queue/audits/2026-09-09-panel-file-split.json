@@ -1,0 +1,27 @@
+{
+  "feature": "The panel is many files instead of one",
+  "epic": "ui-building",
+  "summary": "Nothing in the app looks or behaves differently. The one 5,158 line file that held the whole right hand panel is now twelve files, one per part, so two people (or two runs of the loop) can work on the layers list and on the effects rows without landing on each other.",
+  "setup": "Photonz Dev, release Next. No flags. Nothing to turn on: this is the same panel it was this morning.",
+  "try": [
+    { "do": "Open a screenshot and draw a rectangle with R.", "shot": "2026-09-09-panel-file-split-1.png" },
+    { "do": "Look down the panel: Layers, Appearance, Effects, Position and Size, all where they were." },
+    { "do": "Fold Layers with its chevron, then open it again." },
+    { "do": "Drag the Effects header up above Appearance, then put it back." },
+    { "do": "Pull the Opacity slider and press Command Z." },
+    { "do": "Pick the Canvas row at the bottom of the layers list and check its settings appear." },
+    { "do": "Pick up the measure tool with M and check its settings replace the layer's." }
+  ],
+  "evaluate": [
+    "Does every section still open, fold, and reorder exactly as it did before?",
+    "Does anything in the panel flicker, jump, or land a pixel off where it used to?",
+    "Does picking a layer still scroll the panel to the section for it?",
+    "Is there any panel control that has stopped responding?"
+  ],
+  "rough": [
+    "This was a move, not a rewrite. Of 4,890 lines of code, the only lines that changed are twelve declarations that lost the word private, because the type is now used from a different file. Everything else is byte for byte what it was.",
+    "The dock file is still the biggest at 1,310 lines, because the height sharing and the three scroll-to-what-you-picked routines all live inside the panel view itself and cannot move out without touching its state. Filed as a follow-up rather than done here.",
+    "One scripted walk (layers-lazy-rows) failed once while running the layers group and passed on its own before the change, on its own after the change, and again in the same group. Filed as something to look into rather than called a break.",
+    "Screen Recording was granted for this run, so the picture above is the real window."
+  ]
+}

@@ -564,7 +564,7 @@ Everything below is a consequence of that table.
   control reaches fewer than all the picked things, the section carries one
   visible line saying how many and what the rest will do. Already the practice
   and the exemplar to copy: `shadowReachNote` and `borderReachNote` in
-  `LayersPanel.swift` ("3 of the 5 selected layers have a shadow. The rows below
+  `LayerEffectsInspector.swift` ("3 of the 5 selected layers have a shadow. The rows below
   change those; the switch gives the rest one too."). One line under the
   section, never a tip per control, same as the placement rule in **Where the
   explanation goes** below.
@@ -740,7 +740,7 @@ says which of the two the word is about.)*
 `MixedLook.controlOpacity`, which is the one step quieter for a control made of
 picture rather than words, and the word sits beside the switch. The Shadow
 switch wears the same two as of 2026-09-06, and so does every switch in the
-parts list: `ShadowInspector` in `LayersPanel.swift` and `PartRowView` in
+parts list: `ShadowInspector` in `LayerEffectsInspector.swift` and `PartRowView` in
 `PartsInspector.swift`.
 
 **The word goes AFTER the control, not between it and its caption.** Both were

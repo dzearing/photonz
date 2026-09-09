@@ -1,15 +1,15 @@
 {
   "id": "the-panel-file-is-split-so-the-dock-and-its-sect",
   "title": "The panel file is split so the dock and its sections are separate work",
-  "goal": "One file holds the whole right hand panel: how it shares out its height, how it scrolls to what you picked, the layers list, the rows in that list, the measure tool settings, the measurements list, the effects rows and every unit word. It is 5,017 lines and 123 of the last week’s commits touched it. Every feature in the current focus edits it, so every feature waits on it.",
+  "goal": "One file holds the whole right hand panel: how it shares out its height, how it scrolls to what you picked, the layers list, the rows in that list, the measure tool settings, the measurements list, the effects rows and every unit word. It is 5,017 lines and 123 of the last week\u2019s commits touched it. Every feature in the current focus edits it, so every feature waits on it.",
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "repo",
   "created": "2026-09-09T09:42:41.176Z",
-  "updated": "2026-09-09T12:22:11.266Z",
+  "updated": "2026-09-09T12:54:21.792956Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Held back twice on purpose (manager passes 2026-09-04 and 2026-09-08) so capability work went first. It has now grown from about 4,000 lines to 5,017 in one day, and the height-sharing code in it is what three open decision cards are all arguing about, so the next round of panel work will be easier to reason about after this than before it.\n\nSources/Photonz/LayersPanel.swift, 5,017 lines / 256KB. Seams already marked in the file: InspectorPanel plus its height budget and its three reveal routines (lines 70-1200), the section id enum and drop delegates (1316-1690), CollapsibleSection and the resize handles (1691-2013), the layers list and its rows (2014-2843), the per-tool inspectors (2844-3065), the measurements list (3066-3264), the effects and shadow inspectors (3265 on).\n\nThe app already has a precedent for this: \"The canvas splits its drawing and its gestures into their own files\" landed 2026-09-06, and the CanvasView/CanvasDisplay/CanvasPointerDrags/CanvasMeasure split is the shape to copy. Keep Swift 6 strict concurrency clean and do not introduce a @preconcurrency anywhere.\n\nPROMOTED to p1-high by the 2026-09-09 triage pass, after being held back twice.\n\nWhy now, in numbers rather than taste. The file is 5,017 lines and grew about a thousand of them in one day. Of the 59 tasks finished in the last 24 hours, the large majority are panel work, and four separate tasks in that day were spent repairing scripted walks that the panel's own churn had broken. Three of the questions now waiting on the dashboard, on where a picked thing's settings go, on what gives way when the panel runs out of room, and on the room an open effect keeps, are all arguing about the height code inside this one file. Whichever way those answers go, the work lands here.\n\nThe one thing that must not happen: this is a move, not a rewrite. The acceptance list says so and it is the whole risk.",
@@ -40,6 +40,43 @@
     {
       "t": "2026-09-09T12:22:11.265Z",
       "note": "seq 60 -> 10"
+    },
+    {
+      "t": "2026-09-09T12:28:56.412Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T12:54:21.792956Z",
+      "note": "Adversarial review before starting: the risk in this task is not the split, it is doing anything else while splitting. So the plan was mechanical from the start: cut on the seams the file already had, move lines verbatim, and prove afterwards that the only changed lines are the ones the compiler forced."
+    },
+    {
+      "t": "2026-09-09T12:54:21.792956Z",
+      "note": "Split into 12 files: InspectorPanel (1,310, the dock, its height budget and its three reveals), InspectorSections (612, the section list, the collapsible shell, the resize handles, section drops), LayersListView (644), LayersRow (433), ToolInspectors (226, measure/wand/crop/callout), MeasurementsListView (204), LayerEffectsInspector (312, effects and shadow), InspectorControls (249, shared sliders, the selection menu, the one unit word), AnnotationInspector (458, arrows, captions, corner radius), TextInspector (231), MeasureInspector (347), CanvasInspector (182, canvas and collage). Largest is 1,310, under the 1,500 the acceptance asked for. LayersPanel.swift is gone."
+    },
+    {
+      "t": "2026-09-09T12:54:21.792956Z",
+      "note": "Proved it is a move: comparing every non-blank line of the old file against every non-blank line of the twelve new ones, 4,890 lines in and 4,890 out, the only difference is 12 declarations that lost the word private because they are now used across a file boundary (PanelFileDrop, PanelDropAffordance, StyleRowDropNote, SectionFileDrop, CollapsibleSection, LayerRowHeightKey, LayerCanvasRowHeightKey, LayerRowDropDelegate, OutOfViewMark, LayersRow, SelectionMenu, selectionCaption). No behaviour touched."
+    },
+    {
+      "t": "2026-09-09T12:54:21.792956Z",
+      "note": "Two things landed with their real owner rather than where the line numbers put them: the TextAlign and TextVerticalAlign symbol extensions went to TextInspector.swift (their only caller) and ArrowCaptionField stayed with AnnotationInspector. Relative order of every line is preserved."
+    },
+    {
+      "t": "2026-09-09T12:54:21.792956Z",
+      "note": "Verified: swift build clean with zero warnings, Swift 6 strict concurrency clean, no @preconcurrency added. Scripts/test.sh 5,365 tests in 446 suites pass. Walks: panel-start-margin, effects-fit-one-open, dock-picked-first, one-unit-word all ok; then the whole panel group (18 passed, 0 failed), the dock group (3 passed, 0 failed) and the layers group (6 passed, 0 failed on the second run)."
+    },
+    {
+      "t": "2026-09-09T12:54:21.792956Z",
+      "note": "layers-lazy-rows-walk failed once inside the layers group. Checked against HEAD by stashing the split: it passes alone before the change, alone after the change, and in the same group run again. Filed as find-out-why-the-lazy-rows-walk-sometimes-cannot at p2-normal, not fixed here."
+    },
+    {
+      "t": "2026-09-09T12:54:21.792956Z",
+      "note": "Follow-up filed: the-panel-keeps-its-height-sharing-in-a-file-of at p3-low, for the 1,310 line dock file. The budget and reveal code reads the view own @State, so lifting it out is a rewrite rather than a move and was deliberately left alone."
+    },
+    {
+      "t": "2026-09-09T12:54:21.792956Z",
+      "note": "Docs updated to point at the new files: tools.md (CornerRadiusRow), ui-building.md (the Shadow switch), next-measure.md (the measurements copy), UX-PATTERNS.md (the reach note and the Shadow switch). Audit at queue/audits/2026-09-09-panel-file-split.json with a real screen capture."
     }
-  ]
+  ],
+  "started": "2026-09-09T12:28:56.411Z"
 }

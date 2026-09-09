@@ -2063,7 +2063,7 @@ smudge behind the words.
   actually drawn.
 
 **Where it lives.** `Components.swift` in `PhotonzCore`;
-`DocumentRenderer.swift`; `LayersPanel.swift` (the Shadow switch). Tested in
+`DocumentRenderer.swift`; `LayerEffectsInspector.swift` (the Shadow switch). Tested in
 `TextHaloTests` and `TextHaloRenderTests`. Walked by
 `Scripts/playtest/screen-text-halo-walk.json`, which paints a screen a strong
 colour first — on a white screen a white halo behind dark text cannot be seen

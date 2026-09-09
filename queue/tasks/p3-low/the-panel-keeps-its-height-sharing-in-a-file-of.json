@@ -1,0 +1,27 @@
+{
+  "id": "the-panel-keeps-its-height-sharing-in-a-file-of",
+  "title": "The panel keeps its height sharing in a file of its own",
+  "goal": "After the panel was split into twelve files, the file holding the dock itself is still the largest at 1,310 lines, because the arithmetic that decides how the sections share the panel height, and the three routines that scroll to what you just picked, all live inside the panel view. Every question the dashboard is currently asking about what gives way when the panel runs out of room lands in that arithmetic, so it is worth having on its own.",
+  "epic": "ui-building",
+  "priority": "p3-low",
+  "seq": 1310,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T12:54:02.606Z",
+  "updated": "2026-09-09T12:54:02.609Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/InspectorPanel.swift, 1,310 lines after the 2026-09-09 split. The blocker is that the budget and reveal code reads the view own @State and @AppStorage, so moving it to an extension in another file means widening those properties or lifting them into a small observable holder. That is a rewrite rather than a move, which is why the split task stopped short of it. DockBudgetScratch, DockRevealScratch, DockArrivals and SectionDragScratch are already separate reference types and are the natural place to land it.",
+  "acceptance": [
+    "The height sharing and the scroll-to-what-you-picked routines live in their own file, and the dock file is under about 800 lines",
+    "Nothing a person sees changes: Scripts/test.sh passes and the panel and dock walks pass exactly as they do today",
+    "No behaviour is corrected on the way through"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T12:54:02.608Z",
+      "note": "created (manual)"
+    }
+  ]
+}

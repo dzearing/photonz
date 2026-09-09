@@ -13895,3 +13895,42 @@ out; whoever takes it should open a decision before building.
 Open question for the user, in the audit: the line does not follow the pointer
 the way the canvas one does, and it covers a row at the far end of the list
 while it shows.
+
+## 2026-09-09 — the panel is twelve files instead of one
+
+`LayersPanel.swift` was 5,158 lines and held the whole right hand panel: the
+dock, its height budget, its three reveal routines, the section list, the
+collapsible shell, the resize handles, the layers list and its rows, the
+per-tool settings, the measurements list, the effects and shadow rows, the
+annotation and text and measure and canvas inspectors, and the one unit word.
+Every open feature in the focus edited it, so every feature queued behind it.
+
+It is now twelve files, cut on the seams the file already carried, each opening
+with one sentence saying what it owns: `InspectorPanel` (1,310),
+`InspectorSections` (612), `LayersListView` (644), `LayersRow` (433),
+`ToolInspectors` (226), `MeasurementsListView` (204),
+`LayerEffectsInspector` (312), `InspectorControls` (249),
+`AnnotationInspector` (458), `TextInspector` (231), `MeasureInspector` (347),
+`CanvasInspector` (182). Same shape as the 2026-09-06 canvas split.
+
+A move, not a rewrite, and provably so: 4,890 non-blank lines in, 4,890 out, and
+the only difference across the whole set is twelve declarations that lost the
+word `private` because they are now used from another file. Nothing else was
+touched, corrected or tidied on the way through. Two blocks moved to the file
+that actually calls them rather than the one their line numbers sat in: the
+`TextAlign` and `TextVerticalAlign` symbol extensions now sit with
+`TextInspector`.
+
+Verified with `swift build` (clean, no warnings, strict concurrency untouched),
+`Scripts/test.sh` (5,365 tests, 446 suites), and the walks: the panel group
+(18), the dock group (3) and the layers group (6), all green, plus
+`panel-start-margin`, `effects-fit-one-open`, `dock-picked-first` and
+`one-unit-word` on their own.
+
+What is next: the dock file is still the largest at 1,310 lines, because the
+height sharing and the reveals read the view's own `@State` and cannot leave it
+without a rewrite. Filed as `the-panel-keeps-its-height-sharing-in-a-file-of`
+(p3). `layers-lazy-rows-walk` failed once inside its group and passed alone
+before the change, alone after it, and in the group on a re-run, so it is filed
+as a flake to look into (`find-out-why-the-lazy-rows-walk-sometimes-cannot`,
+p2) rather than a break.
