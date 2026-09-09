@@ -1,0 +1,28 @@
+{
+  "feature": "A frame shows its new size while you drag it",
+  "epic": "ui-building",
+  "summary": "Drag a handle on a frame and its edge now follows your hand the whole way, so you can see the size you are choosing instead of dropping it to find out. The frame's name, its column bands and the Size readout in the panel all keep up too.",
+  "setup": "Photonz Dev, release Next. Frames are on by default; nothing to switch on.",
+  "try": [
+    { "do": "Make a new blank canvas." },
+    { "do": "Press the frame tool and drag out a frame about 700 by 640." },
+    { "do": "Draw a handful of rectangles on it so it has something inside." },
+    { "do": "Click the frame's row in the Layers list to pick the frame itself." },
+    { "do": "Drag the bottom right handle out slowly and watch the frame's grey edge, not the panel.", "shot": "2026-09-09-frame-resize-live-2-after-corner.png" },
+    { "do": "Let go, undo, then drag the middle handle on the right edge instead.", "shot": "2026-09-09-frame-resize-live-3-after-edge.png" },
+    { "do": "Undo, then drag the frame itself from an empty spot inside it and watch its name travel with it." }
+  ],
+  "evaluate": [
+    "While you drag, is the grey edge enough to tell you the size you are getting, or do you find yourself hunting for the W and H in the panel?",
+    "The blue selection box and the eight handles still disappear for the whole resize, on purpose, so the edge you are lining up stays clear. Is that the right trade, or would you rather see the box?",
+    "Does the edge feel glued to your pointer, or a beat behind it?",
+    "When you let go, does the frame land exactly where the edge said it would?",
+    "Shrinking a frame chops what hangs off it as you drag. Is that helpful, or alarming?"
+  ],
+  "rough": [
+    "The first picture, 2026-09-09-frame-resize-live-1-before.png, is the same drag BEFORE the fix, so the two can be read side by side: the edge sits at 700 by 640 while the panel says 1040 by 820.",
+    "The reported cause was wrong and worth knowing: the canvas was never slow. It redrew 61 times in 1.46s during the drag, one picture per pointer move, about 4ms of render each. What stood still was the frame's edge, which the canvas drew from the saved document rather than from the hand. On a white frame over a white canvas that edge is the only thing you can see, so a perfectly live drag read as a dead one.",
+    "A self-arranging stack still shows almost nothing while you resize it: its rows are left aligned and do not stretch, and a group has no edge of its own to follow. Filed separately rather than folded in here, because fixing it means deciding what a group's edge should look like mid-drag.",
+    "The fourth picture shows all four container kinds mid-resize on one canvas, so you can judge whether the frame now behaves like its neighbours: a plain group scales its pieces, a stack reflows, a copy of a frame component keeps its own size."
+  ]
+}

@@ -1,0 +1,546 @@
+{
+  "out": "/tmp/photonz-playtest/frame-live-other-kinds",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1500,
+      "canvasHeight": 1000,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        60,
+        60
+      ],
+      "to": [
+        260,
+        150
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        290,
+        60
+      ],
+      "to": [
+        490,
+        150
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        60,
+        180
+      ],
+      "to": [
+        260,
+        270
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        290,
+        180
+      ],
+      "to": [
+        490,
+        270
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        40,
+        40
+      ],
+      "to": [
+        520,
+        300
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        60,
+        450
+      ],
+      "to": [
+        260,
+        530
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        60,
+        560
+      ],
+      "to": [
+        260,
+        640
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        60,
+        670
+      ],
+      "to": [
+        260,
+        750
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        40,
+        430
+      ],
+      "to": [
+        290,
+        780
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        620,
+        60
+      ],
+      "to": [
+        1020,
+        340
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        660,
+        100
+      ],
+      "to": [
+        850,
+        190
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        880,
+        100
+      ],
+      "to": [
+        990,
+        190
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        660,
+        220
+      ],
+      "to": [
+        850,
+        310
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1120,
+        620
+      ],
+      "to": [
+        1400,
+        860
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1160,
+        660
+      ],
+      "to": [
+        1360,
+        760
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        1250,
+        820
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        560,
+        880
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "action",
+      "action": "insertPickedComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        750,
+        500
+      ],
+      "to": [
+        750,
+        780
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "0-built",
+      "note": "four kinds of container side by side: a plain group top left, a self-arranging stack under it, a frame top right, and a copy of a frame component in the middle"
+    },
+    {
+      "do": "snapshot",
+      "name": "kinds-0-built"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        490,
+        270
+      ],
+      "to": [
+        600,
+        360
+      ],
+      "steps": 30,
+      "hold": "kinds-1-group-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "550"
+    },
+    {
+      "do": "describe",
+      "stage": "1-group",
+      "note": "a plain group scales its pieces, exactly as it did before"
+    },
+    {
+      "do": "selectRow",
+      "row": "Group 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        260,
+        750
+      ],
+      "to": [
+        380,
+        860
+      ],
+      "steps": 30,
+      "hold": "kinds-2-stack-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-stack",
+      "note": "a self-arranging stack takes the width and re-flows its rows"
+    },
+    {
+      "do": "selectRow",
+      "row": "Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        1020,
+        341
+      ],
+      "to": [
+        1180,
+        430
+      ],
+      "steps": 30,
+      "hold": "kinds-3-frame-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "540"
+    },
+    {
+      "do": "describe",
+      "stage": "3-frame",
+      "note": "the frame's edge follows the corner all the way, which is what this task fixed"
+    },
+    {
+      "do": "selectRow",
+      "row": "Frame 3"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        890,
+        900
+      ],
+      "to": [
+        1040,
+        970
+      ],
+      "steps": 30,
+      "hold": "kinds-4-copy-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-copy",
+      "note": "a copy of a frame component keeps a size of its own, and its edge and its mark travel with the drag too"
+    },
+    {
+      "do": "snapshot",
+      "name": "kinds-5-after"
+    }
+  ]
+}

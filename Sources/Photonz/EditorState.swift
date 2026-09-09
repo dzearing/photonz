@@ -39,6 +39,17 @@ final class EditorState {
     /// (latest-wins: rapid edits coalesce instead of queueing renders).
     private(set) var renderedImage: CGImage?
 
+    /// How many composites have reached the canvas since the window opened.
+    ///
+    /// A drag is only as live as the number of pictures it puts on screen, and
+    /// nothing else here counts them: the scheduler drops the frames it
+    /// overtakes, so the moves a walk makes and the pictures a person sees are
+    /// different numbers. A playtest reads this either side of a drag and
+    /// divides by the time it took, which is how "the frame did not move while
+    /// I dragged it" stops being a feeling and becomes a rate. Ignored by
+    /// observation so counting costs no view rebuild.
+    @ObservationIgnored private(set) var canvasFrameCount = 0
+
     /// Zoomed in, the canvas would be stretching one document-sized picture
     /// over four or sixteen screen pixels each, which is what makes a label you
     /// placed go soft while the one you are typing stays sharp. This is the
@@ -2490,6 +2501,7 @@ final class EditorState {
                     // Drop the frame if the document was closed while rendering.
                     guard let self, self.history != nil else { return }
                     self.renderedImage = image
+                    self.canvasFrameCount += 1
                     if self.clearPreviewAfterNextFrame {
                         self.clearPreviewAfterNextFrame = false
                         self.dragPreview = nil

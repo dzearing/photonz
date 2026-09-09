@@ -1,0 +1,414 @@
+{
+  "out": "/tmp/photonz-playtest/frame-resize-live",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1500,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        820,
+        760
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        150
+      ],
+      "to": [
+        370,
+        270
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        150
+      ],
+      "to": [
+        620,
+        270
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        650,
+        150
+      ],
+      "to": [
+        870,
+        270
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        300
+      ],
+      "to": [
+        370,
+        420
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        300
+      ],
+      "to": [
+        620,
+        420
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        650,
+        300
+      ],
+      "to": [
+        870,
+        420
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        450
+      ],
+      "to": [
+        370,
+        570
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        450
+      ],
+      "to": [
+        620,
+        570
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        650,
+        450
+      ],
+      "to": [
+        870,
+        570
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        600
+      ],
+      "to": [
+        370,
+        720
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        600
+      ],
+      "to": [
+        620,
+        720
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        650,
+        600
+      ],
+      "to": [
+        870,
+        720
+      ],
+      "steps": 3
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Frame"
+      ]
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "700"
+    },
+    {
+      "do": "describe",
+      "stage": "1-picked",
+      "note": "a frame 700 by 640 with twelve cards on it, picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "frame-live-1-picked"
+    },
+    {
+      "do": "drag",
+      "from": [
+        820,
+        760
+      ],
+      "to": [
+        1120,
+        940
+      ],
+      "steps": 40,
+      "hold": "frame-live-2-corner-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-corner",
+      "note": "the frame's edge followed the corner the whole way: the held picture shows the hairline at 1000 by 820, not at 700 by 640"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "1000"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "820"
+    },
+    {
+      "do": "snapshot",
+      "name": "frame-live-3-corner-after"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "700"
+    },
+    {
+      "do": "drag",
+      "from": [
+        820,
+        440
+      ],
+      "to": [
+        1120,
+        440
+      ],
+      "steps": 40,
+      "hold": "frame-live-4-edge-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-edge",
+      "note": "the right edge alone moved out; the held picture shows the hairline already at 1000 wide"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "1000"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "640"
+    },
+    {
+      "do": "snapshot",
+      "name": "frame-live-5-edge-after"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        740
+      ],
+      "to": [
+        650,
+        840
+      ],
+      "steps": 40,
+      "hold": "frame-live-6-move-mid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-move",
+      "note": "the frame carried its edge and its name with it while it travelled"
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "270"
+    },
+    {
+      "do": "snapshot",
+      "name": "frame-live-7-move-after"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "120"
+    }
+  ]
+}

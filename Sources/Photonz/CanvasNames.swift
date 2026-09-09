@@ -81,7 +81,9 @@ extension CanvasNSView {
         // has never been given a second version.
         let versions = componentsEnabled ? document.canvasVersionNames() : [:]
         func append(_ layer: Layer, inset: CGFloat, kind: CanvasNameChip.Kind) {
-            guard layer.isVisible, let bounds = document.canvasBounds(of: layer.id),
+            // Live, so a name keeps its place above the corner it belongs to
+            // while that corner is being dragged (`liveCanvasBounds`).
+            guard layer.isVisible, let bounds = liveCanvasBounds(of: layer.id),
                   bounds.width > 0, bounds.height > 0 else { return }
             let rect = viewRect(forDocRect: bounds, in: viewport)
             let version = kind == .screen ? nil : versions[layer.id]

@@ -17,6 +17,42 @@ import PhotonzCore
 ///   the whole feature is about.
 extension CanvasNSView {
 
+    // MARK: Where a frame is RIGHT NOW
+
+    /// A layer's box on the canvas as the hand has it this instant, drag and
+    /// all. The one door every piece of frame chrome reads its geometry
+    /// through.
+    ///
+    /// A preview drag never touches the document: `previewLayerFrame` re-renders
+    /// the picture through `submit` without recording anything, so `document`
+    /// goes on holding the pre-drag box until mouse-up. The picture is live
+    /// — the surface grows, the contents clip — but chrome asking the document
+    /// where the frame is gets told where it WAS, and stands still for the
+    /// whole gesture.
+    ///
+    /// That is invisible for most things and fatal for a frame. A frame's
+    /// surface is usually the same white as the canvas behind it, so its edge
+    /// hairline is the only thing on screen saying where its boundary is; with
+    /// the blue outline and the eight handles both hidden for the duration of a
+    /// resize, a frozen hairline means a drag with NOTHING moving in it.
+    /// Reported by the user on 2026-09-09: "when i try to resize a frame, it
+    /// has no live feedback". Measured at the time: the canvas was redrawing 42
+    /// times a second throughout, one composite per pointer move. Every one of
+    /// them was drawn under an edge that had not moved.
+    func liveCanvasBounds(of id: UUID) -> CGRect? {
+        if let resizeDrag, resizeDrag.layerID == id { return resizeDrag.frame }
+        if let moveDrag, moveDrag.moved, moveDrag.layerID == id, !moveDrag.copying {
+            return CGRect(origin: moveDrag.snapped.origin, size: moveDrag.size)
+        }
+        // A ⌥-drag leaves the original where it is and carries a copy that has
+        // no id yet, so the frame this asks about is the one standing still.
+        if multiMove?.copying != true, let origin = multiMove?.liveOrigins?[id],
+           let box = document?.canvasBounds(of: id) {
+            return CGRect(origin: origin, size: box.size)
+        }
+        return document?.canvasBounds(of: id)
+    }
+
     // MARK: Drawing
 
     func refreshFrameChrome() {
@@ -32,7 +68,7 @@ extension CanvasNSView {
 
         let edges = CGMutablePath()
         for frame in document.frames {
-            guard frame.isVisible, let bounds = document.canvasBounds(of: frame.id),
+            guard frame.isVisible, let bounds = liveCanvasBounds(of: frame.id),
                   bounds.width > 0, bounds.height > 0 else { continue }
             edges.addRect(viewRect(forDocRect: bounds, in: viewport).insetBy(dx: 0.5, dy: 0.5))
         }

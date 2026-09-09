@@ -12,8 +12,14 @@ struct FrameInspector: View {
     @Environment(EditorState.self) private var editorState
     let layer: Layer
 
+    /// Preview-aware, exactly as Position & Size is. A drag in flight has not
+    /// reached the document, so reading the document here left this row saying
+    /// 700 x 640 while the W and H fields four rows above it said 1040 x 820
+    /// and the frame on the canvas was plainly the second one. One frame, one
+    /// width.
     private var size: CGSize {
-        editorState.document?.layer(id: layer.id)?.frame.size ?? layer.frame.size
+        editorState.previewedFrame(of: layer.id)?.size
+            ?? editorState.document?.layer(id: layer.id)?.frame.size ?? layer.frame.size
     }
 
     private var clips: Bool {

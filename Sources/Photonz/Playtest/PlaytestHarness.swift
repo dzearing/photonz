@@ -4790,6 +4790,12 @@ private final class Run {
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",
             "layers": layers.count,
+            // Composites that have reached the canvas since the window opened.
+            // Read it either side of a drag and divide by the time between the
+            // two `describe` lines: that is how many pictures the drag actually
+            // put on screen per second, which is the only honest answer to "is
+            // this live?".
+            "canvasFrames": editor.canvasFrameCount,
             // Whether Undo and Redo have anything to do, which is what the
             // Edit menu dims itself on and what a shortcut walk checks.
             "canUndo": editor.canUndo,

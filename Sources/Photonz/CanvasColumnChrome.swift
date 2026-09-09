@@ -44,7 +44,7 @@ extension CanvasNSView {
         var drawn: [CAShapeLayer] = []
         for frame in document.frames {
             guard frame.isVisible, frame.columns?.isVisible == true,
-                  let box = document.canvasBounds(of: frame.id) else { continue }
+                  let box = liveCanvasBounds(of: frame.id) else { continue }
             // A screen scrolled out of the window draws nothing at all.
             guard viewRect(forDocRect: box, in: viewport).intersects(bounds) else { continue }
             let path = CGMutablePath()

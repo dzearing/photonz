@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T16:19:05.459Z",
-  "updated": "2026-09-09T16:19:05.504Z",
+  "updated": "2026-09-09T16:58:09.956Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-09: \"when i try to resize a frame, it has no live feedback\". Not reproduced by me - everything below is from reading, and the runner must reproduce FIRST.\n\nWhat I ruled IN by reading: the live path exists and does cover frames. CanvasPointerDrags.swift:787 calls onFramePreview on every mouse move, which reaches EditorState+Frames.swift:171 previewCanvasFrame and then EditorState+LayerDrag.swift:82 previewLayerFrame. AnnotationEditing.swift:197 dispatches a frame to LayerScaling.refitting (LayerScaling.swift:38). So the model is being updated live; this is not a case of the drag doing nothing until mouse-up.\n\nStrongest SUSPECT, unconfirmed: throughput, not wiring. LayerContent.scalesUniformlyOnResize (Layer.swift:896) returns false for a group, so previewLayerFrame DISCARDS the drag sprite (EditorState+LayerDrag.swift:93-96) and every single mouse move re-renders the whole document with the frame refitted and its children re-placed. On a screen-sized frame with a lot in it that is a full composite per pointer move, which would look exactly like nothing happening until release. Note the sprite is discarded deliberately and for a good reason (a scaled sprite stretches strokes and text), so the fix is not simply to keep the sprite - it is to make the live re-render cheap enough, or to find a preview that is faithful for a frame.\n\nThe cheap discriminator, do this first: CanvasDisplay.swift:830 sets the selection outline from resizeDrag.frame, so the blue box should follow the pointer even when the content does not. If the outline tracks and the contents lag, it is throughput. If the outline is stuck too, the drag is not starting and the cause is somewhere in the press path (CanvasPointerDrags.swift:387, gated on offersOwnHandles and allowsFrameResize; a frame passes both by AnnotationEditing.swift:62).\n\nSecond possibility worth ruling out before building anything: the user may mean there is no NUMERIC readout - no width by height chip following the drag. Nothing in the code draws one during a resize as far as I found. If reproduction shows the geometry does update live and smoothly, then what is missing is the readout, and the task becomes a small one: show the size while dragging. Decide which of the two it is from the reproduction, say so in the log, and do that one.\n\nAlso note CanvasDisplay.swift:913 and :932 hide the eight handles for the whole drag (!dragInFlight), so during a slow frame resize there may be nothing on screen changing at all - which would make a merely slow render read as a completely dead one.\n\nCheck Sources/Photonz/Releases/ before assuming one change reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -32,6 +32,47 @@
     {
       "t": "2026-09-09T16:19:05.503Z",
       "note": "seq 270 -> 8"
+    },
+    {
+      "t": "2026-09-09T16:58:09.955Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T17:08:05.000Z",
+      "note": "REPRODUCED on the probe, and the suspect in the notes is wrong. Walk: a frame with 24 cards on it, corner handle dragged, `hold` snapshot taken with the button still down. Mid-drag the canvas shows the frame's edge exactly where it was before the press, so the drag looks completely dead. But the contents ARE live: shrinking the frame mid-drag clips the right and bottom cards at the new box, and over a screenshot fixture the frame's white surface plainly grows with the pointer. What stands still is the frame's grey EDGE HAIRLINE, and on a white frame over a white canvas that hairline is the only thing you can see, so nothing appears to happen at all."
+    },
+    {
+      "t": "2026-09-09T17:08:05.000Z",
+      "note": "MEASURED before changing anything (new canvasFrameCount counter, read either side of the drag by a describe step). Frame 1000x780 with 24 children, 60-move drag: 61 composites in 1.46s = 42 fps, one picture per pointer move, nothing dropped. The harness itself paces moves 20ms apart, so of the 24ms per move about 4ms is the render: far inside the 16ms target. Throughput is NOT the problem; the notes' 'every move re-renders the whole document and that is why it looks dead' theory is measurably false. A frame MOVE takes 2 composites in the same 1.4s because a move floats a CA sprite, which is why moving a frame looks live and resizing it does not."
+    },
+    {
+      "t": "2026-09-09T17:08:05.000Z",
+      "note": "CAUSE, one line: the frame's chrome is drawn by the canvas from the COMMITTED document. CanvasFrames.refreshFrameChrome, CanvasNames.canvasNameChips and CanvasColumnChrome.refreshColumnChrome each call document.canvasBounds(of:), and a preview drag never touches document (previewLayerFrame renders through submit without recording), so the hairline, the frame's name and its column bands all freeze at the pre-drag box for the whole gesture. Second, smaller half: CanvasDisplay hides the blue outline AND the eight handles for the duration of any resize, so for a frame there is then nothing at all left on screen that moves."
+    },
+    {
+      "t": "2026-09-09T17:35:56.000Z",
+      "note": "ADVERSARIAL REVIEW, before building. The shortest thing that delivers the value is to make the frame's OWN edge live, not to invent a size chip or bring the blue outline back. The hairline is already the app's word for 'here is this screen's boundary', so a person reads it without being taught, and it is exactly the thing that was frozen. Rejected: un-hiding the blue outline and the eight handles during a resize. They are hidden on purpose, so the edge you are lining something up against is not covered by a fat blue line, and that reason holds for a frame as much as for a photo; it would also change behaviour for every layer type, which acceptance item 5 forbids. Rejected: a width-by-height chip following the pointer. The numbers are already live in Position & Size, and a chip under the hand is one more thing covering the edge you are aiming."
+    },
+    {
+      "t": "2026-09-09T17:35:56.000Z",
+      "note": "BUILT. New CanvasNSView.liveCanvasBounds(of:) in Sources/Photonz/CanvasFrames.swift: the in-flight resize or move box when the drag is about this layer, the document otherwise. Three chrome call sites now read it instead of document.canvasBounds: the edge hairline (CanvasFrames), the frame and component names (CanvasNames.canvasNameChips) and the column bands (CanvasColumnChrome). Also FrameInspector's Size row now reads previewedFrame like Position & Size does: mid-drag it said 700 x 640 four rows under a W of 1040, one frame wearing two widths."
+    },
+    {
+      "t": "2026-09-09T17:35:56.000Z",
+      "note": "VERIFIED on the probe, Screen Recording granted so these are real window captures, not offscreen renders. Corner drag mid-flight: hairline, W/H and the Frame Size row all read 1000 x 820 together. Right-edge drag: all three read 1000 x 640. Over a screenshot fixture, where the frame's white surface IS visible, the hairline sits exactly on the edge of the grown surface. Shrinking: the contents clip exactly at the hairline. Move: the frame, its picture, its outline, its edge and its name all travel together. No jump at mouse-up - the walk asserts the W and H after release equal what the held picture showed."
+    },
+    {
+      "t": "2026-09-09T17:35:56.000Z",
+      "note": "PERF, measured the same way before and after, three runs each (frame 1000x780, 24 children, 60-move drag). Before: 61 composites in 1.57s, 1.58s, and one warm-up outlier at 1.46s. After: 61 composites in 1.58s, 1.59s, 1.59s. Same 38.5 fps, one picture per pointer move, nothing dropped. The renderer is not touched at all: the change is three CGRect lookups in chrome that already ran on every move, plus one panel row that now rebuilds per move alongside the Position & Size rows that already did. Scripts/test.sh reports the 12MP/10-layer interactive edit at a median of 6.8ms against the 16ms target."
+    },
+    {
+      "t": "2026-09-09T17:35:56.000Z",
+      "note": "OTHER KINDS, checked side by side in one walk (Scripts/playtest/frame-live-other-kinds-walk.json): a plain group, a self-arranging stack, a frame and a copy of a frame component on one canvas, each resized with a picture taken mid-drag. The group still scales its pieces, the stack still reflows, the copy still keeps a size of its own. None of them is reachable by this change except the component copy, whose mark and edge now travel with the drag the same way. Scripts/test.sh green (5497 tests), and the frame, screen, column, resize, component, stack and layout walk families all pass."
+    },
+    {
+      "t": "2026-09-09T17:35:56.000Z",
+      "note": "ROUGH, filed rather than folded in: resizing a self-arranging stack still shows almost nothing, because its rows are left aligned and do not stretch and a group has no edge of its own to follow. Reproduced with a picture (kinds-2-stack-mid-sc.png in the same walk) and filed p2 as 'Resizing a self-arranging stack shows what you are getting while you drag'. It needs a design answer, not the same fix."
     }
-  ]
+  ],
+  "started": "2026-09-09T16:58:09.954Z"
 }
