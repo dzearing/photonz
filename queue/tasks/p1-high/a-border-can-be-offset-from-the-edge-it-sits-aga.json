@@ -1,0 +1,37 @@
+{
+  "id": "a-border-can-be-offset-from-the-edge-it-sits-aga",
+  "title": "A border can be offset from the edge it sits against",
+  "goal": "A border sits directly on the shape's edge, inside it, centred on it or outside it, and nothing else. Give it an offset so it can sit away from that edge: an inside border with an offset of ten is drawn ten points in from the inside edge, an outside one ten points out from the outside edge. That is what makes two borders on one shape useful, a tight one and a ring standing off it. Centred has no edge to measure from, so the offset does not apply there and should not be offered.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T13:06:52.628Z",
+  "updated": "2026-09-09T13:06:52.672Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-09. BorderEffect (Sources/PhotonzCore/LayerEffects.swift line 119 onwards) carries width, paint and position and no offset, and its coding keys are at line 167 so adding one needs a default of zero for old documents. The place the geometry lives is BorderPosition.outset(width:) (BorderPosition.swift line 38), which returns 0, half the width, or the width, and its own comment says this one number is the whole of what the renderer needs: the bitmap grows by it, the ring is pushed out by it, and the layer's reach grows by it. So the offset belongs in that same number rather than being applied at the drawing site, or the reach and the clipping will not follow. Note the renderer's ringed function already takes an outset and grows a rounded rect by it, which grows the radius by the same amount, which is exactly the parallel rounding wanted here, so the corner behaviour should come out right if the offset goes through the outset. Inside is the awkward direction: outset returns 0 for inside today, and an inside offset moves the ring further IN, which the current single non negative number cannot express, so say how that is represented rather than leaving it to the drawing code.",
+  "acceptance": [
+    "A border effect takes an offset, typed and dragged like its width, and the shape redraws as it changes",
+    "With the position inside, an offset moves the border that far further in from the inside edge; with it outside, that far further out",
+    "The offset control is not offered when the position is centred, and switching to centred says plainly that the offset does not apply rather than silently keeping a number that does nothing",
+    "Two borders on one shape with different offsets draw as two separate rings, and the audit shows exactly that",
+    "The layer's reach grows with the offset, so an outside border with a large offset is not clipped, and a group, a frame or a drag preview makes room for it",
+    "The corner rounding follows the offset, so an offset border round a rounded rectangle stays parallel to the shape rather than going square",
+    "A border saved before this opens with an offset of zero and draws exactly as it did",
+    "Core logic covered by tests in PhotonzCore written before the change, including the reach at a large outside offset",
+    "Audit written under queue/audits/ with a shape carrying an inside and an outside offset border, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T13:06:52.630Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T13:06:52.671Z",
+      "note": "seq 260 -> 9"
+    }
+  ]
+}
