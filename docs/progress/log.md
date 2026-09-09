@@ -13783,3 +13783,32 @@ Audit: `queue/audits/2026-09-09-edge-grab.json`.
 
 Next: the audit asks whether a short box wants something visible on its side at
 rest, and whether the canvas boundary should read the same rule.
+
+## 2026-09-09 — a scrolled-away row stops answering to the row it drifted under
+
+The scripted walks could be told a control existed in a place it does not.
+Reopening a Shadow scrolls the Effects list inside itself, which slides the
+Border row up over the Appearance section; the Border switch's frame then sat
+inside Appearance's Corner Radius row and the switch started calling itself
+"Border, Corner Radius". A walk asserting a Switch in Corner Radius — a row
+with no switch at all — passed.
+
+`PlaytestPanelPress.fields(of:among:)` now splits the two cases. A row in the
+control's OWN nearest scrolling area still lends its name by whole-frame
+containment, because those two move together and a control the dock has
+scrolled away has to keep its name so a walk can scroll to it. A row further
+out is judged against the part of the control that is actually drawn, and
+lends nothing once that is empty.
+
+`Scripts/playtest/scrolled-row-keeps-its-own-name-walk.json` is the regression
+walk: it fails on the old code and passes on the new. Full test suite green
+(5291 tests); the effect, parts, dock/section and layout/settings walk batches
+are green. A sweep was requested, since this touches how every panel control
+gets its row names.
+
+Next: the sweep result. Two walks flaked during this work in ways unrelated to
+the change (effects-room-for-the-one-you-opened at step 32, glow-effect losing
+the Add Effect button's accessibility label at step 11, appearance-effects with
+no done.json), each in a different place across six runs, with two fully green
+runs of the same batch. If the sweep shows them again they are worth a task of
+their own.
