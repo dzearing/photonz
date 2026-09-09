@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-08T12:08:42.818Z",
-  "updated": "2026-09-09T01:02:16.681Z",
+  "updated": "2026-09-09T01:14:46.363Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Design review 2026-09-08, from queue/history.jsonl. Two runner_failed entries in 24 hours are this: with-the-grid-off-only-the-grid-switch-is-on-the at 2026-09-07T16:22, whose note begins \"The full walk sweep is still running (it re-runs all 253 walks)\", and a-marquee-keeps-the-layer-you-picked-and-delete at 2026-09-08T00:03 with \"Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely.\" Both tasks completed later, so this costs time rather than work. The other three failures in the same window were network errors and are not this.\n\nIt is filed at p3 because the loop is a next epic, not the focus, but it protects focus throughput directly: both tasks it cost were ui-building work. a-full-walk-run-finishes-in-an-hour-not-four already cut the sweep from about 60 to 40 minutes, which is still four times the ceiling, so the answer is how it is run, not how fast it is.",
@@ -71,7 +71,12 @@
     {
       "t": "2026-09-09T01:14:07.871Z",
       "note": "No audit report: this is loop plumbing with no surface in the app, so there is nothing for the user to playtest. The Ready to try index is for things they can open and judge."
+    },
+    {
+      "t": "2026-09-09T01:14:46.361Z",
+      "note": "The full walk sweep now belongs to the go loop, not to a task runner. queue/bin/sweep.sh request returns instantly and the loop runs the sweep between tasks (sweep_pass in go-loop.sh), where nothing terminates it; failing walks come back as one standing task via sweep-report.mjs, updated in place rather than duplicated. Scripts/playtest-all.sh refuses the whole set without PHOTONZ_SWEEP=1 and prints the redirect, so the rule is enforced. A two-hour cap stops a runaway sweep and a cut-short run reports that it did not finish. Verified by running the gate, the request, a narrowed sweep end to end twice, the go-loop function out of go-loop.sh in a zsh harness, the cap with PHOTONZ_SWEEP_MAX_SECONDS=20, and the failing/dedupe path in a throwaway queue; Scripts/test.sh green. Scripts/playtest.sh is untouched, so a single walk runs exactly as before. Pushed as 04c7e679."
     }
   ],
-  "started": "2026-09-09T01:02:16.679Z"
+  "started": "2026-09-09T01:02:16.679Z",
+  "completed": "2026-09-09T01:14:46.362Z"
 }
