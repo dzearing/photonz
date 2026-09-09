@@ -869,8 +869,8 @@ private final class Run {
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
-        case .expectInView(let field):
-            note(number, step.name, try checkInView(field), state: describe())
+        case .expectInView(let field, let whole):
+            note(number, step.name, try checkInView(field, whole: whole), state: describe())
 
         case .expectOneUnit:
             note(number, step.name, try checkOneUnit(), state: describe())
@@ -2077,7 +2077,9 @@ private final class Run {
             : "\(count) \(plural(count)) on the canvas, as claimed"
     }
 
-    /// Whether the dock left the named section room for its first open entry.
+    /// Whether the dock left the named section room for the pane it promised
+    /// whole: the entry you just opened, or its first open one when nothing
+    /// has been opened by hand.
     ///
     /// The claim is about points, and the answer is in points, so a walk that
     /// fails here says by how much rather than leaving someone to measure a
@@ -2093,18 +2095,18 @@ private final class Run {
             return "\(title) is not a list the dock may shorten, so nothing in it is cut"
         }
         func points(_ value: CGFloat) -> String { "\(Int(value.rounded())) pt" }
-        guard let needs = room.needsForFirstOpen else {
+        guard let needs = room.needsForOpenPane else {
             return "\(title) has nothing open in it, so there is no control for a cut to fall in"
         }
         guard room.keepsItsFloor else {
             throw Failure(description: "\(title) was drawn \(points(room.drawn)) tall and needs "
-                + "\(points(needs)) to draw its first open entry whole, so the dock has cut a "
+                + "\(points(needs)) to draw \(room.openPaneName) whole, so the dock has cut a "
                 + "control across the middle; the whole list wants \(points(room.natural))")
         }
         return room.drawn >= room.natural - 0.5
             ? "\(title) is drawn whole, all \(points(room.natural)) of it"
             : "\(title) is shortened to \(points(room.drawn)) of \(points(room.natural)) and scrolls, "
-                + "past its first open entry at \(points(needs))"
+                + "past \(room.openPaneName) at \(points(needs))"
     }
 
     /// Whether one named thing in the panel is really on screen: all of it, or
@@ -2122,7 +2124,11 @@ private final class Run {
     /// with its settings running down from there. So nothing may be cut off
     /// the TOP, ever, and something may only be cut off the bottom when it is
     /// taller than the room it is in.
-    private func checkInView(_ name: String) throws -> String {
+    ///
+    /// `whole` takes that allowance away, for the pane the dock promised to
+    /// keep room for: too tall for the room it was given is exactly the failure
+    /// there, since the room was the panel's to decide.
+    private func checkInView(_ name: String, whole: Bool = false) throws -> String {
         let all = try panelTargets()
         guard let match = all.first(where: { $0.name == name })
                 ?? all.first(where: { $0.detail == name })
@@ -2152,10 +2158,13 @@ private final class Run {
                 + "is cut off above what a person can see. Whatever it is in should have scrolled "
                 + "to its beginning.")
         }
-        guard below <= 0.5 || box.height > room + 0.5 else {
+        guard below <= 0.5 || (!whole && box.height > room + 0.5) else {
             throw Failure(description: "\"\(name)\" is not all on screen: it is \(points(box.height)) "
                 + "tall, there is \(points(room)) of room for it, and \(points(below)) of it is past "
-                + "the bottom of what a person can see. The panel should have scrolled to it.")
+                + "the bottom of what a person can see. "
+                + (whole && box.height > room + 0.5
+                   ? "The panel should have kept it \(points(box.height)) of room and scrolled to it."
+                   : "The panel should have scrolled to it."))
         }
         guard below > 0.5 else {
             return "\"\(name)\" is all on screen, \(points(box.height)) of it"
@@ -4641,7 +4650,7 @@ private final class Run {
             "dockListRoom": InspectorLayoutProbe.shared.measured.compactMap { section in
                 InspectorLayoutProbe.shared.listRoom[section.id].map {
                     "\(section.title) \(Int($0.drawn.rounded()))/\(Int($0.natural.rounded()))"
-                        + ($0.needsForFirstOpen.map { " needs \(Int($0.rounded()))" } ?? "")
+                        + ($0.needsForOpenPane.map { " needs \(Int($0.rounded()))" } ?? "")
                 }
             },
             // The sections a person can see WHOLE without touching the scroll

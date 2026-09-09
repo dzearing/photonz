@@ -1,0 +1,186 @@
+{
+  "out": "/tmp/photonz-playtest/effects-room-for-the-one-you-opened",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "comment": "A window too short to hold two open effects at once, which is where the panel has to choose which of them to keep room for.",
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 600
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        240
+      ],
+      "to": [
+        560,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "Open the Border by hand, so the panel has been told which effect is being worked on.",
+      "do": "press",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-border-opened",
+      "note": "the Border is the effect being worked on, so the Effects list keeps room for it: 8 of padding, the Border, the gap and a peek at the Shadow's heading"
+    },
+    {
+      "do": "expectInView",
+      "field": "Border",
+      "whole": true
+    },
+    {
+      "do": "expectSectionFits",
+      "section": "Effects"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-border-opened"
+    },
+    {
+      "comment": "Now open the LOWER effect. This used to show its top half only, because the room went to the first open effect in the list rather than to the one just pressed.",
+      "do": "press",
+      "control": "Twist",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "2-shadow-opened",
+      "note": "the Shadow is the effect being worked on now, so the room moves to it: the whole pane, with the Border's tail showing through the fade above it"
+    },
+    {
+      "do": "expect",
+      "control": "Twist",
+      "in": "Shadow",
+      "reads": "Shadow, open"
+    },
+    {
+      "do": "expectInView",
+      "field": "Shadow",
+      "whole": true
+    },
+    {
+      "do": "expectSectionFits",
+      "section": "Effects"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-shadow-opened"
+    },
+    {
+      "comment": "Back up the list to the Border, which the reveal has carried off the top of it.",
+      "do": "scrollPanel",
+      "row": "Shadow",
+      "by": 120
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "comment": "Open the Border again: the room goes back to it, and the Shadow is the one that scrolls.",
+      "do": "press",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "comment": "A full second, not half of one: folding a pane shortens the list under the scroller, which slides every heading below it, and a press aimed at where the Border's chevron WAS lands on nothing.",
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-border-opened-again",
+      "note": "the Border is being worked on again, so the Effects list is back to the room the Border needs and the Shadow is what runs past the cut"
+    },
+    {
+      "do": "expect",
+      "control": "Twist",
+      "in": "Border",
+      "reads": "Border, open"
+    },
+    {
+      "do": "expectInView",
+      "field": "Border",
+      "whole": true
+    },
+    {
+      "do": "expectSectionFits",
+      "section": "Effects"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-border-opened-again"
+    }
+  ]
+}

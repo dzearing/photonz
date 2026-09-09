@@ -1,0 +1,29 @@
+{
+  "feature": "The panel keeps room for the effect you just opened",
+  "epic": "ui-building",
+  "summary": "In a window too short to hold two open effects, opening the lower one now shows the whole of it instead of its top half. The room the Effects list is given follows the effect you pressed, and goes back to the one above the moment you open that one again.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing new to switch on. Make the window short, about 600 points tall, so the panel has to choose.",
+  "try": [
+    { "do": "Make the window about 600 points tall." },
+    { "do": "Press R and drag a rectangle on the canvas." },
+    { "do": "Press the plus on the Effects header and choose Shadow, so the list holds a Border and a Shadow." },
+    { "do": "Press the twist in front of Border twice, so it is open and it is the one you last opened.", "shot": "2026-09-09-effects-room-2-border-again.png" },
+    { "do": "Press the twist in front of Shadow twice, so it folds and opens again." },
+    { "do": "Read the Shadow: every row from Style down to Opacity, with the Border's last row fading out above it.", "shot": "2026-09-09-effects-room-1-shadow.png" },
+    { "do": "Scroll the panel back up to the Border and open it again: the room goes back to the Border and the Shadow becomes the one that runs past the cut." }
+  ],
+  "evaluate": [
+    "Opening the Shadow scrolls the layers list off the top of the dock to make room. Is that a fair price for seeing the whole effect, or would you rather keep the layers and scroll to the settings yourself?",
+    "Above the open Shadow you get the Border's last row under a fade, not the Border's name. Is that enough to tell you the list goes on up, or do you want to see whose settings those are?",
+    "The last row of the Shadow ends about fourteen points above the bottom of the window. Does that read as fitting, or as squeezed?",
+    "Should opening one effect fold the others, so the list is always one open effect and a stack of headings?",
+    "Open the Border again and the Shadow is cut off mid slider under the fade. Is a cut acceptable for the effect you are NOT working on?"
+  ],
+  "rough": [
+    "The effect above the one you opened keeps a sliver of its last row, not its heading. Its heading is 129 points further up, and a 277 point shadow plus a 129 point border does not fit in a 568 point dock, so something had to give and it was the name of the effect you are not looking at.",
+    "Folding an effect hands its room back to whatever is still open above it, which is the pane that gets drawn whole next. Nothing tries to remember the one before it.",
+    "An effect taller than the whole dock still scrolls inside the list, cut at the bottom with the edge faded. There is no room to give it, so this is the honest answer rather than a fix.",
+    "The screenshots here are real window captures, not offscreen renders: the probe had Screen Recording.",
+    "One walk unrelated to this work, dock-picked-first, fails on picking a text layer: its Text section lands below the fold and nothing scrolls to it. It fails the same way on a clean build of main, so it predates this change; filed as its own task."
+  ]
+}

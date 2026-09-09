@@ -1149,7 +1149,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// scrolled to them: the walk that proves that fixed says
     /// `{"do": "expectInView", "field": "Shadow"}` and fails naming the points
     /// that are cut off.
-    case expectInView(field: String)
+    ///
+    /// By default a thing TALLER than the room it is in may run past the
+    /// bottom, since starting at its top is all the panel can do about it.
+    /// `"whole": true` refuses that answer: the room has to be there as well,
+    /// which is the claim to make about a pane the panel promised to keep room
+    /// for. Opening the second of two effects in a short window showed 175
+    /// points of its 277 and passed the plain step, because 175 was all the
+    /// room the panel had kept for it (2026-09-09).
+    case expectInView(field: String, whole: Bool)
     /// CLAIMS that every readout in the right hand panel spells the unit the
     /// same way, and fails the run naming the row that does not.
     ///
@@ -1533,7 +1541,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "expectSectionFits":
             self = .expectSectionFits(section: try f.string("section"))
         case "expectInView":
-            self = .expectInView(field: try f.string("field"))
+            self = .expectInView(field: try f.string("field"),
+                                 whole: try f.optionalFlag("whole") ?? false)
         case "expectOneUnit":
             self = .expectOneUnit
         case "expectPicked":

@@ -63,6 +63,9 @@ import SwiftUI
         /// The entries this list is made of, when it is a stack of panes.
         /// Empty for a list of plain rows, which may be cut anywhere.
         let panes: [DockHeightBudget.Block]
+        /// Which of them was just opened, by its place in the list. Nil when
+        /// nobody has said, and then the first open one stands in.
+        let focus: Int?
         /// The gap between two panes, the padding above and below the stack,
         /// and how much of the next entry a cut is meant to leave showing.
         let spacing: CGFloat
@@ -73,9 +76,18 @@ import SwiftUI
         /// pane is simply too tall to promise whole.
         let room: CGFloat?
 
-        /// The height that draws every entry down to and including the first
-        /// open one, whole. Nil for a list of rows, which promises nothing.
-        var needsForFirstOpen: CGFloat? {
+        /// The height that draws the pane the dock promised whole: the one you
+        /// just opened, measured from a peek at the entry above it, or every
+        /// entry down to and including the first open one when nobody has said
+        /// which. Nil for a list of rows, which promises nothing.
+        var needsForOpenPane: CGFloat? {
+            if let focus, panes.indices.contains(focus), panes[focus].isOpen {
+                let above: CGFloat = focus == 0 ? topInset : peek + spacing
+                let wanted = above + panes[focus].height
+                    + (focus == panes.count - 1 ? bottomInset : spacing + peek)
+                guard let room else { return wanted }
+                return min(wanted, room)
+            }
             guard let open = panes.firstIndex(where: \.isOpen) else { return nil }
             let through = panes.prefix(through: open)
             var wanted = topInset + through.reduce(0) { $0 + $1.height }
@@ -85,10 +97,18 @@ import SwiftUI
             return min(wanted, room * DockHeightBudget.floorShareOfDock)
         }
 
+        /// Which pane the promise is about, in the words a walk reads back.
+        var openPaneName: String {
+            if let focus, panes.indices.contains(focus), panes[focus].isOpen {
+                return "the entry you opened"
+            }
+            return "its first open entry"
+        }
+
         /// Whether the cut, if there is one, falls past everything the dock
         /// promised to keep whole.
         var keepsItsFloor: Bool {
-            guard let needs = needsForFirstOpen else { return true }
+            guard let needs = needsForOpenPane else { return true }
             return drawn >= min(natural, needs) - 0.5
         }
     }
@@ -144,10 +164,11 @@ import SwiftUI
 @MainActor func recordInspectorListRoom(_ id: InspectorSectionID,
                                         natural: CGFloat, drawn: CGFloat,
                                         panes: [DockHeightBudget.Block],
+                                        focus: Int?,
                                         spacing: CGFloat, topInset: CGFloat,
                                         bottomInset: CGFloat, peek: CGFloat, room: CGFloat?) {
     InspectorLayoutProbe.shared.listRoom[id] =
-        InspectorLayoutProbe.ListRoom(natural: natural, drawn: drawn, panes: panes,
+        InspectorLayoutProbe.ListRoom(natural: natural, drawn: drawn, panes: panes, focus: focus,
                                       spacing: spacing, topInset: topInset,
                                       bottomInset: bottomInset, peek: peek, room: room)
 }
@@ -172,6 +193,7 @@ extension View {
 @MainActor func recordInspectorListRoom(_ id: InspectorSectionID,
                                         natural: CGFloat, drawn: CGFloat,
                                         panes: [DockHeightBudget.Block],
+                                        focus: Int?,
                                         spacing: CGFloat, topInset: CGFloat,
                                         bottomInset: CGFloat, peek: CGFloat, room: CGFloat?) {}
 

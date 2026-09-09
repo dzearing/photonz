@@ -28,10 +28,12 @@ struct EffectsListInspector: View {
     static let listInset: CGFloat = 8
 
     /// Told what this list is made of whenever it changes: one block per
-    /// effect, how tall it is and whether it is open. The dock's height budget
-    /// keeps room to draw the first OPEN one whole, so a squeezed Effects
-    /// section never cuts a slider in half.
-    var onPanes: (([DockHeightBudget.Block]) -> Void)?
+    /// effect, how tall it is and whether it is open, and which one of them you
+    /// just opened. The dock's height budget keeps room to draw THAT one whole,
+    /// so a squeezed Effects section never cuts a slider in half, and the
+    /// effect it keeps room for is the one you pressed rather than whichever
+    /// happens to be first in the list.
+    var onPanes: (([DockHeightBudget.Block], Int?) -> Void)?
 
     /// Where one effect is sitting in the dock's visible area, told to the
     /// panel so an effect you have just opened can be brought on screen. Keyed
@@ -68,17 +70,24 @@ struct EffectsListInspector: View {
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, Self.listInset)
-        // Both, because either can move on its own: an effect folding changes
-        // a height, and removing one changes how many there are while the
-        // measurements of the rest stay exactly as they were.
-        .onChange(of: panes, initial: true) { report(rows.count + (caption == nil ? 0 : 1)) }
-        .onChange(of: rows.count) { report(rows.count + (caption == nil ? 0 : 1)) }
+        // All three, because each can move on its own: an effect folding
+        // changes a height, removing one changes how many there are while the
+        // measurements of the rest stay exactly as they were, and opening one
+        // changes which of them the dock is keeping room for.
+        .onChange(of: panes, initial: true) { report(rows) }
+        .onChange(of: rows.count) { report(rows) }
+        .onChange(of: editorState.openedEffectRow) { report(rows) }
     }
 
     /// The panes in list order, dropping any measurement left behind by an
-    /// effect that has since been removed.
-    private func report(_ count: Int) {
-        onPanes?((0..<count).compactMap { panes[$0] })
+    /// effect that has since been removed, and where in that order the effect
+    /// you just opened sits.
+    private func report(_ rows: [LayerEffectRow]) {
+        let count = rows.count + (caption == nil ? 0 : 1)
+        let focus = editorState.openedEffectRow.flatMap { id in
+            rows.firstIndex { $0.id == id }
+        }
+        onPanes?((0..<count).compactMap { panes[$0] }, focus)
     }
 
     /// What an untouched shape shows: one line saying what this list is for and

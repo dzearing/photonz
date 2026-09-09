@@ -85,11 +85,12 @@ public enum DockHeightBudget {
         }
     }
 
-    /// The most of the dock a single list may claim as its floor. A pane can be
-    /// arbitrarily tall — an effect with a dozen settings on it — and a floor
-    /// that took the whole window would starve every group under it, so past
-    /// this share the pane gives up and scrolls inside itself like anything
-    /// else.
+    /// The most of the dock a list may claim as its floor for panes nobody
+    /// asked to see. Reaching an open pane from the top of the list pays for
+    /// every pane above it, and a floor that took the whole window would starve
+    /// every group under it, so past this share the list gives up and scrolls
+    /// inside itself like anything else. The pane you just opened is exempt:
+    /// see `paneListFloor`.
     public static let floorShareOfDock: CGFloat = 0.45
 
     /// How short a list of PANES may be squeezed before the budget stops
@@ -103,11 +104,25 @@ public enum DockHeightBudget {
     /// carefully the edge is faded. Reported by the user on 2026-09-08: one
     /// border opened in a full dock, and the Width slider was sliced in half.
     ///
-    /// So the rule for a pane list is: **whatever else is squeezed, the first
-    /// open pane is drawn whole, and the next entry shows its top.** Everything
-    /// above the open pane is counted in too, since a list cannot start halfway
-    /// down. Nothing below the peek is: three effects open is a list you
-    /// scroll, and the cut edge fading is the honest answer there.
+    /// So the rule for a pane list is: **whatever else is squeezed, one pane is
+    /// drawn whole, and the entries either side of it show through the fade.**
+    /// Nothing more is: three effects open is a list you scroll, and the cut
+    /// edge fading is the honest answer there.
+    ///
+    /// WHICH pane is the whole of it. Told nothing, this is the first open one,
+    /// and everything above it is counted in too, since a list left where it
+    /// was starts at its beginning. Told which pane you just opened (`focus`),
+    /// it is that one, measured from a peek at the entry above rather than from
+    /// the top of the list, because opening a pane scrolls the list to it. That
+    /// is the difference between opening the second of two effects in a short
+    /// window and seeing its top half — the panel having kept room for the
+    /// FIRST one — and seeing the effect you actually pressed.
+    ///
+    /// The two are capped differently on purpose. Reaching an open pane from
+    /// the top of the list can drag in any number of panes nobody asked to see,
+    /// so that stops at `floorShareOfDock`. The pane you just opened is the one
+    /// thing you did ask for, so it may take as much of the dock as it needs,
+    /// up to the whole of it, and the dock scrolls for the rest.
     ///
     /// The `peek` is not decoration. Squeezed to the open pane exactly, the cut
     /// lands in the gap between two entries and the section ends on clean empty
@@ -120,20 +135,38 @@ public enum DockHeightBudget {
     /// the list draws above and below its stack. A list with nothing open in it
     /// is a list of headings, which cuts as cleanly as any row list, so it
     /// keeps `base`.
+    /// - Parameter focus: the pane the user just opened, by its place in the
+    ///   list. Ignored when it names a pane that is not there or is folded
+    ///   shut, so a stale request quietly falls back to the first open pane.
     public static func paneListFloor(_ blocks: [Block],
+                                     focus: Int? = nil,
                                      spacing: CGFloat,
                                      topInset: CGFloat,
                                      bottomInset: CGFloat,
                                      peek: CGFloat,
                                      base: CGFloat,
                                      viewport: CGFloat?) -> CGFloat {
+        // What follows the pane: either there is more under it, and the cut
+        // shows the top of it, or there is not, and the list ends on its own
+        // padding.
+        func below(_ index: Int) -> CGFloat {
+            index == blocks.count - 1 ? bottomInset : spacing + peek
+        }
+
+        if let focus, blocks.indices.contains(focus), blocks[focus].isOpen {
+            // A sliver of the entry above, so the top of the list reads as a
+            // list rather than as the beginning of one.
+            let above: CGFloat = focus == 0 ? topInset : peek + spacing
+            let wanted = above + blocks[focus].height + below(focus)
+            guard let viewport else { return max(base, wanted) }
+            return max(base, min(wanted, viewport))
+        }
+
         guard let openIndex = blocks.firstIndex(where: \.isOpen) else { return base }
         let through = blocks.prefix(through: openIndex)
         var wanted = topInset + through.reduce(0) { $0 + $1.height }
             + spacing * CGFloat(through.count - 1)
-        // Either there is more under it, and the cut shows the top of it, or
-        // there is not, and the list ends on its own padding.
-        wanted += openIndex == blocks.count - 1 ? bottomInset : spacing + peek
+        wanted += below(openIndex)
         guard let viewport else { return max(base, wanted) }
         return max(base, min(wanted, viewport * floorShareOfDock))
     }

@@ -1405,12 +1405,42 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectInView", "field": "Shadow" } ] }
         """)
-        guard case .expectInView(let field) = script.steps[0] else {
+        guard case .expectInView(let field, let whole) = script.steps[0] else {
             Issue.record("expectInView"); return
         }
         #expect(field == "Shadow")
+        // Left unsaid, a thing too tall for the room it is in may run past the
+        // bottom, because starting at its top is all the panel can do.
+        #expect(whole == false)
         #expect(script.steps[0].name == "expectInView")
         #expect(PlaytestStep.names.contains("expectInView"))
+    }
+
+    // "As much of it as there is room for" is the panel's promise in a dock
+    // that is over-subscribed, and it is the right promise for a pane nobody
+    // asked to see. It is too weak for the pane you just opened: on 2026-09-09
+    // opening the second of two effects showed 175 points of its 277 and the
+    // step still passed, because that was all the room the panel had kept.
+    // `"whole": true` is how a walk says the room itself has to be there.
+    @Test("An expectInView step can insist on the whole of it, room and all")
+    func expectInViewCanInsistOnTheWhole() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectInView", "field": "Shadow", "whole": true } ] }
+        """)
+        guard case .expectInView(let field, let whole) = script.steps[0] else {
+            Issue.record("expectInView"); return
+        }
+        #expect(field == "Shadow")
+        #expect(whole)
+    }
+
+    @Test("An expectInView step's whole has to be true or false")
+    func expectInViewWholeIsAFlag() throws {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectInView", "field": "Shadow", "whole": "yes" } ] }
+            """)
+        }
     }
 
     @Test("An expectInView step must say which thing it means")

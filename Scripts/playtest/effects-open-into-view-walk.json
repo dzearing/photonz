@@ -136,7 +136,7 @@
     {
       "do": "describe",
       "stage": "5-shadow-open",
-      "note": "the Shadow opened at the foot of the list. Its settings used to land below the bottom of the panel with nothing scrolling to them; now the panel brings the whole effect on screen"
+      "note": "the Shadow opened at the foot of the list. Its settings used to land below the bottom of the panel with nothing scrolling to them, and then in the top half of a list keeping room for the Border above it; now the panel keeps the room for the Shadow and brings all of it on screen"
     },
     {
       "do": "expect",
@@ -146,7 +146,8 @@
     },
     {
       "do": "expectInView",
-      "field": "Shadow"
+      "field": "Shadow",
+      "whole": true
     },
     {
       "do": "expectSectionFits",
@@ -210,7 +211,8 @@
     },
     {
       "do": "expectInView",
-      "field": "Shadow"
+      "field": "Shadow",
+      "whole": true
     },
     {
       "do": "snapshot",

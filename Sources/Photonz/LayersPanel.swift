@@ -55,6 +55,10 @@ struct DockBudgetScratch: Equatable {
     /// small panes rather than stacks of rows. Only Effects reports these, and
     /// they decide its floor: see `DockHeightBudget.paneListFloor`.
     var listPanes: [InspectorSectionID: [DockHeightBudget.Block]] = [:]
+    /// Which of those panes you just opened, by its place in the list. That is
+    /// the one the floor pays to draw whole; nil means nobody has said, and the
+    /// first open pane stands in.
+    var listFocus: [InspectorSectionID: Int] = [:]
 }
 
 // MARK: - Docked inspector panel
@@ -380,6 +384,7 @@ struct InspectorPanel: View {
                     recordInspectorListRoom(id, natural: natural,
                                             drawn: ceilings[id] ?? natural,
                                             panes: budget.listPanes[id] ?? [],
+                                            focus: budget.listFocus[id],
                                             spacing: EffectsListInspector.paneSpacing,
                                             topInset: EffectsListInspector.listInset,
                                             bottomInset: EffectsListInspector.listInset
@@ -403,13 +408,16 @@ struct InspectorPanel: View {
     /// measurements, the Library shelf. A list of PANES asks for more, because
     /// a pane cut across the middle shows half a slider rather than most of a
     /// row — see `DockHeightBudget.paneListFloor`, and the Border the user was
-    /// handed sliced in two on 2026-09-08.
+    /// handed sliced in two on 2026-09-08. Which pane it pays for is the one
+    /// you just opened, so opening the second of two effects in a short window
+    /// makes room for the second rather than for the first.
     private func squeezeFloor(for id: InspectorSectionID, room: CGFloat?) -> CGFloat {
         guard let panes = budget.listPanes[id], !panes.isEmpty else {
             return InspectorPanel.listFloor
         }
         return DockHeightBudget.paneListFloor(
             panes,
+            focus: budget.listFocus[id],
             spacing: EffectsListInspector.paneSpacing,
             topInset: EffectsListInspector.listInset,
             bottomInset: EffectsListInspector.listInset + InspectorPanel.bodyBottomPadding,
@@ -874,7 +882,10 @@ struct InspectorPanel: View {
             // with the split on this section is the list rather than four
             // sliders that are always there (`next-shape-parts`).
             if Experiments.shared.shapePartsEnabled {
-                EffectsListInspector(onPanes: { budget.listPanes[.effects] = $0 },
+                EffectsListInspector(onPanes: {
+                                         budget.listPanes[.effects] = $0
+                                         budget.listFocus[.effects] = $1
+                                     },
                                      onPaneFrame: { reveal.effectFrames[$0] = $1 })
             } else {
                 EffectsInspector()

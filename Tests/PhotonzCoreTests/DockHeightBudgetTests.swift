@@ -186,10 +186,95 @@ struct DockHeightBudgetTests {
         #expect(floor == 211)
     }
 
-    @Test("Only the FIRST open pane is protected: the rest of the list may be cut")
+    @Test("With nothing said about which pane you opened, the first open one is protected")
     func onlyTheFirstOpenPaneIsProtected() {
         let blocks = [pane(149, open: true), pane(149, open: true), pane(149, open: true)]
         let floor = DockHeightBudget.paneListFloor(blocks, spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 996)
+        #expect(floor == 195)
+    }
+
+    // MARK: The pane you just opened
+
+    @Test("Told which pane you opened, the floor pays for THAT one")
+    func focusedPaneIsTheOneProtected() {
+        // Two effects open in a short dock: a 149 border and a 255 shadow under
+        // it. The shadow is the one that was just opened, so the room is a
+        // sliver of the border under the fade, the gap, the whole shadow, and
+        // the padding at the foot of the list.
+        let blocks = [pane(149, open: true), pane(255, open: true)]
+        let floor = DockHeightBudget.paneListFloor(blocks, focus: 1,
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 996)
+        #expect(floor == 307)   // 22 peek + 16 gap + 255 shadow + 14 padding
+    }
+
+    @Test("The pane you opened is paid for whole, not the ones above it")
+    func focusSkipsThePrefix() {
+        // The same list, asked for the first pane and then for the second. The
+        // second costs LESS than reaching it from the top of the list would,
+        // because the list scrolls to what you opened rather than starting at
+        // its beginning.
+        let blocks = [pane(149, open: true), pane(255, open: true), pane(24)]
+        let fromTheTop = DockHeightBudget.paneListFloor(blocks,
+                                                        spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                        base: 112, viewport: 996)
+        let second = DockHeightBudget.paneListFloor(blocks, focus: 1,
+                                                    spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                    base: 112, viewport: 996)
+        #expect(fromTheTop == 195)   // 8 padding + 149 border + 16 gap + 22 peek
+        #expect(second == 331)   // 22 peek + 16 gap + 255 shadow + 16 gap + 22 peek
+        #expect(second < 466)   // what reaching the shadow from the top of the list would cost
+    }
+
+    @Test("Opening the pane at the top of the list gives the room back to it")
+    func focusOnTheFirstPane() {
+        // Nothing is above the first pane, so it is the list's own padding
+        // rather than a peek, and the floor is what it always was.
+        let blocks = [pane(149, open: true), pane(255, open: true)]
+        let floor = DockHeightBudget.paneListFloor(blocks, focus: 0,
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 996)
+        #expect(floor == 195)   // 8 padding + 149 border + 16 gap + 22 peek
+    }
+
+    @Test("The pane you opened may claim more of the dock than its share")
+    func focusedPaneOutgrowsTheShare() {
+        // 300 points of settings in a 400 point dock is past the share a list
+        // may take when it is paying for panes nobody asked to see. You asked
+        // to see this one, so it is drawn whole and the dock scrolls.
+        let floor = DockHeightBudget.paneListFloor([pane(300, open: true)], focus: 0,
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 400)
+        #expect(floor == 322)   // 8 padding + 300 of settings + 14 padding
+        #expect(floor > 400 * DockHeightBudget.floorShareOfDock)
+    }
+
+    @Test("...but never more room than the dock has")
+    func focusedPaneStopsAtTheDock() {
+        let floor = DockHeightBudget.paneListFloor([pane(900, open: true)], focus: 0,
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 400)
+        #expect(floor == 400)
+    }
+
+    @Test("A pane you folded again stops being the one paid for")
+    func focusOnAFoldedPaneFallsBack() {
+        // The shadow was opened and then folded shut. There is nothing to keep
+        // whole down there any more, so the floor goes back to the open pane at
+        // the top of the list.
+        let blocks = [pane(149, open: true), pane(24)]
+        let floor = DockHeightBudget.paneListFloor(blocks, focus: 1,
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 996)
+        #expect(floor == 195)   // back to the open border at the top of the list
+    }
+
+    @Test("A focus on a pane that is no longer in the list is ignored")
+    func focusPastTheEndOfTheList() {
+        let blocks = [pane(149, open: true), pane(24)]
+        let floor = DockHeightBudget.paneListFloor(blocks, focus: 7,
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
                                                    base: 112, viewport: 996)
         #expect(floor == 195)
     }

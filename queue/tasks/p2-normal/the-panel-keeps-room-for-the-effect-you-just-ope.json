@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2200,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T02:47:04.547Z",
-  "updated": "2026-09-09T02:47:04.550Z",
+  "updated": "2026-09-09T07:06:53.186420Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08). Command: Scripts/playtest.sh Scripts/playtest/effects-open-into-view-walk.json --no-build (window 1280x600, a rectangle with a Border and a Shadow, both open). The log at stage 5-shadow-open reads dockListRoom [\"Effects 153/400 needs 153\"] and the reveal line \"shadow.1 255pt at 504-759, room 153pt: scrolled to its top\", and the expectInView step reports: \"Shadow\" starts on screen and shows 153 pt of its 255 pt, which is all the room there is.\n\nThe floor is DockHeightBudget.paneListFloor, reached through InspectorPanel.squeezeFloor(for:room:) in Sources/Photonz/LayersPanel.swift, and it measures down to the first OPEN pane (ListRoom.needsForFirstOpen). Opening an effect already tells the app which one you mean: EditorState.effectToReveal carries it for the reveal, and the same fact could pick the pane the floor pays for. Watch the knock-on: the floor is capped at DockHeightBudget.floorShareOfDock, and whatever Effects takes comes off Layers.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-09T02:47:04.549Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T06:25:20.973Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T07:06:53.186420Z",
+      "note": "Reproduced first, before touching anything. Scripts/playtest.sh Scripts/playtest/effects-open-into-view-walk.json: at stage 5-shadow-open the log read dockListRoom [\"Effects 175/444 needs 175\"] and expectInView said \"Shadow starts on screen and shows 175 pt of its 277 pt, which is all the room there is\". 175 is exactly the room for the BORDER: 8 topInset + 129 border + 16 gap + 22 peek."
+    },
+    {
+      "t": "2026-09-09T07:06:53.186420Z",
+      "note": "Adversarial review of the idea before building. (1) The mock rule \"a list cannot start halfway down\" is already false in the app: the reveal scrolls the Effects list to the pane you opened, and the log says so (\"scrolled to its top\"). So paying for every pane above the open one buys nothing once the app knows which pane you mean. (2) Measuring from the top and merely moving the index would not have fixed it either: reaching the shadow from the top of the list costs 8+129+16+277+14 = 444, past every cap. The floor has to start AT the pane. (3) The old cap, 45% of the dock, would still have cut a 277pt shadow at 250, so the cap had to change too: paying for panes nobody asked to see is still capped at the share, and the one you pressed may take the dock. (4) Shortest version that delivers the value: one extra argument on the core function plus one piece of remembered state; no new controls, no new gestures."
+    },
+    {
+      "t": "2026-09-09T07:06:53.186420Z",
+      "note": "Built TDD from PhotonzCore out. DockHeightBudget.paneListFloor gained focus:, which measures a peek above, the focused pane whole, and a peek below, capped at the dock rather than at floorShareOfDock; told nothing it behaves exactly as before (7 new tests, all 31 in the suite green). EditorState.openedEffectRow remembers the effect you opened for as long as it stays open, cleared when you fold it and when the list or the selection changes under it. EffectsListInspector reports its index with the panes; InspectorPanel.squeezeFloor passes it through."
+    },
+    {
+      "t": "2026-09-09T07:06:53.186420Z",
+      "note": "Verified on the real app, not by reading. effects-open-into-view now reads \"Shadow is all on screen, 277 pt of it\" and \"Effects is shortened to 329 pt of 444 and scrolls, past the entry you opened at 329 pt\" (329 = 22 peek + 16 gap + 277 shadow + 14 padding). Acceptance 3: opening the Border again puts Effects back to 175 and draws the Border whole."
+    },
+    {
+      "t": "2026-09-09T07:06:53.186420Z",
+      "note": "Acceptance 4 needed a stronger step: expectInView passed on the BROKEN app, because \"175 of 277, which is all the room there is\" is a pass when 175 is all the room the panel kept. Added {\"whole\": true} to expectInView, which refuses that answer, and wrote Scripts/playtest/effects-room-for-the-one-you-opened-walk.json around it. Proved it catches the regression: with the fix disabled at the call site the walk fails with \"Shadow is not all on screen: it is 277 pt tall, there is 175 pt of room for it, and 102 pt of it is past the bottom\"."
+    },
+    {
+      "t": "2026-09-09T07:06:53.186420Z",
+      "note": "Acceptance 2 is met in spirit, not to the letter, and the audit says so: the effect above keeps a sliver of its LAST ROW under the fade, not its heading. A 277pt shadow plus a 129pt border does not fit a 568pt dock, so the name of the effect you are not looking at is what gives. Whether opening one effect should fold the others is a real product question and is asked in the audit rather than guessed at."
+    },
+    {
+      "t": "2026-09-09T07:06:53.186420Z",
+      "note": "Scripts/test.sh green (5278 tests). All 13 effect walks pass; dock-picked-first fails on picking a text layer but fails identically on a clean build of main, so it predates this and is filed as picking-a-piece-of-text-brings-its-text-section. Audit: queue/audits/2026-09-09-effects-room.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-09T06:25:20.972Z"
 }

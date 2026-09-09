@@ -1,0 +1,26 @@
+{
+  "id": "picking-a-piece-of-text-brings-its-text-section",
+  "title": "Picking a piece of text brings its Text section into view",
+  "goal": "Clicking a text layer in the layers list should scroll the right hand panel to the Text section, so the words you just picked are the ones you can see. Right now the panel stays where it was and the Text section sits below the bottom of the window.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2250,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T07:04:02.931Z",
+  "updated": "2026-09-09T07:04:02.934Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-09 on BOTH the working tree and a clean build of main (stashed changes, rebuilt, same failure), so it is not from the pane-floor work landed that day.\n\nCommand: Scripts/playtest-all.sh --no-build dock-picked-first\nOutput: dock-picked-first-walk  16s  FAILED  step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s\n\nThe log at the step before shows why: with the text layer picked the dock runs Layers 6-169, Appearance 169-341, Effects 341-525, Measurements 525-612, Text 760-958, Position & Size 958-1093 in a 688 point viewport, so Text starts 72 points below the fold and nothing scrolled to it. Effects is drawn 299 of its natural 299, so the height budget is not squeezing anything here: the missing piece is a reveal for the section the picked layer brings up, like the one the Library shelf and an opened effect already have (LayersPanel.applyLibraryReveal, applyEffectReveal).",
+  "acceptance": [
+    "Picking a text layer in a 1200x720 window puts the Text section on screen without touching the scroll wheel",
+    "Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json --no-build passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T07:04:02.933Z",
+      "note": "created (manual)"
+    }
+  ]
+}

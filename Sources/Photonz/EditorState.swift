@@ -1067,16 +1067,33 @@ final class EditorState {
     /// fixes.
     private(set) var effectToReveal: String?
 
+    /// The effect you last opened, by `LayerEffectRow.id`, for as long as it
+    /// stays open.
+    ///
+    /// `effectToReveal` above is a one-shot errand and is cleared the moment
+    /// the panel has run it. This one lasts, because the panel keeps room for
+    /// the effect you are working on for as long as you are working on it: let
+    /// it go with the errand and the dock would draw the effect whole for a
+    /// quarter of a second and then cut it in half again.
+    ///
+    /// Nil means nobody has said which one, and the dock falls back to the
+    /// first open effect in the list. See `DockHeightBudget.paneListFloor`.
+    private(set) var openedEffectRow: String?
+
     /// The chevron on an effect's heading.
     func toggleEffectFolded(_ row: LayerEffectRow) {
         if foldedEffectRows.contains(row.id) {
             foldedEffectRows.remove(row.id)
             effectToReveal = row.id
+            openedEffectRow = row.id
         } else {
             foldedEffectRows.insert(row.id)
             // Folding the very effect that was still waiting to be shown: it
             // is gone again, so there is nothing left to scroll to.
             if effectToReveal == row.id { effectToReveal = nil }
+            // ...and nothing left to keep room for, so the room goes back to
+            // whatever is still open above it.
+            if openedEffectRow == row.id { openedEffectRow = nil }
         }
     }
 
@@ -1089,8 +1106,10 @@ final class EditorState {
     /// moved, and this one sits on the selection's hot path.
     func forgetEffectFolds() {
         // A reveal is about one effect in one list; the list has just changed
-        // under it, so the request goes with the folds it belonged to.
+        // under it, so the request goes with the folds it belonged to, and so
+        // does the room the dock was keeping for it.
         if effectToReveal != nil { effectToReveal = nil }
+        if openedEffectRow != nil { openedEffectRow = nil }
         guard !foldedEffectRows.isEmpty else { return }
         foldedEffectRows = []
     }
