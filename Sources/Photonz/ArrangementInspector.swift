@@ -448,7 +448,7 @@ struct ArrangementInspector: View {
     /// The room kept clear inside the edges.
     ///
     /// One field, because one number all round is what most things want, and a
-    /// chevron beside it that opens the four sides for the things that do not:
+    /// twist in front of it that opens the four sides for the things that do not:
     /// a card 16 in from the left, 12 down from the top and 24 up from the
     /// bottom is ordinary, and it used to be buildable only by nudging pieces
     /// the stack then put back. The sides open themselves whenever they
@@ -470,28 +470,11 @@ struct ArrangementInspector: View {
         let room = reading.value ?? .none
         let open = showsSides()
         HStack(spacing: 6) {
-            Text("Padding")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize()
-            // The same twist-open every section in this panel already uses,
-            // beside the word it opens rather than in front of it, so Padding
-            // still starts where Gap and Width start and the number still ends
-            // where theirs end.
-            Button {
-                sidesOpen = !open
-            } label: {
-                Image(systemName: open ? "chevron.down" : "chevron.right")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 12, height: 12)
-                    .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-            .panelHelp(open
-                ? "Hide the four sides and keep the room they were given."
-                : "Give this \(noun) different room on each of its four sides.")
-            .playtestControl("Each side", detail: "Layout")
+            foldHead("Padding", isOpen: open,
+                     help: open
+                        ? "Hide the four sides and keep the room they were given."
+                        : "Give this \(noun) different room on each of its four sides.",
+                     control: "Each side", detail: "Layout") { sidesOpen = !open }
             Spacer(minLength: 8)
             LayoutNumberField(
                 title: "Padding", value: reading.isMixed ? nil : room.uniform,
@@ -502,10 +485,16 @@ struct ArrangementInspector: View {
         }
         .playtestField("Padding")
         if open {
-            ForEach(GroupPadding.Side.allCases, id: \.self) { side in
-                number(side.title, reading: contents.padding(side), indent: 20,
-                       help: "The room kept clear inside the \(noun)'s \(side.title.lowercased()) edge.") { value in
-                    editorState.updateArrangement(ids: ids) { $0.padding[side] = value }
+            // Behind the rule an effect's settings sit behind, hung on the
+            // twist that opened them. A plain 20pt step said "these are
+            // further in" and nothing else: which row they belonged to was
+            // left for you to work out from the order.
+            OwnedSettings(owner: "Padding") {
+                ForEach(GroupPadding.Side.allCases, id: \.self) { side in
+                    number(side.title, reading: contents.padding(side),
+                           help: "The room kept clear inside the \(noun)'s \(side.title.lowercased()) edge.") { value in
+                        editorState.updateArrangement(ids: ids) { $0.padding[side] = value }
+                    }
                 }
             }
         }
@@ -559,7 +548,7 @@ struct ArrangementInspector: View {
         return room.shorthand
     }
 
-    /// One axis' Hug-or-Fixed row, and behind a chevron beside it, the
+    /// One axis' Hug-or-Fixed row, and behind a twist in front of its name, the
     /// smallest and the largest that axis may get.
     ///
     /// Choosing Fixed starts from the size each group is at that moment, so
@@ -568,8 +557,8 @@ struct ArrangementInspector: View {
     /// with it.
     ///
     /// The two limits hide behind the same twist-open Padding already uses,
-    /// because four more always-on rows would be the section telling you it has
-    /// run out of room. They open themselves the moment one is set, so a group
+    /// in the panel's shared leading column, because four more always-on rows
+    /// would be the section telling you it has run out of room. They open themselves the moment one is set, so a group
     /// that stopped growing never hides the reason.
     @ViewBuilder
     private func sizeRows(_ axis: SizeAxis) -> some View {
@@ -604,18 +593,25 @@ struct ArrangementInspector: View {
                 : "This \(noun) holds the \(axis.noun) it was given. Type it in \(axis.field) above, or drag a handle.")
         }
         if open {
-            limit("Smallest", axis: axis,
-                  reading: axis == .width ? contents.minWidth : contents.minHeight,
-                  help: "The \(axis.least) this \(noun) may ever get, whatever is inside it. Leave it empty for no limit.") { size in
-                editorState.updateArrangement(ids: ids) {
-                    if axis == .width { $0.minWidth = size } else { $0.minHeight = size }
+            // Same bracket the four sides of a padding sit behind, so the two
+            // rows say which axis they limit rather than leaving it to the
+            // order they happen to be in. Two axes open at once is the case
+            // this is for: four rows reading Smallest, Largest, Smallest,
+            // Largest are otherwise one block.
+            OwnedSettings(owner: axis.title) {
+                limit("Smallest", axis: axis,
+                      reading: axis == .width ? contents.minWidth : contents.minHeight,
+                      help: "The \(axis.least) this \(noun) may ever get, whatever is inside it. Leave it empty for no limit.") { size in
+                    editorState.updateArrangement(ids: ids) {
+                        if axis == .width { $0.minWidth = size } else { $0.minHeight = size }
+                    }
                 }
-            }
-            limit("Largest", axis: axis,
-                  reading: axis == .width ? contents.maxWidth : contents.maxHeight,
-                  help: "The \(axis.most) this \(noun) may ever get, whatever is inside it. Leave it empty for no limit.") { size in
-                editorState.updateArrangement(ids: ids) {
-                    if axis == .width { $0.maxWidth = size } else { $0.maxHeight = size }
+                limit("Largest", axis: axis,
+                      reading: axis == .width ? contents.maxWidth : contents.maxHeight,
+                      help: "The \(axis.most) this \(noun) may ever get, whatever is inside it. Leave it empty for no limit.") { size in
+                    editorState.updateArrangement(ids: ids) {
+                        if axis == .width { $0.maxWidth = size } else { $0.maxHeight = size }
+                    }
                 }
             }
         }
@@ -657,7 +653,7 @@ struct ArrangementInspector: View {
         // "Smallest" — because the word Smallest sits under Width AND under
         // Height, and a field two rows answer to is a field neither of them
         // owns, for a screen reader as much as for a scripted walk.
-        row(title, indent: 20, field: "\(title) \(axis.noun)") {
+        row(title, field: "\(title) \(axis.noun)") {
             LayoutNumberField(title: "\(title) \(axis.noun)",
                               value: reading.value ?? nil, prompt: "None",
                               placeholder: reading.isMixed ? MixedValue.text : "",
@@ -717,11 +713,16 @@ struct ArrangementInspector: View {
     /// lines is the panel telling you it has run out of room, and the control
     /// beside it can give up the points instead.
     ///
+    /// `chevron` turns the label into a fold head, which moves it into the
+    /// panel's name column. Rows without one keep starting on the section's
+    /// own margin, which is the same two left edges every other list in this
+    /// dock has.
+    ///
     /// `mixed` puts the word Mixed at the end of the label, which is where a
     /// control made of pictures rather than words has to say it: out at the
     /// trailing edge it would land against the next column and stop saying
     /// which of the two rows differs.
-    private func row(_ title: String, indent: CGFloat = 0, field: String? = nil,
+    private func row(_ title: String, field: String? = nil,
                      chevron: (() -> Void)? = nil, open: Bool = false,
                      chevronHelp: String = "", mixed: Bool = false,
                      @ViewBuilder control: () -> some View) -> some View {
@@ -735,25 +736,14 @@ struct ArrangementInspector: View {
         // (`LayersPanel.labelled`). Same control, same place, one line lower.
         VStack(alignment: .leading, spacing: mixed ? 3 : 0) {
             HStack(spacing: 8) {
-                // The sides of a padding sit under the word they belong to, so
-                // a Top on its own could never read as a rule about the whole
-                // group.
-                if indent > 0 { Spacer().frame(width: indent) }
-                Text(title)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize()
                 if let chevron {
-                    Button(action: chevron) {
-                        Image(systemName: open ? "chevron.down" : "chevron.right")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 12, height: 12)
-                            .contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                    .panelHelp(chevronHelp)
-                    .playtestControl("Limits", detail: title)
+                    foldHead(title, isOpen: open, help: chevronHelp,
+                             control: "Limits", detail: title, toggle: chevron)
+                } else {
+                    Text(title)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize()
                 }
                 if mixed {
                     MixedWord().fixedSize()
@@ -765,7 +755,6 @@ struct ArrangementInspector: View {
             }
             if mixed {
                 HStack(spacing: 8) {
-                    if indent > 0 { Spacer().frame(width: indent) }
                     Spacer(minLength: 8)
                     control()
                 }
@@ -779,13 +768,48 @@ struct ArrangementInspector: View {
     }
 
     private func number(_ title: String, reading: PlacementReading<CGFloat>,
-                        minimum: CGFloat = 0, indent: CGFloat = 0, help: String,
+                        minimum: CGFloat = 0, help: String,
                         commit: @escaping (CGFloat) -> Void) -> some View {
-        row(title, indent: indent) {
+        row(title) {
             LayoutNumberField(title: title, value: reading.value, minimum: minimum,
                               placeholder: reading.isMixed ? MixedValue.text : "",
                               help: help, commit: commit)
         }
+    }
+
+    /// The head of a row that folds more rows open: the panel's shared twist in
+    /// the leading column, then the row's own word.
+    ///
+    /// Same glyph, same size, same column as an effect's heading and Corner
+    /// Radius's, because it is literally the same view (`PanelFoldChevron`).
+    /// That column is load bearing rather than a taste: the rule `OwnedSettings`
+    /// draws down the side of what a row owns hangs on it, so a twist drawn
+    /// after the word — which is where these two were until now — leaves the
+    /// rule pointing at nothing.
+    ///
+    /// The word keeps THIS section's type, callout and secondary, rather than
+    /// an effect heading's lit footnote. A Layout row is a row with more rows
+    /// under it, not a small pane of its own, and the section reads as one
+    /// list of rows; only where the twist lived was wrong.
+    ///
+    /// Twist and word are ONE press, the way an effect and Corner Radius both
+    /// are, since a 9pt glyph on its own is a mean target.
+    private func foldHead(_ title: String, isOpen: Bool, help: String,
+                          control: String, detail: String,
+                          toggle: @escaping () -> Void) -> some View {
+        Button(action: toggle) {
+            HStack(spacing: ColorPartLayout.spacing) {
+                PanelFoldChevron(isFolded: !isOpen)
+                Text(title)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .panelHelp(help)
+        .playtestControl(control, detail: detail)
     }
 }
 

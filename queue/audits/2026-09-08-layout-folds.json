@@ -1,0 +1,27 @@
+{
+  "feature": "Layout's two folds open the way an effect does",
+  "epic": "ui-building",
+  "summary": "Padding and each axis' size Limits now open with the same twist an effect and Corner Radius use, sitting in front of the word rather than after it, and the rows they open sit behind a rule hung on that twist instead of a plain step to the right.",
+  "setup": "Photonz Dev, Experiments window, release Next. Auto layout is on by default; nothing new to switch on.",
+  "try": [
+    { "do": "Draw three rectangles one under the other, select all three, and press Command Control G to stack them." },
+    { "do": "Open the inspector and scroll to the Layout section." },
+    { "do": "Type 16 into Padding, then press the twist in front of the word Padding.", "shot": "2026-09-08-layout-folds-1-padding.png" },
+    { "do": "Read the four sides against the Corner Radius fold two sections above: same glyph, same column, same rule." },
+    { "do": "Press the twist in front of Width, then the one in front of Height, so both sets of limits are open at once.", "shot": "2026-09-08-layout-folds-2-limits.png" },
+    { "do": "Press the word Padding itself, not the twist, to close it again." }
+  ],
+  "evaluate": [
+    "With both axes open, does the rule tell you at a glance which Smallest belongs to Width and which to Height?",
+    "Does the twist read as the start of the row now, the way it does on Corner Radius and on an effect?",
+    "The fold rows' names sit one step in from Arrangement, Direction and Gap, which stay on the section's margin. Does that two-step left edge read as structure, or as things not lining up?",
+    "Padding and Width keep this section's plain grey callout rather than an effect heading's lit, smaller, bolder name. Is that the right weight, or should a row that opens look more like a heading?",
+    "Pressing the word toggles the fold now, not just the small glyph. Did that ever fire when you did not mean it to?"
+  ],
+  "rough": [
+    "The four padding sides land in the same column as the word Padding rather than further in. That is on purpose, copied from Corner Radius, where the rule is what says they are owned. If the rule reads too faintly, that is the thing to change, not the indent.",
+    "The Layout section's type is untouched on purpose: the task asked for the twist's place to change and nothing else. Whether these rows should read as small panes with a heading each is still an open look question.",
+    "The screenshots here are real window captures, not offscreen renders: the probe had Screen Recording.",
+    "One walk, wrapped-label-width, failed once on the first run after a fresh build with the Largest field not yet answering to its name, then passed six times in a row including a full pass of all thirteen affected walks. I could not reproduce it and did not chase it further."
+  ]
+}

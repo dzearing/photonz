@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2190,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T02:04:55.976Z",
-  "updated": "2026-09-09T02:04:55.979Z",
+  "updated": "2026-09-09T06:09:37.281Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while doing corner-radius-folds-like-an-effect-with-its-chev, which converted the Corner Radius row and left these two behind on purpose. Sources/Photonz/ArrangementInspector.swift line 471 (padding) and line 735 (the shared row helper's chevron, used for Limits) both draw Image(systemName: open ? chevron.down : chevron.right) at caption2 semibold in a 12x12 frame, placed after the Text, and the rows they open are indented with number(..., indent: 20). The pieces to adopt are PanelFoldChevron (Sources/Photonz/PanelSectionLook.swift) and OwnedSettings (Sources/Photonz/PartsInspector.swift line 299), which is exactly what CornerRadiusRow now uses. The reason it was NOT done in the same task: ArrangementInspector draws its labels at .callout while Appearance is on .caption, so the effect heading font (footnote semibold) cannot be copied across without deciding what the Layout section's heading weight should be, and that is a look decision rather than a mechanical swap. Walks to rerun: anything pressing Each side or Limits.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-09T02:04:55.978Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T06:09:37.280Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T06:35:00.000Z",
+      "note": "Adversarial review before building. The mock is not the source here, the Appearance panel is, and the one real risk was width: moving the twist in front of Width and Height pushes their name right, and those rows carry a segmented Hug/Fixed that cannot shrink below its own words. Measured it instead of guessing: the twist already sat on those rows at 12+8, so the leading column costs 16+8, a net 4pt. Padding pays 6pt and its field is elastic. Nothing else was worth cutting: this is already the shortest version, three call sites and one shared head."
+    },
+    {
+      "t": "2026-09-09T06:36:00.000Z",
+      "note": "Built. ArrangementInspector gained foldHead(), which is PanelFoldChevron plus the row's word as ONE press, and both Padding and row(chevron:) now use it. The four padding sides and each axis' two limits are wrapped in OwnedSettings(owner:) and lost their indent: 20; the indent parameter is gone from row() and number() entirely since nothing else used it. Deliberately kept the section's own type, callout secondary, rather than an effect heading's footnote semibold: the task's acceptance says the Layout section keeps its type scale, which settles the look question the previous task deferred. Only the fold rows moved; Arrangement, Direction, Gap and Wrap still start on the section margin, which is the panel's established two-left-edges rule (ColorPartLayout.nameLeading)."
+    },
+    {
+      "t": "2026-09-09T06:37:00.000Z",
+      "note": "Verified on the real app, not by reading. Probe launched with Screen Recording granted, so these are window captures. Padding open: twist at the margin, name at 24, rule directly under the twist holding Top/Right/Bottom/Left, identical to Corner Radius two sections above. Width and Height limits open together: two separate brackets, so the two Smallest/Largest pairs no longer read as one block of four. All thirteen walks that press Each side or Limits pass (clip-contents, component-uneven-room, container-too-small, layout-fits, mixed-padding, out-of-view-mark, refused-width-says-why, size-limits, stack-padding, stack-padding-closed, width-reads-back, wrap-at-a-ceiling, wrapped-label-width) and Scripts/test.sh is green at 5269 tests."
+    },
+    {
+      "t": "2026-09-09T06:38:00.000Z",
+      "note": "One flake seen and not reproduced: wrapped-label-width-walk failed once on the first run after a fresh build, at focus \"Largest width\", with the field on screen but not yet answering to its accessibility name. Six subsequent runs passed, including one full pass of all thirteen. Recorded in the audit's rough rather than filed as a bug, since an unreproduced problem has not earned a slot."
+    },
+    {
+      "t": "2026-09-09T06:39:00.000Z",
+      "note": "Audit written: queue/audits/2026-09-08-layout-folds.json, with two real window captures. No sweep requested: the change is confined to one section of one inspector and its walks were all run by name."
     }
-  ]
+  ],
+  "started": "2026-09-09T06:09:37.279Z"
 }
