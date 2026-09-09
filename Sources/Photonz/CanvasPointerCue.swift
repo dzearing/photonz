@@ -74,13 +74,15 @@ extension CanvasNSView {
         // gives way only on the eight handles, which are the one press you
         // cannot see coming. The box is axis-aligned, so no transform.
         if tool == .crop {
-            return CanvasPointer.cropCue(at: p, cropRect: cropRect, zoom: viewport.zoom)
+            return CanvasPointer.cropCue(at: p, cropRect: cropRect, zoom: viewport.zoom,
+                                         edgeGrabEnabled: Experiments.shared.edgeGrabEnabled)
                 .map { ($0, .identity) }
         }
         guard tool == .select else { return nil }
         if isCanvasSelected,
            let handle = Handles.hit(at: p, frame: CGRect(origin: .zero, size: viewport.documentSize),
-                                    zoom: viewport.zoom, screenTolerance: 8) {
+                                    zoom: viewport.zoom, screenTolerance: 8,
+                                    edgeGrab: Experiments.shared.edgeGrabEnabled) {
             return (.resize(handle), .identity)
         }
         guard let layer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) })
@@ -91,7 +93,8 @@ extension CanvasNSView {
                                     captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
                                     offersRotation: offersRotation(layer),
                                     captionPillSize: layer.measuredCaptionPillSize,
-                                    cornerHandlesEnabled: Experiments.shared.cornerHandlesEnabled)
+                                    cornerHandlesEnabled: Experiments.shared.cornerHandlesEnabled,
+                                    edgeGrabEnabled: Experiments.shared.edgeGrabEnabled)
         return cue.map { ($0, layer.transform) }
     }
 
@@ -120,7 +123,8 @@ extension CanvasNSView {
            CornerRadiusHandles.hit(at: local, frame: frame, radii: selected.roundedCornerRadii,
                                    zoom: viewport.zoom) != nil { return false }
         guard selected?.allowsFrameResize ?? true,
-              Handles.hit(at: local, frame: frame, zoom: viewport.zoom) != nil else { return true }
+              Handles.hit(at: local, frame: frame, zoom: viewport.zoom,
+                          edgeGrab: Experiments.shared.edgeGrabEnabled) != nil else { return true }
         return false
     }
 

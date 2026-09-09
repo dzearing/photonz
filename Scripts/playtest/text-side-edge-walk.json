@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/text-side-edge",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 140] },
+    { "do": "type", "text": "Sign in to continue to your account" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "reveal", "control": "H", "in": "Position & Size" },
+    { "do": "focus", "field": "W" },
+    { "do": "type", "text": "360" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "describe",
+      "stage": "1-one-line",
+      "note": "a label at 140,140 pinned to 360 wide, sitting on one line: its right edge is the vertical line at x 500, and the whole box is under 40 points tall, so it wears four corner squares and no square in the middle of either side"
+    },
+    { "do": "snapshot", "name": "1-one-line" },
+    { "do": "drag", "from": [500, 154], "to": [250, 154], "steps": 12 },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "2-wrapped",
+      "note": "the right edge taken halfway down, well clear of both corners, and pulled in to 250. The drag line above must say the cursor while down was resize-left-right, and the label must still start at x 140 and now be about 110 wide with the words wrapped onto more lines and a taller H. If X moved instead, the press slid the label across the canvas, which is the bug this walk exists for"
+    },
+    { "do": "snapshot", "name": "2-wrapped" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "drag", "from": [320, 154], "to": [420, 154], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "describe",
+      "stage": "3-moved",
+      "note": "the same label taken by its middle, 180 points in from either side: the drag line above must say the cursor was a plain arrow, X must have travelled to about 240 and W must still be 360. Grabbing a side sets the width the words wrap at, grabbing the middle moves the label, and the two never swap"
+    },
+    { "do": "snapshot", "name": "3-moved" }
+  ]
+}

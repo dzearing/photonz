@@ -55,6 +55,8 @@ public enum FeatureCatalog {
 
     public static let grabCueFlag = "next-grab-cue"
 
+    public static let edgeGrabFlag = "next-edge-grab"
+
     public static let toolOptionsFlag = "next-tool-options"
 
     public static let toolSettingsFlag = "next-tool-settings"
@@ -211,6 +213,15 @@ public enum FeatureCatalog {
                     name: cornerHandlesFlag,
                     title: "Drag a corner to round it",
                     description: "A picked shape with corners wears a small dot just inside each of its four corners. Pull one in and that corner rounds under your hand, live, while the other three stay as they are; pull it back out and the corner squares off again. Hold Option and all four go together. Letting go is one undo step, and the Corner Radius rows in the panel show what you dragged. The dot sits at the centre of the corner's curve, so it travels a point for every point your hand does rather than creeping while you drag, and a shape too small to keep its edge handles does not wear the dots at all.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: edgeGrabFlag,
+                    title: "Pull the side of a label to set where it wraps",
+                    description: "The outline round a picked object is the handle, not just the small squares on it. Take hold of any part of an edge and pull, and that side moves: the pointer shows the left-right or up-down arrows before you press, so you can see it coming. It matters most on a one line label, which is too short to wear a square in the middle of its side edges — until now the only way to set the width the words wrap at was to drag a corner or type a number. The middle of the object still picks it up and moves it, and a box too small to spare the room keeps its whole body for moving and offers no edges at all.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

@@ -3420,3 +3420,46 @@ that fits pays one flow, and one that hugs on both axes pays none at all, since
 a box the size of its contents can never run out of room. Tested in
 `GroupOverflowTests`, walked by
 `Scripts/playtest/group-says-it-overflows-walk.json`.
+
+## Landed: the outline round a picked box is the handle (Next, `next-edge-grab`, 2026-09-09)
+
+Put a label on the canvas and pull its right edge in to make the words wrap.
+Until now the label slid across the canvas instead. The side handle was a small
+square in the middle of the edge, and a one line label is under thirty points
+tall, so its two corner squares claimed the whole side between them and there
+was nothing left in the middle to draw a square on or aim a press at. On the
+boxes most UI work is made of, the width the words wrap at — the one thing a
+label is ever resized for — could only be set from a corner or typed into W.
+
+**The outline itself is the handle now.** Take hold of any part of an edge and
+pull, and that side moves. The pointer shows the left-right or up-down resize
+arrows before you press, which is the invitation the square used to be, and it
+is what every other drawing tool does.
+
+- **A corner still beats the edge it ends.** The four squares are read first, so
+  a press aimed at a corner can never come back as a side.
+- **The middle still picks the box up.** An edge may only claim its band while
+  there are twenty clear points left down the middle of the box on that axis
+  (`Handles.edgeGrabInterior`). On a one line label that is what keeps the top
+  and bottom edges off the words: the sides go live, the body stays a move
+  target, and the whole label is still something you can pick up and drag.
+- **A box with no room offers no edges at all.** The two letter label, a
+  hairline divider, anything zoomed out to a speck: the corners have the edges
+  between them, so nothing is offered and the whole object moves, exactly as
+  before. Zoom in and the edges come back, because this is a screen measure like
+  every other handle rule.
+- **Same rule everywhere handles are.** A layer, the crop box, and the canvas
+  boundary all read the one hit test, so an edge means the same thing wherever
+  you find one.
+
+**Where it lives.** `Handles.grabRun` and `Handles.hit(…, edgeGrab:)` in
+`PhotonzCore` carry the whole rule, tested in `EdgeGrabTests`; the app passes
+`Experiments.shared.edgeGrabEnabled` at each press and hover site
+(`CanvasPointerDrags`, `CanvasPointerCue`). Drawing is untouched: a cramped box
+still wears four squares and no more. Walked by
+`Scripts/playtest/text-side-edge-walk.json`, and
+`Scripts/playtest/text-width-floor-walk.json` now proves the 80 point width
+floor by dragging the edge down onto it instead of asserting it.
+
+Not in this slice: a visible cue on the edge at rest. The resize arrows appear
+on hover and nothing is drawn along the outline itself.

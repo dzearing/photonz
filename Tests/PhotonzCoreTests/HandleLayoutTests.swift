@@ -173,3 +173,123 @@ struct HandleLayoutTests {
         #expect(abs(stepOne - stepTwo) < 1e-9)
     }
 }
+
+/// A one line label is the box most UI work is made of, and it is short: 21 to
+/// 30 points tall. Its two corner squares claim that whole side edge between
+/// them, so the width the words wrap at — the one thing a label is resized for
+/// — had no handle you could take hold of, and pulling the side of a label
+/// slid it across the canvas instead.
+///
+/// The answer is the one every drawing tool uses: the OUTLINE is the handle.
+/// The whole run of an edge answers to a press, not just a square in the
+/// middle of it, so a short box has a side to pull even where there is no room
+/// to draw a square on it.
+@Suite("The edge of a picked box is a handle down its whole run")
+struct EdgeGrabTests {
+    /// The label from the bug: a text box pinned to 360 wide, one line tall.
+    let label = CGRect(x: 140, y: 140, width: 360, height: 29)
+    /// The label the width floor walk places: 132 wide, one line at 21.
+    let shortLabel = CGRect(x: 140, y: 140, width: 132, height: 21)
+    let roomy = CGRect(x: 100, y: 100, width: 200, height: 100)
+    let tiny = CGRect(x: 40, y: 40, width: 19, height: 16)
+
+    private func hit(_ p: CGPoint, _ frame: CGRect, zoom: CGFloat = 1) -> ResizeHandle? {
+        Handles.hit(at: p, frame: frame, zoom: zoom, edgeGrab: true)
+    }
+
+    // MARK: The bug
+
+    @Test func theSideOfAOneLineLabelResizesItRatherThanMovingIt() {
+        // The three presses from the bug report, all on the right edge.
+        #expect(hit(CGPoint(x: 500, y: 150), label) == .right)
+        #expect(hit(CGPoint(x: 499, y: 154), label) == .right)
+        #expect(hit(CGPoint(x: 500, y: 160), label) == .right)
+        #expect(hit(CGPoint(x: 140, y: 154), label) == .left)
+    }
+
+    @Test func theMiddleOfAOneLineLabelStillPicksItUp() {
+        for x in stride(from: label.minX + 20, to: label.maxX - 20, by: 40) {
+            #expect(hit(CGPoint(x: x, y: label.midY), label) == nil, "x \(x)")
+        }
+    }
+
+    /// The label is short enough that top and bottom bands would eat the words:
+    /// twelve of its twenty nine points, leaving a sliver to pick it up by. So
+    /// only the sides — the ones a label is actually resized by — take a band.
+    @Test func aOneLineLabelKeepsItsWholeBodyToBePickedUpBy() {
+        for y in stride(from: label.minY, through: label.maxY, by: 2) {
+            #expect(hit(CGPoint(x: label.midX, y: y), label) == nil, "y \(y)")
+        }
+    }
+
+    @Test func theCornersStillWinWhereTheyAreDrawn() {
+        let layout = Handles.layout(in: label, zoom: 1)
+        for corner in layout.handles {
+            #expect(hit(layout.point(for: corner), label) == corner, "\(corner)")
+        }
+    }
+
+    /// The walk that is meant to prove the 80 point width floor drags from the
+    /// middle of this label's right edge.
+    @Test func theWidthFloorWalksGrabPointIsTheRightEdge() {
+        #expect(hit(CGPoint(x: 272, y: 150), shortLabel) == .right)
+    }
+
+    // MARK: A roomy box gains a whole edge instead of a square in the middle
+
+    @Test func aRoomyBoxAnswersAnywhereAlongEachEdge() {
+        #expect(hit(CGPoint(x: 100, y: 120), roomy) == .left)
+        #expect(hit(CGPoint(x: 300, y: 180), roomy) == .right)
+        #expect(hit(CGPoint(x: 130, y: 100), roomy) == .top)
+        #expect(hit(CGPoint(x: 270, y: 200), roomy) == .bottom)
+        // ...and its middle is still where you pick it up.
+        #expect(hit(CGPoint(x: roomy.midX, y: roomy.midY), roomy) == nil)
+    }
+
+    @Test func aPressJustOutsideAnEdgeCountsAsThatEdge() {
+        #expect(hit(CGPoint(x: 305, y: 150), roomy) == .right)
+        #expect(hit(CGPoint(x: 307, y: 150), roomy) == nil)
+    }
+
+    // MARK: A cramped box keeps every guarantee it had
+
+    @Test func aTinyLabelIsStillGrabbableEverywhereInside() {
+        for x in stride(from: tiny.minX, through: tiny.maxX, by: 1) {
+            for y in stride(from: tiny.minY, through: tiny.maxY, by: 1) {
+                #expect(hit(CGPoint(x: x, y: y), tiny) == nil, "\(x),\(y)")
+            }
+        }
+    }
+
+    @Test func aHairlineDividerIsStillGrabbable() {
+        let divider = CGRect(x: 0, y: 200, width: 400, height: 8)
+        for y in stride(from: divider.minY, through: divider.maxY, by: 1) {
+            #expect(hit(CGPoint(x: divider.midX, y: y), divider) == nil, "y \(y)")
+        }
+    }
+
+    @Test func aSpeckIsStillGrabbable() {
+        let speck = CGRect(x: 10, y: 10, width: 1, height: 1)
+        #expect(hit(CGPoint(x: speck.midX, y: speck.midY), speck) == nil)
+    }
+
+    // MARK: Zoom decides it, like every other handle measure
+
+    @Test func zoomingOutTakesTheEdgeBandsAwayWithTheHandles() {
+        // 360x29 at 0.25x is 90x7 on screen: nothing left to aim at.
+        #expect(hit(CGPoint(x: 500, y: 154), label, zoom: 0.25) == nil)
+    }
+
+    @Test func zoomingInGivesATinyLabelItsEdgesBack() {
+        // Off the midpoint square, up the left edge: nothing but the band can
+        // answer here, and at 4x the label is 76x64 on screen with room for it.
+        #expect(hit(CGPoint(x: tiny.minX, y: tiny.minY + 2), tiny, zoom: 4) == .left)
+    }
+
+    // MARK: Off by default, so only the release that opted in changes
+
+    @Test func withoutTheFlagTheEdgeIsNotAHandle() {
+        #expect(Handles.hit(at: CGPoint(x: 500, y: 154), frame: label, zoom: 1) == nil)
+        #expect(Handles.hit(at: CGPoint(x: 100, y: 120), frame: roomy, zoom: 1) == nil)
+    }
+}

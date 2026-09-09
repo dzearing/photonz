@@ -13749,3 +13749,37 @@ No app code changed. `Scripts/test.sh` green, 5278 tests; parts walks 3/3,
 effect walks 12/13.
 
 Next: the two follow-ups above are in the queue at p2.
+
+## 2026-09-09 — the side of a one line label resizes it
+
+Fixed the queued bug "Dragging the side edge of a one line text box moves it
+instead of resizing it" (`ui-building`, Next, `next-edge-grab`).
+
+The side handle was a square in the middle of an edge, and a one line label is
+under 30 points tall, so its two corner squares claimed the whole side and there
+was nothing left to draw a square on. Putting the square back does not work at
+that size: it lands 15 to 19 points from each corner, which is the lattice the
+cramped rule exists to prevent. So the handle stopped being a square. The whole
+run of an edge answers a press now (`Handles.grabRun`), shortened at both ends
+by what the corners claim, and offered only while 20 clear points survive down
+the middle of the box on that axis — which on a one line label switches the top
+and bottom edges off and keeps the body a move target.
+
+- `Handles.grabRun` / `Handles.hit(…, edgeGrab:)` in PhotonzCore, tested first
+  in `EdgeGrabTests` (13 cases). Drawing is untouched.
+- Behind `next-edge-grab`, on by default in Next and absent from Current's
+  catalog, so Current is unchanged.
+- `Scripts/playtest/text-side-edge-walk.json` is new and proves both halves: the
+  edge drag re-wraps with the resize-left-right cursor, the middle drag moves.
+- `text-width-floor-walk` was claiming to prove the 80 point floor while
+  actually dragging from inside the label and moving it. It now pins W to 200,
+  grabs the real right edge, and lands on 80.
+- `text-height-readout-walk`'s note saying "there is no handle on the side" is
+  no longer true and was rewritten.
+- `Scripts/test.sh` green (5291 tests). 29 walks across text, resize, move,
+  crop, canvas and handles all pass.
+
+Audit: `queue/audits/2026-09-09-edge-grab.json`.
+
+Next: the audit asks whether a short box wants something visible on its side at
+rest, and whether the canvas boundary should read the same rule.

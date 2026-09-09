@@ -1,0 +1,28 @@
+{
+  "feature": "The outline round a picked box is the handle",
+  "epic": "ui-building",
+  "summary": "You can now set where a label's words wrap by pulling its side edge. Any part of a picked object's edge resizes that side, so a one line label, which is too short to wear a square in the middle of its side, finally has a side you can take hold of.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is next-edge-grab and it is on by default.",
+  "try": [
+    { "do": "Press T, click on the canvas, type Sign in to continue to your account, then press Command Return.", "shot": "2026-09-09-edge-grab-1-one-line.png" },
+    { "do": "Press V, then rest the pointer halfway down the right edge of the label and watch the cursor." },
+    { "do": "Drag that edge left about 250 points and let go.", "shot": "2026-09-09-edge-grab-2-wrapped.png" },
+    { "do": "Press Command Z, then drag the label from the middle of its words and let go.", "shot": "2026-09-09-edge-grab-3-moved.png" },
+    { "do": "Type two letters into a new text layer, pick it, and try to drag it from anywhere on it." },
+    { "do": "Pick any rectangle and drag the middle of its top edge, then a corner, then its middle." },
+    { "do": "Zoom out to about 25 percent and try the label's right edge again." }
+  ],
+  "evaluate": [
+    "Without a square drawn on it, did you find the side edge on your own, or did you only find it because this list told you where to look?",
+    "Is the cursor changing to the left-right arrows enough of an invitation, or does a short box want something visible on its side at rest?",
+    "On a one line label the top and bottom edges do NOT resize, only the sides. Did you notice, and did the absence bother you?",
+    "Does the outer few points of a big picked layer now feel like a resize when you meant to move it?",
+    "With the canvas selected, its boundary resizes the same way. Did that ever steal a click you meant for a layer sitting at the edge?"
+  ],
+  "rough": [
+    "Nothing is drawn along the edge at rest. The only thing that says an edge is live is the pointer changing over it, which is what Figma and Sketch do, but it is one fewer signal than the corner squares give.",
+    "The rule that keeps a short label movable is a measurement, not a feeling: an edge takes a band only while 20 clear points survive down the middle of the box on that axis. On a 29 point tall label that switches the top and bottom edges off and leaves only the sides live. It reads as deliberate on a label; on a 34 point tall button, just over the line, all four edges are live and the middle strip is 22 points. That boundary is worth a look.",
+    "Hovering does not show a resize cursor in an unmanned run, so the walk proves the cursor from the drag instead (it reads resize-left-right while the button is down). This is a limit of the playtest harness, not of the feature: corner handles report the same nothing on hover.",
+    "The canvas boundary and the crop box read the same hit test, so their edges became grabbable too. That was not asked for by the bug, but splitting the rule would have made an edge mean different things in different places."
+  ]
+}

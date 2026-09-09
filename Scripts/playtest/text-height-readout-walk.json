@@ -96,7 +96,7 @@
     {
       "do": "describe",
       "stage": "2-wrapped",
-      "note": "the top right corner dragged in to 110 wide so the words re-wrap: H must have grown to the taller number the paragraph turned out to be. A text box only resizes from its corners: there is no handle on the side, and a drag that starts halfway down the right edge moves the label instead, which is what this walk used to do while claiming it had re-wrapped."
+      "note": "the top right corner dragged in to 110 wide so the words re-wrap: H must have grown to the taller number the paragraph turned out to be. The corner is what this walk grabs on purpose, so the number it proves does not depend on the side edges, which resize the box too (`text-side-edge-walk`)."
     },
     {
       "do": "snapshot",

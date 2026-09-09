@@ -39,27 +39,48 @@
       "seconds": 0.6
     },
     {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "reveal",
+      "control": "H",
+      "in": "Position & Size"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
       "do": "describe",
       "stage": "1-placed",
-      "note": "a label placed at 140,140, 132 wide by 21 tall"
+      "note": "a label at 140,140 pinned to 200 wide, one line tall: its right edge is the vertical line at x 340, and the box is too short to wear a square in the middle of that edge"
     },
     {
       "do": "snapshot",
       "name": "1-placed"
     },
     {
-      "do": "tool",
-      "tool": "select"
-    },
-    {
       "do": "drag",
       "from": [
-        272,
-        150
+        340,
+        156
       ],
       "to": [
         150,
-        150
+        156
       ],
       "steps": 10
     },
@@ -70,7 +91,7 @@
     {
       "do": "describe",
       "stage": "2-dragged-narrow",
-      "note": "the right edge dragged as far left as it will go: the drag stops at 80 wide"
+      "note": "the right edge taken halfway down and pulled as far left as it will go. The drag line above must say the cursor while down was resize-left-right, X must still be 140, and W must have stopped at 80 rather than following the pointer down to 10"
     },
     {
       "do": "snapshot",
@@ -87,7 +108,7 @@
     {
       "do": "describe",
       "stage": "3-undone",
-      "note": "back to the width it was placed at"
+      "note": "back to the 200 it was pinned to"
     },
     {
       "do": "focus",

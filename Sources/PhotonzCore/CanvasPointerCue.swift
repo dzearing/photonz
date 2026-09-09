@@ -46,7 +46,8 @@ public enum CanvasPointer {
     public static func cue(at p: CGPoint, layer: Layer, frame: CGRect?, zoom: CGFloat,
                            captionsEnabled: Bool, offersRotation: Bool,
                            captionPillSize: CGSize? = nil,
-                           cornerHandlesEnabled: Bool = false) -> CanvasPointerCue? {
+                           cornerHandlesEnabled: Bool = false,
+                           edgeGrabEnabled: Bool = false) -> CanvasPointerCue? {
         // A locked layer has no handles to cue: the chrome draws none and the
         // press starts nothing, so the pointer stays a plain arrow over all of
         // it. See `Layer.offersHandles`.
@@ -75,7 +76,8 @@ public enum CanvasPointer {
         // The eight frame handles, found in the layer's own untransformed
         // space so a turned or slanted layer answers where its handles draw.
         guard layer.allowsFrameResize else { return nil }
-        return Handles.hit(at: local, frame: frame, zoom: zoom).map { .resize($0) }
+        return Handles.hit(at: local, frame: frame, zoom: zoom,
+                           edgeGrab: edgeGrabEnabled).map { .resize($0) }
     }
 
     /// Screen-point slop around a crop handle, matching the crop press, which
@@ -95,11 +97,12 @@ public enum CanvasPointer {
     ///
     /// The crop box is axis-aligned in document space, so unlike a layer there
     /// is no transform to read the handles through.
-    public static func cropCue(at p: CGPoint, cropRect: CGRect?,
-                               zoom: CGFloat) -> CanvasPointerCue? {
+    public static func cropCue(at p: CGPoint, cropRect: CGRect?, zoom: CGFloat,
+                               edgeGrabEnabled: Bool = false) -> CanvasPointerCue? {
         guard let cropRect else { return nil }
         return Handles.hit(at: p, frame: cropRect, zoom: zoom,
-                           screenTolerance: cropTolerance).map { .resize($0) }
+                           screenTolerance: cropTolerance,
+                           edgeGrab: edgeGrabEnabled).map { .resize($0) }
     }
 
     /// Maps a document point into `layer`'s untransformed frame space, the

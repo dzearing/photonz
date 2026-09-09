@@ -200,6 +200,12 @@ extension Experiments {
     /// false and rounding stays something you type in the panel.
     var cornerHandlesEnabled: Bool { isEnabled(FeatureCatalog.cornerHandlesFlag) }
 
+    /// `next-edge-grab`: whether the whole run of a picked object's edge
+    /// resizes it, rather than only the small square in the middle of that
+    /// edge. Exists only in the Next release's catalog, so Current always
+    /// reads false and a short box still has no side handle to pull.
+    var edgeGrabEnabled: Bool { isEnabled(FeatureCatalog.edgeGrabFlag) }
+
     /// `next-grab-cue`: whether the pointer turns into a hand over a pill that
     /// drags on its own (an arrow's caption, a measurement's number). Exists
     /// only in the Next release's catalog, so Current always reads false.

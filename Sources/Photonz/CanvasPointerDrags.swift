@@ -108,7 +108,8 @@ extension CanvasNSView {
             }
             if let rect = cropRect,
                let handle = Handles.hit(at: p, frame: rect, zoom: viewport.zoom,
-                                        screenTolerance: CanvasPointer.cropTolerance) {
+                                        screenTolerance: CanvasPointer.cropTolerance,
+                                        edgeGrab: Experiments.shared.edgeGrabEnabled) {
                 cropDrag = CropDrag(kind: .resize(handle), startRect: rect, lastPoint: p)
                 // The hover cue already put these arrows up, but a press that
                 // arrived without one (a click straight onto a handle) still
@@ -216,7 +217,8 @@ extension CanvasNSView {
         // normal layer selection / marquee (which also deselects the canvas).
         if isCanvasSelected, tool == .select,
            let handle = Handles.hit(at: p, frame: CGRect(origin: .zero, size: viewport.documentSize),
-                                    zoom: viewport.zoom, screenTolerance: 8) {
+                                    zoom: viewport.zoom, screenTolerance: 8,
+                                    edgeGrab: Experiments.shared.edgeGrabEnabled) {
             canvasResizeDrag = (handle, CGRect(origin: .zero, size: viewport.documentSize), false)
             applyGrabCursor(CanvasCursor.cursor(for: .resize(handle), transform: .identity))
             refreshOverlays()
@@ -383,7 +385,8 @@ extension CanvasNSView {
         if let id = selectedLayerID, let frame = selectedLayerFrame,
            selectedLayer.map(offersOwnHandles) ?? true, selectedLayer?.allowsFrameResize ?? true,
            let handle = Handles.hit(at: handleSpacePoint(p, layer: selectedLayer),
-                                    frame: frame, zoom: viewport.zoom) {
+                                    frame: frame, zoom: viewport.zoom,
+                                    edgeGrab: Experiments.shared.edgeGrabEnabled) {
             if event.modifierFlags.contains(.option), handle.isCorner, let layer = selectedLayer {
                 transformDrag = TransformDragSession(
                     layerID: id, kind: .skew(corner: handle, grabPoint: p),
