@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T23:24:54.770Z",
-  "updated": "2026-09-09T04:01:32.871Z",
+  "updated": "2026-09-09T04:01:58.504Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mirror Sources/Photonz/ColorStylePanel.swift LibraryStyleTile + LibraryStyleTileDrag and Sources/Photonz/LibraryColorDrop.swift. The text tile is Sources/Photonz/TextStylePanel.swift LibraryTextStyleTile; it is now a Button, so the drag has to sit on the button without stealing the click (the colour tile keeps both on one view). Raised in queue/audits/2026-09-08-text-styles.json.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-09-09T04:01:32.871Z",
       "note": "Verified. Scripts/playtest/text-style-drag-walk.json is new and passes: it saves a style, then carries the tile over bare canvas (refused, \"Drop this on a piece of text to set it in Heading\"), over a box (refused, \"Rectangle is not text, so it cannot wear Heading\"), onto unpicked text (taken, \"Sets this text in Heading\", the render shows it re-set and one undo puts it back), onto text already wearing it (refused, \"This text is already Heading\"), and onto one of two picked pieces of text (taken, \"Sets all 2 of them in Heading\", both outlined). Real window captures, Screen Recording granted. text-style-walk still passes, which is what proves the drag did not steal the tile click. Five other dragTile walks pass. Scripts/test.sh green, 5195 tests. A full sweep is requested because the canvas drag destination and the dragTile step are shared by 31 walks. Audit: queue/audits/2026-09-09-text-style-drag.json."
+    },
+    {
+      "t": "2026-09-09T04:01:58.502Z",
+      "note": "A saved text style is now a handle: pick the Ag tile up off the Library shelf and let it go on any piece of text, and that text is set in the style in one undo step. Every piece of text the drop would reach is outlined and a pill under the pointer says what letting go would do, including the no's (bare canvas says where a style goes, a shape says it is not text, text already wearing it says so). Core answer in PhotonzCore/TextStyleDrop.swift with 7 tests; picture side in Sources/Photonz/CanvasTextStyleDrop.swift; tile drag in Sources/Photonz/TextStyleDrag.swift. Verified by a new walk (Scripts/playtest/text-style-drag-walk.json, real window captures) covering all five cases plus one undo, by text-style-walk still passing (which proves the drag did not steal the tile click), by five other dragTile walks, and by Scripts/test.sh at 5195 tests. Audit: queue/audits/2026-09-09-text-style-drag.json. Commit 13191344, pushed. Full sweep requested. Not verified and flagged in the audit: whether a real drag STARTS from the tile, since AppKit only begins one from a device event."
     }
   ],
-  "started": "2026-09-09T03:36:21.421Z"
+  "started": "2026-09-09T03:36:21.421Z",
+  "completed": "2026-09-09T04:01:58.503Z"
 }
