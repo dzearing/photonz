@@ -1,0 +1,35 @@
+{
+  "id": "an-inner-border-reaches-the-shape-s-edge-with-no",
+  "title": "An inner border reaches the shape's edge with no fill showing through",
+  "goal": "Put an inner border on a rectangle and a hairline of the fill colour still shows along the outside of it, so the shape does not end where the border does. An inner border should be the edge: from the outer boundary inwards it is the border's colour, with nothing of the fill leaking past it at any zoom.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T13:11:39.106Z",
+  "updated": "2026-09-09T13:11:39.152Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-09 with a magnified screenshot: a red fill showing faintly along the outer edge of a black inner border. Where to look, from a read of Sources/PhotonzRender/DocumentRenderer.swift: the ring is built in ringed at line 988 as an outer rounded rectangle with an inner one punched out of it (the flat path around lines 1011 to 1023), then composited OVER the layer image. So the fill is still painted underneath, and the ring only covers it as well as its own antialiased edge allows; two antialiased edges meeting at the same boundary do not sum to full coverage, which is exactly the hairline seen. Two candidate fixes to weigh and record: draw the ring so its outer edge is the shape's own outer edge and the fill is clipped to the ring's inner edge rather than painted to the boundary, or composite the ring with the fill already cut back. The first is likely right because it keeps one antialiased outer edge for the whole shape rather than two stacked. Note the generator used is CIFilter.roundedRectangleGenerator (line 1323), so whatever is chosen has to work with that rather than assume a path stroke.",
+  "acceptance": [
+    "Reproduce it first and record the numbers in the log: sample the pixels across the edge of a filled rectangle with an inner border and say how wide the leaking band is and what colour it is",
+    "With an inner border, no pixel outside the border's inner edge carries any of the fill colour, checked by sampling rather than by eye, at one hundred percent and at several zooms",
+    "The outside of the shape stays properly antialiased against the background, so removing the leak does not leave a hard jagged edge",
+    "A shape with a rounded corner behaves the same all the way round the corner, where the two curves are closest together",
+    "The same check passes for an outside and a centred border, so the fix does not trade one edge for another",
+    "A pixel test in PhotonzRender covers the edge of a filled rectangle with an inner border, written before the change",
+    "Audit written under queue/audits/ with a magnified corner and edge before and after, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T13:11:39.108Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T13:11:39.151Z",
+      "note": "seq 260 -> 10"
+    }
+  ]
+}

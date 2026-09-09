@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 15,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "tools",
   "created": "2026-09-09T12:25:11.791Z",
-  "updated": "2026-09-09T13:08:20.151Z",
+  "updated": "2026-09-09T13:08:37.098Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass, with the evidence checked rather than reasoned about.\n\n  ps -o pid,lstart -p 36604      -> Sat Sep  5 06:58:32 2026\n  git log -1 -S sweep_pass -- queue/bin/go-loop.sh -> 04c7e679, 2026-09-08 18:14:25\n  queue/bin/sweep.sh due          -> exit 0, a sweep is due\n  queue/sweep/                    -> requested.json with 7 requests and nothing else: no latest.json, no run log\n  grep 'walk sweep requested; running it' queue/loop.log -> no match, ever\nSo the loop that is running was started three days before sweep_pass existed, and the seven requests queued since have never been served.\n\nWhat is waiting on that sweep matters: the seven requests are all shared panel chrome, every section header moving 2pt, Corner Radius growing into a heading row, a Style row added to every effect pane, and each one says the whole 322-walk set is the thing that would confirm nothing else shifted.\n\nThe immediate unblock is a human restarting the loop with /go. This task is about the next time, not this time. Worth considering: the loop re-execs itself when queue/bin/go-loop.sh changes, at a safe point between tasks, or it records the file's hash at start and status.json carries a stale flag the dashboard reads.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-09T13:08:20.151Z",
       "note": "Adversarial review of the built thing. The strip reads plainly and names the fix (ctrl-c, /go). The sweep line is faint by design: it is a permanent line rather than an alarm, and the strip above it is doing the loud talking today; the audit asks the user whether that is right. What I could NOT do: serve the seven waiting sweep requests. This runner IS the stale loop, so restarting it would kill this task mid-flight, and a runner cannot run 322 walks against a 600s ceiling. Acceptance item two is therefore half done: the dashboard now shows the sweep and says why it is stalled, and the requests are served by the loop the moment a person restarts it. That is the alternative acceptance item one names, and it is the whole of the unblock this time."
+    },
+    {
+      "t": "2026-09-09T13:08:37.096Z",
+      "note": "The loop now execs itself onto a new copy of queue/bin/go-loop.sh between tasks (same pid, same queue, pass count carried across; a copy that does not parse is refused out loud), and the Summary hero says plainly when the loop is behind its own script and shows the walk sweep under the heartbeat. The dashboard server had the same staleness bug and now re-imports queue-lib.mjs when it changes. Verified: Scripts/test.sh 5365 tests green, failure-drill.sh scenario 4 with 16 new checks green, state-poll-drill green, strip and sweep line checked in a real browser. Shipped in 9d22b252, audited in queue/audits/2026-09-09-loop-reload.json. Not done: the seven waiting sweep requests still need a person to press ctrl-c and /go, because this runner IS the stale loop."
     }
   ],
-  "started": "2026-09-09T12:55:37.913Z"
+  "started": "2026-09-09T12:55:37.913Z",
+  "completed": "2026-09-09T13:08:37.097Z"
 }
