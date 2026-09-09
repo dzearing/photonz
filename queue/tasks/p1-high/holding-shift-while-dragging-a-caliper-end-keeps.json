@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:01:32.564Z",
-  "updated": "2026-09-09T15:10:00.000Z",
+  "updated": "2026-09-09T15:04:55.098Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pair with holding-shift-while-placing-a-caliper-locks-the, filed the same day: shift while PLACING locks the direction, shift while ADJUSTING holds the line. They are the same gesture at two moments and must end up one idea rather than two meanings for one key; whichever lands second makes them agree. Asked for by the user on 2026-09-09. The handle drag is in Sources/Photonz/CanvasPointerDrags.swift around line 659: the head branch snaps through snapMeasureHead and the foot branch windows edge candidates by the span from the opposite foot, and neither reads the shift modifier at all, so shift does nothing on a caliper today. Note the same file already constrains other drags with shift, so take the existing convention rather than inventing one, and check what shift means for an annotation drag so the two agree. The projection itself belongs in PhotonzCore beside the other measure maths rather than in the view. One decision to make explicitly and record: for a caliper whose two feet define the line, holding shift should almost certainly slide the dragged foot along the line through both feet, but for a measurement in a fixed direction, the horizontal or vertical modes, the held line is the mode's axis instead; say which rule applies in each mode.",
@@ -75,7 +75,12 @@
     {
       "t": "2026-09-09T15:10:00.000Z",
       "note": "Audit: queue/audits/2026-09-09-caliper-held-straight.json with two real window captures (Screen Recording was granted for the run)."
+    },
+    {
+      "t": "2026-09-09T15:04:55.096Z",
+      "note": "Shift now holds a measurement on the line it is on while you drag either end: that end slides along the line, the other does not move, the number counts live. MeasureLineHold in PhotonzCore carries the latch, the projection and the snap-then-hold rule (15 tests, written first); wired into the foot drag in CanvasPointerDrags. The playtest drag step gained \"halfway\" so a walk can press or release a key mid drag. Verified in the probe by caliper-held-straight-walk, six claims read from the walk's own state (free 560 vs held 500, pressed halfway 530, released halfway 560, other end held, snap still caught at x 800 with the row unmoved). Scripts/test.sh green at 5446; measure, caliper, redline, snap-hold and arrow-tip walks pass; full sweep requested. Audit queue/audits/2026-09-09-caliper-held-straight.json with two real captures. Convention handed to the paired placing task and written up in docs/design/next-measure.md 8c. Filed with a reproduction: clicking a measurement's end moves it (100 px becomes 98 px from one click)."
     }
   ],
-  "started": "2026-09-09T14:41:28.597Z"
+  "started": "2026-09-09T14:41:28.597Z",
+  "completed": "2026-09-09T15:04:55.097Z"
 }
