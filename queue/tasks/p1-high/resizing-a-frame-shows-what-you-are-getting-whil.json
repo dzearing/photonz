@@ -1,0 +1,37 @@
+{
+  "id": "resizing-a-frame-shows-what-you-are-getting-whil",
+  "title": "Resizing a frame shows what you are getting while you drag",
+  "goal": "Drag a handle on a frame and nothing appears to happen until you let go, so you are resizing blind and have to drop it and try again to see what you got. Dragging a frame's handle should show the frame at its new size the whole way through the drag, the way dragging any other layer does, and it should stay smooth on a frame with a lot inside it.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T16:19:05.459Z",
+  "updated": "2026-09-09T16:19:05.504Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-09: \"when i try to resize a frame, it has no live feedback\". Not reproduced by me - everything below is from reading, and the runner must reproduce FIRST.\n\nWhat I ruled IN by reading: the live path exists and does cover frames. CanvasPointerDrags.swift:787 calls onFramePreview on every mouse move, which reaches EditorState+Frames.swift:171 previewCanvasFrame and then EditorState+LayerDrag.swift:82 previewLayerFrame. AnnotationEditing.swift:197 dispatches a frame to LayerScaling.refitting (LayerScaling.swift:38). So the model is being updated live; this is not a case of the drag doing nothing until mouse-up.\n\nStrongest SUSPECT, unconfirmed: throughput, not wiring. LayerContent.scalesUniformlyOnResize (Layer.swift:896) returns false for a group, so previewLayerFrame DISCARDS the drag sprite (EditorState+LayerDrag.swift:93-96) and every single mouse move re-renders the whole document with the frame refitted and its children re-placed. On a screen-sized frame with a lot in it that is a full composite per pointer move, which would look exactly like nothing happening until release. Note the sprite is discarded deliberately and for a good reason (a scaled sprite stretches strokes and text), so the fix is not simply to keep the sprite - it is to make the live re-render cheap enough, or to find a preview that is faithful for a frame.\n\nThe cheap discriminator, do this first: CanvasDisplay.swift:830 sets the selection outline from resizeDrag.frame, so the blue box should follow the pointer even when the content does not. If the outline tracks and the contents lag, it is throughput. If the outline is stuck too, the drag is not starting and the cause is somewhere in the press path (CanvasPointerDrags.swift:387, gated on offersOwnHandles and allowsFrameResize; a frame passes both by AnnotationEditing.swift:62).\n\nSecond possibility worth ruling out before building anything: the user may mean there is no NUMERIC readout - no width by height chip following the drag. Nothing in the code draws one during a resize as far as I found. If reproduction shows the geometry does update live and smoothly, then what is missing is the readout, and the task becomes a small one: show the size while dragging. Decide which of the two it is from the reproduction, say so in the log, and do that one.\n\nAlso note CanvasDisplay.swift:913 and :932 hide the eight handles for the whole drag (!dragInFlight), so during a slow frame resize there may be nothing on screen changing at all - which would make a merely slow render read as a completely dead one.\n\nCheck Sources/Photonz/Releases/ before assuming one change reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Reproduce it first and say in the log WHICH part is missing: does the blue selection outline follow the pointer while the frame's contents stay put, or is nothing moving at all? The two have different causes and the fix depends on the answer",
+    "Measure it before changing anything: how many frames per second the canvas actually redraws during a frame resize, on a frame with a realistic number of children, and put the number in the log",
+    "Dragging a frame handle shows the frame and its contents at the size the pointer is asking for, continuously, not only on release",
+    "It stays responsive on a frame with a lot inside it: state the frame size and child count tested and the measured redraw rate after the change, against the repo's 16ms target",
+    "Resizing a plain group, a component copy and a self-arranging stack all still behave as they do today, checked side by side, so the frame fix does not change the other three",
+    "The size the drag showed is the size you get on release: no jump at mouse-up",
+    "A playtest walk covers resizing a frame from a corner and from an edge",
+    "Perf note in the commit describing the effect on the composite path, per CLAUDE.md",
+    "Audit under queue/audits/ with before and after captures and the measured numbers, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T16:19:05.461Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T16:19:05.503Z",
+      "note": "seq 270 -> 8"
+    }
+  ]
+}
