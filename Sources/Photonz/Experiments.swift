@@ -194,6 +194,12 @@ extension Experiments {
     /// always reads false.
     var shapePartsEnabled: Bool { isEnabled(FeatureCatalog.shapePartsFlag) }
 
+    /// `next-corner-handles`: whether a picked shape with corners wears a dot
+    /// just inside each corner that rounds that corner when you pull it.
+    /// Exists only in the Next release's catalog, so Current always reads
+    /// false and rounding stays something you type in the panel.
+    var cornerHandlesEnabled: Bool { isEnabled(FeatureCatalog.cornerHandlesFlag) }
+
     /// `next-grab-cue`: whether the pointer turns into a hand over a pill that
     /// drags on its own (an arrow's caption, a measurement's number). Exists
     /// only in the Next release's catalog, so Current always reads false.

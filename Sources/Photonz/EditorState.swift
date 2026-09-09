@@ -1727,7 +1727,17 @@ final class EditorState {
         dragPreviewGeneration += 1
         dragPreview = nil
         clearPreviewAfterNextFrame = false
+        cornerRadiiPreview = nil
     }
+
+    /// The corners a canvas drag is showing RIGHT NOW, before it has been
+    /// committed.
+    ///
+    /// Pulling a corner dot re-renders the picture without recording anything,
+    /// so without this the panel goes on saying 0 px while the shape on screen
+    /// is plainly round (seen on the probe, 2026-09-09). Every edit that lands
+    /// drops it, which is what `discardDragPreview` is for.
+    var cornerRadiiPreview: (ids: [UUID], radii: CornerRadii)?
 
     // MARK: - Layers panel
 

@@ -90,7 +90,8 @@ extension CanvasNSView {
                                     zoom: viewport.zoom,
                                     captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
                                     offersRotation: offersRotation(layer),
-                                    captionPillSize: layer.measuredCaptionPillSize)
+                                    captionPillSize: layer.measuredCaptionPillSize,
+                                    cornerHandlesEnabled: Experiments.shared.cornerHandlesEnabled)
         return cue.map { ($0, layer.transform) }
     }
 
@@ -110,9 +111,16 @@ extension CanvasNSView {
         guard tool == .select, let viewport,
               groupAwarePick(at: p, zoom: viewport.zoom) != nil else { return false }
         let selected = selectedLayerID.flatMap { id in document?.canvasLayer(id: id) }
-        guard let frame = selectedLayerFrame, selected?.allowsFrameResize ?? true,
-              Handles.hit(at: handleSpacePoint(p, layer: selected),
-                          frame: frame, zoom: viewport.zoom) != nil else { return true }
+        guard let frame = selectedLayerFrame else { return true }
+        let local = handleSpacePoint(p, layer: selected)
+        // ⌥ on a rounding dot takes all four corners, so it is not a copy drag
+        // either — the badge would promise the wrong gesture.
+        if Experiments.shared.cornerHandlesEnabled, let selected,
+           selected.offersCornerRadiusHandles,
+           CornerRadiusHandles.hit(at: local, frame: frame, radii: selected.roundedCornerRadii,
+                                   zoom: viewport.zoom) != nil { return false }
+        guard selected?.allowsFrameResize ?? true,
+              Handles.hit(at: local, frame: frame, zoom: viewport.zoom) != nil else { return true }
         return false
     }
 
@@ -138,6 +146,7 @@ extension CanvasNSView {
                                    force: true)
         }
         guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
+              cornerRadiusDrag == nil,
               endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil,
               cropDrag == nil else { return }
         // Carrying something, and sweeping a band, are drags too. They set

@@ -1,0 +1,30 @@
+{
+  "feature": "Drag a shape's corner to round it",
+  "epic": "ui-building",
+  "summary": "A picked shape with corners now wears a small dot just inside each corner. Pull one in and that corner rounds under your hand while the other three stay as they are, so a card with a rounded top or a segmented control's round ends is something you draw rather than four numbers you type.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Drag a corner to round it\" is on by default, as is \"Appearance is what it is, Effects is what you add\", which is what puts the Corner Radius rows in the panel.",
+  "try": [
+    { "do": "Press R and drag out a rectangle about 280 by 200." },
+    { "do": "Press V. Four dots sit just inside its corners, inside the four resize squares." },
+    { "do": "Pull the top left dot down and to the right. Only that corner rounds, and the shape follows your hand as you go.", "shot": "2026-09-09-corner-drag-1.png" },
+    { "do": "Look at Corner Radius in the panel while you are still holding the dot. The number tracks the drag." },
+    { "do": "Let go, then hold Option and pull the top right dot in. All four corners go together.", "shot": "2026-09-09-corner-drag-2.png" },
+    { "do": "Press Command Z once. The whole Option pull comes back off in one step, leaving the one corner you rounded first." },
+    { "do": "Pull that corner's dot back out past the corner. It squares off rather than fighting you." },
+    { "do": "Draw a 30 by 30 rectangle and pick it. It wears no dots at all: it is too small to hold them.", "shot": "2026-09-09-corner-drag-3.png" }
+  ],
+  "evaluate": [
+    "One dot rounds ONE corner and Option rounds all four. Photoshop and Figma do it the other way round: drag rounds all four and Option isolates one. Which way does your hand expect?",
+    "Is a dot 12 points inside the corner far enough from the resize square that you never grab the wrong one?",
+    "The dot sits where the curve is struck from rather than on the curve itself, which is what keeps it under your hand as you pull. Does it read as attached to the corner, or does it look like it is floating in the middle of the shape?",
+    "The dots are on shapes only. A screenshot, a group and a text block still round from the panel. Do you want to drag a screenshot's corners too, or would four more dots on every capture be in your way?",
+    "There is no number floating beside the corner while you drag, only the panel row updating. Is the panel close enough, or do you want the value under the pointer?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is a real capture of the window rather than an offscreen render.",
+    "The four dots are on a shape's corners only, which is narrower than the panel's Corner Radius row: that row rounds a screenshot, a group and a frame too. This was a deliberate cut, because most selections in this app are a capture being measured and four dots inside every one of them would be noise over the picture.",
+    "A press on a dot no longer picks the shape up from those four spots. It is the same trade a collage cell and a measurement's feet already make, but on a small shape those four spots are a real share of it, which is part of why a cramped shape wears no dots.",
+    "The value snaps to whole points as you drag, matching what the panel shows. There is no finer control from the canvas; the typed rows are still the way to a fraction.",
+    "No modifier holds the four corners in PROPORTION while you pull one, the way Shift keeps an aspect ratio. Pulling 16/16/0/0 by one corner sets one number and leaves the others; Option flattens all four to the same."
+  ]
+}

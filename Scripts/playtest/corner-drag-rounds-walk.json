@@ -1,0 +1,302 @@
+{
+  "out": "/tmp/photonz-playtest/corner-drag-rounds",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        320,
+        260
+      ],
+      "to": [
+        600,
+        460
+      ]
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-picked",
+      "note": "a square cornered rectangle, picked. Four dots rest 12 screen points inside its corners, clear of the resize squares sitting on the corners themselves"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-picked"
+    },
+    {
+      "do": "render",
+      "name": "1-canvas-picked"
+    },
+    {
+      "do": "drag",
+      "from": [
+        332,
+        272
+      ],
+      "to": [
+        370,
+        310
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-corner",
+      "note": "THE TEST: pulling the top left dot in rounds the TOP LEFT corner alone to 50, and leaves the other three square"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-one-corner"
+    },
+    {
+      "do": "render",
+      "name": "2-canvas-one-corner"
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Corner Radius"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Top Left",
+      "reads": "50"
+    },
+    {
+      "do": "expect",
+      "field": "Top Right",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Right",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Left",
+      "reads": "0"
+    },
+    {
+      "do": "panel",
+      "stage": "2-one-corner"
+    },
+    {
+      "do": "drag",
+      "from": [
+        588,
+        272
+      ],
+      "to": [
+        575,
+        285
+      ],
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-all-four",
+      "note": "THE TEST: holding Option while pulling the top right dot takes all four corners together, so every one of them reads 25"
+    },
+    {
+      "do": "expect",
+      "field": "Top Left",
+      "reads": "25"
+    },
+    {
+      "do": "expect",
+      "field": "Top Right",
+      "reads": "25"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Right",
+      "reads": "25"
+    },
+    {
+      "do": "expect",
+      "field": "Bottom Left",
+      "reads": "25"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-all-four"
+    },
+    {
+      "do": "render",
+      "name": "3-canvas-all-four"
+    },
+    {
+      "do": "panel",
+      "stage": "3-all-four"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-undone",
+      "note": "THE TEST: ONE undo takes back the whole Option pull and no more, so the shape is the 50/0/0/0 the first drag made. Undo is driven straight on the editor rather than with command Z: the probe is never the frontmost app, so a synthesized chord never reaches its Edit menu"
+    },
+    {
+      "do": "expect",
+      "field": "Top Left",
+      "reads": "50"
+    },
+    {
+      "do": "expect",
+      "field": "Top Right",
+      "reads": "0"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-undone"
+    },
+    {
+      "do": "drag",
+      "from": [
+        370,
+        310
+      ],
+      "to": [
+        300,
+        240
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-squared-again",
+      "note": "pulling the same dot back out past the corner squares it off rather than going negative"
+    },
+    {
+      "do": "expect",
+      "field": "Top Left",
+      "reads": "0"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-squared-again"
+    },
+    {
+      "do": "render",
+      "name": "5-canvas-squared-again"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        470
+      ],
+      "to": [
+        730,
+        500
+      ]
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-too-small",
+      "note": "THE TEST: a 30 by 30 shape is too cramped to keep its edge handles, so it wears no corner dots either. Its four corner squares have stepped OUTSIDE the outline and the whole inside of it belongs to picking it up"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-too-small"
+    },
+    {
+      "do": "click",
+      "at": [
+        460,
+        360
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        460,
+        242
+      ],
+      "to": [
+        540,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-rotated",
+      "note": "THE TEST: the big shape turned by its knob. The four dots turn with it and stay inside the corners they belong to, because they are placed through the same transform the eight frame handles are"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-rotated"
+    }
+  ]
+}

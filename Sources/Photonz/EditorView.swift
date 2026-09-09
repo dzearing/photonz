@@ -343,6 +343,8 @@ struct EditorView: View {
                        onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
                        onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
                        onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
+                       onCornerRadiiPreview: { editorState.previewCornerRadii(ids: [$0], $1) },
+                       onCornerRadiiCommit: { editorState.commitCornerRadii(ids: [$0], $1) },
                        onCaptionPlacePreview: { editorState.previewCaptionPlacement(id: $0, center: $1) },
                        onCaptionPlaceCommit: { editorState.commitCaptionPlacement(id: $0, center: $1) },
                        onCaptionPlaceCancel: { editorState.cancelCaptionPlacement() },

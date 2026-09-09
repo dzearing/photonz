@@ -310,8 +310,21 @@ extension EditorState {
     /// speaks for both, so one pull can round a screenshot and the box drawn on
     /// top of it together.
     var cornerRadiusSelection: CornerRadiusSelection {
-        guard let document else { return CornerRadiusSelection(members: [], selectionCount: 0) }
+        guard let document = cornerReadingDocument else {
+            return CornerRadiusSelection(members: [], selectionCount: 0)
+        }
         return document.cornerRadiusSelection(layerIDs: colorStyleTargetIDs)
+    }
+
+    /// The document as the corner rows should READ it: the one being edited,
+    /// plus whatever a corner dot being pulled on the canvas is showing. A
+    /// number that says 0 over a shape that is visibly round is the row lying
+    /// about the picture beside it.
+    private var cornerReadingDocument: PhotonzDocument? {
+        guard var document else { return nil }
+        guard let preview = cornerRadiiPreview else { return document }
+        document.setCornerRadii(layerIDs: preview.ids, to: preview.radii)
+        return document
     }
 
     /// Live drag on that row: rounds every picked layer without recording an
@@ -330,6 +343,9 @@ extension EditorState {
         stylePreview = nil
         discardDragPreview()
         doc.setCornerRadii(layerIDs: ids, to: radii)
+        // The rows read this while the drag is in flight, so what the panel
+        // says and what the canvas draws are the same number.
+        cornerRadiiPreview = (ids, radii)
         submit(doc)
     }
 
@@ -524,7 +540,9 @@ extension EditorState {
     /// HAVE corners. An ellipse has none, so it brings no row rather than a
     /// slider that does nothing to what you have picked.
     var corneredRadiusSelection: CornerRadiusSelection {
-        guard let document else { return CornerRadiusSelection(members: [], selectionCount: 0) }
+        guard let document = cornerReadingDocument else {
+            return CornerRadiusSelection(members: [], selectionCount: 0)
+        }
         return document.cornerRadiusSelection(layerIDs: colorStyleTargetIDs, cornersOnly: true)
     }
 

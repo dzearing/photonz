@@ -45,7 +45,8 @@ public enum CanvasPointer {
     /// frame reserves around it. See `CanvasGrab.captionPillRect`.
     public static func cue(at p: CGPoint, layer: Layer, frame: CGRect?, zoom: CGFloat,
                            captionsEnabled: Bool, offersRotation: Bool,
-                           captionPillSize: CGSize? = nil) -> CanvasPointerCue? {
+                           captionPillSize: CGSize? = nil,
+                           cornerHandlesEnabled: Bool = false) -> CanvasPointerCue? {
         // A locked layer has no handles to cue: the chrome draws none and the
         // press starts nothing, so the pointer stays a plain arrow over all of
         // it. See `Layer.offersHandles`.
@@ -62,10 +63,18 @@ public enum CanvasPointer {
         // in a frame handle's way.
         if offersRotation, let knob = layer.rotateKnobPoint(zoom: zoom),
            hypot(p.x - knob.x, p.y - knob.y) * zoom <= rotateTolerance { return .rotate }
+        guard let frame else { return nil }
+        let local = handleSpacePoint(p, layer: layer)
+        // The four dots inside a shape's corners, ahead of the frame handles
+        // exactly as the press reads them.
+        if cornerHandlesEnabled, layer.offersCornerRadiusHandles,
+           CornerRadiusHandles.hit(at: local, frame: frame,
+                                   radii: layer.roundedCornerRadii, zoom: zoom) != nil {
+            return .grab
+        }
         // The eight frame handles, found in the layer's own untransformed
         // space so a turned or slanted layer answers where its handles draw.
-        guard let frame, layer.allowsFrameResize else { return nil }
-        let local = handleSpacePoint(p, layer: layer)
+        guard layer.allowsFrameResize else { return nil }
         return Handles.hit(at: local, frame: frame, zoom: zoom).map { .resize($0) }
     }
 

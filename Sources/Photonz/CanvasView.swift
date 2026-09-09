@@ -161,6 +161,10 @@ struct CanvasView: NSViewRepresentable {
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
+    /// A corner dot pulled on the canvas: live while it moves, one undo step
+    /// on release (`next-corner-handles`).
+    let onCornerRadiiPreview: (UUID, CornerRadii) -> Void
+    let onCornerRadiiCommit: (UUID, CornerRadii) -> Void
     /// A selected arrow's caption pill dragged to a spot: live, drop, Esc.
     let onCaptionPlacePreview: (UUID, CGPoint) -> Void
     let onCaptionPlaceCommit: (UUID, CGPoint) -> Void
@@ -304,6 +308,8 @@ struct CanvasView: NSViewRepresentable {
         view.onCandidateLevelChange = onCandidateLevelChange
         view.onMeasureEndpointPreview = onMeasureEndpointPreview
         view.onMeasureEndpointCommit = onMeasureEndpointCommit
+        view.onCornerRadiiPreview = onCornerRadiiPreview
+        view.onCornerRadiiCommit = onCornerRadiiCommit
         view.onCaptionPlacePreview = onCaptionPlacePreview
         view.onCaptionPlaceCommit = onCaptionPlaceCommit
         view.onCaptionPlaceCancel = onCaptionPlaceCancel
@@ -404,6 +410,10 @@ final class CanvasNSView: NSView {
     var onCandidateLevelChange: ((Int) -> Void) = { _ in }
     var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void) = { _, _, _, _, _ in }
     var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void) = { _, _, _, _, _ in }
+    /// A corner dot being pulled: live (no history), then the release (one
+    /// undo step).
+    var onCornerRadiiPreview: ((UUID, CornerRadii) -> Void) = { _, _ in }
+    var onCornerRadiiCommit: ((UUID, CornerRadii) -> Void) = { _, _ in }
     /// A selected arrow's caption pill being dragged: live (no history), the
     /// drop (one undo step), and Esc (restores the render).
     var onCaptionPlacePreview: ((UUID, CGPoint) -> Void) = { _, _ in }
@@ -553,6 +563,11 @@ final class CanvasNSView: NSView {
     let multiSelectOutlineLayer = CAShapeLayer()
     /// The eight resize handles on the selected layer's outline.
     let handlesLayer = CAShapeLayer()
+    /// The four dots just inside a picked shape's corners, each rounding the
+    /// corner it sits in (`next-corner-handles`). Round rather than square, so
+    /// the thing that makes a corner round does not look like the thing that
+    /// resizes it.
+    let cornerRadiusHandlesLayer = CAShapeLayer()
     /// Rotate knob: a circle floated off the layer's top edge plus its stem.
     let rotateKnobLayer = CAShapeLayer()
     /// The faint box around the group you are currently INSIDE, so descending
@@ -1195,6 +1210,27 @@ final class CanvasNSView: NSView {
     }
     var resizeDrag: ResizeDrag?
 
+    /// In-flight pull on one of the four dots inside a shape's corners
+    /// (`next-corner-handles`).
+    ///
+    /// The live corners are kept HERE rather than read back off the document,
+    /// because the preview only re-renders the picture: the dots and the blue
+    /// outline have to curve by the number under the hand on the very same
+    /// frame the hand moved.
+    struct CornerRadiusDrag {
+        let layerID: UUID
+        let corner: CornerRadii.Corner
+        let startRadii: CornerRadii
+        var radii: CornerRadii
+        /// ⌥ is held: all four corners travel together. Read on every move,
+        /// so the key can be taken up or let go part way through a pull.
+        var allCorners: Bool
+        /// True once the pull actually changed something, so a press that
+        /// never moved commits nothing and leaves no empty undo step.
+        var changed: Bool { radii != startRadii }
+    }
+    var cornerRadiusDrag: CornerRadiusDrag?
+
     /// True only between a move/resize COMMIT and the post-commit composite
     /// landing — the window in which the sprite must be held at the committed
     /// frame so it doesn't flash. A static click-select sets up a drag preview
@@ -1509,7 +1545,7 @@ final class CanvasNSView: NSView {
                       multiSelectOutlineLayer, gridSnapLayer, pinnedGuideLayer,
                       gridOriginLayer, gridOriginKnobLayer, guideHighlightLayer,
                       selectedGuideKnobLayer,
-                      snapGuideLayer, handlesLayer] {
+                      snapGuideLayer, handlesLayer, cornerRadiusHandlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
             shape.isHidden = true
@@ -1622,6 +1658,8 @@ final class CanvasNSView: NSView {
         selectedGuideKnobLayer.isHidden = true
         handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
         handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        cornerRadiusHandlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
+        cornerRadiusHandlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
         rotateKnobLayer.fillColor = CGColor(gray: 1, alpha: 1)
         rotateKnobLayer.strokeColor = NSColor.controlAccentColor.cgColor
         rotateKnobLayer.lineWidth = 1
@@ -1681,6 +1719,7 @@ final class CanvasNSView: NSView {
         // (A caliper's head dot is not drawn while its readout pill covers
         // it, see `drawnMeasureHandles`, so nothing here draws on a number.)
         handlesLayer.zPosition = 100
+        cornerRadiusHandlesLayer.zPosition = 100
         snapDotLayer.zPosition = 100
 
         registerForDraggedTypes([.fileURL, ComponentDrag.pasteboardType])

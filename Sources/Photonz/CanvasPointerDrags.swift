@@ -358,6 +358,25 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
+        // The four dots inside a shape's corners, each rounding the corner it
+        // sits in (`next-corner-handles`). Read BEFORE the frame handles: they
+        // sit inside the outline rather than on it, so nothing is taken from a
+        // resize, and ⌥ over a dot has to mean all four corners rather than the
+        // skew it means on a corner square.
+        if Experiments.shared.cornerHandlesEnabled, tool == .select,
+           let id = selectedLayerID, let layer = selectedLayer, let frame = selectedLayerFrame,
+           offersOwnHandles(layer), layer.offersCornerRadiusHandles,
+           let corner = CornerRadiusHandles.hit(at: handleSpacePoint(p, layer: layer),
+                                                frame: frame, radii: layer.roundedCornerRadii,
+                                                zoom: viewport.zoom) {
+            let radii = layer.roundedCornerRadii
+            cornerRadiusDrag = CornerRadiusDrag(
+                layerID: id, corner: corner, startRadii: radii, radii: radii,
+                allCorners: event.modifierFlags.contains(.option))
+            if grabCue(at: p) != nil { applyGrabCursor(.closedHand) }
+            refreshOverlays()
+            return
+        }
         // Frame handles. The pointer maps through the layer's inverse
         // transform so handles on a rotated/skewed layer hit where they draw.
         // ⌥ on a corner skews instead of resizing.
@@ -700,6 +719,21 @@ extension CanvasNSView {
             transformDrag = session
             onTransformPreview(session.layerID, session.transform)
             refreshOverlays()
+        } else if var drag = cornerRadiusDrag {
+            // ⌥ is read on every move rather than latched at the press, so
+            // taking hold of one corner and then deciding you meant all four
+            // does not cost you the drag — and letting go of the key hands the
+            // other three straight back.
+            drag.allCorners = event.modifierFlags.contains(.option)
+            let layer = document?.canvasLayer(id: drag.layerID)
+            let frame = selectedLayerFrame ?? layer?.frame ?? .zero
+            let wanted = CornerRadiusHandles.radius(draggingTo: handleSpacePoint(p, layer: layer),
+                                                    corner: drag.corner, in: frame)
+            drag.radii = CornerRadiusHandles.radii(drag.startRadii, corner: drag.corner,
+                                                   to: wanted, allCorners: drag.allCorners)
+            cornerRadiusDrag = drag
+            onCornerRadiiPreview(drag.layerID, drag.radii)
+            refreshOverlays()
         } else if var drag = resizeDrag {
             let layer = document?.canvasLayer(id: drag.layerID)
             // ⇧ keeps the proportions and ⌘ drags free of every magnet: one key
@@ -1015,6 +1049,12 @@ extension CanvasNSView {
                 transformHold = (session.layerID, session.startTransform, session.transform)
                 onTransformCommit(session.layerID, session.transform)
             }
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
+            refreshOverlays()
+        } else if let drag = cornerRadiusDrag {
+            cornerRadiusDrag = nil
+            // A press that never moved a corner leaves no undo step behind.
+            if drag.changed { onCornerRadiiCommit(drag.layerID, drag.radii) }
             refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let drag = resizeDrag {

@@ -202,6 +202,7 @@ extension CanvasNSView {
             snapDotLayer.isHidden = true
             hideMeasureHoverReadout()
             handlesLayer.isHidden = true
+            cornerRadiusHandlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true
             annotationPreviewLayer.isHidden = true
             cropDimLayer.isHidden = true
@@ -736,6 +737,10 @@ extension CanvasNSView {
         // Only the canvas-boundary drag below ever paints the space it is about
         // to add, so every other path through this method leaves it off.
         canvasGrowthLayer.isHidden = true
+        // Only a picked shape with room for them ever wears the four corner
+        // dots, so every other path through this method leaves them off
+        // (`next-corner-handles`).
+        cornerRadiusHandlesLayer.isHidden = true
         refreshGroupContextOutline()
         refreshColumnChrome()
         refreshFrameChrome()
@@ -852,6 +857,16 @@ extension CanvasNSView {
         let resizing = resizeDrag != nil || endpointDrag != nil || measureHandleDrag != nil
             || captionDrag != nil
 
+        // While a corner dot is being pulled, the chrome reads the corners
+        // under the HAND rather than the ones on disk: the preview only
+        // re-renders the picture, and the blue outline hugs a rounded shape's
+        // curve, so without this the outline would lag a frame behind the
+        // curve it is drawn round (`next-corner-handles`).
+        let liveRadii = cornerRadiusDrag.flatMap {
+            $0.layerID == selectedLayerID ? $0.radii : nil
+        }
+        let chromeLayer = liveRadii.map { selectedLayer.rounded($0) } ?? selectedLayer
+
         // The outline (and frame-handle placement) follows the layer's
         // transform — the in-flight one during a rotate/skew drag.
         let activeTransform = transformDrag?.transform ?? selectedLayer.transform
@@ -885,7 +900,7 @@ extension CanvasNSView {
             // square frame corners, which is where a drag grabs.
             layerOutlineLayer.path = SelectionOutlineShape.path(
                 box: box,
-                cornerRadii: selectedLayer.selectionOutlineRadii(box: box),
+                cornerRadii: chromeLayer.selectionOutlineRadii(box: box),
                 transform: docToHandle.concatenating(viewport.documentToView))
             layerOutlineLayer.isHidden = false
         }
@@ -930,6 +945,28 @@ extension CanvasNSView {
                 handlesLayer.isHidden = false
             } else {
                 handlesLayer.isHidden = true
+            }
+
+            // Four dots just inside the corners of a shape that HAS corners,
+            // each one rounding the corner it sits in. A dot sits at the
+            // centre of the curve it controls, so it keeps up with the hand
+            // holding it; on a square corner it rests a fixed distance in,
+            // clear of the resize square sitting on the corner itself. A shape
+            // too cramped to keep its edge handles wears none of them
+            // (`CornerRadiusHandles`).
+            if Experiments.shared.cornerHandlesEnabled, !dragInFlight,
+               offersOwnHandles(selectedLayer), selectedLayer.offersCornerRadiusHandles,
+               CornerRadiusHandles.offered(in: frame, zoom: viewport.zoom) {
+                let dots = CGMutablePath()
+                let radii = liveRadii ?? selectedLayer.roundedCornerRadii
+                for corner in CornerRadii.Corner.allCases {
+                    let p = chromePoint(CornerRadiusHandles.point(for: corner, in: frame,
+                                                                  radii: radii,
+                                                                  zoom: viewport.zoom))
+                    dots.addEllipse(in: CGRect(x: p.x - 3.5, y: p.y - 3.5, width: 7, height: 7))
+                }
+                cornerRadiusHandlesLayer.path = dots
+                cornerRadiusHandlesLayer.isHidden = false
             }
 
             // Rotate knob with its stem, off the (transformed) top edge.

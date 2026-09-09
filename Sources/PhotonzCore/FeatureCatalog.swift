@@ -51,6 +51,8 @@ public enum FeatureCatalog {
 
     public static let shapePartsFlag = "next-shape-parts"
 
+    public static let cornerHandlesFlag = "next-corner-handles"
+
     public static let grabCueFlag = "next-grab-cue"
 
     public static let toolOptionsFlag = "next-tool-options"
@@ -200,6 +202,15 @@ public enum FeatureCatalog {
                     name: shapePartsFlag,
                     title: "Appearance is what it is, Effects is what you add",
                     description: "The panel splits on one rule. Appearance, straight under Layers, holds what a shape simply HAS, always in the same order: opacity, fill, outline, and a corner radius only where there are corners. Effects, under it, starts EMPTY and is a list you add to from one plus: a shadow, a glow, an extra border, a blur. A shadow and a glow each carry a Kind, so one control throws it behind the layer or casts it into the layer, and a border carries a Position. The same kind can arrive more than once, so two shadows are two rows with their own settings, and a row can be switched off, taken out, or dragged to change what paints over what. Each row\'s own settings sit behind a rule of their own, so a shadow\'s blur can never be mistaken for the layer\'s. A rectangle\'s outline can be taken off for the first time, and a box\'s Thickness row and a picture\'s Border row are both the Outline part now.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: cornerHandlesFlag,
+                    title: "Drag a corner to round it",
+                    description: "A picked shape with corners wears a small dot just inside each of its four corners. Pull one in and that corner rounds under your hand, live, while the other three stay as they are; pull it back out and the corner squares off again. Hold Option and all four go together. Letting go is one undo step, and the Corner Radius rows in the panel show what you dragged. The dot sits at the centre of the corner's curve, so it travels a point for every point your hand does rather than creeping while you drag, and a shape too small to keep its edge handles does not wear the dots at all.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
