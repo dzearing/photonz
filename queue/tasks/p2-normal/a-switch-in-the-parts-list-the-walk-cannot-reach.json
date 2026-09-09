@@ -28,7 +28,7 @@
     },
     {
       "t": "2026-09-09T08:25:41.386348Z",
-      "note": "Reproduced: step 54 press Switch in Border failed. Found the cause with a diagnostic walk that dumps the panel after every stage-5 press. Nothing scrolls in the outer dock; the Effects list scrolls INSIDE ITSELF. Re-opening the Shadow at stage 5 makes the list keep room for the effect just opened (877580bf/877580 the 2026-09-08 change), which slides the Border row up from y=469 to y=548, above the Effects header at y=503, so its switch is clipped by the section's own scroll area. inWindow goes false and the press is rightly refused."
+      "note": "Reproduced: step 54 press Switch in Border failed. Found the cause with a diagnostic walk that dumps the panel after every stage-5 press. Nothing scrolls in the outer dock; the Effects list scrolls INSIDE ITSELF. Re-opening the Shadow at stage 5 makes the list keep room for the effect just opened (877780bf, the 2026-09-08 change), which slides the Border row up from y=469 to y=548, above the Effects header at y=503, so its switch is clipped by the section's own scroll area. inWindow goes false and the press is rightly refused."
     },
     {
       "t": "2026-09-09T08:25:41.386348Z",

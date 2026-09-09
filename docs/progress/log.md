@@ -13715,3 +13715,37 @@ moves instead of resizing. `text-width-floor-walk` tells the same fiction and
 is named in that task's acceptance.
 
 Next: that side handle task, and the decision card on panel order.
+
+## 2026-09-09 — the parts walk scrolls to the switch the way a person would
+
+`parts-settings-inline-walk` stopped at step 54: pressing the Border switch in
+stage 5 was refused with "not where a person could click it".
+
+It is not the outer dock. A diagnostic walk that dumps the panel after every
+stage-5 press showed the Effects list scrolling INSIDE itself: re-opening the
+Shadow makes the list keep room for the effect just opened (877780bf,
+2026-09-08), which slides the Border row from y=469 up to y=548, above the
+Effects header at y=503, where the section's own scrolling area clips it.
+`inWindow` goes false and the press is correctly refused. A person meets the
+same thing and scrolls back, so the walk scrolls back: a `reveal` in front of
+each of the two switch presses in stage 5, and one more back to the Border row
+before the final picture. The reveal worked the distance out itself, 73pt, so
+there is no hand-tuned number to go stale.
+
+Stage 5's whole claim is that the list reads exactly as it did at stage 2, and
+that is now machine-checked: `panel-three-on.json` and `panel-back-as-drawn.json`
+match control for control, all 41, same names, details, positions and inWindow.
+
+Two things found on the way, both reproduced and filed rather than fixed here:
+
+- `PlaytestPanelPress.fields(of:among:)` scopes a control to a field by window
+  rect containment alone, so a control scrolled out of its own section picks up
+  the name of whatever row it drifted under. A walk asserting a `Switch` in
+  `Corner Radius` passes, though that row has no switch.
+- `effects-open-into-view-walk` fails at step 12 on a clean tree: folding the
+  Border shut in a 1280x600 window does not stay shut.
+
+No app code changed. `Scripts/test.sh` green, 5278 tests; parts walks 3/3,
+effect walks 12/13.
+
+Next: the two follow-ups above are in the queue at p2.
