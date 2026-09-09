@@ -3367,3 +3367,56 @@ Model in `GroupLayout` (`wraps`, `wrapsContents`, `couldWrap`), maths in
 about wrapping, so every document saved before this is byte for byte the file it
 always was. Tested in `GroupWrapTests`, walked by
 `Scripts/playtest/wrap-onto-more-lines-walk.json`.
+
+## Landed: a group says when its contents run past its edge (Next, `next-auto-layout`, 2026-09-08)
+
+Give a row a width too small for what is in it and the pieces simply hang out
+over the edge. Give it Clip contents as well and they disappear altogether.
+Neither of those said anything anywhere: it was on you to notice the shape was
+wrong, and then to go and find which of the three fixes you wanted. The Layout
+section now says it once, where every one of those fixes already lives.
+
+**One line, and the number is already worked out.** "The pieces run past the
+right edge. Wrap them onto more lines, or make it 320 wide." Which edge first,
+then at most two things to do about it. The 320 is the width the box would need,
+measured rather than guessed, so the fix is typing one number into W rather than
+dragging until it looks right.
+
+**It names a number, never a field.** The thing holding a box in is Width on one
+group, a Largest width on the next, and both on a third. "Make it 320 wide" is
+true of every one of them and shorter than any sentence that tries to say which
+row to go to.
+
+**Wrapping is only offered when wrapping actually fixes it.** The row is wrapped
+on a copy nobody can see and asked again, on BOTH axes: a row that wraps inside
+a height somebody gave it pushes its new lines out of the bottom instead, so
+there the offer is not made. A row that already wraps and still does not fit is
+not told to wrap harder, it is told the width.
+
+**It is measured, so it goes quiet by itself.** The group is flowed exactly the
+way the canvas flows it and the pieces are held against the box that came out,
+so ticking Wrap, widening the box, or deleting a chip all silence the line the
+same moment they fix the shape. The line and the picture cannot drift apart.
+
+**Only a group that ARRANGES, and never a screen.** On a Free group everything
+is exactly where you put it, so a badge hanging off a corner is a drawing rather
+than a fault and nagging about it would be the app second-guessing your work. A
+screen's box is a frame somebody drew to build on, its size lives two sections
+up in Position & Size, and things overhanging one while you work is ordinary.
+
+**It reads one step louder than the teaching lines under it.** The other two
+sentences in this section explain a control that is missing; this one reports
+that this group is wrong right now, so it is secondary where they are tertiary.
+No colour and no warning badge: that would be a new idiom on this panel.
+
+Not in this slice: clipping is not offered as a fix, because it hides the pieces
+rather than fitting them and its switch is already two rows up; a multiple
+selection says nothing, since the number differs per group; and it speaks for a
+group's OWN edge, so a card holding a broken row is quiet and the row says it.
+
+Model in `GroupOverflow` and `Layer.contentsOverflow`, carried to the panel on
+`ContentsSelection.Group.overflow`, printed by `ArrangementInspector`. A group
+that fits pays one flow, and one that hugs on both axes pays none at all, since
+a box the size of its contents can never run out of room. Tested in
+`GroupOverflowTests`, walked by
+`Scripts/playtest/group-says-it-overflows-walk.json`.

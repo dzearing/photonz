@@ -66,6 +66,11 @@ public struct ContentsSelection: Hashable, Sendable {
         /// piece inside is the surface is the thing that decides it and the
         /// rows have no other way to see inside.
         public let roomAnswer: RoomAnswer?
+        /// Where its contents run past its own edge, or nil where everything
+        /// fits. Read here, off the layer itself, because the answer is the
+        /// whole group flowed and measured and the rows have no way to do that
+        /// for themselves.
+        public let overflow: GroupOverflow?
         /// The numbers a COPY already carries as knobs of its own, on its own
         /// outermost edges. Those rows are typeable in the Component section a
         /// few rows above, so the Layout section leaves its greyed copy of
@@ -380,6 +385,7 @@ extension PhotonzDocument {
                                               onAScreen: group.isFrame),
                     overrides: group.contentsWithTheirOwnPlacement(arrangement: arrangement),
                     roomAnswer: group.roomAnswer,
+                    overflow: arranging ? group.contentsOverflow : nil,
                     knobbed: numberKnobsOnTheCopyItself(instance: group.id))
             },
             selectionCount: picked.count,

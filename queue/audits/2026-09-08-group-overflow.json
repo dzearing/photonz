@@ -1,0 +1,31 @@
+{
+  "feature": "A group says when its contents run past its edge",
+  "epic": "ui-layout",
+  "summary": "Squeeze a row narrower than the things in it and the Layout section now says so in one line, naming the width that would hold them and offering to wrap instead. It goes quiet the moment either fix works.",
+  "setup": "Photonz Dev, Experiments window, release Next. Groups that arrange their own contents is on by default.",
+  "try": [
+    { "do": "Draw three rounded rectangles of the same size, side by side." },
+    { "do": "Sweep all three and press Shift-Command-S to make them one Row." },
+    { "do": "Type 10 into Gap in the Layout section, and read the section: it says nothing about running out of room." },
+    { "do": "Type 200 into W and read the new line under Padding.", "shot": "2026-09-08-group-overflow-2.png" },
+    { "do": "Tick Wrap onto more lines, under Gap, and watch the line go away." },
+    { "do": "Untick it, then type the width the line asked for into W. The line goes away for that too." },
+    { "do": "Type 200 into W again and 20 into H.", "shot": "2026-09-08-group-overflow-6.png" },
+    { "do": "Set Arrangement to Free and confirm the line is gone, however far out the pieces hang." }
+  ],
+  "evaluate": [
+    "The line sits under Padding, at the foot of the Layout section, while the W field you type the fix into is up in Position & Size. Is that far enough away to be annoying?",
+    "Is \"make it 320 wide\" enough of an instruction, or did you want it to name the W field, or to be a button you press?",
+    "Two fixes in one sentence, wrap or widen. Does that read as helpful, or as the panel making you choose?",
+    "It is one step louder than the grey lines under it and carries no colour or warning badge. Does it catch your eye at all, or does it need to be louder?",
+    "A Free group never says it, so a badge you deliberately hung off a corner is left alone. Is that the right call, or would you want it there too?"
+  ],
+  "rough": [
+    "It only speaks for ONE picked group. Select three rows and one of them overflows and the section says nothing, because the width that would fix each of them is a different number and a line naming one of them would be read as naming all three.",
+    "It speaks for a group's own edge only. A card wide enough for what it holds, holding a row too narrow for its chips, is quiet: you have to select the row itself to be told. The alternative was a card reporting a fault somewhere inside it with no way to point at it.",
+    "It wraps to two visual lines at the default dock width, and on a group that is also being told \"Set Vertical below to Stretch to fill it\" the section carries three lines of prose at once.",
+    "Clipping is not offered as a fix even though the task named it, because clipping hides the pieces rather than fitting them and its switch is already two rows above the line.",
+    "Screens are left out. A screen's size is not in this section at all, so there is no number here to name, and things overhanging a screen while you build on it is ordinary rather than wrong.",
+    "Both screenshots are real window captures from the probe app: the Grants line said Screen Recording granted."
+  ]
+}

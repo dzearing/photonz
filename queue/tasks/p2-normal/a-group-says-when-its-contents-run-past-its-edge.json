@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 2140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T23:42:38.071Z",
-  "updated": "2026-09-08T23:42:38.074Z",
+  "updated": "2026-09-09T04:44:21.815Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Came out of the second adversarial pass on the row-wrapping task (queue/audits/2026-09-08-row-wrap.json, rough item 3). Today the only hint is visual. Related surfaces: ArrangementInspector.sentence() already carries at most one line under the section (spreadSentence, fillSentence) and is the natural home; GroupFlow.size vs the contents far edge is the test for overflow. Applies to any group with a size of its own, not only a wrapping row, so it should not be scoped to wrapping.",
@@ -22,6 +22,52 @@
     {
       "t": "2026-09-08T23:42:38.073Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T04:25:38.126Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T04:29:30.575Z",
+      "note": "Adversarial pass on the idea, before building. (1) The Layout section already prints up to two greyed teaching lines plus the room answer, so a third grey line risks being a wall the eye skips. The overflow line is not a teaching line, it is a report that this group is wrong right now, so it gets its own line above them and reads one step louder (secondary, not tertiary) while staying inside the section vocabulary. No new warning colour or icon, because that would be a new visual idiom and a call for the user, not for me."
+    },
+    {
+      "t": "2026-09-09T04:29:30.575Z",
+      "note": "(2) Cut: a Free group is left alone. On a Free group everything is exactly where you put it, so a badge deliberately hanging off a corner is your drawing, and nagging about it would be the app second-guessing you. Only groups that ARRANGE their contents (stack, grid) get the line, which is where an overflow is the flow running out of room rather than a decision. The task note says do not scope to wrapping rows, and stack plus grid honours that."
+    },
+    {
+      "t": "2026-09-09T04:29:30.575Z",
+      "note": "(3) Cut: a screen is left alone. Its box is a frame somebody drew to build on, and its W and H are two sections up in Position and Size, so there is no Layout field to name and things overhanging while you work is ordinary. Same exclusion ContainerFit already makes."
+    },
+    {
+      "t": "2026-09-09T04:29:30.575Z",
+      "note": "(4) Shortest version that keeps the value: say it runs past the edge and name the number that would hold it, rather than naming a field. Width versus Largest versus W differ per group, and \"make it 384 wide\" is true in every one of them and shorter. Cap the line at two fixes, never three: clipping is not offered, because clipping hides the problem instead of fixing it and the switch is already on this section."
+    },
+    {
+      "t": "2026-09-09T04:29:30.575Z",
+      "note": "(5) Honesty rule: wrapping is only offered when wrapping actually makes EVERYTHING fit. Wrapping a row that also has a fixed height pushes lines out of the bottom, so a probe is wrapped and re-measured on both axes before the words offer it."
+    },
+    {
+      "t": "2026-09-09T04:44:16.549Z",
+      "note": "Built: GroupOverflow + Layer.contentsOverflow in PhotonzCore, carried on ContentsSelection.Group.overflow, printed by ArrangementInspector under Padding. 23 tests in GroupOverflowTests, all 5236 tests green."
+    },
+    {
+      "t": "2026-09-09T04:44:16.550Z",
+      "note": "Second adversarial pass, on the running probe app. (a) The line renders and reads well, but it sits at the FOOT of the Layout section while the W field you type the fix into is up in Position & Size. Could not fix without moving either the line or the fields, which is a layout call for the user, so it is the first question in the audit. (b) It wraps to two visual lines at the default dock width, and on a group also being told to set Vertical to Stretch the section carries three lines of prose at once. (c) A multiple selection says nothing, because the width that fixes each group is a different number. (d) A card holding a broken row is quiet: it speaks for its own edge only. Both (c) and (d) are in the audit rough."
+    },
+    {
+      "t": "2026-09-09T04:44:16.550Z",
+      "note": "Performance: the panel reads this on every redraw, so a group with no size and no ceiling is turned away before anything is flowed, and a group that fits pays exactly one flow. Only a box that is actually too small pays for the fit numbers, and the size it is at now is handed on from the flow already made rather than measured twice."
+    },
+    {
+      "t": "2026-09-09T04:44:16.550Z",
+      "note": "Verified live: Scripts/playtest/group-says-it-overflows-walk.json, 6 stages with expect steps on the exact words, ok in 9s. Also re-ran every walk that touches the Layout section (wrap 3, room 9, stack and grid 8, narrow panels 8): 29 walks, 0 failures. Screen Recording was granted, so the audit carries two real window captures."
+    },
+    {
+      "t": "2026-09-09T04:44:21.813Z",
+      "note": "A group that arranges its contents now says in the Layout section when they run past its own edge, in one line that names the width or height that would hold them and offers wrapping when wrapping actually fixes it. Measured off the real flow, so it goes quiet the moment either fix works. GroupOverflow + Layer.contentsOverflow in PhotonzCore, ContentsSelection.Group.overflow, ArrangementInspector. Verified by 23 tests in GroupOverflowTests (5236 green), the new group-says-it-overflows walk, and 28 more Layout-section walks re-run clean. Audit at queue/audits/2026-09-08-group-overflow.json with two real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-09T04:25:38.125Z",
+  "completed": "2026-09-09T04:44:21.814Z"
 }

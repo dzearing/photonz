@@ -118,6 +118,19 @@ struct ArrangementInspector: View {
             .panelHelp(Self.arrangementHelp)
         }
         numbers()
+        // Above the teaching lines, and one step louder than them. The two
+        // lines below explain a control that is missing; this one reports that
+        // this group is wrong right now, and a report buried in grey among two
+        // explanations is a report nobody reads. Still the section's own
+        // vocabulary though: same size, no colour, no icon. A warning badge
+        // would be a new idiom on this panel and that is not mine to invent.
+        if let overflow = one?.overflow {
+            Text(overflow.sentence)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .playtestControl("Contents overflow", detail: overflow.sentence)
+        }
         if let sentence = sentence() {
             Text(sentence)
                 .font(.caption2)
