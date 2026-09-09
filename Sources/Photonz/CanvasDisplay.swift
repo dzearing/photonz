@@ -338,6 +338,23 @@ extension CanvasNSView {
             dropHostFrameLayer.isHidden = true
             return
         }
+        // A saved style let go of on picked text sets every one of them, and
+        // the line under the pointer says so, so the outline has to agree:
+        // one box drawn while the words promise several would be the picture
+        // and the sentence disagreeing about the same drop.
+        if !textStyleDropBoxes.isEmpty {
+            let path = CGMutablePath()
+            for box in textStyleDropBoxes {
+                let rect = viewRect(forDocRect: box, in: viewport)
+                let radius = min(6, rect.width / 2, rect.height / 2)
+                path.addPath(CGPath(roundedRect: rect, cornerWidth: radius,
+                                    cornerHeight: radius, transform: nil))
+            }
+            dropLandingLayer.path = path
+            dropLandingLayer.isHidden = false
+            dropHostFrameLayer.isHidden = true
+            return
+        }
         guard let landing = dropLanding else {
             dropLandingLayer.isHidden = true
             // A move drag draws no landing box — the layer itself is already

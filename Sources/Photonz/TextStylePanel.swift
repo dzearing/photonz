@@ -220,6 +220,13 @@ struct TextStyleRow: View {
 /// cannot pick a style off. The sample is short — a tile is about a hundred
 /// points wide — and it is capped in size so a 96pt heading does not make one
 /// tile four times the height of the ones beside it.
+///
+/// It is also the HANDLE for the style it stands for. Saving text under a name
+/// and then having to select other text and find the name in a menu made the
+/// shelf a place styles went rather than a place they came from, so a tile is
+/// picked up and let go of on any piece of text on the picture, the same way a
+/// saved colour is carried onto a swatch. What travels is the style itself, so
+/// the text follows the name afterwards.
 struct LibraryTextStyleTile: View {
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
@@ -232,28 +239,16 @@ struct LibraryTextStyleTile: View {
     /// and a 96pt heading drawn at 96pt would be one letter and a clipped edge.
     private static let sampleSize: CGFloat = 26
 
-    /// What the letters are drawn ON.
-    ///
-    /// Not the panel's own colour: the first build did that and a style whose
-    /// text is near-black came out invisible on the dark dock, which is the one
-    /// thing a tile has to not do. So the plate opposes the letters the same way
-    /// the canvas contrast halo does — light letters get a dark plate, dark
-    /// letters a light one — and the sample is legible whatever the style is and
-    /// whichever theme the app is in.
-    private var plate: Color {
-        let luminance = (RGBA(hex: style.treatment.colorHex)
-                         ?? RGBA(r: 1, g: 1, b: 1)).relativeLuminance
-        return luminance >= 0.5 ? Color.black.opacity(0.75) : Color.white.opacity(0.85)
-    }
+    /// What the letters are drawn on, and how heavy they are. Shared with the
+    /// chip that travels under the pointer (`TextStyleTileLook`), so what you
+    /// picked up and what is on the shelf are recognisably one thing.
+    private var plate: Color { TextStyleTileLook.plate(style.treatment) }
 
     private func weight(_ weight: TextWeight) -> Font.Weight {
-        switch weight {
-        case .regular: return .regular
-        case .medium: return .medium
-        case .semibold: return .semibold
-        case .bold: return .bold
-        }
+        TextStyleTileLook.weight(weight)
     }
+
+    private func item() -> NSItemProvider { TextStyleDrag.itemProvider(style: style) }
 
     var body: some View {
         // A real button rather than a tap gesture on a plain view.
@@ -267,9 +262,17 @@ struct LibraryTextStyleTile: View {
         // gesture never had.
         Button { editorState.selectLibraryItem(entry.id) } label: { tile }
             .buttonStyle(.plain)
+            // Pulling the tile carries the style onto the picture. It sits
+            // OUTSIDE the button rather than on its label, so a press still
+            // reaches the button and only a press that travels becomes a drag.
+            .modifier(LibraryTextStyleTileDrag(style: style, item: item))
             .panelHelp("\(entry.name) • \(TextStyleNaming.treatmentText(style.treatment))"
                        + " • \(entry.detail)")
-            .playtestTarget(entry.name, kind: .tile, detail: "Styles")
+            // Named for a walk, carrying the very item the tile's own drag
+            // hands over, so a walk can never carry a style the pointer could
+            // not.
+            .playtestTarget(entry.name, kind: .tile, detail: "Styles",
+                            payload: Experiments.shared.colorDragEnabled ? item : nil)
     }
 
     private var tile: some View {
@@ -302,6 +305,24 @@ struct LibraryTextStyleTile: View {
                 .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), lineWidth: 1.5)
         )
         .contentShape(Rectangle())
+    }
+}
+
+/// Picking a text style tile up, only where style drag is turned on. It is its
+/// own modifier so the tile itself stays one plain button, the way the colour
+/// tile keeps its drag in `LibraryStyleTileDrag`.
+private struct LibraryTextStyleTileDrag: ViewModifier {
+    let style: TextStyle
+    let item: () -> NSItemProvider
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if Experiments.shared.colorDragEnabled {
+            // The chip, not the tile: a tile under the pointer would say a
+            // tile was moving, and what is moving is a style.
+            content.onDrag(item, preview: { DraggedTextStyleChip(style: style) })
+        } else {
+            content
+        }
     }
 }
 

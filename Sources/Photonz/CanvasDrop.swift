@@ -11,11 +11,20 @@ extension CanvasNSView {
     // MARK: - Drag destination (drop an image to add it as a layer)
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        // A saved style first: it is the app's own type, so it can never be
+        // mistaken for a file, and everything else the canvas takes is a thing
+        // being ADDED rather than a name being put on what is already here.
+        if let style = droppedTextStyle(sender) {
+            return trackTextStyleDrag(style, atViewPoint: viewPoint(sender))
+        }
         if droppedComponent(sender) != nil { return trackComponentDrag(sender) }
         return trackImageDrag(sender)
     }
 
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if let style = droppedTextStyle(sender) {
+            return trackTextStyleDrag(style, atViewPoint: viewPoint(sender))
+        }
         // A component off the shelf lands wherever the pointer is: there is no
         // collage slot to highlight, and the copy is centred on the drop. What
         // it needs instead is the box it would fill and the frame it would
@@ -29,15 +38,31 @@ extension CanvasNSView {
         dropLanding = nil
         dropHostBox = nil
         draggedImage = nil
+        clearTextStyleNote()
         onComponentDragEnded()
         refreshOverlays()
     }
 
+    /// Where the pointer is, in this view's own coordinates.
+    private func viewPoint(_ sender: NSDraggingInfo) -> CGPoint {
+        convert(sender.draggingLocation, from: nil)
+    }
+
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        // Read before the chrome is cleared: the answer depends only on the
+        // pointer and the document, but the sentence it drew has to go the
+        // moment the button comes up either way.
+        let style = droppedTextStyle(sender)
+        let stylePoint = viewPoint(sender)
         hoverSlot = nil
         dropLanding = nil
         dropHostBox = nil
         draggedImage = nil
+        clearTextStyleNote()
+        if let style {
+            refreshOverlays()
+            return dropTextStyle(style, atViewPoint: stylePoint)
+        }
         // The room closes before the piece lands in it: the drop draws the real
         // picture straight after, and one that is refused still gets its own
         // picture back rather than a gap left open for nothing.

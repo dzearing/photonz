@@ -95,6 +95,27 @@ extension EditorState {
         rememberTextStyleDefaults(style.treatment)
     }
 
+    /// Dresses the text a style was let go of on, in ONE step: drop, undo once,
+    /// and it is back exactly as it was.
+    ///
+    /// It names its own text rather than reading the selection, because a drop
+    /// is aimed: the pointer said which words, and they are often words nobody
+    /// has picked. For the same reason it does NOT arm the text tool with the
+    /// style the way choosing a name from the Style row does — that row speaks
+    /// for text you have selected and are working on, while this lands on text
+    /// you may never have touched, and quietly changing what the next block
+    /// comes out in would be a side effect nobody asked for.
+    func dropTextStyle(styleID: UUID, onLayers ids: [UUID]) {
+        guard textStylesEnabled, !ids.isEmpty,
+              let style = document?.textStyle(id: styleID) else { return }
+        discardDragPreview()
+        let sizes = restyledTextSizes(ids: ids, treatment: style.treatment)
+        perform { document in
+            _ = document.bindTextStyle(layerIDs: ids, styleID: styleID)
+            document.applyTextBoxes(sizes)
+        }
+    }
+
     /// Unlink: the text stays exactly as it is, it just becomes its own again,
     /// in one step. Nothing moves, so there is nothing to re-measure.
     func unlinkTextStyle() {

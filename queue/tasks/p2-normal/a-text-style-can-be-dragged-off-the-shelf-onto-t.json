@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T23:24:54.770Z",
-  "updated": "2026-09-08T23:24:54.773Z",
+  "updated": "2026-09-09T04:01:32.871Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mirror Sources/Photonz/ColorStylePanel.swift LibraryStyleTile + LibraryStyleTileDrag and Sources/Photonz/LibraryColorDrop.swift. The text tile is Sources/Photonz/TextStylePanel.swift LibraryTextStyleTile; it is now a Button, so the drag has to sit on the button without stealing the click (the colour tile keeps both on one view). Raised in queue/audits/2026-09-08-text-styles.json.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-09-08T23:24:54.772Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T03:36:21.422Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T03:42:20.314Z",
+      "note": "Adversarial review before building. (1) The colour parallel is not exact: a colour lands on a SWATCH in the panel, and a text style has no swatch anywhere, so the only honest target is the text itself on the picture. That means a canvas drop, not a panel drop. (2) First-time user: they carry the Ag tile over the picture and nothing in the panel tells them where it goes, so bare canvas must SAY where it goes rather than sit there refusing, and a shape must say it is not text. Both are sentences, not just a no-entry pointer. (3) Aiming at one of several picked pieces of text: a swatch paints everything its row speaks for, so a drop on picked text sets all of the picked text and says how many. Aiming at unpicked text sets just that one. (4) Cut: no drop onto the layers list row, no drop onto the Style menu, no multi-style crowd handling beyond a count. The shortest version is tile drag, canvas outline, one sentence, one undo step. (5) Known limit going in: text inside a component copy hit-tests as the copy, so it will read as not text."
+    },
+    {
+      "t": "2026-09-09T04:01:32.871Z",
+      "note": "Built. PhotonzCore/TextStyleDrop.swift works out the whole answer away from any view (tests first, 7 in TextStyleDropTests): what letting go does, and the one line that says so either way round. Sources/Photonz/TextStyleDrag.swift carries the saved style itself on its own pasteboard type com.photonz.text-style, declared in Scripts/build-app.sh with a build guard beside the paint one. The tile in TextStylePanel.swift keeps its Button and takes the drag OUTSIDE it, travelling as a small Ag chip. Sources/Photonz/CanvasTextStyleDrop.swift is the picture side: hit test, accent outline round every piece of text the drop would reach, and a pill under the pointer carrying the sentence. EditorState.dropTextStyle(styleID:onLayers:) binds and re-measures in one step."
+    },
+    {
+      "t": "2026-09-09T04:01:32.871Z",
+      "note": "Adversarial review of the built thing, on the real app. (1) A drop aimed at picked text sets all of it, and the first build outlined only the one under the pointer while the words said \"all 2 of them\" - the picture and the sentence disagreeing about the same drop. Fixed: every reached box is outlined (CanvasDisplay.refreshDropLanding). (2) Text is no longer NAMED in the sentence. The first build said \"Sets Text 2 in Heading\", and a made-up layer name says less than the outline already does; a shape still IS named, because there is no outline there and what you need told is what kind of thing you are pointing at. (3) \"Sets all 2 of them\" is clumsy, but it is the phrasing the colour drop already uses, so it was left matching rather than fixed in one place. Left in the audit. (4) A drop does not arm the Text tool the way choosing a name from the Style row does, because it lands on text you may never have touched. In the audit as a question."
+    },
+    {
+      "t": "2026-09-09T04:01:32.871Z",
+      "note": "Verified. Scripts/playtest/text-style-drag-walk.json is new and passes: it saves a style, then carries the tile over bare canvas (refused, \"Drop this on a piece of text to set it in Heading\"), over a box (refused, \"Rectangle is not text, so it cannot wear Heading\"), onto unpicked text (taken, \"Sets this text in Heading\", the render shows it re-set and one undo puts it back), onto text already wearing it (refused, \"This text is already Heading\"), and onto one of two picked pieces of text (taken, \"Sets all 2 of them in Heading\", both outlined). Real window captures, Screen Recording granted. text-style-walk still passes, which is what proves the drag did not steal the tile click. Five other dragTile walks pass. Scripts/test.sh green, 5195 tests. A full sweep is requested because the canvas drag destination and the dragTile step are shared by 31 walks. Audit: queue/audits/2026-09-09-text-style-drag.json."
     }
-  ]
+  ],
+  "started": "2026-09-09T03:36:21.421Z"
 }

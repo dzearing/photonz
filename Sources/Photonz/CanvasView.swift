@@ -196,6 +196,8 @@ struct CanvasView: NSViewRepresentable {
     let onComponentDragMoved: (UUID, UUID?, CGPoint) -> Void
     /// That drag left or landed: the room closes back up.
     let onComponentDragEnded: () -> Void
+    /// A saved text style let go of on a piece of text (Next, `next-styles`).
+    let onDropTextStyle: (UUID, [UUID]) -> Void
     let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
     let onAbsorbLayerIntoCollage: (UUID, UUID, Int) -> Void
     let onSwapCollageSlots: (UUID, Int, Int) -> Void
@@ -320,6 +322,7 @@ struct CanvasView: NSViewRepresentable {
         view.onDropComponent = onDropComponent
         view.onComponentDragMoved = onComponentDragMoved
         view.onComponentDragEnded = onComponentDragEnded
+        view.onDropTextStyle = onDropTextStyle
         view.onAbsorbLayerIntoCollage = onAbsorbLayerIntoCollage
         view.onSwapCollageSlots = onSwapCollageSlots
         view.onCanvasResize = onCanvasResize
@@ -428,6 +431,9 @@ final class CanvasNSView: NSView {
     /// A component dragged off the Library shelf, dropped at a document point
     /// (Next, `next-components`).
     var onDropComponent: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
+    /// A saved text style dragged off the Library shelf and let go on text:
+    /// (style, the text it reached). Next, `next-styles`.
+    var onDropTextStyle: ((UUID, [UUID]) -> Void) = { _, _ in }
     var onComponentDragMoved: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
     var onComponentDragEnded: (() -> Void) = { }
     /// A photo layer dropped onto a collage slot: (photo layer, collage, slot).
@@ -630,6 +636,21 @@ final class CanvasNSView: NSView {
     /// The file the drag in flight is carrying and what the canvas can make of
     /// it, kept for the life of that one drag session. See `draggedFile`.
     var draggedImage: (sequence: Int, url: URL, drop: CanvasFileDrop)?
+    /// The pill the canvas says a drag in the air into, and the words on it. A
+    /// ring can only ever say yes; half of what somebody carrying a saved style
+    /// needs to hear is a no with a reason, and a tip cannot show while a drag
+    /// is in flight. See `CanvasTextStyleDrop.swift`.
+    let dropNoteLayer = CAShapeLayer()
+    let dropNoteTextLayer = CATextLayer()
+    /// What that pill currently says, for a playtest to read back. Nil whenever
+    /// no style is over this canvas.
+    var textStyleDropNote: String?
+    /// Every box a saved style let go of here would set. Empty whenever no
+    /// style is over this canvas, or the drop would do nothing. It is a LIST
+    /// rather than one box because a drop aimed at picked text reaches all of
+    /// it, and the outline has to promise exactly what the line under the
+    /// pointer says.
+    var textStyleDropBoxes: [CGRect] = []
 
     /// The screen a move drag in flight would drop what it carries INTO,
     /// outlined while the pointer is still down. Without it the drop changes
@@ -1509,6 +1530,14 @@ final class CanvasNSView: NSView {
         dropHostFrameLayer.fillColor = nil
         dropHostFrameLayer.lineWidth = 2
         dropHostFrameLayer.lineDashPattern = [5, 4]
+        // The sentence a drag in the air says, above everything else on the
+        // canvas: it is the one thing that must never be behind what it is
+        // talking about. See `CanvasTextStyleDrop.swift`.
+        dropNoteLayer.strokeColor = nil
+        dropNoteLayer.lineWidth = 0
+        dropNoteLayer.isHidden = true
+        dropNoteLayer.addSublayer(dropNoteTextLayer)
+        layer?.addSublayer(dropNoteLayer)
         // Crop chrome stacks above the composite and the selection chrome
         // (which is hidden in crop mode anyway).
         cropDimLayer.fillColor = CGColor(gray: 0, alpha: 0.55)

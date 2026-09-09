@@ -811,8 +811,9 @@ private final class Run {
         case .dragOver(let carry, let at, let hold, let leave):
             try await dragOver(carry, at: at, hold: hold, leave: leave, number: number)
 
-        case .dragTile(let tile, let to, let hold):
-            try await dragTile(tile, to: to, hold: hold, number: number)
+        case .dragTile(let tile, let to, let hold, let expect, let says):
+            try await dragTile(tile, to: to, hold: hold, expect: expect, says: says,
+                               number: number)
 
         case .dragRow(let row, let onto, let zone, let hold):
             try await dragRow(row, onto: onto, zone: zone, hold: hold, number: number)
@@ -2966,7 +2967,9 @@ private final class Run {
     /// Picks a tile up off the Library shelf and lets it go on the picture,
     /// through the canvas's own drag destination — the same calls a drag from
     /// the Finder makes, pasteboard and all.
-    private func dragTile(_ name: String, to at: PlaytestPoint, hold: String?, number: Int) async throws {
+    private func dragTile(_ name: String, to at: PlaytestPoint, hold: String?,
+                          expect: PlaytestColorDropExpectation, says: String?,
+                          number: Int) async throws {
         let canvas = try requireCanvas()
         let window = try requireWindow()
         let target = try panelTarget(name, kind: .tile)
@@ -2996,17 +2999,44 @@ private final class Run {
                                         .map { ", joining \($0)" } ?? ", loose on the canvas") }
                    ?? "no landing box")
         }
-        guard updated != [] else {
-            canvas.draggingExited(info)
-            throw Failure(description: "the canvas refused the tile \"\(name)\" at \(short(at.point)) \(at.space.rawValue)")
+        // The sentence the picture is saying about this drag, for the walk to
+        // read back. Only a saved style says one; everything else is silent,
+        // and a walk that asks what a file says gets told there was nothing.
+        let sentence = canvas.textStyleDropNote
+        if let says {
+            guard let sentence else {
+                throw Failure(description: "the picture said nothing about the tile "
+                    + "\"\(name)\", and the walk expected \"\(says)\"")
+            }
+            guard sentence.localizedCaseInsensitiveContains(says) else {
+                throw Failure(description: "the picture said \"\(sentence)\" about the tile "
+                    + "\"\(name)\", and the walk expected \"\(says)\"")
+            }
         }
-        guard canvas.performDragOperation(info) else {
-            throw Failure(description: "the canvas would not take the tile \"\(name)\"")
+        let takes = updated != []
+        if takes != (expect == .takes) {
+            canvas.draggingExited(info)
+            throw Failure(description: "the picture \(takes ? "took" : "refused") the tile "
+                + "\"\(name)\" at \(short(at.point)) \(at.space.rawValue)"
+                + (sentence.map { ", saying \"\($0)\"" } ?? "")
+                + ", and the walk expected it to \(expect.rawValue)")
+        }
+        var landed = false
+        if takes {
+            landed = canvas.performDragOperation(info)
+            guard landed else {
+                throw Failure(description: "the canvas would not take the tile \"\(name)\"")
+            }
+        } else {
+            canvas.draggingExited(info)
         }
         await sleep(0.4)
         let types = (board.types ?? []).map(\.rawValue).joined(separator: ", ")
         note(number, "dragTile",
-             "\"\(name)\" carrying \(types) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
+             "\"\(name)\" carrying \(types) held over \(short(at.point)) \(at.space.rawValue) "
+                + "= view \(short(viewPoint)): the picture \(takes ? "took it" : "refused it")"
+                + (sentence.map { ", saying \"\($0)\"" } ?? "")
+                + ", drop \(landed ? "landed" : "did not land")\(held)",
              state: describe())
     }
 

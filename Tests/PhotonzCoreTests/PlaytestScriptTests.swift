@@ -924,21 +924,41 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragTile", "tile": "Button", "to": [400, 300], "hold": "over-canvas" } ] }
         """)
-        guard case .dragTile(let tile, let to, let hold) = script.steps[0] else {
+        guard case .dragTile(let tile, let to, let hold, let expect, let says) = script.steps[0] else {
             Issue.record("dragTile"); return
         }
         #expect(tile == "Button")
         #expect(to.point == CGPoint(x: 400, y: 300))
         #expect(to.space == .document)
         #expect(hold == "over-canvas")
+        // A walk that says nothing about the answer is asking for the ordinary
+        // one: the picture takes it. Every walk written before a tile could be
+        // refused still means what it meant.
+        #expect(expect == .takes)
+        #expect(says == nil)
         #expect(script.steps[0].name == "dragTile")
+    }
+
+    /// A saved style carried onto something that cannot wear it is refused, and
+    /// a walk has to be able to say so: without this, a refusal working exactly
+    /// as designed reads as a broken step.
+    @Test func aTileDragCanExpectARefusalAndTheWordsWithIt() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragTile", "tile": "Heading", "to": [400, 300],
+                       "expect": "refuses", "says": "is not text" } ] }
+        """)
+        guard case .dragTile(_, _, _, let expect, let says) = script.steps[0] else {
+            Issue.record("dragTile"); return
+        }
+        #expect(expect == .refuses)
+        #expect(says == "is not text")
     }
 
     @Test func aTileDragTakesTheSameViewSpaceEveryOtherPointDoes() throws {
         let script = try decode("""
         { "steps": [ { "do": "dragTile", "tile": "Button", "to": [40, 30], "space": "view" } ] }
         """)
-        guard case .dragTile(_, let to, let hold) = script.steps[0] else {
+        guard case .dragTile(_, let to, let hold, _, _) = script.steps[0] else {
             Issue.record("dragTile"); return
         }
         #expect(to.space == .view)

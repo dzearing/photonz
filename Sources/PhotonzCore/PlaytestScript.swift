@@ -1004,7 +1004,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Pick a tile up off the Library shelf by its name, hold it over a point
     /// on the picture, and let go there. `hold` names a picture taken while it
     /// is still in hand, which is the only moment the landing outline exists.
-    case dragTile(tile: String, to: PlaytestPoint, hold: String?)
+    /// `expect` says whether the picture should take it, so a walk can prove a
+    /// refusal is a refusal rather than reading one as a broken step, and
+    /// `says` is the words the canvas has to be saying while it is held, which
+    /// is the whole of what a refusal owes somebody.
+    case dragTile(tile: String, to: PlaytestPoint, hold: String?,
+                  expect: PlaytestColorDropExpectation, says: String?)
     /// Pick a row up in the layers list by its name and let go of it on
     /// another row: above it, below it, or inside it when that row is a group.
     /// `hold` names a picture taken before letting go, which is the only
@@ -1426,8 +1431,14 @@ public enum PlaytestStep: Sendable, Equatable {
                                ticked: try f.optionalStrings("ticked"),
                                unticked: try f.optionalStrings("unticked"))
         case "dragTile":
+            let landing: PlaytestColorDropExpectation = if fields["expect"] == nil {
+                .takes
+            } else {
+                try f.enumValue("expect", PlaytestColorDropExpectation.self)
+            }
             self = .dragTile(tile: try f.string("tile"), to: try f.point("to"),
-                             hold: try f.optionalString("hold"))
+                             hold: try f.optionalString("hold"), expect: landing,
+                             says: try f.optionalString("says"))
         case "dragRow":
             let zone: PlaytestDropZone = if fields["zone"] == nil {
                 .above

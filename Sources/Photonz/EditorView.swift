@@ -373,6 +373,9 @@ struct EditorView: View {
                                                                 version: version, at: point)
                        },
                        onComponentDragEnded: { editorState.releaseRoomForComponentDrag() },
+                       onDropTextStyle: { styleID, layerIDs in
+                           editorState.dropTextStyle(styleID: styleID, onLayers: layerIDs)
+                       },
                        onDropImageURLIntoCollage: { url, collageID, slot in
                            editorState.dropImage(at: url, intoCollage: collageID, slot: slot)
                        },

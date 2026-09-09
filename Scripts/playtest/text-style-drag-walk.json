@@ -1,0 +1,102 @@
+{
+  "out": "/tmp/photonz-playtest/text-style-drag",
+  "seed": "A saved text style picked up off the Library shelf and carried onto the picture. A saved colour has always been a handle you can pull off its tile and drop on a swatch; a text style could only be worn by selecting text and finding the name in a menu. This walk saves a style off one heading, then carries the tile over bare canvas, over a box, and onto a second heading, checking what the picture SAYS in each place before letting go, and that one undo puts the drop back.",
+  "setup": {
+    "forget": ["text", "panel", "shapes", "color", "tools"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [520, 380], "to": [760, 500], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 300] },
+    { "do": "type", "text": "Create account" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Font", "choose": "Georgia" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Size", "choose": "32 px" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Weight", "choose": "Bold" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Style", "choose": "Save as Style" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "type", "text": "Heading" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-saved", "note": "one heading set up by hand and saved as Heading. The Library is open on the Styles shelf with the Ag tile on it, which is the handle everything below pulls on." },
+    { "do": "snapshot", "name": "1-saved-and-on-the-shelf" },
+
+    { "do": "click", "at": [840, 90] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-nothing-picked", "note": "nothing picked, so every drop below is AIMED by the pointer rather than steered by a selection" },
+
+    {
+      "do": "dragTile", "tile": "Heading", "to": [430, 200],
+      "expect": "refuses", "says": "Drop this on a piece of text",
+      "hold": "2-over-bare-canvas"
+    },
+    { "do": "wait", "seconds": 0.4 },
+
+    {
+      "do": "dragTile", "tile": "Heading", "to": [640, 440],
+      "expect": "refuses", "says": "is not text",
+      "hold": "3-over-a-box"
+    },
+    { "do": "wait", "seconds": 0.4 },
+
+    {
+      "do": "dragTile", "tile": "Heading", "to": [200, 315],
+      "expect": "takes", "says": "Sets this text in Heading",
+      "hold": "4-over-the-second-heading"
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "4-dressed", "note": "THE TEST: the second heading was never selected and is now set in Heading, box re-measured so nothing clips" },
+    { "do": "snapshot", "name": "4-dressed-by-the-drop" },
+    { "do": "render", "name": "4-canvas" },
+
+    {
+      "do": "dragTile", "tile": "Heading", "to": [200, 315],
+      "expect": "refuses", "says": "This text is already Heading",
+      "hold": "5-already-wearing-it"
+    },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-undone", "note": "ONE undo puts the drop back: the second heading is its own again. Undo is asked for as a menu action rather than as command Z, because a synthesized chord does not reach the Edit menu of an app that is not in front (see undo-shortcut-walk)." },
+    { "do": "snapshot", "name": "5-one-undo" },
+    { "do": "render", "name": "5-canvas" },
+
+    { "do": "click", "at": [180, 145] },
+    { "do": "click", "at": [200, 315], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "dragTile", "tile": "Heading", "to": [200, 315],
+      "expect": "takes", "says": "Sets all 2 of them in Heading",
+      "hold": "6-over-two-picked"
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "6-a-crowd", "note": "aiming at one of several picked pieces of text reaches all of them, the way a colour let go on a swatch paints everything that swatch speaks for. The line said how many before the button came up." },
+    { "do": "render", "name": "6-canvas" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "7-undone", "note": "and one undo puts the crowd back too, in one step." },
+    { "do": "snapshot", "name": "7-one-undo" },
+    { "do": "render", "name": "7-canvas" }
+  ]
+}
