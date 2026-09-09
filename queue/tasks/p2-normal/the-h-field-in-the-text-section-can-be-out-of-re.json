@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2230,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T04:24:32.449Z",
-  "updated": "2026-09-09T08:14:59.360425Z",
+  "updated": "2026-09-09T08:15:37.017Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on unmodified main (git stash -u, then Scripts/playtest.sh Scripts/playtest/text-height-readout-walk.json). done.json: {\"error\":\"step 15 (press): the control \\\"H\\\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on...\",\"status\":\"failed\",\"steps\":14}. NOT caused by the text-style arming work in seq 2130: the same failure happens with that work stashed. Either the dock grew a section since the walk was written (Effects is expanded by default now) or the walk needs a scrollPanel step.",
@@ -49,7 +49,12 @@
     {
       "t": "2026-09-09T08:14:59.360425Z",
       "note": "The task title says the H field is in the Text section. It is not, it is in Position & Size; left the title alone rather than churn the id."
+    },
+    {
+      "t": "2026-09-09T08:15:37.015Z",
+      "note": "text-height-readout-walk passes again (32 steps, ok). H is in Position & Size, not the Text section, and sits 141pt below the window bottom once Layers, Appearance and an open Effects are stacked above it, so the walk now reveals it and a describe stage says why. Verifying also caught the walk's drag moving the label instead of re-wrapping it: it now drags the top right corner and the readout really moves, H 29 to 113 and back to 29. Scripts/test.sh green. Filed dragging-the-side-edge-of-a-one-line-text-box-mo for the gesture gap behind it. Commit 12a0bc55, pushed."
     }
   ],
-  "started": "2026-09-09T08:05:10.225Z"
+  "started": "2026-09-09T08:05:10.225Z",
+  "completed": "2026-09-09T08:15:37.016Z"
 }
