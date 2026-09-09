@@ -72,6 +72,35 @@ struct DockRevealTests {
         #expect(DockReveal.action(sectionTop: -550, sectionHeight: 600, viewportHeight: 400) == .top)
     }
 
+    // MARK: One effect opened inside the Effects list
+    //
+    // The same rule, one level down. An effect is a small pane with a chevron,
+    // and pressing it open grows it downwards: in a short window the settings
+    // that appear can land past the bottom of the panel, so you press a
+    // chevron and nothing you can see happens. The numbers here are the ones a
+    // 1280x600 window really produced on 2026-09-08.
+
+    @Test func bringsAnOpenedEffectUpFromBelowTheBottomOfTheDock() {
+        // Shadow opened at the foot of a 568pt dock: 49pt of it hangs off.
+        #expect(DockReveal.action(sectionTop: 383, sectionHeight: 234,
+                                  viewportHeight: 568) == .bottom)
+    }
+
+    @Test func leavesAnOpenedEffectAloneWhenItIsAlreadyWhollyOnScreen() {
+        // The ordinary case, and the one that must never move: a panel with
+        // room for the effect you just opened does not scroll at all.
+        #expect(DockReveal.action(sectionTop: 200, sectionHeight: 234,
+                                  viewportHeight: 568) == .none)
+    }
+
+    @Test func showsTheTopOfAnEffectTooTallForTheRoomItIsIn() {
+        // Inside a squeezed Effects list the room is the list's own window, not
+        // the dock: an effect taller than that window shows its heading and its
+        // first settings rather than its end.
+        #expect(DockReveal.action(sectionTop: 120, sectionHeight: 234,
+                                  viewportHeight: 186) == .top)
+    }
+
     // MARK: Nothing measured yet
 
     @Test func doesNothingBeforeTheDockHasBeenMeasured() {

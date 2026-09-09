@@ -1,0 +1,28 @@
+{
+  "feature": "Opening an effect brings it into view",
+  "epic": "ui-building",
+  "summary": "Pressing an effect's chevron open now scrolls the properties panel to that effect, so the settings you just asked for are where you are already looking. An effect you can already see whole does not move, and folding one never scrolls anything.",
+  "setup": "Photonz Dev, Experiments window, release Next. Make the window short, about 600pt tall, so the panel holds more than it can show.",
+  "try": [
+    { "do": "Draw a rectangle with R and a drag." },
+    { "do": "Press the plus on the Effects header and choose Shadow." },
+    { "do": "Press the chevron beside Border to fold it, then press it again to open it. Watch: nothing moves either time, because the Border was already all on screen." },
+    { "do": "Press the chevron beside Shadow to fold it." },
+    { "do": "Press it again to open it. The panel scrolls to the Shadow.", "shot": "2026-09-08-effect-reveal-open.png" },
+    { "do": "Now fold the Border away and open the Shadow again: this time the whole panel scrolls up as well, to give the Effects list the room it is hanging off the bottom.", "shot": "2026-09-08-effect-reveal-dock-scrolled.png" },
+    { "do": "Make the window tall enough to hold everything and repeat. Nothing should scroll at all." }
+  ],
+  "evaluate": [
+    "When you press the chevron, does the thing you opened end up where your eye already is, or do you still have to go looking?",
+    "The settings appear first and the panel scrolls a moment later. Does that read as the panel following you, or as a lag?",
+    "When an effect is too tall for the room, you get its heading and the settings under it, and the rest is a scroll away. Is starting at the top the right part to show?",
+    "Opening the second effect carries the first one off the top of the list. Is that an acceptable price, or should the list keep the one above in sight?",
+    "Does anything you were looking at ever move when it should not have?"
+  ],
+  "rough": [
+    "With two effects open in a 600pt window the panel can only ever show 153pt of a 255pt shadow, because the dock keeps room for the FIRST open effect rather than the one you just opened. The reveal shows as much as there is, from the top, but the honest fix is for the dock to budget for the effect you are actually working on. Filed as a follow-up.",
+    "The scroll waits about a quarter of a second, until the fold's own animation has finished, so it is measured against a height that has stopped moving. It means the gesture reads in two beats: it opens, then the panel follows.",
+    "Both captures are real screen captures from Scripts/playtest/effects-open-into-view-walk.json; the probe's Screen Recording grant was on.",
+    "The playtest harness's own `reveal` step cannot scroll a section's inner list, only the dock, so a walk that needs to reach back into the Effects list has to use `scrollPanel` with a number. Filed as a follow-up."
+  ]
+}

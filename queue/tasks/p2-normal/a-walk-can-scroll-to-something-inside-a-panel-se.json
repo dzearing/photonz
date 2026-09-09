@@ -1,0 +1,27 @@
+{
+  "id": "a-walk-can-scroll-to-something-inside-a-panel-se",
+  "title": "A walk can scroll to something inside a panel section, not just to the section",
+  "goal": "A scripted playtest can scroll the properties panel to a control, but not INSIDE a section that scrolls on its own, so a walk that needs something in the Effects list has to guess a number of points instead of saying which control it wants.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2210,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T02:47:15.352Z",
+  "updated": "2026-09-09T02:47:15.355Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08). Reproduction: put {\"do\": \"reveal\", \"control\": \"Switch\", \"in\": \"Border\"} in Scripts/playtest/effect-row-is-a-small-pane-walk.json before step 21, then Scripts/playtest.sh Scripts/playtest/effect-row-is-a-small-pane-walk.json --no-build. It fails with: step 21 (reveal): scrolled 0pt and \"Switch\" is still not where a person could press it. It is off the window rather than below the fold: the window may be too short for the section it is in. The Border was inside the Effects list own scroller at the time, one wheel turn away. The walk now uses {\"do\": \"scrollPanel\", \"row\": \"Shadow\", \"by\": 120} instead, which works but hard-codes a distance.\n\nThe reveal step is in Sources/Photonz/Playtest/PlaytestHarness.swift (search for func reveal and scrollClip); scrollPanel gets there because it turns the wheel over a point inside the inner list, which is what reveal has to learn to do.",
+  "acceptance": [
+    "A reveal step reaches a control clipped by a section own scroller and says how far it scrolled",
+    "A control that is already reachable still costs nothing and says so",
+    "The walk effect-row-is-a-small-pane can go back to a reveal step instead of a scrollPanel with a number in it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T02:47:15.354Z",
+      "note": "created (manual)"
+    }
+  ]
+}

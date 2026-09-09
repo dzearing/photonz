@@ -277,7 +277,12 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   screen, and a group already fully visible must not twitch. The reveal stops at
   the group; it reaches INSIDE the group's own scroller only when the command
   named a particular thing in it, the way making a component scrolls the shelf on
-  to that tile (commit `17dca1e`, audit `2026-09-03-shelf-tile-reveal`).
+  to that tile (commit `17dca1e`, audit `2026-09-03-shelf-tile-reveal`), or the
+  way opening an effect scrolls the Effects list on to that effect (audit
+  `2026-09-08-effect-reveal`). When both have to move, the DOCK goes first and
+  the group's own scroller second, against the room it will have rather than the
+  room it had: a group hanging past the bottom of the panel is room the thing
+  inside it could have been given.
   **Only a command the user just issued about that group may re-open a group they
   collapsed on purpose** (Show Library, or making the thing the group holds).
   Ambient changes never may: a selection moving, a document loading, a background

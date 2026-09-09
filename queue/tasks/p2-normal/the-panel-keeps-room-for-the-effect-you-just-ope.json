@@ -1,0 +1,28 @@
+{
+  "id": "the-panel-keeps-room-for-the-effect-you-just-ope",
+  "title": "The panel keeps room for the effect you just opened",
+  "goal": "In a short window, opening a second effect shows only the top half of it: the properties panel keeps room for the FIRST effect in the list that is open, not the one you just pressed. The effect you are working on should be the one the panel makes room for.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2200,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T02:47:04.547Z",
+  "updated": "2026-09-09T02:47:04.550Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08). Command: Scripts/playtest.sh Scripts/playtest/effects-open-into-view-walk.json --no-build (window 1280x600, a rectangle with a Border and a Shadow, both open). The log at stage 5-shadow-open reads dockListRoom [\"Effects 153/400 needs 153\"] and the reveal line \"shadow.1 255pt at 504-759, room 153pt: scrolled to its top\", and the expectInView step reports: \"Shadow\" starts on screen and shows 153 pt of its 255 pt, which is all the room there is.\n\nThe floor is DockHeightBudget.paneListFloor, reached through InspectorPanel.squeezeFloor(for:room:) in Sources/Photonz/LayersPanel.swift, and it measures down to the first OPEN pane (ListRoom.needsForFirstOpen). Opening an effect already tells the app which one you mean: EditorState.effectToReveal carries it for the reveal, and the same fact could pick the pane the floor pays for. Watch the knock-on: the floor is capped at DockHeightBudget.floorShareOfDock, and whatever Effects takes comes off Layers.",
+  "acceptance": [
+    "With two effects open in a 600pt tall window, opening the lower one shows the whole of it rather than its first 153pt",
+    "The effect above it keeps at least its heading on screen, so the list still reads as a list",
+    "Opening the first effect again gives the room back to it",
+    "A playtest walk reads the numbers back and proves the effect you opened is drawn whole"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T02:47:04.549Z",
+      "note": "created (manual)"
+    }
+  ]
+}

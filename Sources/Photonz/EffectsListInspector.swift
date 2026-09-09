@@ -33,6 +33,11 @@ struct EffectsListInspector: View {
     /// section never cuts a slider in half.
     var onPanes: (([DockHeightBudget.Block]) -> Void)?
 
+    /// Where one effect is sitting in the dock's visible area, told to the
+    /// panel so an effect you have just opened can be brought on screen. Keyed
+    /// by `LayerEffectRow.id`. See `LayersPanel.applyEffectReveal`.
+    var onPaneFrame: ((String, CGRect) -> Void)?
+
     /// Each effect's measured extent, by its place in the list.
     @State private var panes: [Int: DockHeightBudget.Block] = [:]
 
@@ -43,7 +48,9 @@ struct EffectsListInspector: View {
                 empty
             } else {
                 ForEach(rows) { row in
-                    EffectRowView(row: row, onExtent: { panes[row.index] = $0 })
+                    EffectRowView(row: row,
+                                  onExtent: { panes[row.index] = $0 },
+                                  onFrame: { onPaneFrame?(row.id, $0) })
                 }
                 if let caption {
                     Text(caption)
@@ -123,6 +130,11 @@ private struct EffectRowView: View {
     /// How tall this pane is and whether it is open, told to the list so the
     /// dock can keep room for it. See `EffectsListInspector.onPanes`.
     let onExtent: (DockHeightBudget.Block) -> Void
+    /// ...and where it is sitting, in the dock's visible area, so opening it
+    /// can bring it on screen. Measured in the DOCK's space rather than this
+    /// list's, because the list may be inside its own scroller and the answer
+    /// has to be "can a person see this", not "is it in the list".
+    let onFrame: (CGRect) -> Void
 
     /// What is being held over this row right now, while it is switched off.
     @State private var incoming: ColorDrop.Answer?
@@ -206,6 +218,12 @@ private struct EffectRowView: View {
                              ? 1 : PanelSectionLook.EffectRow.offSettingsOpacity)
             }
         }
+        // On every scroll tick, and deliberately not through @State: the panel
+        // writes it into a plain box and reads it back only when a reveal is
+        // waiting, so remembering where this pane is costs nothing to draw.
+        .onGeometryChange(for: CGRect.self) {
+            $0.frame(in: .named(inspectorDockSpace))
+        } action: { onFrame($0) }
         .playtestField(row.title)
         .panelStartProbe(.row, owner: row.title)
         // The same three moves the grip and the cross make, for a hand that is

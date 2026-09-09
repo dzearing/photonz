@@ -1,0 +1,27 @@
+{
+  "id": "two-panel-walks-are-failing-on-main",
+  "title": "Two panel walks are failing on main",
+  "goal": "Two scripted walks that check the properties panel fail every run on main, so nobody can tell a new break from these two. They need to be looked at and either fixed or told what changed.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2220,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T02:47:25.499Z",
+  "updated": "2026-09-09T02:47:25.502Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08), and verified against a clean tree (git stash of Sources, Tests and Scripts/playtest, rebuild, rerun) so neither is caused by that work.\n\n1. Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json -> step 63 (press): no control called \"Revert Opacity\" is in the panel. The panel it lists has no Appearance section at all: Layers, Effects, Component, Position & Size, Layout, Library.\n\n2. Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json -> step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s. The log reads dockViewport 688 with dockSections [\"Layers 6-169\",\"Appearance 169-341\",\"Effects 341-503\",\"Measurements 503-590\",\"Text 738-936\",\"Position & Size 936-1071\"], so the Text section starts 50pt below the bottom of the dock and the walk waits for it to be in view.\n\nBoth look like the sections above them have grown since the walks were written.",
+  "acceptance": [
+    "panel-controls-walk runs green, or its claim is rewritten to match what the panel now does and the change is explained",
+    "dock-picked-first-walk runs green, or the same",
+    "Both were verified on a clean checkout, so the fix is not just a walk edited to agree with a bug"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T02:47:25.501Z",
+      "note": "created (manual)"
+    }
+  ]
+}

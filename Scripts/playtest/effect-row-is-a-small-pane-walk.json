@@ -105,6 +105,16 @@
       "stage": "3-unfolded"
     },
     {
+      "comment": "Opening the Shadow brings the Shadow into view, which in a list this full carries the Border's own heading off the top of it. That is the point of the reveal, so the walk turns the wheel back up over the list, the way a person would before pressing the Border's eye.",
+      "do": "scrollPanel",
+      "row": "Shadow",
+      "by": 120
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
       "do": "press",
       "control": "Switch",
       "in": "Border"

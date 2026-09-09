@@ -1375,6 +1375,33 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectMeasures"))
     }
 
+    // Opening an effect used to leave its settings below the bottom of the
+    // panel, with nothing scrolling to them (2026-09-08). A capture cannot
+    // prove the fix: it shows the panel, and a person has to decide whether
+    // the thing they opened is all there. `expectInView` asks the panel
+    // instead, and fails saying by how many points the thing is cut off.
+    @Test("An expectInView step names what has to be all on screen")
+    func expectInViewNamesTheField() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectInView", "field": "Shadow" } ] }
+        """)
+        guard case .expectInView(let field) = script.steps[0] else {
+            Issue.record("expectInView"); return
+        }
+        #expect(field == "Shadow")
+        #expect(script.steps[0].name == "expectInView")
+        #expect(PlaytestStep.names.contains("expectInView"))
+    }
+
+    @Test("An expectInView step must say which thing it means")
+    func expectInViewNeedsAField() throws {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectInView" } ] }
+            """)
+        }
+    }
+
     // The panel measures one space and used to say two words for it: on
     // 2026-09-08 a capture caught Corner Radius reading "18 pt" two rows above
     // Position and Size saying "px from the top left". `expectOneUnit` is the

@@ -868,6 +868,9 @@ private final class Run {
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
+        case .expectInView(let field):
+            note(number, step.name, try checkInView(field), state: describe())
+
         case .expectOneUnit:
             note(number, step.name, try checkOneUnit(), state: describe())
 
@@ -2101,6 +2104,63 @@ private final class Run {
             ? "\(title) is drawn whole, all \(points(room.natural)) of it"
             : "\(title) is shortened to \(points(room.drawn)) of \(points(room.natural)) and scrolls, "
                 + "past its first open entry at \(points(needs))"
+    }
+
+    /// Whether one named thing in the panel is really on screen: all of it, or
+    /// as much of it as there is room for, starting at its top.
+    ///
+    /// Two edges can cut it, and a walk has to answer for both: the window,
+    /// and whatever is scrolling it. An effect opened at the foot of a squeezed
+    /// Effects list is inside the window and still invisible, because the
+    /// list's own scroller ends above it — the exact bug this step was written
+    /// for (2026-09-08).
+    ///
+    /// "As much as there is room for" is not a loophole, it is the panel's
+    /// promise. A shadow with 255pt of settings in a list drawn 153pt tall can
+    /// never be shown whole, and the right answer is its heading at the top
+    /// with its settings running down from there. So nothing may be cut off
+    /// the TOP, ever, and something may only be cut off the bottom when it is
+    /// taller than the room it is in.
+    private func checkInView(_ name: String) throws -> String {
+        let all = try panelTargets()
+        guard let match = all.first(where: { $0.name == name })
+                ?? all.first(where: { $0.detail == name })
+                ?? all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
+            let seen = all.map(\.name).joined(separator: ", ")
+            throw Failure(description: "nothing called \"\(name)\" is in the panel at all; what is: "
+                + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
+        }
+        guard let content = match.window?.contentView else {
+            throw Failure(description: "\"\(name)\" is not in a window right now")
+        }
+        let box = match.convert(match.bounds, to: nil)
+        let shown = match.convert(match.visibleRect, to: nil)
+        let inWindow = content.convert(content.bounds, to: nil)
+        // How much room whatever is scrolling this has, so a thing too tall for
+        // it can be told from a thing that was simply left below the fold.
+        let room = match.enclosingScrollView.map {
+            $0.contentView.convert($0.contentView.bounds, to: nil).height
+        } ?? inWindow.height
+        func points(_ value: CGFloat) -> String { "\(Int(value.rounded())) pt" }
+        // In AppKit's coordinates y counts up from the bottom, so what is cut
+        // off the BOTTOM of the panel is what falls below `minY`.
+        let below = max(shown.minY - box.minY, inWindow.minY - box.minY)
+        let above = max(box.maxY - shown.maxY, box.maxY - inWindow.maxY)
+        guard above <= 0.5 else {
+            throw Failure(description: "the top of \"\(name)\" is not on screen: \(points(above)) of it "
+                + "is cut off above what a person can see. Whatever it is in should have scrolled "
+                + "to its beginning.")
+        }
+        guard below <= 0.5 || box.height > room + 0.5 else {
+            throw Failure(description: "\"\(name)\" is not all on screen: it is \(points(box.height)) "
+                + "tall, there is \(points(room)) of room for it, and \(points(below)) of it is past "
+                + "the bottom of what a person can see. The panel should have scrolled to it.")
+        }
+        guard below > 0.5 else {
+            return "\"\(name)\" is all on screen, \(points(box.height)) of it"
+        }
+        return "\"\(name)\" starts on screen and shows \(points(shown.height)) of its "
+            + "\(points(box.height)), which is all the room there is"
     }
 
     /// Every readout the right hand panel is SHOWING, in the words a person
@@ -4562,6 +4622,9 @@ private final class Run {
             // you at least know the section is there.
             "dockHeadersInView": InspectorLayoutProbe.shared.measured
                 .filter { InspectorLayoutProbe.shared.isHeaderVisible($0) }.map(\.title),
+            // What the panel last did about an effect you opened: the reveal
+            // that keeps a chevron from putting its settings out of sight.
+            "effectReveal": InspectorLayoutProbe.shared.effectReveal ?? "none yet",
             "tooltip": HintTooltipController.shared.visibleDescription ?? "none",
             "edgeMap": !editor.snappingEdgeMap.isEmpty,
             "firstResponder": window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil",

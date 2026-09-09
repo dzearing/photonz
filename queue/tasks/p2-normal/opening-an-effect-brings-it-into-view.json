@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:52:16.537Z",
-  "updated": "2026-09-08T22:52:16.540Z",
+  "updated": "2026-09-09T02:07:42.731Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Observed 2026-09-08 while finishing one-open-effect-fits-in-the-effects-list. Command: Scripts/playtest.sh Scripts/playtest/effects-fit-one-open-walk.json (window 1280x600). At stage 4-first-folded the log reads dockViewport 568 with dockSections [\"Layers 6-169\",\"Appearance 169-334\",\"Effects 334-617\",\"Position & Size 617-752\"] and dockInView [\"Layers\",\"Appearance\"]: the Shadow that was just opened runs 49pt past the bottom of the dock and the dock did not scroll. Capture: queue/audits/2026-09-08-effects-one-open-4.png.\n\nThis is the dock reveal (DockRevealScratch / revealSection in Sources/Photonz/LayersPanel.swift) not being asked for by the fold control in Sources/Photonz/EffectsListInspector.swift. UX-PATTERNS Reveal rules apply: shortest move that puts the group on screen, nothing already visible may twitch, and only a command the user just issued may scroll. Opening an effect IS such a command.",
@@ -23,6 +23,39 @@
     {
       "t": "2026-09-08T22:52:16.539Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T02:07:42.730Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T02:47:47.216395Z",
+      "note": "Reproduced first, before touching anything. Scripts/playtest.sh on a 1280x600 window with a Border and a Shadow: pressing the Shadow's chevron open left its settings entirely below the cut of the Effects list, with only the heading showing (capture in the run's d-shadow-open-sc.png). The task's own evidence was one level out: the panel squeezes the Effects list into a window of its own, so what failed to scroll was usually the LIST, not the dock. Both cases turned out to be real."
+    },
+    {
+      "t": "2026-09-09T02:47:47.216395Z",
+      "note": "Adversarial pass before building. The mock rule (\"reveal scrolls the dock\") is not enough here: the thing you opened lives inside a section that scrolls on its own, so a dock-only reveal would have moved the wrong scroller and looked broken. Shortest thing that delivers the value: reuse DockReveal, measure the effect in the DOCK's coordinates so the answer is \"can a person see this\" rather than \"is it in the list\", and let one scrollTo reach whichever scroller holds it. Nothing decorative was added: no highlight, no flash, no fold-the-others."
+    },
+    {
+      "t": "2026-09-09T02:47:47.216395Z",
+      "note": "Built. EditorState carries effectToReveal, set when a chevron OPENS an effect and never when it folds one, cleared when the list changes under it. Each effect pane reports its frame in the dock's coordinate space and each section reports where its body is drawn; LayersPanel.applyEffectReveal waits out the fold's own spring (0.24s), works out the room the effect really has (the section's window, less whatever of it is off the dock), and asks DockReveal what to do. When both scrollers have to move the dock goes first, so the list is measured against the room it will have rather than the room it had."
+    },
+    {
+      "t": "2026-09-09T02:47:47.216395Z",
+      "note": "New playtest step expectInView, with tests in PlaytestScriptTests: claims one named thing in the panel is all on screen, or as much of it as there is room for, starting at its top. Nothing may ever be cut off the top; the bottom may only be cut when the thing is taller than the room. The failure says how many points are hidden."
+    },
+    {
+      "t": "2026-09-09T02:47:47.216395Z",
+      "note": "Verified. Scripts/playtest/effects-open-into-view-walk.json (new, 43 steps) proves all four acceptance items and asserts the fold state at every stage so a lost click fails the walk instead of quietly changing what it shows: folding never scrolls (effectReveal stays \"none yet\"); opening the Border, already whole on screen, reads \"already all on screen, nothing moved\"; opening the Shadow at the foot of the list scrolls to it; and with the Border folded away both the dock and the list move, leaving 250pt of a 255pt Shadow on screen. Ran green four times running. Scripts/test.sh: 5149 tests, all pass. All 11 effect walks and all 18 panel walks green."
+    },
+    {
+      "t": "2026-09-09T02:47:47.216395Z",
+      "note": "Deviation from acceptance item 1, stated plainly: with TWO effects open in a 600pt window the Shadow can only ever be shown 153pt of its 255pt, because the dock keeps room for the FIRST open effect rather than the one you just pressed. The reveal shows as much as there is, from the heading down. Filed as \"The panel keeps room for the effect you just opened\"."
+    },
+    {
+      "t": "2026-09-09T02:47:47.216395Z",
+      "note": "Changed one existing walk: effect-row-is-a-small-pane now turns the wheel back up the Effects list before pressing the Border's eye, because opening the Shadow correctly carries the Border off the top of the list. The `reveal` step could not do it (it cannot scroll a section's own list), so that is filed too. panel-controls-walk and dock-picked-first-walk fail on a clean checkout as well, verified by stashing this work and rebuilding; filed as \"Two panel walks are failing on main\"."
     }
-  ]
+  ],
+  "started": "2026-09-09T02:07:42.729Z"
 }

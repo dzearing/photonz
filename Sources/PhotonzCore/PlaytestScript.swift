@@ -1133,6 +1133,18 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// The section is named the way the dock names it: "Effects", "Layers".
     case expectSectionFits(section: String)
+    /// The named thing in the right hand panel must be ALL on screen: inside
+    /// the window, and inside whatever is scrolling it.
+    ///
+    /// The claim `expectSectionFits` cannot make. That one asks whether the
+    /// dock gave a section room; this asks whether one named row, pane or
+    /// control ended up somewhere a person can actually see, which is the
+    /// question a reveal answers. On 2026-09-08 pressing an effect's chevron
+    /// open put its settings below the bottom of the panel and nothing
+    /// scrolled to them: the walk that proves that fixed says
+    /// `{"do": "expectInView", "field": "Shadow"}` and fails naming the points
+    /// that are cut off.
+    case expectInView(field: String)
     /// CLAIMS that every readout in the right hand panel spells the unit the
     /// same way, and fails the run naming the row that does not.
     ///
@@ -1226,7 +1238,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectMeasures", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectInView", "expectMeasures", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
@@ -1272,6 +1284,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
         case .expectSectionFits: "expectSectionFits"
+        case .expectInView: "expectInView"
         case .expectOneUnit: "expectOneUnit"
         case .expectPicked: "expectPicked"
         case .scrollPanel: "scrollPanel"
@@ -1508,6 +1521,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectMeasures(count: Int(howMany))
         case "expectSectionFits":
             self = .expectSectionFits(section: try f.string("section"))
+        case "expectInView":
+            self = .expectInView(field: try f.string("field"))
         case "expectOneUnit":
             self = .expectOneUnit
         case "expectPicked":

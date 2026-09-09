@@ -201,7 +201,8 @@ struct InspectorPanel: View {
                                     guard id != .layers else { return }
                                     budget.bodies[id] = height
                                 },
-                                onHeaderHeight: { budget.headers[id] = $0 }
+                                onHeaderHeight: { budget.headers[id] = $0 },
+                                onBodyFrame: { reveal.bodyFrames[id] = $0 }
                             ) {
                                 sectionContent(id, ceiling: ceilings[id])
                             }
@@ -222,6 +223,7 @@ struct InspectorPanel: View {
                             $0.frame(in: .named(inspectorDockSpace))
                         } action: { frame in
                             recordInspectorSection(id, title: sectionTitle(id), frame: frame)
+                            reveal.sectionFrames[id] = frame
                             // Mid-drag a section is standing somewhere it does
                             // not live, so its measurement is worth nothing:
                             // the spans a reorder reads were taken before it
@@ -294,6 +296,14 @@ struct InspectorPanel: View {
             // and then this panel is born with the request already waiting.
             .onChange(of: editorState.pendingLibraryReveal) { requestLibraryReveal(proxy) }
             .onAppear { requestLibraryReveal(proxy) }
+            // You opened an effect: put the settings that just appeared where
+            // you can see them.
+            .onChange(of: editorState.effectToReveal) { _, id in
+                guard let id else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + Self.effectRevealDelay) {
+                    applyEffectReveal(proxy, for: id)
+                }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial)
@@ -440,6 +450,62 @@ struct InspectorPanel: View {
         guard action != .none else { return }
         withAnimation(.easeInOut(duration: 0.28)) {
             proxy.scrollTo(InspectorSectionID.library, anchor: action == .top ? .top : .bottom)
+        }
+    }
+
+    // MARK: Bringing an opened effect into view
+
+    /// How long to wait before scrolling to an effect that has just been
+    /// opened: a shade longer than the fold's own spring, so the pane is
+    /// measured at the height it has settled at rather than partway through
+    /// growing into it.
+    private static let effectRevealDelay = 0.24
+
+    /// An effect's settings have just appeared. Bring the whole pane on screen,
+    /// and only if it is not already there.
+    ///
+    /// The pane is measured in the dock's visible area rather than in the
+    /// Effects list, because the list can be inside a scroller of its own when
+    /// the panel is over-subscribed: an effect can be perfectly placed in its
+    /// list and still be somewhere nobody can see. One `scrollTo` covers both,
+    /// since the pane is identified in the list SwiftUI is scrolling either
+    /// way.
+    private func applyEffectReveal(_ proxy: ScrollViewProxy, for id: String) {
+        // A second chevron pressed while this one was waiting: that press has
+        // its own wait running, and it is measured from ITS fold rather than
+        // from this one, so this turn is simply given up.
+        guard editorState.effectToReveal == id else { return }
+        editorState.effectRevealHandled()
+        guard let frame = reveal.effectFrames[id],
+              let here = reveal.room(for: .effects) else { return }
+        // Where it stands now. Already all there and nothing moves: pressing a
+        // chevron on an effect you can see must never make the panel jump.
+        guard DockReveal.action(sectionTop: frame.minY - here.top,
+                                sectionHeight: frame.height,
+                                viewportHeight: here.height) != .none else {
+            recordEffectReveal(id, frame: frame, room: here.height, action: .none)
+            return
+        }
+        // Something has to move, so the dock takes its turn first: an Effects
+        // list hanging past the bottom of the panel is room the effect could
+        // have had, and gaining it is why the list has to be asked second,
+        // against the room it will have rather than the room it has.
+        let dock = DockReveal.action(sectionTop: reveal.sectionFrames[.effects]?.minY ?? 0,
+                                     sectionHeight: reveal.sectionFrames[.effects]?.height ?? 0,
+                                     viewportHeight: reveal.viewportHeight)
+        let shift = reveal.shift(of: .effects, doing: dock)
+        guard let room = reveal.room(for: .effects, shiftedBy: shift) else { return }
+        let action = DockReveal.action(sectionTop: frame.minY + shift - room.top,
+                                       sectionHeight: frame.height,
+                                       viewportHeight: room.height)
+        recordEffectReveal(id, frame: frame, room: room.height, action: action)
+        withAnimation(.easeInOut(duration: 0.24)) {
+            if dock != .none {
+                proxy.scrollTo(InspectorSectionID.effects, anchor: dock == .top ? .top : .bottom)
+            }
+            if action != .none {
+                proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
+            }
         }
     }
 
@@ -798,7 +864,8 @@ struct InspectorPanel: View {
             // with the split on this section is the list rather than four
             // sliders that are always there (`next-shape-parts`).
             if Experiments.shared.shapePartsEnabled {
-                EffectsListInspector(onPanes: { budget.listPanes[.effects] = $0 })
+                EffectsListInspector(onPanes: { budget.listPanes[.effects] = $0 },
+                                     onPaneFrame: { reveal.effectFrames[$0] = $1 })
             } else {
                 EffectsInspector()
             }
@@ -1068,6 +1135,45 @@ private struct SectionDrag: Equatable {
     var libraryFrame: CGRect?
     var viewportHeight: CGFloat = 0
     var isPending = false
+    /// Where each effect in the Effects list is sitting, by
+    /// `LayerEffectRow.id`, in the dock's visible area. Written on every scroll
+    /// tick and read only when an effect has just been opened.
+    var effectFrames: [String: CGRect] = [:]
+    /// Where each section's body is drawn, in the same coordinates.
+    var bodyFrames: [InspectorSectionID: CGRect] = [:]
+    /// ...and each whole section, header and all, which is what the dock's own
+    /// scroller moves.
+    var sectionFrames: [InspectorSectionID: CGRect] = [:]
+
+    /// The band of the dock a thing inside `section` can be seen in: what the
+    /// section is drawing, less whatever of that has scrolled off the dock.
+    ///
+    /// The two are different whenever the dock is over-subscribed, and that
+    /// difference is the whole reason this exists: an effect can have 255pt of
+    /// settings and 153pt of list to show them in, and a reveal that measured
+    /// itself against the dock would scroll the effect's heading off the top
+    /// to line its foot up with a bottom edge nobody can see.
+    func room(for section: InspectorSectionID, shiftedBy shift: CGFloat = 0)
+        -> (top: CGFloat, height: CGFloat)? {
+        guard viewportHeight > 0 else { return nil }
+        guard let body = bodyFrames[section] else { return (0, viewportHeight) }
+        let top = max(body.minY + shift, 0)
+        let bottom = min(body.maxY + shift, viewportHeight)
+        guard bottom > top else { return nil }
+        return (top, bottom - top)
+    }
+
+    /// How far the dock would carry `section` if it scrolled to it: the number
+    /// the reveal needs to work out what room the section will have AFTER the
+    /// dock has moved, rather than the room it has now.
+    func shift(of section: InspectorSectionID, doing action: DockReveal.Action) -> CGFloat {
+        guard let frame = sectionFrames[section] else { return 0 }
+        return switch action {
+        case .none: 0
+        case .top: -frame.minY
+        case .bottom: viewportHeight - frame.maxY
+        }
+    }
 }
 
 /// Which dock sections have actually been built, so a brand new one can wait a
@@ -1107,7 +1213,7 @@ private struct SectionDrag: Equatable {
 
 /// The dock's scrolling area as a coordinate space, so a section can say where
 /// it sits relative to what is on screen rather than to the window.
-private let inspectorDockSpace = "inspector.dock"
+let inspectorDockSpace = "inspector.dock"
 
 /// The sections of the inspector, in their default order. `rawValue` persists.
 enum InspectorSectionID: String, CaseIterable {
@@ -1510,6 +1616,11 @@ private struct CollapsibleSection<Content: View>: View {
     /// ...and how tall the header is, since a header whose words wrap is
     /// taller than the row it is pinned to.
     var onHeaderHeight: ((CGFloat) -> Void)?
+    /// Where the body is DRAWN, in the dock's visible area: the window a
+    /// shortened body shows through, and the body itself when it is whole.
+    /// This is the room anything inside the section has, which is not the same
+    /// as the room the dock has. See `LayersPanel.applyEffectReveal`.
+    var onBodyFrame: ((CGRect) -> Void)?
     @ViewBuilder var content: () -> Content
     /// Whether this header's press has travelled far enough to have picked the
     /// section up. See `headerGesture`.
@@ -1546,6 +1657,9 @@ private struct CollapsibleSection<Content: View>: View {
                 }
             if !isCollapsed {
                 boundedBody
+                    .onGeometryChange(for: CGRect.self) {
+                        $0.frame(in: .named(inspectorDockSpace))
+                    } action: { onBodyFrame?($0) }
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }

@@ -1048,20 +1048,40 @@ final class EditorState {
         foldedEffectRows.contains(row.id)
     }
 
+    /// The effect whose settings have just been opened and are waiting to be
+    /// brought into view, by `LayerEffectRow.id`.
+    ///
+    /// Opening an effect is a command you just issued, so it may scroll the
+    /// panel — the one thing the reveal rules allow to. Folding one is not:
+    /// nothing appears, so nothing has to be found, and a panel that jumped
+    /// every time you tidied a list away would be worse than the hunt this
+    /// fixes.
+    private(set) var effectToReveal: String?
+
     /// The chevron on an effect's heading.
     func toggleEffectFolded(_ row: LayerEffectRow) {
         if foldedEffectRows.contains(row.id) {
             foldedEffectRows.remove(row.id)
+            effectToReveal = row.id
         } else {
             foldedEffectRows.insert(row.id)
+            // Folding the very effect that was still waiting to be shown: it
+            // is gone again, so there is nothing left to scroll to.
+            if effectToReveal == row.id { effectToReveal = nil }
         }
     }
+
+    /// The panel has dealt with the reveal, whether or not it had to move.
+    func effectRevealHandled() { effectToReveal = nil }
 
     /// Called when what the list holds, or which layers it speaks for, has
     /// changed under the folds. Written only when there is something to clear:
     /// `@Observable` tells every reader about a write whether or not the value
     /// moved, and this one sits on the selection's hot path.
     func forgetEffectFolds() {
+        // A reveal is about one effect in one list; the list has just changed
+        // under it, so the request goes with the folds it belonged to.
+        if effectToReveal != nil { effectToReveal = nil }
         guard !foldedEffectRows.isEmpty else { return }
         foldedEffectRows = []
     }

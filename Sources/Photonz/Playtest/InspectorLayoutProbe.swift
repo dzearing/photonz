@@ -38,6 +38,12 @@ import SwiftUI
     /// The section currently being carried, by its title, so a walk can say
     /// the dock really did pick one up rather than only that it looks lifted.
     var carrying: String?
+    /// What the panel last did about an effect you opened, in words: which
+    /// effect, where it was sitting, and whether the panel had to move to put
+    /// it on screen. A reveal that decided to do nothing says so too, since
+    /// "it was already all there" is the answer half the time and a walk
+    /// reading an empty line could not tell that from a reveal that never ran.
+    var effectReveal: String?
     /// What the height budget did to each list section this pass, so a walk can
     /// say "nothing in Effects is cut across the middle" in words rather than
     /// by someone squinting at a capture.
@@ -123,6 +129,18 @@ import SwiftUI
     InspectorLayoutProbe.shared.carrying = title
 }
 
+@MainActor func recordEffectReveal(_ id: String, frame: CGRect,
+                                   room: CGFloat, action: DockReveal.Action) {
+    func points(_ value: CGFloat) -> String { "\(Int(value.rounded()))" }
+    let where_ = "\(id) \(points(frame.height))pt at \(points(frame.minY))-\(points(frame.maxY)), "
+        + "room \(points(room))pt"
+    InspectorLayoutProbe.shared.effectReveal = switch action {
+    case .none: "\(where_): already all on screen, nothing moved"
+    case .top: "\(where_): scrolled to its top"
+    case .bottom: "\(where_): scrolled up to its bottom"
+    }
+}
+
 @MainActor func recordInspectorListRoom(_ id: InspectorSectionID,
                                         natural: CGFloat, drawn: CGFloat,
                                         panes: [DockHeightBudget.Block],
@@ -149,6 +167,8 @@ extension View {
 @MainActor func recordInspectorViewportHeight(_ height: CGFloat) {}
 @MainActor func recordInspectorDockFrame(_ frame: CGRect) {}
 @MainActor func recordInspectorCarrying(_ title: String?) {}
+@MainActor func recordEffectReveal(_ id: String, frame: CGRect,
+                                   room: CGFloat, action: DockReveal.Action) {}
 @MainActor func recordInspectorListRoom(_ id: InspectorSectionID,
                                         natural: CGFloat, drawn: CGFloat,
                                         panes: [DockHeightBudget.Block],

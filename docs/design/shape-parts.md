@@ -385,6 +385,24 @@ Pick something else, or add, remove or reorder an entry, and every effect is
 open again. A fold that survived a removal would land on the wrong effect, and
 that is worse than one that does not survive at all.
 
+**Opening an effect brings it into view** (2026-09-08). The settings appear
+BELOW the chevron you pressed, and in a short window that is often below the
+bottom of the panel: you press an arrow, something happens somewhere you cannot
+see, and you have to go looking for what you just asked for. So opening one
+scrolls to it, by the Reveal rules in `UX-PATTERNS.md` — the shortest move, and
+an effect already whole on screen never moves at all. Folding one never scrolls
+anything: nothing appeared, so there is nothing to go and find.
+
+Two things scroll and both may have to. The dock takes its turn first, because
+an Effects list hanging past the bottom of the panel is room the effect could
+have had; then the list scrolls inside itself, against the room it will have
+rather than the room it had. An effect too tall for that room shows its heading
+at the top with its settings running down from there, which is what a 255pt
+shadow does in a list drawn 153pt tall: you cannot see all of it anywhere, so
+you see it from its beginning. The walk that reads this is
+`Scripts/playtest/effects-open-into-view-walk.json`, through the `expectInView`
+step.
+
 ### Off is not remove
 
 A row carries both, and they mean different things:
