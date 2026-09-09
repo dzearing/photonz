@@ -18,6 +18,9 @@
 //   node queue/bin/queue.mjs guard           reset any in_progress task back to pending (parks one that keeps failing)
 //   node queue/bin/queue.mjs compact        collapse old churn events in history.jsonl into counted entries
 //   node queue/bin/queue.mjs reset-health   clear the unhealthy flag (the loop does this on start)
+//   node queue/bin/queue.mjs script <sha256> <running|broken> <path>
+//                                            record which copy of go-loop.sh the loop is running,
+//                                            so the dashboard can say when it is older than the file
 //   node queue/bin/queue.mjs runner-error <stderrFile> <stdoutFile>
 //                                            print the one line of a runner's output worth keeping
 //                                            (a sign-in failure first, else the last stderr/stdout line)
@@ -96,6 +99,12 @@ try {
     // run should not colour a loop that has not tried anything yet.
     case 'reset-health':
       q.writeStatus({ health: 'ok', consecutiveFailures: 0, lastError: null, failureStreak: null });
+      break;
+    // The loop naming the copy of itself it is running. Freshness is not
+    // decided here: loopScript() hashes the file at read time, so a recorded
+    // answer can never go stale behind the dashboard's back.
+    case 'script':
+      q.writeStatus({ script: { hash: args[0] || null, state: args[1] || 'running', path: args[2] || null, since: new Date().toISOString() } });
       break;
     // Missing files read as empty: the loop must get an answer even when a
     // temp file vanished, and "no error text" is the honest one.

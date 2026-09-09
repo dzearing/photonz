@@ -19,7 +19,7 @@ a task says otherwise.
 | `sweep/` | The full walk sweep, handed back and forth between the runners and the loop. A runner asks for one with `bin/sweep.sh request "<why>"` and finishes its task; the loop runs it between tasks and writes `sweep/latest.json` plus a per-run log. Only the README in there is tracked. See `sweep/README.md`. |
 | `status.json` | Live loop heartbeat: state, current task, note, pid, plus loop health (`health`, `consecutiveFailures`, `lastError`) so a wedged loop is visible instead of silent. |
 | `loop.log` | Runner output from each iteration. Rotated to `loop.log.1` past 32MB. Untracked. |
-| `bin/go-loop.sh` | The loop: a requested walk sweep, daily digest+triage, a manager pass whenever the queue runs low, then one task at a time via a fresh headless agent per task. Every runner is Opus 5 at high effort (`PHOTONZ_RUNNER_MODEL`, `PHOTONZ_RUNNER_EFFORT`), by the user's choice on 2026-09-01. Records every runner exit, backs off on failure, parks tasks that keep failing. |
+| `bin/go-loop.sh` | The loop: adopt any fix landed in this file (it re-execs itself between tasks, keeping its pid and its queue; `PHOTONZ_LOOP_RELOAD=0` turns that off), a requested walk sweep, daily digest+triage, a manager pass whenever the queue runs low, then one task at a time via a fresh headless agent per task. Every runner is Opus 5 at high effort (`PHOTONZ_RUNNER_MODEL`, `PHOTONZ_RUNNER_EFFORT`), by the user's choice on 2026-09-01. Records every runner exit, backs off on failure, parks tasks that keep failing. |
 | `bin/sweep.sh` | The full walk sweep (all 322 scripted walks, about 52 minutes). A task runner's background work is terminated at 600s, so a runner that starts the sweep is killed waiting for it and its task is handed back unfinished: eight of the twenty recorded runner failures are that, including 2026-09-07 16:22 and 2026-09-08 00:03. Runners call `sweep.sh request` and move on; the loop calls `sweep.sh run` between tasks, where nothing can kill it and no task is in flight to fight it for the probe app. `Scripts/playtest-all.sh` refuses to run the whole set without `PHOTONZ_SWEEP=1` so the rule is enforced rather than only written down. |
 | `bin/sweep-report.mjs` | Turns a failing sweep into ONE standing task, "Walks that fail in the full sweep", updated in place on every later sweep instead of filed again. |
 | `bin/refresh-dev-app.sh` | Rebuilds `dist/Photonz Dev.app` and puts it back as it was found (running or closed). The loop runs it after any task that lands code under `Sources/`, so the app the user is reviewing is never behind the loop. `PHOTONZ_AUTO_REFRESH=0` turns that off; the script still runs by hand. |
@@ -95,10 +95,26 @@ happens now, after every runner exit:
   is counted, three in a row park the task, and a streak across tasks blames
   the environment as before.
 
+A fourth way the loop can stop working is quieter than any of these: it keeps
+running, healthily, on a copy of itself from days ago. zsh parses a script once,
+so a fix landed in `bin/go-loop.sh` reaches nothing until the process restarts.
+That cost four days in September 2026: the loop started on the 5th, the walk
+sweep landed in it on the 8th, and by the 9th seven runners had asked for a
+sweep the running loop had no code to serve, with nothing anywhere saying why.
+So between tasks, with nothing claimed, the loop hashes its own file and
+`exec`s itself onto a new copy: same pid, same queue, same window, pass count
+carried across in the environment. A copy that does not parse is refused out
+loud and the old one keeps working. `PHOTONZ_LOOP_RELOAD=0` turns it off. The
+loop also records the copy it is running in `status.json`, and the dashboard
+hashes the file at read time to say plainly when the loop is behind it; a live
+loop that never recorded one is stale by definition, since only a loop from
+before this landed can be silent about it.
+
 `queue/bin/failure-drill.sh` proves all of the above against the real loop:
 one scenario for a runner that always dies, one for a login that expires and
 is later restored, one for a spend limit that refuses the digest run and later
-clears.
+clears, and one for a fix landed in the loop's own script (which builds a
+stand-in repo of symlinks so the real one is never written to).
 
 Whatever still slips through cannot balloon the files the dashboard reads. A
 task's `log` is capped at 120 entries (the oldest 20 and the newest 99 are kept,

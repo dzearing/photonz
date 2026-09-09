@@ -1,0 +1,28 @@
+{
+  "feature": "The loop picks up its own fixes, and says when it has not",
+  "epic": "unmanned-loop",
+  "summary": "A fix landed in the go loop's own script now reaches the loop that is running: it restarts onto the new copy between tasks, keeping its pid and its queue. When it cannot, the dashboard says so on the Summary hero instead of staying quiet, and the hero now also shows the walk sweep, which nothing on the page mentioned before.",
+  "setup": "The design dashboard at http://127.0.0.1:8791, Project section, Summary tab. Nothing to enable. The go loop running right now is the one from 5 September, so the warning this adds is live on the page as you read this.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/index.html#dashboard and look at the top card.", "shot": "2026-09-09-loop-reload-1.png" },
+    { "do": "Read the amber strip under the Running pill: it says the loop is on an older copy of its own script and what to do about it." },
+    { "do": "Look at the faint block on the right, under the heartbeat: the third line is the walk sweep, amber because seven runs have been asked for and none has happened." },
+    { "do": "Press ctrl-c in the go loop window and run /go to restart it." },
+    { "do": "Reload the dashboard: the amber strip is gone, and the loop starts the sweep those seven requests have been waiting for." },
+    { "do": "Come back in an hour and read the sweep line again: it now says how many of the 322 walks passed and how long ago." }
+  ],
+  "evaluate": [
+    "Reading the amber strip cold, do you know what went wrong and what to do next, without knowing anything about how the loop works?",
+    "Is the top card the right place for this, or does it push the decision card you actually came for too far down?",
+    "The sweep line sits in the faint heartbeat block. Is that enough for something that quietly stalled for three days, or should a sweep nobody has served shout louder?",
+    "Would you rather the loop just restarted itself onto a new script, or would you rather it always asked first?",
+    "Once the loop is current the strip disappears for good. Is anything lost by it being invisible when things are fine?"
+  ],
+  "rough": [
+    "This cannot fix the loop that is running now. That loop was started on 5 September and does not contain a line of this; the page saying so, and a person pressing /go, is the whole of the unblock this time. Everything after this restart is automatic.",
+    "The seven waiting sweep requests are still waiting for that restart. A runner cannot serve them: the set is 322 walks and about 52 minutes, and a runner's background work is cut off at 600 seconds.",
+    "The dashboard server had the same bug and it was in the way of the fix: node caches an imported module forever and the server had been up since 8 September, so it could not have served the new warning at all. It now re-imports the queue library when the file changes. It was restarted once by hand to pick that up.",
+    "Only go-loop.sh can go stale this way. The prompts are read with cat every pass and the queue CLI is a fresh process every call, so nothing else needed watching, and watching it would have been theatre.",
+    "The screenshot is a real browser capture of the live dashboard, not a mock render."
+  ]
+}

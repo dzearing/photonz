@@ -33,6 +33,17 @@
 #      pass once the runner works again
 #  12. the task that follows is untouched by it, and the loop recovers
 #
+# Scenario 4, a fix to the loop that never reaches the loop (2026-09-05 to 09-09):
+#
+#  13. the loop notices its own script changed and restarts onto it between
+#      tasks, keeping its pid, its queue and its pass count
+#  14. a new copy that does not parse is refused, out loud, and the loop keeps
+#      working on the copy it has
+#  15. the queue survives the restart: the task that follows still runs and
+#      nothing is left in_progress
+#  16. status.json names the copy the loop is running, and the dashboard reads
+#      a loop that has not named one as stale
+#
 # Nothing here touches the real queue or the real repo history.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -43,7 +54,8 @@ Q() { node queue/bin/queue.mjs "$@"; }
 SANDBOX=$(mktemp -d -t photonz-drill)
 SANDBOX2=$(mktemp -d -t photonz-drill-signin)
 SANDBOX3=$(mktemp -d -t photonz-drill-spend)
-trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3"' EXIT
+SANDBOX4=$(mktemp -d -t photonz-drill-reload)
+trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4"' EXIT
 QDIR="$SANDBOX/queue"
 BIN="$SANDBOX/bin"
 mkdir -p "$QDIR" "$BIN"
@@ -394,9 +406,152 @@ process.exit(failed ? 1 : 0);
 '
 S3=$?
 
-if (( S1 == 0 && S2 == 0 && S3 == 0 )); then
+# ---- scenario 4: a fix to the loop that never reaches the loop --------------
+# The loop ran unbroken from 5 September. The walk sweep landed in go-loop.sh
+# on the 8th. By the 9th, seven runners had asked for a sweep that the running
+# loop had no code to serve, and nothing anywhere said why. This proves the
+# loop now picks up a change to its own script, and refuses one it cannot read.
+#
+# The loop must run a script it is allowed to edit, so this builds a stand-in
+# repo out of symlinks to the real one, with a WRITABLE copy of go-loop.sh in
+# it. Nothing real is written to.
+QDIR4="$SANDBOX4/queue"
+BIN4="$SANDBOX4/bin"
+STATE4="$SANDBOX4/state"
+FAKEREPO="$SANDBOX4/repo"
+mkdir -p "$QDIR4/digests" "$BIN4" "$STATE4" "$FAKEREPO/queue/bin"
+for e in "$REPO"/*(N) "$REPO"/.[^.]*(N); do
+  [[ "${e:t}" == queue ]] && continue
+  ln -s "$e" "$FAKEREPO/${e:t}"
+done
+for f in "$REPO"/queue/bin/*(N); do
+  [[ "${f:t}" == go-loop.sh ]] && continue
+  ln -s "$f" "$FAKEREPO/queue/bin/${f:t}"
+done
+cp "$REPO/queue/bin/go-loop.sh" "$FAKEREPO/queue/bin/go-loop.sh"
+chmod +x "$FAKEREPO/queue/bin/go-loop.sh"
+
+# The fake runner finishes each task it is handed, and edits the loop's script
+# on the way out, exactly as a runner landing a fix to the loop would. The
+# first edit is broken on purpose; the second is a real one.
+cat > "$BIN4/claude" <<'FAKE'
+#!/bin/zsh
+prompt="${@[-1]}"
+[[ "$prompt" == *"TASK FILE: "* ]] || { echo '{"type":"result","subtype":"success","result":"no task"}'; exit 0; }
+stamp="$DRILL_STATE/task.calls"
+n=$(( $(cat "$stamp" 2>/dev/null || echo 0) + 1 )); echo $n > "$stamp"
+file="${prompt##*TASK FILE: }"
+id=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).id)' "$file")
+node queue/bin/queue.mjs status "$id" done "drill: finished" >/dev/null
+cp "$PHOTONZ_QUEUE_DIR/status.json" "$DRILL_STATE/status-during-task-$n.json" 2>/dev/null
+if (( n == 1 )); then
+  # A half-written script: `if` with no `fi`. The loop must refuse it.
+  printf '\nif true; then\n' >> "$DRILL_SCRIPT"
+elif (( n == 2 )); then
+  # ...and the fixed version, which the loop must adopt.
+  cp "$DRILL_SCRIPT.orig" "$DRILL_SCRIPT"
+  printf '\n# a fix a runner landed in the loop, drill %s\n' "$n" >> "$DRILL_SCRIPT"
+  shasum -a 256 "$DRILL_SCRIPT" | cut -d" " -f1 > "$DRILL_STATE/expected-hash"
+fi
+echo '{"type":"result","subtype":"success","result":"done"}'
+exit 0
+FAKE
+chmod +x "$BIN4/claude"
+cp "$FAKEREPO/queue/bin/go-loop.sh" "$FAKEREPO/queue/bin/go-loop.sh.orig"
+
+export PATH="$BIN4:$PATH"
+export PHOTONZ_QUEUE_DIR="$QDIR4"
+export DRILL_STATE="$STATE4"
+export DRILL_SCRIPT="$FAKEREPO/queue/bin/go-loop.sh"
+export PHOTONZ_BACKOFF_STEPS="1,2,3"
+export PHOTONZ_MAX_ITERS=4          # task 1 (breaks it), task 2 (fixes it), the reload, task 3
+unset PHOTONZ_DIGEST_HOUR
+: > "$QDIR4/digests/$(date +%F).md"  # this scenario is about the script, not the digest
+
+Q add "Drill task four" p1-high "drill" >/dev/null
+Q add "Drill task five" p1-high "drill" >/dev/null
+Q add "Drill task six" p1-high "drill" >/dev/null
+
+echo "[drill] scenario 4: running the real go loop against a fix landed in its own script..."
+"$FAKEREPO/queue/bin/go-loop.sh" > "$SANDBOX4/drill.log" 2>&1
+export DRILL_LOG="$SANDBOX4/drill.log"
+
+PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
+const fs = await import("node:fs");
+const q = process.env.PHOTONZ_QUEUE_DIR;
+const st = process.env.DRILL_STATE;
+const read = (f, fb) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return fb; } };
+const status = read(q + "/status.json", {});
+const history = fs.readFileSync(q + "/history.jsonl", "utf8").trim().split("\n").map(JSON.parse);
+const tasks = ["p0-critical","p1-high","p2-normal","p3-low"].flatMap((p) => {
+  const d = q + "/tasks/" + p;
+  return fs.existsSync(d) ? fs.readdirSync(d).map((f) => JSON.parse(fs.readFileSync(d + "/" + f, "utf8"))) : [];
+});
+const log = fs.readFileSync(process.env.DRILL_LOG, "utf8");
+let failed = 0;
+const check = (name, ok, detail) => {
+  console.log((ok ? "  PASS  " : "  FAIL  ") + name + (detail ? "\n          " + detail : ""));
+  if (!ok) failed++;
+};
+
+const reloads = history.filter((e) => e.ev === "loop_reloaded");
+const refused = history.filter((e) => e.ev === "loop_reload_refused");
+const starts  = history.filter((e) => e.ev === "loop_started");
+const during1 = read(st + "/status-during-task-1.json", {});
+const expected = (fs.readFileSync(st + "/expected-hash", "utf8") || "").trim();
+
+check("the loop restarted onto the fixed script", reloads.length === 1,
+  reloads.length + " loop_reloaded events");
+check("...and said so in its window", /go-loop.sh changed; restarting onto it/.test(log),
+  (log.match(/go-loop.sh changed; restarting[^\n]*/) || ["no such line"])[0]);
+check("a script that does not parse is refused, not adopted", refused.length === 1,
+  refused.length + " loop_reload_refused events");
+check("...and the refusal names itself in the window",
+  /changed but does not parse; still running the copy from startup/.test(log),
+  (log.match(/does not parse[^\n]*/) || ["no such line"])[0]);
+check("the restart kept the same process", starts.length === 2 && starts[0].pid === starts[1].pid,
+  starts.map((e) => e.pid).join(" -> "));
+check("...so it never read as a second loop starting", !/declining to start/.test(log), "");
+// Without this the restart would reset the count and PHOTONZ_MAX_ITERS would
+// never be reached, which is a drill that hangs rather than one that fails.
+check("the pass count survived the restart, so MAX_ITERS still ended the run",
+  /reached PHOTONZ_MAX_ITERS=4/.test(log), (log.match(/reached PHOTONZ[^\n]*/) || ["the loop never stopped"])[0]);
+check("status.json names the copy the loop is running", status.script && status.script.hash === expected,
+  "recorded " + String(status.script && status.script.hash).slice(0, 12) + ", expected " + expected.slice(0, 12));
+check("the queue survived: every drill task finished",
+  tasks.length === 3 && tasks.every((t) => t.status === "done"),
+  tasks.map((t) => t.id + "=" + t.status).join(", "));
+check("no task is left in_progress", tasks.every((t) => t.status !== "in_progress"),
+  tasks.map((t) => t.id + "=" + t.status).join(", "));
+check("the loop was healthy throughout", status.health === "ok" && !status.lastError,
+  "health=" + status.health);
+check("the loop named its script from the very first pass, before any reload",
+  !!(during1.script && during1.script.hash), JSON.stringify(during1.script || null));
+
+// The dashboard half, unit-tested on a throwaway queue: a loop that is alive
+// and has never named its script is the 2026-09-05 loop, and must read stale.
+process.env.PHOTONZ_QUEUE_DIR = st + "/unit-queue";
+fs.mkdirSync(process.env.PHOTONZ_QUEUE_DIR, { recursive: true });
+const { writeStatus, loopScript, hashFile } = await import(process.cwd() + "/queue/bin/queue-lib.mjs");
+const script = process.cwd() + "/queue/bin/go-loop.sh";
+writeStatus({ pid: process.pid, state: "running" });
+check("a live loop that never named its script reads as stale",
+  loopScript(undefined, true).stale && loopScript(undefined, true).reason === "unrecorded", "");
+writeStatus({ script: { hash: hashFile(script), state: "running", path: script } });
+check("a live loop on the current script does not", !loopScript(undefined, true).stale, "");
+writeStatus({ script: { hash: "0".repeat(64), state: "running", path: script } });
+check("a live loop on an older copy reads as stale, and says which kind",
+  loopScript(undefined, true).stale && loopScript(undefined, true).reason === "changed", "");
+check("a stopped loop is not called stale", !loopScript(undefined, false).stale, "");
+
+console.log(failed ? "\n[drill] scenario 4: " + failed + " check(s) failed" : "\n[drill] scenario 4: all checks passed");
+process.exit(failed ? 1 : 0);
+'
+S4=$?
+
+if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 )); then
   echo "[drill] all checks passed"
   exit 0
 fi
-echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3)"
+echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4)"
 exit 1

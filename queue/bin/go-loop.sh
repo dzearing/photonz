@@ -21,10 +21,18 @@
 #                         user's dev app after a task lands app code. Default 1.
 #   PHOTONZ_DIGEST_HOUR   earliest local hour for the daily digest. Default 5
 #                         (drills set 0 so the digest pass runs whenever).
+#   PHOTONZ_LOOP_RELOAD   0 to stop the loop adopting edits to this file
+#                         between tasks. Default 1.
+#   PHOTONZ_LOOP_ITERS    set by the loop on itself across a reload; not for
+#                         hand use.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO"
 export GO_LOOP_PID=$$
+# The absolute path of THIS file, kept for the reload check below. :A resolves
+# it whole, so the check still works if the loop was started through a relative
+# path or a symlink.
+SCRIPT="${0:A}"
 QDIR="${PHOTONZ_QUEUE_DIR:-$REPO/queue}"
 SANDBOX=0; [[ -n "${PHOTONZ_QUEUE_DIR:-}" ]] && SANDBOX=1
 MAX_ITERS="${PHOTONZ_MAX_ITERS:-0}"
@@ -143,6 +151,54 @@ sweep_pass() {
   Q event sweep_pass "$(queue/bin/sweep.sh summary 2>/dev/null || echo '{}')"
 }
 
+# ---- adopting a fix to this file -------------------------------------------
+# zsh parses a script once, at start, so every later edit to this file is
+# invisible to the process already running it. That is not a theoretical
+# problem: the loop ran unbroken from 5 September, the walk sweep landed in
+# here on the 8th, and by the 9th seven runners had asked for a sweep that the
+# running loop had no code to serve. Nothing anywhere said why.
+#
+# So between tasks, with nothing claimed and nothing in flight, the loop
+# compares the file on disk against the copy it started with and re-execs
+# itself onto the new one. exec keeps the same pid, so status.json, the
+# double-start guard and the Ghoztty window all carry over untouched, and the
+# pass count rides across in the environment so PHOTONZ_MAX_ITERS still ends a
+# drill.
+#
+# Only THIS file can go stale. The prompts are read with cat every pass, and
+# queue.mjs, sweep.sh and refresh-dev-app.sh are fresh processes every time
+# they are called, so they are always current already.
+LOOP_RELOAD="${PHOTONZ_LOOP_RELOAD:-1}"
+script_hash() { shasum -a 256 "$SCRIPT" 2>/dev/null | cut -d" " -f1; }
+LOOP_SCRIPT_HASH=$(script_hash)
+LOOP_SCRIPT_REFUSED=""   # hash of a copy that did not parse, so we say so once
+reload_if_changed() {
+  (( LOOP_RELOAD )) || return 0
+  local fresh; fresh=$(script_hash)
+  [[ -n "$fresh" && "$fresh" != "$LOOP_SCRIPT_HASH" ]] || return 0
+  # Never exec a copy that does not parse or cannot be run: a half-written
+  # script, or one that lost its executable bit, would end the loop on the spot
+  # and the only symptom would be silence. exec failing is not recoverable, so
+  # the check comes first. Keep running the copy we have, say so, and try again
+  # when it changes.
+  if [[ ! -x "$SCRIPT" ]] || ! zsh -n "$SCRIPT" 2>/tmp/goloop-parse.$$; then
+    if [[ "$fresh" != "$LOOP_SCRIPT_REFUSED" ]]; then
+      LOOP_SCRIPT_REFUSED="$fresh"
+      echo "[go-loop] $(date +%T) go-loop.sh changed but does not parse; still running the copy from startup. $(head -c 300 /tmp/goloop-parse.$$)" | tee -a "$LOG"
+      Q event loop_reload_refused "{\"reason\":\"parse error\"}"
+      Q script "$LOOP_SCRIPT_HASH" broken "$SCRIPT"
+    fi
+    rm -f /tmp/goloop-parse.$$
+    return 0
+  fi
+  rm -f /tmp/goloop-parse.$$
+  echo "[go-loop] $(date +%T) go-loop.sh changed; restarting onto it (same pid $$, no task claimed)" | tee -a "$LOG"
+  Q event loop_reloaded "{\"from\":\"${LOOP_SCRIPT_HASH:0:12}\",\"to\":\"${fresh:0:12}\"}"
+  Q busy "restarting onto the updated loop script"
+  export PHOTONZ_LOOP_ITERS=$ITERS
+  exec "$SCRIPT"
+}
+
 banner() { printf '\033]7778;%s\007' "$1"; }   # sticky Ghoztty pane banner
 state()  { printf '\033]7777;%s\007' "$1"; }   # Ghoztty activity state
 title()  { printf '\033]2;%s\007' "$1"; }      # window title
@@ -170,6 +226,11 @@ title "photonz: go-loop"
 
 echo "[go-loop] started pid=$$ repo=$REPO queue=$QDIR model=$RUNNER_MODEL effort=$RUNNER_EFFORT" | tee -a "$LOG"
 Q event loop_started "{\"pid\":$$}"
+# Tell the queue which copy of this script is running. The dashboard hashes the
+# file itself and says plainly when the loop is on an older one, which covers
+# the window this reload check cannot: the twenty minutes the loop spends
+# inside a task, and any copy it has refused.
+Q script "$LOOP_SCRIPT_HASH" running "$SCRIPT"
 Q reset-health
 Q busy "starting up"
 
@@ -212,12 +273,19 @@ rotate_log() {
   return 0
 }
 
-ITERS=0
+# Passes already made before a reload, so a drill's PHOTONZ_MAX_ITERS still
+# counts the whole run and not just the part after the last restart.
+ITERS=${PHOTONZ_LOOP_ITERS:-0}
+unset PHOTONZ_LOOP_ITERS
 while :; do
   TODAY=$(date +%F)
   ITERS=$((ITERS + 1))
   rotate_log
   [[ "$MAX_ITERS" != 0 && $ITERS -gt $MAX_ITERS ]] && { echo "[go-loop] reached PHOTONZ_MAX_ITERS=$MAX_ITERS, exiting" | tee -a "$LOG"; cleanup; }
+
+  # A fix to this file, landed by the runner of the last task, is adopted here
+  # and nowhere else: no task is claimed and no sweep is running yet.
+  reload_if_changed
 
   # A sweep a runner asked for is served here, between tasks, before anything
   # else in the pass claims work.

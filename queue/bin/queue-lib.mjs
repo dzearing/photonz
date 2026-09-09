@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, appendFileSync, renameSync, statSync } from 'node:fs';
 import { join, dirname, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 // The queue lives at <repo>/queue. PHOTONZ_QUEUE_DIR points every writer at a
 // throwaway copy instead, which is how the runner-failure drill
@@ -754,6 +755,67 @@ export function loopAlive(status = readStatus()) {
   try { process.kill(status.pid, 0); return true; } catch { return false; }
 }
 
+// ---- is the loop running the loop we have? ----------------------------------
+// A zsh script is parsed once. Everything landed in go-loop.sh after the loop
+// started is invisible to the process running it, and until 2026-09-09 nothing
+// said so: the loop ran from 5 September, the walk sweep landed on the 8th, and
+// seven runners asked for sweeps the running loop had no code to serve.
+//
+// The loop records which copy it is running (queue.mjs script). Freshness is
+// worked out HERE, at read time, by hashing the file now, so the answer can
+// never itself be stale. The loop adopts a new copy between tasks on its own;
+// this is what covers the rest: the long minutes it spends inside a task, a
+// copy it refused because it did not parse, and reloading being turned off.
+const LOOP_SCRIPT = join(QUEUE, 'bin', 'go-loop.sh');
+export function hashFile(file) {
+  try { return createHash('sha256').update(readFileSync(file)).digest('hex'); } catch { return null; }
+}
+export function loopScript(status = readStatus(), alive = loopAlive(status)) {
+  const rec = status.script || null;
+  const path = (rec && rec.path) || LOOP_SCRIPT;
+  const onDisk = hashFile(path);
+  // A live loop that has never said which copy it runs IS an old one: saying so
+  // is a thing go-loop.sh only learned to do on 2026-09-09, so a loop that has
+  // not said it was started before that and cannot have the code. This is the
+  // case that was silent for three days and it must not be silent again.
+  let reason = null;
+  if (alive && !(rec && rec.hash)) reason = 'unrecorded';
+  else if (alive && onDisk && rec.hash !== onDisk) reason = 'changed';
+  return {
+    running: rec ? rec.hash : null,
+    onDisk,
+    since: rec ? rec.since : null,
+    // "broken" means the loop saw a newer copy and refused it because it does
+    // not parse. That is worse than plain staleness and reads differently.
+    state: rec ? rec.state || 'running' : null,
+    reason,
+    stale: reason !== null,
+  };
+}
+
+// ---- the full walk sweep ----------------------------------------------------
+// A runner cannot run the 322-walk set (its background work is cut off at
+// 600s), so it asks with queue/bin/sweep.sh request and the loop runs one
+// between tasks. Requests that nothing ever serves used to be invisible: seven
+// of them sat unserved for three days because the loop had no code to run
+// them. The dashboard shows this so a stalled sweep says so on its own.
+const SWEEP = join(QUEUE, 'sweep');
+export function sweepState() {
+  const latest = readJSON(join(SWEEP, 'latest.json'), null);
+  const req = readJSON(join(SWEEP, 'requested.json'), { requests: [] });
+  const requests = Array.isArray(req.requests) ? req.requests : [];
+  return {
+    pending: requests.length,
+    oldestRequest: requests.length ? requests[0].t : null,
+    reasons: requests.slice(-3).map((r) => ({ by: r.by, why: r.why })),
+    last: latest ? {
+      ended: latest.ended, seconds: latest.seconds, walks: latest.walks,
+      passed: latest.passed, failed: (latest.failed || []).length,
+      complete: latest.complete !== false,
+    } : null,
+  };
+}
+
 // ---- objectives -------------------------------------------------------------
 // The ordered epic tree that steers triage. Order IS priority; nesting is
 // sub-epics. The dashboard's Objectives tab edits this wholesale.
@@ -937,7 +999,9 @@ export function aggregateState({ tasks: includeTasks = true } = {}) {
       health: status.health || 'ok',
       consecutiveFailures: status.consecutiveFailures || 0,
       lastError: status.lastError || null,
+      script: loopScript(status, alive),
     },
+    sweep: sweepState(),
     // list rows only, see taskRow: the poll used to carry every task's whole
     // log and was three megabytes fifteen times a minute
     ...(includeTasks ? { tasks } : {}),

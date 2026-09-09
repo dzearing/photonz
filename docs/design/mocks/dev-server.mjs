@@ -2,9 +2,9 @@
 // Start (detached):  cd docs/design/mocks && nohup node dev-server.mjs >/tmp/photonz-mock-server.log 2>&1 & disown
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { watch } from 'node:fs';
+import { watch, statSync } from 'node:fs';
 import { extname, join, normalize, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = dirname(fileURLToPath(import.meta.url)); // docs/design/mocks
 const TYPES = { '.html': 'text/html;charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
 // An audit's screenshots live beside its markdown in queue/audits/, outside
@@ -63,8 +63,23 @@ export async function assemble(kind) {
 // itself is outside ROOT on purpose so status writes never trip livereload.
 const QUEUE_LIB = join(ROOT, '..', '..', '..', 'queue', 'bin', 'queue-lib.mjs');
 let q = null;
+let qStamp = 0;
+// Node caches an imported module forever, so this server used to serve
+// whatever the queue library looked like the day it was started. That is the
+// same trap the go loop was in: on 2026-09-09 the loop was running a copy of
+// itself from four days earlier and this server was a day behind, so the very
+// warning about the stale loop could not have reached the page. Re-import when
+// the file changes, keyed on its mtime, and the dashboard is never behind the
+// queue again.
 async function queueLib() {
-  if (!q) { try { q = await import(QUEUE_LIB); } catch (e) { console.error('queue lib unavailable:', e.message); } }
+  let mtime = 0;
+  try { mtime = statSync(QUEUE_LIB).mtimeMs; } catch {}
+  if (!q || mtime !== qStamp) {
+    try {
+      q = await import(pathToFileURL(QUEUE_LIB).href + '?v=' + mtime);
+      qStamp = mtime;
+    } catch (e) { console.error('queue lib unavailable:', e.message); }
+  }
   return q;
 }
 function readBody(req) {

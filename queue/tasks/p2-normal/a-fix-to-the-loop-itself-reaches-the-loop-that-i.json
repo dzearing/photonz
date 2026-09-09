@@ -9,7 +9,7 @@
   "release": "next",
   "area": "tools",
   "created": "2026-09-09T12:25:11.791Z",
-  "updated": "2026-09-09T12:58:49.054Z",
+  "updated": "2026-09-09T13:08:20.151Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass, with the evidence checked rather than reasoned about.\n\n  ps -o pid,lstart -p 36604      -> Sat Sep  5 06:58:32 2026\n  git log -1 -S sweep_pass -- queue/bin/go-loop.sh -> 04c7e679, 2026-09-08 18:14:25\n  queue/bin/sweep.sh due          -> exit 0, a sweep is due\n  queue/sweep/                    -> requested.json with 7 requests and nothing else: no latest.json, no run log\n  grep 'walk sweep requested; running it' queue/loop.log -> no match, ever\nSo the loop that is running was started three days before sweep_pass existed, and the seven requests queued since have never been served.\n\nWhat is waiting on that sweep matters: the seven requests are all shared panel chrome, every section header moving 2pt, Corner Radius growing into a heading row, a Style row added to every effect pane, and each one says the whole 322-walk set is the thing that would confirm nothing else shifted.\n\nThe immediate unblock is a human restarting the loop with /go. This task is about the next time, not this time. Worth considering: the loop re-execs itself when queue/bin/go-loop.sh changes, at a safe point between tasks, or it records the file's hash at start and status.json carries a stale flag the dashboard reads.",
@@ -43,6 +43,26 @@
     {
       "t": "2026-09-09T12:58:49.054Z",
       "note": "Scope note: this task sits under the unmanned-loop epic, staged next rather than now. Doing it anyway because it is what unblocks the focus: the seven waiting sweep requests are all ui-building shared panel chrome, and none of them can be confirmed while the loop cannot run a sweep."
+    },
+    {
+      "t": "2026-09-09T13:08:20.150Z",
+      "note": "Built both halves. The loop hashes its own file at startup, records it in status.json, and between tasks (nothing claimed, nothing in flight) compares it against the file on disk; when it differs and zsh -n parses it and it is executable, the loop execs itself onto the new copy. exec keeps the pid, so status.json, the double-start guard and the Ghoztty window carry over, and the pass count rides across in PHOTONZ_LOOP_ITERS so PHOTONZ_MAX_ITERS still ends a drill. A copy that does not parse is refused out loud and only complained about once per broken version. PHOTONZ_LOOP_RELOAD=0 turns the whole thing off."
+    },
+    {
+      "t": "2026-09-09T13:08:20.151Z",
+      "note": "The other half: queue-lib loopScript() hashes the file at READ time, so the freshness answer can never itself be stale, and the Summary hero carries an amber strip naming the situation and the fix. A live loop that never recorded a script is stale by definition (only a loop from before today can be silent about it), which is what makes the warning true of the loop running right now. Also added a sweep line under the heartbeat: the last run pass count and age, or how many have been asked for and never served."
+    },
+    {
+      "t": "2026-09-09T13:08:20.151Z",
+      "note": "Second instance of the same bug, found while verifying: the dashboard server had been up since 2026-09-08 00:30 and node caches an imported module forever, so /api/state returned neither new field. The server that has to SHOW the stale-loop warning was itself stale. It now re-imports queue-lib.mjs whenever the file mtime changes, and was restarted once by hand to pick that up. Verified live: /api/state now returns script.stale true, reason unrecorded, and sweep.pending 7."
+    },
+    {
+      "t": "2026-09-09T13:08:20.151Z",
+      "note": "Verified. Scripts/test.sh: 5365 tests in 446 suites passed. queue/bin/failure-drill.sh: all four scenarios pass, including 16 new checks in scenario 4 (restarts onto a fixed script, refuses one that does not parse, keeps the same pid, pass count survives so MAX_ITERS still ends the run, all three drill tasks finish, nothing left in_progress, status.json names the running copy, and the four dashboard staleness cases). state-poll-drill.mjs still passes, so the two new fields did not cost the poll budget. Dashboard checked in a real browser at 127.0.0.1:8791: the amber strip and the sweep line both render, screenshot in queue/audits/2026-09-09-loop-reload-1.png."
+    },
+    {
+      "t": "2026-09-09T13:08:20.151Z",
+      "note": "Adversarial review of the built thing. The strip reads plainly and names the fix (ctrl-c, /go). The sweep line is faint by design: it is a permanent line rather than an alarm, and the strip above it is doing the loud talking today; the audit asks the user whether that is right. What I could NOT do: serve the seven waiting sweep requests. This runner IS the stale loop, so restarting it would kill this task mid-flight, and a runner cannot run 322 walks against a 600s ceiling. Acceptance item two is therefore half done: the dashboard now shows the sweep and says why it is stalled, and the requests are served by the loop the moment a person restarts it. That is the alternative acceptance item one names, and it is the whole of the unblock this time."
     }
   ],
   "started": "2026-09-09T12:55:37.913Z"

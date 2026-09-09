@@ -51,6 +51,11 @@
   #dashboard .db-herr code{display:block;font-family:var(--mono);font-size:10.5px;color:var(--dim);
     margin-top:var(--s2);white-space:pre-wrap;word-break:break-word;line-height:1.5}
   #dashboard .db-herr p{margin:var(--s2) 0 0;font-size:11.5px;color:var(--dim);line-height:1.5}
+  /* Same strip, amber: the loop is working, but on an older copy of itself. */
+  #dashboard .db-herr.warn{border-top-color:color-mix(in srgb,var(--warn) 30%,transparent);
+    background:color-mix(in srgb,var(--warn) 8%,transparent)}
+  #dashboard .db-herr.warn .ic{color:var(--warn)}
+  #dashboard .db-beat .db-sweep.waiting{color:var(--warn)}
   #dashboard .db-hero .db-what{min-width:0;flex:1}
   #dashboard .db-hero .db-what b{display:block;font-size:13.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #dashboard .db-hero .db-what span{font-size:11.5px;color:var(--dim)}
@@ -749,6 +754,47 @@
     if (L.state === 'running') return { cls: 'run', ic: '', label: 'Running', note: '' };
     return { cls: 'idle', ic: 'ic-pause', label: 'Idle', note: 'Waiting for ready tasks. Queue one below or resolve a blocker.' };
   }
+  // The 322-walk sweep runs between tasks, so nothing else on the page would
+  // ever mention it. Seven requests once sat unserved for three days with no
+  // sign of it anywhere; this is that sign.
+  function sweepLine() {
+    var W = S.sweep || { pending: 0, last: null };
+    var cls = W.pending ? 'db-sweep waiting' : 'db-sweep';
+    if (!W.last) {
+      return '<span class="' + cls + '">' + (W.pending
+        ? 'walk sweep: ' + W.pending + ' asked for since ' + rel(W.oldestRequest) + ', none run yet'
+        : 'no walk sweep run yet') + '</span>';
+    }
+    var t = 'walk sweep ' + W.last.passed + '/' + W.last.walks + ' ' + rel(W.last.ended);
+    if (!W.last.complete) t = 'walk sweep cut short at ' + W.last.walks + ' walks ' + rel(W.last.ended);
+    else if (W.last.failed) t += ' · ' + W.last.failed + ' failing';
+    if (W.pending) t += ' · ' + W.pending + ' more asked for';
+    return '<span class="' + cls + '">' + t + '</span>';
+  }
+
+  // The loop is a zsh script and zsh parses one once, so a fix landed in it
+  // reaches nothing until the process restarts. The loop restarts itself onto
+  // a new copy between tasks; this covers what that cannot: the long minutes
+  // it spends inside a task, a copy it refused because it did not parse, and
+  // a loop old enough to predate the whole mechanism.
+  function scriptStrip(L) {
+    var C = L.script;
+    if (!C || !C.stale) return '';
+    var h = '<div class="db-herr' + (C.state === 'broken' ? '' : ' warn') + '"><i class="ic ic-warning"></i><div>';
+    if (C.state === 'broken') {
+      h += '<b>The loop cannot read its own latest script</b>';
+      h += '<p>Someone changed the loop\u2019s script and the new version has a syntax error, so the loop refused it and kept running the copy it started with. Fix the script, and the loop picks it up on its own between tasks.</p>';
+    } else if (C.reason === 'unrecorded') {
+      h += '<b>The loop is running an older copy of its own script</b>';
+      h += '<p>This loop was started before it learned to restart itself when its own script changes, so everything the script has learned since it started is code this loop does not have. Press ctrl-c in the go loop window and run /go to restart it. From then on it picks up its own changes between tasks.</p>';
+    } else {
+      h += '<b>The loop is running an older copy of its own script</b>';
+      h += '<p>Its script changed ' + (C.since ? 'after it started ' + rel(C.since) : '') + ' and it has not restarted onto the new one yet. It does that between tasks, so this clears itself once the task in flight finishes. If it is still here in an hour, run /go to restart the loop.</p>';
+    }
+    h += '</div></div>';
+    return h;
+  }
+
   function renderSummary() {
     var st = loopState();
     var L = S.loop;
@@ -759,7 +805,8 @@
     if (L.task) h += '<b>' + esc(L.task.title) + '</b><span>' + esc(L.note || 'working') + ' · <span class="badge sm soft">' + esc(PRIO_LABEL[L.task.priority] || '') + '</span></span>';
     else h += '<b>' + (st.cls === 'run' ? 'Between tasks' : 'Nothing running') + '</b><span>' + esc(st.note) + '</span>';
     h += '</div>';
-    h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked</div>';
+    h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked';
+    h += '<br>' + sweepLine() + '</div>';
     h += '</div>';
     if (L.health === 'unhealthy' && L.lastError && L.lastError.signIn) {
       var LS = L.lastError;
@@ -790,6 +837,7 @@
         : (LE.taskId ? 'Failing task: ' + esc(LE.taskId) + '. After three tries in a row it gets parked and the loop moves on.' : 'The daily digest run failed.')) + '</p>';
       h += '</div></div>';
     }
+    h += scriptStrip(L);
     h += '</div>';
 
     h += '<div class="db-sumgrid">';

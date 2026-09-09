@@ -83,3 +83,34 @@ says it is deferred rather than stubbed, the loop reports `unhealthy` at once,
 and the hero pill says **Spend limit hit** with when it resets. On a task run
 the limit can land mid-work, so there the usual per-task rule stays in charge.
 Details and the drill that verifies it: `queue/README.md`.
+
+## When the loop is behind its own script
+
+zsh parses a script once, so every fix landed in `queue/bin/go-loop.sh` is
+invisible to the process already running it. That was silent for four days: the
+loop ran unbroken from 5 September, the walk sweep landed in the loop on the
+8th, and by the 9th seven runners had asked for a sweep the running loop had no
+code to serve.
+
+Two halves fix it. The loop hashes its own file at startup, records that in
+`status.json`, and between tasks (nothing claimed, nothing in flight) compares
+it against the file on disk. When it differs and `zsh -n` parses it, the loop
+`exec`s itself onto the new copy: same pid, same queue, same window, and the
+pass count rides across in the environment so `PHOTONZ_MAX_ITERS` still ends a
+drill. A copy that does not parse is refused out loud and the loop keeps working
+on the one it has. Turn the whole thing off with `PHOTONZ_LOOP_RELOAD=0`.
+
+The other half is the page saying so, for the window the reload cannot cover:
+the long minutes inside a task, a refused copy, and a loop old enough to predate
+the mechanism. `loopScript()` hashes the file at read time, so the answer is
+never itself stale, and the Summary hero carries an amber strip naming the
+situation and the fix. A live loop that has never recorded a script is read as
+stale on its own: only a loop from before 2026-09-09 can be silent about it.
+
+The dashboard server had the same trap, since node caches an imported module
+forever and it had been up a day. It now re-imports `queue-lib.mjs` whenever the
+file changes, so the page is never behind the queue.
+
+The sweep is on the hero too, under the heartbeat: the last run's pass count and
+age, or how many runs have been asked for and never served. It runs between
+tasks and nothing else on the page would ever have mentioned it.
