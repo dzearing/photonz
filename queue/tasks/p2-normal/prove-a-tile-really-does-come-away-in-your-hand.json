@@ -1,0 +1,32 @@
+{
+  "id": "prove-a-tile-really-does-come-away-in-your-hand",
+  "title": "Prove a tile really does come away in your hand",
+  "goal": "Three features shipped in one day rest on the same gesture: pick a saved colour or a saved text style up off the Library shelf and carry it somewhere. Every one of their reports says the same thing to you, that no scripted walk can prove the pick-up itself, only what happens once something is in the air, and asks you to check by hand. That is three features handing the same risk to the person who is meant to be trying them. Settle it once.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T12:23:40.425Z",
+  "updated": "2026-09-09T12:23:40.576Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by the 2026-09-09 triage pass, reading the day's audits as a user.\n\nThe same paragraph appears in queue/audits/2026-09-09-text-style-drag.json, 2026-09-09-text-style-row-drop.json and, by reference, 2026-09-09-style-on-a-copy.json: \"AppKit only begins a drag session from an event that came off a real device, so the walk hands the payload to the canvas directly instead... If the tile will not come away in your hand, say so and it is a small fix.\"\n\nWhat IS already proven, so this is narrower than it sounds. Sources/Photonz/Playtest/PanelTarget.swift:12 says the harness uses \"the SAME drag payload its own onDrag hands over, one closure, used by both\", so the bytes on the pasteboard are the real ones. PlaytestHarness.dragTile (line 3136) then builds a PlaytestDraggingInfo and calls draggingEntered/draggingUpdated/performDragOperation on the destination. So the receiving half and the payload are covered; what nothing exercises is the mouse-down on the tile turning into a drag session.\n\nWorth trying before concluding it is impossible: a CGEvent posted to the HID event tap is treated as a real device event, which is how other UI test harnesses start drags. Sources/Photonz/Playtest/PlaytestHarness.swift already imports CGEvent for keys.",
+  "acceptance": [
+    "It is proven, and written down, that a Library tile can be picked up with a real mouse in the running app: a colour tile and a text style tile at least",
+    "Either a walk can start a real drag from now on, or the report says plainly that it cannot and names the one manual check that stands in for it",
+    "The audits that carry the warning are amended, or a line in the harness doc says where the answer lives, so the next three features do not each ask again",
+    "If the pick-up is broken for any tile, that is filed as its own bug with what was seen"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T12:23:40.427Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T12:23:40.575Z",
+      "note": "seq 30 -> 40"
+    }
+  ]
+}

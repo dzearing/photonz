@@ -1,0 +1,66 @@
+{
+  "id": "picking-a-text-layer-leaves-its-settings-below-t",
+  "title": "The panel has one settled rule for what you see when you pick something",
+  "goal": "Three different mechanisms now share one job in the right hand panel: the order the sections sit in, the panel scrolling itself to whatever you just picked, and the room the Effects list keeps for the effect you just opened. Each was built on its own, and together they decide what you can see. The symptom that filed this, picking a piece of text and finding its settings off the bottom, no longer happens, because the panel now scrolls itself. What is left is the question underneath it, which is yours to answer: should picking something move the panel at all, or should the sections be ordered so it never has to?",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-08T09:45:45.773Z",
+  "updated": "2026-09-09T12:22:11.331Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "TRIAGED 2026-09-09: the p1 bug this was filed as no longer reproduces, so it is a p2 open question now, not a critical bug.\n\nWhat I ran, on a clean tree at HEAD 7e1e4d6d with the probe rebuilt from that commit:\n  Scripts/playtest-all.sh dock-picked-first          -> 1 passed, 0 failed, 18s\n  Scripts/playtest-all.sh --no-build panel-controls  -> 1 passed, 0 failed, 16s\nBoth were also green on the earlier 05:02 probe, so this is not a build fluke.\n\nWhat fixed it: 7f65ae4d, Picking a layer brings its own section into view, audit queue/audits/2026-09-09-dock-picked-first-reveal.json. The panel now scrolls itself to the picked section. That is option scroll on this task's own decision card, shipped by a neighbouring task while the card was still pending, and unflagged. So the question was answered by the app rather than by the user.\n\nWhy the card still stands. The shipped scroll has a cost the audit names itself: the panel holds about 1030 points of sections in a 690 point window, so showing the Text section means the layers list goes off the top. You click a row and the list of rows leaves. Picking from the layers list is the main way anybody moves between layers while building UI, so a click that takes the list away is worth an answer rather than a default.\n\nIt also crosses a written rule. UX-PATTERNS section 3, Reveal: ambient changes never may, a selection moving, a document loading, a background update leave a shut header shut and do not scroll. A selection moving now scrolls the dock. Either the rule moves or the behaviour does; that scrub is filed separately.\n\nFolded in from two-panel-walks-are-failing-on-main, closed as done by the same pass: panel-controls-walk was fixed by 64ac9f3c, and a verified alternative to the scroll is in hand there, a v5 order migration moving the picked section above Effects, guarded by shapePartsEnabled, which makes the walk pass at 1200x720 with no self-scrolling at all.",
+  "acceptance": [
+    "The user answers the decision card on where a picked thing's settings belong, and the answer is written into this task before any code is written",
+    "Whatever the answer, the panel does one thing rather than three: the rule is written down in the dock rules and the code follows it",
+    "Clicking a row in the layers list does not scroll that list off the top of the panel, so the next row you want is still where you are looking, or the answer says plainly why it must",
+    "dock-picked-first-walk and panel-controls-walk both still pass",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-08T09:45:45.775Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-08T10:47:13.020Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-08T10:52:15.818080Z",
+      "note": "REPRODUCED on a fresh probe build of clean main. `Scripts/playtest-all.sh dock-picked-first` -> dock-picked-first-walk 16s FAILED step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s. The dock's own offsets in a 688pt viewport: text picked -> Text 602-778 (dockInView stops at Measurements); measurement picked -> Measurement 502-781; zoom callout right after it is drawn -> Zoom Callout 627-741; plain rectangle -> Appearance 169-431, whole. A second run with the waitFor steps stripped out also failed on `press Details`, because the Measurement section's Details control is itself off the window. Same bug, second symptom."
+    },
+    {
+      "t": "2026-09-08T10:52:15.818080Z",
+      "note": "ADVERSARIAL REVIEW of the three directions, before building any of them. (a) auto-scroll: fine when you pick on the canvas, bad when you pick in the layers list, which is where the walk picks and where half of real picking happens. Bringing Text whole into view costs 90pt of travel, which takes the Layers header off the top and leaves about a row and a half of the list under the pointer that just clicked it. Motion on every selection, for a problem the order can solve without any motion. (b) picked section first: arithmetic on the measured heights puts Text at 169-345 and Appearance at 345-546 both whole, Effects 546-691 (3pt cut), Measurement at 169-448 whole, callout 169-283 whole, and a plain rectangle unchanged, so the 2026-09-07 arrangement survives untouched in the case it was asked for. Shortest change too: one more numbered migration in loadOrder moving pickedSections before .color instead of before .geometry. (c) auto-fold: the app has to guess what you are not using and will guess wrong (a shadow on a label needs Effects open while text is picked), and it overwrites collapse state the user set by hand. Rejected. The note's worry that a measurement still would not fit under (b) is out of date: the Details fold brought that section from 470pt to 279pt, so it fits at 169-448."
+    },
+    {
+      "t": "2026-09-08T10:52:15.818080Z",
+      "note": "Decision filed with the numbers and a real screenshot of the panel with text picked: queue/decisions/picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c.{json,md} plus 2026-09-08-picked-below-the-fold-today.png. Recommended \"What you picked sits at the top\". \"Leave it, scrolling is fine\" carries declines:true so answering no retires the task. Acceptance item 4 says the runner must not choose the direction, so this run stops here."
+    },
+    {
+      "t": "2026-09-08T10:52:22.643Z",
+      "note": "Reproduced on a fresh probe build (walk fails at sectionInView Text; Text sits 602-778 in a 688pt viewport). Direction is a UX call the runner may not make, so a decision card is open with the measured numbers, a real screenshot and four options, recommending that what you picked sits at the top."
+    },
+    {
+      "t": "2026-09-08T12:09:06.647Z",
+      "note": "seq 230 -> 30"
+    },
+    {
+      "t": "2026-09-09T12:19:57.445Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-09-09T12:20:16.804Z",
+      "note": "triage 2026-09-09: stated repro no longer fails, both walks green on a probe rebuilt at HEAD 7e1e4d6d on a clean tree. Moved p1-high to p2-normal and retitled as the open question it really is. Still blocked on its card, which is now a preference question rather than a bug report."
+    },
+    {
+      "t": "2026-09-09T12:22:11.330Z",
+      "note": "seq 30 -> 10"
+    }
+  ],
+  "started": "2026-09-08T10:47:13.019Z"
+}

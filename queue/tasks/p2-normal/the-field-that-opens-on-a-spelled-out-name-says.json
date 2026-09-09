@@ -4,12 +4,12 @@
   "goal": "On the canvas, a component drawing you have picked now reads its whole name, like \"Save button · Disabled\". Double clicking it opens a box holding only \"Disabled\", because that is what gets renamed. Somebody who just read the longer words can reasonably expect to be renaming all of them.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 2390,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:27:56.619Z",
-  "updated": "2026-09-09T11:27:56.622Z",
+  "updated": "2026-09-09T12:23:41.124Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Landed 2026-09-09 with the spelled-out canvas name (queue/audits/2026-09-09-copy-names.json). The word drawn is CanvasNameChip.word (live caption); the rename target is still canvasRenameVersion(of:) in Sources/Photonz/CanvasNames.swift, which reads the RESTING caption. Cheapest honest fix is probably to open the field over just the version part of the words, so the box lines up with the letters it will replace.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-09T11:27:56.621Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T12:22:12.015Z",
+      "note": "seq 2390 -> 130"
+    },
+    {
+      "t": "2026-09-09T12:23:41.123Z",
+      "note": "seq 130 -> 140"
     }
   ]
 }

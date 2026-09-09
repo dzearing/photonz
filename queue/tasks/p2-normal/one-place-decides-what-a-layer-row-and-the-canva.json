@@ -1,0 +1,41 @@
+{
+  "id": "one-place-decides-what-a-layer-row-and-the-canva",
+  "title": "One place decides what a layer row and the canvas will take a drop of",
+  "goal": "Every surface you can let something go on, a layer row, the picture, a colour well, the Library shelf, works out for itself what is being carried and in what order to ask. Each new kind of saved thing means going round every one of those surfaces by hand and adding another branch, and each branch reasons about the order on its own. The next task in the queue adds a fourth kind to the layers list, so this is the moment to have one place answer the question instead.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T12:21:41.434Z",
+  "updated": "2026-09-09T12:23:41.290Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by the 2026-09-09 triage pass as an extraction candidate: this was built three times in three days.\n\nEvidence. Sources/Photonz/LayersPanel.swift:1618, LayerRowDropDelegate, hand-rolls the dispatch: acceptedTypes is [.text] + FileDrop.types + the text style type, styleInFlight() is asked first, then carriesARow(), then the file path, and the comments argue the ordering locally (\"Asked FIRST, before anything else about the drag\"). The canvas does the same thing again across CanvasDrop.swift and CanvasTextStyleDrop.swift. ColorSwatchDropDelegate, LibraryColorDropDelegate and OffPartDropDelegate are three more.\n\nThe fourth branch is already queued: a-saved-colour-dropped-on-a-layer-row-paints-the will add colour to the same chain in the same file. Doing this first would make that task smaller; doing it after is fine too, but then it is a fifth branch, not a fourth.\n\nThe drag SIDE is deliberately not in scope: ColorDrag speaks the system colour and plain text types on purpose and TextStyleDrag speaks only the app's own type on purpose, and both files explain why. What repeats is the receiving side.",
+  "acceptance": [
+    "There is one place that says what is being carried, and every drop target asks it rather than working it out again",
+    "Adding a new kind of thing that can be carried means naming it once, not editing every surface that takes a drop",
+    "Nothing a person sees changes: the walks that drive a colour, a text style, a row reorder and a file drop all pass exactly as they do now",
+    "The move is a move, not a rewrite: no behaviour is corrected on the way through, and anything found broken is filed rather than fixed here",
+    "audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T12:21:41.436Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T12:22:12.297Z",
+      "note": "seq 2440 -> 180"
+    },
+    {
+      "t": "2026-09-09T12:22:30.858Z",
+      "note": "seq 180 -> 155"
+    },
+    {
+      "t": "2026-09-09T12:23:41.289Z",
+      "note": "seq 155 -> 170"
+    }
+  ]
+}

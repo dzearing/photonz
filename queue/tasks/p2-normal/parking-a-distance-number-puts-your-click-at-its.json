@@ -4,12 +4,12 @@
   "goal": "Measuring a distance takes three clicks, and the third click parks the number. Click into the gap just under a button and half the number grows back up toward the button, because your click becomes the middle of the pill rather than the near edge of it. So the number ends up closer to the thing you measured than the spot you actually pointed at. Worth deciding whether the click should mean the near edge of the number instead.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 2170,
+  "seq": 80,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T00:57:43.170Z",
-  "updated": "2026-09-09T05:41:18.103Z",
+  "updated": "2026-09-09T12:23:40.796Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing a-measurement-number-keeps-clear-of-the-edge-it. NOT a bug: the app obeys the click. The readout centres on labelAnchor, which is the head line, and the third click sets headOffset (CanvasMeasure.swift, measureHeadOffset). Evidence: Scripts/playtest/distance-three-clicks.json clicks [357, 840] to park the number on a button whose bottom edge is at y=816, i.e. 24 px of gap, and the pill (43 px tall) centres there, so it ends 2.5 px under the edge. That picture is queue/audits/2026-09-08-distance-three-clicks.png, the one that filed the clearance task. Size and Gap mode are unaffected: they place their own head and now stand off by half the pill height plus half the chip (MeasureBuilder.clearingHeadOffset). This is a UX judgement about what a click means, so it wants a decision card rather than a unilateral change.",
@@ -54,6 +54,14 @@
     {
       "t": "2026-09-09T05:41:18.101Z",
       "note": "Waiting on the decision 'When you click to park a distance number, which part of the number should land on your click?' (three real pictures of the app, one per option; c recommended). The decidable half shipped: the number now rides under the pointer while you aim the third click, so where it will sit is visible before you commit. Tests green, distance/measure/redline walks pass, audit at queue/audits/2026-09-08-distance-parking.json."
+    },
+    {
+      "t": "2026-09-09T12:22:11.673Z",
+      "note": "seq 2170 -> 70"
+    },
+    {
+      "t": "2026-09-09T12:23:40.795Z",
+      "note": "seq 70 -> 80"
     }
   ],
   "started": "2026-09-09T05:20:04.923Z"

@@ -4,12 +4,12 @@
   "goal": "Draw a box and drag its Border width up and nothing appears to happen: the box just gets bigger. The border is there, it is simply painted the exact colour the fill already is, so there is no line to see until you also go and change its colour. A first border should read as a border.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2070,
+  "seq": 70,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T18:24:56.607Z",
-  "updated": "2026-09-08T18:35:39.513Z",
+  "updated": "2026-09-09T12:23:40.740Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-08 while repairing the five stale border walks. Reproduced on the probe build at 0ef9bd9f.\n\nCommand (walk body saved at /tmp/pz-probe/border-invisible.json: blank 900x600, key r, drag 340,300 to 560,460, press Slider in Border across 0.3, panelMenu Border choose Outside, render, press Color in Border, panel):\n\n  Scripts/playtest.sh /tmp/pz-probe/border-invisible.json --no-build\n\nOutput:\n  border picker swatch marked as current: [{'detail': '#FF2114, already picked', 'name': 'Shades 5'}]\n  fill centre pixel: (255, 59, 48)\n  11pt outside border pixel: (255, 59, 48)\n\nThe panel at that moment reads Fill (red swatch), Border > Color (the same red swatch), Position Outside, Width 11 pt. An 11 pt outside ring painted in the fill colour is invisible on white, and the only visible effect of dragging Width is that the shape grows.\n\nThis is why corner-radius-rounds-walk and ellipse-border-walk now have to press the Border Color well and pick Shades 9 before their ring is legible: without it the walk passes while photographing nothing. Those two walks are the regression test to keep honest if this changes.\n\nA shape arrives at Width 0, so nobody sees the clash until they pull the slider. Likely fix is in the arriving style (PhotonzCore AnnotationStyles.arrivingStyle(forShape:)) or wherever a new layer's border colour is seeded: a first border wants a colour that contrasts with the fill rather than a copy of it. Whether that should be a fixed ink, a darker shade of the fill, or the last border colour you used is a UX judgment, hence p2 and not a silent fix.",
@@ -50,6 +50,14 @@
     {
       "t": "2026-09-08T18:35:39.512Z",
       "note": "Reproduced (fresh box: Border on, Inside, 4 pt, painted the fill colour, no rim in the render). The fix is a visual direction call - it changes what every newly drawn shape looks like, and it cuts against today's answer that nothing you draw changes - so a decision is open with four options and real app pictures. Recommended: a deeper shade of the fill."
+    },
+    {
+      "t": "2026-09-09T12:22:11.616Z",
+      "note": "seq 2070 -> 60"
+    },
+    {
+      "t": "2026-09-09T12:23:40.739Z",
+      "note": "seq 60 -> 70"
     }
   ],
   "started": "2026-09-08T18:26:27.791Z"

@@ -1,0 +1,32 @@
+{
+  "id": "a-decision-card-that-no-longer-needs-an-answer-c",
+  "title": "A decision card that no longer needs an answer can be taken down",
+  "goal": "A question put to you on the dashboard can only leave it by being answered. When two runners ask the same question, or when the thing a question was about gets fixed some other way, the card sits there forever asking for an answer that means nothing, and the real questions are harder to find among them. There should be a way to take a card down without pretending somebody answered it.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "tools",
+  "created": "2026-09-09T12:21:41.545Z",
+  "updated": "2026-09-09T12:22:12.469Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by the 2026-09-09 triage pass, which hit exactly this. Two cards were open asking the same question about where a picked thing's settings belong: picking-a-text-layer-leaves-its-settings-below-t (2026-09-08) and two-panel-walks-are-failing-on-main (2026-09-09). The second task closed as done, and its card is still pending and moot, because queue.mjs has resolve but nothing else, and answering it myself would put words in the user's mouth.\n\nWhere it goes: readDecisions/resolveDecision in queue/bin/queue-lib.mjs, the pending filter is status === 'pending' so a third status is most of the work; queue/bin/decision-drill.mjs is the test; the dashboard reads decisions.pending out of aggregateState.",
+  "acceptance": [
+    "A card can be withdrawn, with a reason, by the queue tool rather than by editing a file",
+    "A withdrawn card is gone from the questions waiting for you, and it does not appear as if it was answered",
+    "Withdrawing a card never quietly starts the work it was blocking: a task still blocked with no question left says so, the way it already does",
+    "The decision drill covers it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T12:21:41.547Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T12:22:12.468Z",
+      "note": "seq 2100 -> 40"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "Components live only in the document they were made in. Build a button, a card and a nav bar for one screen, start a second file tomorrow, and none of them are there: you copy and paste between windows and end up with two originals that drift apart. The epic is create once, reuse everywhere, and today it is create once, reuse in this one file. Let a person put a component somewhere every document can reach, and have the copies in every document follow it.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 50,
+  "seq": 30,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:18:21.644Z",
-  "updated": "2026-09-08T22:18:55.999Z",
+  "updated": "2026-09-09T12:22:11.446Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED ON A DECISION CARD until the user says where the shared shelf lives. Do not start building before the card is answered.\n\nOBJECTIVE GAP named by the spec itself. docs/design/ui-building.md, What the first version deliberately does not do: components live in the document they were made in, there is no shared library across documents, no publishing, no versioning and no update notifications, and the starter set is the one exception. The epic ui-components is titled Component design: create once, reuse everywhere, so the plan and the objective disagree, and the 2026-09-04 manager report flagged it as an open thread that has sat unfiled since.\n\nThe machinery to copy: Sources/PhotonzCore/StarterComponents.swift is already a set of components that live outside any document and are copied in on drop, with a stable id so a document saved today opens tomorrow still pointing at it. Whatever the user chooses, build it on that, not beside it. Sources/PhotonzCore/LinkBreaks.swift already says what happens when a link breaks and is where the missing original case belongs.\n\nSuggested flag: next-shared-library, off by default in Next until it has been played with. Keep PhotonzCore pure: where the shelf is stored on disk is app layer work, the model of what a shared component IS is core.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-09-08T22:18:55.997Z",
       "note": "waiting on the card: where a shared component shelf lives, or whether to build one at all"
+    },
+    {
+      "t": "2026-09-09T12:22:11.445Z",
+      "note": "seq 50 -> 30"
     }
   ]
 }

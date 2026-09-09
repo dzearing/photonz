@@ -1,0 +1,32 @@
+{
+  "id": "a-fix-to-the-loop-itself-reaches-the-loop-that-i",
+  "title": "A fix to the loop itself reaches the loop that is running",
+  "goal": "The loop has been running without a break since 5 September. Everything it has learned to do since then, it cannot do, because the script it is running was read into memory before those changes existed. The full walk sweep is the first thing this has cost: seven runners have asked for one since Monday evening, the mechanism that runs them landed the same evening, and no sweep has ever run. Nothing says so anywhere; the requests just sit there. The loop should either pick up its own changes or say out loud that it is running an old copy.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "tools",
+  "created": "2026-09-09T12:25:11.791Z",
+  "updated": "2026-09-09T12:25:11.833Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by the 2026-09-09 triage pass, with the evidence checked rather than reasoned about.\n\n  ps -o pid,lstart -p 36604      -> Sat Sep  5 06:58:32 2026\n  git log -1 -S sweep_pass -- queue/bin/go-loop.sh -> 04c7e679, 2026-09-08 18:14:25\n  queue/bin/sweep.sh due          -> exit 0, a sweep is due\n  queue/sweep/                    -> requested.json with 7 requests and nothing else: no latest.json, no run log\n  grep 'walk sweep requested; running it' queue/loop.log -> no match, ever\nSo the loop that is running was started three days before sweep_pass existed, and the seven requests queued since have never been served.\n\nWhat is waiting on that sweep matters: the seven requests are all shared panel chrome, every section header moving 2pt, Corner Radius growing into a heading row, a Style row added to every effect pane, and each one says the whole 322-walk set is the thing that would confirm nothing else shifted.\n\nThe immediate unblock is a human restarting the loop with /go. This task is about the next time, not this time. Worth considering: the loop re-execs itself when queue/bin/go-loop.sh changes, at a safe point between tasks, or it records the file's hash at start and status.json carries a stale flag the dashboard reads.",
+  "acceptance": [
+    "A change to the loop script reaches the running loop, or the loop says plainly on the dashboard that it is running a copy older than the file on disk and needs a restart",
+    "The seven waiting sweep requests are served once the loop is current again, and the dashboard shows when the last sweep ran",
+    "Whatever the fix, it survives the loop being restarted mid-task and does not lose the queue",
+    "The failure drill covers it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T12:25:11.793Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T12:25:11.832Z",
+      "note": "seq 2280 -> 15"
+    }
+  ]
+}

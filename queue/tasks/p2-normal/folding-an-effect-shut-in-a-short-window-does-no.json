@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-09T08:25:19.599Z",
-  "updated": "2026-09-09T09:46:18.676Z",
+  "updated": "2026-09-09T12:23:40.633Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-09 on a clean tree (only Scripts/playtest/parts-settings-inline-walk.json and queue files were modified, neither touches this walk). Not a flake: failed twice in a row, once via Scripts/playtest-all.sh --no-build effect and once on its own.\n\nRepro: Scripts/playtest.sh Scripts/playtest/effects-open-into-view-walk.json --no-build\n\nOutput: status failed, [12 expect] FAILED: the control called \"Twist\" in \"Border\" reads \"Border, open\", not \"Border, shut\"\n\nStep 9 presses the Border twist to fold it and step 12 expects it shut. The window is 1280x600, short enough that the Effects list scrolls inside itself, which is what this walk exists to cover. Worth checking whether the press is landing on the twist at all once the list has scrolled, and whether the keep-room-for-the-effect-you-opened scroll (877780bf) re-opens it. 12 of the 13 effect walks pass, so this is specific to the short window.",
@@ -25,6 +25,14 @@
     {
       "t": "2026-09-09T09:46:18.675Z",
       "note": "seq 2280 -> 50"
+    },
+    {
+      "t": "2026-09-09T12:22:11.500Z",
+      "note": "seq 50 -> 40"
+    },
+    {
+      "t": "2026-09-09T12:23:40.632Z",
+      "note": "seq 40 -> 50"
     }
   ]
 }

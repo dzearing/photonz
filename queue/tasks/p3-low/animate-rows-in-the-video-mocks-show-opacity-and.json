@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 1300,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T21:15:29.592Z",
-  "updated": "2026-09-08T21:15:29.595Z",
+  "updated": "2026-09-09T12:20:23.482Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pages: video-freeze-wt, video-move-wt, video-title-wt (two blocks), video-zoom-wt, and the same shape in video-motion. The markup is <div class=\"irow split\"><span class=\"rl\">Rotation</span><span class=\"field\"><span class=\"v\">0&deg;</span></span><button class=\"btn ghost icon sm\">…</button></div> — a KEYLESS .field, which is why the 2026-09-08 sweep (task size-and-position-rows-in-the-mock-panels-are-pi) did not match it. Target is .stepper sm with the row label carrying the name, so no .k inside, and the unit in a <span class=\"u\">. Position is the whole reason this is a separate task: ids vPosition, vCentre and the data-set strings on the walkthrough steps write one string (\"1390, 290\"), so splitting it into two fields means rewriting those data-set pairs on every step of those pages. shared/components/walkthrough.js already writes into an <input> via value, added 2026-09-08, so the field half is free.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-08T21:15:29.594Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T12:20:23.481Z",
+      "note": "Dropped by the 2026-09-09 triage: it polishes five video walkthrough mock pages, and video-editing is staged later, so this is someday-work sitting in front of the focus. It will be re-created when video is staged; the notes on it name the exact markup and the five page ids, so nothing is lost."
     }
   ]
 }

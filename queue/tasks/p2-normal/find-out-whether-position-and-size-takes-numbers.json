@@ -4,12 +4,12 @@
   "goal": "A piece inside a copy of a component owns nothing: its size, its place and its look are refilled from the original after every edit. The canvas knows this and offers such a piece no handles. It is not clear whether the Position and Size panel knows it too, or whether it offers X, Y, W, H and A as typeable numbers that the next sync quietly puts back. Somebody typing into a box and watching it spring back with nothing said would read that as a broken panel.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2380,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:52:03.358Z",
-  "updated": "2026-09-09T10:52:03.361Z",
+  "updated": "2026-09-09T12:23:41.071Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced. Noticed on 2026-09-09 while adding the angle field: Sources/Photonz/CanvasGroups.swift offersOwnHandles excludes a component piece (componentPiece(of:) != nil), but Sources/PhotonzCore/LayerGeometry.swift LayerGeometryEditing takes only the layer and its container and has no idea about components, so nothing in it can refuse on those grounds. I did not get as far as selecting a piece inside a copy in the probe to watch it happen, so this is an open question rather than a bug. To check: Scripts/probe-app.sh, drop a Button from the Library, step into the copy, pick the label inside it, type an X and watch.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-09T10:52:03.360Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T12:22:11.959Z",
+      "note": "seq 2380 -> 120"
+    },
+    {
+      "t": "2026-09-09T12:23:41.070Z",
+      "note": "seq 120 -> 130"
     }
   ]
 }
