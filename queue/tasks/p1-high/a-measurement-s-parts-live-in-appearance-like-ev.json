@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 6,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:59:46.357Z",
-  "updated": "2026-09-09T14:07:23.274Z",
+  "updated": "2026-09-09T14:40:50.963Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09, straight after the same request for arrows, so the two should share one shape rather than each inventing theirs; read an-arrow-s-parts-live-in-appearance-each-with-it and follow it. A measurement is further along than an arrow: MeasureContent already stores strokeColorHex, chipColorHex, chipOpacity and textColorHex (Sources/PhotonzCore/Measure.swift lines 85 to 93) plus strokeWidth and labelScale, so most colours exist and are not derived. Two gaps. The chip has no border colour or width at all, unlike the arrow's caption which derives one from the stroke, so that is the model addition here. And the panel does not use the shared colour control: MeasureInspector.swift builds its own swatchRow around ColorWellButton at lines 133, 139, 144 and 340, so these colours cannot take a named style while every other colour in the app can. The parts belong in LayerParts.swift alongside the others rather than as a special case, and the non colour settings folded in from the measure section, the thickness, the label size, the unit and decimals, need homes; say where each went.",
@@ -48,7 +48,40 @@
     {
       "t": "2026-09-09T14:07:23.274Z",
       "note": "The one deviation from the acceptance list, decided rather than guessed. The Measurement section does not vanish entirely: everything that says how a measurement LOOKS moves to Appearance, and what is left is its Name and the Details fold with Copy Measurement, a text field and a grid of read-only numbers, neither of which is a setting. Putting those into a section whose whole rule is what the thing IS made of would break the rule this task exists to apply. Said out loud in the audit so the user can send it back if they disagree."
+    },
+    {
+      "t": "2026-09-09T14:40:43.676Z",
+      "note": "Built. Model: MeasureContent gained chipBorderColorHex and chipBorderWidth. Off is said in the units the chip already had rather than in a third one: no fill is chipOpacity 0, which is what no chip has always meant here and what the well's own alpha slider writes, and no ring is chipBorderWidth 0, which is what a border means everywhere else in the app. The width is the migration mark because it is always written and it is allowed to be zero, so an absent key can only mean a chip that was ringed by its caliper: those decode as the caliper's colour at the caliper's thickness, which is exactly what they drew. MeasureRoleColors and MeasureStyles remember the ring too, so the next caliper starts where the last one was left, including with no ring at all."
+    },
+    {
+      "t": "2026-09-09T14:40:43.676Z",
+      "note": "ColorSlot gained caliper, chipFill, chipBorder and chipText, so all four go down the same well, the same saved-colours menu and the same naming field every other colour does. They are their own cases rather than the arrow's four: sharing .stroke with a shape would have meant a rectangle and a measurement picked together answered ONE row, which is a change to the release that has no parts list at all. LayerPart gained chipFill and chipBorder as switchable parts. None of the four is offered a gradient, because the measure rasterizer paints one flat colour for each."
+    },
+    {
+      "t": "2026-09-09T14:40:43.676Z",
+      "note": "Panel: Appearance lists Role, Caliper with its Thickness, a Chip block with Chip size and Unit, then Chip Fill, Chip Edge with its Width, and Chip Text. The Measurement section keeps only its Name and the Details fold with Copy Measurement, and disappears entirely where the Measurements panel is off. Written down in the MeasurePartSettings.swift header table and in docs/design/shape-parts.md."
+    },
+    {
+      "t": "2026-09-09T14:40:43.676Z",
+      "note": "Adversarial review of the built thing, on the probe app with a real screen capture at each stage. Two findings, both fixed. (1) Switching Chip Edge off left its Width slider sitting there reading 1 px, so a switched-off row was not showing off; it now hangs on the row's own showsSettings like every other drawer. (2) Switching Chip Fill off on a light screenshot made the number vanish, because the number is white and the pill behind it had gone. Nothing is refused and nothing is corrected, but the panel now says it under Chip Text, in two different sentences for the two different situations, pinned by tests."
+    },
+    {
+      "t": "2026-09-09T14:40:43.676Z",
+      "note": "Porting rule: PhotonzCore and PhotonzRender are shared, so the current release opens these documents and draws them identically. Two things keep that true. Its Color section is not given the four new slots (EditorState.measurePartSlots is filtered while next-shape-parts is off), and its Stroke swatch still paints the chip's ring as well as the caliper, which is what that one swatch has always done there. In Next the Caliper row leaves the ring alone, which is the point, and the paint bucket is still the way to say all of it."
+    },
+    {
+      "t": "2026-09-09T14:40:43.676Z",
+      "note": "Verified: Scripts/test.sh green (5428 tests, 457 suites), including 21 new ones in Tests/PhotonzCoreTests/MeasurePartsTests.swift written before the change. New walk Scripts/playtest/measure-parts-walk.json passes and carries a real screen capture at each stage (Screen Recording granted). Walks run: measure (7), redline (3), caliper (2), part (8), appearance (3), colour (12), style (10), all pass. A full sweep was requested rather than run."
+    },
+    {
+      "t": "2026-09-09T14:40:43.676Z",
+      "note": "Audit: queue/audits/2026-09-09-measure-parts.json with four real screen captures. Follow-up filed: a-measurement-offers-a-corner-radius-it-has-noth, a pre-existing row that a measurement has nothing to round, visible in every screenshot of this audit."
+    },
+    {
+      "t": "2026-09-09T14:40:50.961Z",
+      "note": "Appearance now lists a measurement's parts (Role, Caliper, Chip, Chip Fill, Chip Edge, Chip Text), each colour set the way every other colour in the app is including saved names, and the chip has an edge of its own with a colour and a width for the first time. Everything that said how a measurement looks moved out of the Measurement section; its Name and Details fold stayed, which is the one deviation from the acceptance list and is said out loud in the audit. Existing measurements open unchanged: the ring seeds from the caliper's colour at the caliper's thickness. Model in PhotonzCore/Measure.swift, panel in Sources/Photonz/MeasurePartSettings.swift, design in docs/design/shape-parts.md. Verified: Scripts/test.sh green (5428 tests), new walk measure-parts-walk passes with real screen captures, plus 36 more measure, redline, caliper, part, appearance, colour and style walks. Audit: queue/audits/2026-09-09-measure-parts.json. Full sweep requested."
     }
   ],
-  "started": "2026-09-09T13:55:43.277Z"
+  "started": "2026-09-09T13:55:43.277Z",
+  "completed": "2026-09-09T14:40:50.962Z"
 }
