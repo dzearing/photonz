@@ -2,3 +2,10 @@
 # nothing on another machine. Tasks, decisions, digests, and history stay tracked.
 status.json
 loop.log
+
+# Walk sweep results: the loop rewrites these and the per-run logs are large.
+# queue/sweep/README.md explains the folder and stays tracked.
+sweep/*.log
+sweep/latest.json
+sweep/requested.json
+sweep/.claimed.json

@@ -39,6 +39,38 @@
     {
       "t": "2026-09-09T01:02:16.680Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T01:05:07.694Z",
+      "note": "Reproduced from queue/history.jsonl: 8 of the 20 recorded runner_failed events are this, not two. 2026-09-06T02:25 a-sweep-inside-a-group (\"Waiting on the full walk suite\"), 2026-09-06T10:23 a-one-or-two-digit-measurement (\"Waiting on the walk set\"), 2026-09-07T10:52 and 11:15 the-mixed-one-look-walk (both \"Background tasks still running after 600s; terminating\"), 2026-09-07T16:22 with-the-grid-off (\"The full walk sweep is still running (it re-runs all 253 walks)\"), 2026-09-08T00:03 a-marquee-keeps-the-layer (600s terminate), 2026-09-08T15:40 find-out-whether-a-tool-letter (\"Waiting on the walk suite to finish before the final rebuild\"), 2026-09-08T17:04 thirteen-scripted-walks (\"The suite is at walk 58 of 307\"). Two distinct shapes, one cause."
+    },
+    {
+      "t": "2026-09-09T01:05:07.695Z",
+      "note": "Measured the sweep instead of guessing: loop.log records 247 walks in 40m 21s, and Scripts/playtest/ now holds 322 walks. At 9.8s each that is about 52 minutes, five times the 600s background ceiling and growing with every walk anyone adds. Making the sweep faster is not the fix."
+    },
+    {
+      "t": "2026-09-09T01:05:07.695Z",
+      "note": "Adversarial review of the obvious fix. Raising CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS to 0 was rejected: it converts a killed runner into a runner that sits for 52 minutes, which is the cost we are trying to remove, it does nothing for the four failures where the model ended its own turn saying it was waiting, and an infinite ceiling lets one wedged sweep wedge the loop forever. Detaching the sweep with nohup so it outlives the runner was also rejected: playtest-all.sh quits and rebuilds the probe bundle, so a sweep running alongside the next task fights it for the same app, and flaky walks are exactly what this area has spent weeks fixing."
+    },
+    {
+      "t": "2026-09-09T01:05:07.695Z",
+      "note": "Chosen shape: the sweep belongs to the loop, not to a runner. A runner asks for one and finishes; the loop runs it between tasks, where nothing can terminate it and no task is in flight to collide with the probe."
+    },
+    {
+      "t": "2026-09-09T01:14:07.870Z",
+      "note": "Built: queue/bin/sweep.sh (request / due / run / status / summary), queue/bin/sweep-report.mjs, a sweep_pass in queue/bin/go-loop.sh at the top of every pass, and a gate in Scripts/playtest-all.sh that refuses the whole set without PHOTONZ_SWEEP=1 and prints what to do instead. The rule is enforced, not only written down: a runner that reaches for the sweep is stopped and redirected in the same breath."
+    },
+    {
+      "t": "2026-09-09T01:14:07.871Z",
+      "note": "Verified, not assumed. Full run refused with exit 2 and the redirect message. Naming walks still allowed. request returned in 0.04s and flipped due from 1 to 0. A real narrowed sweep ran end to end twice (probe built, 2 walks, latest.json written, request consumed, sweep_pass event recorded in history.jsonl). The go-loop function itself was exercised by evaluating it out of go-loop.sh in a zsh harness: a no-op with nothing pending, a real sweep with a request pending. The failing path was driven in a throwaway queue (PHOTONZ_QUEUE_DIR): the first failing sweep filed walks-that-fail-in-the-full-sweep, and a second identical sweep updated it in place instead of filing a duplicate. Scripts/test.sh passed."
+    },
+    {
+      "t": "2026-09-09T01:14:07.871Z",
+      "note": "Second adversarial pass found three real holes, all closed. (1) Each walk has its own 180s timeout, so a probe that builds but never drives would leave 322 walks timing out one after another and hold the loop for sixteen hours. There is now a wall-clock cap, default two hours, that stops the run, quits the probe through Scripts/probe-app.sh --quit rather than pkill, and records where it got to. Verified with PHOTONZ_SWEEP_MAX_SECONDS=20: stopped at walk 3, probe gone. (2) A cut-short run first reported 0 of 0 and Nothing failing, which reads as a clean bill of health for a set it never touched. status, summary and the filed task now say DID NOT FINISH and that the walks it never reached are unknown rather than passing, and the parse falls back to the per-walk lines so a stopped run still says what it reached. (3) The run stamp was per-minute, so two sweeps in the same minute overwrote each other's log; it carries seconds now. Also fixed a grep -c with a fallback that would have printed two numbers into one substitution."
+    },
+    {
+      "t": "2026-09-09T01:14:07.871Z",
+      "note": "No audit report: this is loop plumbing with no surface in the app, so there is nothing for the user to playtest. The Ready to try index is for things they can open and judge."
     }
   ],
   "started": "2026-09-09T01:02:16.679Z"

@@ -4,11 +4,23 @@
 # that only passes the first time it is ever run on a machine is worse than no
 # walk, so run this twice in a row and expect the same answers both times.
 #
-#   Scripts/playtest-all.sh                 build once, then run them all
-#   Scripts/playtest-all.sh --no-build      reuse the built probe
 #   Scripts/playtest-all.sh --no-build a b  only the walks whose names match
+#   Scripts/playtest-all.sh --no-build      reuse the built probe
+#   PHOTONZ_SWEEP=1 Scripts/playtest-all.sh  all of them (see the gate below)
 #
 # Exits 0 when every walk passed. Never touches "dist/Photonz Dev.app".
+#
+# The whole set is now 322 walks, about 52 minutes, and it is GATED behind
+# PHOTONZ_SWEEP=1. That is not a build flag, it is a guard rail: a task runner
+# has its background work killed at 600s, and eight of the twenty recorded
+# runner failures are a runner that started this script and was terminated
+# waiting for it. Runners ask for a sweep instead, and the go loop runs it
+# between tasks where nothing can kill it:
+#
+#   queue/bin/sweep.sh request "<why you want the whole set>"
+#
+# Naming walks (the third form above) is not gated: a handful of walks is
+# seconds of work and is what you should be running while you build.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -20,6 +32,33 @@ for arg in "$@"; do
     *) PATTERNS+=("$arg") ;;
   esac
 done
+
+# The whole set costs about 52 minutes, which is five times the 600s ceiling on
+# a task runner's background work, so running it from inside a task ends with
+# the runner terminated and its task handed back unfinished. Point whoever did
+# that at the way that survives instead of letting them start the run.
+if (( ${#PATTERNS[@]} == 0 )) && [[ "${PHOTONZ_SWEEP:-0}" != 1 ]]; then
+  cat >&2 <<'EOM'
+!! Refusing to run all 300+ walks here: it takes about 52 minutes, and a task
+!! runner's background work is terminated at 600s, so this run would be killed
+!! and the task that started it would be handed back unfinished.
+!!
+!! Ask the go loop for a sweep instead. It runs between tasks, where nothing
+!! kills it, and files a task naming any walk that fails:
+!!
+!!     queue/bin/sweep.sh request "<why you want the whole set>"
+!!     queue/bin/sweep.sh status        # what the last sweep found
+!!
+!! While you are building, run only the walks you touched. Each is ~10s:
+!!
+!!     Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
+!!     Scripts/playtest-all.sh --no-build <name-fragment>
+!!
+!! If you are a person at a terminal and you really do want to sit through the
+!! whole set, re-run with PHOTONZ_SWEEP=1.
+EOM
+  exit 2
+fi
 
 # Build the PROBE BUNDLE, which is the thing every walk below then runs
 # against. A plain `swift build` here would warm a debug product nothing in

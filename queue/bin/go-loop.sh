@@ -126,6 +126,23 @@ refresh_dev_app() { # $1 = git rev before the task ran
     || echo "[go-loop] $(date +%T) dev app refresh failed; see the log" | tee -a "$LOG"
 }
 
+# The full walk sweep, run BETWEEN tasks. A runner cannot run it: 322 walks is
+# about 52 minutes and a runner's background work is terminated at 600s, which
+# is how eight of the twenty recorded runner failures happened (2026-09-07
+# 16:22 and 2026-09-08 00:03 among them). So a runner asks with
+# `queue/bin/sweep.sh request`, and the loop does the waiting here, in its own
+# shell, with no task claimed and nothing else touching the probe app.
+sweep_pass() {
+  (( SANDBOX == 0 )) || return 0
+  queue/bin/sweep.sh due || return 0
+  echo "[go-loop] $(date +%T) walk sweep requested; running it before the next task" | tee -a "$LOG"
+  Q busy "running the full walk sweep before the next task"
+  banner "**Go loop** running the full walk sweep (about 50 minutes). No task is claimed while it runs."
+  state busy
+  queue/bin/sweep.sh run 2>&1 | tee -a "$LOG"
+  Q event sweep_pass "$(queue/bin/sweep.sh summary 2>/dev/null || echo '{}')"
+}
+
 banner() { printf '\033]7778;%s\007' "$1"; }   # sticky Ghoztty pane banner
 state()  { printf '\033]7777;%s\007' "$1"; }   # Ghoztty activity state
 title()  { printf '\033]2;%s\007' "$1"; }      # window title
@@ -201,6 +218,10 @@ while :; do
   ITERS=$((ITERS + 1))
   rotate_log
   [[ "$MAX_ITERS" != 0 && $ITERS -gt $MAX_ITERS ]] && { echo "[go-loop] reached PHOTONZ_MAX_ITERS=$MAX_ITERS, exiting" | tee -a "$LOG"; cleanup; }
+
+  # A sweep a runner asked for is served here, between tasks, before anything
+  # else in the pass claims work.
+  sweep_pass
 
   # Daily digest + triage: once per calendar day, at or after 05:00 so it reads
   # as a morning report rather than a midnight one. (10# forces base-10: date

@@ -30,7 +30,7 @@ malformed script fails with a readable error before anything runs.
 
 ```bash
 Scripts/playtest.sh Scripts/playtest/redline-walk.json           # build, run, wait, quit
-Scripts/playtest-all.sh                                          # every walk, one line each
+Scripts/playtest-all.sh --no-build caption                       # the walks whose names match
 Scripts/playtest.sh path/to/walk.json --no-build                 # reuse the built probe
 Scripts/playtest.sh path/to/walk.json --keep                     # leave the probe running
 PHOTONZ_PLAYTEST_TIMEOUT=300 Scripts/playtest.sh path/to/walk.json
@@ -200,7 +200,31 @@ when another one had run first.
 
 `Scripts/playtest-all.sh` runs every walk in the folder and prints a line each.
 Run it twice in a row: the same answers both times is what says the set can be
-trusted. `PlaytestWalkSetupTests` holds the rest of the line — no walk may hide
+trusted.
+
+### The whole set is the loop's job, not a runner's
+
+There are 322 walks and the set takes about 52 minutes. A task runner's
+background work is terminated at 600s, so a runner that starts the whole set is
+killed waiting for it and its task is handed back unfinished; eight of the
+twenty recorded runner failures are exactly that. `Scripts/playtest-all.sh`
+therefore refuses to run with no walk named unless `PHOTONZ_SWEEP=1` is set,
+and points at the way that survives:
+
+```bash
+queue/bin/sweep.sh request "<why you want the whole set>"   # instant, from a task
+queue/bin/sweep.sh status                                   # what the last sweep found
+```
+
+The go loop runs the sweep between tasks, in its own shell, where nothing kills
+it and no task is in flight to fight it for the probe app. Any walk that fails
+comes back as the standing task "Walks that fail in the full sweep". Full
+detail: `queue/sweep/README.md`.
+
+Naming walks is never gated, and while you are building it is the check you
+want: `Scripts/playtest-all.sh --no-build caption` is seconds, not an hour.
+
+`PlaytestWalkSetupTests` holds the rest of the line — no walk may hide
 setup in prose, every borrowed picture has to exist, and no walk may name a menu
 by a value an earlier step of the same walk chose.
 

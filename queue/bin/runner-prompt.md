@@ -32,6 +32,35 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 
   Without it there are no real screenshots at all, only offscreen renders, and the audit must say so in `rough` in plain words. Never write "verified live" when the line said denied. Neither grant ever prompts you: the probe raises the system dialog at most once per launch and only while the grant is undetermined, so if one is missing, print the fix and move on rather than trying to force it.
 
+- **Run the walks you touched, never the whole sweep.** There are two checks and
+  they are not interchangeable. While you build, run the one or few walks your
+  change affects: each costs about ten seconds.
+  ```
+  Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
+  Scripts/playtest-all.sh --no-build <name-fragment>   # a handful at once
+  ```
+  The whole set is 322 walks and about 52 minutes, which is five times the 600s
+  ceiling on your background work, so starting it inside a task ends with you
+  terminated and your task handed back unfinished. That is not hypothetical:
+  eight of the twenty recorded runner failures are exactly this, including
+  2026-09-07 16:22 ("The full walk sweep is still running (it re-runs all 253
+  walks)") and 2026-09-08 00:03 ("Background tasks still running after 600s;
+  terminating"). Every one of those tasks was finished later by a different
+  runner, so the sweep did not cost work, it cost cycles of the focus.
+
+  `Scripts/playtest-all.sh` with no walk named now refuses to run for this
+  reason. When you genuinely need the whole set (you changed something every
+  walk touches, or you rewrote a batch of walks), ask for one and finish your
+  task:
+  ```
+  queue/bin/sweep.sh request "<why you want the whole set>"
+  queue/bin/sweep.sh status        # what the last sweep found
+  ```
+  It returns instantly. The loop runs the sweep between tasks, where nothing
+  can terminate it, and any walk that fails comes back as a task with the walk
+  names in it. **You do not wait for it and you do not report on it.** Say in
+  your task log that you asked for one and why, and finish.
+
 - All Photonz app work happens in the "next" release only (`Sources/Photonz/Releases/Next/` or behind flags scoped to next), unless the task file explicitly says `"release": "current"`. Never touch current-release behavior otherwise.
 - Follow the repo rules in `CLAUDE.md` (TDD for core modules, `Scripts/test.sh` green before commit, pure PhotonzCore, and so on).
 - Design-study work follows `docs/design/mocks/shared/AGENTS.md` and `docs/design/mocks/shared/UX-PATTERNS.md`. No em dashes in user-facing copy; say "agent", never a vendor name.

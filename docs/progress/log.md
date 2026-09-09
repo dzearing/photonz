@@ -13568,3 +13568,36 @@ real captures. Open question filed from it —
 CENTRE of the pill, so half the number grows back toward what you measured. That
 is what the picture in the audit that filed this task was actually showing, and
 it wants a decision rather than a unilateral change.
+
+## 2026-09-08 — A long walk sweep no longer costs a task its runner
+
+Eight of the twenty recorded runner failures were one thing: a task runner
+started `Scripts/playtest-all.sh` and was terminated waiting for it. The set is
+322 walks and about 52 minutes; a runner's background work is killed at 600s.
+Both shapes appear in `queue/history.jsonl` — the harness message ("Background
+tasks still running after 600s; terminating", 2026-09-07 11:15, 2026-09-08
+00:03) and the runner ending its own turn still waiting ("The full walk sweep is
+still running (it re-runs all 253 walks)", 2026-09-07 16:22; "The suite is at
+walk 58 of 307", 2026-09-08 17:04). Every one of those tasks was finished later
+by another runner, so the sweep cost cycles of the focus rather than work.
+
+The sweep now belongs to the loop, not to a runner. A runner asks with
+`queue/bin/sweep.sh request "<why>"` (instant) and finishes its task; the loop
+runs it between tasks in its own shell, where there is no ceiling to hit and no
+task in flight to fight it for the probe app. Failing walks come back as one
+standing task, updated in place rather than filed again. `playtest-all.sh` now
+refuses the whole set without `PHOTONZ_SWEEP=1` and prints the redirect, so the
+rule is enforced instead of only documented. A two-hour wall-clock cap stops a
+runaway sweep, and a run that was cut short reports that it did not finish
+instead of reading as a clean bill of health.
+
+Rejected on the way: raising `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS` (turns a
+killed runner into one that idles 52 minutes, and does nothing for the four
+failures where the model ended its own turn), and detaching the sweep with nohup
+(it would rebuild the probe underneath the next task and make both flaky).
+
+Running one or a few walks is unchanged and is still the check to use while
+building: `Scripts/playtest-all.sh --no-build <name-fragment>`.
+
+Next: nothing outstanding here. The first real sweep will be whichever runner
+next asks for one.
