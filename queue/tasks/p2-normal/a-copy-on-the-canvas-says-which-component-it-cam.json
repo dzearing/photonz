@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:42:00.386Z",
-  "updated": "2026-09-09T10:55:52.920Z",
+  "updated": "2026-09-09T11:28:38.088Z",
   "deps": [],
   "blockedBy": [],
   "notes": "This is the trade queue/audits/2026-09-08-version-labels.json named itself and asked to be argued with: \"A component with two or more drawings no longer shows its name anywhere on the canvas... This is the deliberate trade and it is the first thing to argue with.\" Reproduced on 2026-09-09 in queue/manager/shots/2026-09-09-0238-three-copies.png: the two originals carry Default and Disabled, the three copies below them carry a bare diamond each.\n\nPutting a name back is not a new control, it is restoring something the width fix took away, so no decision card. If the runner concludes the honest answer is no label at all, dropping the naked marker is an acceptable outcome and should be said plainly in the audit.\n\nWidth is the constraint that caused this: read the 2026-09-08 work before re-adding a long string.",
@@ -60,7 +60,12 @@
     {
       "t": "2026-09-09T11:28:12.680069Z",
       "note": "Audit queue/audits/2026-09-09-copy-names.json. Follow-up filed: the-field-that-opens-on-a-spelled-out-name-says (the rename box holds only the version while the label reads both words)."
+    },
+    {
+      "t": "2026-09-09T11:28:38.086Z",
+      "note": "A component drawing spells out its whole name while it is the one you are looking at (pointer on it, or picked) and keeps its short word at rest, so a copy is never anonymous when you ask and a row of twelve never shouts. Landed in 796df285; audit queue/audits/2026-09-09-copy-names.json; verified with Scripts/test.sh and 26 component/version/frame walks against a fresh probe."
     }
   ],
-  "started": "2026-09-09T10:55:52.918Z"
+  "started": "2026-09-09T10:55:52.918Z",
+  "completed": "2026-09-09T11:28:38.087Z"
 }
