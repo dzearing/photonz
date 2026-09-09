@@ -1,0 +1,26 @@
+{
+  "id": "a-control-scrolled-out-of-its-own-section-gets-c",
+  "title": "A control scrolled out of its own section gets checked as if it belonged to another row",
+  "goal": "When a setting scrolls out of view inside its own section, the scripted walks can mistake it for a setting in a different section that happens to sit where it drifted to. A walk can then claim a control exists in a place it does not, and pass. That makes the walks a weaker safety net than they look.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2270,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T08:25:10.631Z",
+  "updated": "2026-09-09T08:25:10.634Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-09.\n\nRepro: Scripts/playtest.sh /tmp/diag-leak.json --no-build (walk saved at /tmp/diag-leak.json; it draws a box, adds a Shadow, switches all three off, shuts both twists, reopens Border then Shadow, dumps the panel, then asserts expect {control: Switch, in: Corner Radius, present: true}).\n\nOutput: status ok, and [28 expect] the control \"Switch\" in \"Corner Radius\" is in the panel, as claimed. The Appearance section's Corner Radius row has no switch at all.\n\nWhat happens: reopening the Shadow scrolls the Effects list inside itself to keep the opened effect in view, which slides the Border row up above the Effects header. Its window frame then lands inside the Appearance section's Corner Radius field frame. The panel dump shows it as \"Border, Corner Radius, off\" at y=548 with inWindow false (see /tmp/photonz-playtest/diag-parts/panel-E-shadow-open.json).\n\nCause: PlaytestPanelPress.fields(of:among:) at Sources/Photonz/Playtest/PlaytestPanelPress.swift:182 scopes a control to a field purely by window-rect containment. Its guard (line 191) only requires that the field's nearest clip view be somewhere in the control's own clip chain, which is true here because both share the outer dock clip. A control that has scrolled outside its own nearest clip view's visible rect should not pick up field names it has merely drifted under.",
+  "acceptance": [
+    "A walk that asks for a Switch in the Corner Radius row fails when the only switch nearby is a scrolled-away Border row",
+    "The parts-settings-inline and effects walks still pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T08:25:10.633Z",
+      "note": "created (manual)"
+    }
+  ]
+}

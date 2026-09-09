@@ -1,76 +1,357 @@
 {
   "out": "/tmp/photonz-playtest/parts-settings-inline",
-  "seed": "Ticking a part used to put its settings behind a chevron, and only one part could be open at a time. This walk draws a box and holds the panel to the rule each list actually keeps. In Appearance there is no fold at all: what is switched ON shows its settings on the lines under it, and what is switched OFF shows none of them. Since 2026-09-07 a shadow is an EFFECT rather than a part of a shape, and an effect row carries its own twist, so its settings answer to the twist and stay put when the switch goes off: switching an effect off says the effect is not painting, not that its settings are gone. Since 2026-09-08 a shape edge is a Border in that same list and keeps the very same rule.",
-  "setup": { "forget": ["panel", "tools", "shapes"] },
+  "seed": "Ticking a part used to put its settings behind a chevron, and only one part could be open at a time. This walk draws a box and holds the panel to the rule each list actually keeps. In Appearance there is no fold at all: what is switched ON shows its settings on the lines under it, and what is switched OFF shows none of them. Since 2026-09-07 a shadow is an EFFECT rather than a part of a shape, and an effect row carries its own twist, so its settings answer to the twist and stay put when the switch goes off: switching an effect off says the effect is not painting, not that its settings are gone. Since 2026-09-08 a shape edge is a Border in that same list and keeps the very same rule.\n\nThe last stage scrolls, and has to. The Effects list keeps room for the effect you just opened, so re-opening the shadow slides the Border row up out of the list's own view. Every press after that is scrolled to by name rather than aimed at a remembered spot, and the list is put back at the Border row before the final picture so it can be held up against stage 2.",
+  "setup": {
+    "forget": [
+      "panel",
+      "tools",
+      "shapes"
+    ]
+  },
   "steps": [
-    { "do": "blank", "canvasWidth": 760, "canvasHeight": 520, "width": 1280, "height": 900 },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [260, 180], "to": [520, 360], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.9 },
-    { "do": "describe", "stage": "1-as-drawn",
-      "note": "the box as drawn. Fill in Appearance and the Border the box arrived with in Effects are both on, and each shows its settings on the line below it at the same left edge as the row. Nothing in Appearance folds at all, and the twist on an effect row starts open, so every setting on the box is readable without opening anything." },
-    { "do": "panel", "stage": "as-drawn" },
-    { "do": "snapshot", "name": "parts-1-as-drawn" },
-    { "do": "panelMenu", "menu": "Add Effect", "choose": "Shadow" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "2-three-on",
-      "note": "a shadow added. Everything switched on now shows its own settings at once: the Border's Width and the shadow's colour, kind and five sliders are all readable without opening either." },
-    { "do": "expect", "control": "Slider", "in": "Softness", "present": true },
-    { "do": "expect", "control": "Color", "in": "Shadow", "present": true },
-    { "do": "panel", "stage": "three-on" },
-    { "do": "snapshot", "name": "parts-2-three-on" },
-    { "do": "describe", "stage": "3-switched-off",
-      "note": "everything switched off. Fill has no fold, so its colour well goes with the switch. The two effect rows stay exactly as they were: an effect that is not painting still shows the settings it would paint with, because in the Effects list the twist is what opens and shuts a row, not the switch." },
-    { "do": "press", "control": "Switch", "in": "Fill" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Switch", "in": "Border" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Switch", "in": "Shadow" },
-    { "do": "wait", "seconds": 0.9 },
-    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, off" },
-    { "do": "expect", "control": "Color", "in": "Fill", "present": false },
-    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, off" },
-    { "do": "expect", "control": "Slider", "in": "Border", "present": true },
-    { "do": "expect", "control": "Switch", "in": "Shadow", "reads": "Shadow, off" },
-    { "do": "expect", "control": "Slider", "in": "Softness", "present": true },
-    { "do": "expect", "control": "Remove", "in": "Shadow", "present": true },
-    { "do": "panel", "stage": "switched-off" },
-    { "do": "snapshot", "name": "parts-3-switched-off" },
-    { "do": "describe", "stage": "4-folded-shut",
-      "note": "and the twists shut. THIS is what takes an effect’s settings away, and it takes ALL of them: no width, no shadow sliders, no colour wells left behind by something nobody can see. The row itself stays, because it is still in the list to be switched back on or taken out." },
-    { "do": "press", "control": "Twist", "in": "Border" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Twist", "in": "Shadow" },
-    { "do": "wait", "seconds": 0.9 },
-    { "do": "expect", "control": "Twist", "in": "Border", "reads": "Border, shut" },
-    { "do": "expect", "control": "Slider", "in": "Border", "present": false },
-    { "do": "expect", "control": "Color", "in": "Border", "present": false },
-    { "do": "expect", "control": "Twist", "in": "Shadow", "reads": "Shadow, shut" },
-    { "do": "expect", "control": "Slider", "in": "Softness", "present": false },
-    { "do": "expect", "control": "Color", "in": "Shadow", "present": false },
-    { "do": "expect", "control": "Remove", "in": "Shadow", "present": true },
-    { "do": "panel", "stage": "folded-shut" },
-    { "do": "snapshot", "name": "parts-4-folded-shut" },
-    { "do": "describe", "stage": "5-back-as-drawn",
-      "note": "opened and switched on again. The list has to read exactly as it did at stage 2: same rows, same settings, nothing left shut and nothing lost." },
-    { "do": "press", "control": "Twist", "in": "Border" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "press", "control": "Twist", "in": "Shadow" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "press", "control": "Switch", "in": "Fill" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "press", "control": "Switch", "in": "Border" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "press", "control": "Switch", "in": "Shadow" },
-    { "do": "wait", "seconds": 0.9 },
-    { "do": "expect", "control": "Slider", "in": "Softness", "present": true },
-    { "do": "expect", "control": "Color", "in": "Shadow", "present": true },
-    { "do": "expect", "control": "Color", "in": "Fill", "present": true },
-    { "do": "expect", "control": "Slider", "in": "Border", "present": true },
-    { "do": "expect", "control": "Color", "in": "Border", "present": true },
-    { "do": "panel", "stage": "back-as-drawn" },
-    { "do": "snapshot", "name": "parts-5-back-as-drawn" }
+    {
+      "do": "blank",
+      "canvasWidth": 760,
+      "canvasHeight": 520,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        260,
+        180
+      ],
+      "to": [
+        520,
+        360
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "1-as-drawn",
+      "note": "the box as drawn. Fill in Appearance and the Border the box arrived with in Effects are both on, and each shows its settings on the line below it at the same left edge as the row. Nothing in Appearance folds at all, and the twist on an effect row starts open, so every setting on the box is readable without opening anything."
+    },
+    {
+      "do": "panel",
+      "stage": "as-drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "parts-1-as-drawn"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-three-on",
+      "note": "a shadow added. Everything switched on now shows its own settings at once: the Border's Width and the shadow's colour, kind and five sliders are all readable without opening either."
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Softness",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Shadow",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "three-on"
+    },
+    {
+      "do": "snapshot",
+      "name": "parts-2-three-on"
+    },
+    {
+      "do": "describe",
+      "stage": "3-switched-off",
+      "note": "everything switched off. Fill has no fold, so its colour well goes with the switch. The two effect rows stay exactly as they were: an effect that is not painting still shows the settings it would paint with, because in the Effects list the twist is what opens and shuts a row, not the switch."
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Fill",
+      "reads": "Fill, off"
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Fill",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Border",
+      "reads": "Border, off"
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Border",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Shadow",
+      "reads": "Shadow, off"
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Softness",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Remove",
+      "in": "Shadow",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "switched-off"
+    },
+    {
+      "do": "snapshot",
+      "name": "parts-3-switched-off"
+    },
+    {
+      "do": "describe",
+      "stage": "4-folded-shut",
+      "note": "and the twists shut. THIS is what takes an effect’s settings away, and it takes ALL of them: no width, no shadow sliders, no colour wells left behind by something nobody can see. The row itself stays, because it is still in the list to be switched back on or taken out."
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "expect",
+      "control": "Twist",
+      "in": "Border",
+      "reads": "Border, shut"
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Border",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Border",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Twist",
+      "in": "Shadow",
+      "reads": "Shadow, shut"
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Softness",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Shadow",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Remove",
+      "in": "Shadow",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "folded-shut"
+    },
+    {
+      "do": "snapshot",
+      "name": "parts-4-folded-shut"
+    },
+    {
+      "do": "describe",
+      "stage": "5-back-as-drawn",
+      "note": "opened and switched on again. The list has to read exactly as it did at stage 2: same rows, same settings, nothing left shut and nothing lost. Opening the shadow again is what makes this stage scroll: the Effects list keeps room for the effect you just opened, so the shadow's five sliders come back into view by pushing the Border row up past the top of the list. Its switch is then out of reach, and the walk scrolls back to it the way a person would rather than clicking where it used to be. The list is scrolled back to the Border row before the picture, so this stage frames what stage 2 framed."
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Switch",
+      "in": "Border"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Switch",
+      "in": "Shadow"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Softness",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Shadow",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Fill",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Border",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Border",
+      "present": true
+    },
+    {
+      "do": "reveal",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panel",
+      "stage": "back-as-drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "parts-5-back-as-drawn"
+    }
   ]
- }
+}

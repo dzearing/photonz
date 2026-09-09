@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2240,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T06:08:28.395Z",
-  "updated": "2026-09-09T06:08:28.398Z",
+  "updated": "2026-09-09T08:25:41.386348Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pre-existing, NOT caused by the Appearance section gate change on 2026-09-08. Reproduced both ways.\n\nWITH that change: Scripts/playtest.sh Scripts/playtest/parts-settings-inline-walk.json --no-build -> exit 1, [54 press] FAILED: the control \"Switch\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel's edge cuts across the point a press would land on. Scroll to it with a \"scrollPanel\" step first.\n\nWITHOUT it (git stash push -- Sources/Photonz/LayersPanel.swift, full rebuild): identical failure at step 54, same message. So the gate change is not the cause.\n\nLikely the same class as the alignment-button task that landed on 2026-09-08 (44d95ca0 \"Scroll to the alignment buttons instead of guessing a distance\"): the walk needs a scrollPanel step rather than a guessed distance.",
@@ -21,6 +21,31 @@
     {
       "t": "2026-09-09T06:08:28.397Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T08:16:07.984Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T08:25:41.386348Z",
+      "note": "Reproduced: step 54 press Switch in Border failed. Found the cause with a diagnostic walk that dumps the panel after every stage-5 press. Nothing scrolls in the outer dock; the Effects list scrolls INSIDE ITSELF. Re-opening the Shadow at stage 5 makes the list keep room for the effect just opened (877580bf/877580 the 2026-09-08 change), which slides the Border row up from y=469 to y=548, above the Effects header at y=503, so its switch is clipped by the section's own scroll area. inWindow goes false and the press is rightly refused."
+    },
+    {
+      "t": "2026-09-09T08:25:41.386348Z",
+      "note": "Adversarial review before changing anything: is the walk being told the dock got worse? No. The stage-5 describe only claims the list reads as it did at stage 2, never that it is all on screen without scrolling, and scrolling back to a row that the list scrolled away from is exactly what a person does. Keeping the opened effect in view is deliberate and worth keeping. So reveal is the right answer here, not a source change."
+    },
+    {
+      "t": "2026-09-09T08:25:41.386348Z",
+      "note": "Fixed: reveal in front of the Border switch press and the Shadow switch press in stage 5, and a reveal back to the Border row before the final picture so stage 5 frames what stage 2 framed. Seed and the stage-5 describe now say why the stage scrolls. Walk JSON only, no source changed."
+    },
+    {
+      "t": "2026-09-09T08:25:41.386348Z",
+      "note": "Verified: walk finishes status ok in 68 steps (was failed at 53). The reveal reports 'brought into reach by scrolling 73pt' rather than a guessed number. panel-three-on.json and panel-back-as-drawn.json now match control for control, all 41, same names, details, positions and inWindow, so the walk's own claim that stage 5 reads exactly as stage 2 is machine-checked. parts (3/3) and effect (12/13) walks re-run; Scripts/test.sh green, 5278 tests."
+    },
+    {
+      "t": "2026-09-09T08:25:41.386348Z",
+      "note": "Two follow-ups filed, both reproduced with commands and output in their notes: a-control-scrolled-out-of-its-own-section-gets-c (a walk can assert a control exists in a row it merely drifted under, and pass) and folding-an-effect-shut-in-a-short-window-does-no (effects-open-into-view-walk fails at step 12 on a clean tree, unrelated to this change)."
     }
-  ]
+  ],
+  "started": "2026-09-09T08:16:07.983Z"
 }

@@ -1,0 +1,26 @@
+{
+  "id": "folding-an-effect-shut-in-a-short-window-does-no",
+  "title": "Folding an effect shut in a short window does not stay shut",
+  "goal": "In a window too short to hold both effects open, folding the Border effect away does not take. The walk that checks this stops at its second step, so nothing it was written to guard is being checked any more.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2280,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T08:25:19.599Z",
+  "updated": "2026-09-09T08:25:19.602Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-09 on a clean tree (only Scripts/playtest/parts-settings-inline-walk.json and queue files were modified, neither touches this walk). Not a flake: failed twice in a row, once via Scripts/playtest-all.sh --no-build effect and once on its own.\n\nRepro: Scripts/playtest.sh Scripts/playtest/effects-open-into-view-walk.json --no-build\n\nOutput: status failed, [12 expect] FAILED: the control called \"Twist\" in \"Border\" reads \"Border, open\", not \"Border, shut\"\n\nStep 9 presses the Border twist to fold it and step 12 expects it shut. The window is 1280x600, short enough that the Effects list scrolls inside itself, which is what this walk exists to cover. Worth checking whether the press is landing on the twist at all once the list has scrolled, and whether the keep-room-for-the-effect-you-opened scroll (877780bf) re-opens it. 12 of the 13 effect walks pass, so this is specific to the short window.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/effects-open-into-view-walk.json passes end to end",
+    "The rest of the effect walks still pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T08:25:19.601Z",
+      "note": "created (manual)"
+    }
+  ]
+}
