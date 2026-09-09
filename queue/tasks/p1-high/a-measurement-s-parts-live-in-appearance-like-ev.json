@@ -1,0 +1,37 @@
+{
+  "id": "a-measurement-s-parts-live-in-appearance-like-ev",
+  "title": "A measurement's parts live in Appearance, like every other shape",
+  "goal": "A measurement's colours sit in a section of their own, with their own swatches that do not work like the colours anywhere else in the app, and its chip has no edge to colour at all. Put a measurement's parts in Appearance beside every other shape's: the caliper itself, and the chip's fill, its edge and its text, each with a colour chosen the way every other colour is chosen, and the chip's size beside them. Fold the separate measure section in so one place says how a measurement looks.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T12:59:46.357Z",
+  "updated": "2026-09-09T12:59:46.397Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-09, straight after the same request for arrows, so the two should share one shape rather than each inventing theirs; read an-arrow-s-parts-live-in-appearance-each-with-it and follow it. A measurement is further along than an arrow: MeasureContent already stores strokeColorHex, chipColorHex, chipOpacity and textColorHex (Sources/PhotonzCore/Measure.swift lines 85 to 93) plus strokeWidth and labelScale, so most colours exist and are not derived. Two gaps. The chip has no border colour or width at all, unlike the arrow's caption which derives one from the stroke, so that is the model addition here. And the panel does not use the shared colour control: MeasureInspector.swift builds its own swatchRow around ColorWellButton at lines 133, 139, 144 and 340, so these colours cannot take a named style while every other colour in the app can. The parts belong in LayerParts.swift alongside the others rather than as a special case, and the non colour settings folded in from the measure section, the thickness, the label size, the unit and decimals, need homes; say where each went.",
+  "acceptance": [
+    "Appearance lists a measurement's parts: the caliper, and the chip's fill, edge and text",
+    "Each colour is chosen with the same control the rest of the panel uses, including using and saving named colours, rather than a swatch that only this section has",
+    "The chip gains an edge that can be coloured and given a width, and the audit says what an existing measurement's chip edge becomes so nothing changes on opening",
+    "The chip's size sits with its parts rather than somewhere else, and the caliper's thickness sits with the caliper",
+    "There is no separate measure section: everything in it is in Appearance, and the audit lists where each control went",
+    "A measurement whose chip is hidden shows no chip parts, so the section never offers settings for something not on screen",
+    "Existing measurements open looking exactly as they do now",
+    "Core logic covered by tests in PhotonzCore written before the change",
+    "Audit written under queue/audits/ with a measurement whose chip and caliper are coloured differently, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T12:59:46.359Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T12:59:46.396Z",
+      "note": "seq 260 -> 6"
+    }
+  ]
+}
