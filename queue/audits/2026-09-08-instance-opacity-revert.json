@@ -1,0 +1,27 @@
+{
+  "feature": "Put a copy back on its original's opacity",
+  "epic": "ui-components",
+  "summary": "Pick a copy of a component and the panel now has an Appearance section with an Opacity row, the same one every other layer gets. Fade the copy and a small back arrow appears next to the word Opacity; press it and the copy follows the original's opacity again. The same gap was hiding the Opacity row on an unlocked picture, so a screenshot can now be faded too.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to change: this is on by default.",
+  "try": [
+    { "do": "Open the Library shelf and drag a Card component onto the canvas." },
+    { "do": "Click the copy you just placed." },
+    { "do": "Look at the Appearance section: it should have an Opacity row." },
+    { "do": "Drag the Opacity slider down to about a third.", "shot": "2026-09-08-instance-opacity-revert-1.png" },
+    { "do": "Press the small back arrow that appeared next to the word Opacity.", "shot": "2026-09-08-instance-opacity-revert-2.png" },
+    { "do": "Open a screenshot, unlock the Background layer, click it, and drag its Opacity down." }
+  ],
+  "evaluate": [
+    "Is the back arrow next to Opacity where you looked for it, or did you go hunting in the Component section instead?",
+    "Two ways back are on screen at once for a faded copy: the arrow on the Opacity row and the one on the Component section's Its own look row. Is that reassuring or is it clutter?",
+    "For a copy of a component the Appearance section holds only Opacity and Corner Radius. Does a section that short earn its heading, or should Opacity sit somewhere else for these layers?",
+    "After you press the back arrow, the Stopped following message is often still on screen even though the copy is following again. Did that confuse you?",
+    "Being able to fade a screenshot: is that something you wanted, and is Appearance where you would have gone for it?"
+  ],
+  "rough": [
+    "Pressing the back arrow says nothing at all, on purpose, so the Stopped following toast raised by the fade a moment earlier can still be on screen while the copy is following again. The message is not wrong when it appears, it just outlives the thing it describes. I left it alone rather than invent a Following again message nobody asked for.",
+    "The task described this as a component problem. It was wider: the Appearance section was shown only when a picked layer had a colour to paint, and Opacity leads that section, so anything that paints nothing of its own lost its opacity entirely. A copy of a component was one case, an unlocked picture was the other, which matters more given screenshots are the main material here. A plain group turned out to be fine, because picking one reaches the shapes inside it.",
+    "Screenshots here are real window captures, not offscreen renders: the probe had the Screen Recording grant.",
+    "Scripts/playtest/parts-settings-inline-walk.json fails at step 54, and it fails the same way on a checkout without this change. Filed separately, not fixed here."
+  ]
+}

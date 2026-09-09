@@ -547,7 +547,17 @@ struct InspectorPanel: View {
             // One list of the parts the picked layers paint (`next-shape-parts`),
             // in the same slot the Color section held: it IS the Color section,
             // widened to hold each colour's switch and settings beside it.
-            if !editorState.layerPartRows.isEmpty { set.insert(.color) }
+            //
+            // Present for ANYTHING unlocked, not just for things with a colour.
+            // Opacity leads this section and it is the one thing every layer
+            // has, so gating the section on there being a paintable part took
+            // the opacity away from everything that paints nothing of its own:
+            // a copy of a component, and an unlocked picture. A faded copy then
+            // had no Opacity row to carry the way back to the original's
+            // opacity, and a screenshot could not be faded at all. (A plain
+            // group is fine either way: picking one reaches the shapes inside
+            // it, and those have colours.)
+            if editorState.hasRestylableSelection { set.insert(.color) }
         } else if !editorState.colorRowSlots.isEmpty {
             set.insert(.color)
         }

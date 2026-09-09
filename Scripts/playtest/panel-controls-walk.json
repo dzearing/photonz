@@ -82,7 +82,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "panel", "stage": "8-own-opacity" },
     { "do": "describe", "stage": "8-own-opacity",
-      "note": "this copy of Card has been faded, so the Effects section's Opacity row grew the arrow that puts it back, called Revert Opacity" },
+      "note": "this copy of Card has been faded, so the Appearance section's Opacity row grew the arrow that puts it back, called Revert Opacity" },
     { "do": "snapshot", "name": "panel-controls-6-own-opacity" },
     { "do": "press", "control": "Revert Opacity" },
     { "do": "wait", "seconds": 0.6 },

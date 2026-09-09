@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2180,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T01:46:50.466Z",
-  "updated": "2026-09-09T01:46:50.469Z",
+  "updated": "2026-09-09T06:08:48.924044Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-08 on an UNCHANGED checkout (stashed the panel-margin work, rebuilt, ran the walk): Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json fails at step 63 (press) with: no control called \"Revert Opacity\" is in the panel. The panel listing in the same error shows the sections that ARE there for a picked component copy: Layers, Effects, Component, Position & Size, Layout, Library. No Appearance section, so no Opacity row and no Revert Opacity. It fails identically with the panel-margin change applied, so it is not caused by it. The control is InstanceStyleRevert, put on the row by LayerStyleSlider when field: .opacity and there is a sole layer id (Sources/Photonz/LayersPanel.swift, LayerStyleSlider); the Opacity row itself is PartsInspector.opacity. The question to answer first is why the .color section is not in the dock for a component instance selection: LayersPanel.swift around line 770 builds it, and Appearance appears for a plain rectangle in the same walk.",
@@ -23,6 +23,55 @@
     {
       "t": "2026-09-09T01:46:50.468Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T05:42:39.446Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Reproduced first: Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json exit 1, step 63 (press) no control called \"Revert Opacity\" is in the panel; the listing shows Layers, Effects, Component, Position & Size, Layout, Library and no Appearance."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Adversarial review before building: the wiring for the way back was all already there (InstanceStyleRevert, LayerStyleSlider field: .opacity, PartsInspector.opacity). Nothing needed designing. The only thing missing was that the Appearance section was not on screen, so the shortest version that delivers the value is one gate, not a new control."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Root cause, and it is wider than the task said: InspectorPanel gated .color on !editorState.layerPartRows.isEmpty, meaning \"at least one picked layer has a colour to paint\". Opacity LEADS that section and is the one thing every layer has, so anything that paints nothing of its own lost its opacity outright. A copy of a component was one case; an unlocked picture was the other, which matters more here since screenshots are the main material."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Checked the wider claim instead of asserting it. A plain group is NOT affected (temp walk, group of two rectangles: Appearance present both with and without the change) because picking a group reaches the shapes inside it. An unlocked picture IS affected: temp walk opening Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, unlocking Background and clicking it gave sections Layers, Effects, Position & Size, Library on the unfixed build and Layers, Appearance, Effects, Position & Size, Library with the fix. Narrowed the code comment to the two cases I could show."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Fix: Sources/Photonz/LayersPanel.swift:550, gate .color on editorState.hasRestylableSelection, the same condition Effects already uses. Appearance and Effects now come and go together, which matches their own split: what a shape IS, and what you ADD."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Verified all four acceptance items on the real app (probe, Screen Recording granted, so these are real window captures). panel-8-own-opacity dump: Appearance section, Opacity row, Revert Opacity on it. panel-9-following-again dump: Appearance and Opacity still there, Revert Opacity gone. Screenshots show 35% then 100% and the copy solid again."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Scripts/test.sh green (5269 tests in 438 suites). Walks: all 18 panel walks ok, 15 component ok, 3 appearance ok, 12 effect ok, 7 shape ok, 1 instance ok."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "parts-settings-inline-walk fails at step 54 (a Switch scrolled out of reach). Confirmed pre-existing by stashing the change, rebuilding and getting the identical failure. Filed as a-switch-in-the-parts-list-the-walk-cannot-reach with both commands and outputs."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Also corrected the walk's own describe note at step 61, which still said the arrow was on the Effects section's Opacity row. Opacity moved to Appearance on 2026-09-07."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Adversarial review of the built thing: pressing the arrow is deliberately silent (perform(announcing: false)), so the Stopped following toast from the fade a moment earlier can still be on screen while the copy is following again. The message is not wrong when raised, it just outlives what it describes. Left alone rather than invent a Following again toast; put it in the audit's evaluate and rough for the user to judge. Second point for them: a faded copy now shows two ways back at once, the arrow on the Opacity row and the one on the Component section's Its own look row."
+    },
+    {
+      "t": "2026-09-09T06:08:48.924044Z",
+      "note": "Audit: queue/audits/2026-09-08-instance-opacity-revert.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-09T05:42:39.445Z"
 }
