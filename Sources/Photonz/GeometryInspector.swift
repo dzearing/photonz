@@ -156,10 +156,12 @@ struct GeometryInspector: View {
                 field(.x, selection)
                 field(.y, selection)
             }
+            .panelStartProbe(.row, owner: "Position")
             HStack(spacing: 8) {
                 field(.width, selection)
                 field(.height, selection)
             }
+            .panelStartProbe(.row, owner: "Size")
             Text(said ?? selection.caption)
                 .font(.caption2)
                 .foregroundStyle(said == nil ? AnyShapeStyle(.tertiary)

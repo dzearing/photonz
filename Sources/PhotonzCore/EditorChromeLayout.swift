@@ -197,6 +197,47 @@ public enum EditorChromeLayout {
         max(0, panelEdgeInset - gutter)
     }
 
+    // MARK: The panel's left edge
+
+    /// Where EVERYTHING inside a panel begins: a section's heading, every row
+    /// under it, the label over a slider, the first field of a pair.
+    ///
+    /// The same number as the right edge, so a panel has one margin rather
+    /// than two, and a ruler laid across a screenshot reads the same on both
+    /// sides.
+    ///
+    /// Reported by the user on 2026-09-08: the rows in Appearance started 38pt
+    /// in, which is this margin plus the width of the tick column, so the
+    /// section's content lined up with neither its own heading nor the
+    /// sections above and below it. The tick column was the name column back
+    /// when the name came first; when the tick moved to the front of the row
+    /// it stopped being a column and became an indent standing in for a
+    /// control the row did not have.
+    public static var panelStartInset: CGFloat { panelEdgeInset }
+
+    /// The column a row holds open for its leading control — the tick on a
+    /// part, the chevron on an effect — whether or not it has one to put
+    /// there. It is INSIDE the row, so a row with a tick and a row without
+    /// still begin on `panelStartInset`.
+    public static let panelRowLeadingColumn: CGFloat = 16
+
+    /// The gap between one thing in a row and the next.
+    public static let panelRowGap: CGFloat = 8
+
+    /// The ONE reason anything inside a panel steps in past the margin: it is
+    /// a subsection folded under the row above it, drawn behind a rule that
+    /// says whose it is.
+    ///
+    /// It is exactly the leading column and its gap, so a folded subsection's
+    /// content starts under its parent's NAME. That is what makes the step
+    /// read as a bracket rather than as a second margin, and it is why the
+    /// number is shared: a section added later cannot pick its own.
+    public static var panelSubsectionIndent: CGFloat { panelRowLeadingColumn + panelRowGap }
+
+    /// Where a folded subsection's content begins, from the panel's own left
+    /// edge. The number a ruler measures.
+    public static var panelSubsectionStartInset: CGFloat { panelStartInset + panelSubsectionIndent }
+
     // MARK: Tool bar fit
 
     /// One tool slot's share of the bar: a 28pt control plus the 14pt gap that

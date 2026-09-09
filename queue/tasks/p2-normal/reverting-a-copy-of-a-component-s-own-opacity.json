@@ -1,0 +1,28 @@
+{
+  "id": "reverting-a-copy-of-a-component-s-own-opacity",
+  "title": "Reverting a copy of a component's own opacity",
+  "goal": "When you take a copy of a component and give it an opacity of its own, the panel is supposed to offer a small way back to the original's opacity, sitting on the Opacity row itself. That way back is not on screen: the Appearance section is not in the panel at all while a copy of a component is picked, so there is nothing to press.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2180,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T01:46:50.466Z",
+  "updated": "2026-09-09T01:46:50.469Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-08 on an UNCHANGED checkout (stashed the panel-margin work, rebuilt, ran the walk): Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json fails at step 63 (press) with: no control called \"Revert Opacity\" is in the panel. The panel listing in the same error shows the sections that ARE there for a picked component copy: Layers, Effects, Component, Position & Size, Layout, Library. No Appearance section, so no Opacity row and no Revert Opacity. It fails identically with the panel-margin change applied, so it is not caused by it. The control is InstanceStyleRevert, put on the row by LayerStyleSlider when field: .opacity and there is a sole layer id (Sources/Photonz/LayersPanel.swift, LayerStyleSlider); the Opacity row itself is PartsInspector.opacity. The question to answer first is why the .color section is not in the dock for a component instance selection: LayersPanel.swift around line 770 builds it, and Appearance appears for a plain rectangle in the same walk.",
+  "acceptance": [
+    "Picking a copy of a component shows the Appearance section with its Opacity row",
+    "Giving that copy an opacity of its own puts the way back on the Opacity row",
+    "Pressing it puts the copy back on the original's opacity",
+    "Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json passes end to end"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T01:46:50.468Z",
+      "note": "created (manual)"
+    }
+  ]
+}

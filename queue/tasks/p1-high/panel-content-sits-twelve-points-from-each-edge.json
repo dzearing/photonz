@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T01:02:41.329Z",
-  "updated": "2026-09-09T01:02:41.365Z",
+  "updated": "2026-09-09T01:48:12.064287Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user confirmed on 2026-09-08 that fourteen is the right margin, so panelEdgeInset stays as it is and nothing derived from it moves. That leaves ONE cause, the real one: PartsInspector.swift line 61 adds a leading pad of ColorPartLayout.nameLeading, the switch column width plus the gap (ColorStylePanel.swift line 254), so a row without a leading control is pushed in by the width of one that has. Remove that indent and make it a proper column. Reported by the user on 2026-09-08 with a marked up screenshot asking for twelve points at each edge. Two separate causes, and both need fixing or the rows will still not line up. First, the shared value is wrong: EditorChromeLayout.panelEdgeInset (Sources/PhotonzCore/EditorChromeLayout.swift line 158) is 14, and every inspector applies it, so the outer margin is 14 rather than 12; note panelEdgeCenterInset at line 182 is derived from it, so changing it moves that too and the right hand icon alignment must be rechecked. Second, the extra indent the user is pointing at is inside the rows: PartsInspector.swift line 61 adds a leading pad of ColorPartLayout.nameLeading, which is the switch column width plus the gap (ColorStylePanel.swift line 254), so a row without a leading control is pushed in by the width of one that has. That is the indent to remove, replacing it with a proper column so a row with a control and a row without still begin at the same place. Coordinate with an-effect-row-reads-like-a-small-pane-with-a-che, which replaces the leading tick with a chevron and moves the switch to the right; if that lands first the leading column changes and this task should follow its shape rather than restore the old one.",
@@ -30,6 +30,19 @@
     {
       "t": "2026-09-09T01:02:41.364Z",
       "note": "seq 260 -> 3"
+    },
+    {
+      "t": "2026-09-09T01:15:07.794Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T01:20:05.959Z",
+      "note": "Adversarial review before building. Measured the live panel off a probe capture (appearance-effects walk, 2x): panel margin 14pt; a section heading chevron starts at 14 and its title at 25.5; Position & Size starts its X label at 14; but in Appearance the Opacity label and the Corner Radius label start at 38 and so does every part name. 38 = 14 + 24, and 24 is the tick column plus its gap. So the section has three left edges and only one of them is the panel margin. The 24 is a leftover: it was the name column back when the name came first, and when the tick moved to the front (the user asked for that) it became an indent nothing owns. Shortest version that fixes it: delete the leading pads, let the two sliders run the full width, add no controls. Cost I have to be honest about: with the pads gone, Opacity starts at the margin while Fill starts 24pt in behind its tick, so rows share a left edge but words do not. That is exactly what the task asks for, so I am building it and putting the question in the audit."
+    },
+    {
+      "t": "2026-09-09T01:48:12.064287Z",
+      "note": "Built and measured. EditorChromeLayout now owns the left edge the way it owns the right (panelStartInset 14, panelRowLeadingColumn 16, panelRowGap 8, panelSubsectionIndent 24, panelSubsectionStartInset 38), with tests; ColorPartLayout reads them. Opacity, Corner Radius and the two reach notes lost their leading pads, and the two sliders run the full width. The dock section header was padded in by 12 against its rows' 14 and is on the shared margin now; that is one view both releases draw, so current moved with next. PanelRowHead holds the tick column open only while some row in the same list has a tick, which was the last indent standing in for a control a row did not have: a lone arrow's Colour row. New playtest step panelStart plus PanelStartProbe reads every leading edge back as a number; panel-start-margin-walk and panel-start-narrow-walk both report every heading and row at 14.0 and every subsection at 38.0, across a box, an effect, a folded effect, a lone arrow, a mixed selection and a 264pt panel. Scripts/test.sh green, 5144 tests. Walks rerun: appearance 3, parts 3, effect 10, colour 12, color 7, panel 18, inspector 2, section 1 - all pass except panel-controls-walk, which fails identically on an unchanged checkout and is filed as reverting-a-copy-of-a-component-s-own-opacity. Asked for a full sweep because the section header moved in every walk's picture. Audit: queue/audits/2026-09-08-panel-start-margin.json with four real captures."
     }
-  ]
+  ],
+  "started": "2026-09-09T01:15:07.793Z"
 }

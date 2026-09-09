@@ -1608,9 +1608,15 @@ private struct CollapsibleSection<Content: View>: View {
                 .foregroundStyle(.tertiary)
                 .panelEdgeIcon("section grip", of: title)
         }
-        // Leading and trailing separately: the title stays exactly where it
-        // was, and the grip joins the column the eyes make down the edge.
-        .padding(.leading, 12)
+        // Where a walk reads the heading's own leading edge back as a number,
+        // so "the section's content lines up with its heading" is a
+        // measurement rather than a picture.
+        .panelStartProbe(.heading, owner: title)
+        // Leading and trailing separately, and both on the panel's own margin:
+        // the heading begins exactly where the rows under it do. It used to be
+        // padded in by 12 against their 14, so every section's title started
+        // two points left of its own content (measured 2026-09-08).
+        .padding(.leading, EditorChromeLayout.panelStartInset)
         .panelEdgePadding()
         .padding(.vertical, 8)
         // A floor, not a fixed height: a header whose words grow still grows.

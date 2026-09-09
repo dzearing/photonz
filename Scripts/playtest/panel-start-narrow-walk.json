@@ -1,0 +1,19 @@
+{
+  "out": "/tmp/photonz-playtest/panel-start-narrow",
+  "seed": "The same margin on a small window, where a row that lost its indent has the least room to lose. Every number is measured from the panel's own left edge, so nothing here should move; and nothing in a section should overlap or clip.",
+  "setup": { "forget": ["shapes", "color", "panel", "tools", "grid"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 600, "canvasHeight": 400, "width": 860, "height": 700 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "key", "key": "r" },
+    { "do": "drag", "from": [140, 120], "to": [380, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "v" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panelStart", "stage": "1-narrow" },
+    { "do": "panel", "stage": "1-narrow" },
+    { "do": "snapshot", "name": "1-narrow" }
+  ]
+}

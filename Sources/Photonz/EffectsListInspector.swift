@@ -84,6 +84,7 @@ struct EffectsListInspector: View {
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
             .playtestField("Effects Empty")
+            .panelStartProbe(.row, owner: "Effects empty")
     }
 
     private var caption: String? {
@@ -174,16 +175,16 @@ private struct EffectRowView: View {
             }
             .modifier(OffEffectColorDrop(row: row, active: !row.isOn, incoming: $incoming))
             if let note = row.reachNote {
-                // Under the NAME it is about, not under the chevron. The
-                // chevron is the row's leading column, so a note left at the
-                // row's own edge would start a whole column left of the word
-                // it explains and read as belonging to the list rather than to
-                // this row.
+                // On the panel's margin, the same as the Appearance list above
+                // it: a note padded in under the row's NAME made a second left
+                // edge inside the section, which is what the user reported on
+                // 2026-09-08. It sits directly under the row it is about, one
+                // gap below it and a pane gap above the next effect, so what it
+                // belongs to is said by where it sits.
                 Text(note)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.leading, ColorPartLayout.nameLeading)
             }
             if !isFolded {
                 // Shown whether or not the effect is drawing. An effect that is
@@ -206,6 +207,7 @@ private struct EffectRowView: View {
             }
         }
         .playtestField(row.title)
+        .panelStartProbe(.row, owner: row.title)
         // The same three moves the grip and the cross make, for a hand that is
         // not going to drag a 20pt strip: a pointer that right clicks, and a
         // screen reader. It is also the only way a scripted walk can reorder,

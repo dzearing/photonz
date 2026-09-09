@@ -13601,3 +13601,57 @@ building: `Scripts/playtest-all.sh --no-build <name-fragment>`.
 
 Next: nothing outstanding here. The first real sweep will be whichever runner
 next asks for one.
+
+## 2026-09-08 — Panel content sits on one edge margin
+
+The user reported that the rows in Appearance started further in than the
+panel's own margin, so the section's content lined up with neither its own
+heading nor the sections above and below it. Measured off a probe capture
+before the fix, from the panel's left edge: section headings at 12, Position &
+Size at 14, and the Opacity label, every part name and the Corner Radius label
+at 38.
+
+The 38 was 14 plus the width of the tick column. That column was the NAME
+column back when the name came first; when the user asked for the tick to lead
+the row, the pad left behind stopped being a column and became an indent
+standing in for a control the row did not have.
+
+What changed:
+
+- `EditorChromeLayout` now owns the left edge the way it already owned the
+  right: `panelStartInset` (the same 14 as `panelEdgeInset`, so a panel has one
+  margin rather than two), `panelRowLeadingColumn` (16), `panelRowGap` (8),
+  `panelSubsectionIndent` (24) and `panelSubsectionStartInset` (38). The
+  subsection indent IS the leading column, which is what makes a folded block
+  land under its parent's name. `ColorPartLayout` reads all of them, so a
+  section added later cannot pick its own.
+- Opacity, Corner Radius and the two "applies to N of the M selected layers"
+  notes lost their leading pads. The two sliders now run the full width.
+- The dock's section header was padded in by 12 against its rows' 14; it is on
+  the shared margin now. That is one view both releases draw, so current moved
+  with next.
+- `PanelRowHead` holds the tick column open only while some row in the same
+  list has a tick. A lone arrow's Colour row had nothing to line up with and
+  was indented for a control that was not there; a box and an arrow picked
+  together still share the column.
+- The ONE remaining indent in the panel is an effect's settings, folded under
+  the effect's name behind a rule.
+
+Measured rather than eyeballed: new playtest step `panelStart`, the mirror of
+`panelEdge`, reads every heading's, row's and subsection's leading edge back as
+points in from the panel's left edge (`PanelStartProbe`). Two walks read it —
+`panel-start-margin-walk` (a box, an effect, a folded effect, a lone arrow, a
+mixed selection) and `panel-start-narrow-walk` (a 264pt panel in an 860x700
+window). Both report every heading and row at 14.0 and every subsection at
+38.0.
+
+Also found, reproduced on an unchanged checkout and filed rather than fixed
+here: `panel-controls-walk` fails because a picked copy of a component has no
+Appearance section at all, so its Opacity row and the way back to the
+original's opacity are not on screen
+(`reverting-a-copy-of-a-component-s-own-opacity`).
+
+Next: `corner-radius-folds-like-an-effect-with-its-chev` moves the Corner
+Radius chevron to the front of its row, which gives it the same shape an effect
+has and needs nothing here to change. A full sweep was requested, since the
+section header moved in every walk's picture.

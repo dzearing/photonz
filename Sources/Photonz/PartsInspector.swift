@@ -35,20 +35,28 @@ struct PartsInspector: View {
             // whatever it is made of, so it is the row that never moves.
             //
             // It is a label over a track rather than a tick and a name, so it
-            // has no tick to lead with; it steps in by the width of the tick
-            // column all the same, so its name starts in the same place Fill's
-            // and Outline's do and the list reads as one column.
+            // has no tick to lead with and it does not pretend to: it starts on
+            // the panel's own margin like every other row, and its track runs
+            // the full width. It used to step in by the width of the tick
+            // column to line its label up with the names beside the ticks,
+            // which put the section's content 24pt further in than its own
+            // heading (reported by the user, 2026-09-08).
             opacity
-                .padding(.leading, ColorPartLayout.nameLeading)
+                .panelStartProbe(.row, owner: "Opacity")
             ForEach(rows) { row in
-                PartRowView(row: row)
+                // The tick column is held open across the whole list, or not at
+                // all: over a box the Fill row has a tick and everything lines
+                // up beside it, while over an arrow nothing here can be
+                // switched, so there is no column and the Colour row starts on
+                // the panel's own margin like the slider above it.
+                PartRowView(row: row, leadsWithColumn: rows.contains(where: \.hasSwitch))
             }
             // ...and a corner radius only where there are corners. An ellipse
             // has none, so it shows no row rather than a slider that does
             // nothing to what you have picked.
             if !corners.isEmpty {
-                // Another label over a track, stepped in to the same name
-                // column as everything above it.
+                // Another label over a track, and like Opacity it begins on the
+                // panel's margin rather than under the name column.
                 VStack(alignment: .leading, spacing: 2) {
                     CornerRadiusRow(selection: corners)
                     if let note = corners.note {
@@ -58,13 +66,14 @@ struct PartsInspector: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .padding(.leading, ColorPartLayout.nameLeading)
+                .panelStartProbe(.row, owner: "Corner Radius")
             }
             if let caption {
                 Text(caption)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelStartProbe(.row, owner: "Appearance note")
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -128,6 +137,9 @@ struct PartsInspector: View {
 private struct PartRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerPartRow
+    /// Whether ANY row in this list has a tick, which is what decides whether
+    /// the list has a leading column at all. See `PanelRowHead`.
+    let leadsWithColumn: Bool
 
     /// What is being held over this row right now, while it is switched off.
     /// Nil the rest of the time, and whenever what is in the air is not a
@@ -148,7 +160,7 @@ private struct PartRowView: View {
                 // the panel's columns live. A part with nothing to switch — a
                 // line's ink, a letter's ink — still holds the tick column open,
                 // so its name starts on the same line as everybody else's.
-                PanelRowHead(title: row.title) {
+                PanelRowHead(title: row.title, leadsWithColumn: leadsWithColumn) {
                     if row.hasSwitch { partSwitch }
                 }
                 if showsColor {
@@ -176,22 +188,25 @@ private struct PartRowView: View {
             // Nothing is drawn here at rest.
             .modifier(OffPartColorDrop(row: row, active: !showsColor, incoming: $incoming))
             if let note = row.reachNote {
-                // Under the NAME it is about, not under the tick. The tick is
-                // the row's leading column now, so a note left at the row's
-                // own edge would start a whole column left of the word it
-                // explains and read as belonging to the list rather than to
-                // this row.
+                // On the panel's margin, like everything else in the section.
+                // It used to be padded in under the row's NAME so it read as
+                // belonging to the row rather than to the list; that put a
+                // second left edge inside the section, which is the thing the
+                // user reported on 2026-09-08. It is a line of small grey type
+                // directly under the row it is about, one gap below and a gap
+                // and a half above the next, so what it belongs to is already
+                // said by where it sits.
                 Text(note)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.leading, ColorPartLayout.nameLeading)
             }
         }
         // Every row holds a control called Switch and one called Color, so the
         // row's own word is what tells the outline's from the fill's:
         // `press "Switch" in "Outline"`.
         .playtestField(row.title)
+        .panelStartProbe(.row, owner: row.title)
     }
 
     // MARK: The switch
@@ -316,6 +331,10 @@ struct OwnedSettings<Content: View>: View {
                 .fill(.quaternary)
                 .frame(width: Self.ruleWidth)
             VStack(alignment: .leading, spacing: 6) { content }
+                // The one thing in a panel allowed to step in past the margin,
+                // so a walk can say in numbers that it steps in ONCE and lands
+                // under the name it belongs to.
+                .panelStartProbe(.subsection, owner: owner)
         }
         .padding(.leading, Self.ruleLeading)
         .accessibilityElement(children: .contain)

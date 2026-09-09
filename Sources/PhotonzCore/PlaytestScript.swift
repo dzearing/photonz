@@ -1199,6 +1199,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// one line" is a claim about numbers. This is how a walk proves it rather
     /// than photographing it and hoping.
     case panelEdge(stage: String)
+    /// The mirror of `panelEdge`: write the measured LEADING edge of every
+    /// section heading, every row and every folded subsection in the panel to
+    /// the log and to `panel-start-<stage>.json`, each one given as a distance
+    /// in from the panel's own left edge.
+    ///
+    /// "Everything inside a section begins on one margin, and only a subsection
+    /// steps in" is a claim about numbers, and the rows are drawn by different
+    /// views in different files, so this is how a walk proves it rather than
+    /// photographing it and hoping.
+    case panelStart(stage: String)
     /// Put the probe into light or dark for the shots that follow, so one walk
     /// can photograph a surface both ways. It changes THIS app only, never the
     /// machine's setting, so nothing outside the probe notices.
@@ -1217,7 +1227,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "expect", "expectMeasures", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
-        "panel", "panelEdge", "panelMenu", "pinch", "press",
+        "panel", "panelEdge", "panelMenu", "panelStart", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
     ]
 
@@ -1272,6 +1282,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .menus: "menus"
         case .toolBar: "toolBar"
         case .panelEdge: "panelEdge"
+        case .panelStart: "panelStart"
         case .action: "action"
         }
     }
@@ -1520,6 +1531,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .toolBar(stage: try f.string("stage"))
         case "panelEdge":
             self = .panelEdge(stage: try f.string("stage"))
+        case "panelStart":
+            self = .panelStart(stage: try f.string("stage"))
         case "appearance":
             self = .appearance(try f.enumValue("value", PlaytestAppearance.self))
         case "action":

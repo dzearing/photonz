@@ -1,0 +1,54 @@
+{
+  "feature": "Panel content on one margin",
+  "epic": "ui-building",
+  "summary": "Every row, heading and slider in the right hand panel now begins on the same 14pt margin, so a section's content lines up with its own title and with the sections above and below it. The only thing that steps in is an effect's settings, folded under the effect's name.",
+  "setup": "Photonz Dev, Experiments window, release Next, the Appearance/Effects flag on (it is on by default in Next). Pick a shape and look down the left edge of the panel.",
+  "try": [
+    {
+      "do": "Draw a rectangle and press V to pick it.",
+      "shot": "2026-09-08-panel-start-margin-1-appearance-sc.png"
+    },
+    {
+      "do": "Run your eye down the left edge of Appearance: the word Opacity, the Fill tick, the word Corner Radius and the word Appearance all start on one line."
+    },
+    {
+      "do": "Press the plus on the Effects header and choose Shadow.",
+      "shot": "2026-09-08-panel-start-margin-2-with-an-effect-sc.png"
+    },
+    {
+      "do": "Note that the Shadow's own settings are the one thing that steps in, and they land under the word Shadow."
+    },
+    {
+      "do": "Press the chevron beside Shadow to fold it away, then again to bring it back."
+    },
+    {
+      "do": "Press A, drag an arrow, press V.",
+      "shot": "2026-09-08-panel-start-margin-3-an-arrow-sc.png"
+    },
+    {
+      "do": "Note that the arrow's Colour row has no tick column in front of it at all, so it starts beside the Opacity slider."
+    },
+    {
+      "do": "Command-click the rectangle's row in the layers list so both are picked: the tick comes back and Fill and Colour line up beside it.",
+      "shot": "2026-09-08-panel-start-margin-4-arrow-and-box-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Does the panel read as one column down the left now, rather than as content floating in from its own headings?",
+    "Opacity starts on the margin while Fill starts a tick's width in, because the tick has the margin. Does that read as a checkbox and its label, or as two ragged left edges?",
+    "The effect settings stepping in behind a rule is now the ONLY indent in the panel. Is that step clearly saying 'these belong to the effect above'?",
+    "A note like 'Applies to 1 of the 2 selected layers' now sits on the margin under the row it is about, instead of under that row's name. Is it still obvious which row it belongs to?",
+    "Every section title moved 2pt right to meet its own rows. Does anything about the headings look off now?"
+  ],
+  "rough": [
+    "Measured, not eyeballed: a new playtest step reads every leading edge back as a number. Scripts/playtest/panel-start-margin-walk.json reports 'every heading and every row begins on the panel's 14.0pt margin; every folded subsection steps in once, to 38.0' for a box, an effect, a folded effect, a lone arrow and a mixed selection. Before the change the same panel measured headings at 12, Position & Size at 14, and the Opacity label, every part name and the Corner Radius label at 38.",
+    "The screenshots here are real captures of the running probe (Screen Recording is granted), not offscreen renders.",
+    "The task asked for twelve points; the user confirmed on 2026-09-08 that fourteen is the right number and that nothing derived from it should move, so this is fourteen everywhere and panelEdgeCenterInset is untouched.",
+    "The section headings moved: they were padded in by 12 while their rows sat at 14, so every title started two points left of its own content. They are on the shared margin now, which also moves them in the current release, since the dock header is one view both releases draw.",
+    "Corner Radius still wears its chevron AFTER its name rather than in front of it like an effect. The pending task corner-radius-folds-like-an-effect-with-its-chev moves it; when it lands, Corner Radius gains a leading chevron on the margin and its name steps in beside it, the same shape an effect has, and nothing here has to change.",
+    "A row's 'Applies to 1 of the 2 selected layers' note sits 6pt under its row and 16pt above the next one, which is the only thing saying which row it belongs to now that it is not indented under the name. It reads correctly in the capture, but it is the line I would watch.",
+    "One place still indents for a reason that is not a subsection, and it is out of the panel this task is about: SelectionColorInspector (Sources/Photonz/ColorStylePanel.swift) pads its notes in by the old name column of 76. That view only draws when the Appearance/Effects flag is OFF, which is never in Next, so it was left alone rather than changed under the current release.",
+    "Nothing overlaps or clips at a narrow panel: checked at a 264pt panel in an 860x700 window (Scripts/playtest/panel-start-narrow-walk.json), where a Border's settings still sit whole inside their rule.",
+    "Scripts/playtest/panel-controls-walk.json fails, and it failed identically on an unchanged checkout: there is no Revert Opacity control for a picked component copy because the Appearance section is not in the panel at all for one. Filed as reverting-a-copy-of-a-component-s-own-opacity with the reproduction."
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "out": "/tmp/photonz-playtest/panel-start-margin",
+  "seed": "The left hand mirror of panel-edge-column-walk. The user reported on 2026-09-08 that the rows in Appearance started further in than the panel's own margin, so the section's content lined up with neither its own heading nor the sections above and below it. Measured before the fix: headings at 12, Position & Size at 14, and the Opacity label, every part name and the Corner Radius label at 38. This walk fills the panel with a section that has a slider, a tick-and-name row and a folded effect, and reads every leading edge back as a number.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel",
+      "tools",
+      "grid"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        560,
+        460
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-appearance",
+      "note": "one rectangle picked: Appearance holds a slider with no leading control (Opacity), a tick-and-name row (Fill) and a second slider (Corner Radius), and Position & Size is under it. Everything should begin on the panel's 14pt margin."
+    },
+    {
+      "do": "panelStart",
+      "stage": "1-appearance"
+    },
+    {
+      "do": "panel",
+      "stage": "1-appearance"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-appearance"
+    },
+    {
+      "do": "describe",
+      "stage": "2-with-an-effect",
+      "note": "a shadow added, so an effect row and its folded settings are on screen: the row begins on the margin and its settings are the one thing allowed to step in, to 38."
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelStart",
+      "stage": "2-with-an-effect"
+    },
+    {
+      "do": "panel",
+      "stage": "2-with-an-effect"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-with-an-effect"
+    },
+    {
+      "do": "describe",
+      "stage": "3-folded",
+      "note": "the shadow folded away: the row keeps the margin with nothing under it"
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelStart",
+      "stage": "3-folded"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-folded"
+    },
+    {
+      "do": "describe",
+      "stage": "4-an-arrow-on-its-own",
+      "note": "an arrow picked on its own: nothing in Appearance can be switched, so there is no tick column and its Colour row starts on the margin beside the Opacity slider"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        180
+      ],
+      "to": [
+        420,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelStart",
+      "stage": "4-an-arrow-on-its-own"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-an-arrow-on-its-own"
+    },
+    {
+      "do": "describe",
+      "stage": "5-an-arrow-and-a-box",
+      "note": "the box picked as well: the Fill row has a tick, so the column comes back and both names line up beside it, and both rows still begin on the margin"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelStart",
+      "stage": "5-an-arrow-and-a-box"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-an-arrow-and-a-box"
+    }
+  ]
+}

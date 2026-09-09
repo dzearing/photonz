@@ -635,3 +635,59 @@ struct GridToolBarCapsuleTests {
         }
     }
 }
+
+/// The column down the LEFT of the inspector panel: where every row, every
+/// section heading and every slider begins.
+///
+/// Reported by the user on 2026-09-08: the rows in Appearance started further
+/// in than the panel's own margin, so the section's content did not line up
+/// with its heading or with the sections above and below it. Measured off the
+/// running app before the fix, from the panel's own left edge: a section
+/// heading's chevron at 14, its title at 25.5, Position & Size's first field
+/// label at 14 — and, in Appearance, the Opacity label, every part name and
+/// the Corner Radius label all at 38. The 38 was 14 plus the width of the tick
+/// column, left behind when the tick moved to the front of the row: an indent
+/// standing in for a control the row did not have.
+@Suite struct PanelStartColumnTests {
+
+    /// One margin, both edges. The number a ruler on a screenshot measures from
+    /// the panel's left edge to the start of anything inside it.
+    @Test func bothEdgesOfAPanelUseTheOneMargin() {
+        #expect(EditorChromeLayout.panelEdgeInset == 14)
+        #expect(EditorChromeLayout.panelStartInset == EditorChromeLayout.panelEdgeInset)
+    }
+
+    /// A row's leading control — a tick, a chevron — is drawn INSIDE the row,
+    /// in a column the row holds open whether or not it has one to put there.
+    /// So a row with a tick and a row without still begin on the margin.
+    @Test func aLeadingControlSitsInsideTheRowRatherThanPushingItIn() {
+        let column = EditorChromeLayout.panelRowLeadingColumn
+        let gap = EditorChromeLayout.panelRowGap
+        #expect(column > 0 && gap > 0)
+        // Whatever is in the column, the row starts at the margin.
+        #expect(EditorChromeLayout.panelStartInset == 14)
+        // ...and what follows the column starts one column and one gap in.
+        #expect(EditorChromeLayout.panelSubsectionIndent == column + gap)
+    }
+
+    /// The ONE reason anything steps in further: it is a subsection folded
+    /// under the row above it. It steps in by exactly the leading column, so
+    /// its content starts under its parent's NAME and the fold reads as a
+    /// bracket rather than as a second margin.
+    @Test func theOnlyIndentIsASubsectionAndItLandsUnderItsParentsName() {
+        #expect(EditorChromeLayout.panelSubsectionIndent == 24)
+        #expect(EditorChromeLayout.panelSubsectionStartInset
+                == EditorChromeLayout.panelStartInset + 24)
+    }
+
+    /// The indent is a distance from the panel's own left edge, so resizing the
+    /// panel carries it and nothing has to be re-tuned — the mirror of the
+    /// promise the right hand column already makes.
+    @Test func theMarginFollowsThePanelWhenItIsResized() {
+        for width in [220.0, 264.0, 380.0, 480.0] as [CGFloat] {
+            let content = width - EditorChromeLayout.panelStartInset
+                - EditorChromeLayout.panelEdgeInset
+            #expect(content == width - 28)
+        }
+    }
+}

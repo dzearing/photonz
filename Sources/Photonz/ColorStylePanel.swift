@@ -227,13 +227,17 @@ enum ColorPartLayout {
     /// The switch column, FIRST in the row and left blank in rows with nothing
     /// to switch, so a row that has a checkbox and a row that does not still
     /// agree on where the name and the color go.
-    static let switchWidth: CGFloat = 16
+    ///
+    /// It is the panel's shared leading column, INSIDE the row: holding it
+    /// open lines the names up without pushing the row itself off the panel's
+    /// margin (`EditorChromeLayout.panelRowLeadingColumn`).
+    static let switchWidth: CGFloat = EditorChromeLayout.panelRowLeadingColumn
     /// Wide enough for the 18pt swatch and for the word Mixed.
     static let readoutWidth: CGFloat = 52
     /// The band the label, the switch and the color all centre on, so nothing
     /// sits half a line above its neighbour.
     static let rowHeight: CGFloat = 20
-    static let spacing: CGFloat = 8
+    static let spacing: CGFloat = EditorChromeLayout.panelRowGap
 
     /// The ink a small checkbox actually draws, which is narrower than the
     /// column it sits in and leading aligned inside it. Measured off a probe
@@ -246,12 +250,22 @@ enum ColorPartLayout {
     /// number is shared instead of typed twice.
     static var tickCenter: CGFloat { tickWidth / 2 }
 
-    /// How far in the NAME column starts, now that the tick leads. A row in one
-    /// of the lists that is not a tick-and-name row at all — the Opacity slider,
-    /// the Corner Radius slider, which wear their label over a full width track
-    /// — steps in by this much so the whole list has one column of names and no
-    /// row looks ragged beside its neighbour.
-    static var nameLeading: CGFloat { switchWidth + spacing }
+    /// How far in the NAME column starts, INSIDE a row that leads with a tick
+    /// or a chevron. The row itself still begins on the panel's margin.
+    ///
+    /// It is the panel's one subsection indent, which is not a coincidence: a
+    /// part's settings fold under its name, so they step in by exactly this
+    /// much and land under the word they belong to
+    /// (`EditorChromeLayout.panelSubsectionIndent`).
+    ///
+    /// It is NOT a margin for rows that have no leading control. A slider that
+    /// wears its label over a full width track — Opacity, Corner Radius — used
+    /// to be padded in by this much to line its label up with the names, which
+    /// pushed it 24pt off the panel's own margin and left the section's content
+    /// lining up with neither its heading nor the sections around it (reported
+    /// by the user, 2026-09-08). Those rows start on the margin now and their
+    /// tracks run the full width.
+    static var nameLeading: CGFloat { EditorChromeLayout.panelSubsectionIndent }
 
 }
 
@@ -269,23 +283,35 @@ enum ColorPartLayout {
 struct PanelRowHead<Switch: View>: View {
     /// The row's own word: Outline, Fill, Blur, Shadow 2.
     let title: String
+    /// Whether the LIST this row is in has any ticks in it at all.
+    ///
+    /// True and the column is held open on every row, blank or not, so a row
+    /// with a tick and a row without still put their names on one line. False
+    /// and there is no column: a list where NOTHING can be switched has nothing
+    /// to line up with, and holding the space anyway indents every name by the
+    /// width of a control that is not there. That is what a lone arrow's Color
+    /// row looked like — one word floating 24pt in from the panel's margin with
+    /// empty space to its left (measured 2026-09-08).
+    var leadsWithColumn: Bool = true
     /// The tick, where the row has one. Rows with nothing to switch pass an
-    /// `EmptyView` and still keep the column, so their names start on the same
-    /// line as everybody else's.
+    /// `EmptyView` and still keep the column while any row in the list has one.
     @ViewBuilder var switchControl: Switch
 
     var body: some View {
         HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
-            // ALWAYS this wide, blank or not. The empty rectangle is what
-            // holds the column open: a frame put straight on a view that draws
-            // nothing reserves nothing, and a row with no tick then starts its
-            // name a whole column to the left of every other row. That is
-            // exactly what an arrow's ink row did the first time this was
-            // built, on 2026-09-08, and again the day the columns arrived.
-            Color.clear
-                .frame(width: ColorPartLayout.switchWidth,
-                       height: ColorPartLayout.rowHeight)
-                .overlay(alignment: .leading) { switchControl }
+            // ALWAYS this wide, blank or not, once the list has a tick in it
+            // anywhere. The empty rectangle is what holds the column open: a
+            // frame put straight on a view that draws nothing reserves nothing,
+            // and a row with no tick then starts its name a whole column to the
+            // left of every other row. That is exactly what an arrow's ink row
+            // did the first time this was built, on 2026-09-08, and again the
+            // day the columns arrived.
+            if leadsWithColumn {
+                Color.clear
+                    .frame(width: ColorPartLayout.switchWidth,
+                           height: ColorPartLayout.rowHeight)
+                    .overlay(alignment: .leading) { switchControl }
+            }
             Text(title)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -298,9 +324,10 @@ struct PanelRowHead<Switch: View>: View {
 }
 
 extension PanelRowHead where Switch == EmptyView {
-    /// A row with nothing to switch. It still holds the tick column open.
-    init(title: String) {
-        self.init(title: title) { EmptyView() }
+    /// A row with nothing to switch. It still holds the tick column open while
+    /// any other row in the same list has one.
+    init(title: String, leadsWithColumn: Bool = true) {
+        self.init(title: title, leadsWithColumn: leadsWithColumn) { EmptyView() }
     }
 }
 

@@ -908,6 +908,11 @@ private final class Run {
             write(json: edge, to: "panel-edge-\(stage).json")
             note(number, step.name, Self.outlinePanelEdge(edge), state: edge)
 
+        case .panelStart(let stage):
+            let start = Self.readPanelStart()
+            write(json: start, to: "panel-start-\(stage).json")
+            note(number, step.name, Self.outlinePanelStart(start), state: start)
+
         case .describe(let stage, let text):
             note(number, stage, text ?? "", state: describe())
 
@@ -2251,6 +2256,59 @@ private final class Run {
                 "edgeInsets": insets.sorted(),
                 "spread": round2((insets.max() ?? 0) - (insets.min() ?? 0)),
                 "onOneLine": insets.count <= 1]
+    }
+
+    /// Everything inside the panel with a leading edge, with the numbers that
+    /// decide whether they begin on one margin. `inset` is what a person could
+    /// measure with a ruler: how far the thing starts in from the panel's own
+    /// LEFT edge.
+    private static func readPanelStart() -> [String: Any] {
+        let probe = PanelStartProbe.shared
+        let left = PanelEdgeProbe.shared.panel.minX
+        let marks = probe.measured.map { mark -> [String: Any] in
+            ["kind": mark.kind.rawValue, "owner": mark.owner,
+             "startX": round2(mark.frame.minX),
+             "centerY": round2(mark.frame.midY),
+             "inset": round2(mark.frame.minX - left)]
+        }
+        // Headings and rows share the panel's margin; a subsection is the one
+        // thing allowed to step in, and it steps in by exactly one leading
+        // column so its content lands under its parent's name.
+        let onMargin = probe.measured.filter { $0.kind != .subsection }
+        let margins = Set(onMargin.map { round2($0.frame.minX - left) })
+        let stepped = Set(probe.measured.filter { $0.kind == .subsection }
+            .map { round2($0.frame.minX - left) })
+        return ["panelLeft": round2(left),
+                "panelWidth": round2(PanelEdgeProbe.shared.panel.width),
+                "marks": marks,
+                "margin": Double(EditorChromeLayout.panelStartInset),
+                "margins": margins.sorted(),
+                "subsectionMargin": Double(EditorChromeLayout.panelSubsectionStartInset),
+                "subsectionInsets": stepped.sorted(),
+                "spread": round2((margins.max() ?? 0) - (margins.min() ?? 0)),
+                "onOneMargin": margins.count <= 1
+                    && (margins.first.map { abs($0 - Double(EditorChromeLayout.panelStartInset)) < 0.5 } ?? true),
+                "subsectionsStepInOnce": stepped.allSatisfy {
+                    abs($0 - Double(EditorChromeLayout.panelSubsectionStartInset)) < 0.5
+                }]
+    }
+
+    private static func outlinePanelStart(_ start: [String: Any]) -> String {
+        let marks = start["marks"] as? [[String: Any]] ?? []
+        guard !marks.isEmpty else { return "nothing in the panel is being measured" }
+        let line = marks.map { mark -> String in
+            "\(mark["owner"] ?? "?") (\(mark["kind"] ?? "?")) starts \(mark["inset"] ?? "?")pt in"
+        }.joined(separator: "; ")
+        let verdict = (start["onOneMargin"] as? Bool ?? false)
+            ? "every heading and every row begins on the panel's \(start["margin"] ?? "?")pt margin"
+            : "they DO NOT share a margin: rows and headings begin \(start["margins"] ?? []) in, "
+              + "a spread of \(start["spread"] ?? 0)pt against a margin of \(start["margin"] ?? "?")"
+        let folded = (start["subsectionInsets"] as? [Double] ?? []).isEmpty
+            ? "nothing is folded under anything here"
+            : ((start["subsectionsStepInOnce"] as? Bool ?? false)
+                ? "every folded subsection steps in once, to \(start["subsectionMargin"] ?? "?")"
+                : "a folded subsection is at the wrong indent: \(start["subsectionInsets"] ?? [])")
+        return line + " — " + verdict + "; " + folded
     }
 
     /// Halves and quarters matter here — a glyph one point wider moves its own
