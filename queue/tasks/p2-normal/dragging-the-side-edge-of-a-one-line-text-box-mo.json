@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2260,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T08:14:39.045Z",
-  "updated": "2026-09-09T08:42:51.582Z",
+  "updated": "2026-09-09T09:02:54.462Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-09 with the probe build, on clean main plus the text-height-readout walk fix.\n\nA text layer at 140,140 pinned to W 360 is 29pt tall, so its box is x 140-500, y 140-169.\n\n  drag (500, 140) -> (250, 140)  cursor while down resize-up-right-down-left   W 360 -> 110, H 29 -> 113   (top right CORNER: resizes)\n  drag (500, 150) -> (250, 150)  cursor while down arrow                        X 140 -> -110, W 360         (right EDGE: moves)\n  drag (499, 154) -> (250, 154)  cursor while down arrow                        no resize                    (right edge, exact middle: moves)\n\nSame layer with H typed to 120, so the box is 120pt tall:\n\n  drag (500, 200) -> (400, 200)  cursor while down resize-left-right                                         (right EDGE: resizes)\n\nSo the side handle exists and is simply not reachable on a short box: the two corner handles claim the whole 29pt edge between them. Scripts/playtest/text-box-room-walk.json drags the BOTTOM edge of a tall box and gets resize-up-down, which is the same handle family working where there is room for it.\n\nFallout in the walks: text-width-floor-walk drags from (272, 150), the middle of a 21pt tall box edge, and describes it as the right edge dragged as far left as it will go. It moves the label; the walk passes and proves nothing about the 80pt floor. text-height-readout-walk had the same fiction and was changed on 2026-09-09 to drag the top right corner instead, which does re-wrap.\n\nThe fix is probably in the handle hit testing for a short box (give the side handles the middle of the edge, or shrink the corner claim on a box under about 40pt), not in the walks.",
@@ -29,12 +29,17 @@
     },
     {
       "t": "2026-09-09T08:57:53.382605Z",
-      "note": "Adversarial review of the fix before building it. The obvious fix \u2014 let the side midpoint square come back on a short box \u2014 does not work: on a 29pt tall label the square sits 19.5pt from each corner, and on the 21pt label the width floor walk uses it sits 15.5pt away, which is a 7pt gap between 8pt squares. That is the lattice the cramped rule exists to prevent, and the line between 'works' and 'lattice' would fall between a 21pt label and a 16pt one, which is not a rule anyone can predict. So the handle stops being a square: the whole run of an EDGE answers to a press, which is what Figma and Sketch do and why their short boxes have sides you can pull. Trade-offs weighed: (1) no square is drawn on a short box's side, so the invitation is the pointer turning into resize arrows rather than something visible at rest \u2014 accepted, that is the platform idiom; (2) a selected layer loses its outer 6pt ring as a move target, so an edge band may only exist while 20 clear points survive down the middle of the box on that axis, which on a one line label switches the top and bottom edges OFF and keeps the whole body grabbable; (3) the corner-radius dots sit 12pt in, clear of the band, and are read first anyway. Shortest version considered and rejected: side edges on text layers only. The same problem hits any short box (a divider, a 24pt button), and a rule that applies to one content type is unguessable."
+      "note": "Adversarial review of the fix before building it. The obvious fix — let the side midpoint square come back on a short box — does not work: on a 29pt tall label the square sits 19.5pt from each corner, and on the 21pt label the width floor walk uses it sits 15.5pt away, which is a 7pt gap between 8pt squares. That is the lattice the cramped rule exists to prevent, and the line between 'works' and 'lattice' would fall between a 21pt label and a 16pt one, which is not a rule anyone can predict. So the handle stops being a square: the whole run of an EDGE answers to a press, which is what Figma and Sketch do and why their short boxes have sides you can pull. Trade-offs weighed: (1) no square is drawn on a short box's side, so the invitation is the pointer turning into resize arrows rather than something visible at rest — accepted, that is the platform idiom; (2) a selected layer loses its outer 6pt ring as a move target, so an edge band may only exist while 20 clear points survive down the middle of the box on that axis, which on a one line label switches the top and bottom edges OFF and keeps the whole body grabbable; (3) the corner-radius dots sit 12pt in, clear of the band, and are read first anyway. Shortest version considered and rejected: side edges on text layers only. The same problem hits any short box (a divider, a 24pt button), and a rule that applies to one content type is unguessable."
     },
     {
       "t": "2026-09-09T08:57:53.382605Z",
       "note": "Built. Handles.grabRun + Handles.hit(edgeGrab:) in PhotonzCore, behind next-edge-grab (on by default in Next, absent from Current's catalog so Current is untouched). Threaded through every press and hover site: layer handles, the crop box, the canvas boundary. Drawing is unchanged. Tests written first: EdgeGrabTests in Tests/PhotonzCoreTests/HandleLayoutTests.swift, 13 cases. Scripts/test.sh green: 5291 tests in 439 suites."
+    },
+    {
+      "t": "2026-09-09T09:02:54.460Z",
+      "note": "The whole run of a picked box's edge now resizes it (Handles.grabRun + Handles.hit(edgeGrab:) in PhotonzCore, behind next-edge-grab, on by default in Next). A one line label's sides set the wrap width; its body still moves it; a box with no room to spare offers no edges and moves from everywhere. Tests first (EdgeGrabTests, 13 cases); Scripts/test.sh green at 5291 tests. Verified in the probe: text-side-edge-walk drags the right edge of a 360 wide one line label to 110 with cursor resize-left-right and X unmoved at 140, then drags the middle and X travels to 240 with W unchanged. text-width-floor-walk was claiming the 80 point floor while dragging from INSIDE the label and only moving it; it now grabs the real edge and lands on 80. 29 walks across text, resize, move, crop, canvas and handles pass. Audit: queue/audits/2026-09-09-edge-grab.json. Commit 8a212ac2."
     }
   ],
-  "started": "2026-09-09T08:42:51.580Z"
+  "started": "2026-09-09T08:42:51.580Z",
+  "completed": "2026-09-09T09:02:54.461Z"
 }
