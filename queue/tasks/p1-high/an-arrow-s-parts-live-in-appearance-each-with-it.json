@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:57:53.360Z",
-  "updated": "2026-09-09T13:54:32.175619Z",
+  "updated": "2026-09-09T13:54:58.703Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09. What the model has today, from Sources/PhotonzCore/Layer.swift: an annotation carries ONE colorHex (line 99) used for the shaft and the head, an optional fillColorHex (line 139) for a closed shape's interior, and the caption pill has no colours of its own at all: captionChipColor (line 329) darkens colorHex by 0.55 and keeps darkening until white text reads on it, and captionBorderWidth (line 357) is derived from strokeWidth. So giving the pill its own fill, edge and text colours is a model change, not just a panel change, and it needs a migration that turns an existing arrow's derived colours into stored ones so nothing shifts on opening. The colour slots that exist are fill, stroke, text, border and shadow (ColorStyles.swift line 26 onwards), which is nearly enough but does not distinguish a line from a head, so the parts model in LayerParts.swift is where the new parts belong rather than a sixth slot. The separate arrow section is the .annotation case in the inspector (Sources/Photonz/AnnotationInspector.swift, listed in InspectorSections.swift); folding it in means the shape settings that are not colours, the head style, the thickness, the caption roundness, need homes in Appearance too, so say where each went. This is the same principle as the Appearance and Effects split already agreed: Appearance says what the thing is made of.",
@@ -72,7 +72,12 @@
     {
       "t": "2026-09-09T13:54:32.175619Z",
       "note": "Audit: queue/audits/2026-09-09-arrow-parts.json with four real screen captures."
+    },
+    {
+      "t": "2026-09-09T13:54:58.701Z",
+      "note": "Appearance now lists an arrow's parts (Line, Head, Caption, Label Fill, Label Edge, Label Text), each with its own colour set the way every other colour is, and the separate arrow section is gone with every one of its controls folded in under the part it belongs to. Model in PhotonzCore (headPaint plus the label's three, seeded from the old derivation so existing arrows open unchanged), panel in Sources/Photonz/ShapePartSettings.swift, design in docs/design/shape-parts.md. Verified: Scripts/test.sh green (5396 tests), new walk arrow-parts-walk.json passes with real screen captures, plus the arrow, caption, part, appearance, colour, style and version walk sets. Audit: queue/audits/2026-09-09-arrow-parts.json. A full sweep was requested."
     }
   ],
-  "started": "2026-09-09T13:08:55.364Z"
+  "started": "2026-09-09T13:08:55.364Z",
+  "completed": "2026-09-09T13:54:58.702Z"
 }
