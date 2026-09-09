@@ -120,6 +120,17 @@ and `queue/README.md`. Queue mutations go through `queue/bin/queue.mjs`, never
 hand-edited status files. Queue-driven app work targets the **next** release
 unless a task explicitly says otherwise.
 
+## The intake window
+
+The session the user reviews the app from is an INTAKE window, not a place to
+write app code: they say what is wrong, you file one queue task per thing and
+answer their question in a few sentences. The whole contract is
+`.claude/skills/intake/SKILL.md` (`/intake`); the short version is that every
+task the user asks for is `p1-high` with `source: user` and a low `seq`, and the
+go loop does the building. Infrastructure the loop runs on (`queue/`,
+`.claude/skills/`, this file, the loop's scripts and prompts) is still yours to
+change directly.
+
 ## Releases
 
 Use the `release` skill (`.claude/skills/release/SKILL.md`). Never hand-roll a release: the skill keeps VERSION, CHANGELOG, `site/version.json`, the git tag, and the GitHub release in lockstep.
