@@ -1,0 +1,337 @@
+{
+  "out": "/tmp/photonz-playtest/angle-field",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        320,
+        220
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-drew",
+      "note": "a rectangle 200 by 100; Position & Size should now show a third row with an A on it"
+    },
+    {
+      "do": "panel",
+      "stage": "1-drew"
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "0\u00b0"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-drew"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        220,
+        100
+      ],
+      "to": [
+        270,
+        120
+      ],
+      "steps": 10,
+      "modifiers": [
+        "shift"
+      ],
+      "hold": "2-mid-turn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-turned",
+      "note": "the rotate knob floats above the top edge at about [220, 100]; dragging it round to [270, 120] with shift held snaps the turn to 45 degrees. The held shot is taken with the button still down, so A must already read 45 there rather than jumping on mouse-up"
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "45\u00b0"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-turned"
+    },
+    {
+      "do": "focus",
+      "field": "A"
+    },
+    {
+      "do": "type",
+      "text": "0"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-straightened",
+      "note": "typing 0 puts a turned layer back to straight, which is the only way back other than undo"
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "0\u00b0"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-straightened"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-undo",
+      "note": "one undo takes back the typed angle in one step, so the rectangle is at 45 again"
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "45\u00b0"
+    },
+    {
+      "do": "focus",
+      "field": "A"
+    },
+    {
+      "do": "type",
+      "text": "30"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "30\u00b0"
+    },
+    {
+      "do": "focus",
+      "field": "A"
+    },
+    {
+      "do": "key",
+      "key": "up"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "5-arrow-up",
+      "note": "up arrow in A steps one degree, the same 1 the other four step by"
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "31\u00b0"
+    },
+    {
+      "do": "key",
+      "key": "up",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "41\u00b0"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-stepped"
+    },
+    {
+      "do": "focus",
+      "field": "A"
+    },
+    {
+      "do": "type",
+      "text": "370"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-wrapped",
+      "note": "a number past a whole turn lands on the same angle said the short way"
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "10\u00b0"
+    },
+    {
+      "do": "press",
+      "control": "Lock",
+      "in": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "7-locked",
+      "note": "a locked layer still has an angle worth reading: A should show 10 degrees as plain text with no box, the way X and Y do, rather than going blank"
+    },
+    {
+      "do": "panel",
+      "stage": "7-locked"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-locked"
+    },
+    {
+      "do": "press",
+      "control": "Lock",
+      "in": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        400
+      ],
+      "to": [
+        500,
+        500
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "7-arrow",
+      "note": "an arrow is aimed by its two ends, so A should be a dash you cannot type in rather than a live box"
+    },
+    {
+      "do": "panel",
+      "stage": "7-arrow"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-arrow"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "selectRow",
+      "row": "Arrow",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "9-group",
+      "note": "a group moves as a whole and offers no rotate knob, so A should be a dash with a sentence behind it rather than a live box showing 0"
+    },
+    {
+      "do": "panel",
+      "stage": "9-group"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-group"
+    }
+  ]
+}

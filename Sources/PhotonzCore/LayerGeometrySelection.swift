@@ -46,6 +46,27 @@ public enum LayerGeometryReading: Hashable, Sendable {
         default: return draftText
         }
     }
+
+    /// The same two, with the field's own unit mark on the digits.
+    ///
+    /// Four of the five numbers in the section are lengths in the same unit
+    /// and say so once, in the caption. The angle is the odd one out, so it
+    /// carries its degree sign: a bare 45 sitting under a W of 296 reads as
+    /// one more length, and the whole point of the row is that it is not.
+    /// Mixed and the blank mark are words rather than numbers, so neither
+    /// takes a unit.
+    public func draftText(for field: LayerGeometryField) -> String {
+        marked(draftText, field)
+    }
+
+    public func readoutText(for field: LayerGeometryField) -> String {
+        marked(readoutText, field)
+    }
+
+    private func marked(_ text: String, _ field: LayerGeometryField) -> String {
+        guard case .agreed = self else { return text }
+        return text + field.displaySuffix
+    }
 }
 
 /// The layers the Position & Size fields speak for, and what typing in one of
@@ -78,14 +99,27 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         /// back on whatever a typed number produces (`Layer.boxSlack`). Zero
         /// for everything but text.
         public let slack: CGSize
+        /// The angle this layer is turned to, in DEGREES, positive clockwise.
+        /// It is not in `frame` and never could be: it lives on the layer's
+        /// transform, and the panel is handed it in the unit a person types
+        /// so nothing downstream has to know about radians.
+        public let angle: CGFloat
         public let editing: LayerGeometryEditing
 
         public init(id: UUID, frame: CGRect, editing: LayerGeometryEditing,
-                    slack: CGSize = .zero) {
+                    slack: CGSize = .zero, angle: CGFloat = 0) {
             self.id = id
             self.frame = frame
             self.slack = slack
+            self.angle = angle
             self.editing = editing
+        }
+
+        /// The number this field shows for this layer: whole points off the
+        /// box, or whole degrees off the angle.
+        func displayNumber(_ field: LayerGeometryField) -> CGFloat {
+            field.isFrameNumber ? LayerGeometry.displayValue(field, of: frame)
+                                : LayerAngle.display(angle)
         }
 
         /// `box` turned back into the box to store.
@@ -144,10 +178,11 @@ public struct LayerGeometrySelection: Hashable, Sendable {
             }
             guard !members.allSatisfy(\.editing.containerOwnsPosition) else {
                 return "\(count) locked layers, all inside something that decides where they sit. "
-                    + "Unlocking them in the Layers list gives back their size, not their position."
+                    + "Unlocking them in the Layers list gives back their size and angle, "
+                    + "not their position."
             }
             return "\(count) locked layers. Unlock them in the Layers list to "
-                + "change their position or size."
+                + "change their position, size or angle."
         }
         // Only the numbers that actually take typing are described. A section
         // whose W and H are plain text because a stack decided them has no
@@ -155,7 +190,13 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         // panel describing a control that is not there.
         let typeable = LayerGeometryField.allCases.filter { allows($0) }
         guard count > 1 else {
-            let where_ = "\(LayerGeometry.unitSuffix) from the top left."
+            // The angle is the one number here that is not a length, so the
+            // line says its unit as soon as there is an angle on show. Where
+            // there is not — a group, an arrow — it says nothing about
+            // degrees, because there is nothing on the row to explain.
+            let where_ = reading(.rotation) == .empty
+                ? "\(LayerGeometry.unitSuffix) from the top left."
+                : "\(LayerGeometry.unitSuffix) from the top left, A in degrees clockwise."
             // Nothing picked is not a panel full of numbers somebody else
             // decided, it is an empty panel, so it keeps the plain caption.
             guard !typeable.isEmpty || isEmpty else { return "\(where_) \(Self.workedOutForYou)" }
@@ -169,7 +210,8 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         guard !typeable.isEmpty else { return "\(head) \(Self.workedOutForThem)" }
         guard typeable.count < LayerGeometryField.allCases.count else {
             return "\(head) X sets every left edge, Y every top edge, "
-                + "W and H each layer's own size. Arrow steps them all by 1, Shift by 10."
+                + "W and H each layer's own size, A each layer's own angle. "
+                + "Arrow steps them all by 1, Shift by 10."
         }
         return "\(head) \(Self.letters(typeable)) land on every one of them. "
             + "Arrow steps them by 1, Shift by 10."
@@ -228,9 +270,8 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     private func reading(_ field: LayerGeometryField,
                          over members: [Member]) -> LayerGeometryReading {
         guard let first = members.first else { return .empty }
-        let value = LayerGeometry.displayValue(field, of: first.frame)
-        for member in members.dropFirst()
-        where LayerGeometry.displayValue(field, of: member.frame) != value {
+        let value = first.displayNumber(field)
+        for member in members.dropFirst() where member.displayNumber(field) != value {
             return .mixed
         }
         return .agreed(value)
@@ -352,7 +393,10 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// field does not act on, and layers already at that number, are left out,
     /// so an edit that changes nothing produces no moves at all.
     public func applying(_ value: CGFloat, to field: LayerGeometryField) -> [UUID: CGRect] {
-        moves(for: field) { frame, member in
+        // A is not a number about the box, so it moves nothing here: it goes
+        // through `turning(to:)` instead, and the panel routes it there.
+        guard field.isFrameNumber else { return [:] }
+        return moves(for: field) { frame, member in
             LayerGeometry.applying(value, to: field, of: frame,
                                    notBelow: member.editing.minimum(for: field),
                                    notAbove: member.editing.maximum(for: field))
@@ -371,13 +415,49 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// and only moves together — which is what a nudge means.
     public func stepping(_ field: LayerGeometryField, direction: Int,
                          coarse: Bool) -> [UUID: CGRect] {
-        moves(for: field) { frame, member in
+        guard field.isFrameNumber else { return [:] }
+        return moves(for: field) { frame, member in
             let stepped = LayerGeometry.stepped(LayerGeometry.value(field, of: frame),
                                                 direction: direction, coarse: coarse)
             return LayerGeometry.applying(stepped, to: field, of: frame,
                                           notBelow: member.editing.minimum(for: field),
                                           notAbove: member.editing.maximum(for: field))
         }
+    }
+
+    /// Every layer's new ANGLE, in degrees, after `value` is typed into A.
+    ///
+    /// The angle is not in the box, so it cannot ride along with the frames:
+    /// this is the second half of `applying(_:to:)`, and the panel calls
+    /// whichever of the two the field belongs to. Layers that do not turn are
+    /// left out, and so is a layer already at that angle, so typing the number
+    /// that is already on screen records no undo step. 45 typed at a layer
+    /// sitting on 405 is the same turn and changes nothing.
+    ///
+    /// What comes back is said the shortest way, so a knob swung round twice
+    /// is tidied to the angle you can see the moment you type over it.
+    public func turning(to value: CGFloat) -> [UUID: CGFloat] {
+        guard value.isFinite else { return [:] }
+        let wanted = LayerAngle.normalized(value)
+        var turns: [UUID: CGFloat] = [:]
+        for member in members(taking: .rotation) where !LayerAngle.isSameTurn(member.angle, wanted) {
+            turns[member.id] = wanted
+        }
+        return turns
+    }
+
+    /// Every layer's new angle after one arrow-key press. Each layer steps
+    /// from its OWN angle, the same rule the other four follow, so a row of
+    /// shapes at different angles all tilt one more degree and stay different.
+    public func steppingRotation(direction: Int, coarse: Bool) -> [UUID: CGFloat] {
+        var turns: [UUID: CGFloat] = [:]
+        for member in members(taking: .rotation) {
+            let stepped = LayerAngle.normalized(
+                LayerGeometry.stepped(LayerAngle.display(member.angle),
+                                      direction: direction, coarse: coarse))
+            if !LayerAngle.isSameTurn(member.angle, stepped) { turns[member.id] = stepped }
+        }
+        return turns
     }
 
     /// The new boxes to STORE. A member is left out when the box a person sees

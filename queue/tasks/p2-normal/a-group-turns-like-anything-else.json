@@ -1,0 +1,28 @@
+{
+  "id": "a-group-turns-like-anything-else",
+  "title": "A group turns like anything else",
+  "goal": "You can turn a rectangle by dragging the knob above it or by typing an angle, but a group of shapes cannot be turned at all: no knob appears over it, and the panel shows a dash where the angle would be. Anyone laying out a card, a badge or a nav bar and wanting the whole thing on a slant has to turn every piece by hand and line them up again.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2370,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T10:51:52.796Z",
+  "updated": "2026-09-09T10:51:52.799Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Today Sources/Photonz/CanvasGroups.swift:82 offersRotation returns false for any group (isGroup), and LayerGeometryEditing sets turnsAtAll false for the same reason, so the A field renders a dash with LayerGeometryEditing.groupTurnReason behind it. Renderer side: check DocumentRenderer composites a group transform before promising this. Written 2026-09-09 while landing the angle field; the angle field task deliberately left this alone and asked for it to be filed.",
+  "acceptance": [
+    "A group offers the rotate knob on the canvas, and dragging it turns the group and everything inside it as one",
+    "The Position and Size section shows the group angle as a number you can read and type, instead of the dash it shows now",
+    "Turning a group is one undo step, and the pieces inside keep their own angles relative to it",
+    "Anything drawn on top of a group (the outline, the handles, the name label) sits where the turned group is, not where its unturned box was"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T10:51:52.798Z",
+      "note": "created (manual)"
+    }
+  ]
+}

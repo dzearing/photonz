@@ -2,13 +2,21 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
-/// Where the selected layers sit and how big they are, as four numbers you can
-/// type (Next, `next-geometry-fields`).
+/// Where the selected layers sit, how big they are and what angle they were
+/// turned to, as numbers you can type (Next, `next-geometry-fields`).
 ///
 /// The point of this section is building to a spec: two buttons the same width,
-/// a row exactly 296 by 118. Dragging can get close and never exact, so every
-/// number here is typeable, steps by an arrow key the same 1 and 10 the canvas
-/// nudges by, and lands as one undo step.
+/// a row exactly 296 by 118, a badge at exactly 45. Dragging can get close and
+/// never exact, so every number here is typeable, steps by an arrow key the
+/// same 1 and 10 the canvas nudges by, and lands as one undo step.
+///
+/// A is the odd one out in one way only: it is not a number about the box, so
+/// it is written to the layer's transform rather than its frame
+/// (`LayerGeometrySelection.turning(to:)`). It is the same FIELD as the other
+/// four, which is the whole reason it is one of them: Mixed, the read-only
+/// look, the click that explains itself and the arrow keys all come with it
+/// rather than being invented again for one control. It carries a degree sign
+/// because it is the one number in the section that is not a length.
 ///
 /// It speaks for the WHOLE selection. Pick four buttons and type one width and
 /// all four take it; type one X and all four line up on that left edge. Where
@@ -162,6 +170,16 @@ struct GeometryInspector: View {
                 field(.height, selection)
             }
             .panelStartProbe(.row, owner: "Size")
+            // The angle, on its own row under the size. It keeps the left
+            // column rather than spreading across, so X, W and A line up in
+            // one column of numbers and the row does not read as a fifth field
+            // twice the width of the four above it. The empty half is the
+            // honest shape of a section with an odd number of numbers in it.
+            HStack(spacing: 8) {
+                field(.rotation, selection)
+                Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
+            }
+            .panelStartProbe(.row, owner: "Angle")
             Text(said ?? selection.caption)
                 .font(.caption2)
                 .foregroundStyle(said == nil ? AnyShapeStyle(.tertiary)
@@ -402,7 +420,9 @@ private struct GeometryNumberField: View {
     /// Whole points, the same rounding `LayerGeometry.displayValue` does, so
     /// what is on screen is exactly what an arrow key steps from, and the same
     /// spelling the readout beside it uses so the two columns agree.
-    private func display(_ reading: LayerGeometryReading) -> String { reading.draftText }
+    private func display(_ reading: LayerGeometryReading) -> String {
+        reading.draftText(for: field)
+    }
 }
 
 /// One geometry number the app worked out for you: read, never typed.
@@ -432,7 +452,7 @@ private struct GeometryReadout: View {
     /// The digits, the word for "they differ", or the mark that stands for no
     /// number at all. Never blank: an arrow has no width, and a lone W with a
     /// gap after it reads as a row that failed to draw.
-    private var text: String { reading.readoutText }
+    private var text: String { reading.readoutText(for: field) }
 
     var body: some View {
         // The slot IS the control: clicking anywhere on it, the letter, the

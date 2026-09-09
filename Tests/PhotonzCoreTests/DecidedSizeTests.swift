@@ -53,7 +53,7 @@ struct DecidedSizeTests {
         switch field {
         case .width: piece.size.width = value
         case .height: piece.size.height = value
-        case .x, .y: break
+        case .x, .y, .rotation: break
         }
         var again = container
         again.children[0] = settled.children[0].resized(to: piece)

@@ -1,0 +1,29 @@
+{
+  "feature": "The angle you turned something to is a number you can read and type",
+  "epic": "ui-building",
+  "summary": "Position & Size grew a third row, A, showing the angle a layer has been turned to in degrees. It follows the rotate knob while you are still dragging it, takes a typed angle, and typing 0 puts a turned layer back to straight without reaching for undo.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag \"Type a layer's position and size\" on (it is on by default in Next).",
+  "try": [
+    { "do": "Draw a rectangle with the rectangle tool.", "shot": "2026-09-09-angle-field-1-turned.png" },
+    { "do": "Look at Position & Size: under W and H there is now an A, reading 0 degrees." },
+    { "do": "Drag the knob floating above the rectangle's top edge, slowly, and watch A while the button is still down." },
+    { "do": "Hold Shift while dragging the knob and let go on a 45." },
+    { "do": "Click A, type 0 and press Return: the rectangle stands straight again." },
+    { "do": "Press Undo once: it goes back to 45 in a single step." },
+    { "do": "Click A and press the up arrow, then Shift and the up arrow." },
+    { "do": "Lock the rectangle in the Layers list and select it again: A is plain text with no box, still reading its angle.", "shot": "2026-09-09-angle-field-2-locked.png" }
+  ],
+  "evaluate": [
+    "Is A the right letter for it, or would you sooner see R, or a rotate glyph the way other tools draw it?",
+    "Does the angle belong in Position & Size, or does it want a section of its own once flips and skew arrive?",
+    "Positive means clockwise here, because that is the way you dragged. Does that match what you expect from a number?",
+    "The row leaves its right half empty. Does that read as a gap, or as room for the next number?",
+    "The arrow key steps 1 degree and Shift 10, while Shift on the knob snaps to 15. Should the keyboard snap to 15 too?"
+  ],
+  "rough": [
+    "A group, a frame and a copy of a component cannot turn at all, so their A is a dash with a sentence behind it. That is honest about today's app rather than good: turning a group is filed as its own task.",
+    "The layer thumbnail in the Layers list still draws the shape unturned, so a rectangle at 45 looks straight in the list.",
+    "A line, an arrow and a caliper show a dash too, on the grounds that they are aimed by their two ends. That is a judgement, not a limitation: they could take an angle that swings both ends about their middle.",
+    "Both shots here are real screen captures from a playtest run, not offscreen renders."
+  ]
+}

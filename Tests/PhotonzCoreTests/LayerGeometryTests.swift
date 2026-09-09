@@ -215,9 +215,15 @@ struct LayerGeometryTests {
         let group = Layer(name: "Group", content: .group(GroupContent(children: [child])),
                           frame: CGRect(x: 5, y: 5, width: 0, height: 0))
         let editing = LayerGeometryEditing(layer: group)
-        for field in LayerGeometryField.allCases { #expect(editing.allows(field)) }
+        for field in [.x, .y, .width, .height] as [LayerGeometryField] {
+            #expect(editing.allows(field))
+        }
         #expect(editing.fixedReason(for: .width) == nil)
         #expect(editing.fixedReason(for: .height) == nil)
+        // Turning is the one thing it does not do: a group moves as a whole,
+        // and the canvas offers it no rotate knob either.
+        #expect(!editing.allows(.rotation))
+        #expect(editing.fixedReason(for: .rotation) == LayerGeometryEditing.groupTurnReason)
     }
 
     /// A copy used to be the one group whose size was read-only, on the grounds
@@ -233,10 +239,12 @@ struct LayerGeometryTests {
         let copy = Layer(name: "Group", content: .group(content),
                          frame: CGRect(x: 5, y: 5, width: 0, height: 0))
         let editing = LayerGeometryEditing(layer: copy)
-        for field in LayerGeometryField.allCases {
+        for field in [.x, .y, .width, .height] as [LayerGeometryField] {
             #expect(editing.allows(field))
             #expect(editing.fixedReason(for: field) == nil)
         }
+        // A copy is a group, so it does not turn, for the group's reason.
+        #expect(!editing.allows(.rotation))
     }
 
     @Test("Every reason a field is fixed reads as a plain sentence, not a code word")

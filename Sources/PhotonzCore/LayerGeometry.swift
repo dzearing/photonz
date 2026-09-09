@@ -1,14 +1,22 @@
 import CoreGraphics
 import Foundation
 
-/// One typed geometry number in the inspector: where a layer sits and how big
-/// it is. Four fields, labelled the way every design tool labels them, so
-/// nobody has to learn a new vocabulary to make two buttons the same width.
+/// One typed geometry number in the inspector: where a layer sits, how big it
+/// is, and what angle it was turned to. Labelled the way every design tool
+/// labels them, so nobody has to learn a new vocabulary to make two buttons
+/// the same width.
 public enum LayerGeometryField: String, CaseIterable, Hashable, Sendable {
     case x
     case y
     case width
     case height
+    /// The angle, in degrees. Not part of the frame at all: it lives on the
+    /// layer's transform, which is why the two write paths differ (see
+    /// `LayerGeometrySelection.turning(to:)`). Everything else about it — the
+    /// Mixed rule, the read-only look, the click that explains itself, the
+    /// arrow-key stepping — is the same field the other four are, which is why
+    /// it is one of them rather than a control of its own invention.
+    case rotation
 
     /// The one- or two-letter label beside the field.
     public var label: String {
@@ -17,6 +25,7 @@ public enum LayerGeometryField: String, CaseIterable, Hashable, Sendable {
         case .y: "Y"
         case .width: "W"
         case .height: "H"
+        case .rotation: "A"
         }
     }
 
@@ -28,11 +37,26 @@ public enum LayerGeometryField: String, CaseIterable, Hashable, Sendable {
         case .y: "Distance from the top edge of the canvas"
         case .width: "Width"
         case .height: "Height"
+        case .rotation: "Angle, in degrees, turning clockwise"
         }
+    }
+
+    /// The mark that goes after the number in this field. Lengths carry none,
+    /// because a panel of numbers all in the same unit says it once in the
+    /// caption; the angle carries its degree sign, because it is the one
+    /// number in the section that is not a length and a bare 45 beside a
+    /// W of 296 reads as another length.
+    public var displaySuffix: String {
+        self == .rotation ? LayerAngle.unitSuffix : ""
     }
 
     /// Whether this field changes the layer's size (rather than its position).
     public var isSize: Bool { self == .width || self == .height }
+
+    /// Whether this field is one of the four read off the layer's box. The
+    /// angle is not: it is on the transform, and every function here that
+    /// takes a `CGRect` is about the other four.
+    public var isFrameNumber: Bool { self != .rotation }
 
     /// The noun a sentence about this size uses, so "Smallest width" in a
     /// reason is spelled the way the Layout section's row spells it.
@@ -77,12 +101,17 @@ public enum LayerGeometry {
     public static let coarseStep: CGFloat = 10
 
     /// The exact number behind a field.
+    ///
+    /// A box has no angle, so A reads 0 here and is read from the layer's
+    /// transform instead (`LayerGeometrySelection.Member.angle`). Every
+    /// function in this type that takes a `CGRect` is about the other four.
     public static func value(_ field: LayerGeometryField, of frame: CGRect) -> CGFloat {
         switch field {
         case .x: frame.minX
         case .y: frame.minY
         case .width: frame.width
         case .height: frame.height
+        case .rotation: 0
         }
     }
 
@@ -118,6 +147,7 @@ public enum LayerGeometry {
         case .y: result.origin.y = value
         case .width: result.size.width = clampedSide(value, notBelow: floor, notAbove: ceiling)
         case .height: result.size.height = clampedSide(value, notBelow: floor, notAbove: ceiling)
+        case .rotation: break // not a number about the box
         }
         return result
     }
@@ -141,9 +171,16 @@ public enum LayerGeometry {
     /// comma in "1,296" was supposed to mean.
     public static func parse(_ text: String) -> CGFloat? {
         var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if cleaned.hasSuffix(unitSuffix) {
-            cleaned = String(cleaned.dropLast(unitSuffix.count))
+        // The units a person might have pasted or typed back in. The degree
+        // sign is here because the A field SHOWS one: select the number, type
+        // over it and the mark goes with it, but click to the end of "45°"
+        // and add a digit and the box still has to read 455 rather than
+        // snapping back as if you had typed a word.
+        for unit in [unitSuffix, LayerAngle.unitSuffix, "degrees", "deg"]
+        where cleaned.hasSuffix(unit) {
+            cleaned = String(cleaned.dropLast(unit.count))
                 .trimmingCharacters(in: .whitespaces)
+            break
         }
         cleaned = cleaned.replacingOccurrences(of: "\u{2212}", with: "-") // a typographic minus
         if cleaned.hasPrefix("+") { cleaned = String(cleaned.dropFirst()) }
@@ -215,8 +252,11 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// position: the room around it is the group's Padding.
     public static let huggedReason = "The group this is in is as big as what is inside it, so the room around this is the group's Padding in the Layout section."
 
-    /// Why nothing on a locked layer can be typed.
-    public static let lockedReason = "This layer is locked. Unlock it in the Layers list to change its position or size."
+    /// Why nothing on a locked layer can be typed. All three of the things
+    /// this section holds are named, because it is also the caption for a
+    /// locked selection and a sentence that stopped at size would be the panel
+    /// promising less than unlocking gives back.
+    public static let lockedReason = "This layer is locked. Unlock it in the Layers list to change its position, size or angle."
 
     /// The same, for a locked layer whose position was never its own anyway:
     /// a stack, a grid, or a group that closes around what is inside it
@@ -229,7 +269,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     public static func lockedInsideReason(_ kind: GroupLayoutKind?) -> String {
         let noun = kind?.title.lowercased() ?? "group"
         return "This layer is locked, and the \(noun) it is in decides where it sits. "
-            + "Unlocking it in the Layers list gives back its size, not its position."
+            + "Unlocking it in the Layers list gives back its size and angle, not its position."
     }
 
     /// Why a typed size sprang back to the smallest this group is allowed to
@@ -264,6 +304,19 @@ public struct LayerGeometryEditing: Hashable, Sendable {
 
     /// Whole points, the spelling every number in a reason uses.
     private static func whole(_ value: CGFloat) -> String { String(Int(value.rounded())) }
+
+    /// Why a group has no angle to read or type. The rotate knob is not
+    /// offered on one either, so the field says the same thing the canvas
+    /// says by leaving the knob off (`EditorState.offersRotation`).
+    public static let groupTurnReason = "A group moves as a whole and does not turn. Turn the layers inside it one at a time."
+
+    /// Why a shape drawn end to end has no angle: it already points wherever
+    /// its two ends are, so an angle typed here would be a second answer to a
+    /// question the ends have already answered.
+    public static let endpointTurnReason = "This shape points wherever its two ends are. Drag either end on the canvas to aim it."
+
+    /// The same for a measurement, which points at the thing it measures.
+    public static let measurementTurnReason = "A measurement lies along what it measures. Drag either end on the canvas to change it."
 
     /// Why a shape drawn end to end has no typeable size.
     public static let endpointReason = "Drag this shape's ends on the canvas to change its size."
@@ -310,6 +363,17 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     public let canSetWidth: Bool
     public let canSetHeight: Bool
 
+    /// Whether a typed angle turns this layer. The rule is the canvas's:
+    /// a field is typeable exactly where the knob is offered, so a group, a
+    /// line, an arrow, a caliper and a locked layer all take none.
+    public let canRotate: Bool
+
+    /// Whether turning is a thing this layer does AT ALL, lock or no lock.
+    /// A locked layer that was turned to 30 still has 30 worth reading, the
+    /// same way its X is still worth reading; a group has no angle to show in
+    /// the first place, so its A is a dash rather than a 0 that means nothing.
+    private let turnsAtAll: Bool
+
     /// Whether the group holding this layer is what decides where it sits, so
     /// no lock and no unlock changes that. The panel needs it apart from the
     /// reason strings because a caption speaking for several locked layers has
@@ -351,6 +415,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     private let widthReason: String?
     private let heightReason: String?
     private let moveReason: String?
+    private let rotationReason: String?
 
     /// `container` is the group this layer sits in, when it has one. It only
     /// matters when that group arranges itself: a stack or a grid decides
@@ -401,6 +466,21 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         minimumHeight = max(heightFloor?.limit ?? 0, LayerGeometry.minimumSide)
         frameIsTheShape = !layer.hasEndpointHandles
         isLocked = layer.isLocked
+        // Turning, decided the same way the canvas decides whether to float
+        // the knob above the outline (`EditorState.offersRotation`). A shape
+        // held between two ends is aimed by its ends, and a group moves as a
+        // whole; both would be a field with nothing behind it, so both get a
+        // dash and a sentence rather than a live box.
+        let cannotTurn: String? = if layer.isGroup {
+            Self.groupTurnReason
+        } else if layer.hasEndpointHandles {
+            layer.measure != nil ? Self.measurementTurnReason : Self.endpointTurnReason
+        } else {
+            nil
+        }
+        turnsAtAll = cannotTurn == nil
+        canRotate = turnsAtAll && !layer.isLocked
+        rotationReason = cannotTurn ?? (layer.isLocked ? Self.lockedReason : nil)
         // A container that arranges its contents, or that closes around them,
         // owns where they sit; one that was given a size on both axes and
         // arranges nothing leaves them exactly where you put them.
@@ -481,6 +561,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         case .x, .y: canMove
         case .width: canSetWidth
         case .height: canSetHeight
+        case .rotation: canRotate
         }
     }
 
@@ -496,6 +577,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         switch field {
         case .x, .y: return true
         case .width, .height: return frameIsTheShape
+        case .rotation: return turnsAtAll
         }
     }
 
@@ -503,7 +585,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// position may go anywhere, including off the canvas.
     public func minimum(for field: LayerGeometryField) -> CGFloat? {
         switch field {
-        case .x, .y: nil
+        case .x, .y, .rotation: nil
         case .width: minimumWidth
         case .height: minimumHeight
         }
@@ -514,7 +596,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// Layout section has one.
     public func maximum(for field: LayerGeometryField) -> CGFloat? {
         switch field {
-        case .x, .y: nil
+        case .x, .y, .rotation: nil
         case .width: widthCeiling?.limit
         case .height: heightCeiling?.limit
         }
@@ -553,6 +635,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         case .x, .y: return moveReason
         case .width: return widthReason
         case .height: return heightReason
+        case .rotation: return rotationReason
         }
     }
 }

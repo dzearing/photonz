@@ -50,6 +50,10 @@ public struct RegionGeometry: Hashable, Sendable {
         case .y: "Distance from the top edge of the canvas to the selection"
         case .width: "Width of the selection"
         case .height: "Height of the selection"
+        // A marquee is a box on the picture and is never turned, so the
+        // section leaves A off entirely while it is the subject. The wording
+        // is here so the switch stays honest rather than defaulting.
+        case .rotation: "Angle of the selection, which is always straight"
         }
     }
 

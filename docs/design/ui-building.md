@@ -805,9 +805,36 @@ for the selected layer, as numbers you can type.
   frame commit so annotation endpoints and caption placement stay correct.
   Walked end to end by `Scripts/playtest/multi-geometry-walk.json`.
 
-Not in this slice: a proportional lock, a rotation field, and treating the
-selection as one box (typing X moves every layer onto that edge, it does not
-slide the group of them as a unit).
+- **The angle is a number too** (2026-09-09). A fifth field, **A**, on its own
+  row under W and H, in the left column so X, W and A line up. It reads the
+  angle the rotate knob left behind, in whole degrees, positive clockwise
+  because that is the direction you dragged; it follows the knob live rather
+  than jumping on mouse-up; and typing one turns every picked layer that can
+  turn, in one undo step. Typing 0 is how you put something back to straight
+  without reaching for undo. It is the only number in the section that is not a
+  length, so it carries a degree sign and the caption says "A in degrees
+  clockwise".
+  - A number past a whole turn is said the shortest way: swing the knob round
+    twice and the field reads 10, not 730; type 370 and it lands on 10. Typing
+    the angle a layer is already at records no undo step, and 405 counts as the
+    same turn as 45.
+  - Up or down steps a degree and Shift ten, the same 1 and 10 every other field
+    steps by. The knob's own Shift snap is still 15 degrees.
+  - A field is typeable exactly where the canvas offers the knob, so a group, a
+    line, an arrow and a caliper all show A as a dash with a sentence behind it
+    rather than a live box holding a 0 that means nothing. A locked layer keeps
+    the angle as a number to READ, the way it keeps X and Y.
+  - The angle is not in the frame, so the write goes the other way:
+    `LayerGeometrySelection.turning(to:)` and `steppingRotation` hand back
+    angles in degrees, `EditorState.commitRotations` stores them as radians on
+    the layer's transform, and `LayerAngle` is the one place the two units meet.
+    `EditorState.previewRotations` is the angle half of `previewMoves`, which is
+    what makes the field follow a knob drag. Walked end to end by
+    `Scripts/playtest/angle-field-walk.json`.
+
+Not in this slice: a proportional lock, turning a group (a group moves as a
+whole and offers no knob), and treating the selection as one box (typing X moves
+every layer onto that edge, it does not slide the group of them as a unit).
 
 ## Landed: layers can hold layers (Next, unflagged, 2026-09-03)
 

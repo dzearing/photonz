@@ -145,6 +145,12 @@ extension EditorState {
     /// the transform to the floated sprite, so this only renders when the
     /// preview pieces haven't landed yet.
     func previewLayerTransform(id: UUID, transform: LayerTransform) {
+        // The A field reads this, BEFORE the guard below. While the canvas is
+        // floating a sprite the document still holds the pre-drag angle, and a
+        // panel reading that would sit on 0 for the whole drag and jump to 30
+        // on mouse-up — the exact "numbers jump instead of following" the four
+        // fields beside it already fixed with `previewMoves`.
+        previewRotations[id] = transform.rotation
         guard dragPreview?.layerID != id else { return }
         guard var doc = document, doc.layer(id: id) != nil else { return }
         doc.updateLayer(id: id) { $0.transform = transform }
@@ -154,6 +160,10 @@ extension EditorState {
     /// Mouse-up on a rotate/skew drag: one undo step. Committing the original
     /// transform is a History no-op (the Esc-cancel path).
     func commitLayerTransform(id: UUID, transform: LayerTransform) {
+        // The document is about to hold the real angle, so the stand-in goes.
+        // Esc comes through here too, committing the angle the drag started
+        // from, which is how a cancelled turn puts the field back as well.
+        previewRotations[id] = nil
         dragPreviewGeneration += 1
         clearPreviewAfterNextFrame = dragPreview != nil
         perform { $0.updateLayer(id: id) { $0.transform = transform } }

@@ -334,9 +334,12 @@ struct LayerGeometrySelectionTests {
     func everyReadOnlyFieldHasAnAnswer() {
         let frame = CGRect(x: 5, y: 6, width: 50, height: 60)
         let locked = LayerGeometrySelection([member(rectangle(frame, locked: true), frame)])
-        for field in LayerGeometryField.allCases {
+        for field in [.x, .y, .width, .height] as [LayerGeometryField] {
             #expect(locked.explanation(for: field) == LayerGeometryEditing.lockedReason)
         }
+        // The angle takes the same one sentence: it names all three of the
+        // things unlocking hands back, so the section has one lock wording.
+        #expect(locked.explanation(for: .rotation) == LayerGeometryEditing.lockedReason)
         let box = CGRect(x: 0, y: 0, width: 100, height: 40)
         let ends = LayerGeometrySelection([member(arrow(box), box)])
         #expect(ends.explanation(for: .width) == LayerGeometryEditing.endpointReason)
@@ -368,7 +371,8 @@ struct LayerGeometrySelectionTests {
     func oneLayerCaptionExplainsTheNumbers() {
         let frame = CGRect(x: 12, y: 34, width: 296, height: 118)
         #expect(selection([frame]).caption
-                == "\(LayerGeometry.unitSuffix) from the top left. Up or down arrow steps by 1, Shift by 10.")
+                == "\(LayerGeometry.unitSuffix) from the top left, A in degrees clockwise. "
+                + "Up or down arrow steps by 1, Shift by 10.")
     }
 
     @Test("A locked layer's caption says it is locked, where you are already looking")
@@ -408,7 +412,7 @@ struct LayerGeometrySelectionTests {
                                           member(rectangle(b, locked: true), b)])
         #expect(sel.isLocked)
         #expect(sel.caption
-                == "2 locked layers. Unlock them in the Layers list to change their position or size.")
+                == "2 locked layers. Unlock them in the Layers list to change their position, size or angle.")
     }
 
     @Test("A locked row in a stack says both reasons in the caption, so unlocking is not oversold")
@@ -470,8 +474,8 @@ struct LayerGeometrySelectionTests {
         // layer's either — the stack decides X and Y, so an arrow key steps
         // only W and H and the caption says exactly that.
         #expect(sel.caption != LayerGeometryEditing.lockedReason)
-        #expect(sel.caption == "\(LayerGeometry.unitSuffix) from the top left. "
-                + "Up or down arrow steps W and H by 1, Shift by 10.")
+        #expect(sel.caption == "\(LayerGeometry.unitSuffix) from the top left, A in degrees clockwise. "
+                + "Up or down arrow steps W, H and A by 1, Shift by 10.")
         #expect(sel.caption != selection([frame]).caption)
     }
 
@@ -479,7 +483,9 @@ struct LayerGeometrySelectionTests {
     func anEmptySelectionIsNotLocked() {
         let sel = LayerGeometrySelection([])
         #expect(!sel.isLocked)
-        #expect(sel.caption == selection([CGRect(x: 0, y: 0, width: 1, height: 1)]).caption)
+        // No layer, so nothing to say about degrees either: the plain line.
+        #expect(sel.caption == "\(LayerGeometry.unitSuffix) from the top left. "
+                + "Up or down arrow steps by 1, Shift by 10.")
     }
 
     // MARK: - What a number reads as on screen

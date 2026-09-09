@@ -582,6 +582,13 @@ final class EditorState {
     /// the canvas puts every layer it carries in here at once, so the numbers
     /// in the inspector track all of them rather than just one.
     var previewMoves: [UUID: CGRect] = [:]
+    /// The same for the rotate knob: the angle a turn in flight is at, in
+    /// RADIANS, committed to history only on mouse-up. `previewMoves` cannot
+    /// carry it because an angle is not in the box, and the panel needs it for
+    /// the same reason it needs those: while the canvas floats a sprite the
+    /// document still holds the pre-drag angle, and a field reading that would
+    /// sit still through the whole turn and jump on mouse-up.
+    var previewRotations: [UUID: CGFloat] = [:]
     /// The gap a component drag in the air is holding open: the group whose
     /// contents have moved aside, and the slot they made room for. A row that
     /// takes a piece has to SHOW the space it is about to give it, or the box
@@ -1831,6 +1838,16 @@ final class EditorState {
     /// Preview-aware: while a move or resize drag is in flight the document
     /// still holds the pre-drag frame, so anything that reads a number off a
     /// layer has to read the preview or it would sit still until mouse-up.
+    /// A layer's angle in DEGREES, preview-aware for exactly the same reason
+    /// the frame is: a turn in flight has not reached the document yet.
+    func previewedAngle(of id: UUID) -> CGFloat {
+        if let radians = previewRotations[id] {
+            return LayerAngle.degrees(fromRadians: radians)
+        }
+        guard let layer = document?.layer(id: id) else { return 0 }
+        return LayerAngle.degrees(fromRadians: layer.transform.rotation)
+    }
+
     func previewedFrame(of id: UUID) -> CGRect? {
         if let frame = previewMoves[id], let document {
             return document.parentSpaceFrame(frame, of: id)
@@ -1877,7 +1894,8 @@ final class EditorState {
                                                     layer: layer, in: holder,
                                                     textTakesAHeight: Experiments.shared
                                                         .placementEnabled),
-                                                 slack: layer.boxSlack)
+                                                 slack: layer.boxSlack,
+                                                 angle: previewedAngle(of: layer.id))
         }
         return LayerGeometrySelection(members)
     }
@@ -1888,6 +1906,13 @@ final class EditorState {
     /// that changes nothing are all no-ops, so tabbing through the fields
     /// without editing never puts anything in the undo stack.
     func setLayerGeometry(field: LayerGeometryField, to value: CGFloat) {
+        // The angle is not in the box, so it takes the other door. Same field,
+        // same landing rules, same one undo step: only the thing being written
+        // is different.
+        guard field.isFrameNumber else {
+            commitRotations(geometrySelection.turning(to: value))
+            return
+        }
         commitGeometry(geometrySelection.applying(value, to: field))
     }
 
@@ -1895,7 +1920,35 @@ final class EditorState {
     /// number, in ONE undo step, so a row that is spread out moves together
     /// and stays spread out.
     func stepLayerGeometry(field: LayerGeometryField, direction: Int, coarse: Bool) {
+        guard field.isFrameNumber else {
+            commitRotations(geometrySelection.steppingRotation(direction: direction,
+                                                               coarse: coarse))
+            return
+        }
         commitGeometry(geometrySelection.stepping(field, direction: direction, coarse: coarse))
+    }
+
+    /// One undo step for a whole selection's worth of typed angles.
+    ///
+    /// The angles arrive in degrees, the unit the panel speaks, and are stored
+    /// in radians, the unit the maths wants; `LayerAngle` is the only place
+    /// the two meet. Resolved in draw order like the frames beside them, so
+    /// the one undo step lands the same way every time.
+    private func commitRotations(_ turns: [UUID: CGFloat]) {
+        guard !turns.isEmpty, let document else { return }
+        previewRotations = [:]
+        dragPreviewGeneration += 1 // cancels an in-flight preview session
+        clearPreviewAfterNextFrame = dragPreview != nil
+        let ordered: [(id: UUID, radians: CGFloat)] = document.allLayers
+            .compactMap { layer in
+                guard let degrees = turns[layer.id] else { return nil }
+                return (layer.id, LayerAngle.radians(fromDegrees: degrees))
+            }
+        perform { document in
+            for turn in ordered {
+                document.updateLayer(id: turn.id) { $0.transform.rotation = turn.radians }
+            }
+        }
     }
 
     /// One undo step for a whole selection's worth of typed frames.

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:41:41.437Z",
-  "updated": "2026-09-09T09:46:09.184Z",
+  "updated": "2026-09-09T10:21:51.412Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Verified by reading the code on 2026-09-09. Rotation is fully real: Sources/PhotonzCore/LayerTransform.swift holds rotation, skew and both flips, Sources/PhotonzCore/TransformDrag.swift does the maths, Sources/Photonz/CanvasPointerDrags.swift:349 drives the knob, and Sources/PhotonzRender/DocumentRenderer.swift:858 composites it. The only thing missing is a readout: Sources/Photonz/GeometryInspector.swift has X, Y, W and H and no angle, and grep finds no Rotation or Angle row anywhere in Sources/Photonz.\n\nThis is finishing a gesture that already ships, not a new feature, so no decision card. Follow the pattern the geometry fields already set (docs/design/ui-building.md, \"Landed: typed position and size\"), including the arrow-key stepping and the refusal sentence when a number is clamped.\n\nOne thing NOT in scope, filed separately if it matters: Sources/Photonz/CanvasGroups.swift:82 says a group never offers the rotate knob because groups translate and nothing else. Do not try to make groups turn in this task; just make the field say so honestly.",
@@ -29,6 +29,39 @@
     {
       "t": "2026-09-09T09:46:09.183Z",
       "note": "seq 270 -> 20"
+    },
+    {
+      "t": "2026-09-09T10:21:51.411Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T10:26:46.870337Z",
+      "note": "Read the model. Rotation lives on Layer.transform (radians), the knob commits through EditorState.commitLayerTransform, and Position & Size is LayerGeometryField (four CGRect fields) + LayerGeometrySelection. Plan: add a fifth field case 'rotation' (label A, degrees) so Mixed, read-only, caption and click-to-explain all come for free, with the write routed to a transform commit rather than a frame commit."
+    },
+    {
+      "t": "2026-09-09T10:53:48.827610Z",
+      "note": "Adversarial pass before building. The mock had nothing to say here, so the argument was with the section itself. Making the angle a fifth LayerGeometryField rather than a control of its own was the shortest version that delivers the value: Mixed, the read-only look, the click that explains itself, the arrow keys and the caption all come for free instead of being invented again. Rejected: a Transform section (a new home for one number), and a bare number with no unit (the section says px once in its caption, and a bare 45 under a W of 296 reads as another length, so A carries a degree sign). Cut: nothing decorative was proposed. The one thing that had to be added rather than reused is a second write path, because an angle is not in the box."
+    },
+    {
+      "t": "2026-09-09T10:53:48.827610Z",
+      "note": "Built. Core: LayerAngle (the one place radians and degrees meet, plus wrapping a turn to the shortest way round), LayerGeometryField.rotation with label A, LayerGeometryEditing.canRotate mirroring the canvas rule for the knob, Member.angle, turning(to:)/steppingRotation, caption and unit-marked text. App: EditorState.previewRotations (the angle half of previewMoves, so the field follows the knob live), commitRotations for one undo step across a selection, and a third row in GeometryInspector."
+    },
+    {
+      "t": "2026-09-09T10:53:48.827610Z",
+      "note": "Widened the locked sentence from \"its position or size\" to \"its position, size or angle\" and dropped a second locked wording, so the section still has ONE lock sentence now that it has three kinds of number."
+    },
+    {
+      "t": "2026-09-09T10:53:48.827610Z",
+      "note": "Verified on the real app, not assumed. Scripts/playtest/angle-field-walk.json is new and passes: A reads 0 on a fresh rectangle, a shift-held knob drag lands 45 AND the held mid-drag capture already shows 45 (so the field follows rather than jumping), typing 0 straightens, one undo returns 45, arrow steps 1 and shift 10, 370 lands on 10, an arrow shows a dash, a locked layer shows 10 degrees as plain text, a group shows a dash. Also re-ran every walk that touches this section: geometry (2), panel (18), text (13) and 13 more named ones, all green. Scripts/test.sh green at 5331 tests."
+    },
+    {
+      "t": "2026-09-09T10:53:48.827610Z",
+      "note": "Second adversarial pass, on the built thing. Rough and filed: a group/frame/copy cannot turn at all (task a-group-turns-like-anything-else), and it is unconfirmed whether the panel offers typeable numbers on a piece inside a copy (task find-out-whether-position-and-size-takes-numbers, p2 because I could not reproduce it). Left as judgement calls, recorded in the audit: the keyboard steps 1 and 10 while the knob's shift snap is 15, and the layer thumbnail still draws a turned shape straight."
+    },
+    {
+      "t": "2026-09-09T10:53:48.827610Z",
+      "note": "Audit: queue/audits/2026-09-09-angle-field.json, with two real screen captures (Screen Recording was granted)."
     }
-  ]
+  ],
+  "started": "2026-09-09T10:21:51.410Z"
 }
