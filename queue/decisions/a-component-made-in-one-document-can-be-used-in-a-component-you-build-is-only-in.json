@@ -50,6 +50,11 @@
     }
   ],
   "recommended": "app-shelf",
-  "status": "pending",
-  "created": "2026-09-08T22:18:36.545Z"
+  "status": "resolved",
+  "created": "2026-09-08T22:18:36.545Z",
+  "answer": {
+    "choice": "app-shelf",
+    "note": "",
+    "resolved": "2026-09-09T14:02:56.163Z"
+  }
 }

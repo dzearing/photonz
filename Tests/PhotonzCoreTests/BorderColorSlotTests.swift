@@ -68,6 +68,7 @@ struct BorderColorSlotTests {
     @Test func theBorderRowComesAfterTheColorsTheLayerItselfHas() {
         #expect(ColorSlot.allCases == [.fill, .stroke, .arrowHead, .text,
                                        .captionFill, .captionBorder, .captionText,
+                                       .caliper, .chipFill, .chipBorder, .chipText,
                                        .border, .shadow, .glow])
     }
 

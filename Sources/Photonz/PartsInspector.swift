@@ -43,6 +43,10 @@ struct PartsInspector: View {
             // heading (reported by the user, 2026-09-08).
             opacity
                 .panelStartProbe(.row, owner: "Opacity")
+            // A measurement's Role, right under it: it is a preset for every
+            // colour below it, so it reads as "what this calls out, then what
+            // that is painted" (`MeasurePartSettings`).
+            if Experiments.shared.shapePartsEnabled { MeasureRoleRow() }
             let column = rows.contains(where: \.hasSwitch)
             ForEach(rows) { row in
                 // The tick column is held open across the whole list, or not at
@@ -55,12 +59,17 @@ struct PartsInspector: View {
                 // label's colour rows, so the words come before what they are
                 // painted. See `ArrowLabelSettings`.
                 if row.id == firstLabelRowID(rows) { ArrowLabelSettings(leadsWithColumn: column) }
+                // ...and a measurement's chip block goes in front of the first
+                // of ITS colour rows, for the same reason.
+                if row.id == firstChipRowID(rows) { MeasureChipSettings(leadsWithColumn: column) }
                 VStack(alignment: .leading, spacing: 6) {
                     PartRowView(row: row, leadsWithColumn: column)
                     // What used to be the arrow's own section, folded under the
-                    // part each control belongs to (`ShapePartSettings`).
+                    // part each control belongs to (`ShapePartSettings`), and
+                    // the same for a measurement's (`MeasurePartSettings`).
                     if Experiments.shared.shapePartsEnabled {
                         ShapePartSettings(row: row)
+                        MeasurePartSettings(row: row)
                     }
                 }
             }
@@ -119,6 +128,16 @@ struct PartsInspector: View {
         rows.first { row in
             guard let slot = row.slot else { return false }
             return slot == .captionFill || slot == .captionBorder || slot == .captionText
+        }?.id
+    }
+
+    /// The first of the chip's three colour rows, which is where a
+    /// measurement's chip block goes in front of. Nil when the picked
+    /// measurement has no readout, so those rows are not there at all.
+    private func firstChipRowID(_ rows: [LayerPartRow]) -> String? {
+        rows.first { row in
+            guard let slot = row.slot else { return false }
+            return slot == .chipFill || slot == .chipBorder || slot == .chipText
         }?.id
     }
 
@@ -278,6 +297,10 @@ private struct PartRowView: View {
             editorState.setColorEnabled(slot: .captionFill, on: on)
         case .captionBorder:
             editorState.setColorEnabled(slot: .captionBorder, on: on)
+        case .chipFill:
+            editorState.setColorEnabled(slot: .chipFill, on: on)
+        case .chipBorder:
+            editorState.setColorEnabled(slot: .chipBorder, on: on)
         case .arrowHead, .shadow, nil:
             // The shadow is not a row in this panel any more; it is an entry in
             // the Effects list under it.

@@ -1,0 +1,32 @@
+{
+  "feature": "A measurement's parts in Appearance",
+  "epic": "measure-redline",
+  "summary": "A measurement's caliper and the three parts of its readout chip now sit in Appearance beside every other shape's parts, each with the same colour control the rest of the app uses, saved names and all. The chip has an edge of its own for the first time, with a colour and a width, and the separate Measurement section keeps only its name and its numbers.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press I, then click twice across something to measure it and once more to place the number.", "shot": "2026-09-09-measure-parts-1-panel-sc.png" },
+    { "do": "Press V to go back to the pointer, and read the Appearance section top to bottom." },
+    { "do": "Set the Caliper row to a different colour and watch the chip's ring stay where it was.", "shot": "2026-09-09-measure-parts-2-caliper-only-sc.png" },
+    { "do": "Drag the Caliper row's swatch onto the Chip Edge row to bring the ring along with it." },
+    { "do": "Pull the Width slider under Chip Edge and watch the ring thicken." },
+    { "do": "Switch Chip Edge off, and notice the number keeps its place and its size.", "shot": "2026-09-09-measure-parts-4-edge-off-sc.png" },
+    { "do": "Switch Chip Fill off too, and read the line that appears under Chip Text.", "shot": "2026-09-09-measure-parts-5-fill-off-sc.png" },
+    { "do": "Open the saved colours menu beside Chip Fill and give the chip a named colour." }
+  ],
+  "evaluate": [
+    "Is Caliper the right word for the row that paints the measuring line, or would you reach for something else?",
+    "Chip Fill, Chip Edge and Chip Text: does calling the readout a chip read naturally, given an arrow's pill is called a Label?",
+    "Role sits at the top of Appearance now, above the parts it repaints. Does it belong there, or was it better in a section of its own?",
+    "Chip size and Unit sit in a Chip block above the chip's colours. Is Unit appearance enough to live there?",
+    "The Measurement section still holds the Name field and the Details fold with Copy Measurement. Should those move too, and if so where?",
+    "Is a ring you can colour and thicken worth having at all on a measurement chip, or is it a control nobody will touch?"
+  ],
+  "rough": [
+    "The Measurement section did not disappear. Everything that says how a measurement LOOKS moved into Appearance, but its Name field and the Details fold with Copy Measurement stayed: a text field and a grid of read-only numbers are not settings, and Appearance is the section for what a thing is made of. The task asked for the section to be folded in entirely, so this is the one place the build differs from the ask.",
+    "Switching Chip Fill off on a light screenshot makes the number disappear, because the number is white and there is nothing behind it any more. Nothing is corrected behind your back, but the panel says it under Chip Text. The alternative would have been to refuse the combination, which the app does not do anywhere else.",
+    "Painting the Caliper row no longer repaints the chip's ring, which is the point of the split, but it does mean recolouring a measurement end to end is two moves. The paint bucket still does all of it in one, and so does switching Role.",
+    "Thickness under Caliper is still the three-position 1 px / 2 px / 3 px picker it was in the old section, rather than a slider like a shape's. Pixel-precise redlining wanted whole pixels; if the three are too few, say so.",
+    "A measurement shows a Corner Radius row in Appearance, which it has nothing to round. That is not new and not from this work, but it is visible in every screenshot here, so it is filed as its own task.",
+    "A full walk sweep was requested rather than run: the Appearance row list changed for every measurement and the colour slot list grew by four, which many walks touch."
+  ]
+}

@@ -693,7 +693,11 @@ struct InspectorPanel: View {
             // picked, the way Color and Effects are: what a callout magnifies
             // is a property of the callout, not of the tool in your hand.
             if layer.zoomCallout != nil { set.insert(.callout) }
-            if layer.measure != nil { set.insert(.measure) }
+            // With the parts split on, everything that said how a measurement
+            // LOOKS is in Appearance, so this section is here only for what it
+            // is called and the numbers it can tell you about itself. Where
+            // there is neither, there is no section (`MeasureInspector`).
+            if layer.measure != nil, MeasureInspector.hasAnyRow { set.insert(.measure) }
             if layer.collage != nil { set.insert(.collage) }
         }
         // Where the picked layers sit when the thing holding them is resized

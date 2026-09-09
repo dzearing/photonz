@@ -649,6 +649,10 @@ extension EditorState {
             // Nothing to arm: a label's colours belong to a pill that already
             // has words in it, so there is no "next one" for a tool to hold.
             break
+        case .chipFill, .chipBorder:
+            // A measurement's colours are the measure tool's own memory rather
+            // than a shape tool's, so they are remembered there instead.
+            rememberMeasureColors(of: ids)
         }
         recordRecentColor(hex: landing.paint.hex)
     }
@@ -665,6 +669,8 @@ extension EditorState {
             switch part {
             case .fill: slots[.fill, default: []].append(id)
             case .arrowHead: slots[.arrowHead, default: []].append(id)
+            case .chipFill: slots[.chipFill, default: []].append(id)
+            case .chipBorder: slots[.chipBorder, default: []].append(id)
             case .captionFill: slots[.captionFill, default: []].append(id)
             case .captionBorder: slots[.captionBorder, default: []].append(id)
             case .shadow: break
@@ -708,13 +714,21 @@ extension EditorState {
         // here: it goes on showing an arrow as one colour, exactly as it always
         // has (`Releases/README.md`, the porting rule runs one way).
         guard !Experiments.shared.shapePartsEnabled else { return slots }
-        return slots.filter { !Self.arrowPartSlots.contains($0) }
+        return slots.filter {
+            !Self.arrowPartSlots.contains($0) && !Self.measurePartSlots.contains($0)
+        }
     }
 
     /// The colours that belong to an arrow's own parts rather than to the
     /// layer as one thing.
     static let arrowPartSlots: Set<ColorSlot> = [.arrowHead, .captionFill,
                                                  .captionBorder, .captionText]
+
+    /// The colours that belong to a measurement's own parts. They join the list
+    /// above in the release WITHOUT the parts split, which goes on setting a
+    /// measurement from its own section exactly as it always has.
+    static let measurePartSlots: Set<ColorSlot> = [.caliper, .chipFill,
+                                                   .chipBorder, .chipText]
 
     /// What the checkbox on a color row reads: offered only where the color can
     /// be absent at all, and on only when every layer it speaks for has one.
@@ -836,8 +850,11 @@ extension EditorState {
         case .fill: guard shape == .rectangle || shape == .ellipse else { return .neverWearsNames }
         // An arrow's head and its label's three are set on a shape already on
         // the canvas, so with nothing picked there is nothing for them to name.
+        // ...and neither does a measurement's, for the same reason: a caliper
+        // is drawn by the measure tool from its own remembered ink.
         case .text, .border, .shadow, .glow,
-             .arrowHead, .captionFill, .captionBorder, .captionText:
+             .arrowHead, .captionFill, .captionBorder, .captionText,
+             .caliper, .chipFill, .chipBorder, .chipText:
             return .neverWearsNames
         }
         return styleWelcome(slot: slot, styleID: styleID)

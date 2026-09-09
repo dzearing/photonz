@@ -58,6 +58,10 @@ public enum MeasureRasterizer {
         let chip = RGBA(hex: measure.chipColorHex) ?? RGBA(r: 1, g: 1, b: 1)
         let chipColor = CGColor(srgbRed: chip.r, green: chip.g, blue: chip.b,
                                 alpha: min(max(measure.chipOpacity, 0), 1))
+        // The chip's ring is its own part now. Fully see-through where it has
+        // been switched off, so a chip with no ring really shows what is behind
+        // it rather than a black hairline.
+        let chipBorder = chipEdgeColor(measure)
         // Caliper lines are ACTUAL image pixels — a "1px" caliper is exactly one
         // image pixel (pixel-precise redlining), NOT scaled up by pixelScale.
         let lineWidth = measure.strokeWidth
@@ -73,7 +77,8 @@ public enum MeasureRasterizer {
         // chip instead of the squared-U caliper.
         if measure.alignment != nil {
             drawAlignmentCheck(measure, geometry: g, pixelScale: pixelScale,
-                               color: color, chipColor: chipColor, in: context)
+                               color: color, chipColor: chipColor,
+                               chipBorder: chipBorder, in: context)
             return context.makeImage()
         }
 
@@ -92,7 +97,8 @@ public enum MeasureRasterizer {
         if measure.showLabel {
             drawPill(labelText, at: plan.center, chipSize: plan.size,
                      fontSize: measure.labelPointSize,
-                     borderWidth: lineWidth, fill: chipColor, border: color,
+                     borderWidth: measure.chipBorderWidth,
+                     fill: chipColor, border: chipBorder,
                      textColorHex: measure.textColorHex, in: context)
         }
 
@@ -108,7 +114,8 @@ public enum MeasureRasterizer {
     /// never on the rows being judged.
     private static func drawAlignmentCheck(_ measure: MeasureContent, geometry g: CaliperGeometry,
                                            pixelScale: CGFloat, color: CGColor,
-                                           chipColor: CGColor, in context: CGContext) {
+                                           chipColor: CGColor, chipBorder: CGColor,
+                                           in context: CGContext) {
         guard let check = measure.alignment else { return }
         let labelText = measure.chipText(pixelScale: pixelScale)
         let plan = labelPlan(measure, geometry: g, text: labelText,
@@ -187,7 +194,8 @@ public enum MeasureRasterizer {
         if measure.showLabel {
             drawPill(labelText, at: plan.center, chipSize: plan.size,
                      fontSize: measure.labelPointSize,
-                     borderWidth: measure.strokeWidth, fill: chipColor, border: color,
+                     borderWidth: measure.chipBorderWidth,
+                     fill: chipColor, border: chipBorder,
                      textColorHex: measure.textColorHex, in: context)
         }
     }
@@ -415,13 +423,12 @@ public enum MeasureRasterizer {
         }
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
-        let ink = RGBA(hex: measure.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         let tone = RGBA(hex: measure.chipColorHex) ?? RGBA(r: 1, g: 1, b: 1)
         drawPill(text, at: CGPoint(x: size.width / 2, y: size.height / 2), chipSize: chip,
-                 fontSize: measure.labelPointSize, borderWidth: measure.strokeWidth,
+                 fontSize: measure.labelPointSize, borderWidth: measure.chipBorderWidth,
                  fill: CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
                                alpha: min(max(measure.chipOpacity, 0), 1)),
-                 border: CGColor(srgbRed: ink.r, green: ink.g, blue: ink.b, alpha: ink.a),
+                 border: chipEdgeColor(measure),
                  textColorHex: measure.textColorHex, in: context)
         return context.makeImage().map { ($0, size) }
     }
@@ -449,6 +456,17 @@ public enum MeasureRasterizer {
     /// border in the caliper's stroke color, and text in the readout color — the
     /// three independently editable measure colors. The capsule itself is the
     /// shared `PillRasterizer` (arrow captions draw the same pill).
+    /// The chip's ring as something Core Graphics can paint: fully see-through
+    /// where the ring has been switched off, so nothing is drawn where nothing
+    /// should be.
+    static func chipEdgeColor(_ measure: MeasureContent) -> CGColor {
+        guard measure.hasChipBorder,
+              let rgba = RGBA(hex: measure.chipBorderColorHex) else {
+            return CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0)
+        }
+        return CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+    }
+
     private static func drawPill(_ string: String, at anchor: CGPoint, chipSize: CGSize,
                                  fontSize: CGFloat, borderWidth: CGFloat, fill: CGColor,
                                  border: CGColor, textColorHex: String, in context: CGContext) {

@@ -81,16 +81,41 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     public var headOffset: CGFloat
     public var mode: MeasureMode
     public var strokeWidth: CGFloat
-    /// The caliper's ink: legs, head line, and the label chip's border.
+    /// The caliper's ink: its legs and its head line.
+    ///
+    /// It used to ring the label chip too. The chip has its own edge now
+    /// (`chipBorderColorHex`), so repainting the caliper leaves the chip alone.
     public var strokeColorHex: String
     /// The label chip's fill. Its alpha lives in `chipOpacity`, NOT in this hex —
     /// `RGBA.hexString` emits six digits and drops alpha, so a `#RRGGBBAA` stored
     /// here would lose its transparency on the first round-trip through a picker.
     public var chipColorHex: String
     /// The label chip fill's alpha, 0 (invisible chip) … 1 (solid). Clamped.
+    ///
+    /// It is also how the chip's fill is switched OFF. An alpha of nothing is
+    /// a chip you see straight through, which is what the row's switch says
+    /// and what the colour well's own alpha slider says: two controls, one
+    /// number, so neither can contradict the other.
     public var chipOpacity: CGFloat
     /// The numeric readout's color.
     public var textColorHex: String
+    /// The ring round the label chip.
+    ///
+    /// It used to have none. The chip was ringed in `strokeColorHex` at
+    /// `strokeWidth`, so a red caliper could not carry a grey-edged chip, and
+    /// repainting the caliper repainted the ring behind you. It is the chip's
+    /// own part now, seeded from exactly what it used to draw so nothing on an
+    /// existing picture moves.
+    public var chipBorderColorHex: String
+    /// How thick that ring is, and ZERO when the chip has no ring at all.
+    ///
+    /// The width is where "off" lives, because that is already what a border
+    /// means everywhere else here: there is no empty border colour, only a
+    /// border with no width (`Layer.setColorHex`). It is also the mark that
+    /// says which measurements were drawn before the chip had an edge of its
+    /// own — see the decoder — because it is the one of the chip's numbers
+    /// that is always written.
+    public var chipBorderWidth: CGFloat
     /// Whether the numeric size readout is drawn. The label is always shown in the
     /// UI now (no toggle); the field stays for internal/legacy use.
     public var showLabel: Bool
@@ -141,6 +166,8 @@ public struct MeasureContent: Hashable, Codable, Sendable {
                 chipColorHex: String = MeasureContent.defaultChipColorHex,
                 chipOpacity: CGFloat = MeasureContent.defaultChipOpacity,
                 textColorHex: String = MeasureContent.defaultStrokeColorHex,
+                chipBorderColorHex: String? = nil,
+                chipBorderWidth: CGFloat? = nil,
                 showLabel: Bool = true,
                 unit: MeasureUnit = .pixels, decimals: Int = 0, labelScale: CGFloat = 1,
                 role: MeasureRole = .size,
@@ -158,6 +185,11 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         self.chipColorHex = chipColorHex
         self.chipOpacity = MeasureContent.clampedOpacity(chipOpacity)
         self.textColorHex = textColorHex
+        // Seeded, not derived: a chip nobody has an opinion about gets the ring
+        // it has always been drawn with — the caliper's ink at the caliper's
+        // thickness — and from that moment the two are apart.
+        self.chipBorderColorHex = chipBorderColorHex ?? strokeColorHex
+        self.chipBorderWidth = max(chipBorderWidth ?? strokeWidth, 0)
         self.showLabel = showLabel
         self.unit = unit
         self.decimals = decimals
@@ -180,12 +212,84 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// Alpha clamped into 0…1 (a picker or a hand-edited document can overshoot).
     static func clampedOpacity(_ value: CGFloat) -> CGFloat { min(max(value, 0), 1) }
 
+    /// Whether there is a ring round the chip at all. Nothing about the chip's
+    /// place or its size changes when there is not — only the ring goes.
+    public var hasChipBorder: Bool { chipBorderWidth > 0 }
+
+    /// Whether the chip's fill is painted at all. An alpha of nothing IS no
+    /// fill: the number is on the picture rather than on a pill.
+    public var hasChipFill: Bool { chipOpacity > 0 }
+
+    /// The width the chip's ring comes back at when it is switched on and
+    /// nothing remembers what it was: the caliper's own thickness, which is
+    /// what it was drawn at before the ring was a part of its own.
+    public var startingChipBorderWidth: CGFloat { max(strokeWidth, 1) }
+
+    /// The chip's fill as ONE colour, alpha and all, for the colour well that
+    /// sets it: to a picker they are one thing, and its alpha slider IS the
+    /// chip's opacity.
+    public var chipFillHexWithAlpha: String {
+        var rgba = RGBA(hex: chipColorHex) ?? RGBA(r: 1, g: 1, b: 1)
+        rgba.a = chipOpacity
+        return rgba.hexStringWithAlpha
+    }
+
+    /// Takes a colour from a well, a saved name, or another row and paints the
+    /// chip's fill with it.
+    ///
+    /// A colour that carries an alpha sets the chip's opacity too, because that
+    /// is what somebody just dragged. A plain six-digit colour LEAVES the
+    /// opacity where it was — a name saved for fills says nothing about how
+    /// see-through this chip should be, and quietly making it solid would undo
+    /// a setting nobody touched — except on a chip with no fill at all, which
+    /// comes back solid because that is what asking to paint it means.
+    public mutating func setChipFillHex(_ hex: String) {
+        guard let rgba = RGBA(hex: hex) else { return }
+        chipColorHex = rgba.hexString
+        let digits = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        if digits.count == 8 {
+            chipOpacity = Self.clampedOpacity(rgba.a)
+        } else if !hasChipFill {
+            chipOpacity = 1
+        }
+    }
+
+    /// What to say under the chip's text row when the number will be hard to
+    /// read, or nil when it will not.
+    ///
+    /// Two different warnings, because they are two different situations. With
+    /// no fill at all the number is sitting straight on the picture, and
+    /// nothing here can see what is under it — but the chip it was on has just
+    /// gone, so saying nothing would leave somebody looking at a measurement
+    /// whose number they cannot find. With a fill, the pair is right here to
+    /// check. Nothing is refused and nothing is corrected behind anybody's
+    /// back either way.
+    public var chipLegibilityNote: String? {
+        guard showLabel else { return nil }
+        guard hasChipFill else {
+            return "With no fill the number sits straight on the picture, "
+                + "so its own colour is the only thing making it readable."
+        }
+        guard let back = RGBA(hex: chipColorHex), let ink = RGBA(hex: textColorHex),
+              chipOpacity > 0.5 else { return nil }
+        let lighter = max(back.relativeLuminance, ink.relativeLuminance) + 0.05
+        let darker = min(back.relativeLuminance, ink.relativeLuminance) + 0.05
+        guard lighter / darker < 3 else { return nil }
+        return "This number will be hard to read on this fill."
+    }
+
+    /// What the chip's edge slider runs between. It never reaches zero: an
+    /// edge with no width is the row's switch, and a slider that can also do
+    /// it would be two answers to one question.
+    public static let chipBorderWidthRange: ClosedRange<CGFloat> = 1...8
+
     enum CodingKeys: String, CodingKey {
         case start, end, headOffset, mode, strokeWidth, showLabel, unit, decimals, labelScale
         case role
         case alignment
         case labelPlacement, labelNudge, labelCrossReach, labelPinned
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
+        case chipBorderColorHex, chipBorderWidth
         // Legacy keys from the pre-caliper measure model (decode-only) and the
         // pre-split single color (decode + a write-only mirror, see `encode`).
         case form, capStyle, colorHex
@@ -204,6 +308,11 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encode(chipColorHex, forKey: .chipColorHex)
         try c.encode(chipOpacity, forKey: .chipOpacity)
         try c.encode(textColorHex, forKey: .textColorHex)
+        try c.encode(chipBorderColorHex, forKey: .chipBorderColorHex)
+        // Always written, even at zero, because it is what tells a later
+        // opening that this chip has an edge of its own rather than one to be
+        // worked out from the caliper.
+        try c.encode(chipBorderWidth, forKey: .chipBorderWidth)
         // Write-only mirror of the pre-split key: a build from before the color
         // split REQUIRES `colorHex`, so keeping it here means an older Photonz can
         // still open documents this one saves (it just sees one color). Never read
@@ -240,6 +349,19 @@ public struct MeasureContent: Hashable, Codable, Sendable {
             ?? Self.defaultChipColorHex
         chipOpacity = Self.clampedOpacity(
             try c.decodeIfPresent(CGFloat.self, forKey: .chipOpacity) ?? Self.defaultChipOpacity)
+        // A measurement drawn before the chip had an edge of its own keeps the
+        // one it drew: the caliper's ink at the caliper's thickness. The WIDTH
+        // is the mark, because it is always written from here on and it is
+        // allowed to be zero, so an absent key can only mean a chip that was
+        // ringed by the caliper.
+        if let chipEdge = try c.decodeIfPresent(CGFloat.self, forKey: .chipBorderWidth) {
+            chipBorderWidth = max(chipEdge, 0)
+            chipBorderColorHex = try c.decodeIfPresent(String.self, forKey: .chipBorderColorHex)
+                ?? strokeColorHex
+        } else {
+            chipBorderWidth = strokeWidth
+            chipBorderColorHex = strokeColorHex
+        }
         showLabel = try c.decode(Bool.self, forKey: .showLabel)
         unit = try c.decode(MeasureUnit.self, forKey: .unit)
         decimals = try c.decode(Int.self, forKey: .decimals)
@@ -532,7 +654,7 @@ extension MeasureContent {
     /// pixel for antialiasing. The builder pads the chip reservation by this,
     /// as `renderPadding` does for the legs.
     public var chipRenderPadding: CGFloat {
-        (strokeWidth / 2 + 1).rounded(.up)
+        (max(strokeWidth, chipBorderWidth) / 2 + 1).rounded(.up)
     }
 
     /// How far drawing can extend past the caliper's point bounding box: half the
@@ -843,7 +965,10 @@ public enum MeasureBuilder {
     /// space while the frame re-pads for any new stroke width.
     public static func restyled(_ layer: Layer, strokeColorHex: String? = nil,
                                 chipColorHex: String? = nil, chipOpacity: CGFloat? = nil,
-                                textColorHex: String? = nil, strokeWidth: CGFloat? = nil,
+                                textColorHex: String? = nil,
+                                chipBorderColorHex: String? = nil,
+                                chipBorderWidth: CGFloat? = nil,
+                                strokeWidth: CGFloat? = nil,
                                 showLabel: Bool? = nil, unit: MeasureUnit? = nil, decimals: Int? = nil,
                                 mode: MeasureMode? = nil, labelScale: CGFloat? = nil,
                                 role: MeasureRole? = nil) -> Layer {
@@ -854,6 +979,8 @@ public enum MeasureBuilder {
         if let chipColorHex { m.chipColorHex = chipColorHex }
         if let chipOpacity { m.chipOpacity = MeasureContent.clampedOpacity(chipOpacity) }
         if let textColorHex { m.textColorHex = textColorHex }
+        if let chipBorderColorHex { m.chipBorderColorHex = chipBorderColorHex }
+        if let chipBorderWidth { m.chipBorderWidth = max(chipBorderWidth, 0) }
         if let strokeWidth { m.strokeWidth = strokeWidth }
         if let showLabel { m.showLabel = showLabel }
         if let unit { m.unit = unit }

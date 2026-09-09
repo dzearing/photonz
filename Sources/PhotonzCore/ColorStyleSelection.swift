@@ -220,9 +220,14 @@ extension ColorSlot {
     /// no fill is words on the picture, a label with no ring is a plain pill —
     /// so they switch exactly the way a box's inside does. Its words cannot:
     /// there is no label with nothing written in it.
+    /// A measurement's readout chip works the same way as an arrow's label:
+    /// its fill and its ring can both be taken off — a chip with no fill is a
+    /// number on the picture, a chip with no ring is a plain pill — and its
+    /// number cannot, because there is no readout with nothing written in it.
+    /// The caliper cannot either: a measurement IS its caliper.
     public var isSwitchable: Bool {
         switch self {
-        case .fill, .captionFill, .captionBorder: return true
+        case .fill, .captionFill, .captionBorder, .chipFill, .chipBorder: return true
         default: return false
         }
     }
@@ -242,6 +247,10 @@ extension ColorSlot {
         case .captionFill: return "Label Fill"
         case .captionBorder: return "Label Edge"
         case .captionText: return "Label Text"
+        case .caliper: return "Caliper"
+        case .chipFill: return "Chip Fill"
+        case .chipBorder: return "Chip Edge"
+        case .chipText: return "Chip Text"
         case .border: return "Border"
         case .shadow: return "Shadow"
         case .glow: return "Glow"

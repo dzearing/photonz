@@ -369,6 +369,7 @@ struct ColorStyleSelectionTests {
         let titles = ColorSlot.allCases.map(\.selectionTitle)
         #expect(titles == ["Fill", "Outline", "Head", "Text",
                            "Label Fill", "Label Edge", "Label Text",
+                           "Caliper", "Chip Fill", "Chip Edge", "Chip Text",
                            "Border", "Shadow", "Glow"])
         #expect(Set(titles).count == titles.count)
     }

@@ -3,8 +3,18 @@
 import PhotonzCore
 import SwiftUI
 
-/// Docked per-layer measure inspector (16.3): unit, label toggle, color, and the
-/// document's pixel scale (so the points readout is correct on a Retina capture).
+/// Docked per-layer measure inspector: what a measurement is CALLED and what it
+/// reads, which is all that is left here.
+///
+/// Everything that says how a measurement LOOKS moved into Appearance on
+/// 2026-09-09, under the part it belongs to: the Role above the parts, the
+/// Thickness under Caliper, the Chip size and the Unit under a Chip block, and
+/// the three swatches replaced by the Caliper, Chip Fill, Chip Edge and Chip
+/// Text rows, each with the same colour control every other part in the app
+/// has (`MeasurePartSettings.swift`). What stays is the Name and the Details
+/// fold, neither of which is a setting.
+///
+/// The release WITHOUT the parts split keeps this section exactly as it was.
 struct MeasureInspector: View {
     @Environment(EditorState.self) private var editorState
     let layer: Layer
@@ -30,6 +40,16 @@ struct MeasureInspector: View {
     private var displayName: String {
         MeasureSpecList.displayName(for: editorState.document?.layer(id: layer.id) ?? layer)
     }
+
+    /// Whether this section has anything left to show. With the parts split on
+    /// and the Measurements panel off there is nothing here at all, and an
+    /// empty heading with a name on it is worse than no section.
+    static var hasAnyRow: Bool {
+        Experiments.shared.measurePanelEnabled || !Experiments.shared.shapePartsEnabled
+    }
+
+    /// Whether the controls that moved into Appearance are still drawn here.
+    private var showsLookControls: Bool { !Experiments.shared.shapePartsEnabled }
 
     var body: some View {
         if let c = content {
@@ -64,7 +84,7 @@ struct MeasureInspector: View {
                 // The mock's Role control (§5, `next-measure-roles`): Size vs
                 // Spacing, each with its own remembered color set. Alignment
                 // guides are their own kind, so they don't offer it.
-                if Experiments.shared.measureRolesEnabled, c.alignment == nil {
+                if showsLookControls, Experiments.shared.measureRolesEnabled, c.alignment == nil {
                     row("Role") {
                         Picker("Role", selection: Binding(
                             get: { c.role },
@@ -78,6 +98,7 @@ struct MeasureInspector: View {
                               + "with the last-used role.")
                     }
                 }
+                if showsLookControls {
                 row("Unit") {
                     Picker("Unit", selection: Binding(
                         get: { c.unit },
@@ -143,6 +164,7 @@ struct MeasureInspector: View {
                 }
                 swatchRow("Text", hex: c.textColorHex) {
                     editorState.setMeasureTextColor($0, commit: true)
+                }
                 }
                 if Experiments.shared.measurePanelEnabled {
                     detailsSection(c)

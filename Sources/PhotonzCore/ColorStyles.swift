@@ -41,6 +41,20 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     case captionBorder
     /// The words in an arrow's label pill.
     case captionText
+    /// A measurement's own ink: its legs and its head line.
+    ///
+    /// Its own case rather than the `stroke` a shape uses, and deliberately:
+    /// a caliper is not a shape's outline, and sharing the case would mean a
+    /// rectangle and a measurement picked together answered one row — which is
+    /// a thing nobody asked for and a change to the release that has no parts
+    /// list at all.
+    case caliper
+    /// The inside of a measurement's readout chip.
+    case chipFill
+    /// The ring round that chip.
+    case chipBorder
+    /// The number written in it.
+    case chipText
     /// The ring a layer's own styling draws around it — the Border in the
     /// Effects section. Last, because it sits over whatever the layer is
     /// rather than saying what the layer is.
@@ -70,6 +84,10 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         case .captionFill: return "Label Fill"
         case .captionBorder: return "Label Edge"
         case .captionText: return "Label Text"
+        case .caliper: return "Caliper"
+        case .chipFill: return "Chip Fill"
+        case .chipBorder: return "Chip Edge"
+        case .chipText: return "Chip Text"
         case .border: return "Border"
         case .shadow: return "Shadow"
         case .glow: return "Glow"
@@ -93,8 +111,12 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         case .fill, .stroke, .border, .arrowHead: return true
         // A label pill is drawn by the pill rasterizer, which paints one flat
         // colour for its inside, one for its ring and one for its words.
+        // A measurement is drawn by the measure rasterizer, which paints one
+        // flat colour for the caliper and one each for the chip's three, so
+        // none of the four is ever offered a ramp that would not land.
         case .text, .shadow, .glow,
-             .captionFill, .captionBorder, .captionText: return false
+             .captionFill, .captionBorder, .captionText,
+             .caliper, .chipFill, .chipBorder, .chipText: return false
         }
     }
 
@@ -105,12 +127,13 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         // A label pill's inside is an area somebody fills, exactly like a box's,
         // so it reaches for the same shelf of saved colours.
-        case .fill, .captionFill: return .surface
+        case .fill, .captionFill, .chipFill: return .surface
         // A shadow is drawn OVER the design rather than filling an area of it,
         // the same as a line and a letter, so it takes the ink shelf: the
         // near-black somebody keeps for hairlines is the one they reach for.
         case .stroke, .text, .border, .shadow, .glow,
-             .arrowHead, .captionBorder, .captionText: return .ink
+             .arrowHead, .captionBorder, .captionText,
+             .caliper, .chipBorder, .chipText: return .ink
         }
     }
 }
@@ -272,6 +295,13 @@ extension Layer {
                 }
             }
         case .text: slots = [.text]
+        case .measure(let measure):
+            // The caliper itself, and then the chip's three — and those only
+            // while there IS a chip. A measurement with its readout hidden has
+            // nothing to fill, so offering it a fill would be a setting for
+            // something that is not on screen.
+            slots = [.caliper]
+            if measure.showLabel { slots += [.chipFill, .chipBorder, .chipText] }
         case .group(let group): slots = group.isFrame ? [.fill] : []
         default: slots = []
         }
@@ -324,6 +354,20 @@ extension Layer {
         case (.captionText, .annotation(let annotation)):
             guard annotation.hasCaption else { return nil }
             return annotation.captionTextHex
+        case (.caliper, .measure(let measure)):
+            return measure.strokeColorHex
+        case (.chipFill, .measure(let measure)):
+            // Nil is a real answer: an alpha of nothing is a chip with no fill,
+            // which is what the row's switch writes.
+            guard measure.showLabel, measure.hasChipFill else { return nil }
+            return measure.chipFillHexWithAlpha
+        case (.chipBorder, .measure(let measure)):
+            // ...and a ring with no width is a chip with no ring.
+            guard measure.showLabel, measure.hasChipBorder else { return nil }
+            return measure.chipBorderColorHex
+        case (.chipText, .measure(let measure)):
+            guard measure.showLabel else { return nil }
+            return measure.textColorHex
         case (.text, .text(let text)):
             return text.colorHex
         case (.border, _):
@@ -406,6 +450,11 @@ extension Layer {
         case (.captionFill, .annotation(let annotation)):
             return annotation.captionChipColor.hexString
         case (.captionBorder, .annotation(let annotation)): return annotation.colorHex
+        // A chip part switched back on returns to what it was drawn as rather
+        // than to a colour nobody chose: its fill comes back at the hue it kept
+        // while it was off, and its ring in the colour it is already stored in.
+        case (.chipFill, .measure(let measure)): return measure.chipColorHex
+        case (.chipBorder, .measure(let measure)): return measure.chipBorderColorHex
         default: return colorHex(for: slot)
         }
     }
@@ -445,6 +494,38 @@ extension Layer {
             guard let hex else { return }
             annotation.captionTextColorHex = hex
             content = .annotation(annotation)
+        case (.caliper, .measure(var measure)):
+            guard let hex else { return }
+            measure.strokeColorHex = hex
+            content = .measure(measure)
+        case (.chipFill, .measure(var measure)):
+            // Nil is a real answer here, the way it is for a box's inside: the
+            // Chip Fill switch writes exactly this, and it is said as an alpha
+            // of nothing because that is what "no chip" has always meant.
+            guard let hex else {
+                measure.chipOpacity = 0
+                content = .measure(measure)
+                return
+            }
+            measure.setChipFillHex(hex)
+            content = .measure(measure)
+        case (.chipBorder, .measure(var measure)):
+            guard let hex else {
+                measure.chipBorderWidth = 0
+                content = .measure(measure)
+                return
+            }
+            measure.chipBorderColorHex = hex
+            // Painting a ring that is not there gives it one, which is what
+            // somebody letting a colour go on the row just asked for.
+            if !measure.hasChipBorder { measure.chipBorderWidth = measure.startingChipBorderWidth }
+            content = .measure(measure)
+        case (.chipText, .measure(var measure)):
+            // The number is always written in something; there is no readout
+            // with invisible digits.
+            guard let hex else { return }
+            measure.textColorHex = hex
+            content = .measure(measure)
         case (.text, .text):
             // Through the text builder, so repainting text keeps the contrast
             // halo that every other way of coloring text maintains.

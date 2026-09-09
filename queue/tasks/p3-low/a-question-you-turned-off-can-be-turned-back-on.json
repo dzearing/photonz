@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 30,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T21:50:13.465Z",
-  "updated": "2026-09-09T12:22:12.412Z",
+  "updated": "2026-09-09T14:03:06.393Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed 2026-09-08 by the pass that wrote the rule this breaks: UX-PATTERNS section 3, Panels and surfaces, \"The question you can silence\", which requires a way back and records that nothing ships one.\n\nThe only silenceable question today is Turn Into Picture: Sources/PhotonzCore/RasterizePrompt.swift holds the words, Sources/Photonz/EditorState+LayerOps.swift:217 holds the answer at UserDefaults key photonz.turnIntoPicture.dontAsk (per app bundle, so dev, probe and release each keep their own). Not reproduced as a defect because there is nothing to reproduce: the code has one setter and no reader anywhere else and no UI reaches it. Verified by grep, not by a walk.\n\nOPEN UX QUESTION for whoever takes this, worth a decision card rather than a guess: where the list lives. Photonz has no Settings window today; the candidates are a new Settings pane, a section in the Experiments window (which is a developer surface, so probably wrong for a normal person), or offering it back inline the next time the command runs. Also worth deciding whether the list names one question or is written to hold the ten it will have in a year.\n\nPARKED at p3-low by the 2026-09-09 triage pass. It serves the design-system epic, which is staged next rather than now, and it does not unblock the focus. It is a real hole and the rule it was filed against still stands; it comes back up when design-system is staged.",
@@ -75,6 +75,10 @@
     {
       "t": "2026-09-09T12:22:12.411Z",
       "note": "seq 2090 -> 30"
+    },
+    {
+      "t": "2026-09-09T14:03:06.392Z",
+      "note": "decision \"Where do you go to turn a question back on after you told Photonz not to ask it again?\" resolved: A Settings window"
     }
   ],
   "started": "2026-09-08T22:02:53.550Z"

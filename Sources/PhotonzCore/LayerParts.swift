@@ -35,6 +35,15 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     case captionFill
     /// The ring round that pill.
     case captionBorder
+    /// The inside of the readout chip on a measurement.
+    ///
+    /// The same part an arrow's label has, on the other thing in the app that
+    /// draws a pill. It is a case of its own rather than the arrow's because a
+    /// measurement stores its chip differently, and because a measurement and
+    /// an arrow picked together should answer two rows and not one.
+    case chipFill
+    /// The ring round that chip.
+    case chipBorder
     /// What the layer throws behind it.
     ///
     /// A shadow is no longer a row in Appearance: it is something you ADD, so
@@ -51,6 +60,8 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
         case .arrowHead: return "Head"
         case .captionFill: return "Label Fill"
         case .captionBorder: return "Label Edge"
+        case .chipFill: return "Chip Fill"
+        case .chipBorder: return "Chip Edge"
         case .shadow: return "Shadow"
         }
     }
@@ -60,8 +71,8 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     /// sentence cannot end up saying "a outline".
     public var article: String {
         switch self {
-        case .fill, .shadow, .captionFill, .arrowHead: return "a"
-        case .captionBorder: return "an"
+        case .fill, .shadow, .captionFill, .arrowHead, .chipFill: return "a"
+        case .captionBorder, .chipBorder: return "an"
         }
     }
 
@@ -361,6 +372,38 @@ extension PhotonzDocument {
                 switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
         }
 
+        // A measurement's own parts, in the same order and with the same
+        // manners as an arrow's: the caliper it IS, then the chip's three. The
+        // chip's rows are here only while there is a chip to paint — a
+        // measurement with its readout hidden shows the caliper alone.
+        let calipered = picked.filter { $0.colorSlots.contains(.caliper) }
+        if !calipered.isEmpty {
+            rows.append(LayerPartRow(
+                part: nil, colors: [PartColor(slot: .caliper, layerIDs: calipered.map(\.id))],
+                title: ColorSlot.caliper.title,
+                switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
+        }
+        for part in [LayerPart.chipFill, LayerPart.chipBorder] {
+            let slot: ColorSlot = part == .chipFill ? .chipFill : .chipBorder
+            let chipped = picked.filter { $0.colorSlots.contains(slot) }
+            guard !chipped.isEmpty else { continue }
+            rows.append(LayerPartRow(
+                part: part, colors: [PartColor(slot: slot, layerIDs: chipped.map(\.id))],
+                title: part.title,
+                switchIDs: chipped.map(\.id),
+                onCount: chipped.filter { $0.colorHex(for: slot) != nil }.count,
+                widthIDs: part == .chipBorder ? chipped.map(\.id) : [],
+                selectionCount: count))
+        }
+        // The number is always written in something, so no switch.
+        let numbered = picked.filter { $0.colorSlots.contains(.chipText) }
+        if !numbered.isEmpty {
+            rows.append(LayerPartRow(
+                part: nil, colors: [PartColor(slot: .chipText, layerIDs: numbered.map(\.id))],
+                title: ColorSlot.chipText.title,
+                switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
+        }
+
         // A letter's ink. Always there, so no switch.
         let lettered = picked.filter { $0.colorSlots.contains(.text) }
         if !lettered.isEmpty {
@@ -432,8 +475,14 @@ extension PhotonzDocument {
                     $0.unbindColorStyle(for: .arrowHead)
                     $0.setPaint(paint, for: .arrowHead)
                 }
-            case .captionFill, .captionBorder:
-                let slot: ColorSlot = part == .captionFill ? .captionFill : .captionBorder
+            case .captionFill, .captionBorder, .chipFill, .chipBorder:
+                let slot: ColorSlot
+                switch part {
+                case .captionFill: slot = .captionFill
+                case .captionBorder: slot = .captionBorder
+                case .chipFill: slot = .chipFill
+                default: slot = .chipBorder
+                }
                 guard layer.colorSlots.contains(slot) else { continue }
                 updateLayer(id: id) {
                     $0.unbindColorStyle(for: slot)

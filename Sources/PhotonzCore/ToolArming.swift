@@ -118,8 +118,12 @@ public extension AnnotationStyles {
         // label's three are set on a shape that is already on the canvas, so a
         // tool holding one would be arming a colour for a label nobody has
         // typed yet.
+        // ...and neither is any of a measurement's, which the measure tool
+        // remembers for itself in `MeasureStyles` rather than through the
+        // shape tool's arming.
         case .text, .border, .shadow, .glow,
-             .arrowHead, .captionFill, .captionBorder, .captionText:
+             .arrowHead, .captionFill, .captionBorder, .captionText,
+             .caliper, .chipFill, .chipBorder, .chipText:
             return
         }
         // After the paint, never before: painting a slot is exactly how a tool

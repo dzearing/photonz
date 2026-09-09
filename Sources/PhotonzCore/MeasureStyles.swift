@@ -1,12 +1,12 @@
 import CoreGraphics
 import Foundation
 
-/// One measurement role's remembered ink (§5, `next-measure-roles`): the four
+/// One measurement role's remembered ink (§5, `next-measure-roles`): the five
 /// color fields a caliper draws with. `MeasureStyles` keeps one of these per
 /// `MeasureRole`, so switching a measurement's role applies that role's set and
 /// style edits absorb into the edited role's memory only.
 public struct MeasureRoleColors: Equatable, Codable, Sendable {
-    /// Caliper ink: legs, head line, and the chip's border.
+    /// Caliper ink: its legs and its head line.
     public var strokeColorHex: String
     /// The label chip's fill.
     public var chipColorHex: String
@@ -16,13 +16,20 @@ public struct MeasureRoleColors: Equatable, Codable, Sendable {
     }
     /// The numeric readout's color.
     public var textColorHex: String
+    /// The ring round the chip. Nil means the chip is remembered with no ring
+    /// at all, which is what a chip whose edge was switched off absorbs.
+    public var chipBorderColorHex: String?
 
     public init(strokeColorHex: String, chipColorHex: String,
-                chipOpacity: CGFloat = 1, textColorHex: String = "#FFFFFF") {
+                chipOpacity: CGFloat = 1, textColorHex: String = "#FFFFFF",
+                chipBorderColorHex: String? = nil) {
         self.strokeColorHex = strokeColorHex
         self.chipColorHex = chipColorHex
         self.chipOpacity = MeasureContent.clampedOpacity(chipOpacity)
         self.textColorHex = textColorHex
+        // A set with nothing said about the ring rings the chip in its own ink,
+        // which is what every caliper drew before the ring was a part of its own.
+        self.chipBorderColorHex = chipBorderColorHex ?? strokeColorHex
     }
 
     /// The shipped redliner set — what Size measurements (and every pre-roles
@@ -32,6 +39,12 @@ public struct MeasureRoleColors: Equatable, Codable, Sendable {
     /// The mock's Spacing set: blue ink, solid darker-blue chip, white numbers.
     public static let spacingDefault = MeasureRoleColors(strokeColorHex: "#0A84FF",
                                                          chipColorHex: "#1B3A66")
+
+    /// Spelled out because both halves of the coding are written by hand now,
+    /// so nothing is synthesised to hang them on.
+    enum CodingKeys: String, CodingKey {
+        case strokeColorHex, chipColorHex, chipOpacity, textColorHex, chipBorderColorHex
+    }
 
     /// Tolerant like `MeasureStyles`: a blob from a build that predates a field
     /// fills that field in (from the red set) rather than dropping the memory.
@@ -43,7 +56,27 @@ public struct MeasureRoleColors: Equatable, Codable, Sendable {
                 ?? d.strokeColorHex,
             chipColorHex: try c.decodeIfPresent(String.self, forKey: .chipColorHex) ?? d.chipColorHex,
             chipOpacity: try c.decodeIfPresent(CGFloat.self, forKey: .chipOpacity) ?? d.chipOpacity,
-            textColorHex: try c.decodeIfPresent(String.self, forKey: .textColorHex) ?? d.textColorHex)
+            textColorHex: try c.decodeIfPresent(String.self, forKey: .textColorHex) ?? d.textColorHex,
+            // A remembered set written before the chip had a ring of its own
+            // rings it in that set's ink, which is what it drew.
+            chipBorderColorHex: c.contains(.chipBorderColorHex)
+                ? try c.decodeIfPresent(String.self, forKey: .chipBorderColorHex)
+                : nil)
+    }
+
+    /// Written by hand so a ring switched OFF stays off: the synthesised
+    /// encoder drops a nil, and an absent key means "ring it in the ink" here.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(strokeColorHex, forKey: .strokeColorHex)
+        try c.encode(chipColorHex, forKey: .chipColorHex)
+        try c.encode(chipOpacity, forKey: .chipOpacity)
+        try c.encode(textColorHex, forKey: .textColorHex)
+        if let chipBorderColorHex {
+            try c.encode(chipBorderColorHex, forKey: .chipBorderColorHex)
+        } else {
+            try c.encodeNil(forKey: .chipBorderColorHex)
+        }
     }
 }
 
@@ -69,6 +102,10 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     /// Spacing's remembered ink (the mock's blue set until tuned).
     public var spacingColors: MeasureRoleColors
     public var strokeWidth: CGFloat
+    /// How thick the readout chip's ring is, shared across roles the way the
+    /// caliper's own thickness is. Zero means the next caliper's chip has no
+    /// ring at all.
+    public var chipBorderWidth: CGFloat
     /// The label's size in image pixels — what the inspector's slider shows —
     /// clamped to `MeasureContent.labelSizeRangePx`. Stored in pixels rather than
     /// as a scale so the remembered value means the same thing the UI displayed.
@@ -91,6 +128,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
                 sizeColors: MeasureRoleColors = .sizeDefault,
                 spacingColors: MeasureRoleColors = .spacingDefault,
                 strokeWidth: CGFloat = 2,
+                chipBorderWidth: CGFloat? = nil,
                 labelSizePx: CGFloat = 20,
                 // Logical points, not raw bitmap pixels: redlining a UI expects
                 // on-screen (design) sizes, and a 2× Retina screenshot's raw
@@ -104,6 +142,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         self.sizeColors = sizeColors
         self.spacingColors = spacingColors
         self.strokeWidth = strokeWidth
+        self.chipBorderWidth = max(chipBorderWidth ?? strokeWidth, 0)
         self.labelSizePx = Self.clampedLabelSize(labelSizePx)
         self.unit = unit
         self.decimals = decimals
@@ -156,7 +195,8 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case role, sizeColors, spacingColors
-        case strokeWidth, labelSizePx, unit, decimals, layerStyle, snapsToCenters
+        case strokeWidth, chipBorderWidth
+        case labelSizePx, unit, decimals, layerStyle, snapsToCenters
         // Pre-roles flat color keys: decoded to seed the Size memory (the only
         // set that existed), and mirrored on encode so an older build reading
         // this blob still sees the active colors.
@@ -190,6 +230,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
             spacingColors: try c.decodeIfPresent(MeasureRoleColors.self, forKey: .spacingColors)
                 ?? d.spacingColors,
             strokeWidth: try c.decodeIfPresent(CGFloat.self, forKey: .strokeWidth) ?? d.strokeWidth,
+            chipBorderWidth: try c.decodeIfPresent(CGFloat.self, forKey: .chipBorderWidth),
             labelSizePx: try c.decodeIfPresent(CGFloat.self, forKey: .labelSizePx) ?? d.labelSizePx,
             unit: try c.decodeIfPresent(MeasureUnit.self, forKey: .unit) ?? d.unit,
             decimals: try c.decodeIfPresent(Int.self, forKey: .decimals) ?? d.decimals,
@@ -204,6 +245,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         try c.encode(sizeColors, forKey: .sizeColors)
         try c.encode(spacingColors, forKey: .spacingColors)
         try c.encode(strokeWidth, forKey: .strokeWidth)
+        try c.encode(chipBorderWidth, forKey: .chipBorderWidth)
         try c.encode(labelSizePx, forKey: .labelSizePx)
         try c.encode(unit, forKey: .unit)
         try c.encode(decimals, forKey: .decimals)
@@ -232,6 +274,11 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         return MeasureContent(mode: .horizontal, strokeWidth: strokeWidth,
                               strokeColorHex: ink.strokeColorHex, chipColorHex: ink.chipColorHex,
                               chipOpacity: ink.chipOpacity, textColorHex: ink.textColorHex,
+                              chipBorderColorHex: ink.chipBorderColorHex ?? ink.strokeColorHex,
+                              // A ring the memory has switched off comes out
+                              // switched off, which is the whole point of
+                              // remembering the last one you tuned.
+                              chipBorderWidth: ink.chipBorderColorHex == nil ? 0 : chipBorderWidth,
                               showLabel: true, unit: unit, decimals: decimals,
                               labelScale: labelScale, role: role)
     }
@@ -246,8 +293,10 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
             $0.chipColorHex = content.chipColorHex
             $0.chipOpacity = content.chipOpacity
             $0.textColorHex = content.textColorHex
+            $0.chipBorderColorHex = content.hasChipBorder ? content.chipBorderColorHex : nil
         }
         strokeWidth = content.strokeWidth
+        if content.hasChipBorder { chipBorderWidth = content.chipBorderWidth }
         labelSizePx = content.labelPointSize
         unit = content.unit
         decimals = content.decimals

@@ -249,7 +249,81 @@ Two things did not go where the original report asked, and both are deliberate:
   fixed place, so adding to the selection widens what a row answers for and
   never moves it.
 
+## A measurement's parts (2026-09-09)
+
+A measurement kept its looks in a section of its own, with three swatches that
+were not the colour control the rest of the app uses: they could not take a
+saved name, could not be dropped on, and had no menu of the colours already in
+the document. Its chip had no edge to colour at all — the ring was simply the
+caliper's ink at the caliper's thickness — so a red caliper could not carry a
+grey-ringed chip, and repainting the caliper repainted the ring behind you.
+
+Now a measurement is four parts, in Appearance, in this order, with its Role
+above them and the caliper's own settings under it:
+
+| Row | Switch | Its settings |
+| --- | --- | --- |
+| *(Role, above the list)* | none, two positions | — |
+| **Caliper** | none, a measurement IS its caliper | Thickness |
+| **Chip** | none, it is what the chip reads | Chip size, Unit |
+| **Chip Fill** | yes | — |
+| **Chip Edge** | yes | Width |
+| **Chip Text** | none, a number is always written in something | — |
+
+The same three rules an arrow's parts earned, applied here:
+
+- **The chip's rows appear only once there IS a chip.** A measurement with its
+  readout hidden shows the Caliper row and nothing else, so the panel never
+  offers a fill for something that is not on screen.
+- **A row switched off shows nothing under it.** The first build left the Chip
+  Edge's Width slider sitting there reading 1 px under a switch that had just
+  been turned off; the walk's screenshot caught it.
+- **The chip's ring is SEEDED, not derived.** A measurement drawn before the
+  ring was a part of its own opens with the ring it drew: the caliper's colour,
+  at the caliper's thickness. After that the two are apart.
+
+### Off is said in the units the thing already had
+
+An arrow's label fill is a `Paint?` and nil means no fill. A measurement's chip
+already had two numbers that said the same thing in its own words, so it keeps
+them rather than growing a third:
+
+- **No chip fill is `chipOpacity == 0`.** That is what "no chip" has always
+  meant here, and it is what the colour well's own alpha slider writes, so the
+  switch and the slider can never contradict each other.
+- **No chip ring is `chipBorderWidth == 0`.** That is what a border means
+  everywhere else in the app: there is no empty border colour, only a border
+  with no width. It is also the mark that says which measurements predate the
+  ring, because it is always written and it is allowed to be zero.
+
+Switching either back on returns it to what it was: the fill to the hue it kept
+while it was off, the ring to the caliper's own thickness.
+
+### What the chip guaranteed, and what it says instead
+
+The chip could not be made illegible: the number was white on a dark pill and
+neither could be chosen. Both can now, and taking the fill away leaves the
+number sitting on the picture — which, on a light screenshot with white
+numbers, means it vanishes. Nothing is refused and nothing is corrected behind
+anybody's back; the panel says it, under Chip Text:
+
+- with no fill: "With no fill the number sits straight on the picture, so its
+  own colour is the only thing making it readable."
+- with a fill the number cannot be read on: "This number will be hard to read
+  on this fill."
+
+### What did not move
+
+The Measurement section is still there, holding its **Name** and the **Details**
+fold with **Copy Measurement**. Neither says how a measurement looks — one is
+what it is called, the other is a grid of read-only numbers — and Appearance is
+the section for what a thing is MADE OF. Putting them there to empty the section
+would have broken the rule the move exists to apply. With the Measurements panel
+switched off there is nothing left in it and the section does not appear at all.
+
 ### Where the code is
+
+
 
 - `PhotonzCore/LayerParts.swift` — the model: what a part is, which parts a
   selection has, and switching the outline on and off. Tested in
@@ -920,6 +994,14 @@ words are then sitting on the picture and nothing in the model can see that.
   own section, and the table of where each control went.
 - `Scripts/playtest/arrow-parts-walk.json` — the whole thing walked, with a real
   screenshot at each stage.
+- `PhotonzCore/Measure.swift` — `MeasureContent.chipBorderColorHex`,
+  `chipBorderWidth`, `hasChipFill`, `hasChipBorder`, `chipLegibilityNote`, and
+  the decoder that migrates a measurement drawn before the chip had a ring of
+  its own. Tested in `Tests/PhotonzCoreTests/MeasurePartsTests.swift`.
+- `Photonz/MeasurePartSettings.swift` — the drawers and the Chip block that used
+  to be the Measurement section, and the table of where each control went.
+- `Scripts/playtest/measure-parts-walk.json` — the whole thing walked, with a
+  real screenshot at each stage.
 
 ### What is rough, as built
 

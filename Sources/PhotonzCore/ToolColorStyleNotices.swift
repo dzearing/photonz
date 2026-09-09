@@ -92,6 +92,10 @@ public struct ToolColorStyleNotice: Hashable, Sendable {
         case .arrowHead: return "arrowheads"
         case .captionFill: return "label fills"
         case .captionBorder: return "label edges"
+        case .caliper: return "calipers"
+        case .chipFill: return "chip fills"
+        case .chipBorder: return "chip edges"
+        case .chipText: return "chip text"
         }
     }
 

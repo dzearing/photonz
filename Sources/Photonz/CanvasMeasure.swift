@@ -617,10 +617,12 @@ extension CanvasNSView {
         probe.apply(plan)
         let readout = probe.labelRect(chipSize: probe.estimatedLabelSize)
         let built = MeasureBuilder.layer(content: content, from: start, to: end)
-        let key = "\(mode.rawValue)|\(start)|\(end)|\(style.unit.rawValue)|\(style.decimals)|"
-            + "\(style.strokeColorHex)|\(style.chipColorHex)|\(style.textColorHex)|"
-            + "\(style.labelScale)|\(style.strokeWidth)|\(pixelScale)|"
-            + "\(plan.placement.rawValue)|\(plan.nudge)|\(plan.crossReach)"
+        let chipEdge = style.chipBorderColorHex
+        var key = "\(mode.rawValue)|\(start)|\(end)|\(style.unit.rawValue)|\(style.decimals)|"
+        key += "\(style.strokeColorHex)|\(style.chipColorHex)|\(style.textColorHex)|"
+        key += "\(chipEdge)|\(style.chipBorderWidth)|"
+        key += "\(style.labelScale)|\(style.strokeWidth)|\(pixelScale)|"
+        key += "\(plan.placement.rawValue)|\(plan.nudge)|\(plan.crossReach)"
         if sprite?.key != key {
             guard let measure = built.measure,
                   let image = MeasureRasterizer.rasterize(measure, size: built.frame.size,
@@ -674,7 +676,8 @@ extension CanvasNSView {
         let bake = max(1, viewport.zoom * (window?.backingScaleFactor ?? 2))
         let key = "\(content.chipText(pixelScale: pixelScale))|\(content.labelScale)|"
             + "\(content.strokeWidth)|\(content.strokeColorHex)|\(content.chipColorHex)|"
-            + "\(content.textColorHex)|\(content.chipOpacity)|\(bake)"
+            + "\(content.textColorHex)|\(content.chipOpacity)|"
+            + "\(content.chipBorderColorHex)|\(content.chipBorderWidth)|\(bake)"
         if key != measureReadoutPreviewKey {
             guard let baked = MeasureRasterizer.readoutPill(content, pixelScale: pixelScale,
                                                             scale: bake) else {

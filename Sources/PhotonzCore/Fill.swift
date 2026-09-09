@@ -40,9 +40,14 @@ public enum Fill {
             text.colorHex = colorHex
             filled.content = .text(text)
         case .measure(var measure):
-            // A measure's "color" is its ink: outline + readout. The chip fill is
-            // its own inspector control, so the bucket leaves it alone.
+            // A measure's "color" is its ink: the caliper, the ring round its
+            // chip, and the readout. The bucket means "make this thing this
+            // colour", which is a different gesture from the Caliper row in
+            // Appearance: that one sets the caliper and leaves the chip's ring
+            // where it was. The chip's FILL is left alone either way, the same
+            // as an arrow's label pill.
             measure.strokeColorHex = colorHex
+            measure.chipBorderColorHex = colorHex
             measure.textColorHex = colorHex
             filled.content = .measure(measure)
         case .collage(var collage):

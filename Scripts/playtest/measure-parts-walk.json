@@ -1,0 +1,261 @@
+{
+  "out": "/tmp/photonz-playtest/measure-parts",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 15
+    },
+    {
+      "do": "measureMode",
+      "mode": "distance"
+    },
+    {
+      "do": "click",
+      "at": [
+        280,
+        700
+      ]
+    },
+    {
+      "do": "move",
+      "at": [
+        560,
+        700
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        560,
+        700
+      ]
+    },
+    {
+      "do": "move",
+      "at": [
+        560,
+        640
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        560,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-measurement",
+      "note": "one section says how the measurement looks. Appearance lists Role, Caliper with its Thickness, a Chip block with its size and its unit, and then Chip Fill, Chip Edge and Chip Text. The Measurement section under it keeps only the name and the details fold."
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Caliper",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Chip Fill",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Chip Edge",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Color",
+      "in": "Chip Text",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Chip size",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Slider",
+      "in": "Width",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "measurement"
+    },
+    {
+      "do": "snapshot",
+      "name": "measure-parts-1-panel"
+    },
+    {
+      "do": "describe",
+      "stage": "2-caliper-only",
+      "note": "painting the CALIPER leaves the chip's ring the colour it was drawn in. One swatch used to drive both."
+    },
+    {
+      "do": "action",
+      "action": "paintSelectionColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "render",
+      "name": "measure-parts-2-caliper-only"
+    },
+    {
+      "do": "snapshot",
+      "name": "measure-parts-2-caliper-only"
+    },
+    {
+      "do": "describe",
+      "stage": "3-edge-follows",
+      "note": "carrying the caliper's colour onto the Chip Edge row brings the ring with it, in one move one undo puts back."
+    },
+    {
+      "do": "dragColor",
+      "from": "Caliper",
+      "onto": "Chip Edge",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "render",
+      "name": "measure-parts-3-edge-follows"
+    },
+    {
+      "do": "snapshot",
+      "name": "measure-parts-3-edge-follows"
+    },
+    {
+      "do": "describe",
+      "stage": "4-edge-off",
+      "note": "the chip's ring switched off. The number keeps its place, its size and its fill: only the ring goes."
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Chip Edge"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Chip Edge",
+      "reads": "Chip Edge, off"
+    },
+    {
+      "do": "render",
+      "name": "measure-parts-4-edge-off"
+    },
+    {
+      "do": "snapshot",
+      "name": "measure-parts-4-edge-off"
+    },
+    {
+      "do": "describe",
+      "stage": "5-fill-off",
+      "note": "and the chip's fill switched off too, so the number sits straight on the picture."
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Chip Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Chip Fill",
+      "reads": "Chip Fill, off"
+    },
+    {
+      "do": "panel",
+      "stage": "fill-off"
+    },
+    {
+      "do": "render",
+      "name": "measure-parts-5-fill-off"
+    },
+    {
+      "do": "snapshot",
+      "name": "measure-parts-5-fill-off"
+    },
+    {
+      "do": "describe",
+      "stage": "6-fill-back",
+      "note": "switching the fill back on brings back the hue it kept while it was off, rather than a colour nobody chose."
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Chip Fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Chip Fill",
+      "reads": "Chip Fill, on"
+    },
+    {
+      "do": "render",
+      "name": "measure-parts-6-fill-back"
+    },
+    {
+      "do": "snapshot",
+      "name": "measure-parts-6-fill-back"
+    }
+  ]
+}

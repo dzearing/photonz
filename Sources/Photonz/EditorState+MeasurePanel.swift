@@ -176,13 +176,28 @@ extension EditorState {
         }
     }
 
-    /// The caliper's ink: legs, head line, and the chip's border. Absorbs into
-    /// the edited measurement's ROLE memory (§5), so retuning a Spacing caliper
+    /// The caliper's ink: legs, head line, AND the chip's ring. Absorbs into the
+    /// edited measurement's ROLE memory (§5), so retuning a Spacing caliper
     /// never repaints what the next Size caliper starts as.
+    ///
+    /// This is the Stroke swatch in the Measurement section, which only the
+    /// release WITHOUT the parts split still draws, and there the one swatch has
+    /// always painted the chip's ring too. It goes on doing exactly that, so
+    /// nothing about that release changes now that the ring is stored rather
+    /// than worked out. The release WITH the split sets the caliper from its own
+    /// Caliper row, which leaves the ring alone — that is the whole point of the
+    /// parts, and the paint bucket is still the way to say "all of it".
     func setMeasureStrokeColor(_ hex: String, commit: Bool) {
         let role = editedMeasureRole
-        updateMeasureStyles { $0.updateColors(for: role) { $0.strokeColorHex = hex } }
-        applyMeasureRestyle { MeasureBuilder.restyled($0, strokeColorHex: hex) }
+        updateMeasureStyles {
+            $0.updateColors(for: role) {
+                $0.strokeColorHex = hex
+                $0.chipBorderColorHex = hex
+            }
+        }
+        applyMeasureRestyle {
+            MeasureBuilder.restyled($0, strokeColorHex: hex, chipBorderColorHex: hex)
+        }
         if commit { recordRecentColor(hex: hex) }
     }
 
@@ -205,6 +220,68 @@ extension EditorState {
         updateMeasureStyles { $0.updateColors(for: role) { $0.textColorHex = hex } }
         applyMeasureRestyle { MeasureBuilder.restyled($0, textColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
+    }
+
+    // MARK: What a part row in Appearance sets
+
+    /// Restyles EVERY measurement a row speaks for, in one undo step.
+    ///
+    /// The measure section only ever spoke for the one measurement that was
+    /// picked, because that is all it could show. A row in Appearance speaks
+    /// for the whole selection like every other row there, so two calipers
+    /// picked together take one pull on Thickness rather than two.
+    private func applyMeasureRestyle(ids: [UUID], _ restyle: (Layer) -> Layer) {
+        let targets = ids.filter { document?.layer(id: $0)?.measure != nil }
+        guard !targets.isEmpty else { return }
+        perform { doc in
+            for id in targets {
+                guard let layer = doc.layer(id: id) else { continue }
+                let updated = restyle(layer)
+                doc.updateLayer(id: id) { $0 = updated }
+            }
+        }
+    }
+
+    /// The caliper's thickness, for every measurement the Caliper row reaches.
+    func setMeasureThickness(ids: [UUID], _ width: CGFloat) {
+        updateMeasureStyles { $0.strokeWidth = width }
+        applyMeasureRestyle(ids: ids) { MeasureBuilder.restyled($0, strokeWidth: width) }
+    }
+
+    /// How thick the ring round the chip is, live under the hand.
+    func previewMeasureChipBorderWidth(ids: [UUID], _ width: CGFloat) {
+        guard var doc = document else { return }
+        let targets = ids.filter { doc.layer(id: $0)?.measure != nil }
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        var moves: [UUID: CGRect] = [:]
+        for id in targets {
+            guard let layer = doc.layer(id: id) else { continue }
+            let updated = MeasureBuilder.restyled(layer, chipBorderWidth: width)
+            doc.updateLayer(id: id) { $0 = updated }
+            if let frame = doc.canvasLayer(id: id)?.frame { moves[id] = frame }
+        }
+        previewMoves = moves
+        submit(doc)
+    }
+
+    /// Letting go of it: one undo step, and the width the next chip starts at.
+    func commitMeasureChipBorderWidth(ids: [UUID], _ width: CGFloat) {
+        previewMoves = [:]
+        updateMeasureStyles { $0.chipBorderWidth = width }
+        applyMeasureRestyle(ids: ids) { MeasureBuilder.restyled($0, chipBorderWidth: width) }
+    }
+
+    /// Files whatever these measurements are wearing under their own roles, so
+    /// the next caliper starts there. Called after a colour lands on one of a
+    /// measurement's part rows, which is the one path into a measurement's ink
+    /// that does not come through a setter of its own.
+    func rememberMeasureColors(of ids: [UUID]) {
+        guard let document else { return }
+        for id in ids {
+            guard let content = document.layer(id: id)?.measure else { continue }
+            updateMeasureStyles { $0.absorb(content) }
+        }
     }
 
     /// Mutate the measure tool's remembered style and persist it — every measure

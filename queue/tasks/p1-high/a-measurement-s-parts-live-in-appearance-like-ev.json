@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 6,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:59:46.357Z",
-  "updated": "2026-09-09T12:59:46.397Z",
+  "updated": "2026-09-09T14:07:23.274Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09, straight after the same request for arrows, so the two should share one shape rather than each inventing theirs; read an-arrow-s-parts-live-in-appearance-each-with-it and follow it. A measurement is further along than an arrow: MeasureContent already stores strokeColorHex, chipColorHex, chipOpacity and textColorHex (Sources/PhotonzCore/Measure.swift lines 85 to 93) plus strokeWidth and labelScale, so most colours exist and are not derived. Two gaps. The chip has no border colour or width at all, unlike the arrow's caption which derives one from the stroke, so that is the model addition here. And the panel does not use the shared colour control: MeasureInspector.swift builds its own swatchRow around ColorWellButton at lines 133, 139, 144 and 340, so these colours cannot take a named style while every other colour in the app can. The parts belong in LayerParts.swift alongside the others rather than as a special case, and the non colour settings folded in from the measure section, the thickness, the label size, the unit and decimals, need homes; say where each went.",
@@ -32,6 +32,23 @@
     {
       "t": "2026-09-09T12:59:46.396Z",
       "note": "seq 260 -> 6"
+    },
+    {
+      "t": "2026-09-09T13:55:43.278Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T14:07:23.274Z",
+      "note": "Adversarial review before building. (1) A measurement picked would show Opacity, Role, Caliper, Chip, Chip Fill, Chip Edge, Chip Text: seven rows, which sounds like a wall until you count what it replaces, because the Measurement section already carries nine. Nothing new is invented. No decimals control, because there is none today. No separate chip opacity slider, because the colour well's own alpha IS the chip's opacity, which is how no chip has always been said. No chip corner control. (2) The real risk is cutting the link between the caliper and the chip's ring. Today the ring IS the caliper's colour, so one swatch repaints both; once the ring is its own part, recolouring a caliper leaves a ring of the old colour behind. Two answers to that: the paint bucket goes on meaning make this thing this colour and takes the ring with it, and switching Role still applies the whole remembered set. (3) The chip's parts only exist while there IS a chip: a measurement with its readout hidden shows a Caliper row and nothing else, so the section never offers a fill for something that is not on screen. (4) Shortest version: the chip's edge gets a colour and a width and nothing else."
+    },
+    {
+      "t": "2026-09-09T14:07:23.274Z",
+      "note": "Plan. Model: MeasureContent gains chipBorderColorHex and chipBorderWidth, where a width of 0 is how an edge is taken off, because the app already says there is no empty border colour, only a border with no width. An existing measurement decodes its ring as the caliper's colour at the caliper's thickness, which is exactly what it drew, and the chipBorderWidth key is the mark that says which ones still need that. ColorSlot gains caliper, chipFill, chipBorder and chipText so a measurement's colours go down the same well, the same saved-colours menu and the same naming field every other colour does; they are their own cases rather than the arrow's four, so nothing about a shape or about the current release changes. LayerPart gains chipFill and chipBorder as switchable parts. Panel: Appearance lists Role, Caliper with its Thickness, a Chip block holding Chip size and Unit, then Chip Fill, Chip Edge with its Width, and Chip Text."
+    },
+    {
+      "t": "2026-09-09T14:07:23.274Z",
+      "note": "The one deviation from the acceptance list, decided rather than guessed. The Measurement section does not vanish entirely: everything that says how a measurement LOOKS moves to Appearance, and what is left is its Name and the Details fold with Copy Measurement, a text field and a grid of read-only numbers, neither of which is a setting. Putting those into a section whose whole rule is what the thing IS made of would break the rule this task exists to apply. Said out loud in the audit so the user can send it back if they disagree."
     }
-  ]
+  ],
+  "started": "2026-09-09T13:55:43.277Z"
 }
