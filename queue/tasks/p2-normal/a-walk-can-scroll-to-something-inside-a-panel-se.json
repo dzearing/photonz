@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2210,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T02:47:15.352Z",
-  "updated": "2026-09-09T07:07:59.690Z",
+  "updated": "2026-09-09T07:50:53.798Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08). Reproduction: put {\"do\": \"reveal\", \"control\": \"Switch\", \"in\": \"Border\"} in Scripts/playtest/effect-row-is-a-small-pane-walk.json before step 21, then Scripts/playtest.sh Scripts/playtest/effect-row-is-a-small-pane-walk.json --no-build. It fails with: step 21 (reveal): scrolled 0pt and \"Switch\" is still not where a person could press it. It is off the window rather than below the fold: the window may be too short for the section it is in. The Border was inside the Effects list own scroller at the time, one wheel turn away. The walk now uses {\"do\": \"scrollPanel\", \"row\": \"Shadow\", \"by\": 120} instead, which works but hard-codes a distance.\n\nThe reveal step is in Sources/Photonz/Playtest/PlaytestHarness.swift (search for func reveal and scrollClip); scrollPanel gets there because it turns the wheel over a point inside the inner list, which is what reveal has to learn to do.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-09-09T07:40:00.000Z",
       "note": "No audit written: this is walk-writing machinery, not something a person can open the app and try. No sweep requested either, since only the reveal step changed and every walk that uses one was run."
+    },
+    {
+      "t": "2026-09-09T07:50:53.796Z",
+      "note": "reveal now measures against the strip of window a press can land in, so it reaches a control inside a section that scrolls on its own and says how far it turned the wheel. In Sources/Photonz/Playtest/PlaytestHarness.swift; effect-row-is-a-small-pane asks for the Border's eye by name instead of scrolling 120 points. Verified: all 11 walks with a reveal step pass, Scripts/test.sh green (5278 tests)."
     }
   ],
-  "started": "2026-09-09T07:07:59.688Z"
+  "started": "2026-09-09T07:07:59.688Z",
+  "completed": "2026-09-09T07:50:53.797Z"
 }
