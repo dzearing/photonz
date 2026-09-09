@@ -1,0 +1,28 @@
+{
+  "feature": "See the number you are parking",
+  "epic": "measure-redline",
+  "summary": "Placing a distance measurement now shows the actual number under your pointer while you aim the third click, instead of only a thin bracket, so where the number will sit is something you aim at rather than find out after you commit.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open any screenshot. No flags to turn on.",
+  "try": [
+    { "do": "Press I to pick the measure tool, and set the mode to Distance." },
+    { "do": "Click the left edge of a button, then its right edge." },
+    { "do": "Move the pointer down into the space under the button, and stop there.", "shot": "2026-09-08-distance-parking-1-aiming.png" },
+    { "do": "Look at the number riding under the pointer: that is the pill, at its real size, with the real measurement in it." },
+    { "do": "Move up and down a little and watch it follow." },
+    { "do": "Click to park it.", "shot": "2026-09-08-distance-parking-2-parked.png" },
+    { "do": "Check that it landed exactly where the preview had it." },
+    { "do": "Try it again with the third click above the button, and with a vertical measurement." }
+  ],
+  "evaluate": [
+    "Does the number following your pointer help you choose a spot, or does it get in the way of seeing what you are measuring?",
+    "Did the number land exactly where the preview showed it, every time?",
+    "The dot that used to mark the head is gone, since the number sits there now. Do you miss it?",
+    "At a zoomed-in canvas, does the previewed number look as crisp as the one that lands?",
+    "Is the preview quick enough that it feels attached to the pointer?"
+  ],
+  "rough": [
+    "This does not change where the number goes, only what you can see while choosing. The number still centres on your click, so parking it in a gap narrower than the number is tall still leaves it touching the thing you measured. That is now a decision card: 'When you click to park a distance number, which part of the number should land on your click?'",
+    "The preview shows up for Distance only. Size and Gap already draw their whole caliper, number included, on hover, so they never needed it.",
+    "Screenshots here are real window captures from the probe app (Screen Recording was granted), not offscreen renders."
+  ]
+}

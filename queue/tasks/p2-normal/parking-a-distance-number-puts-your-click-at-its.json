@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 2170,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T00:57:43.170Z",
-  "updated": "2026-09-09T00:57:43.173Z",
+  "updated": "2026-09-09T05:41:12.971772Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing a-measurement-number-keeps-clear-of-the-edge-it. NOT a bug: the app obeys the click. The readout centres on labelAnchor, which is the head line, and the third click sets headOffset (CanvasMeasure.swift, measureHeadOffset). Evidence: Scripts/playtest/distance-three-clicks.json clicks [357, 840] to park the number on a button whose bottom edge is at y=816, i.e. 24 px of gap, and the pill (43 px tall) centres there, so it ends 2.5 px under the edge. That picture is queue/audits/2026-09-08-distance-three-clicks.png, the one that filed the clearance task. Size and Gap mode are unaffected: they place their own head and now stand off by half the pill height plus half the chip (MeasureBuilder.clearingHeadOffset). This is a UX judgement about what a click means, so it wants a decision card rather than a unilateral change.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-09T00:57:43.172Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T05:20:04.924Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T05:41:12.971772Z",
+      "note": "Reproduced first. Ran Scripts/playtest/distance-three-clicks.json with Screen Recording granted: the 123 px readout under Save Changes has its top edge on the button's bottom edge (click 24 pt below the edge, pill 43 tall, so 2.5 pt of air). Picture: queue/decisions/...-today.png. The task's reading of the code is right, and the app is obeying the click."
+    },
+    {
+      "t": "2026-09-09T05:41:12.971772Z",
+      "note": "Adversarial review before building. The deeper problem is not the arithmetic, it is that the number was INVISIBLE while you aimed: the placement preview drew the thin squared U and a dot on the head, and the pill only appeared on the commit. Nobody can aim 'half the height of a number that is not on screen yet'. So the shortest thing that delivers most of the value is to show the real readout under the pointer, whichever way the semantics question goes."
+    },
+    {
+      "t": "2026-09-09T05:41:12.971772Z",
+      "note": "Shipped that part (commit 'See the number you are parking before you click'). New MeasureRasterizer.readoutPill/chipFootprint bake the same pill the composite draws; CanvasMeasure holds it under the pointer during .secondPlaced, planned with MeasureLabelPlanner exactly as the commit plans it so nothing jumps. Baked once per placement (span is fixed by then), and the ~23 ms subject detection is cached on the feet, which cannot move while the head is aimed. Review of the built thing found the blue head dot sitting in the middle of the number; removed it, the pill marks the spot now. Tests: Scripts/test.sh green, 5269 tests, 5 new in MeasureReadoutPreviewTests. Walks: distance-*, measure-*, redline-* all pass. New walk Scripts/playtest/distance-parking-preview.json holds the aiming moment and the landing."
+    },
+    {
+      "t": "2026-09-09T05:41:12.971772Z",
+      "note": "Considered a fourth option and dropped it: 'always use the standard standoff, the click only picks the side'. It cannot work for Distance. clearingHeadOffset measures from the FOOT line, and a Distance caliper's feet are wherever you clicked (here, the middle of the button), not on the element's edge the way Size and Gap put them. Tried it: the pill still overlapped the button by ~8 pt."
+    },
+    {
+      "t": "2026-09-09T05:41:12.971772Z",
+      "note": "Blocked on the decision 'When you click to park a distance number, which part of the number should land on your click?' with three real photographs of the app, one per option (today / near edge / never crowds). Option c was produced by inflating the caliper's detected subjects by subjectClearance before planReadout in EditorState.addMeasure, a one-line change reverted after the capture; that is the implementation if c is picked. Option a is marked declines. Recommended c."
+    },
+    {
+      "t": "2026-09-09T05:41:12.971772Z",
+      "note": "Audit for the shipped slice: queue/audits/2026-09-08-distance-parking.json, with real window captures (Screen Recording granted)."
     }
-  ]
+  ],
+  "started": "2026-09-09T05:20:04.923Z"
 }

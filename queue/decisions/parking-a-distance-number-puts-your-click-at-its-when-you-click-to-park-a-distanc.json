@@ -1,0 +1,57 @@
+{
+  "id": "parking-a-distance-number-puts-your-click-at-its-when-you-click-to-park-a-distanc",
+  "taskId": "parking-a-distance-number-puts-your-click-at-its",
+  "question": "When you click to park a distance number, which part of the number should land on your click?",
+  "context": "Measuring a distance takes three clicks and the last one parks the number. Your click becomes the middle of the number, so clicking into the 24 points of gap under a button leaves the number touching the button. This decides what that last click should mean.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Leave it: your click is the middle",
+      "summary": "Nothing changes. The number centres on the spot you click, so half of it grows back toward the thing you just measured. Click into a gap that is narrower than the number is tall and it ends up touching what you measured.",
+      "pros": [
+        "Nothing moves for anyone already used to it",
+        "The number is always exactly centred on the spot you pointed at",
+        "There is no second rule to learn"
+      ],
+      "cons": [
+        "Clicking into a narrow gap leaves the number hard against the thing you measured",
+        "To get any air you have to aim half a number's height clear of the edge, which is not a thing anyone can judge by eye"
+      ],
+      "mitigation": "The number is now drawn under your pointer while you aim, so the crowding is at least visible before you commit rather than after.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Your click is the near edge",
+      "summary": "The number grows away from what you measured instead of straddling your click. Click 24 points under a button and the top of the number lands on that spot, with the rest of it below.",
+      "pros": [
+        "A click anywhere just off an element leaves clean air between the two",
+        "The gap you point into is the gap you get",
+        "It works the same whichever side of the measurement you park on"
+      ],
+      "cons": [
+        "The number always ends about half its own height further out than the exact spot you clicked",
+        "Parking it out in open space, where nothing was in the way, it still sits a little past where you pointed"
+      ],
+      "mitigation": "The number rides under your pointer while you aim, so the offset is on screen the whole time instead of arriving on the click."
+    },
+    {
+      "id": "c",
+      "label": "Your click is the middle, but it never crowds what you measured",
+      "summary": "The number still centres on your click. The one time it moves is when it would land right up against the thing you just measured: then it slides out far enough to leave a hair of air, the same air the Size and Gap numbers already keep.",
+      "pros": [
+        "A click in open space puts the number exactly where you pointed",
+        "The only case that changes is the one case that reads badly, a number touching the element",
+        "It is the same standoff Size and Gap already keep, so all three ways of measuring look alike"
+      ],
+      "cons": [
+        "The click means two slightly different things depending on what is nearby",
+        "It can only stand clear of something it can see in the picture, so a measurement across empty space has nothing to keep off"
+      ],
+      "mitigation": "The number rides under your pointer while you aim, so on the occasions it does slide you see where it will sit before you commit."
+    }
+  ],
+  "recommended": "c",
+  "status": "pending",
+  "created": "2026-09-09T05:40:05.032Z"
+}
