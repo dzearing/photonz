@@ -1,0 +1,73 @@
+{
+  "out": "/tmp/photonz-playtest/arrow-parts",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [260, 520], "to": [520, 380], "steps": 8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "describe", "stage": "1-plain-arrow",
+      "note": "one section says how the arrow looks. Appearance lists Opacity, Line with its Thickness, Head with its Ending and Head Size, and the Caption field. There is no separate arrow section under it any more." },
+    { "do": "expect", "control": "Color", "in": "Line", "present": true },
+    { "do": "expect", "control": "Slider", "in": "Thickness", "present": true },
+    { "do": "expect", "control": "Color", "in": "Head", "present": true },
+    { "do": "expect", "control": "Solid head", "in": "Ending", "present": true },
+    { "do": "expect", "control": "Slider", "in": "Head Size", "present": true },
+    { "do": "panel", "stage": "plain-arrow" },
+    { "do": "snapshot", "name": "arrow-parts-1-plain" },
+
+    { "do": "describe", "stage": "2-line-only",
+      "note": "painting the LINE crimson leaves the head the red it was drawn in. One colour used to drive both." },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "render", "name": "arrow-parts-2-line-only" },
+    { "do": "snapshot", "name": "arrow-parts-2-line-only" },
+
+    { "do": "describe", "stage": "3-head-too",
+      "note": "carrying the line's colour onto the Head row brings the tip with it, in one move one undo puts back." },
+    { "do": "dragColor", "from": "Line", "onto": "Head", "expect": "takes" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "render", "name": "arrow-parts-3-head-too" },
+    { "do": "snapshot", "name": "arrow-parts-3-head-too" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "drag", "from": [900, 620], "to": [1120, 470], "steps": 8 },
+    { "do": "waitFor", "condition": "captionField", "timeout": 3 },
+    { "do": "type", "text": "Gap is 12" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "describe", "stage": "4-labelled-arrow",
+      "note": "with words on it the label's three parts appear under the Caption block: its Fill and its Edge with switches, its Text without one. They are the colours the pill has always drawn in, now stored rather than worked out." },
+    { "do": "expect", "control": "Switch", "in": "Label Fill", "present": true },
+    { "do": "expect", "control": "Switch", "in": "Label Edge", "present": true },
+    { "do": "expect", "control": "Color", "in": "Label Text", "present": true },
+    { "do": "panel", "stage": "labelled-arrow" },
+    { "do": "snapshot", "name": "arrow-parts-4-labelled" },
+
+    { "do": "describe", "stage": "5-pill-painted",
+      "note": "the pill's fill is CHOSEN now: carrying a colour onto Label Fill repaints the bubble and leaves the arrow alone." },
+    { "do": "dragColor", "from": "Line", "onto": "Label Fill", "expect": "takes" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "render", "name": "arrow-parts-5-pill-painted" },
+    { "do": "snapshot", "name": "arrow-parts-5-pill-painted" },
+
+    { "do": "describe", "stage": "6-edge-off",
+      "note": "the pill's edge switched off. The label keeps its place and its size: only the ring goes." },
+    { "do": "press", "control": "Switch", "in": "Label Edge" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Switch", "in": "Label Edge", "reads": "Label Edge, off" },
+    { "do": "render", "name": "arrow-parts-6-edge-off" },
+    { "do": "snapshot", "name": "arrow-parts-6-edge-off" }
+  ]
+}

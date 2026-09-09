@@ -70,6 +70,16 @@ public enum AnnotationRasterizer {
         func fillInk(_ path: CGPath) {
             GradientPainter.fill(path: path, with: ink, in: context)
         }
+        // The head is its own part with its own colour, so it goes down its own
+        // pair of calls. A line has no head and never reaches these.
+        let headPaint = annotation.headPaint
+        func strokeHead(_ path: CGPath) {
+            GradientPainter.stroke(path: path, with: headPaint, width: annotation.strokeWidth,
+                                   lineJoin: join, lineCap: .round, in: context)
+        }
+        func fillHead(_ path: CGPath) {
+            GradientPainter.fill(path: path, with: headPaint, in: context)
+        }
 
         let box = CGRect(x: min(annotation.start.x, annotation.end.x),
                          y: min(annotation.start.y, annotation.end.y),
@@ -102,7 +112,7 @@ public enum AnnotationRasterizer {
                                                    y: circle.center.y - circle.radius,
                                                    width: 2 * circle.radius,
                                                    height: 2 * circle.radius), transform: nil)
-                if style == .dot { fillInk(dot) } else { strokeInk(dot) }
+                if style == .dot { fillHead(dot) } else { strokeHead(dot) }
             } else {
                 let head = Geometry.arrowhead(start: annotation.start, end: annotation.end,
                                               strokeWidth: annotation.strokeWidth,
@@ -115,16 +125,16 @@ public enum AnnotationRasterizer {
                         tip.move(to: head[1])
                         tip.addLine(to: head[0])
                         tip.addLine(to: head[2])
-                        strokeInk(tip)
+                        strokeHead(tip)
                     } else {
                         tip.addLines(between: head)
                         tip.closeSubpath()
-                        fillInk(tip)
+                        fillHead(tip)
                     }
                 }
             }
             if annotation.hasCaption {
-                drawCaption(annotation, border: color, in: context)
+                drawCaption(annotation, in: context)
             }
 
         case .rectangle:
@@ -200,6 +210,16 @@ public enum AnnotationRasterizer {
         return radii.grown(by: difference).path(in: rect)
     }
 
+    /// One of the label pill's own colours as something Core Graphics can
+    /// paint: fully see-through where the part has been switched off, so a pill
+    /// with no fill really shows what is behind it rather than a black square.
+    static func pillColor(_ paint: Paint?) -> CGColor {
+        guard let paint, let rgba = RGBA(hex: paint.hex) else {
+            return CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0)
+        }
+        return CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+    }
+
     /// JUST the caption pill, on its own transparent bitmap, for chrome that
     /// has to show a live label the composite cannot: the vector preview held
     /// over an endpoint drag draws the arrow but has no way to draw type, so
@@ -229,16 +249,12 @@ public enum AnnotationRasterizer {
         }
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
-        let rgba = RGBA(hex: annotation.colorHex) ?? RGBA(r: 1, g: 0, b: 0)
-        let border = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
-        let tone = annotation.captionChipColor
-        let fill = CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
-                           alpha: AnnotationContent.captionChipOpacity)
         PillRasterizer.draw(text, at: CGPoint(x: size.width / 2, y: size.height / 2),
                             chipSize: chip, fontSize: annotation.captionFontSize,
-                            borderWidth: annotation.captionBorderWidth,
-                            fill: fill, border: border,
-                            textColorHex: AnnotationContent.captionTextColorHex,
+                            borderWidth: annotation.drawnCaptionBorderWidth,
+                            fill: pillColor(annotation.captionFill),
+                            border: pillColor(annotation.captionBorder),
+                            textColorHex: annotation.captionTextHex,
                             shadow: PillRasterizer.Shadow(),
                             cornerRadius: annotation.captionCornerRadius(pillHeight: chip.height),
                             in: context)
@@ -252,23 +268,21 @@ public enum AnnotationRasterizer {
     /// layer effects reach it. Every number here comes off `AnnotationContent`,
     /// because the on-canvas caption field draws the same bubble from the same
     /// values: what you type in is what lands.
-    private static func drawCaption(_ annotation: AnnotationContent, border: CGColor,
+    private static func drawCaption(_ annotation: AnnotationContent,
                                     in context: CGContext) {
         let text = CaptionMetrics.committedText(annotation.caption ?? "")
         guard !text.isEmpty else { return }
         let chipSize = CaptionMetrics.pillSize(for: text, in: annotation)
-        let tone = annotation.captionChipColor
-        let fill = CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
-                           alpha: AnnotationContent.captionChipOpacity)
         // Hung from the attachment at the arrow's tail, measured pill and all:
         // a longer caption reaches further away from the arrow instead of
         // sliding the whole bubble off it.
         let center = annotation.captionPillCenter(forPillSize: chipSize)
         PillRasterizer.draw(text, at: center, chipSize: chipSize,
                             fontSize: annotation.captionFontSize,
-                            borderWidth: annotation.captionBorderWidth,
-                            fill: fill, border: border,
-                            textColorHex: AnnotationContent.captionTextColorHex,
+                            borderWidth: annotation.drawnCaptionBorderWidth,
+                            fill: pillColor(annotation.captionFill),
+                            border: pillColor(annotation.captionBorder),
+                            textColorHex: annotation.captionTextHex,
                             shadow: PillRasterizer.Shadow(),
                             cornerRadius: annotation.captionCornerRadius(pillHeight: chipSize.height),
                             in: context)

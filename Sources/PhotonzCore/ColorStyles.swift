@@ -24,10 +24,23 @@ import Foundation
 public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     /// A box's interior, or a frame's surface.
     case fill
-    /// A shape's outline, and the whole of a line, arrow or highlight.
+    /// A shape's outline, and the whole of a line, arrow or highlight. On an
+    /// arrow it is the SHAFT alone: the head is its own part below.
     case stroke
+    /// What an arrow's head is painted.
+    ///
+    /// Its own colour because one colour used to drive the shaft and the tip
+    /// together, so a grey line ending in a red tip was not a thing anyone
+    /// could draw. Only an arrow that actually ends in something has it.
+    case arrowHead
     /// A text block's ink.
     case text
+    /// The inside of an arrow's label pill.
+    case captionFill
+    /// The ring round an arrow's label pill.
+    case captionBorder
+    /// The words in an arrow's label pill.
+    case captionText
     /// The ring a layer's own styling draws around it — the Border in the
     /// Effects section. Last, because it sits over whatever the layer is
     /// rather than saying what the layer is.
@@ -52,7 +65,11 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .fill: return "Fill"
         case .stroke: return "Color"
+        case .arrowHead: return "Head"
         case .text: return "Color"
+        case .captionFill: return "Label Fill"
+        case .captionBorder: return "Label Edge"
+        case .captionText: return "Label Text"
         case .border: return "Border"
         case .shadow: return "Shadow"
         case .glow: return "Glow"
@@ -73,8 +90,11 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         // shape's outline IS a border now (`OutlineRetirement.swift`). A shadow
         // and a glow are light rather than paint, and a letter's ink has no box
         // for a ramp to run across.
-        case .fill, .stroke, .border: return true
-        case .text, .shadow, .glow: return false
+        case .fill, .stroke, .border, .arrowHead: return true
+        // A label pill is drawn by the pill rasterizer, which paints one flat
+        // colour for its inside, one for its ring and one for its words.
+        case .text, .shadow, .glow,
+             .captionFill, .captionBorder, .captionText: return false
         }
     }
 
@@ -83,11 +103,14 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
     /// box's inside and a frame's surface are both surface.
     public var styleRole: ColorStyleRole {
         switch self {
-        case .fill: return .surface
+        // A label pill's inside is an area somebody fills, exactly like a box's,
+        // so it reaches for the same shelf of saved colours.
+        case .fill, .captionFill: return .surface
         // A shadow is drawn OVER the design rather than filling an area of it,
         // the same as a line and a letter, so it takes the ink shelf: the
         // near-black somebody keeps for hairlines is the one they reach for.
-        case .stroke, .text, .border, .shadow, .glow: return .ink
+        case .stroke, .text, .border, .shadow, .glow,
+             .arrowHead, .captionBorder, .captionText: return .ink
         }
     }
 }
@@ -235,7 +258,18 @@ extension Layer {
             // row left Appearance: their edge is a Border in the Effects list,
             // so its colour is the border's (`OutlineRetirement.swift`).
             case .rectangle, .ellipse: slots = [.fill]
-            case .line, .arrow, .highlight: slots = [.stroke]
+            case .line, .highlight: slots = [.stroke]
+            case .arrow:
+                // The shaft, then the head — and the head only when the arrow
+                // ends in something, so the panel never offers a colour for a
+                // tip that is not drawn.
+                slots = [.stroke]
+                if annotation.arrowheadStyle != .plain { slots.append(.arrowHead) }
+                // ...and the label's three, only once there are words for it to
+                // hold. A pill nobody has typed into has nothing to paint.
+                if annotation.hasCaption {
+                    slots += [.captionFill, .captionBorder, .captionText]
+                }
             }
         case .text: slots = [.text]
         case .group(let group): slots = group.isFrame ? [.fill] : []
@@ -278,6 +312,18 @@ extension Layer {
             // Border in the Effects list (`OutlineRetirement.swift`).
             guard !annotation.drawsARingRatherThanBeingOne else { return nil }
             return annotation.colorHex
+        case (.arrowHead, .annotation(let annotation)):
+            guard annotation.shape == .arrow, annotation.arrowheadStyle != .plain else { return nil }
+            return annotation.headColorHex
+        case (.captionFill, .annotation(let annotation)):
+            guard annotation.hasCaption else { return nil }
+            return annotation.captionFill?.hex
+        case (.captionBorder, .annotation(let annotation)):
+            guard annotation.hasCaption else { return nil }
+            return annotation.captionBorder?.hex
+        case (.captionText, .annotation(let annotation)):
+            guard annotation.hasCaption else { return nil }
+            return annotation.captionTextHex
         case (.text, .text(let text)):
             return text.colorHex
         case (.border, _):
@@ -301,6 +347,9 @@ extension Layer {
         case (.stroke, .annotation(let annotation)):
             guard !annotation.drawsARingRatherThanBeingOne else { return nil }
             return annotation.paint
+        case (.arrowHead, .annotation(let annotation)):
+            guard annotation.shape == .arrow, annotation.arrowheadStyle != .plain else { return nil }
+            return annotation.headPaint
         case (.border, _):
             return hasBorderColor ? style.borderEffects.first?.paint : nil
         default:
@@ -327,6 +376,9 @@ extension Layer {
         case (.stroke, .annotation(var annotation)):
             annotation.paint = paint
             content = .annotation(annotation)
+        case (.arrowHead, .annotation(var annotation)):
+            annotation.headPaint = paint
+            content = .annotation(annotation)
         case (.border, _):
             // The ring nearest the eye, ramp and all.
             guard let index = style.borderEffectIndex else { return }
@@ -348,6 +400,12 @@ extension Layer {
         switch (slot, content) {
         case (.fill, .annotation(let annotation)): return annotation.colorHex
         case (.fill, .group): return Layer.defaultFrameBackgroundHex
+        // A label part switched back on returns to the pill the arrow's own
+        // colour makes, which is where it started: a black square nobody asked
+        // for would be the panel answering a different question.
+        case (.captionFill, .annotation(let annotation)):
+            return annotation.captionChipColor.hexString
+        case (.captionBorder, .annotation(let annotation)): return annotation.colorHex
         default: return colorHex(for: slot)
         }
     }
@@ -367,6 +425,25 @@ extension Layer {
         case (.stroke, .annotation(var annotation)):
             guard let hex else { return }
             annotation.colorHex = hex
+            content = .annotation(annotation)
+        case (.arrowHead, .annotation(var annotation)):
+            guard let hex else { return }
+            annotation.headColorHex = hex
+            content = .annotation(annotation)
+        case (.captionFill, .annotation(var annotation)):
+            // Nil is a real answer here, the way it is for a box's inside: the
+            // Label Fill switch writes exactly this.
+            annotation.captionFill = hex.map { Paint(hex: $0) }
+            content = .annotation(annotation)
+        case (.captionBorder, .annotation(var annotation)):
+            annotation.captionBorder = hex.map { Paint(hex: $0) }
+            content = .annotation(annotation)
+        case (.captionText, .annotation(var annotation)):
+            // The words are always written in something; there is no label with
+            // invisible text, only a label with a colour nobody can read, which
+            // the panel says out loud instead of refusing.
+            guard let hex else { return }
+            annotation.captionTextColorHex = hex
             content = .annotation(annotation)
         case (.text, .text):
             // Through the text builder, so repainting text keeps the contrast

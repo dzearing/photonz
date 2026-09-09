@@ -46,7 +46,7 @@ struct CaptionPillShapeTests {
                             fill: CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
                                           alpha: AnnotationContent.captionChipOpacity),
                             border: CGColor(srgbRed: 1, green: 0.23, blue: 0.19, alpha: 1),
-                            textColorHex: AnnotationContent.captionTextColorHex,
+                            textColorHex: AnnotationContent.captionTextDefaultHex,
                             in: context)
         guard let image = context.makeImage() else { return nil }
         var data = [UInt8](repeating: 0, count: width * height * 4)

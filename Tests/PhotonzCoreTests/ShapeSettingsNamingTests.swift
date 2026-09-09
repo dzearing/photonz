@@ -40,10 +40,15 @@ struct ShapeSettingsNamingTests {
         }
     }
 
-    @Test func aShapeThatIsAllOneColorJustCallsItColor() {
-        for shape in [AnnotationShape.arrow, .line, .highlight] {
-            #expect(shape.colorTitle(for: .stroke) == "Color")
+    /// A line and an arrow ARE their line, so the row is called Line: an arrow
+    /// has a head beside it now, and "Color" over one of two colours says
+    /// nothing about which. A highlight is a single wash and keeps the plain
+    /// word, because naming a part there would name the shape twice.
+    @Test func aShapeThatIsItsOwnLineCallsThatRowLine() {
+        for shape in [AnnotationShape.arrow, .line] {
+            #expect(shape.colorTitle(for: .stroke) == "Line")
         }
+        #expect(AnnotationShape.highlight.colorTitle(for: .stroke) == "Color")
     }
 
     @Test func aSlotTheShapeDoesNotHaveHasNoLabel() {
@@ -54,10 +59,16 @@ struct ShapeSettingsNamingTests {
 
     /// The label and the slots the layer actually offers have to agree, or a
     /// row appears with no name or a name appears with no row.
+    ///
+    /// An arrow is measured with a caption on it, because three of its slots —
+    /// its label's fill, edge and text — only exist once there are words for
+    /// the pill to hold. Which slots a LAYER has depends on the layer; which
+    /// slots a SHAPE can ever have is what the naming answers for.
     @Test func everyShapeLabelsExactlyTheSlotsItHas() {
         for shape in AnnotationShape.allCases {
-            let annotation = AnnotationContent(shape: shape, start: .zero,
+            var annotation = AnnotationContent(shape: shape, start: .zero,
                                                end: CGPoint(x: 40, y: 20))
+            annotation.caption = "Label"
             let layer = Layer(name: "S", content: .annotation(annotation),
                               frame: CGRect(x: 0, y: 0, width: 40, height: 20))
             for slot in ColorSlot.allCases {
@@ -65,6 +76,16 @@ struct ShapeSettingsNamingTests {
                         == layer.colorSlots.contains(slot))
             }
         }
+    }
+
+    /// ...and an arrow with no words has no label rows to name, so the panel
+    /// never offers a colour for a pill that is not there.
+    @Test func anArrowWithNoLabelHasNoLabelRows() {
+        let annotation = AnnotationContent(shape: .arrow, start: .zero,
+                                           end: CGPoint(x: 40, y: 20))
+        let layer = Layer(name: "S", content: .annotation(annotation),
+                          frame: CGRect(x: 0, y: 0, width: 40, height: 20))
+        #expect(layer.colorSlots == [.stroke, .arrowHead])
     }
 
     /// With colors living in the Color section, a shape's own section is worth

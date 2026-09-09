@@ -100,6 +100,21 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         get { paint.hex }
         set { paint.hex = newValue; paint.kind = .solid }
     }
+    /// Arrow-only: what the HEAD is painted, which is not what the shaft is.
+    ///
+    /// One colour used to drive both, so there was no way to point at something
+    /// with a grey line and a red tip. The head is its own part now, with its
+    /// own colour, exactly like a box's inside is its own part next to its
+    /// edge. A new arrow's head starts the colour of its line, and an arrow
+    /// drawn before this opens wearing the one colour it was drawn in
+    /// (`init(from:)`), so nothing on an existing picture moves.
+    public var headPaint: Paint
+    /// The head's flat colour, for everything that can only read one. Setting
+    /// it makes the head flat, which is what painting a part a colour means.
+    public var headColorHex: String {
+        get { headPaint.hex }
+        set { headPaint.hex = newValue; headPaint.kind = .solid }
+    }
     /// Where the outline sits relative to the shape's own box: wholly inside
     /// it, straddling the edge, or wholly outside it. Inside is what every
     /// shape drawn before there was a choice wears, and it is what an older
@@ -142,7 +157,45 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     }
     /// Arrow-only: label text rendered as a pill at the arrow's tail, matching
     /// the measure tool's readout treatment. Nil = plain arrow.
-    public var caption: String?
+    ///
+    /// It goes through a setter rather than being stored directly for one
+    /// reason: a label's three colours are the arrow's own now, and the moment
+    /// a label first gets words is the moment they have to exist. Seeding them
+    /// here rather than at each call site means EVERY way of captioning an
+    /// arrow — the panel field, the canvas editor, a scripted walk, a copy
+    /// taking its original's words — lands the same pill, toned from the
+    /// arrow's colour AT THAT MOMENT rather than the colour it was drawn in.
+    public var caption: String? {
+        get { storedCaption }
+        set {
+            let had = Self.isRealCaption(storedCaption)
+            storedCaption = newValue
+            if !had, Self.isRealCaption(newValue) { seedCaptionColors() }
+        }
+    }
+    /// Where the words actually live. Private so nothing can put words on an
+    /// arrow without its label gaining the colours to draw them in.
+    private var storedCaption: String?
+    /// Arrow-only: what the label pill's inside is painted. Nil = no fill, the
+    /// same way a box with no `fill` has no inside: the switch on the Label
+    /// Fill row writes exactly this.
+    public var captionFill: Paint?
+    /// Arrow-only: what the ring round the label pill is painted. Nil = no
+    /// edge. Its WIDTH still follows the arrow's thickness
+    /// (`captionBorderWidth`); this is only what it is drawn in.
+    public var captionBorder: Paint?
+    /// Arrow-only: the label's own ink.
+    ///
+    /// Nil means this label has never had colours of its own — it is a pill
+    /// from before the parts existed, or an arrow with no words yet. It is the
+    /// one of the three that can never be switched off, which is what makes it
+    /// the honest mark of "seeded or not": a fill of nil is a fill somebody
+    /// took away, but a text colour of nil can only be a pill nobody has
+    /// painted yet.
+    public var captionTextColorHex: String?
+    /// The label's ink, resolved: the white every caption has always been
+    /// written in until somebody says otherwise.
+    public var captionTextHex: String { captionTextColorHex ?? Self.captionTextDefaultHex }
     /// Arrow-only: the caption's text size in image pixels.
     public var captionFontSize: CGFloat
     /// Arrow-only: how round the caption pill's corners are, 0 square through
@@ -174,18 +227,29 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.shape = shape
         self.strokeWidth = strokeWidth
         self.paint = Paint(hex: colorHex)
+        // A new arrow's head is the colour of its line. They part company the
+        // moment either one is painted, and not before: nobody draws an arrow
+        // meaning to give it a tip in a different colour.
+        self.headPaint = Paint(hex: colorHex)
         self.start = start
         self.end = end
         self.arrowheadScale = arrowheadScale
         self.arrowheadStyle = .standard
         self.cornerRadii = cornerRadii
         self.fill = fillColorHex.map { Paint(hex: $0) }
-        self.caption = caption
+        self.storedCaption = caption
+        self.captionFill = nil
+        self.captionBorder = nil
+        self.captionTextColorHex = nil
         self.captionFontSize = captionFontSize
         self.captionRoundness = Self.captionRoundnessDefault
         self.captionOffset = nil
         self.captionGrowth = nil
         self.captionPinned = false
+        // Words handed straight to the initialiser get their pill too: the
+        // setter cannot run during initialisation, so this is the same seeding
+        // said once more where Swift will not do it for us.
+        if hasCaption { seedCaptionColors() }
     }
 
     /// `paint` and `fill` keep the key names their flat ancestors wrote —
@@ -195,12 +259,21 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case shape, strokeWidth, strokePosition
         case paint = "colorHex"
+        // The head's own colour, and the label's three. All four postdate every
+        // arrow already on disk, so an absent key is what says "this one was
+        // drawn before its parts came apart" and the decoder fills it in with
+        // exactly what that arrow used to draw.
+        case headPaint = "headColorHex"
+        case captionFill = "captionFillColorHex"
+        case captionBorder = "captionBorderColorHex"
+        case captionTextColorHex
         case start, end, arrowheadScale, arrowheadStyle
         // The four corners keep the key one radius always wrote, and
         // `CornerRadii` reads either shape out of it.
         case cornerRadii = "cornerRadius"
         case fill = "fillColorHex"
-        case caption, captionFontSize, captionRoundness
+        case storedCaption = "caption"
+        case captionFontSize, captionRoundness
         case captionOffset, captionGrowth, captionPinned
     }
 
@@ -229,8 +302,15 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         cornerRadii = try c.decodeIfPresent(CornerRadii.self, forKey: .cornerRadii) ?? .none
         // `fillColorHex` postdates both; legacy shapes are outline-only.
         fill = try c.decodeIfPresent(Paint.self, forKey: .fill)
+        // The head postdates the one colour that drove the whole arrow, so an
+        // arrow drawn before it opens with its head the colour of its line —
+        // which is exactly what it drew.
+        headPaint = try c.decodeIfPresent(Paint.self, forKey: .headPaint) ?? paint
         // Captions postdate everything above; legacy arrows are caption-free.
-        caption = try c.decodeIfPresent(String.self, forKey: .caption)
+        storedCaption = try c.decodeIfPresent(String.self, forKey: .storedCaption)
+        captionFill = try c.decodeIfPresent(Paint.self, forKey: .captionFill)
+        captionBorder = try c.decodeIfPresent(Paint.self, forKey: .captionBorder)
+        captionTextColorHex = try c.decodeIfPresent(String.self, forKey: .captionTextColorHex)
         captionFontSize = try c.decodeIfPresent(CGFloat.self, forKey: .captionFontSize)
             ?? Self.captionFontSizeDefault
         // The corner postdates the pill; every pill drawn before it was fully
@@ -243,6 +323,13 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         captionGrowth = try c.decodeIfPresent(CGSize.self, forKey: .captionGrowth)
         // Hand placement postdates planning; an old offset was the planner's.
         captionPinned = try c.decodeIfPresent(Bool.self, forKey: .captionPinned) ?? false
+        // A label written before it had colours of its own keeps the three it
+        // was drawn in: the darkened tone of the arrow's colour, that colour
+        // for its edge, white for its words. `captionTextColorHex` is the mark,
+        // because it is the one of the three nobody can switch off — so nil
+        // there can only mean a pill nobody has painted. Nothing on an existing
+        // picture moves.
+        if hasCaption, captionTextColorHex == nil { seedCaptionColors() }
     }
 }
 
@@ -266,8 +353,29 @@ extension AnnotationContent {
     /// Whether this annotation renders a caption pill: arrows only, and only
     /// when the caption has real text.
     public var hasCaption: Bool {
-        guard shape == .arrow, let caption else { return false }
-        return !caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        shape == .arrow && Self.isRealCaption(caption)
+    }
+
+    /// Words rather than nothing and rather than blank space. Written down once
+    /// because `caption`'s own setter has to ask the same question to know
+    /// whether a label has just come into being.
+    static func isRealCaption(_ text: String?) -> Bool {
+        guard let text else { return false }
+        return !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Gives the label the three colours it has always been drawn in: the
+    /// darkened tone of the arrow's own colour behind white words, ringed in
+    /// that colour.
+    ///
+    /// Called when a label first gets words, and when an arrow captioned by an
+    /// older build is opened. From then on the three are the arrow's own and
+    /// nothing derives them again, so repainting the line leaves the pill
+    /// exactly as it was.
+    mutating func seedCaptionColors() {
+        captionTextColorHex = Self.captionTextDefaultHex
+        captionFill = Paint(hex: captionChipColor.hexString)
+        captionBorder = Paint(hex: paint.hex)
     }
 
     /// Padding inside the caption pill, each side — the measure chip's
@@ -323,9 +431,14 @@ extension AnnotationContent {
         captionPillHeight * MeasureContent.labelBadgeAspect
     }
 
-    /// The pill's fill tone: the arrow color darkened the way the measure
-    /// defaults pair #FF3B30 ink with a #8C201A chip, so any arrow color gets
-    /// a matching dark pill that white text stays legible on.
+    /// The tone a label pill is SEEDED from: the arrow color darkened the way
+    /// the measure defaults pair #FF3B30 ink with a #8C201A chip, so any arrow
+    /// color gets a matching dark pill that white text stays legible on.
+    ///
+    /// It is no longer what gets DRAWN. `captionFill` is, and a label's fill
+    /// starts as a copy of this the moment the label first has words. That is
+    /// the whole point of the change: the pill's colours are chosen, and this
+    /// is only where the choosing starts from so that nobody has to make one.
     public var captionChipColor: RGBA {
         let rgba = RGBA(hex: colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         var tone = RGBA(r: rgba.r * 0.55, g: rgba.g * 0.55, b: rgba.b * 0.55)
@@ -348,13 +461,62 @@ extension AnnotationContent {
     /// readout; the two labels are one treatment.
     public static let captionChipOpacity = Double(MeasureRoleColors.sizeDefault.chipOpacity)
 
-    /// The caption's text color — the measure readout's.
-    public static let captionTextColorHex = MeasureRoleColors.sizeDefault.textColorHex
+    /// The caption's text color unless a label says otherwise — the measure
+    /// readout's white. Renamed off `captionTextColorHex`, which is now the
+    /// label's OWN colour, so the two can never be mistaken for each other.
+    public static let captionTextDefaultHex = MeasureRoleColors.sizeDefault.textColorHex
 
     /// The pill's border, in the arrow's own ink like the measure chip's border
     /// is in the caliper's: heavy enough to read on a thin arrow, still a
     /// hairline beside a thick shaft.
     public var captionBorderWidth: CGFloat { min(max(1.5, strokeWidth / 2), 3) }
+
+    /// The width the pill's edge is actually DRAWN at: nothing at all when the
+    /// edge has been switched off.
+    ///
+    /// Kept apart from `captionBorderWidth` on purpose. That one is geometry —
+    /// where the pill hangs, how much room it reserves — and it has to stay the
+    /// same whether the edge is painted or not, or the label would jump
+    /// sideways the moment somebody took its ring off.
+    public var drawnCaptionBorderWidth: CGFloat {
+        captionBorder == nil ? 0 : captionBorderWidth
+    }
+
+    /// This annotation with its label's colours filled in, for anything that
+    /// has to draw the pill BEFORE there are words in it.
+    ///
+    /// The on-canvas caption field is the case: it opens on an arrow with no
+    /// caption at all, and it draws the bubble you are about to type into. The
+    /// label has no colours of its own yet, so it borrows the ones it is about
+    /// to be given — which is the same seeding, one moment early, and means the
+    /// bubble you type in is the bubble that lands.
+    public var withSeededCaptionColors: AnnotationContent {
+        guard captionTextColorHex == nil else { return self }
+        var copy = self
+        copy.seedCaptionColors()
+        return copy
+    }
+
+    /// What to say when the label's words would not read on its fill, or nil
+    /// when they will.
+    ///
+    /// The old derivation could not produce an unreadable pill: it darkened the
+    /// tone until white sat on it. Choosing the two colours is worth more than
+    /// that guarantee, so the guarantee becomes a sentence instead of a rule —
+    /// nothing is refused and nothing is corrected behind anyone's back, the
+    /// panel just says the words will be hard to read.
+    ///
+    /// Silent when there is no fill: the words then sit on whatever is under
+    /// the arrow, which nothing here can see, so a warning would be a guess.
+    public var captionLegibilityNote: String? {
+        guard hasCaption, let fill = captionFill,
+              let back = RGBA(hex: fill.hex), let ink = RGBA(hex: captionTextHex),
+              back.a > 0.5 else { return nil }
+        let lighter = max(back.relativeLuminance, ink.relativeLuminance) + 0.05
+        let darker = min(back.relativeLuminance, ink.relativeLuminance) + 0.05
+        guard lighter / darker < 3 else { return nil }
+        return "These words will be hard to read on this fill."
+    }
 
     /// The pill around a laid-out line of caption text: padding on every side,
     /// and never narrower than `captionMinPillWidth`. The rasterizer and the

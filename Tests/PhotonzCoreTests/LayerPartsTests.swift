@@ -73,8 +73,9 @@ struct LayerPartsTests {
         let doc = document([arrow])
         let rows = doc.layerPartRows(layerIDs: [arrow.id])
         // No Outline row at all: the arrow's line IS its colour, and a ring
-        // round its bounding box is not something anyone reaches for.
-        #expect(rows.map(\.title) == ["Color"])
+        // round its bounding box is not something anyone reaches for. Its head
+        // is a second row, because a head is a part with a colour of its own.
+        #expect(rows.map(\.title) == ["Line", "Head"])
         let ink = rows[0]
         #expect(ink.part == nil)
         #expect(!ink.hasSwitch)
@@ -130,10 +131,10 @@ struct LayerPartsTests {
         #expect(doc.layerPartRows(layerIDs: [caption.id]).map(\.title) == ["Text"])
     }
 
-    @Test func aLoneArrowIsStillJustAColor() {
+    @Test func aLoneArrowIsItsLineAndItsHead() {
         let arrow = shape(.arrow)
         let doc = document([arrow])
-        #expect(doc.layerPartRows(layerIDs: [arrow.id]).map(\.title) == ["Color"])
+        #expect(doc.layerPartRows(layerIDs: [arrow.id]).map(\.title) == ["Line", "Head"])
     }
 
     @Test func anEllipseStillGetsItsFill() {

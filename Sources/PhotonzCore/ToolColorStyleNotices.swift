@@ -86,9 +86,12 @@ public struct ToolColorStyleNotice: Hashable, Sendable {
         // A ring round a shape IS its outline, and that is the word a person
         // reaches for (`OutlineRetirement.swift`).
         case .stroke, .border: return "outlines"
-        case .text: return "text"
+        case .text, .captionText: return "text"
         case .shadow: return "shadows"
         case .glow: return "glows"
+        case .arrowHead: return "arrowheads"
+        case .captionFill: return "label fills"
+        case .captionBorder: return "label edges"
         }
     }
 

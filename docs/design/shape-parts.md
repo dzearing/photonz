@@ -841,6 +841,58 @@ ignore it.
 A blur switched OFF saves as `blurRadius: 0`, so an older build agrees with what
 is on screen, while this build keeps the number the row was left at.
 
+## An arrow's parts (2026-09-09)
+
+An arrow used to be ONE colour and a section of its own. The colour drove the
+shaft and the head together, so a grey line ending in a red tip was not a thing
+anybody could draw, and the label pill had no colours at all: its fill was the
+arrow's colour darkened until white read on it, its ring was the arrow's colour,
+its words were white, and none of the three could be chosen. Meanwhile the
+Thickness, the Ending, the Head Size and everything about the label sat in a
+second section under Appearance. Two places, one question.
+
+Now an arrow is five parts, in Appearance, in this order:
+
+| Row | Switch | Its settings |
+| --- | --- | --- |
+| **Line** | none, the arrow IS its line | Thickness |
+| **Head** | none, the Ending picker is the switch | Ending, Head Size |
+| **Caption** | none, it is where the words are typed | the words, Label size, Label corners |
+| **Label Fill** | yes | — |
+| **Label Edge** | yes | — |
+| **Label Text** | none, words are always written in something | — |
+
+Three rules earned their place the hard way:
+
+- **The Head row is there for every arrow, and only its COLOUR comes and goes.**
+  The Ending picker lives under that row, and an arrow can end in nothing, so
+  hanging the row off the head's colour meant picking "no ending" took away the
+  control you had just used. The arrow endings walk caught it within a minute.
+- **The label's rows appear only once there are words.** A pill nobody has typed
+  into has nothing to paint, and a Label Fill row over it would be a setting for
+  something that is not there.
+- **A label's colours are SEEDED, not derived.** The old derivation is still
+  there, and it still runs — once, at the moment a label first gets words, and
+  again when a label written by an older build is opened. After that the three
+  are the arrow's own, so repainting the line leaves the pill alone.
+
+### What existing arrows keep drawing
+
+An arrow saved before any of this opens looking exactly as it did. Its head
+takes the colour of its line, which is the one colour it was drawn in. If it has
+a caption, the pill takes the three colours the old derivation produced for it:
+its fill is the arrow's colour darkened, its edge is the arrow's colour, its
+words are white. `captionTextColorHex` is the mark that says which arrows still
+need this — it is the one of the three nobody can switch off, so nil there can
+only mean a pill nobody has painted.
+
+The one guarantee that is gone is legibility: the old derivation kept darkening
+the tone until white read on it, and colours you choose can be any pair. Nothing
+is refused and nothing is corrected behind anybody's back; the panel says
+"These words will be hard to read on this fill." under the Label Text row when
+the contrast falls under 3:1, and stays quiet when there is no fill, because the
+words are then sitting on the picture and nothing in the model can see that.
+
 ### Where the code is
 
 - `PhotonzCore/LayerEffects.swift` — `EffectKind`, `LayerEffect`, `BlurEffect`,
@@ -860,6 +912,14 @@ is on screen, while this build keeps the number the row was left at.
   Outline and every added Border go through it.
 - `Photonz/EffectsListInspector.swift` — Effects: the rows, the plus, the eye,
   the cross, the grip, the empty line, and the Border's Position and Width.
+- `PhotonzCore/Layer.swift` — `AnnotationContent.headPaint`, `captionFill`,
+  `captionBorder`, `captionTextColorHex`, the seeding `caption` setter, and the
+  decoder that migrates an arrow drawn before any of them existed. Tested in
+  `Tests/PhotonzCoreTests/ArrowPartsTests.swift`.
+- `Photonz/ShapePartSettings.swift` — the drawers that used to be the arrow's
+  own section, and the table of where each control went.
+- `Scripts/playtest/arrow-parts-walk.json` — the whole thing walked, with a real
+  screenshot at each stage.
 
 ### What is rough, as built
 

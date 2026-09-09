@@ -66,7 +66,9 @@ struct BorderColorSlotTests {
     /// rather than to what the layer is, and they are slots at all only so that
     /// an effect's colour can be named and saved like every other colour.
     @Test func theBorderRowComesAfterTheColorsTheLayerItselfHas() {
-        #expect(ColorSlot.allCases == [.fill, .stroke, .text, .border, .shadow, .glow])
+        #expect(ColorSlot.allCases == [.fill, .stroke, .arrowHead, .text,
+                                       .captionFill, .captionBorder, .captionText,
+                                       .border, .shadow, .glow])
     }
 
     /// A border is ink: an outline color saved off one is offered on the next,

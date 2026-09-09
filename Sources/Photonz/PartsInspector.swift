@@ -43,13 +43,33 @@ struct PartsInspector: View {
             // heading (reported by the user, 2026-09-08).
             opacity
                 .panelStartProbe(.row, owner: "Opacity")
+            let column = rows.contains(where: \.hasSwitch)
             ForEach(rows) { row in
                 // The tick column is held open across the whole list, or not at
                 // all: over a box the Fill row has a tick and everything lines
                 // up beside it, while over an arrow nothing here can be
                 // switched, so there is no column and the Colour row starts on
                 // the panel's own margin like the slider above it.
-                PartRowView(row: row, leadsWithColumn: rows.contains(where: \.hasSwitch))
+                //
+                // The arrow's label block goes in front of the first of the
+                // label's colour rows, so the words come before what they are
+                // painted. See `ArrowLabelSettings`.
+                if row.id == firstLabelRowID(rows) { ArrowLabelSettings(leadsWithColumn: column) }
+                VStack(alignment: .leading, spacing: 6) {
+                    PartRowView(row: row, leadsWithColumn: column)
+                    // What used to be the arrow's own section, folded under the
+                    // part each control belongs to (`ShapePartSettings`).
+                    if Experiments.shared.shapePartsEnabled {
+                        ShapePartSettings(row: row)
+                    }
+                }
+            }
+            // ...and when there is no label yet there are no label rows to go
+            // in front of, so the block lands after everything the arrow does
+            // have. This is the state where the Caption field is the whole
+            // point: it is the only way to give an arrow a label from here.
+            if firstLabelRowID(rows) == nil {
+                ArrowLabelSettings(leadsWithColumn: column)
             }
             // ...and a corner radius only where there are corners. An ellipse
             // has none, so it shows no row rather than a slider that does
@@ -79,6 +99,7 @@ struct PartsInspector: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .panelStartProbe(.row, owner: "Rounding note")
             }
+            ArrowLabelPlacementReset()
             if let caption {
                 Text(caption)
                     .font(.caption2)
@@ -89,6 +110,16 @@ struct PartsInspector: View {
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
+    }
+
+    /// The first of the label's three colour rows, which is where the arrow's
+    /// label block goes in front of. Nil when the picked arrows have no words,
+    /// so those rows are not there at all.
+    private func firstLabelRowID(_ rows: [LayerPartRow]) -> String? {
+        rows.first { row in
+            guard let slot = row.slot else { return false }
+            return slot == .captionFill || slot == .captionBorder || slot == .captionText
+        }?.id
     }
 
     /// How solid the whole layer is, whatever it is made of. It used to sit in
@@ -243,7 +274,11 @@ private struct PartRowView: View {
         switch row.part {
         case .fill:
             editorState.setColorEnabled(slot: .fill, on: on)
-        case .shadow, nil:
+        case .captionFill:
+            editorState.setColorEnabled(slot: .captionFill, on: on)
+        case .captionBorder:
+            editorState.setColorEnabled(slot: .captionBorder, on: on)
+        case .arrowHead, .shadow, nil:
             // The shadow is not a row in this panel any more; it is an entry in
             // the Effects list under it.
             break

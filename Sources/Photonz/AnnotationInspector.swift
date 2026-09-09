@@ -60,7 +60,13 @@ struct AnnotationInspector: View {
     /// Thickness brings no section once that width has moved into the Outline
     /// part, rather than an empty heading with its name on it.
     static func visibleRows(_ selection: ShapeSelection) -> [ShapeSettingRow] {
-        selection.rows.filter { row in
+        // There is no arrow section any more where Appearance is on. Every one
+        // of these rows moved into Appearance, under the part it belongs to,
+        // so one section says how the thing looks (`ShapePartSettings.swift`,
+        // asked for by the user on 2026-09-09). The release without the split
+        // keeps the section exactly as it was.
+        guard !Experiments.shared.shapePartsEnabled else { return [] }
+        return selection.rows.filter { row in
             // Captions are a Next feature; without it an arrow is a plain
             // arrow and neither the field nor its size row belongs here.
             guard Experiments.shared.arrowCaptionsEnabled
@@ -358,9 +364,13 @@ struct CornerRadiusRow: View {
 /// One arrow's caption. Its own view because it holds a draft and the keyboard:
 /// typing edits the draft, and Return, Escape or clicking away all land or drop
 /// it exactly once.
-private struct ArrowCaptionField: View {
+struct ArrowCaptionField: View {
     @Environment(EditorState.self) private var editorState
     let layerID: UUID
+    /// Whether the field says its own name above itself. In Appearance the row
+    /// it hangs under is already called Caption, and a label repeating the
+    /// heading two lines above it is a word in the way.
+    var showsLabel = true
     @State private var captionDraft: String = ""
     @FocusState private var captionFocused: Bool
     /// True from the moment the field takes focus until its draft has been
@@ -374,7 +384,9 @@ private struct ArrowCaptionField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Caption").font(.caption).foregroundStyle(.secondary)
+            if showsLabel {
+                Text("Caption").font(.caption).foregroundStyle(.secondary)
+            }
             // As many lines as the caption has: a single line field showed a
             // two line label as its first line alone and landed that back on
             // the arrow the moment the field lost focus, quietly throwing the

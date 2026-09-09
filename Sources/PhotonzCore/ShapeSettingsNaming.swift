@@ -46,7 +46,16 @@ extension AnnotationShape {
         // (`OutlineRetirement.swift`).
         case (.rectangle, .border), (.ellipse, .border): return "Outline"
         case (.rectangle, .fill), (.ellipse, .fill): return "Fill"
-        case (.arrow, .stroke), (.line, .stroke), (.highlight, .stroke): return "Color"
+        // A line and an arrow ARE their line, and an arrow has a head beside
+        // it now, so "Color" over one of two colours would say nothing about
+        // which. A highlight is one wash and keeps the plain word.
+        case (.arrow, .stroke), (.line, .stroke): return "Line"
+        case (.highlight, .stroke): return "Color"
+        // An arrow's other parts, each named after the thing it paints.
+        case (.arrow, .arrowHead): return "Head"
+        case (.arrow, .captionFill): return "Label Fill"
+        case (.arrow, .captionBorder): return "Label Edge"
+        case (.arrow, .captionText): return "Label Text"
         default: return nil
         }
     }

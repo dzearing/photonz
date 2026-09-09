@@ -645,6 +645,10 @@ extension EditorState {
             armToolsFromSelection(slot: .fill, targets: ids)
         case .shadow:
             rememberStyleDefault(of: ids)
+        case .arrowHead, .captionFill, .captionBorder:
+            // Nothing to arm: a label's colours belong to a pill that already
+            // has words in it, so there is no "next one" for a tool to hold.
+            break
         }
         recordRecentColor(hex: landing.paint.hex)
     }
@@ -660,6 +664,9 @@ extension EditorState {
             guard let layer = doc.layer(id: id) else { continue }
             switch part {
             case .fill: slots[.fill, default: []].append(id)
+            case .arrowHead: slots[.arrowHead, default: []].append(id)
+            case .captionFill: slots[.captionFill, default: []].append(id)
+            case .captionBorder: slots[.captionBorder, default: []].append(id)
             case .shadow: break
             }
         }
@@ -694,8 +701,20 @@ extension EditorState {
     /// the way back to a fill.
     var colorRowSlots: [ColorSlot] {
         guard let document else { return [] }
-        return document.colorRowSlots(layerIDs: colorStyleTargetIDs)
+        let slots = document.colorRowSlots(layerIDs: colorStyleTargetIDs)
+        // An arrow's head and its label's three are parts, and parts are what
+        // the Appearance list is for. This is the Color section the release
+        // BEFORE that split still uses, and nothing about that release changes
+        // here: it goes on showing an arrow as one colour, exactly as it always
+        // has (`Releases/README.md`, the porting rule runs one way).
+        guard !Experiments.shared.shapePartsEnabled else { return slots }
+        return slots.filter { !Self.arrowPartSlots.contains($0) }
     }
+
+    /// The colours that belong to an arrow's own parts rather than to the
+    /// layer as one thing.
+    static let arrowPartSlots: Set<ColorSlot> = [.arrowHead, .captionFill,
+                                                 .captionBorder, .captionText]
 
     /// What the checkbox on a color row reads: offered only where the color can
     /// be absent at all, and on only when every layer it speaks for has one.
@@ -815,7 +834,11 @@ extension EditorState {
         switch slot {
         case .stroke: break
         case .fill: guard shape == .rectangle || shape == .ellipse else { return .neverWearsNames }
-        case .text, .border, .shadow, .glow: return .neverWearsNames
+        // An arrow's head and its label's three are set on a shape already on
+        // the canvas, so with nothing picked there is nothing for them to name.
+        case .text, .border, .shadow, .glow,
+             .arrowHead, .captionFill, .captionBorder, .captionText:
+            return .neverWearsNames
         }
         return styleWelcome(slot: slot, styleID: styleID)
     }

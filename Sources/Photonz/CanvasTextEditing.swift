@@ -94,7 +94,7 @@ extension CanvasNSView {
         let anchor = draft.captionAnchor()
         let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
         let style = TextContent(string: "", fontName: "SF Pro", fontSize: a.captionFontSize,
-                                colorHex: AnnotationContent.captionTextColorHex)
+                                colorHex: a.captionTextHex)
         textSession = TextEditSession(layerID: layer.id, origin: center, captionStyle: style,
                                       captionLayer: layer, captionPlacement: placement)
 
@@ -368,7 +368,7 @@ extension CanvasNSView {
         // grown by half a border and its inner stroke lands on the same band.
         // Without this the drawn edge sits half a border in from where the
         // committed one does.
-        let straddle = caption.captionBorderWidth * zoom / 2
+        let straddle = caption.withSeededCaptionColors.drawnCaptionBorderWidth * zoom / 2
         captionPill?.frame = frame.insetBy(dx: -straddle, dy: -straddle)
         // Styled with the caption BEING TYPED, not the one the layer still
         // holds: the corner a pill wears depends on how many lines are in it.
@@ -496,14 +496,25 @@ final class CaptionPillView: NSView {
 
     required init?(coder: NSCoder) { nil }
 
+    /// One of the label's colours as a layer colour, see-through where the part
+    /// has been switched off.
+    private func pillColor(_ paint: Paint?) -> CGColor {
+        guard let paint, let rgba = RGBA(hex: paint.hex) else {
+            return CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0)
+        }
+        return CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+    }
+
     func style(for annotation: AnnotationContent, zoom: CGFloat) {
         guard let layer else { return }
-        let chip = annotation.captionChipColor
-        layer.backgroundColor = CGColor(srgbRed: chip.r, green: chip.g, blue: chip.b,
-                                        alpha: AnnotationContent.captionChipOpacity)
-        let ink = RGBA(hex: annotation.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
-        layer.borderColor = CGColor(srgbRed: ink.r, green: ink.g, blue: ink.b, alpha: ink.a)
-        layer.borderWidth = max(1, annotation.captionBorderWidth * zoom)
+        // The label's OWN three colours, not a tone worked out from the arrow.
+        // A label with no words yet borrows the ones it is about to be given,
+        // so the bubble you type in is the bubble that lands.
+        let shown = annotation.withSeededCaptionColors
+        layer.backgroundColor = pillColor(shown.captionFill)
+        layer.borderColor = pillColor(shown.captionBorder)
+        layer.borderWidth = shown.captionBorder == nil
+            ? 0 : max(1, shown.captionBorderWidth * zoom)
         // Asked in DOCUMENT points and scaled back, because the corner rule
         // reads the caption's padding and line count, which are document
         // numbers: handing it a zoomed height would round a zoomed-in bubble

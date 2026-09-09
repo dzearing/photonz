@@ -635,7 +635,7 @@ struct AnnotationCaptionPillTests {
     }
 
     @Test func textIsTheMeasureReadoutColor() {
-        #expect(AnnotationContent.captionTextColorHex
+        #expect(AnnotationContent.captionTextDefaultHex
                 == MeasureRoleColors.sizeDefault.textColorHex)
     }
 

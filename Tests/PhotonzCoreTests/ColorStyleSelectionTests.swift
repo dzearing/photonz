@@ -185,7 +185,8 @@ struct ColorStyleSelectionTests {
         let plain = Layer(name: "Group", content: .group(GroupContent(children: [])), frame: .zero)
         let doc = document([label, arrow, frame, plain])
         #expect(doc.colorRowSlots(layerIDs: [label.id]) == [.text])
-        #expect(doc.colorRowSlots(layerIDs: [arrow.id]) == [.stroke])
+        // The shaft AND the head: they are two parts with two colours now.
+        #expect(doc.colorRowSlots(layerIDs: [arrow.id]) == [.stroke, .arrowHead])
         #expect(doc.colorRowSlots(layerIDs: [frame.id]) == [.fill])
         #expect(doc.colorRowSlots(layerIDs: [plain.id]).isEmpty)
     }
@@ -199,7 +200,7 @@ struct ColorStyleSelectionTests {
         let arrow = Layer(name: "Arrow", content: .annotation(arrowContent), frame: .zero)
         let doc = document([locked, arrow])
         #expect(doc.colorRowSlots(layerIDs: [locked.id]).isEmpty)
-        #expect(doc.colorRowSlots(layerIDs: [locked.id, arrow.id]) == [.stroke])
+        #expect(doc.colorRowSlots(layerIDs: [locked.id, arrow.id]) == [.stroke, .arrowHead])
     }
 
     // MARK: - The switch that turns a fill on and off
@@ -366,7 +367,9 @@ struct ColorStyleSelectionTests {
     @Test func everySlotHasAnUnambiguousLabelForAMixedSelection() {
         // Two rows both saying "Color" is what this exists to avoid.
         let titles = ColorSlot.allCases.map(\.selectionTitle)
-        #expect(titles == ["Fill", "Outline", "Text", "Border", "Shadow", "Glow"])
+        #expect(titles == ["Fill", "Outline", "Head", "Text",
+                           "Label Fill", "Label Edge", "Label Text",
+                           "Border", "Shadow", "Glow"])
         #expect(Set(titles).count == titles.count)
     }
 

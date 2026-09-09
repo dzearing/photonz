@@ -282,6 +282,7 @@ struct OutlineRetirementTests {
                                                                  start: .zero,
                                                                  end: CGPoint(x: 50, y: 0))),
                           frame: CGRect(x: 0, y: 0, width: 50, height: 4))
-        #expect(rows(for: [arrow]).map(\.title) == [ColorSlot.stroke.title])
+        // Its line, then its head: two parts, two colours, no Outline anywhere.
+        #expect(rows(for: [arrow]).map(\.title) == ["Line", "Head"])
     }
 }

@@ -114,7 +114,12 @@ public extension AnnotationStyles {
         // foreground colour, and a ring, a shadow and a glow are things you ADD
         // to a layer after it exists rather than things the next shape is
         // armed with.
-        case .text, .border, .shadow, .glow:
+        // ...and neither is any of an arrow's other parts: the head and the
+        // label's three are set on a shape that is already on the canvas, so a
+        // tool holding one would be arming a colour for a label nobody has
+        // typed yet.
+        case .text, .border, .shadow, .glow,
+             .arrowHead, .captionFill, .captionBorder, .captionText:
             return
         }
         // After the paint, never before: painting a slot is exactly how a tool

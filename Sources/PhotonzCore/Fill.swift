@@ -26,7 +26,14 @@ public enum Fill {
             case .rectangle, .ellipse:
                 annotation.fillColorHex = colorHex
             case .line, .arrow, .highlight:
+                // The WHOLE thing, head and all. The bucket means "make this
+                // that colour", which is a different gesture from the Line row
+                // in Appearance: that one sets the line and leaves the head
+                // where it was, and this one is somebody pointing at the shape.
+                // The label keeps its own colours, exactly as a measurement's
+                // chip does.
                 annotation.colorHex = colorHex
+                annotation.headColorHex = colorHex
             }
             filled.content = .annotation(annotation)
         case .text(var text):

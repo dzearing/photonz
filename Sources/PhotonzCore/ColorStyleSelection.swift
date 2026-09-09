@@ -215,7 +215,17 @@ public struct ColorSwitch: Hashable, Sendable {
 extension ColorSlot {
     /// Whether this color can be absent. A box's inside and a frame's surface
     /// can; an outline and a letter's ink are always painted something.
-    public var isSwitchable: Bool { self == .fill }
+    ///
+    /// A label pill's inside and its ring can both be taken off — a label with
+    /// no fill is words on the picture, a label with no ring is a plain pill —
+    /// so they switch exactly the way a box's inside does. Its words cannot:
+    /// there is no label with nothing written in it.
+    public var isSwitchable: Bool {
+        switch self {
+        case .fill, .captionFill, .captionBorder: return true
+        default: return false
+        }
+    }
 }
 
 extension ColorSlot {
@@ -227,7 +237,11 @@ extension ColorSlot {
         switch self {
         case .fill: return "Fill"
         case .stroke: return "Outline"
+        case .arrowHead: return "Head"
         case .text: return "Text"
+        case .captionFill: return "Label Fill"
+        case .captionBorder: return "Label Edge"
+        case .captionText: return "Label Text"
         case .border: return "Border"
         case .shadow: return "Shadow"
         case .glow: return "Glow"

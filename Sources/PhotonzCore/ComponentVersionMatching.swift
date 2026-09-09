@@ -181,8 +181,15 @@ extension Layer {
             to.cornerRadii = from.cornerRadii
             to.fill = from.fill
             to.arrowheadScale = from.arrowheadScale
+            to.headPaint = from.headPaint
             to.caption = from.caption
             to.captionFontSize = from.captionFontSize
+            // The label's own three, after the words: setting the words seeds
+            // them, so these have to land last or the copy would wear a pill
+            // toned from its own colour rather than the one it is copying.
+            to.captionFill = from.captionFill
+            to.captionBorder = from.captionBorder
+            to.captionTextColorHex = from.captionTextColorHex
             out.content = .annotation(to)
         case (.group(let from), .group(var to)):
             // A group's own surface colour. Its children, its knobs, its

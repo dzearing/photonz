@@ -22,6 +22,19 @@ import Foundation
 public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     /// What is inside the shape: a box's interior, a frame's surface.
     case fill
+    /// What an arrow ends in.
+    ///
+    /// A part with no switch, which is the one of its kind. It can be absent —
+    /// an arrow can end in nothing — but the way to that is the Ending picker
+    /// in its settings, which has five positions rather than two, and a switch
+    /// beside it would be a second answer to the same question. So the row is
+    /// there for every arrow, because every arrow HAS an ending, and its colour
+    /// well is there only while the arrow ends in something to paint.
+    case arrowHead
+    /// The inside of the label pill on an arrow.
+    case captionFill
+    /// The ring round that pill.
+    case captionBorder
     /// What the layer throws behind it.
     ///
     /// A shadow is no longer a row in Appearance: it is something you ADD, so
@@ -35,6 +48,9 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     public var title: String {
         switch self {
         case .fill: return "Fill"
+        case .arrowHead: return "Head"
+        case .captionFill: return "Label Fill"
+        case .captionBorder: return "Label Edge"
         case .shadow: return "Shadow"
         }
     }
@@ -44,7 +60,8 @@ public enum LayerPart: String, CaseIterable, Hashable, Sendable {
     /// sentence cannot end up saying "a outline".
     public var article: String {
         switch self {
-        case .fill, .shadow: return "a"
+        case .fill, .shadow, .captionFill, .arrowHead: return "a"
+        case .captionBorder: return "an"
         }
     }
 
@@ -201,7 +218,14 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
     /// nothing is a control that cannot answer, and while there is no swatch
     /// the whole row is the landing spot for a colour instead
     /// (`OffPartColorDrop`).
-    public var showsSettings: Bool { !hasSwitch || onCount > 0 }
+    ///
+    /// A row with no switch AND no colour shows nothing either: that is an
+    /// arrow ending in nothing, whose Head row is there because every arrow has
+    /// an ending but has no tip to paint yet. An empty well over nothing is a
+    /// control that cannot answer, whichever way the row got there.
+    public var showsSettings: Bool {
+        hasSwitch ? onCount > 0 : !colors.isEmpty
+    }
 
     /// True while some of the layers this row's switch reaches have the part
     /// and the rest do not.
@@ -282,9 +306,58 @@ extension PhotonzDocument {
         let inked = picked.filter { $0.colorSlots.contains(.stroke) }
         let plainInk = inked
         if !plainInk.isEmpty {
+            // Called Line where every layer it speaks for IS a line — an arrow
+            // or a plain line — because an arrow now has a head beside it and
+            // "Color" over one of two colours says nothing about which. A
+            // highlight's stroke is the wash it is made of rather than a line,
+            // so a selection holding one keeps the old plain word.
+            let allLines = plainInk.allSatisfy {
+                let shape = $0.annotation?.shape
+                return shape == .line || shape == .arrow
+            }
             rows.append(LayerPartRow(
                 part: nil, colors: [PartColor(slot: .stroke, layerIDs: plainInk.map(\.id))],
-                title: ColorSlot.stroke.title,
+                title: allLines ? "Line" : ColorSlot.stroke.title,
+                switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
+        }
+
+        // An arrow's head. The row is there for every arrow, because every
+        // arrow has an ending and the Ending picker lives under this row: hang
+        // it off the COLOUR and choosing "no ending" would take away the
+        // control you just used, which is exactly what the arrow endings walk
+        // caught. Its colour well is there only while there is a tip to paint.
+        let arrows = picked.filter { $0.annotation?.shape == .arrow }
+        if !arrows.isEmpty {
+            let headed = arrows.filter { $0.colorSlots.contains(.arrowHead) }
+            rows.append(LayerPartRow(
+                part: .arrowHead,
+                colors: headed.isEmpty
+                    ? []
+                    : [PartColor(slot: .arrowHead, layerIDs: headed.map(\.id))],
+                title: LayerPart.arrowHead.title,
+                switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
+        }
+
+        // The label pill's three, and ONLY once there are words for it to hold:
+        // an arrow with no caption has no pill, so offering a fill for it would
+        // be settings for something that is not there.
+        for part in [LayerPart.captionFill, LayerPart.captionBorder] {
+            let slot: ColorSlot = part == .captionFill ? .captionFill : .captionBorder
+            let labelled = picked.filter { $0.colorSlots.contains(slot) }
+            guard !labelled.isEmpty else { continue }
+            rows.append(LayerPartRow(
+                part: part, colors: [PartColor(slot: slot, layerIDs: labelled.map(\.id))],
+                title: part.title,
+                switchIDs: labelled.map(\.id),
+                onCount: labelled.filter { $0.colorHex(for: slot) != nil }.count,
+                widthIDs: [], selectionCount: count))
+        }
+        // The words themselves are always written in something, so no switch.
+        let written = picked.filter { $0.colorSlots.contains(.captionText) }
+        if !written.isEmpty {
+            rows.append(LayerPartRow(
+                part: nil, colors: [PartColor(slot: .captionText, layerIDs: written.map(\.id))],
+                title: ColorSlot.captionText.title,
                 switchIDs: [], onCount: 0, widthIDs: [], selectionCount: count))
         }
 
@@ -352,6 +425,19 @@ extension PhotonzDocument {
                     // The colour that landed, not the one the switch would have
                     // seeded: somebody chose this one by letting go of it.
                     $0.setPaint(paint, for: .fill)
+                }
+            case .arrowHead:
+                guard layer.colorSlots.contains(.arrowHead) else { continue }
+                updateLayer(id: id) {
+                    $0.unbindColorStyle(for: .arrowHead)
+                    $0.setPaint(paint, for: .arrowHead)
+                }
+            case .captionFill, .captionBorder:
+                let slot: ColorSlot = part == .captionFill ? .captionFill : .captionBorder
+                guard layer.colorSlots.contains(slot) else { continue }
+                updateLayer(id: id) {
+                    $0.unbindColorStyle(for: slot)
+                    $0.setPaint(paint, for: slot)
                 }
             case .shadow:
                 updateLayer(id: id) { target in

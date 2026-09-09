@@ -1,0 +1,31 @@
+{
+  "feature": "An arrow's parts, each with its own colour",
+  "epic": "ui-building",
+  "summary": "An arrow is now five parts in one section: its line, its head, and its label's fill, edge and text, each with a colour you choose the same way you choose every other colour. The separate arrow section is gone; its Thickness, Ending, Head Size, caption field, label size and label corners all moved in under the part they belong to.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Appearance and Effects (next-shape-parts) and arrow captions (next-arrow-captions), both on by default.",
+  "try": [
+    { "do": "Open any screenshot, press A, and drag an arrow. Press Esc to skip the caption.", "shot": "2026-09-09-arrow-parts-1-plain-sc.png" },
+    { "do": "Read Appearance top to bottom: Opacity, Line with its Thickness, Head with its Ending and Head Size, then Caption. There is no second section under it." },
+    { "do": "Click the Head row's swatch and pick a different colour. The shaft keeps the colour it was drawn in.", "shot": "2026-09-09-arrow-parts-2-line-only-sc.png" },
+    { "do": "Type words into the Caption field and press Return. Three rows appear under it: Label Fill, Label Edge, Label Text.", "shot": "2026-09-09-arrow-parts-4-labelled-sc.png" },
+    { "do": "Click the Label Fill swatch and pick a colour. Only the pill changes; the arrow is untouched." },
+    { "do": "Untick Label Edge. The ring goes and the label stays exactly where it was.", "shot": "2026-09-09-arrow-parts-6-edge-off-sc.png" },
+    { "do": "Paint Label Text white and Label Fill white. A line under the row says the words will be hard to read; nothing is refused." },
+    { "do": "Open a document with arrows in it from before today. Nothing about them should look different." }
+  ],
+  "evaluate": [
+    "Line, Head, Caption, Label Fill, Label Edge, Label Text: is that the order you would look for them in?",
+    "Setting the Line's colour no longer touches the head. On a real markup, is that what you want, or do you reach for one arrow colour more often than two?",
+    "The paint bucket still paints a whole arrow, head and all. Is that the right exception, or should it be a part edit too?",
+    "The caption's WORDS are now typed in a section called Appearance. Does that read wrong to you?",
+    "Seven rows on a captioned arrow: is Appearance getting long enough to want folds on the parts, the way an effect has one?"
+  ],
+  "rough": [
+    "The label's edge still takes its WIDTH from the arrow's thickness, so a heavy arrow gets a heavier ring round its label. Only the colour is the label's own. Nobody asked for a width control and one more slider is one more row, so it stayed derived.",
+    "The Head row is there for every arrow but its colour well is only there while the arrow ends in something. That is because the Ending picker lives under that row: hang the row off the colour and picking 'no ending' takes away the control you just used. The first build did exactly that and the arrow endings walk caught it.",
+    "Every existing way of recolouring an arrow now reaches the shaft alone: a saved colour dropped on the Line row, the toolbar swatch, an arrow tool armed with a colour. Only the paint bucket paints both. If a red arrow with a leftover blue head shows up in real use, that exception is the thing to widen.",
+    "The old derivation guaranteed white text on a dark pill. It is now the SEED rather than the rule, so it still decides what a new label looks like, and the guarantee became a sentence under the Label Text row when the pair falls under 3:1 contrast. With no fill at all the words sit on the picture, which nothing in the model can see, so it keeps quiet rather than crying wolf.",
+    "The label's three rows are missing until the arrow has words, which is right, but it means the section changes height as you type the first caption. It settles the moment you commit.",
+    "The release before Appearance and Effects split is untouched: its Color section still shows an arrow as one colour. Nothing here is back-ported."
+  ]
+}
