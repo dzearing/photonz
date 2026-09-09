@@ -13546,3 +13546,25 @@ output.
 Next: whatever the queue has at the top. The open question here is the one in
 the audit, whether type size should read px alongside everything else or go
 back to pt.
+
+## 2026-09-08 — A measurement number keeps clear of the edge it measures
+
+Size mode's two numbers sat 11 px off the element they measured, whatever the
+label size, so on a 2x capture they read as part of the button rather than as
+notes about it. Reproduced on the probe with a real screen capture before
+changing anything. `MeasureBuilder.clearingHeadOffset` now stands off by half
+the chip plus `MeasureContent.subjectClearance` (half the pill's own height),
+so the air is a proportion of the number and grows with the label-size slider.
+Size, Gap and the hover preview share that function, so it is fixed once.
+
+A planner-side clearance halo was tried and dropped: it also fired on a caliper
+whose head the user placed with Distance mode's third click, moving the number
+away from the spot they pointed at, and it removed the just-clear fallback a
+boxed-in number needs. The repo's own placement tests caught both.
+
+Next: the audit is at `queue/audits/2026-09-08-number-keeps-clear.json` with two
+real captures. Open question filed from it —
+`parking-a-distance-number-puts-your-click-at-its`: the third click becomes the
+CENTRE of the pill, so half the number grows back toward what you measured. That
+is what the picture in the audit that filed this task was actually showing, and
+it wants a decision rather than a unilateral change.
