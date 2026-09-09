@@ -1,0 +1,27 @@
+{
+  "feature": "A border meets the fill and the edge cleanly",
+  "epic": "ui-building",
+  "summary": "A border now separates what is on either side of it completely. An inner border no longer lets a hairline of the fill show along its outside, and an outside border no longer lets a hairline of the background show along its inside.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on: this is how every border draws now.",
+  "try": [
+    { "do": "Draw a rectangle on a coloured background and give it a bright fill." },
+    { "do": "Set Corner Radius to about 20, so the corners are properly curved." },
+    { "do": "In Effects, add a Border, set Position to Inside and Width to 8, and pick a colour that contrasts with the fill (black on red is the clearest)." },
+    { "do": "Zoom to 800% and look along the OUTSIDE of the border, especially round the corner. It should go background straight to border, with no trace of the fill.", "shot": "2026-09-09-border-seam-after.png" },
+    { "do": "Switch Position to Outside and look along the INSIDE of the border, again round the corner. It should go border straight to fill, with no trace of the background." },
+    { "do": "Switch Position to Centre and check both of its edges the same way." },
+    { "do": "Set the border's colour to something half transparent and check the fill still shows through the band.", "shot": "2026-09-09-border-seam-inner-and-outer.png" }
+  ],
+  "evaluate": [
+    "At 800%, does the corner of an inner border read as one clean line, or can you still find a warm pixel where the fill used to leak?",
+    "Does the outside of the shape still look smoothly curved, or has it gained a hard, stepped edge?",
+    "On an outside border, does the border look like it is sitting ON the shape rather than floating a hair off it?",
+    "Does a half transparent border still look like the fill is showing through it, rather than washing out?",
+    "Do borders on ovals look as clean as borders on rectangles, or is one noticeably worse?"
+  ],
+  "rough": [
+    "An OVAL with an outside border keeps a faint trace of the background round its diagonals: about twenty pixels at a twentieth of the background's strength, down from hundreds at three times that. An oval's border is drawn as a stroke ridden round the oval, because that is how the shape draws its own edge, and a stroke's inner boundary is not itself an oval. Filed as its own task.",
+    "Composing a border costs more than it did. On the standard 12 megapixel, 10 layer document an interactive edit went from 5.5ms to 6.4ms and a full render from 38ms to 37ms, both inside budget; the heaviest case in the suite, an edit inside a styled group of five, went from 36ms to 46ms. Confining the correction to the band itself instead of the whole layer would win most of that back; filed as its own task.",
+    "The before and after pictures here are renders magnified ten times, not screen captures: a one pixel seam is invisible at life size, which is the whole reason it took a magnified screenshot to report. The third shot IS a real screen capture from the probe, with an outside and an inside border on the same shape."
+  ]
+}

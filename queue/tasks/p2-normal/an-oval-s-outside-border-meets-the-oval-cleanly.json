@@ -1,0 +1,28 @@
+{
+  "id": "an-oval-s-outside-border-meets-the-oval-cleanly",
+  "title": "An oval's outside border meets the oval cleanly",
+  "goal": "Put an outside border on an oval and a faint trace of the background still shows between the border and the oval, round the diagonals. Everywhere else a border now meets what is on either side of it with nothing showing through; the oval is the one shape left out.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2310,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T16:28:47.801Z",
+  "updated": "2026-09-09T16:28:47.804Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left over from the border seam fix (BorderSeamRenderTests, the ovalBordersStayClean case, which allows up to 24 pixels at under 70/255 for .outside only). An oval's ring is drawn as a STROKE ridden round the oval rather than as two ovals inset from each other, because the shape draws its own edge the same way (DocumentRenderer.ellipseRing, and the comment there explains why). A stroke's inner boundary is the oval walked inwards by half the width, which on a stretched oval is not itself an oval: it misses the oval inset by the width by up to a twentieth of the width round the diagonals. So the ring genuinely does not reach the shape's edge there, and laid() cannot close a gap that is really in the geometry. Worth trying: derive the ring's inner and outer silhouettes by FILLING and CLEAR-STROKING the same mid-oval path in drawEllipseRing, so the masks match the drawn band exactly, and then check whether the residual is the mask arithmetic or the offset-curve geometry.",
+  "acceptance": [
+    "Sample the pixels along the inside of an outside border on a stretched oval and record how much background each carries, before and after",
+    "No pixel between an oval's outside border and its fill carries any of the background colour, checked by sampling at one hundred percent and at several zooms",
+    "An oval's border still lands exactly where the oval's own drawn edge lands, so a border on top of a shape's outline stays one line and not two",
+    "Pixel tests in PhotonzRender cover the oval's outside border, written before the change"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T16:28:47.803Z",
+      "note": "created (manual)"
+    }
+  ]
+}

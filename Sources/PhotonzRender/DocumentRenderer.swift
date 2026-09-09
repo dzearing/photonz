@@ -46,12 +46,32 @@ public final class DocumentRenderer: @unchecked Sendable {
         let pixelHeight: Int
         let width: CGFloat
     }
+
+    /// One drawn rounded-rectangle silhouette: its size in whole pixels, where
+    /// inside those pixels its edges actually fall, and its corners.
+    private struct MaskKey: Hashable {
+        let pixelWidth: Int
+        let pixelHeight: Int
+        let originX: CGFloat
+        let originY: CGFloat
+        let radii: CornerRadii
+    }
     private var ringCache: [RingKey: CIImage] = [:]
     private var ringOrder: [RingKey] = []
+    private var maskCache: [MaskKey: CIImage] = [:]
+    private var maskOrder: [MaskKey] = []
+    private var maskPixels = 0
     /// How big a ring is still worth keeping. Past this it is cheaper to draw
     /// again than to hold 32 of them: a ring is mostly empty pixels, and one
     /// oval the size of a screen is not the thing anybody drags about.
     private static let ringCacheCap = 2_000_000
+    /// The most a ring's silhouette is worth DRAWING rather than generating,
+    /// and how many pixels of them are worth keeping. Past the first, a
+    /// corner is a rounding error's worth of a very large picture and the
+    /// generator's own curve is close enough; past the second, the oldest
+    /// silhouettes go. Eight megapixels is 32MB of masks.
+    private static let maskBakeCap = 2_000_000
+    private static let maskCachePixelCap = 8_000_000
     /// How big a surface gradient is ever drawn, on its longer side. A
     /// gradient is smooth, so drawing it small and stretching it is the same
     /// picture; drawing a sweep at the size of a 12-megapixel screen is a
@@ -1004,7 +1024,19 @@ public final class DocumentRenderer: @unchecked Sendable {
         if shape == .ellipse {
             guard let oval = ellipseRing(in: outerRect, width: width, paint: paint)
             else { return image }
-            return oval.composited(over: image).cropped(to: image.extent.union(outerRect))
+            // The oval's two silhouettes, so the ring can be LAID on the
+            // picture rather than merely dropped over it (`laid`). A ring
+            // asked for wider than there is room for fills the oval solid and
+            // has no hole, exactly as `drawEllipseRing` draws it.
+            let outerOval = filledEllipse(in: outerRect)
+            let holeRect = outerRect.insetBy(dx: width, dy: width)
+            let innerOval = holeRect.width > 0 && holeRect.height > 0
+                ? filledEllipse(in: holeRect) : nil
+            guard let outerOval else {
+                return oval.composited(over: image).cropped(to: image.extent.union(outerRect))
+            }
+            return laid(oval, outerMask: outerOval, innerMask: innerOval,
+                        opacity: paintOpacity(paint), over: image, outerRect: outerRect)
         }
         // A square box keeps square corners however far the ring is pushed out.
         // Growing a rounded rect by d grows its radius by d, which is the right
@@ -1017,20 +1049,256 @@ public final class DocumentRenderer: @unchecked Sendable {
         // through it, because a box's edge can be a gradient — it was the
         // shape's own stroke before the Outline row left Appearance, and a
         // gradient edge somebody drew must not flatten (`OutlineRetirement`).
-        let flat = !paint.isGradient
-        let outer = roundedRectImage(rect: outerRect, radii: outerRadii,
-                                     color: flat ? ciColor(hex: paint.hex) : .white)
+        //
+        // Both shapes are generated in plain WHITE whatever the ring is
+        // painted, because their alpha is doing two jobs: it is the ring's own
+        // edge, and it is the coverage `laid` needs to work out how the ring
+        // and the picture underneath share a pixel. A see-through paint baked
+        // into the generator would make the second job read low.
+        let outer = roundedRectMask(rect: outerRect, radii: outerRadii)
         let innerRect = outerRect.insetBy(dx: width, dy: width)
-        var ring = outer
+        var inner: CIImage?
+        var band = outer
         if !innerRect.isNull, !innerRect.isEmpty {
-            let inner = roundedRectImage(rect: innerRect,
-                                         radii: outerRadii.grown(by: -width),
-                                         color: .white)
-            ring = outer.applyingFilter("CISourceOutCompositing",
-                                        parameters: [kCIInputBackgroundImageKey: inner])
+            let hole = roundedRectMask(rect: innerRect, radii: outerRadii.grown(by: -width))
+            inner = hole
+            band = outer.applyingFilter("CISourceOutCompositing",
+                                        parameters: [kCIInputBackgroundImageKey: hole])
         }
-        if !flat { ring = poured(paint, through: ring, in: outerRect) }
-        return ring.composited(over: image).cropped(to: image.extent.union(outerRect))
+        // A flat ring is poured its one colour, a gradient one its ramp; both
+        // go through the same band, so the two kinds cannot drift apart.
+        band = paint.isGradient ? poured(paint, through: band, in: outerRect)
+                                : tinted(band, ciColor(hex: paint.hex))
+        return laid(band, outerMask: outer, innerMask: inner,
+                    opacity: paintOpacity(paint), over: image, outerRect: outerRect)
+    }
+
+    /// The silhouette a ring hugs, DRAWN rather than generated.
+    ///
+    /// This looks like a needless second way to make a rounded rectangle, and
+    /// it is the other half of the fix `laid` describes. Sharing a pixel out
+    /// by area only works if both sides measure the same edge, and Core
+    /// Image's rounded rectangle generator and the shape rasterizer do not
+    /// quite agree: on the same 20 point corner they differ by up to nine
+    /// parts in 255, which is small enough to look like nothing and big enough
+    /// to leave the hairline the user reported. Filling the same path through
+    /// Core Graphics, the way the shape itself is filled, matches it to the
+    /// last bit.
+    ///
+    /// The bitmap is baked on WHOLE pixels and placed on whole pixels, so a
+    /// ring whose box lands between two of them keeps its softness where it
+    /// belongs rather than being smeared by a resample. Sizes are remembered,
+    /// so a shape being dragged or a document being redrawn pays once.
+    ///
+    /// A ring too big to bake sensibly falls back to the generator: the corner
+    /// is then a rounding error's worth of a very large picture, which nobody
+    /// can see.
+    private func roundedRectMask(rect: CGRect, radii: CornerRadii) -> CIImage {
+        let bounds = rect.integral
+        let pixelWidth = Int(bounds.width), pixelHeight = Int(bounds.height)
+        guard rect.width > 0, rect.height > 0,
+              pixelWidth > 0, pixelHeight > 0,
+              pixelWidth * pixelHeight <= Self.maskBakeCap else {
+            return roundedRectImage(rect: rect, radii: radii, color: .white)
+        }
+        let local = CGRect(x: rect.minX - bounds.minX, y: rect.minY - bounds.minY,
+                           width: rect.width, height: rect.height)
+        let key = MaskKey(pixelWidth: pixelWidth, pixelHeight: pixelHeight,
+                          originX: local.minX, originY: local.minY,
+                          radii: radii.fitted(in: rect.size))
+        cacheLock.lock()
+        let hit = maskCache[key]
+        cacheLock.unlock()
+        let baked: CIImage
+        if let hit {
+            baked = hit
+        } else {
+            guard let drawn = drawRoundedRect(pixelWidth: pixelWidth, pixelHeight: pixelHeight,
+                                              in: local, radii: key.radii) else {
+                return roundedRectImage(rect: rect, radii: radii, color: .white)
+            }
+            baked = drawn
+            cacheLock.lock()
+            if maskCache[key] == nil {
+                maskCache[key] = drawn
+                maskOrder.append(key)
+                maskPixels += pixelWidth * pixelHeight
+                // Kept to a budget in PIXELS rather than in entries: a
+                // hundred button-sized silhouettes cost less than one the
+                // size of a photograph, and it is the megabytes that matter.
+                while maskPixels > Self.maskCachePixelCap, let oldest = maskOrder.first {
+                    maskOrder.removeFirst()
+                    if let gone = maskCache.removeValue(forKey: oldest) {
+                        maskPixels -= Int(gone.extent.width * gone.extent.height)
+                    }
+                }
+            }
+            cacheLock.unlock()
+        }
+        return baked.transformed(by: CGAffineTransform(translationX: bounds.minX,
+                                                       y: bounds.minY))
+            .cropped(to: bounds)
+    }
+
+    private func drawRoundedRect(pixelWidth: Int, pixelHeight: Int,
+                                 in local: CGRect, radii: CornerRadii) -> CIImage? {
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: pixelWidth, height: pixelHeight,
+                                      bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1))
+        // `radii` is stated in the DOCUMENT's top-left space and drawn into
+        // Core Image's bottom-left one, so the pairs swap over — the same turn
+        // `roundedRectImage` makes.
+        context.addPath(radii.flippedVertically.path(in: local))
+        context.fillPath()
+        guard let bitmap = context.makeImage() else { return nil }
+        return CIImage(cgImage: bitmap)
+    }
+
+    /// `mask`'s shape, in one flat colour.
+    private func tinted(_ mask: CIImage, _ color: CIColor) -> CIImage {
+        CIImage(color: color).cropped(to: mask.extent)
+            .applyingFilter("CISourceInCompositing",
+                            parameters: [kCIInputBackgroundImageKey: mask])
+    }
+
+    /// How solid a ring's paint is, 0 for invisible and 1 for opaque.
+    ///
+    /// A flat colour says so itself. A ramp is taken at its CLEAREST stop,
+    /// which for the ordinary ring — every stop opaque — is 1, and for a ramp
+    /// that fades out keeps what is under the ring rather than rubbing it away
+    /// where the paint cannot cover it.
+    private func paintOpacity(_ paint: Paint) -> CGFloat {
+        if !paint.isGradient { return CGFloat(RGBA(hex: paint.hex)?.a ?? 1) }
+        let alphas = paint.stops.map { RGBA(hex: $0.hex)?.a ?? 1 }
+        return CGFloat(alphas.min() ?? 1)
+    }
+
+    /// One filled oval covering `rect`, as a white mask.
+    ///
+    /// Drawn by the ring baker with a width nothing can fit inside, which is
+    /// the branch that fills the oval solid, so the fill and the ring that
+    /// rides it come off the same curve and the same cache.
+    private func filledEllipse(in rect: CGRect) -> CIImage? {
+        guard let mask = ellipseRingMask(size: rect.size,
+                                         width: max(rect.width, rect.height)) else { return nil }
+        return mask.transformed(by: CGAffineTransform(translationX: rect.midX - mask.extent.midX,
+                                                      y: rect.midY - mask.extent.midY))
+    }
+
+    /// A ring laid ON the picture underneath, rather than simply dropped OVER
+    /// it.
+    ///
+    /// Dropping it over was the bug the user reported on 2026-09-09, twice
+    /// over: a hairline of the FILL along the outside of an inner border, and
+    /// a hairline of the BACKGROUND along the inside of an outside border.
+    /// Both come from the same arithmetic. Where the ring's own soft edge
+    /// lands on a soft edge in the picture, ordinary compositing multiplies
+    /// the two coverages instead of letting them meet: half a pixel of ring
+    /// over half a pixel of fill leaves a quarter of a pixel of fill showing
+    /// past the ring, and half a pixel of ring beside half a pixel of fill
+    /// leaves a quarter of a pixel of neither, which is a hole the background
+    /// shines through.
+    ///
+    /// So the pixel is shared out by AREA instead. A ring sits in a band
+    /// between two silhouettes, and the picture underneath is taken to fill
+    /// that pixel from the INSIDE out — true of every shape a ring goes round,
+    /// since the ring hugs the shape's own edge. That gives the picture's
+    /// share of the pixel directly:
+    ///
+    ///     under = min(max(0, a - inner), outer - inner)   // it lies in the band
+    ///     left  = 1 - opacity * under / a                 // and the paint covers it
+    ///
+    /// which is the whole fix. An inner border makes `under` the shape's whole
+    /// coverage, so nothing of the fill is left to leak outside it; an outside
+    /// border makes it nought, so the fill keeps every scrap of its edge and
+    /// the ring's own share of the pixel sits beside it rather than over it.
+    /// The two are then ADDED, because they share the pixel and do not overlap.
+    ///
+    /// `opacity` is what stops this rubbing out what a SEE-THROUGH ring is
+    /// meant to show: a ring painted at half strength keeps half the picture
+    /// under its band, exactly as it did before.
+    private func laid(_ band: CIImage, outerMask: CIImage, innerMask: CIImage?,
+                      opacity: CGFloat, over image: CIImage, outerRect: CGRect) -> CIImage {
+        let extent = image.extent.union(outerRect)
+        // Nothing to share out a pixel of: an unbounded picture has no edge to
+        // meet, so it takes the plain composite it always took.
+        guard !extent.isInfinite, !extent.isNull, !extent.isEmpty else {
+            return band.composited(over: image).cropped(to: extent)
+        }
+        // Every one of these is an OPAQUE grey reaching everywhere, never a
+        // grey cropped to the picture. A cropped one is see-through past its
+        // edge, and the blend filters below then have two half-there operands
+        // to reconcile instead of two numbers to subtract, which is exactly
+        // the row where the ring meets the world and exactly where being
+        // wrong shows. Outside the picture the numbers are simply nought,
+        // which is the truth anyway.
+        let a = coverage(of: image)
+        let outer = coverage(of: outerMask)
+        let inner = innerMask.map { coverage(of: $0) } ?? CIImage(color: .black)
+        let past = clampedDifference(a, minus: inner)
+        let room = clampedDifference(outer, minus: inner)
+        var under = past.applyingFilter("CIDarkenBlendMode",
+                                        parameters: [kCIInputBackgroundImageKey: room])
+        if opacity < 1 { under = dimmed(under, by: opacity) }
+        // What FRACTION of the picture the ring takes, rather than how much:
+        // the picture is then simply held back by that much, which scales its
+        // colour and its coverage together and never has to take it apart.
+        // A pixel the picture does not reach divides nought by nought, which
+        // this filter answers with one, and nought held back by any amount is
+        // still nought.
+        let taken = a.applyingFilter("CIDivideBlendMode",
+                                     parameters: [kCIInputBackgroundImageKey: under])
+        let left = clampedDifference(CIImage(color: .white), minus: taken)
+        let picture = image.applyingFilter("CISourceInCompositing",
+                                           parameters: [kCIInputBackgroundImageKey: stencil(left)])
+            .cropped(to: extent)
+        return band.applyingFilter("CIAdditionCompositing",
+                                   parameters: [kCIInputBackgroundImageKey: picture])
+            .cropped(to: extent)
+    }
+
+    /// An image's alpha as a plain opaque grey, so the blend filters below can
+    /// do arithmetic on coverage rather than on pictures.
+    private func coverage(of image: CIImage) -> CIImage {
+        image.applyingFilter("CIColorMatrix", parameters: [
+            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 1),
+            "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 1),
+            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 1),
+            "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputBiasVector": CIVector(x: 0, y: 0, z: 0, w: 1)
+        ])
+    }
+
+    /// `left` less `right`, never below nought — both stated as opaque greys.
+    private func clampedDifference(_ left: CIImage, minus right: CIImage) -> CIImage {
+        right.applyingFilter("CISubtractBlendMode",
+                             parameters: [kCIInputBackgroundImageKey: left])
+    }
+
+    /// An opaque grey read back as a SHAPE: white, covering as much of each
+    /// pixel as the grey was bright. What `CISourceInCompositing` needs, since
+    /// it cuts by alpha and nothing else.
+    private func stencil(_ gray: CIImage) -> CIImage {
+        gray.applyingFilter("CIColorMatrix", parameters: [
+            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+            "inputAVector": CIVector(x: 1, y: 0, z: 0, w: 0),
+            "inputBiasVector": CIVector(x: 1, y: 1, z: 1, w: 0)
+        ])
+    }
+
+    /// An opaque grey scaled by `factor`, alpha left alone.
+    private func dimmed(_ gray: CIImage, by factor: CGFloat) -> CIImage {
+        gray.applyingFilter("CIColorMatrix", parameters: [
+            "inputRVector": CIVector(x: factor, y: 0, z: 0, w: 0),
+            "inputGVector": CIVector(x: 0, y: factor, z: 0, w: 0),
+            "inputBVector": CIVector(x: 0, y: 0, z: factor, w: 0),
+            "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 1)
+        ])
     }
 
     /// `paint`'s ramp, laid into the shape `mask` draws and nowhere else.
