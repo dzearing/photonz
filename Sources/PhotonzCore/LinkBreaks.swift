@@ -28,6 +28,8 @@ public enum LinkBreakKind: String, Hashable, Sendable, CaseIterable {
     case colorStyle
     /// Text that was wearing a named style was set some other way.
     case textStyle
+    /// An effect that was wearing a named style was tuned some other way.
+    case effectStyle
     /// One part of a copy's look was set by hand, so it stopped following.
     case instanceStyle
 
@@ -39,7 +41,8 @@ public enum LinkBreakKind: String, Hashable, Sendable, CaseIterable {
         case .instanceUngrouped: return 1
         case .colorStyle: return 2
         case .textStyle: return 3
-        case .instanceStyle: return 4
+        case .effectStyle: return 4
+        case .instanceStyle: return 5
         }
     }
 }
@@ -75,6 +78,8 @@ public struct LinkBreak: Hashable, Sendable {
             return count == 1 ? "1 color" : "\(count) colors"
         case .textStyle:
             return count == 1 ? "1 piece of text" : "\(count) pieces of text"
+        case .effectStyle:
+            return count == 1 ? "1 effect" : "\(count) effects"
         case .instanceStyle:
             if count == 1, let part { return "\(part) on this copy" }
             let parts = "\(count) parts"
@@ -92,7 +97,7 @@ public struct LinkBreak: Hashable, Sendable {
         switch kind {
         case .instanceUngrouped: return true
         case .instanceStyle: return count != 1
-        case .colorStyle, .textStyle, .originalDeleted: return count != 1
+        case .colorStyle, .textStyle, .effectStyle, .originalDeleted: return count != 1
         }
     }
 
@@ -148,7 +153,8 @@ extension LinkBreakReport {
     public static func between(_ before: PhotonzDocument,
                                _ after: PhotonzDocument) -> LinkBreakReport {
         let holdsCopies = before.holdsComponentInstance
-        guard !before.colorStyles.isEmpty || !before.textStyles.isEmpty || holdsCopies else {
+        guard !before.colorStyles.isEmpty || !before.textStyles.isEmpty
+                || !before.effectStyles.isEmpty || holdsCopies else {
             return LinkBreakReport()
         }
 
@@ -159,6 +165,7 @@ extension LinkBreakReport {
         var breaks: [LinkBreak] = []
         breaks.append(contentsOf: colorBreaks(before, after, edited, afterByID))
         breaks.append(contentsOf: textBreaks(before, after, edited, afterByID))
+        breaks.append(contentsOf: effectBreaks(before, after, edited, afterByID))
         if holdsCopies {
             breaks.append(contentsOf: componentBreaks(before, after, edited, afterByID))
         }
@@ -256,6 +263,43 @@ extension LinkBreakReport {
         return order.map { LinkBreak(kind: .textStyle, count: lost[$0] ?? 0, source: names[$0]) }
     }
 
+    /// Effects that drifted off a style.
+    ///
+    /// The same three exceptions the colours and the text make. An entry now
+    /// pointing at a DIFFERENT style is a choice somebody made, not a break,
+    /// and an entry whose style was taken off the shelf is not one either:
+    /// Remove already means "these effects are their own now". What is left is
+    /// the quiet one, where the shadow was tuned by hand and the name it
+    /// claimed stopped being true.
+    ///
+    /// A row TAKEN OUT of the list is not a break either. Its name went with
+    /// it, and the app repeating your own delete back at you is not news. It is
+    /// told from a drift the same way an effect's colour is: by which STYLE is
+    /// still worn rather than by where it sits, since taking a row out moves
+    /// every row under it up a place.
+    private static func effectBreaks(_ before: PhotonzDocument, _ after: PhotonzDocument,
+                                     _ edited: [Layer],
+                                     _ afterByID: [UUID: Layer]) -> [LinkBreak] {
+        guard !before.effectStyles.isEmpty else { return [] }
+        let names = Dictionary(after.effectStyles.map { ($0.id, $0.name) },
+                               uniquingKeysWith: { first, _ in first })
+        var lost: [UUID: Int] = [:]
+        var order: [UUID] = []
+        for layer in edited {
+            let bindings = layer.effectStyleBindings ?? []
+            guard !bindings.isEmpty, let now = afterByID[layer.id] else { continue }
+            let stillWorn = Set((now.effectStyleBindings ?? []).map(\.styleID))
+            let listShrank = now.style.effects.count < layer.style.effects.count
+            for binding in bindings {
+                guard !listShrank, !stillWorn.contains(binding.styleID) else { continue }
+                guard names[binding.styleID] != nil else { continue }
+                if lost[binding.styleID] == nil { order.append(binding.styleID) }
+                lost[binding.styleID, default: 0] += 1
+            }
+        }
+        return order.map { LinkBreak(kind: .effectStyle, count: lost[$0] ?? 0, source: names[$0]) }
+    }
+
     /// The three ways a copy stops following its original.
     private static func componentBreaks(_ before: PhotonzDocument, _ after: PhotonzDocument,
                                         _ edited: [Layer],
@@ -323,7 +367,7 @@ extension LinkBreakReport {
             case .originalDeleted:
                 guard let count = stranded[componentID] else { return nil }
                 return LinkBreak(kind: kind, count: count, source: name)
-            case .colorStyle, .textStyle:
+            case .colorStyle, .textStyle, .effectStyle:
                 return nil
             }
         }

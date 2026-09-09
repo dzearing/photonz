@@ -168,6 +168,7 @@ extension Layer {
         var out = self
         out.style = source.style
         out.colorStyleBindings = source.colorStyleBindings
+        out.effectStyleBindings = source.effectStyleBindings
         switch (source.content, content) {
         case (.text(let words), .text):
             out.content = .text(words)

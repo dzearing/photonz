@@ -551,7 +551,8 @@ extension PhotonzDocument {
         guard a.name == b.name, a.frame == b.frame, a.crop == b.crop,
               a.transform == b.transform, a.style == b.style,
               a.isVisible == b.isVisible, a.isLocked == b.isLocked else { return false }
-        guard a.colorStyleBindings == b.colorStyleBindings, a.placement == b.placement,
+        guard a.colorStyleBindings == b.colorStyleBindings,
+              a.effectStyleBindings == b.effectStyleBindings, a.placement == b.placement,
               a.flowFill == b.flowFill else {
             return false
         }
@@ -575,6 +576,7 @@ extension PhotonzDocument {
                          isVisible: layer.isVisible, isLocked: layer.isLocked,
                          colorStyleBindings: layer.colorStyleBindings,
                          placement: layer.placement, flowFill: layer.flowFill)
+        copy.effectStyleBindings = layer.effectStyleBindings
         if let nested = layer.instanceOf {
             let version = layer.instanceVersionID
             copy.children = resolvedChildren(of: nested, version: version, instance: id,

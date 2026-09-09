@@ -513,7 +513,7 @@ extension Layer {
     mutating func insertEffect(_ effect: LayerEffect, at index: Int) {
         let at = min(max(0, index), style.effects.count)
         style.effects.insert(effect, at: at)
-        remapEffectBindings { $0 >= at ? $0 + 1 : $0 }
+        remapEffectPlaces { $0 >= at ? $0 + 1 : $0 }
     }
 
     /// Takes an effect out of the list. Its name goes with it, and everything
@@ -521,7 +521,7 @@ extension Layer {
     mutating func removeEffect(at index: Int) {
         guard style.effects.indices.contains(index) else { return }
         style.effects.remove(at: index)
-        remapEffectBindings { $0 == index ? nil : ($0 > index ? $0 - 1 : $0) }
+        remapEffectPlaces { $0 == index ? nil : ($0 > index ? $0 - 1 : $0) }
     }
 
     /// Drags an effect somewhere else in the list, names and all.
@@ -530,16 +530,24 @@ extension Layer {
               style.effects.indices.contains(to), from != to else { return }
         let moved = style.effects.remove(at: from)
         style.effects.insert(moved, at: to)
-        remapEffectBindings { place in
+        remapEffectPlaces { place in
             if place == from { return to }
             if from < to { return place > from && place <= to ? place - 1 : place }
             return place >= to && place < from ? place + 1 : place
         }
     }
 
-    /// Rewrites every effect binding's place, dropping the ones the change
-    /// answered with nothing.
-    private mutating func remapEffectBindings(_ move: (Int) -> Int?) {
+    /// Rewrites every name a place in the Effects list carries — the colour
+    /// bindings here and the effect-style bindings in `EffectStyles.swift` —
+    /// dropping the ones the change answered with nothing.
+    private mutating func remapEffectPlaces(_ move: (Int) -> Int?) {
+        remapEffectStyleBindings(move)
+        remapEffectColorBindings(move)
+    }
+
+    /// Rewrites every effect COLOUR binding's place, dropping the ones the
+    /// change answered with nothing.
+    private mutating func remapEffectColorBindings(_ move: (Int) -> Int?) {
         guard let bindings = colorStyleBindings,
               bindings.contains(where: { $0.effectIndex != nil }) else { return }
         var rebuilt: [ColorStyleBinding] = []

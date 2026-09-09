@@ -1253,6 +1253,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// until somebody saves a text style and dresses this layer in it, so a
     /// layer that has never met one writes exactly what it always wrote.
     public var textStyleID: UUID?
+    /// Which entries in this layer's Effects list came from a named effect
+    /// rather than being tuned here (`EffectStyles.swift`). Nil until somebody
+    /// saves an effect and puts it on this layer, so a layer that has never met
+    /// one writes exactly what it always wrote.
+    public var effectStyleBindings: [EffectStyleBinding]?
     /// What this layer does when the group holding it is resized, overriding
     /// that group's default one axis at a time (`docs/design/ui-building.md`,
     /// "Resizing places the pieces"). Nil, or a nil axis, means follow the
@@ -1332,6 +1337,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.wrappedByItsContainer = wrappedByItsContainer
         copy.heightChosenByHand = heightChosenByHand
         copy.textStyleID = textStyleID
+        copy.effectStyleBindings = effectStyleBindings
         copy.repointComponentProperties(map)
         return copy
     }
@@ -1359,6 +1365,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.wrappedByItsContainer = wrappedByItsContainer
         copy.heightChosenByHand = heightChosenByHand
         copy.textStyleID = textStyleID
+        copy.effectStyleBindings = effectStyleBindings
         map[id] = copy.id
         return copy
     }

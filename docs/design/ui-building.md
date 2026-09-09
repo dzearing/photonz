@@ -331,13 +331,23 @@ it. Tokens (the layer beneath styles, where `accent` resolves differently per
 mode) are deferred: the built-in components bind to styles, and styles gain token
 backing when modes arrive.
 
-Two of the three exist. A named paint is `Sources/PhotonzCore/ColorStyles.swift`;
-a named text treatment (font, size, weight and colour kept together) is
-`Sources/PhotonzCore/TextStyleLibrary.swift`, landed 2026-09-08. Both keep the
+All three exist. A named paint is `Sources/PhotonzCore/ColorStyles.swift`; a
+named text treatment (font, size, weight and colour kept together) is
+`Sources/PhotonzCore/TextStyleLibrary.swift`, landed 2026-09-08; a named effect
+(a shadow, a glow, a border or a blur, with every one of its settings) is
+`Sources/PhotonzCore/EffectStyles.swift`, landed 2026-09-09. All three keep the
 value ON the layer as well as in the style, so nothing downstream has to learn
-what a style is, and both let go of the name the moment the value is set some
-other way, which the app says out loud (`LinkBreaks.swift`). A named effect is
-the one still missing.
+what a style is, and all three let go of the name the moment the value is set
+some other way, which the app says out loud (`LinkBreaks.swift`).
+
+The effect one had a question the other two did not: an effect sits at a PLACE
+in a list that can be added to, taken from and dragged around, so a binding can
+name either the place or the effect. It names the PLACE, because the app already
+answered that question once for an effect's own colour
+(`ColorStyleBinding.effectIndex`) and made `Layer.insertEffect`, `removeEffect`
+and `moveEffect` the only ways the list may change so that a place-named binding
+stays true. A second way of addressing the same list would be a second rule to
+keep in step with the first.
 
 ## The order of work
 

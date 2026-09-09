@@ -206,18 +206,32 @@ struct LibraryPanel: View {
         }
     }
 
+    /// ...and the named effects, on the same shelf and after them (Next,
+    /// `next-styles`). The third of the three kinds a style comes in, and it
+    /// sits with the other two because to a person they are one thing: a name
+    /// you put on things.
+    private var visibleEffectStyles: [(entry: LibraryEntry, style: EffectStyle)] {
+        guard scope == .styles, let document = editorState.document else { return [] }
+        let hits = LibrarySearch.filter(editorState.effectStyleEntries, query: query)
+        return hits.prefix(Self.maxTiles).compactMap { entry in
+            guard let id = UUID(uuidString: entry.id),
+                  let style = document.effectStyle(id: id) else { return nil }
+            return (entry, style)
+        }
+    }
+
     /// Whether this scope has anything to show at all, whatever the search
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
         visibleEntries.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
-            && visibleTextStyles.isEmpty
+            && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty
     }
 
     /// How many tiles the shelf is showing right now, whatever scope they came
     /// from — the shelf only ever draws one scope at a time.
     private var tileCount: Int {
         visibleEntries.count + visibleComponents.count + visibleStyles.count
-            + visibleTextStyles.count
+            + visibleTextStyles.count + visibleEffectStyles.count
     }
 
     /// The height the shelf takes: its tiles, capped at the ceiling the grab
@@ -289,6 +303,9 @@ struct LibraryPanel: View {
             }
             ForEach(visibleTextStyles, id: \.entry.id) { pair in
                 LibraryTextStyleTile(entry: pair.entry, style: pair.style)
+            }
+            ForEach(visibleEffectStyles, id: \.entry.id) { pair in
+                LibraryEffectStyleTile(entry: pair.entry, style: pair.style)
             }
         }
         .padding(.vertical, LibraryShelfLayout.gridVerticalPadding)

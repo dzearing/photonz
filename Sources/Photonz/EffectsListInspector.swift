@@ -387,7 +387,11 @@ private struct EffectRowView: View {
     // MARK: The settings
 
     @ViewBuilder private var settings: some View {
-        // The colour first, whatever the effect is, so the list reads one way:
+        // The name this effect came from, at the top, because it sets every row
+        // under it and a control that does that placed below them is a control
+        // nobody finds (`EffectStylePanel.swift`).
+        EffectStyleRow(row: row)
+        // Then the colour, whatever the effect is, so the list reads one way:
         // every entry that paints a colour asks for it in the same place, in
         // the same words, with the same saved colours behind it.
         EffectColorRow(row: row)
@@ -787,6 +791,21 @@ struct AddEffectButton: View {
                 Button(kind.title) { editorState.addEffect(kind) }
                     .disabled(!editorState.canAddEffect(kind))
                     .panelHelp(kind.summary)
+            }
+            // ...and the effects somebody has already tuned and named. This is
+            // the route by which a saved effect reaches a layer that has
+            // nothing like it yet, and it lives here because adding a saved
+            // effect IS adding an effect: a Style menu on a row can only reach
+            // layers that already hold that effect at that place
+            // (`EffectStylePanel.swift`).
+            let saved = editorState.namedEffectStyles
+            if !saved.isEmpty {
+                Section("Saved effects") {
+                    ForEach(saved) { style in
+                        Button(style.name) { editorState.addEffectStyle(styleID: style.id) }
+                            .panelHelp(EffectStyleNaming.effectText(style.effect))
+                    }
+                }
             }
         } label: {
             Image(systemName: "plus")

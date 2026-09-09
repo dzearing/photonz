@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T23:24:54.733Z",
-  "updated": "2026-09-08T23:24:54.736Z",
+  "updated": "2026-09-09T02:48:45.325Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Third of the three style kinds in docs/design/ui-building.md. Do it the way the other two do it: Sources/PhotonzCore/ColorStyles.swift and Sources/PhotonzCore/TextStyleLibrary.swift are the two working examples, and the text one is the closer model because an effect, like a text treatment, is several values kept together rather than one. Same shelf, same reconcile-on-every-edit rule, same LinkBreaks kind. Flag: next-styles.\n\nThe hard part the other two did not have: an effect lives at a PLACE in the Effects list, and the list moves (Layer.insertEffect/removeEffect/moveEffect already remap colour bindings by index). Decide early whether the binding names the place or the effect.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-09-08T23:24:54.735Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T02:48:45.324Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T02:52:17.969339Z",
+      "note": "Adversarial review before building. (1) The binding names the PLACE, not the effect. The app already has exactly this invariant for an effect's COLOUR (ColorStyleBinding.effectIndex), and insertEffect/removeEffect/moveEffect exist so a place-named binding stays true. A second addressing scheme for the same list would mean two rules to keep in step, so the effect-style binding rides the same remap. (2) Where you save from: the Style row is the FIRST setting under the effect's rule, above Colour, for the same reason the text Style row sits at the top of the Text section - it sets every row under it. The row header (chevron, grip, eye, cross) is already full and a fifth control there would be crowding. (3) Where you USE it: the mock-shaped answer would be a tile you drag, but the honest one is the Effects header PLUS menu. Adding a saved effect to a layer IS adding an effect, so it belongs where adding an effect already lives; a Style menu on an effect row can only reach layers that already have that effect at that place, which is circular. The row's own menu therefore offers only styles of the SAME KIND, so a row titled Shadow can never quietly become a border. (4) Cut: no free-standing drag-and-drop from the shelf, no per-kind style scoping, no 'update style from this layer'. (5) The style's settings are edited in the Library section with plain one-value controls rather than by reusing the layer-bound rows: a style has exactly one value, so all the mixed-reading machinery in those rows is dead weight. That is precisely what LibraryTextStyleInspector already does for text."
+    },
+    {
+      "t": "2026-09-09T03:33:00.214555Z",
+      "note": "Built. Core: Sources/PhotonzCore/EffectStyles.swift (EffectStyle, EffectStyleBinding, save/use/bind/unbind/set/rename/delete, EffectStyleSelection, EffectStyleNaming, reconcileEffectStyles), PhotonzDocument.effectStyles + Codable (no key when empty), Layer.effectStyleBindings carried through duplicate/reidentify and the component copier, LinkBreakKind.effectStyle. The three list moves now go through one remapEffectPlaces that carries BOTH the colour bindings and the effect-style bindings. 32 new tests in Tests/PhotonzCoreTests/EffectStyleTests.swift; Scripts/test.sh green at 5187 tests. App: EditorState+EffectStyles.swift, EffectStylePanel.swift (EffectStyleRow at the top of each effect's settings, LibraryEffectStyleTile, EffectSample, LibraryEffectStyleInspector), the Effects plus menu grew a Saved effects section, the Library shelf grew the tiles, LayersPanel routes the picked tile to the new section. Verified on the probe with Scripts/playtest/effect-style-walk.json (new, 10 stages, ok); the 12 effect walks, 6 style walks, 5 border walks all pass. panel-controls-walk and dock-picked-first-walk fail, and fail identically on a stashed clean tree, so they are not this change. Asked for a full sweep because every effect pane got taller."
+    },
+    {
+      "t": "2026-09-09T03:33:00.214555Z",
+      "note": "Adversarial review of the BUILT thing, on the probe. (1) The first shelf tile was a grey square: a 40% black shadow drawn on the dark dock is invisible, and so were the other three kinds. EffectSample now draws its own piece of paper under the plate in both themes, which is what any of these effects is actually seen against, and a shadow tile and a glow tile are now tellable apart at a glance. (2) The style section's shadow rows were Softness/Distance/Size; they are now Softness, Size, Distance, Direction, Opacity, the same five in the same order with the same ranges the Effects list uses, so a style's controls and the hand ones are the same controls. (3) A text layer has a shadow in its Effects list, so a walk on one saw TWO rows called Style and could open neither (text-style-walk broke). The effect's Style row now names itself after the effect it is in, the way two shadows are told apart."
     }
-  ]
+  ],
+  "started": "2026-09-09T02:48:45.323Z"
 }

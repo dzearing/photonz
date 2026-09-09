@@ -60,6 +60,9 @@ public struct History: Sendable {
         // ...and text that was set some other way lets go of the name it
         // claimed, for exactly the same reason and at the same moment.
         next.reconcileTextStyles()
+        // ...and an effect that was tuned some other way lets go of its name
+        // too, for the same reason and at the same moment.
+        next.reconcileEffectStyles()
         // Every stack and grid puts its contents back in order inside the same
         // step, BEFORE the copies are refilled, so a copy of a component is
         // rebuilt from an original that has already settled. It happens here

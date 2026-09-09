@@ -1,0 +1,30 @@
+{
+  "feature": "An effect can be saved as a named style",
+  "epic": "ui-components",
+  "summary": "A shadow, a glow, a border or a blur you have tuned can be saved under a name, put on other layers from the plus on the Effects header, and re-tuned once so every layer wearing it follows in a single undo step. It is the third of the three kinds a style comes in, beside the saved colours and the saved text treatments, and it sits on the same Library shelf as both.",
+  "setup": "Photonz Dev, Experiments window, release Next. It rides the same next-styles flag the saved colours and text styles are already behind, so it is on wherever they are.",
+  "try": [
+    { "do": "Draw two rectangles on a blank canvas." },
+    { "do": "Select the first, press the plus on the Effects header, and choose Shadow. Tune the Softness and Distance until you like it." },
+    { "do": "Open the Style menu at the top of that shadow's settings and choose Save as Style. Type a name and press Return.", "shot": "2026-09-09-effect-styles-1.png" },
+    { "do": "Select the second rectangle, press the plus on the Effects header, and choose your name from Saved effects at the bottom of that menu.", "shot": "2026-09-09-effect-styles-2.png" },
+    { "do": "Click the style's tile on the Library's Styles shelf.", "shot": "2026-09-09-effect-styles-3.png" },
+    { "do": "Drag the Softness slider in that section. Both rectangles change." },
+    { "do": "Press Command Z once. Both go back together." },
+    { "do": "Now drag the Softness slider on ONE of the rectangles, in the Effects list. That shadow quietly leaves the style and the app says so." }
+  ],
+  "evaluate": [
+    "Adding a saved effect from the plus, rather than dragging its tile onto a layer: is that where you would have looked for it?",
+    "The Style row sits at the TOP of an effect's settings, above the colour. Does it read as the thing that sets everything under it, or as one more setting?",
+    "The line under a styled row says changing any setting below takes the effect off the style, and it is showing the whole time. Is that a useful warning or is it in the way?",
+    "The shelf tiles draw the effect on a small piece of paper. Can you tell a shadow from a glow at that size without reading the name?",
+    "The style's own section names the effect once at the top (\"Drop shadow, 12 pt, 40%\"). Does that tell you enough, or do you want a bigger preview?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is a real capture of the probe window, not an offscreen render.",
+    "The style's section does not carry a border's \"Follows\" setting, which decides whether a ring goes round a label's letters or its box. It is the one border setting a style cannot change; a style saved from a label keeps whatever it was saved with. It was left out because it means nothing on any layer but a label and the section is already six rows.",
+    "There is no way to update a style FROM a layer you have just re-tuned. Tuning a styled effect breaks the link, which is the same rule the saved colours and text styles follow, but with an effect it is easier to want the other thing: you tune the shadow on one card and then wish every card had it. Worth watching for whether that is a real want or a habit from other tools.",
+    "A style can only be worn by an effect of its own kind, so the menu on a Shadow row lists only saved shadows. That is on purpose (a row titled Shadow must not become a border), but it means the row's menu is empty until you have saved something of that kind, and the only hint about where the others are is the plus.",
+    "The shelf tile is a picture drawn in SwiftUI rather than the renderer's own answer, so it approximates: an inner shadow and an inner glow are drawn as a soft band inside the plate rather than composited the way the canvas does it."
+  ]
+}

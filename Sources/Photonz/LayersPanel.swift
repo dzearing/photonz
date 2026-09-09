@@ -892,6 +892,8 @@ struct InspectorPanel: View {
                 LibraryStyleInspector()
             } else if editorState.selectedTextStyle != nil {
                 LibraryTextStyleInspector()
+            } else if editorState.selectedEffectStyle != nil {
+                LibraryEffectStyleInspector()
             } else {
                 LibraryItemInspector()
             }

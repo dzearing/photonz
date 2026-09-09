@@ -521,6 +521,7 @@ final class EditorState {
             // that row is gone (Next, `next-styles`).
             if colorStyleNaming != nil { colorStyleNaming = nil }
             if isNamingTextStyle { isNamingTextStyle = false }
+            if namingEffectStyleRow != nil { namingEffectStyleRow = nil }
             // ...and so does a folded effect: the Effects list is about to be
             // some other shape's.
             forgetEffectFolds()
@@ -544,6 +545,7 @@ final class EditorState {
             if multiSelectedLayerIDs != oldValue {
                 colorStyleNaming = nil
                 isNamingTextStyle = false
+                namingEffectStyleRow = nil
                 forgetEffectFolds()
                 history?.syncSelection(selectionSnapshot)
             }
@@ -1022,6 +1024,13 @@ final class EditorState {
     /// lives here for the same two reasons: one field open at a time, and a
     /// walk can open it.
     var isNamingTextStyle = false
+
+    /// Which effect row's Style field is asking for a name right now, by
+    /// `LayerEffectRow.id`. Unlike the text one it needs an address: the
+    /// Effects list can hold several rows at once and each has its own Style
+    /// row. It lives here for the same two reasons the others do: one field
+    /// open at a time, and a walk can open it.
+    var namingEffectStyleRow: String?
 
     /// Which effects in the Effects list are folded shut right now, by
     /// `LayerEffectRow.id`.
