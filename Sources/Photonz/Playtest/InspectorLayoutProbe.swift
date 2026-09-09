@@ -44,6 +44,11 @@ import SwiftUI
     /// "it was already all there" is the answer half the time and a walk
     /// reading an empty line could not tell that from a reveal that never ran.
     var effectReveal: String?
+    /// ...and the same for the section a PICK brought up: which section, where
+    /// it was sitting, and whether the dock had to move to put it on screen.
+    /// Same reason as the line above: "it was already there" has to be
+    /// readable as an answer rather than as silence.
+    var pickReveal: String?
     /// What the height budget did to each list section this pass, so a walk can
     /// say "nothing in Effects is cut across the middle" in words rather than
     /// by someone squinting at a capture.
@@ -161,6 +166,18 @@ import SwiftUI
     }
 }
 
+@MainActor func recordPickedReveal(_ title: String, frame: CGRect,
+                                   viewport: CGFloat, action: DockReveal.Action) {
+    func points(_ value: CGFloat) -> String { "\(Int(value.rounded()))" }
+    let where_ = "\(title) \(points(frame.height))pt at \(points(frame.minY))-\(points(frame.maxY)), "
+        + "dock \(points(viewport))pt"
+    InspectorLayoutProbe.shared.pickReveal = switch action {
+    case .none: "\(where_): already all on screen, nothing moved"
+    case .top: "\(where_): scrolled to its top"
+    case .bottom: "\(where_): scrolled down to its bottom"
+    }
+}
+
 @MainActor func recordInspectorListRoom(_ id: InspectorSectionID,
                                         natural: CGFloat, drawn: CGFloat,
                                         panes: [DockHeightBudget.Block],
@@ -190,6 +207,8 @@ extension View {
 @MainActor func recordInspectorCarrying(_ title: String?) {}
 @MainActor func recordEffectReveal(_ id: String, frame: CGRect,
                                    room: CGFloat, action: DockReveal.Action) {}
+@MainActor func recordPickedReveal(_ title: String, frame: CGRect,
+                                   viewport: CGFloat, action: DockReveal.Action) {}
 @MainActor func recordInspectorListRoom(_ id: InspectorSectionID,
                                         natural: CGFloat, drawn: CGFloat,
                                         panes: [DockHeightBudget.Block],

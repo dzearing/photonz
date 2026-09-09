@@ -4732,6 +4732,10 @@ private final class Run {
             // What the panel last did about an effect you opened: the reveal
             // that keeps a chevron from putting its settings out of sight.
             "effectReveal": InspectorLayoutProbe.shared.effectReveal ?? "none yet",
+            // ...and what it last did about the section a PICK brought up: the
+            // reveal that keeps a click on a layer from leaving that layer's
+            // own settings below the fold.
+            "pickReveal": InspectorLayoutProbe.shared.pickReveal ?? "none yet",
             "tooltip": HintTooltipController.shared.visibleDescription ?? "none",
             "edgeMap": !editor.snappingEdgeMap.isEmpty,
             "firstResponder": window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil",

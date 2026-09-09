@@ -308,6 +308,11 @@ struct InspectorPanel: View {
                     applyEffectReveal(proxy, for: id)
                 }
             }
+            // You picked something: put the section named after it where you
+            // can see it. Both stores, because a plain click and a shift click
+            // are the same act as far as the panel is concerned.
+            .onChange(of: editorState.selectedLayerID) { requestPickedReveal(proxy) }
+            .onChange(of: editorState.multiSelectedLayerIDs) { requestPickedReveal(proxy) }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial)
@@ -515,6 +520,70 @@ struct InspectorPanel: View {
                 proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
             }
         }
+    }
+
+    // MARK: Bringing what you just picked into view
+
+    /// How long to wait after a pick before scrolling to the section it brought
+    /// up. A section that has just appeared is built a pass after the click
+    /// (see `PanelSectionArrival`) and the lists above it settle to their new
+    /// heights in the pass after that, so a reveal measured any sooner is
+    /// measuring a dock that is still moving.
+    private static let pickRevealDelay = 0.24
+
+    /// You clicked a layer — in the list or on the canvas. Bring the section
+    /// named after it into view, so the settings for the thing you just picked
+    /// are the ones you can see.
+    ///
+    /// Only the pick's OWN section: the dock is routinely taller than the panel
+    /// (a marked-up screenshot runs about 1100pt in a 690pt panel), so
+    /// something is always off screen, and the one thing that must not be is
+    /// what you just clicked. Everything general — Appearance, Effects,
+    /// Position & Size — keeps whatever place the reader left it in.
+    private func requestPickedReveal(_ proxy: ScrollViewProxy) {
+        reveal.pickPass &+= 1
+        let pass = reveal.pickPass
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pickRevealDelay) {
+            guard reveal.pickPass == pass else { return }
+            applyPickedReveal(proxy)
+        }
+    }
+
+    private func applyPickedReveal(_ proxy: ScrollViewProxy) {
+        // The Library shelf asked first and is mid-flight; two scrollers
+        // fighting over the same dock is worse than either one losing.
+        guard !reveal.isPending else { return }
+        guard let id = pickedSection, let frame = reveal.sectionFrames[id] else { return }
+        let action = DockReveal.action(sectionTop: frame.minY,
+                                       sectionHeight: frame.height,
+                                       viewportHeight: reveal.viewportHeight)
+        recordPickedReveal(sectionTitle(id), frame: frame,
+                           viewport: reveal.viewportHeight, action: action)
+        // Already all there: picking a second piece of text while its section
+        // is under your eyes must not make the dock twitch.
+        guard action != .none else { return }
+        withAnimation(.easeInOut(duration: 0.28)) {
+            proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
+        }
+    }
+
+    /// The section named after what is picked, or nil when what is picked has
+    /// none of its own.
+    ///
+    /// A plain rectangle is the nil case and it is the ordinary one: since the
+    /// parts list landed, everything a rectangle owns is a row inside
+    /// Appearance, which sits high in the dock and needs no help. Only the
+    /// kinds that still carry a section of their own — a piece of text, a
+    /// measurement, a zoom callout, an arrow's head and caption, a collage —
+    /// are worth moving the dock for.
+    ///
+    /// The Canvas section is deliberately NOT one of them. Clicking empty space
+    /// is how you put something down, not how you ask about the canvas, and a
+    /// dock that jumped every time you deselected would be jumping most of the
+    /// time.
+    private var pickedSection: InspectorSectionID? {
+        let available = availableSections
+        return Self.pickedSections.first { $0 != .canvas && available.contains($0) }
     }
 
     private var selectedLayer: Layer? {
@@ -1158,6 +1227,11 @@ private struct SectionDrag: Equatable {
     var libraryFrame: CGRect?
     var viewportHeight: CGFloat = 0
     var isPending = false
+    /// How many picks the dock has seen. A reveal waits a beat for the section
+    /// it is about to scroll to to finish being laid out, and this is how the
+    /// wait knows it is still the newest one: click three rows quickly and only
+    /// the third moves the dock.
+    var pickPass = 0
     /// Where each effect in the Effects list is sitting, by
     /// `LayerEffectRow.id`, in the dock's visible area. Written on every scroll
     /// tick and read only when an effect has just been opened.

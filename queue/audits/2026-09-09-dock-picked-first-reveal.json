@@ -1,0 +1,29 @@
+{
+  "feature": "Picking a layer brings its own section into view",
+  "epic": "ui-building",
+  "summary": "Click a piece of text, a measurement or a zoom callout and the right hand panel now scrolls itself so that thing's own settings are on screen. Before, on a marked up screenshot in a laptop window, the Text section sat 70 points below the bottom of the panel and you had to find it with the scroll wheel.",
+  "setup": "Photonz Dev, release Next, a 1200 by 720 window. Nothing to turn on; this is how the panel behaves now.",
+  "try": [
+    { "do": "Open a screenshot and mark it up until the layers list is full: four rectangles, an arrow, a measurement, a piece of text and a zoom callout." },
+    { "do": "Click the text layer in the layers list on the right.", "shot": "2026-09-09-dock-picked-first-text-sc.png" },
+    { "do": "Read the Text section at the bottom of the panel without touching the scroll wheel." },
+    { "do": "Click the measurement layer and read its Measurement section the same way.", "shot": "2026-09-09-dock-picked-first-measure-sc.png" },
+    { "do": "Click the arrow layer, whose Arrow section already fits, and watch that the panel does not move." },
+    { "do": "Click a plain rectangle and watch that the panel does not move either." },
+    { "do": "Click the text layer again, scroll the panel back to the top by hand, then click the zoom callout." }
+  ],
+  "evaluate": [
+    "When the panel scrolls itself, does it land where your eye expected, or does it feel like the panel jumped?",
+    "Picking a text layer scrolls the layers list off the top of the panel. Does losing the list you just clicked in bother you more than not seeing the Text settings did?",
+    "The section it scrolls to sits flush against the bottom edge of the panel. Should it stop a little short of the edge instead?",
+    "Clicking a plain rectangle leaves the panel exactly where it was. Should a rectangle pull the panel back to the top instead of leaving it wherever the last pick put it?",
+    "Drawing a new zoom callout also scrolls the panel to its settings. Is that welcome, or noise in the middle of drawing?"
+  ],
+  "rough": [
+    "The real cost, and it is unavoidable: the panel holds about 1030 points of sections in a 690 point window, so showing the Text section means the layers list goes off the top. You click a row and the list of rows leaves. Nothing can show both.",
+    "The top of the panel is then an orphan: the first thing you see is a colour row with no heading above it, because the scroll cut Appearance in half. That is true of any scrolled panel, but this makes it happen more often.",
+    "Clicking empty canvas deliberately does NOT scroll to the Canvas section. Putting something down is not the same as asking about the canvas, and a panel that jumped on every deselect would be jumping most of the time.",
+    "A collapsed section is scrolled to as a header and left collapsed. Opening it for you would undo a choice you made on purpose.",
+    "Picking the same layer twice does nothing, so scrolling away by hand and clicking the same row again will not bring the section back. Clicking a different layer and back does."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2250,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T07:04:02.931Z",
-  "updated": "2026-09-09T07:04:02.934Z",
+  "updated": "2026-09-09T08:41:58.886726Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-09 on BOTH the working tree and a clean build of main (stashed changes, rebuilt, same failure), so it is not from the pane-floor work landed that day.\n\nCommand: Scripts/playtest-all.sh --no-build dock-picked-first\nOutput: dock-picked-first-walk  16s  FAILED  step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s\n\nThe log at the step before shows why: with the text layer picked the dock runs Layers 6-169, Appearance 169-341, Effects 341-525, Measurements 525-612, Text 760-958, Position & Size 958-1093 in a 688 point viewport, so Text starts 72 points below the fold and nothing scrolled to it. Effects is drawn 299 of its natural 299, so the height budget is not squeezing anything here: the missing piece is a reveal for the section the picked layer brings up, like the one the Library shelf and an opened effect already have (LayersPanel.applyLibraryReveal, applyEffectReveal).",
@@ -21,6 +21,39 @@
     {
       "t": "2026-09-09T07:04:02.933Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T08:26:32.063Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T08:41:58.886726Z",
+      "note": "Adversarial review before building. Walked it as a first-time reader. The mock-ish assumption in the task ('add a reveal like the Library's') survives, with three corrections. (1) It must not fire for a plain rectangle: since the parts list landed a rectangle has no section of its own, and Appearance already sits high in the dock, so a reveal there would be a jump with nothing at the end of it. (2) It must not fire for the Canvas section: clicking empty space is how you put something down, not how you ask about the canvas, so the dock would jump on most clicks. (3) It must not fire when the section is already whole on screen, which is half the picks (proved: picking the Arrow reads 'already all on screen, nothing moved'). The shortest version that delivers the value is therefore one reveal, for the sections named after the picked thing only, reusing DockReveal.action for the do-nothing case."
+    },
+    {
+      "t": "2026-09-09T08:41:58.886726Z",
+      "note": "The cost, found by reading the live numbers rather than guessing: showing Text means the layers list leaves. With a text layer picked the dock is 1028pt of sections in a 688pt panel and Text sits at 695-893, so putting Text on screen carries Layers to -264--101. You click a row and the list of rows goes away. That is arithmetic, not a bug: nothing can show both. It is written into the audit's rough and asked about in evaluate, since which of the two the user would rather keep is theirs to say."
+    },
+    {
+      "t": "2026-09-09T08:41:58.886726Z",
+      "note": "Implementation. Sources/Photonz/LayersPanel.swift: requestPickedReveal / applyPickedReveal / pickedSection, fired from .onChange on selectedLayerID and multiSelectedLayerIDs. Waits Self.pickRevealDelay (0.24s, same as the effect reveal) so the section \u2014 built a pass after the click by PanelSectionArrival \u2014 and the lists above it have settled before being measured, and a pickPass counter drops the wait when a newer pick has arrived (click three rows fast, only the third moves the dock). The decision itself is DockReveal.action, already in PhotonzCore and tested, so .none/.top/.bottom is not re-derived here. Probe: recordPickedReveal + a new 'pickReveal' line in the walk state, next to 'effectReveal', so a walk can read what the dock did in words."
+    },
+    {
+      "t": "2026-09-09T08:41:58.886726Z",
+      "note": "Shared file on purpose. The dock has no Next fork (Sources/Photonz/Releases/Next holds only NextExperience.swift), so like every earlier dock reveal this lands in the shared panel and both releases have it. No porting work outstanding, no flag, matching the un-flagged Library and effect reveals beside it."
+    },
+    {
+      "t": "2026-09-09T08:41:58.886726Z",
+      "note": "Verified. Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json passes end to end (was: FAILED step 47). The walk's own numbers: Text 198pt at 695-893 scrolled down to its bottom, now 490-688 and in dockInView; Measurement 279pt at 473-752 -> 409-688 in view; Zoom Callout 114pt at 665-779 -> 574-688 in view; Arrow 209pt at 457-666 'already all on screen, nothing moved'; picking Rectangle 4 leaves dockSections byte-identical. Also green: the dock (3), panel (18), text (12) and callout (4) walk families with --no-build, and Scripts/test.sh (5278 tests, 438 suites)."
+    },
+    {
+      "t": "2026-09-09T08:41:58.886726Z",
+      "note": "Asked for a full sweep (queue/bin/sweep.sh request) rather than running one: the change can move any control in the right panel after a layer is picked, which is wider than the 37 walks run here."
+    },
+    {
+      "t": "2026-09-09T08:41:58.886726Z",
+      "note": "Audit: queue/audits/2026-09-09-dock-picked-first-reveal.json, with two real screen captures beside it (Screen Recording was granted this run)."
     }
-  ]
+  ],
+  "started": "2026-09-09T08:26:32.062Z"
 }
