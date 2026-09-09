@@ -1,0 +1,35 @@
+{
+  "id": "corner-radius-folds-like-an-effect-with-its-chev",
+  "title": "Corner radius folds like an effect, with its chevron on the left",
+  "goal": "The corner radius row carries its chevron in the middle, after the name, and its four corner fields sit under a plain indent rather than behind the rule that says which row they belong to. It should read exactly like an effect: a chevron on the left, the name beside it, and its settings folded away behind the same owning rule the effects use, so a panel has one way of showing a row that opens.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T01:04:07.113Z",
+  "updated": "2026-09-09T01:04:07.151Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-08. Today CornerRadiusRow (Sources/Photonz/LayersPanel.swift line 3624) keeps its own open state in cornersOpen, draws its chevron inside the row after the name rather than at the leading edge, and indents the four corner fields with a plain leading pad of 16 instead of using OwnedSettings, which is the rule view the effects and parts lists share (PartsInspector.swift line 268). So the work is to adopt the shared pieces rather than restyle this one: leading chevron, shared rule, same name treatment. Note the row is shared between releases and only the new panel grows the chevron at all, gated on Experiments.shapePartsEnabled at line 3654, so keep that gate rather than changing what the old panel shows. Coordinate with an-effect-row-reads-like-a-small-pane-with-a-che, which defines the chevron, title and rule treatment this row is being asked to match, and with panel-content-sits-twelve-points-from-each-edge, which sets where the leading column starts; this should follow whatever those settle rather than pick its own numbers.",
+  "acceptance": [
+    "The corner radius row's chevron is the leftmost thing on the row, in the same place and the same size as an effect's chevron",
+    "Folding it away and opening it works the same way an effect does, and the state is remembered while the layer stays picked",
+    "The four corner fields sit behind the same vertical rule an effect's settings use, not a plain indent, and that rule lines up under the chevron",
+    "The row's name is drawn the same way an effect's name is",
+    "The slider and the number the row shows when it is closed keep working exactly as they do now",
+    "Nothing else in the panel changes shape, and any other row that opens follows the same pattern or the audit names it and says why not",
+    "Audit written under queue/audits/ with the row closed and open beside an effect for comparison, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T01:04:07.115Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T01:04:07.150Z",
+      "note": "seq 260 -> 4"
+    }
+  ]
+}
