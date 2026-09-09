@@ -1,0 +1,36 @@
+{
+  "id": "holding-shift-while-placing-a-caliper-locks-the",
+  "title": "Holding shift while placing a caliper locks the direction it is measuring",
+  "goal": "Placing a measurement decides whether it is going across or down from wherever the pointer is, and it keeps changing its mind as you move. So to measure from a baseline down to the top of a line of text that is off to one side, you cannot reach that text without the caliper flipping to measure across instead. Holding shift should lock the direction to whatever it is at that moment and keep it locked while shift is down, so you can travel sideways to the point you actually want to catch. Letting shift go returns to deciding as it does now.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T13:04:06.589Z",
+  "updated": "2026-09-09T13:04:06.630Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-09 with the exact case: a baseline, then the top of a text run that is not directly below it. The deciding happens in CanvasMeasure.snapMeasureSecondFoot (Sources/Photonz/CanvasMeasure.swift line 229): it snaps the pointer, then calls MeasureContent.dominantAxis(from:to:) on every move and flattens the far foot onto that axis, so the mode is recomputed continuously and nothing holds it. Command is already taken on this path, freeing the snap entirely (line 231), so shift is the right key and is currently unread here. Two things to get right. The lock has to capture the mode at the moment shift goes down and keep it until shift comes up, so it needs to live with the placement state rather than be derived each move. And snapping must keep working while locked, which is the whole point of the feature: the pointer catches a point off to the side and only its position ALONG the locked axis is used for the far foot. Pair this with holding-shift-while-dragging-a-caliper-end-keeps so both are the same gesture; whichever lands second should make them agree rather than adding a second meaning for the key.",
+  "acceptance": [
+    "While placing a measurement, pressing shift locks the direction it is currently measuring in, and moving the pointer anywhere while shift is held cannot change it",
+    "With the direction locked, the caliper still catches points off to the side: the far foot takes its position along the locked direction from the point caught, so a baseline can be measured against text that is not underneath it",
+    "Letting shift go returns to choosing the direction from where the pointer is, with no jump",
+    "Pressing shift after the pointer has already crossed into the other direction locks what is on screen at that moment, not what it was when the placement started",
+    "The reading updates live while locked, so the number always matches what is drawn",
+    "This is the same key doing the same thing as holding shift while dragging a caliper end, so the two read as one idea, and the audit says how they line up",
+    "Core logic covered by tests in PhotonzCore written before the change, including a lock held while the pointer travels well past the crossover",
+    "Audit written under queue/audits/ with a baseline measured down to text that sits off to one side, anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T13:04:06.591Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T13:04:06.629Z",
+      "note": "seq 260 -> 8"
+    }
+  ]
+}
