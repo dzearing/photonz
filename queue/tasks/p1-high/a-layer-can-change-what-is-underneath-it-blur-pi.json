@@ -1,0 +1,37 @@
+{
+  "id": "a-layer-can-change-what-is-underneath-it-blur-pi",
+  "title": "A layer can change what is underneath it: blur, pixelate, greyscale, invert",
+  "goal": "Right now a blur softens the shape you drew, not the picture under it, so there is no way to blur an email address, pixelate a name, grey out a region or invert part of a screenshot. Add a layer whose job is to change what is beneath it: you draw a box (or any shape), pick what it does - Blur, Pixelate, Greyscale, Invert, Brighten or Darken - and everything under that shape is drawn through it. Each one has its own setting: blur has a strength, pixelate has a block size, greyscale and brightness have an amount. It is a normal layer in every other way: it moves, resizes, rotates, rounds its corners, takes a border or a shadow, sits in the layer list, and undoes.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T13:30:53.578Z",
+  "updated": "2026-09-09T13:31:18.676Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-09, after rejecting a dedicated redaction tool: \"We need a much more powerful and generalized way to mix layer content onto the page to enable things like burn text on a layer, inverse it, pixelate it, greyscale it, and there needs to be a way to control the effect. Pixelation might have a granularity level, blur might have strength... are these effects or a property of the layer?\"\n\nSUPERSEDES the decision card 'hide-a-name-or-an-email-in-a-screenshot-before-y...', which the user resolved 'd' (do not build) the same day. The redaction case falls out of this general mechanism for free. Do NOT resurrect a dedicated cover-up or redact tool; the user called that \"stupid and proprietary for a niche scenario\".\n\nWhere it goes, and why. The answer to \"effect or property\" is NEITHER: it is the layer's CONTENT. The rule the app already keeps is Content = what a layer IS (a picture, a shape, a magnifier), Appearance = what it HAS, Effects = what you ADDED on top of it. EffectKind (Sources/PhotonzCore/LayerEffects.swift:20) is explicitly about the layer's own pixels - its comment says a blur is 'the layer's own softness, laid over everything it is made of'. An adjustment does the opposite: its input is what is BELOW. Putting it in the Effects list would give one list two meanings, so add a case to LayerContent (Sources/PhotonzCore/Layer.swift:886) beside .zoomCallout instead. A lens layer can then still wear its own Effects - a border round a blurred box, a shadow under it - which is exactly what a redaction callout wants.\n\nThe seam already exists and is already tested by the zoom callout. DocumentRenderer.swift:442 builds `backdrop` (output composited over underlay) for a zoom callout, and DocumentRenderer.swift:736 crops and transforms it. A zoom callout IS this feature with 'magnify' as its adjustment. Build the new kind next to it on the same path with a CoreImage filter on the end: CIGaussianBlur, CIPixellate, CIColorControls (saturation 0) or CIPhotoEffectMono, CIColorInvert, CIColorControls (brightness). Then mask to the layer's shape and corner radii.\n\nTraps a naive fix hits:\n1. A lens must never read itself or anything above it, at any nesting depth, or it feeds back. Read only what is composited below.\n2. The pass-through fast path at DocumentRenderer.swift:430 skips buffering a plain group and composites children straight onto the output. Check what that does to a lens inside such a group before assuming the underlay is right.\n3. Blur and pixelate are NEIGHBOURHOOD operations: they read pixels from outside the layer's own frame, so cropping the backdrop to the frame first gives a dark or smeared edge. Sample wider than the frame, filter, then crop.\n4. CIPixellate's blocks are anchored to a point, so a lens that is moved must not shimmer as its block grid slides; decide and record whether the grid is anchored to the canvas or to the layer.\n5. Contentscale: the renderer draws at contentScale for zoom. A blur strength and a pixel block size are in document points and must scale with it, the same way ZoomCalloutOverlayRasterizer handles it (DocumentRenderer.swift:453 onwards), or a 10pt block is a different size at 200%.\n\nSafety note worth one tooltip, not a second mechanism: what leaves the app (export, copy) is flattened, so a pixelated region really is gone from the PNG. The saved .photonz file still holds the original picture underneath. Say that once; do not build a separate baking step for it.\n\nExplicitly OUT of scope, file as a follow-up: folding the existing zoom callout into this as a 'Magnify' adjustment. It is the right end state and the model should be shaped so it can happen, but the callout has canvas-space chrome (leader lines, source outline) and is shipped, so do not risk it in the same change.\n\nSee also the sibling task on blend modes - that is the OTHER axis (per-pixel maths against the backdrop, for tinting and burning) and it cannot do blur or pixelate, which are not blends. The two are complementary, not alternatives.",
+  "acceptance": [
+    "A new layer kind exists that reads what is composited below it and draws it through a chosen adjustment; the shape of the layer is what it covers",
+    "The first set of adjustments all work and all have a setting you can change and see change live: Blur (strength), Pixelate (block size), Greyscale (amount), Invert, Brightness (amount, both directions)",
+    "The setting lives in the panel with everything else and reads as a setting of the layer, not as a second Effects list; a first-time user can find it without being told",
+    "The layer keeps everything a layer has: move, resize, rotate, corner radius, opacity, its own border and shadow, layer-list position, undo and redo",
+    "A lens over a group reads the group's contents over the canvas beneath the group, the same rule the zoom callout already follows, and a lens never reads itself at any nesting depth",
+    "Export and copy carry what you see: a pixelated region is pixelated in the PNG that leaves the app, checked by sampling exported pixels rather than by eye",
+    "Pixel tests in PhotonzRender for each adjustment, and model tests in PhotonzCore for the new content kind and its Codable round trip, all written before the implementation",
+    "A playtest walk covers drawing one, changing its adjustment, changing its setting, and moving it over different content",
+    "Audit under queue/audits/ with before and after captures of each adjustment, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T13:30:53.580Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-09T13:31:18.675Z",
+      "note": "seq 260 -> 12"
+    }
+  ]
+}

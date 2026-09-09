@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-09T02:47:25.499Z",
-  "updated": "2026-09-09T12:19:33.156Z",
+  "updated": "2026-09-09T13:29:45.384Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building opening-an-effect-brings-it-into-view (2026-09-08), and verified against a clean tree (git stash of Sources, Tests and Scripts/playtest, rebuild, rerun) so neither is caused by that work.\n\n1. Scripts/playtest.sh Scripts/playtest/panel-controls-walk.json -> step 63 (press): no control called \"Revert Opacity\" is in the panel. The panel it lists has no Appearance section at all: Layers, Effects, Component, Position & Size, Layout, Library.\n\n2. Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json -> step 47 (waitFor): sectionInView(\"Text\") did not happen within 4.0s. The log reads dockViewport 688 with dockSections [\"Layers 6-169\",\"Appearance 169-341\",\"Effects 341-503\",\"Measurements 503-590\",\"Text 738-936\",\"Position & Size 936-1071\"], so the Text section starts 50pt below the bottom of the dock and the walk waits for it to be in view.\n\nBoth look like the sections above them have grown since the walks were written.\n\nUPDATE 2026-09-09 (runner): panel-controls-walk is green, fixed by 64ac9f3c. dock-picked-first-walk still red; root cause is the section ORDER, not the walk. Verified fix in hand (v5 migration moving pickedSections before .effects in InspectorPanel.loadOrder, guarded by Experiments.shared.shapePartsEnabled, next to orderVersionLookUnderLayers) — makes the walk pass at 1200x720. Waiting on the decision because it reverses part of the user's 2026-09-07 ask.",
@@ -74,6 +74,10 @@
     {
       "t": "2026-09-09T12:19:33.154Z",
       "note": "Both walks verified green by the 2026-09-09 triage pass on a clean tree at HEAD 7e1e4d6d, with the probe rebuilt from that commit. panel-controls-walk: 75 steps, ok (fixed by 64ac9f3c, which gave Appearance back to anything unlocked). dock-picked-first-walk: 18s, ok (fixed by 7f65ae4d, Picking a layer brings its own section into view, which made the panel scroll itself to the picked section). Ran twice each, once on the 05:02 probe and once on a probe rebuilt at HEAD. The panel-order question this was blocked on is not closed and is not this task: it lives on picking-a-text-layer-leaves-its-settings-below-t, which now carries it. This task's own decision card is left pending and moot; there is no command to withdraw a card, which is filed as a-decision-card-that-no-longer-needs-an-answer-c."
+    },
+    {
+      "t": "2026-09-09T13:29:45.383Z",
+      "note": "decision \"Pick a piece of text in a short window and its own settings are off the bottom of the panel. What should give?\" resolved: What you picked goes above Effects (Style, font size, weight, etc are all appearance settings and belong in the appearance pane)"
     }
   ],
   "started": "2026-09-09T07:51:20.865Z",

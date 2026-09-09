@@ -47,6 +47,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-09T08:03:37.325Z"
+  "status": "resolved",
+  "created": "2026-09-09T08:03:37.325Z",
+  "answer": {
+    "choice": "a",
+    "note": "Style, font size, weight, etc are all appearance settings and belong in the appearance pane",
+    "resolved": "2026-09-09T13:29:45.371Z"
+  }
 }

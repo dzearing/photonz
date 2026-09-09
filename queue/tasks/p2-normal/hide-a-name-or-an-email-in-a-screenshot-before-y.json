@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:43:02.237Z",
-  "updated": "2026-09-09T12:23:40.850Z",
+  "updated": "2026-09-09T13:29:02.312Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED on its decision card until the user answers: this adds a visible tool nobody asked for, and the manager rule after the 2026-09-02 capture loupe is that competitor-parity controls get a card first.\n\nWhy it is a small piece of work despite being a new tool. The renderer already composites a layer against the picture beneath it: Sources/PhotonzRender/DocumentRenderer.swift line 647, \"backdrop is the composite of all visible layers below this one\", which is how a zoom callout magnifies live rather than baking a copy. A cover reads the same backdrop and blurs or pixelates it instead of magnifying it, so it is the zoom callout seam with a different filter.\n\nWhat exists today, checked on 2026-09-09: EffectKind in Sources/PhotonzCore/LayerEffects.swift is blur, shadow, border, glow, and blur is applied to the layer’s own image (DocumentRenderer.swift:856). Nothing in Sources matches pixelate, redact or spotlight. Sources/PhotonzCore/Tools.swift has no cover tool.\n\nThe export question in the acceptance matters more than it looks: a blur that is only a view-time effect can be undone by anyone who gets the document, which for this feature is the whole point of it.\n\nCleanShot X ships this as two things, secure blur and pixelate, and it is one of the features its reviews lead with (docs/plan/competitive-cleanshot.md).",
@@ -37,6 +37,16 @@
     {
       "t": "2026-09-09T12:23:40.849Z",
       "note": "seq 80 -> 90"
+    },
+    {
+      "t": "2026-09-09T13:29:02.310Z",
+      "note": "decision \"A redline you hand over often has a real name or email in it. Should Photonz be able to cover part of a picture, and how hard should that cover be?\" resolved: Do not build this"
+    },
+    {
+      "t": "2026-09-09T13:29:02.311Z",
+      "note": "retired by that answer: \"Do not build this\" means this should not be built, so it will not be picked up again."
     }
-  ]
+  ],
+  "parked": false,
+  "parkReason": ""
 }
