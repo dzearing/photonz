@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 8,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:04:06.589Z",
-  "updated": "2026-09-09T15:06:14.628Z",
+  "updated": "2026-09-09T15:22:42.315Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09 with the exact case: a baseline, then the top of a text run that is not directly below it. The deciding happens in CanvasMeasure.snapMeasureSecondFoot (Sources/Photonz/CanvasMeasure.swift line 229): it snaps the pointer, then calls MeasureContent.dominantAxis(from:to:) on every move and flattens the far foot onto that axis, so the mode is recomputed continuously and nothing holds it. Command is already taken on this path, freeing the snap entirely (line 231), so shift is the right key and is currently unread here. Two things to get right. The lock has to capture the mode at the moment shift goes down and keep it until shift comes up, so it needs to live with the placement state rather than be derived each move. And snapping must keep working while locked, which is the whole point of the feature: the pointer catches a point off to the side and only its position ALONG the locked axis is used for the far foot. Pair this with holding-shift-while-dragging-a-caliper-end-keeps so both are the same gesture; whichever lands second should make them agree rather than adding a second meaning for the key.\n\nUPDATE 2026-09-09, from its pair landing first (holding-shift-while-dragging-a-caliper-end-keeps, shipped): the convention is now set and this task inherits it rather than choosing one. The idea in one sentence, which both moments say: SHIFT HOLDS THE DIRECTION THE MEASUREMENT IS GOING IN, the pointer may travel anywhere, and only where it lands ALONG that direction is taken. Three rules came with it and this task should match all three. (1) The key is LIVE, read on every mouse-moved event and never latched at the press, so pressing it partway takes what is on screen at that moment and letting it go hands the drag straight back to the pointer with no jump. (2) The magnets are asked exactly what a free pass asks them and the hold has the LAST word: a catch along the held direction is kept, one that would pull the point off it is dropped, and its yellow guide goes out with it so nothing is lit that is not drawn. Command still frees the magnets entirely and the two keys compose. (3) The projection maths lives in PhotonzCore as MeasureLineHold (Sources/PhotonzCore/MeasureLineHold.swift), including MeasureLineHold.holding(...) for the press/release latch and .landing(...) for the snap-then-hold rule; reuse both here rather than writing a second copy. Design write-up: docs/design/next-measure.md section 8c. The playtest drag step now takes a \"halfway\" list of modifiers that come into force for the second half of the travel, which is how a walk presses or releases the key with the button down; Scripts/playtest/caliper-held-straight-walk.json is the worked example. The one place this task must still decide for itself: while PLACING, the held thing is which axis the measurement is going to be, so the hold has to survive the pointer crossing into the other axis, which the adjusting case never has to do.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-09T15:21:31.165680Z",
       "note": "Audit written: queue/audits/2026-09-09-caliper-held-direction.json with two real screen captures beside it. Design write-up updated: docs/design/next-measure.md section 8c now covers both halves of the key as one rule and says what placing has to survive that adjusting does not."
+    },
+    {
+      "t": "2026-09-09T15:22:42.313Z",
+      "note": "Shift now holds the direction a measurement is going in while you place it, so the pointer can travel sideways to the point you want and only how far it got along that direction is taken. Same key and same rule as shift on a placed caliper's foot, running on the same MeasureLineHold (new: axis, placing). Core logic TDD'd, 14 tests written red first, 5457 tests pass. Verified in the app with a new walk, Scripts/playtest/caliper-held-direction-walk.json, which places the same measurement five ways and got every committed pair of feet as predicted, including held-and-still-catching a magnet along the held direction. 13 related caliper/measure/placement walks pass. Audit with two real screen captures at queue/audits/2026-09-09-caliper-held-direction.json. Pushed as 4b73e7dc."
     }
   ],
-  "started": "2026-09-09T15:06:14.626Z"
+  "started": "2026-09-09T15:06:14.626Z",
+  "completed": "2026-09-09T15:22:42.314Z"
 }
