@@ -39,27 +39,53 @@
       "seconds": 0.6
     },
     {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "describe",
+      "stage": "reach-for-h",
+      "note": "W and H are not in the Text section: they live in Position & Size, the section below it, and with Layers, Appearance and an open Effects stacked above them they start below the bottom of the panel. A person scrolls down to read the height, so the walk does the same before it looks, and every snapshot from here on has the readout in it."
+    },
+    {
+      "do": "reveal",
+      "control": "H",
+      "in": "Position & Size"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "360"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
       "do": "describe",
       "stage": "1-one-line",
-      "note": "a label on one line: H must now read that one line's height as a dimmed number, not sit blank"
+      "note": "the label pinned to 360 wide, which is wider than its words need: it is on one line and H must read that one line's height as a dimmed number, not sit blank. 360 also puts the top right corner handle at a known place on the canvas, 500,140, for the drag below."
     },
     {
       "do": "snapshot",
       "name": "1-one-line"
     },
     {
-      "do": "tool",
-      "tool": "select"
-    },
-    {
       "do": "drag",
       "from": [
-        384,
-        150
+        500,
+        140
       ],
       "to": [
         250,
-        150
+        140
       ],
       "steps": 12
     },
@@ -70,11 +96,16 @@
     {
       "do": "describe",
       "stage": "2-wrapped",
-      "note": "the right edge dragged in so the words re-wrap: H must have grown to the taller number the paragraph turned out to be"
+      "note": "the top right corner dragged in to 110 wide so the words re-wrap: H must have grown to the taller number the paragraph turned out to be. A text box only resizes from its corners: there is no handle on the side, and a drag that starts halfway down the right edge moves the label instead, which is what this walk used to do while claiming it had re-wrapped."
     },
     {
       "do": "snapshot",
       "name": "2-wrapped"
+    },
+    {
+      "do": "reveal",
+      "control": "H",
+      "in": "Position & Size"
     },
     {
       "do": "press",
@@ -83,7 +114,7 @@
     {
       "do": "describe",
       "stage": "3-h-reads",
-      "note": "H just took a press. It is a readout, not a field: the keyboard never lands in it, and the line under the fields says why the height is not yours to set."
+      "note": "H just took a press and the keyboard landed in it: the height is a field you can set, not only a number to read. Until somebody types a height, it goes on showing whatever height the words wrapped to, which is what the rest of this walk checks."
     },
     {
       "do": "focus",
@@ -111,13 +142,18 @@
       "name": "4-rewrapped-wider"
     },
     {
+      "do": "reveal",
+      "control": "H",
+      "in": "Position & Size"
+    },
+    {
       "do": "press",
       "control": "H"
     },
     {
       "do": "describe",
       "stage": "5-h-follows",
-      "note": "H after the re-wrap: the number above must be the shorter one, not the one it read before, and pressing it says the same sentence again."
+      "note": "H after the re-wrap: the number must be the shorter one, not the one it read before, because nobody has typed a height into it, and pressing it hands it the keyboard again."
     }
   ]
 }

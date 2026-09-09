@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2230,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T04:24:32.449Z",
-  "updated": "2026-09-09T04:24:32.452Z",
+  "updated": "2026-09-09T08:14:59.360425Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on unmodified main (git stash -u, then Scripts/playtest.sh Scripts/playtest/text-height-readout-walk.json). done.json: {\"error\":\"step 15 (press): the control \\\"H\\\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on...\",\"status\":\"failed\",\"steps\":14}. NOT caused by the text-style arming work in seq 2130: the same failure happens with that work stashed. Either the dock grew a section since the walk was written (Effects is expanded by default now) or the walk needs a scrollPanel step.",
@@ -21,6 +21,35 @@
     {
       "t": "2026-09-09T04:24:32.451Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T08:05:10.226Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T08:14:59.360425Z",
+      "note": "REPRODUCED on unmodified main: step 15 (press) failed, \"H\" is not where a person could click it. Cause found with a `panel` step: H is NOT in the Text section, it is in Position & Size, the section below it. In a 1280x840 window with a text layer picked the dock stacks Layers 6-169, Appearance 169-341, Effects 341-673 (a Shadow open by default), Text 673-871, Position & Size 871-1006, in a 808pt viewport. H sits 141pt below the bottom of the window, so a person genuinely scrolls to read it. The panel-order half of that is already owned by p1 picking-a-text-layer-leaves-its-settings-below-t, which is blocked on a decision card, and Position & Size sits below the picked-thing section under every option on that card, so no ordering choice would put H on screen here. The walk therefore scrolls, and says why."
+    },
+    {
+      "t": "2026-09-09T08:14:59.360425Z",
+      "note": "FIXED by revealing H before the walk looks at it: `{\"do\":\"reveal\",\"control\":\"H\",\"in\":\"Position & Size\"}` right after the label is committed, plus a describe stage `reach-for-h` that explains in plain words where W and H live and why the scroll happens. The reveal scrolls 153pt and reports it; the two later reveals before each press cost nothing. Because the reveal now happens BEFORE the first snapshot, all three snapshots have the readout in them, which the walk needed to demonstrate its own subject and never had."
+    },
+    {
+      "t": "2026-09-09T08:14:59.360425Z",
+      "note": "SECOND DEFECT found while verifying, in the same walk: its drag never re-wrapped anything. It dragged from (384, 150), which was inside the box rather than on its edge, so the label MOVED (X 140 -> 0, W unchanged at 335) while stage 2 claimed the words had re-wrapped and H had grown. Probing the handles showed a text box resizes from its CORNERS: (500, 140) gives cursor resize-up-right-down-left, the side edge of a 29pt tall box gives plain arrow. The walk now pins W to 360 first so the corner is at a known 500,140 and drags that corner to 250,140. Measured from the screenshots: W 360 H 29 -> dragged to W 110 H 113 -> W typed 400, H back to 29 on its own. The walk finally proves the thing it is named after."
+    },
+    {
+      "t": "2026-09-09T08:14:59.360425Z",
+      "note": "The side edge not being grabbable on a short box is a real gesture gap and is filed separately as dragging-the-side-edge-of-a-one-line-text-box-mo, with the cursor readings for each point tried. text-width-floor-walk carries the same fiction and is named in that task's acceptance."
+    },
+    {
+      "t": "2026-09-09T08:14:59.360425Z",
+      "note": "Stages 3 and 5 also said H is a readout the keyboard never lands in. That is out of date: the log shows firstResponder becoming _SystemTextFieldFieldEditor after the press, and text-box-room-walk (which passes) types 160 into H on purpose. Both notes were reworded to say the height is a field you can set, and that until somebody sets one it keeps following the wrap."
+    },
+    {
+      "t": "2026-09-09T08:14:59.360425Z",
+      "note": "The task title says the H field is in the Text section. It is not, it is in Position & Size; left the title alone rather than churn the id."
     }
-  ]
+  ],
+  "started": "2026-09-09T08:05:10.225Z"
 }

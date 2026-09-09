@@ -1,0 +1,27 @@
+{
+  "id": "dragging-the-side-edge-of-a-one-line-text-box-mo",
+  "title": "Dragging the side edge of a one line text box moves it instead of resizing it",
+  "goal": "Put a label on the canvas, then take hold of its right edge and pull it in to make the words wrap. The label slides across the canvas instead: the edge only becomes a resize handle once the box is tall enough, so on the one line labels that most UI work is made of there is no way to set the wrap width by dragging. Corner handles still resize, and so does the bottom edge of a tall box.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2260,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T08:14:39.045Z",
+  "updated": "2026-09-09T08:14:39.048Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-09 with the probe build, on clean main plus the text-height-readout walk fix.\n\nA text layer at 140,140 pinned to W 360 is 29pt tall, so its box is x 140-500, y 140-169.\n\n  drag (500, 140) -> (250, 140)  cursor while down resize-up-right-down-left   W 360 -> 110, H 29 -> 113   (top right CORNER: resizes)\n  drag (500, 150) -> (250, 150)  cursor while down arrow                        X 140 -> -110, W 360         (right EDGE: moves)\n  drag (499, 154) -> (250, 154)  cursor while down arrow                        no resize                    (right edge, exact middle: moves)\n\nSame layer with H typed to 120, so the box is 120pt tall:\n\n  drag (500, 200) -> (400, 200)  cursor while down resize-left-right                                         (right EDGE: resizes)\n\nSo the side handle exists and is simply not reachable on a short box: the two corner handles claim the whole 29pt edge between them. Scripts/playtest/text-box-room-walk.json drags the BOTTOM edge of a tall box and gets resize-up-down, which is the same handle family working where there is room for it.\n\nFallout in the walks: text-width-floor-walk drags from (272, 150), the middle of a 21pt tall box edge, and describes it as the right edge dragged as far left as it will go. It moves the label; the walk passes and proves nothing about the 80pt floor. text-height-readout-walk had the same fiction and was changed on 2026-09-09 to drag the top right corner instead, which does re-wrap.\n\nThe fix is probably in the handle hit testing for a short box (give the side handles the middle of the edge, or shrink the corner claim on a box under about 40pt), not in the walks.",
+  "acceptance": [
+    "Dragging the right or left edge of a one line text box resizes it and re-wraps the words, with the pointer showing the left-right resize cursor",
+    "Dragging the middle of the same label still moves it",
+    "Scripts/playtest/text-width-floor-walk.json actually narrows the label: its stage 2 note claims the drag stops at 80 wide and today the label just moves, so the walk needs to prove the floor rather than assert it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T08:14:39.047Z",
+      "note": "created (manual)"
+    }
+  ]
+}

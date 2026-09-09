@@ -13688,3 +13688,30 @@ Next: `dock-picked-first-walk` fails on picking a text layer — its Text sectio
 lands below the fold and nothing scrolls to it. It fails identically on a clean
 build of main, so it predates this work and is filed as
 `picking-a-piece-of-text-brings-its-text-section`.
+
+## 2026-09-09 — the height readout a walk could not reach
+
+`text-height-readout-walk` had been failing since the press step started
+refusing points the panel's edge cuts across. A `panel` step said why: W and H
+are not in the Text section at all, they are in Position & Size below it, and
+with Layers, Appearance and an Effects section holding an open Shadow above
+them they start 141pt below the bottom of a 1280x840 window. A person scrolls
+to read the height there, so the walk now scrolls too: a `reveal` of H, placed
+before the first snapshot so every picture has the readout in it, and a
+`reach-for-h` stage that says in plain words where those fields live. The panel
+order half of this belongs to the blocked p1 `picking-a-text-layer-leaves-its-settings-below-t`,
+and Position & Size sits below the picked-thing section under every option on
+that card, so no ordering answer would have put H on screen anyway.
+
+Verifying it turned up a second defect in the same walk: its drag started
+inside the box rather than on a handle, so the label moved (X 140 to 0) while
+the walk claimed the words had re-wrapped. It now pins W to 360 and drags the
+top right corner, and the numbers finally move: W 360 H 29, dragged to W 110
+H 113, then W typed 400 and H back to 29 on its own.
+
+Filed `dragging-the-side-edge-of-a-one-line-text-box-mo`: the side handle only
+answers on a box tall enough for it, so on a one line label the right edge
+moves instead of resizing. `text-width-floor-walk` tells the same fiction and
+is named in that task's acceptance.
+
+Next: that side handle task, and the decision card on panel order.
