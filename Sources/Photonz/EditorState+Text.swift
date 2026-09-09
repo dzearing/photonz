@@ -18,8 +18,16 @@ extension EditorState {
     var activeTextContent: TextContent {
         var content = textStyles.content()
         // NEW text types in the current foreground color; re-edits keep the
-        // layer's own color (the session seeds the styles).
-        if editingTextLayerID == nil { content.colorHex = foregroundFillHex }
+        // layer's own color (the session seeds the styles). A tool holding a
+        // saved style is the exception: the block comes out in that style,
+        // colour and all, so what you type looks like what you get.
+        if editingTextLayerID == nil {
+            if let treatment = armedTextTreatment {
+                content.setTreatment(treatment)
+            } else {
+                content.colorHex = foregroundFillHex
+            }
+        }
         return content
     }
 
@@ -200,7 +208,10 @@ extension EditorState {
     func beginTextEdit(layerID: UUID?) {
         guard let layerID, let layer = document?.layer(id: layerID),
               case .text(let content) = layer.content else { return }
-        textStyles.adopt(content)
+        // ...and the style that layer wears, so re-editing a heading leaves the
+        // tool holding the heading's name and the next block typed follows it
+        // too. Text of its own leaves the tool holding nothing.
+        textStyles.adopt(content, styleID: layer.textStyleID)
         saveTextStyles()
         editingTextLayerID = layerID
         if let document { submit(document) }
@@ -268,12 +279,21 @@ extension EditorState {
             }
         } else {
             guard !isEmpty else { return }
-            // New text commits in the current foreground color (16.12).
+            // New text commits in the current foreground color (16.12) — unless
+            // the text tool is holding a saved style, in which case the block
+            // comes out set in that style and WEARING it, so an edit to the
+            // style re-sets this block too. Worked out before the measure, so
+            // the box is measured at the type the words actually land in.
             var content = content
-            content.colorHex = foregroundFillHex
+            if let treatment = armedTextTreatment {
+                content.setTreatment(treatment)
+            } else {
+                content.colorHex = foregroundFillHex
+            }
             let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth,
                                                   hugsShortWords: hugsShortWords)
-            let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
+            let layer = wearingArmedTextStyle(
+                TextBuilder.layer(content: content, at: origin, naturalSize: size))
             perform { $0.addLayerDrawnOnFrame(layer) }
             // Re-editing existing text already runs with Select active, so only
             // the new-block path hands the editor back.

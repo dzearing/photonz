@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 2130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T23:24:54.808Z",
-  "updated": "2026-09-08T23:24:54.811Z",
+  "updated": "2026-09-09T04:24:54.250Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The colour half is EditorState.armToolsFromSelection and AnnotationStyles.arm(_:styleID:name:slot:forShape:) — a tool remembers a colour AND the name behind it. TextStyles (the tool settings, Sources/PhotonzCore/TextStyles.swift) has no place to keep a style id yet. Raised in queue/audits/2026-09-08-text-styles.json.",
@@ -22,6 +22,40 @@
     {
       "t": "2026-09-08T23:24:54.810Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T04:02:32.063Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T04:24:54.000Z",
+      "note": "adversarial review, before building: the mock is not the problem here, the asymmetry is. A saved colour arms the tool with its NAME; a text style armed only the four values behind it, so the next block matched and then quietly stopped following. Two things the task did not name fell out of walking it: (1) new text commits in the current FOREGROUND colour, so before this change the next block did not even match the style's colour, and (2) saving text under a name is itself a use of it, and the colour half arms on save, so saving now arms too or the very next block you type would not follow the name you just made. Shortest version that delivers the value: the tool holds an id, the document resolves it at commit time, and any hand edit or Unlink lets go."
+    },
+    {
+      "t": "2026-09-09T04:24:54.000Z",
+      "note": "core (TDD, 20 new tests in Tests/PhotonzCoreTests/ToolTextStyleArmingTests.swift): TextStyles gains styleID, treatment, arm(_:styleID:), letGoOfStyle() and adopt(_:styleID:). Setting fontName/fontSize/weight/colorHex by hand lets go of the name through a didSet, so no control can forget the rule the Style row promises in words. New Sources/PhotonzCore/ToolTextStyles.swift mirrors ToolColorStyles.swift: armedTextTreatment(_:) and wearingArmedTextStyle(_:styles:), so the DOCUMENT has the last word every time a block is typed (a style re-set since arming gives the block what it is now; a document that never heard of the id types plain)."
+    },
+    {
+      "t": "2026-09-09T04:24:54.000Z",
+      "note": "app: EditorState.useTextStyle and saveTextStyle arm the tool; commitTextEdit resolves the armed treatment BEFORE measuring the box and dresses the new layer in the style; activeTextContent shows the style while you type; beginTextEdit adopts the edited layer's style id; unlinkTextStyle and deleteTextStyle let the tool go. Letting go keeps the type the tool was actually typing (the style as the document has it now, not the copy it picked up) and puts that colour back as the current colour, so nothing changes except the following."
+    },
+    {
+      "t": "2026-09-09T04:24:54.000Z",
+      "note": "visible: the bottom bar's tool swatch carries the Aa (textformat) mark and a Using <name> tooltip while the text tool holds a style, and the popover it opens grows a Using <name> row with Unlink, exactly as the saved colours do."
+    },
+    {
+      "t": "2026-09-09T04:24:54.000Z",
+      "note": "verified: Scripts/test.sh green (5215 tests). New walk Scripts/playtest/text-style-arming-walk.json asserts all three acceptance items and passes: the block typed after saving reads Style = Heading, it follows the style from 32 px to 48 px, and after Unlink the block typed next stays at 48 px while the style grows to 96 px. All 3 text-style walks pass. text-height-readout-walk fails, and fails identically with this work stashed, so it is not this change: filed as its own task with the reproduction."
+    },
+    {
+      "t": "2026-09-09T04:24:54.000Z",
+      "note": "audit: queue/audits/2026-09-08-text-style-arming.json with two real window captures (Screen Recording was granted)."
+    },
+    {
+      "t": "2026-09-09T04:24:54.248Z",
+      "note": "The text tool now holds the style NAME: saving text as a style or putting one on arms the tool, the next block typed wears it and follows edits to it, and Unlink or any hand edit lets go. Core in TextStyles + new ToolTextStyles.swift (20 tests), app in EditorState+Text/+TextStyles, Aa mark and Using row in the bar and its popover. Verified by Scripts/test.sh (5215 green) and a new walk, text-style-arming-walk, that asserts all three acceptance items. Audit: queue/audits/2026-09-08-text-style-arming.json"
     }
-  ]
+  ],
+  "started": "2026-09-09T04:02:32.062Z",
+  "completed": "2026-09-09T04:24:54.249Z"
 }

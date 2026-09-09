@@ -73,6 +73,10 @@ extension EditorState {
         var saved: UUID?
         perform { saved = $0.saveTextStyle(from: targets, name: name) }
         guard let styleID = saved else { return nil }
+        // The text you saved from is the style's first wearer, and the tool
+        // comes away holding it, so the next block you type is the second one.
+        // The same thing saving a colour under a name does to the shape tools.
+        if let style = document?.textStyle(id: styleID) { armTextTool(with: style) }
         showStylesShelf()
         pendingLibraryTileID = styleID.uuidString
         return styleID
@@ -90,9 +94,10 @@ extension EditorState {
             _ = document.bindTextStyle(layerIDs: targets, styleID: styleID)
             document.applyTextBoxes(sizes)
         }
-        // The next block typed comes out in what you just chose, the same way
-        // picking a size on the row above arms the next block with it.
-        rememberTextStyleDefaults(style.treatment)
+        // The next block typed comes out in what you just chose, and comes out
+        // WEARING it, the same way a shape drawn after a saved colour was put
+        // on one follows that colour by name.
+        armTextTool(with: style)
     }
 
     /// Dresses the text a style was let go of on, in ONE step: drop, undo once,
@@ -120,9 +125,18 @@ extension EditorState {
     /// in one step. Nothing moves, so there is nothing to re-measure.
     func unlinkTextStyle() {
         guard textStylesEnabled else { return }
-        let targets = textStyleSelection.layerIDs
+        let selection = textStyleSelection
+        let targets = selection.layerIDs
         guard !targets.isEmpty else { return }
         perform(reportingLinkBreaks: false) { $0.unbindTextStyle(layerIDs: targets) }
+        // Taking this text off the style takes the TOOL off it too, when the
+        // tool is holding the very name being let go of. Otherwise Unlink would
+        // leave the next block you type wearing the name you just took off,
+        // which reads as the button not having worked.
+        if let held = textStyles.styleID,
+           selection.members.contains(where: { $0.styleID == held }) {
+            releaseArmedTextStyle()
+        }
     }
 
     /// Re-sets a style and every piece of text wearing it, as one undo step.
@@ -155,6 +169,8 @@ extension EditorState {
     func deleteTextStyle(styleID: UUID) {
         guard textStylesEnabled else { return }
         perform { $0.deleteTextStyle(id: styleID) }
+        // Every piece of text wearing it owns its type again; so does the tool.
+        if textStyles.styleID == styleID { releaseArmedTextStyle() }
         if selectedLibraryItemID == styleID.uuidString { selectedLibraryItemID = nil }
     }
 
@@ -216,15 +232,58 @@ extension EditorState {
         }
     }
 
-    /// What the next block of text starts at, so choosing a name on this row
-    /// carries over the way choosing a size on the row above it does.
-    private func rememberTextStyleDefaults(_ treatment: TextTreatment) {
-        textStyles.fontName = treatment.fontName
-        textStyles.fontSize = treatment.fontSize
-        textStyles.weight = treatment.weight
-        textStyles.colorHex = treatment.colorHex
+    // MARK: - What the text tool is holding
+
+    /// The saved style the text tool is holding, as THIS document has it now.
+    ///
+    /// Nil in the three cases where holding a name means nothing: styles are
+    /// off, the tool is holding none, or the name came from a document that is
+    /// not this one. In every one of those the next block is typed in the
+    /// tool's own font, size, weight and colour, exactly as it always was.
+    var armedTextStyle: TextStyle? {
+        guard textStylesEnabled, let id = textStyles.styleID else { return nil }
+        return document?.textStyle(id: id)
+    }
+
+    /// The type the next block of text comes out in when the tool is holding a
+    /// name: the style as the document has it NOW, not the copy the tool picked
+    /// up, so a style re-set since the tool took it is honoured.
+    var armedTextTreatment: TextTreatment? { armedTextStyle?.treatment }
+
+    /// The block just typed, wearing the style the tool is holding.
+    func wearingArmedTextStyle(_ layer: Layer) -> Layer {
+        guard textStylesEnabled, let document else { return layer }
+        return document.wearingArmedTextStyle(layer, styles: textStyles)
+    }
+
+    /// The text tool picks a style up: the type it sets, and the name behind it.
+    private func armTextTool(with style: TextStyle) {
+        textStyles.arm(style.treatment, styleID: style.id)
         saveTextStyles()
-        recordRecentColor(hex: treatment.colorHex)
+        // The style's colour becomes the current colour, the same way picking a
+        // colour on a text row does. Without it, the moment the tool lets go of
+        // the name — a size chosen by hand is enough — the next block would jump
+        // back to whatever colour was current before the style was ever used.
+        foregroundFillHex = style.treatment.colorHex
+        recordRecentColor(hex: style.treatment.colorHex)
+    }
+
+    /// The text tool puts it down. The type stays; it is the tool's own again.
+    ///
+    /// What stays is the type the tool was actually TYPING — the style as the
+    /// document has it now — rather than the copy it picked the name up with.
+    /// Let go of a name that has grown from 32pt to 48pt since and the next
+    /// block is 48pt, which is what "nothing changes except the following"
+    /// means to the person watching.
+    func releaseArmedTextStyle() {
+        guard textStyles.styleID != nil else { return }
+        if let treatment = armedTextTreatment {
+            textStyles.adopt(treatment) // takes the name off by itself
+            foregroundFillHex = treatment.colorHex
+        } else {
+            textStyles.letGoOfStyle()
+        }
+        saveTextStyles()
     }
 }
 

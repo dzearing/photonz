@@ -1,0 +1,30 @@
+{
+  "feature": "The text tool keeps the style name you just used",
+  "epic": "ui-components",
+  "summary": "Save some text as a style, or put a saved style on it, and the text tool comes away holding that NAME. The next block you type comes out wearing the style rather than merely matching it, so the day somebody edits the style, that block is re-set with everything else.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Save a color as a style and reuse it\" is on by default; it covers text styles too.",
+  "try": [
+    { "do": "Press T, click on the canvas, type Sign in, then press Command Return." },
+    { "do": "Press V, click the heading, and set Font Georgia, Size 32 px, Weight Bold in the Text section." },
+    { "do": "Open the Style menu at the top of the Text section, choose Save as Style, type Heading and press Return." },
+    { "do": "Press T and look at the round colour swatch on the bottom bar: it now carries an Aa mark, and its tooltip says Using Heading." },
+    { "do": "Click lower on the canvas, type Create account, press Command Return, then press V and click that new block.", "shot": "2026-09-08-text-style-arming-typed.png" },
+    { "do": "Click empty canvas, click the Heading tile on the Library's Styles shelf, and change Size to 48 px.", "shot": "2026-09-08-text-style-arming-followed.png" },
+    { "do": "Click Create account and open its Style menu, then choose Unlink." },
+    { "do": "Press T, type one more block, then change the style to 96 px and watch that last block stay where it was." }
+  ],
+  "evaluate": [
+    "Typing a block that silently comes out wearing a name: is that the help you wanted, or would you rather each new block was its own until you say otherwise?",
+    "The Aa mark beside the swatch on the bottom bar is the only sign the tool is holding a name. Is that enough to notice, or does it need to say the name out loud somewhere?",
+    "Unlink on a piece of text also takes the tool off the style. Is that what Unlink means to you, or should it only let that one piece of text go?",
+    "Setting the font, size, weight or colour by hand takes the tool off the style with no notice at all. A saved colour says so in the picker when it happens. Do you want the same sentence here?",
+    "A style carries its colour, so while the tool holds one the new block ignores the current colour and comes out in the style's. Right, or surprising?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so both pictures are real window captures from a scripted walk (Scripts/playtest/text-style-arming-walk.json), not offscreen renders.",
+    "Saving text as a style now arms the tool too, which the task did not ask for. It is what saving a colour under a name already does, and without it the very first thing you do after naming a style, typing the next block, would not follow it.",
+    "Dragging a style tile onto text still does NOT arm the tool. A drop lands on words you may never have picked, so quietly changing what the next block comes out in would be a side effect nobody asked for.",
+    "The tool holds only an id. Carry it into a document that has never heard of that style and the block is simply typed in the tool's own font, size, weight and colour, with nothing said about it. A saved colour keeps the NAME beside the id so it can say what was lost; text does not, so there is no sentence to show.",
+    "The Style row in the dock only exists while text is picked, so with the text tool in hand the only place the held name is written in words is the tooltip on the bar swatch and the row inside the popover it opens."
+  ]
+}

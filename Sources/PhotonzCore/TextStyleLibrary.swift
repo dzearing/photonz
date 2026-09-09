@@ -59,6 +59,18 @@ public struct TextStyle: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
+extension TextContent {
+
+    /// Sets these words in a treatment: the type changes, the words themselves
+    /// and where they sit in their box do not.
+    public mutating func setTreatment(_ treatment: TextTreatment) {
+        fontName = treatment.fontName
+        fontSize = treatment.fontSize
+        weight = treatment.weight
+        colorHex = treatment.colorHex
+    }
+}
+
 // MARK: - The text on a layer
 
 extension Layer {

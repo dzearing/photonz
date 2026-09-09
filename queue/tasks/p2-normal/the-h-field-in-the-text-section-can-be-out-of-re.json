@@ -1,0 +1,26 @@
+{
+  "id": "the-h-field-in-the-text-section-can-be-out-of-re",
+  "title": "The H field in the Text section can be out of reach when a walk asks for it",
+  "goal": "A scripted walk that types text and then reaches for the height field in the dock cannot get to it: the dock has scrolled far enough that the field sits under the panel edge. Somebody following the same steps by hand would have to scroll before they could read the height.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2230,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T04:24:32.449Z",
+  "updated": "2026-09-09T04:24:32.452Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on unmodified main (git stash -u, then Scripts/playtest.sh Scripts/playtest/text-height-readout-walk.json). done.json: {\"error\":\"step 15 (press): the control \\\"H\\\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on...\",\"status\":\"failed\",\"steps\":14}. NOT caused by the text-style arming work in seq 2130: the same failure happens with that work stashed. Either the dock grew a section since the walk was written (Effects is expanded by default now) or the walk needs a scrollPanel step.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/text-height-readout-walk.json passes",
+    "The height readout is reachable after typing a text block without scrolling the dock by hand, or the walk says where to scroll and why"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T04:24:32.451Z",
+      "note": "created (manual)"
+    }
+  ]
+}

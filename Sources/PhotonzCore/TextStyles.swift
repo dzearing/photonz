@@ -5,10 +5,25 @@ import Foundation
 /// text blocks. Mirrors `AnnotationStyles`: Codable so it persists across
 /// launches, value-typed so the popover edits are testable.
 public struct TextStyles: Equatable, Codable, Sendable {
-    public var fontName: String
-    public var fontSize: CGFloat
-    public var weight: TextWeight
-    public var colorHex: String
+    // Setting any of the four by hand lets go of the saved style the tool is
+    // holding, because that is what setting type by hand MEANS: the words stop
+    // being that name's. It is the same rule the Style row says out loud before
+    // the click ("Changing the font, size, weight or colour takes this off the
+    // style"), kept here so no control can forget it.
+    public var fontName: String { didSet { if fontName != oldValue { styleID = nil } } }
+    public var fontSize: CGFloat { didSet { if fontSize != oldValue { styleID = nil } } }
+    public var weight: TextWeight { didSet { if weight != oldValue { styleID = nil } } }
+    public var colorHex: String { didSet { if colorHex != oldValue { styleID = nil } } }
+
+    /// The saved text style the tool is HOLDING, when the type above came from
+    /// a name rather than from the menus (`TextStyleLibrary.swift`).
+    ///
+    /// Only ever an id. What the name is set in lives in the open document, and
+    /// the document is asked every time a block is typed — this preference
+    /// outlives any one document, so an id from a document that is closed means
+    /// nothing and falls back to the four values beside it.
+    /// `PhotonzDocument.wearingArmedTextStyle` is where that happens.
+    public private(set) var styleID: UUID?
 
     public init(fontName: String = "SF Pro",
                 fontSize: CGFloat = 24,
@@ -18,6 +33,33 @@ public struct TextStyles: Equatable, Codable, Sendable {
         self.fontSize = fontSize
         self.weight = weight
         self.colorHex = colorHex
+    }
+
+    /// The four of them together, the way a saved style keeps them.
+    public var treatment: TextTreatment {
+        TextTreatment(fontName: fontName, fontSize: fontSize,
+                      weight: weight, colorHex: colorHex)
+    }
+
+    /// Picks up a saved style: the type it sets AND the name behind it, so the
+    /// next block typed follows the style rather than merely matching it.
+    public mutating func arm(_ treatment: TextTreatment, styleID id: UUID) {
+        adopt(treatment)
+        styleID = id
+    }
+
+    /// Lets go of the style. The type stays exactly as it is — it is simply the
+    /// tool's own again.
+    public mutating func letGoOfStyle() {
+        styleID = nil
+    }
+
+    /// Takes on a treatment, name and all let go of.
+    public mutating func adopt(_ treatment: TextTreatment) {
+        fontName = treatment.fontName
+        fontSize = treatment.fontSize
+        weight = treatment.weight
+        colorHex = treatment.colorHex
     }
 
     /// The font picker's family choices. Curated: families that ship with
@@ -128,12 +170,12 @@ public struct TextStyles: Equatable, Codable, Sendable {
     }
 
     /// Takes on an existing text layer's style, so re-editing seeds the picker
-    /// with what that layer already looks like.
-    public mutating func adopt(_ content: TextContent) {
-        fontName = content.fontName
-        fontSize = content.fontSize
-        weight = content.weight
-        colorHex = content.colorHex
+    /// with what that layer already looks like — and the style that layer wears,
+    /// so re-editing a heading leaves the tool holding the heading's name.
+    /// Text of its own leaves the tool holding nothing, which is the truth.
+    public mutating func adopt(_ content: TextContent, styleID id: UUID? = nil) {
+        adopt(TextTreatment(content))
+        styleID = id
     }
 }
 

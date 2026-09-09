@@ -1462,6 +1462,37 @@ struct EditorView: View {
     /// What a tool holds is a preference rather than part of the picture, so a
     /// pull of the picker you did not mean was never in the history to step
     /// back over.
+    /// What the TEXT TOOL is holding, when the next block it types comes from a
+    /// saved style rather than from the menus under it.
+    ///
+    /// The same row the saved colours grew, for the same reason: the menus
+    /// alone cannot say it. Two headings can be the same 32pt Georgia with only
+    /// one of them following Heading, and the difference is the whole point of
+    /// saving a style, so the popover the tool opens is where the name goes.
+    ///
+    /// Only while the popover is speaking for the TOOL. With a piece of text
+    /// picked it speaks for that text, and the Style row in the dock is already
+    /// saying what that text wears.
+    @ViewBuilder private var toolTextStyleRow: some View {
+        if editorState.activeTool == .text, selectedTextContent == nil,
+           let style = editorState.armedTextStyle {
+            HStack(spacing: 6) {
+                Image(systemName: "textformat")
+                    .foregroundStyle(.secondary)
+                Text("Using \(style.name)")
+                    .font(.callout)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 8)
+                Button("Unlink") { editorState.releaseArmedTextStyle() }
+                    .buttonStyle(.link)
+                    .font(.callout)
+            }
+            .help("New text follows the saved style \(style.name). "
+                  + "Setting the font, size, weight or colour below lets go of it.")
+        }
+    }
+
     @ViewBuilder private func toolColorStyleRow(slot: ColorSlot) -> some View {
         if let style = editorState.toolColorStyle(slot: slot) {
             HStack(spacing: 6) {
@@ -2072,6 +2103,13 @@ struct EditorView: View {
     /// away, inside.
     private var styleButton: some View {
         let heldStyle = editorState.toolColorStyle(slot: toolColorSlot)
+        // The text tool holds a whole TEXT style rather than a colour, and the
+        // swatch has the same nothing to say about it: 32pt Georgia typed by
+        // hand and 32pt Georgia following Heading look alike until one of them
+        // is edited. Only ever one of the two, because a tool that draws no
+        // shape can hold no saved colour.
+        let heldText = editorState.activeTool == .text ? editorState.armedTextStyle : nil
+        let heldName = heldStyle?.name ?? heldText?.name
         return Button {
             editorState.toggleColorWell(toolStyleWellKey)
         } label: {
@@ -2080,15 +2118,15 @@ struct EditorView: View {
                     .clipShape(Circle())
                     .frame(width: 16, height: 16)
                     .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
-                if heldStyle != nil {
-                    Image(systemName: "swatchpalette")
+                if heldName != nil {
+                    Image(systemName: heldStyle != nil ? "swatchpalette" : "textformat")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
             }
-            .frame(width: heldStyle == nil ? 28 : 42, height: 28)
+            .frame(width: heldName == nil ? 28 : 42, height: 28)
         }
-        .toolTip(heldStyle.map { "Using \($0.name)" }
+        .toolTip(heldName.map { "Using \($0)" }
                  ?? (editorState.activeTool == .text ? "Text Style" : "Annotation Style"),
                  key: "S")
         .keyboardShortcut("s", modifiers: [])
@@ -2162,6 +2200,7 @@ struct EditorView: View {
                     .font(.callout)
             }
             VStack(alignment: .leading, spacing: 14) {
+                toolTextStyleRow
                 toolColorStyleRow(slot: toolColorSlot)
                 // One consistent color control everywhere: the same picker
                 // this row opens is the one every other color row opens.
