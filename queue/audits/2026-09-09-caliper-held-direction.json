@@ -1,0 +1,29 @@
+{
+  "feature": "Holding shift locks the direction a measurement is going in",
+  "epic": "measure-redline",
+  "summary": "While you are placing a measurement, holding shift locks whether it is going across or down, so you can steer the pointer sideways to the thing you actually want to catch without the caliper flipping on the way. It is the same key, doing the same thing, as holding shift while dragging the end of a caliper you already placed.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open any screenshot with the Measure tool (i) in Distance mode. Nothing to turn on.",
+  "try": [
+    { "do": "Click once on a baseline in the picture to put the first foot down." },
+    { "do": "Move the pointer straight down a few hundred pixels, so the caliper is measuring DOWN." },
+    { "do": "Keep moving out sideways, without shift, until the caliper flips to measuring across. That is the old behaviour, and why the thing below the baseline was unreachable." },
+    { "do": "Bring the pointer back down so it reads as measuring down again, then press and HOLD shift." },
+    { "do": "With shift still down, travel far out to the side, over a line of text that is nowhere near underneath the baseline. The caliper keeps measuring down and only how far down you got is taken.", "shot": "2026-09-09-caliper-held-direction.png" },
+    { "do": "Click to set the second foot, then click once more to park the number." },
+    { "do": "Place another one the same way, but let shift go before you click: the direction goes straight back to being chosen from where the pointer is." },
+    { "do": "Place a third one with shift held and the magnets on (no command), stopping a few pixels short of an edge you want. The edge still catches, because it lies along the direction you are holding.", "shot": "2026-09-09-caliper-held-and-caught.png" }
+  ],
+  "evaluate": [
+    "Is shift the key your hand reaches for here, given it already holds a placed caliper's foot on its line?",
+    "When you press shift, is it obvious on screen that the direction has been locked, or did you have to move the pointer to find out?",
+    "Pressing shift takes the direction that is on screen at that instant rather than the one you started with. Is that what you expected, or would you rather it took the direction the placement began in?",
+    "While held, the dot marking the second foot stops following your pointer and stands on the locked line. Does that read as the caliper obeying you, or as the pointer losing its grip?",
+    "Does letting shift go feel like handing control straight back, with no jump?"
+  ],
+  "rough": [
+    "Nothing on screen announces the key. Holding shift on a placed caliper's foot shipped the same way, and the honest feedback is that the second foot's dot visibly stops flipping. A hint would belong to both moments at once rather than to this one, so it was left out here on purpose. Say if you want one and it becomes its own task.",
+    "There is a dead spot: with the direction held across, walking the pointer back to the first foot's own column makes a zero length caliper, and the click that would set the second foot is silently swallowed because the app refuses anything under a pixel. Free placement would have flipped direction instead. It is a corner, but a click that does nothing and says nothing is not great.",
+    "Shift is unread on the third click, the one that parks the number, so holding it all the way through the gesture locks the direction and then places the number normally. That matches the placed caliper case, where shift holds a foot and never the readout.",
+    "This screenshot is the real window, taken with the probe's Screen Recording grant, not an offscreen render."
+  ]
+}

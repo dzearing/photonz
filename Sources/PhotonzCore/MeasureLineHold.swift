@@ -50,6 +50,18 @@ public struct MeasureLineHold: Equatable, Sendable {
         }
     }
 
+    /// The direction this line runs in, as a measurement's mode names it.
+    ///
+    /// Read off the line that is DRAWN rather than off whatever mode happened
+    /// to build it, because while a caliper is being PLACED the mode is the
+    /// very thing the key is holding: the pointer is allowed to wander into
+    /// the other direction and the answer must not change with it. Every line
+    /// this app makes today is axis aligned, so this is exact; a line at an
+    /// angle answers with the axis it most nearly runs along.
+    public var axis: MeasureMode {
+        abs(direction.dx) >= abs(direction.dy) ? .horizontal : .vertical
+    }
+
     /// `p` pulled onto the line: the point of the line nearest to it. A point
     /// already on the line comes back untouched, so nothing jumps.
     public func project(_ p: CGPoint) -> CGPoint {
@@ -91,5 +103,57 @@ public struct MeasureLineHold: Equatable, Sendable {
         return (point,
                 abs(point.x - snapped.x) <= tolerance ? guideX : nil,
                 abs(point.y - snapped.y) <= tolerance ? guideY : nil)
+    }
+
+    /// Where the far foot goes while a caliper is being PLACED, which direction
+    /// it is measuring in, and the guides that are still honest.
+    ///
+    /// Placing is the other half of the same idea `landing` serves for a foot
+    /// being adjusted, with one thing it has to survive that adjusting never
+    /// does: the held thing here is WHICH DIRECTION the measurement is going
+    /// to be, so the pointer crossing into the other direction must not change
+    /// it. Free, the direction is chosen from where the pointer is on every
+    /// move, which is what makes an unheld caliper flip; held, it is the one
+    /// the key caught and the pointer is free to travel anywhere, only how far
+    /// it got ALONG that direction being taken.
+    ///
+    /// Flattening the far foot onto the measuring axis and projecting it onto
+    /// the held line are the same operation, so there is only one of them here.
+    /// A free placement therefore lands exactly where it always did, magnets'
+    /// guides included: `landing` hands those straight back when nothing is
+    /// held.
+    public static func placing(_ existing: MeasureLineHold?, shiftDown: Bool,
+                               from foot1: CGPoint, toward pointer: CGPoint,
+                               guideX: CGFloat? = nil,
+                               guideY: CGFloat? = nil) -> Placement {
+        // What the caliper is measuring right now with nothing holding it —
+        // the direction the key takes if it goes down on this very event.
+        let live = MeasureContent.dominantAxis(from: foot1, to: pointer)
+        let hold = holding(existing, shiftDown: shiftDown, mode: live, fixedFoot: foot1)
+        let mode = hold?.axis ?? live
+        let landed = landing(snapped: pointer, guideX: guideX, guideY: guideY, on: hold)
+        let line = hold ?? MeasureLineHold(mode: mode, through: foot1)
+        return Placement(hold: hold, foot2: line.project(landed.point), mode: mode,
+                         guideX: landed.guideX, guideY: landed.guideY)
+    }
+
+    /// One move's worth of placing a caliper: the line the key is holding (nil
+    /// when it is not down), where the far foot lands, the direction the
+    /// measurement is going in, and the guides worth lighting.
+    public struct Placement: Equatable, Sendable {
+        public let hold: MeasureLineHold?
+        public let foot2: CGPoint
+        public let mode: MeasureMode
+        public let guideX: CGFloat?
+        public let guideY: CGFloat?
+
+        public init(hold: MeasureLineHold?, foot2: CGPoint, mode: MeasureMode,
+                    guideX: CGFloat?, guideY: CGFloat?) {
+            self.hold = hold
+            self.foot2 = foot2
+            self.mode = mode
+            self.guideX = guideX
+            self.guideY = guideY
+        }
     }
 }

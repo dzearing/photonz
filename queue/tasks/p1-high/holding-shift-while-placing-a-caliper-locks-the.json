@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:04:06.589Z",
-  "updated": "2026-09-09T15:05:00.000Z",
+  "updated": "2026-09-09T15:06:14.628Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09 with the exact case: a baseline, then the top of a text run that is not directly below it. The deciding happens in CanvasMeasure.snapMeasureSecondFoot (Sources/Photonz/CanvasMeasure.swift line 229): it snaps the pointer, then calls MeasureContent.dominantAxis(from:to:) on every move and flattens the far foot onto that axis, so the mode is recomputed continuously and nothing holds it. Command is already taken on this path, freeing the snap entirely (line 231), so shift is the right key and is currently unread here. Two things to get right. The lock has to capture the mode at the moment shift goes down and keep it until shift comes up, so it needs to live with the placement state rather than be derived each move. And snapping must keep working while locked, which is the whole point of the feature: the pointer catches a point off to the side and only its position ALONG the locked axis is used for the far foot. Pair this with holding-shift-while-dragging-a-caliper-end-keeps so both are the same gesture; whichever lands second should make them agree rather than adding a second meaning for the key.\n\nUPDATE 2026-09-09, from its pair landing first (holding-shift-while-dragging-a-caliper-end-keeps, shipped): the convention is now set and this task inherits it rather than choosing one. The idea in one sentence, which both moments say: SHIFT HOLDS THE DIRECTION THE MEASUREMENT IS GOING IN, the pointer may travel anywhere, and only where it lands ALONG that direction is taken. Three rules came with it and this task should match all three. (1) The key is LIVE, read on every mouse-moved event and never latched at the press, so pressing it partway takes what is on screen at that moment and letting it go hands the drag straight back to the pointer with no jump. (2) The magnets are asked exactly what a free pass asks them and the hold has the LAST word: a catch along the held direction is kept, one that would pull the point off it is dropped, and its yellow guide goes out with it so nothing is lit that is not drawn. Command still frees the magnets entirely and the two keys compose. (3) The projection maths lives in PhotonzCore as MeasureLineHold (Sources/PhotonzCore/MeasureLineHold.swift), including MeasureLineHold.holding(...) for the press/release latch and .landing(...) for the snap-then-hold rule; reuse both here rather than writing a second copy. Design write-up: docs/design/next-measure.md section 8c. The playtest drag step now takes a \"halfway\" list of modifiers that come into force for the second half of the travel, which is how a walk presses or releases the key with the button down; Scripts/playtest/caliper-held-straight-walk.json is the worked example. The one place this task must still decide for itself: while PLACING, the held thing is which axis the measurement is going to be, so the hold has to survive the pointer crossing into the other axis, which the adjusting case never has to do.",
@@ -31,6 +31,35 @@
     {
       "t": "2026-09-09T13:04:06.629Z",
       "note": "seq 260 -> 8"
+    },
+    {
+      "t": "2026-09-09T15:06:14.627Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T15:09:58.741926Z",
+      "note": "Adversarial review BEFORE building. (1) Nothing else on the caliper placement path reads shift: only command, which frees the magnets. Grepped, confirmed. So the key is free and the two compose, command+shift = held direction, free of magnets. (2) No mock here, this came from the user and its pair already fixed the convention in docs/design/next-measure.md section 8c, so the job is to inherit it, not invent a second one. (3) CUT: the task suggests placement state should hold a mode. It does not need a second concept. The flatten the placement code already does (mode == .horizontal ? (p.x, foot1.y) : (foot1.x, p.y)) IS MeasureLineHold.project for an axis line through foot A, so the whole feature is: latch a line, read the direction back off it, project. One new core member instead of a parallel mode lock. (4) Discoverability: nothing on screen announces the key. Its pair shipped the same way and the preview line is the feedback, it visibly stops flipping. A cue would belong to both moments at once, not this task, so it goes in rough rather than in scope. (5) Degenerate case to be honest about: held across, then walking the pointer back to foot A's own column makes a zero length caliper, and the commit already refuses anything under 1px, so that click is silently swallowed where a free placement would have flipped direction instead. (6) Shift before foot A is down means nothing and must stay a no op, and shift on the third click (parking the number) stays unread, so holding it through the whole gesture locks the direction and then places the number normally. (7) The hold has to die with the placement or a caliper started while the key is still down inherits the last one's direction through the last one's foot."
+    },
+    {
+      "t": "2026-09-09T15:21:31.165680Z",
+      "note": "Built. Core: MeasureLineHold gains axis (the direction a line runs in, read off the line that is DRAWN because while placing the mode is the thing being held) and placing(...) which latches with the existing holding(...), reads the direction back, asks landing(...) for the guides and projects the far foot. The flatten the placement code already did IS project for an axis line through foot A, so there is one operation, and a free placement lands byte for byte where it did before, magnets' guides included. App: CanvasMeasure.snapMeasureSecondFoot now calls it and stores the hold in a new CanvasNSView.measurePlacementHold, cleared everywhere a placement starts, finishes, is cancelled or is abandoned by a tool switch. Also changed CanvasDisplay's one refreshMeasureCreation(modifierFlags: []) to pass the keys that are actually down: a refresh driven by a state sync must not silently drop a held direction by claiming no keys are held."
+    },
+    {
+      "t": "2026-09-09T15:21:31.165680Z",
+      "note": "TDD: 14 new tests in Tests/PhotonzCoreTests/MeasureLineHoldTests.swift written first and run RED (type 'MeasureLineHold' has no member 'placing'), then green. They cover the direction read off a line, the hold surviving the pointer travelling well past the crossover (700 across against 300 down, which a free placement calls horizontal twice over), pressing the key AFTER the crossover taking what is on screen then, letting go landing exactly where a never-held placement would, and the magnets keeping a catch along the held direction while one across it is dropped with its guide. Full suite: 5457 tests in 458 suites, all passing."
+    },
+    {
+      "t": "2026-09-09T15:21:31.165680Z",
+      "note": "Verified in the real app, not just in tests. New walk Scripts/playtest/caliper-held-direction-walk.json places the SAME measurement five ways from foot A at (500, 200) and the committed feet come back exactly as predicted: free flips to (500,200)-(940,200) across, which is the bug; held stays (500,200)-(500,600) down after the pointer travelled 420 out to x 940; pressed after the crossover gives (500,200)-(700,200), so it took the across that was on screen at the press and not the down it started with; let go gives the free answer again with nothing carried over; and held with the magnets on, pointer stopped 6px short at (940,606), lands (500,600) by catching a reference caliper's row line along the held direction while the pointer's x was simply not taken. Screen Recording was granted, so both snapshots are real window captures. Ran caliper (4), measure (7) and placement (2) walks: 13 passed, 0 failed."
+    },
+    {
+      "t": "2026-09-09T15:21:31.165680Z",
+      "note": "Adversarial review of the BUILT thing. Good: the second foot's dot stops following the pointer and stands on the held line, which is honest feedback with no new chrome, and preview and landing cannot disagree because the click runs the same function with the click's own modifiers. Rough, all three written into the audit for the user to react to: nothing announces the key (left out on purpose, a hint belongs to both moments at once rather than to this task); held across, walking the pointer back to foot A's own column makes a zero length caliper and the click is silently swallowed by the existing under-1px guard where a free placement would have flipped instead; shift stays unread on the third click that parks the number, which matches the placed-caliper case. One honesty note about the walk: it presses and releases the key with a move step at the same point rather than a bare modifier event, because a walk cannot send modifiers alone. That is the same handler with the same flags, and the real flagsChanged path converges on the identical refreshMeasureCreation call, but it is simulated rather than literal."
+    },
+    {
+      "t": "2026-09-09T15:21:31.165680Z",
+      "note": "Audit written: queue/audits/2026-09-09-caliper-held-direction.json with two real screen captures beside it. Design write-up updated: docs/design/next-measure.md section 8c now covers both halves of the key as one rule and says what placing has to survive that adjusting does not."
     }
-  ]
+  ],
+  "started": "2026-09-09T15:06:14.626Z"
 }

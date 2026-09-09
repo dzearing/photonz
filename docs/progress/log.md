@@ -13962,3 +13962,30 @@ end does not move.
 Next: the placing half of the same gesture. Found and filed on the way, with a
 reproduction: a click on a measurement's end, with no drag at all, moves it and
 changes the reading (100 px became 98 px from one click).
+
+## 2026-09-09 — Holding shift locks the direction a measurement is going in
+
+Placing a measurement decided whether it was going across or down from wherever
+the pointer was, on every move, so measuring from a baseline down to text that
+sits off to one side was impossible: the caliper flipped to measuring across
+before the pointer got there. ⇧ now holds the direction, the pointer travels
+anywhere, and only how far it got along that direction is taken.
+
+It is the same key and the same rule as ⇧ on a placed caliper's foot, which
+shipped earlier the same day, and it runs on the same `MeasureLineHold`. Two
+things were added to it: `axis`, which reads the direction off the line that is
+DRAWN (while placing, the mode is the thing being held, so reading it back off
+the mode would be circular), and `placing(...)`, which latches, reads the
+direction back and projects. The flatten the placement code already did IS
+`project` for an axis line through foot A, so there is one operation rather than
+a parallel mode lock, and a free placement lands exactly where it always did.
+
+- `Sources/PhotonzCore/MeasureLineHold.swift` — `axis`, `placing(...)`, `Placement`.
+- `Sources/Photonz/CanvasMeasure.swift` — `snapMeasureSecondFoot` calls it; the
+  hold lives in `CanvasNSView.measurePlacementHold` and dies with its placement.
+- `Scripts/playtest/caliper-held-direction-walk.json` — the same measurement
+  placed five ways; every committed pair of feet came back as predicted.
+- Audit: `queue/audits/2026-09-09-caliper-held-direction.json`, two real captures.
+
+Next: the audit's three rough notes are for the user to react to. The one worth
+watching is that nothing on screen announces the key, at either moment.

@@ -548,7 +548,7 @@ offers their feet and head lines precisely, and a caliper's bounding box is not
 something anyone aims at. Covers the first foot, the second foot and a foot
 dragged on a placed caliper; ⌘ frees all three, as before.
 
-## 8c. Holding a caliper on its line — ⇧ (shipped)
+## 8c. Holding the direction a caliper is measuring in — ⇧ (shipped)
 
 No mock: this came from the user (2026-09-09). Adjusting how long a measurement
 was moved what it was measuring across. Dragging one foot carries the whole
@@ -560,10 +560,9 @@ the caliper path read ⇧ at all.
 **One key, one idea, at both moments of a measurement's life.** ⇧ holds the
 direction the caliper is measuring in: while ADJUSTING a placed one it holds the
 line it is already on, and while PLACING one it holds the direction it is
-currently going (`holding-shift-while-placing-a-caliper-locks-the`, which lands
-second and inherits this rule rather than adding a second meaning for the key).
-Either way the pointer is free to travel anywhere and only where it lands ALONG
-the held line is taken.
+currently going. Either way the pointer is free to travel anywhere and only
+where it lands ALONG the held line is taken. Both halves have shipped and they
+are the same rule running twice, not two features that resemble each other.
 
 Which line is "the line it is on" has two readings — the line through both feet,
 or the axis the mode names — and for every caliper this app can draw they are
@@ -589,10 +588,48 @@ along that angle.
 - **The head is untouched.** ⇧ holds a FOOT; the readout chip is not a measured
   point and dragging it has its own two axes.
 
-Walk: `Scripts/playtest/caliper-held-straight-walk.json` (free, held, pressed
-halfway, let go halfway, the other foot, and a held drag that still catches
-another measurement's foot line). The walk presses and releases the key with the
-button down through the playtest `drag` step's `halfway` field.
+### Placing: the direction, not the line
+
+Placing has one thing to survive that adjusting never does. Adjusting holds a
+line the caliper is ALREADY standing on, and the pointer wandering off it does
+not threaten anything. Placing holds WHICH DIRECTION the measurement is going to
+be, and that direction is otherwise recomputed from the pointer on every single
+move (`MeasureContent.dominantAxis`), so the pointer crossing into the other
+direction is exactly the thing the hold exists to survive.
+
+That is the user's case (2026-09-09): measure from a baseline DOWN to the top of
+a line of text that sits off to one side. Free, the caliper flips to measuring
+across before the pointer gets there, and the text is simply unreachable. Held,
+the caliper keeps measuring down and only how far down the pointer got is taken,
+so the pointer is free to travel out to the text and catch it.
+
+Two things fall out and both are the shipped behaviour:
+
+- **The direction comes off the line that is DRAWN**, `MeasureLineHold.axis`,
+  not off whatever mode was passed in when the hold was built. While placing,
+  the mode is the very thing being held, so reading it back off the mode would
+  be circular.
+- **Flattening and projecting are the same operation.** The placement code
+  already levelled the far foot onto the measuring axis
+  (`mode == .horizontal ? (p.x, foot1.y) : (foot1.x, p.y)`), and that IS
+  `project` for an axis line through foot A. So there is one of them:
+  `MeasureLineHold.placing(...)` latches, reads the direction back, and
+  projects. A free placement lands exactly where it always did, magnets' guides
+  included.
+
+The hold lives beside `measurePlacement` on the canvas view and dies with the
+placement it belongs to, or a caliper started while the key was still down would
+inherit the last one's direction through the last one's foot. ⇧ before foot A is
+down means nothing (there is no direction yet), and ⇧ on the third click, the one
+that parks the number, is still unread: the direction is settled by then.
+
+Walks: `Scripts/playtest/caliper-held-straight-walk.json` for adjusting (free,
+held, pressed halfway, let go halfway, the other foot, and a held drag that
+still catches another measurement's foot line; it presses and releases the key
+with the button down through the playtest `drag` step's `halfway` field), and
+`Scripts/playtest/caliper-held-direction-walk.json` for placing (free flips,
+held keeps going, pressed after the crossover, let go after the crossover, and
+held while a magnet along the held direction still catches).
 
 ## 9. Alignment checks — `next-measure-align` (decision D1: resolved)
 

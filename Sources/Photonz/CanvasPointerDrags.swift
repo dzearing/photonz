@@ -204,6 +204,7 @@ extension CanvasNSView {
             hoverPoint = measurePressDownView
             if measurePlacement == nil {
                 resetDragMotion(p)
+                measurePlacementHold = nil
                 measurePlacement = .firstPlaced(foot1: snapMeasureAnchor(p, modifiers: event.modifierFlags))
                 measureFirstFootPress = true
             } else {

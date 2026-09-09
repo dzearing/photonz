@@ -86,7 +86,7 @@ extension CanvasNSView {
         }
         if measureCandidateLevel != self.measureCandidateLevel {
             self.measureCandidateLevel = measureCandidateLevel
-            refreshMeasureCreation(modifierFlags: [])
+            refreshMeasureCreation(modifierFlags: NSEvent.modifierFlags)
         }
         self.measureSnapsToCenters = measureSnapsToCenters
         self.edgeMap = edgeMap
@@ -100,6 +100,7 @@ extension CanvasNSView {
             // and any in-progress caliper placement.
             annotationDrag = nil
             measurePlacement = nil
+            measurePlacementHold = nil
             measureFirstFootPress = false
             measurePressDownView = nil
             measureHandleDrag = nil

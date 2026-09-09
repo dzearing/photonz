@@ -847,6 +847,13 @@ final class CanvasNSView: NSView {
         case secondPlaced(foot1: CGPoint, foot2: CGPoint, mode: MeasureMode) // seeking head
     }
     var measurePlacement: MeasurePlacement?
+    /// The direction ⇧ is holding the caliper being PLACED in: latched the
+    /// moment the key goes down and dropped the moment it comes up, so the
+    /// pointer can travel into the other direction without the measurement
+    /// changing its mind. Lives beside `measurePlacement` rather than inside it
+    /// because it is the pointer's business, not the placement's, and it dies
+    /// with the placement it belongs to.
+    var measurePlacementHold: MeasureLineHold?
     /// What the Measure tool does when you click (Next). Distance is the only
     /// mode that draws nothing under an idle pointer.
     var measureToolMode: MeasureToolMode = .distance

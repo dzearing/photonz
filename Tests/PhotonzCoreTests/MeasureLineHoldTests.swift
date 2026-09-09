@@ -141,4 +141,151 @@ struct MeasureLineHoldTests {
         #expect(landing.guideX == 452)
         #expect(landing.guideY == 240)
     }
+
+    // MARK: Which direction a held line names
+
+    @Test func aHeldLineNamesTheDirectionItRunsIn() {
+        #expect(MeasureLineHold(mode: .horizontal, through: CGPoint(x: 300, y: 200)).axis == .horizontal)
+        #expect(MeasureLineHold(mode: .vertical, through: CGPoint(x: 300, y: 200)).axis == .vertical)
+    }
+
+    /// The direction has to come off the line that is DRAWN, not off whatever
+    /// mode happened to be passed in when it was built: while a caliper is
+    /// being placed the mode is exactly the thing being decided.
+    @Test func theDirectionIsReadFromTheLineNotTheModeItWasBuiltWith() {
+        let line = MeasureLineHold(mode: .horizontal,
+                                   through: CGPoint(x: 200, y: 100), and: CGPoint(x: 200, y: 400))
+        #expect(line.axis == .vertical)
+    }
+
+    // MARK: Placing a caliper — the key holds the direction it is going in
+
+    @Test func withoutTheKeyPlacingKeepsChoosingTheDirectionFromThePointer() {
+        let footA = CGPoint(x: 300, y: 200)
+        let across = MeasureLineHold.placing(nil, shiftDown: false, from: footA,
+                                             toward: CGPoint(x: 500, y: 240))
+        #expect(across.mode == .horizontal)
+        #expect(close(across.foot2, CGPoint(x: 500, y: 200)))
+        #expect(across.hold == nil)
+
+        let down = MeasureLineHold.placing(nil, shiftDown: false, from: footA,
+                                           toward: CGPoint(x: 320, y: 600))
+        #expect(down.mode == .vertical)
+        #expect(close(down.foot2, CGPoint(x: 300, y: 600)))
+    }
+
+    /// The user's case: a baseline, then the top of a line of text that is off
+    /// to one side. Free, the caliper flips to measuring across the moment the
+    /// pointer leaves the column; held, it keeps measuring down and only takes
+    /// how far down the pointer got.
+    @Test func theHeldDirectionSurvivesThePointerCrossingIntoTheOther() {
+        let footA = CGPoint(x: 300, y: 200)
+        // Pressed while the caliper is measuring DOWN.
+        let locked = MeasureLineHold.placing(nil, shiftDown: true, from: footA,
+                                             toward: CGPoint(x: 320, y: 600))
+        #expect(locked.mode == .vertical)
+
+        // Now travel well past the crossover: 700 across against 300 down, so a
+        // free placement would call this horizontal twice over.
+        let travelled = MeasureLineHold.placing(locked.hold, shiftDown: true, from: footA,
+                                                toward: CGPoint(x: 1000, y: 500))
+        #expect(MeasureContent.dominantAxis(from: footA, to: CGPoint(x: 1000, y: 500)) == .horizontal)
+        #expect(travelled.mode == .vertical)
+        #expect(close(travelled.foot2, CGPoint(x: 300, y: 500)))
+        #expect(travelled.hold == locked.hold)
+    }
+
+    @Test func theHeldDirectionDoesNotDriftWhileTheKeyStaysDown() throws {
+        let footA = CGPoint(x: 300, y: 200)
+        let first = MeasureLineHold.placing(nil, shiftDown: true, from: footA,
+                                            toward: CGPoint(x: 500, y: 240))
+        let held = try #require(first.hold)
+        for pointer in [CGPoint(x: 310, y: 900), CGPoint(x: 299, y: -400), CGPoint(x: 800, y: 800)] {
+            let next = MeasureLineHold.placing(held, shiftDown: true, from: footA, toward: pointer)
+            #expect(next.hold == held)
+            #expect(next.mode == .horizontal)
+            #expect(close(next.foot2, CGPoint(x: pointer.x, y: 200)))
+        }
+    }
+
+    /// Pressing the key partway takes what is on SCREEN at that moment, not
+    /// what the placement started out as.
+    @Test func pressingTheKeyAfterTheCrossoverLocksWhatIsOnScreenThen() {
+        let footA = CGPoint(x: 300, y: 200)
+        // Free so far, and the pointer has already crossed into measuring down.
+        let free = MeasureLineHold.placing(nil, shiftDown: false, from: footA,
+                                           toward: CGPoint(x: 340, y: 700))
+        #expect(free.mode == .vertical)
+        // Key goes down here.
+        let locked = MeasureLineHold.placing(free.hold, shiftDown: true, from: footA,
+                                             toward: CGPoint(x: 340, y: 700))
+        #expect(locked.mode == .vertical)
+        // And it stays down as the pointer walks a long way across.
+        let travelled = MeasureLineHold.placing(locked.hold, shiftDown: true, from: footA,
+                                                toward: CGPoint(x: 1200, y: 420))
+        #expect(travelled.mode == .vertical)
+        #expect(close(travelled.foot2, CGPoint(x: 300, y: 420)))
+    }
+
+    @Test func lettingTheKeyGoChoosesFromThePointerAgainWithNoJump() {
+        let footA = CGPoint(x: 300, y: 200)
+        let locked = MeasureLineHold.placing(nil, shiftDown: true, from: footA,
+                                             toward: CGPoint(x: 500, y: 240))
+        let pointer = CGPoint(x: 320, y: 900)
+        let released = MeasureLineHold.placing(locked.hold, shiftDown: false, from: footA,
+                                               toward: pointer)
+        #expect(released.hold == nil)
+        // Exactly what a placement that had never been held would do with the
+        // pointer where it actually is: no lag, nothing carried over.
+        let neverHeld = MeasureLineHold.placing(nil, shiftDown: false, from: footA, toward: pointer)
+        #expect(released.mode == neverHeld.mode)
+        #expect(close(released.foot2, neverHeld.foot2))
+    }
+
+    @Test func theKeyBeforeTheDirectionExistsHoldsTheDirectionThePointerIsAlreadyGivingIt() {
+        // Foot A and the pointer in the same place name no direction at all;
+        // the rule must still answer, and answer the same way a free placement
+        // does, rather than dividing by nothing.
+        let footA = CGPoint(x: 300, y: 200)
+        let stationary = MeasureLineHold.placing(nil, shiftDown: true, from: footA, toward: footA)
+        #expect(stationary.mode == MeasureContent.dominantAxis(from: footA, to: footA))
+        #expect(close(stationary.foot2, footA))
+    }
+
+    // MARK: What the magnets are still allowed to do while placing
+
+    @Test func aMagnetAlongTheHeldDirectionStillCatchesWhilePlacing() {
+        let footA = CGPoint(x: 300, y: 200)
+        let locked = MeasureLineHold.placing(nil, shiftDown: true, from: footA,
+                                             toward: CGPoint(x: 500, y: 240))
+        // The pointer went off to the side and caught a vertical edge at x 448.
+        let caught = MeasureLineHold.placing(locked.hold, shiftDown: true, from: footA,
+                                             toward: CGPoint(x: 448, y: 620),
+                                             guideX: 448, guideY: nil)
+        #expect(close(caught.foot2, CGPoint(x: 448, y: 200)))
+        #expect(caught.guideX == 448)
+        #expect(caught.guideY == nil)
+    }
+
+    @Test func aMagnetAcrossTheHeldDirectionIsNotTakenOrLitWhilePlacing() {
+        let footA = CGPoint(x: 300, y: 200)
+        let locked = MeasureLineHold.placing(nil, shiftDown: true, from: footA,
+                                             toward: CGPoint(x: 500, y: 240))
+        let caught = MeasureLineHold.placing(locked.hold, shiftDown: true, from: footA,
+                                             toward: CGPoint(x: 520, y: 620),
+                                             guideX: nil, guideY: 620)
+        #expect(close(caught.foot2, CGPoint(x: 520, y: 200)))
+        #expect(caught.guideY == nil)
+    }
+
+    /// Free placement is untouched by any of this: it flattens the far foot the
+    /// way it always did and hands the magnets’ guides straight back.
+    @Test func withoutTheKeyPlacingHandsTheMagnetsGuidesStraightBack() {
+        let placed = MeasureLineHold.placing(nil, shiftDown: false, from: CGPoint(x: 300, y: 200),
+                                             toward: CGPoint(x: 448, y: 240),
+                                             guideX: 448, guideY: 240)
+        #expect(close(placed.foot2, CGPoint(x: 448, y: 200)))
+        #expect(placed.guideX == 448)
+        #expect(placed.guideY == 240)
+    }
 }

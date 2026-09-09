@@ -250,11 +250,29 @@ extension CanvasNSView {
     }
 
     /// Snaps the SECOND foot along the measuring line from foot1 (edge magnetize +
-    /// axis gating; ⌘ = free), then levels it to the dominant axis. Returns the
-    /// leveled foot and the chosen axis.
+    /// axis gating; ⌘ = free), then levels it onto the direction the caliper is
+    /// measuring in. Returns the leveled foot and that direction.
+    ///
+    /// ⇧ HOLDS THAT DIRECTION. Without it the direction is chosen afresh from
+    /// wherever the pointer is on every single move, so a caliper measuring down
+    /// from a baseline flips to measuring across the moment you steer towards a
+    /// line of text that sits off to one side — and there is no way to reach
+    /// that text. Held, the direction is the one that was on screen when the key
+    /// went down, the pointer is free to travel anywhere including well into the
+    /// other direction, and only how far it got ALONG the held direction is
+    /// taken. Letting go hands the choosing straight back with no jump.
+    ///
+    /// This is the same key doing the same thing as ⇧ on a placed caliper's
+    /// foot, and it runs on the same `MeasureLineHold`: live rather than latched
+    /// at the press, the magnets asked exactly what a free pass asks them with
+    /// the hold having the last word, and ⌘ still freeing the magnets entirely
+    /// so the two keys compose.
     private func snapMeasureSecondFoot(from foot1: CGPoint, to doc: CGPoint,
                                        modifiers: NSEvent.ModifierFlags) -> (foot2: CGPoint, mode: MeasureMode) {
         var p = doc
+        var guideX: CGFloat?
+        var guideY: CGFloat?
+        var magnetsAsked = false
         if modifiers.contains(.command) {
             // Freed by hand: nothing is being stood on any more, so nothing is
             // waiting to grab the line back when the key comes up.
@@ -271,12 +289,20 @@ extension CanvasNSView {
                                                    layerLines: measureLayerLines(excluding: nil),
                                                    holding: snapHold),
                                   raw: doc)
-            snapHold.caught(x: snap.guideX, y: snap.guideY)
+            magnetsAsked = true
+            guideX = snap.guideX
+            guideY = snap.guideY
             p = snap.point
         }
-        let mode = MeasureContent.dominantAxis(from: foot1, to: p)
-        let foot2 = mode == .horizontal ? CGPoint(x: p.x, y: foot1.y) : CGPoint(x: foot1.x, y: p.y)
-        return (foot2, mode)
+        let placing = MeasureLineHold.placing(measurePlacementHold,
+                                              shiftDown: modifiers.contains(.shift),
+                                              from: foot1, toward: p,
+                                              guideX: guideX, guideY: guideY)
+        measurePlacementHold = placing.hold
+        // A catch the held direction threw away must not go on holding the
+        // sticky snap either: the caliper is not standing on that line.
+        if magnetsAsked { snapHold.caught(x: placing.guideX, y: placing.guideY) }
+        return (placing.foot2, placing.mode)
     }
 
     /// Signed perpendicular distance from the measuring line to `doc` — the head
@@ -321,6 +347,7 @@ extension CanvasNSView {
         case nil:
             // mouse-down normally creates .firstPlaced; guard defensively.
             resetDragMotion(raw)
+            measurePlacementHold = nil
             measurePlacement = .firstPlaced(foot1: snapMeasureAnchor(raw, modifiers: modifiers))
         case .firstPlaced(let foot1):
             if measureFirstFootPress && !dragged {
@@ -332,6 +359,8 @@ extension CanvasNSView {
                 measureFirstFootPress = false
                 let (foot2, mode) = snapMeasureSecondFoot(from: foot1, to: raw, modifiers: modifiers)
                 guard hypot(foot2.x - foot1.x, foot2.y - foot1.y) >= 1 else { break }
+                // The direction is settled now, so there is nothing left to hold.
+                measurePlacementHold = nil
                 measurePlacement = .secondPlaced(foot1: foot1, foot2: foot2, mode: mode)
             }
         case .secondPlaced(let foot1, let foot2, let mode):
@@ -347,6 +376,7 @@ extension CanvasNSView {
     private func finishMeasurePlacement(foot1: CGPoint, foot2: CGPoint,
                                         mode: MeasureMode, headOffset: CGFloat?) {
         measurePlacement = nil
+        measurePlacementHold = nil
         measureFirstFootPress = false
         snapGuide = nil
         snapDotLayer.isHidden = true
@@ -358,6 +388,7 @@ extension CanvasNSView {
     /// switch) — both the caliper draft and any alignment-guide drag.
     func cancelMeasurePlacement() {
         measurePlacement = nil
+        measurePlacementHold = nil
         measureFirstFootPress = false
         measurePressDownView = nil
         alignmentDrag = nil
