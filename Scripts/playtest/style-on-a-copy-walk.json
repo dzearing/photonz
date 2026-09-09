@@ -1,0 +1,69 @@
+{
+  "out": "/tmp/photonz-playtest/style-on-a-copy",
+  "seed": "A text style carried over the words of a COPY of a component. The words are plainly text, but a copy answers as a whole, so the drop is refused. It used to be refused with \"Button is not text\", which contradicts what anybody can see. This walk reads back the sentence over a copy's label, and then proves the way out it offers by letting the same style go on the ORIGINAL, where it does land and every copy follows.",
+  "setup": {
+    "forget": ["text", "panel", "shapes", "color", "tools"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "insertPickedComponent" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-original", "note": "the starter Button, as the ORIGINAL, in the middle of the canvas" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [650, 470] },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "2-copy", "note": "a copy of the Button at (650, 470), following the original. Its words are the thing this walk aims at." },
+    { "do": "render", "name": "2-copy" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Font", "choose": "Georgia" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Size", "choose": "32 px" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Weight", "choose": "Bold" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Style", "choose": "Save as Style" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "type", "text": "Heading" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-saved", "note": "Heading saved off the one heading, and saving put the Library on its Styles shelf, where the Ag tile is the handle everything below pulls on." },
+
+    { "do": "click", "at": [840, 90] },
+    { "do": "wait", "seconds": 0.6 },
+
+    {
+      "do": "dragTile", "tile": "Heading", "to": [650, 470],
+      "expect": "refuses", "says": "Label comes from Button",
+      "hold": "4-over-a-copys-words"
+    },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-refused", "note": "THE TEST: the pointer is on words anybody can read, and the sentence says where they come from and what to do instead, rather than claiming they are not text." },
+
+    {
+      "do": "dragTile", "tile": "Heading", "to": [450, 300],
+      "expect": "takes", "says": "Sets this text in Heading",
+      "hold": "5-over-the-originals-words"
+    },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "5-on-the-original", "note": "THE WAY OUT the refusal offered, taken: the same style let go on the ORIGINAL's words lands, and the copy follows it." },
+    { "do": "snapshot", "name": "5-copy-follows-the-original" },
+    { "do": "render", "name": "5-copy-follows" }
+  ]
+}

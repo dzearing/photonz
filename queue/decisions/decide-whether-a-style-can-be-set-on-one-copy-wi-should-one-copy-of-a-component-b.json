@@ -1,0 +1,56 @@
+{
+  "id": "decide-whether-a-style-can-be-set-on-one-copy-wi-should-one-copy-of-a-component-b",
+  "taskId": "decide-whether-a-style-can-be-set-on-one-copy-wi",
+  "question": "Should one copy of a component be able to wear its own text style?",
+  "context": "A copy of a component follows its original: its words, its colours and its size all come from there. A text style dragged off the Library shelf onto the words inside a copy is refused today, and the app now says why and points at the two moves that work. The question is whether that refusal is right, or whether one copy should be allowed to wear its own text style the way it can already own its colour and its size.",
+  "options": [
+    {
+      "id": "a",
+      "label": "A copy can wear its own style",
+      "summary": "Letting a text style go on the words inside a copy sets that one copy, and nothing else. The copy then says it has a look of its own, with a way back to the original beside it, exactly like a copy that has been given its own colour.",
+      "pros": [
+        "It does what somebody aiming at one button plainly meant",
+        "It matches everything else a copy is already allowed to own: its colour, its size, its room, its opacity, its wording",
+        "Nothing is given up for good, and one press puts the copy back on the original"
+      ],
+      "cons": [
+        "One more thing that can quietly differ between two copies that look alike",
+        "A style edited later reaches copies that answered for themselves as well as ones that did not, so a change to Heading can show up in places nobody expected"
+      ],
+      "mitigation": "The copy says out loud which parts of its look are its own, and every one of them has a one press way back, so a copy that has drifted is visible and reversible."
+    },
+    {
+      "id": "b",
+      "label": "Leave it as it is: the words explain and point the way",
+      "summary": "The refusal stays. Aiming a style at the words inside a copy says where those words come from and offers the two moves that work: set the style on the original, which every copy follows, or detach this copy and style it like anything else.",
+      "pros": [
+        "A copy stays one simple promise: it looks like its original unless it was told otherwise on its own panel",
+        "Nothing new to learn, nothing new to undo",
+        "No work, and no new way for two copies to drift apart"
+      ],
+      "cons": [
+        "The move somebody actually wanted still is not available, and both offered moves are bigger than the one they asked for",
+        "Detaching to change one word's look is a heavy price"
+      ],
+      "mitigation": "The sentence names both ways forward on the spot, so nobody is left guessing what to do next.",
+      "declines": true
+    },
+    {
+      "id": "c",
+      "label": "Offer it on the spot, but ask first",
+      "summary": "Letting a style go on the words inside a copy asks, right there, whether to set it on the original (every copy follows) or on this copy alone. Nothing lands until the question is answered.",
+      "pros": [
+        "Both intentions are served, and the difference between them is said out loud at the moment it matters",
+        "Nobody changes every copy by accident"
+      ],
+      "cons": [
+        "A question in the middle of a drag is a stop, and drag and drop is meant to be the fast way",
+        "The same question every time gets tiring on the tenth copy"
+      ],
+      "mitigation": "The question only appears for a drop aimed inside a copy, and it can remember the answer for the rest of the session."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-09T11:43:35.778Z"
+}

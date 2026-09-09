@@ -71,8 +71,18 @@ extension CanvasNSView {
                     [], [])
         }
         guard hit.textTreatment != nil else {
+            // A copy of a component is hit whole, contents and all, so words
+            // inside one arrive here looking like anything else that is not
+            // text. Saying so over the top of readable words is a lie, so the
+            // one line names the piece and its original instead, and points at
+            // the two moves that work. The rule does not change: nothing lands
+            // inside a copy, because the next sync would write it straight back
+            // over.
+            let copyPiece = componentsEnabled
+                ? document.textStyleCopyPiece(at: point, zoom: viewport.zoom) : nil
             return (TextStyleDrop.answer(dropping: style,
-                                         on: TextStyleDrop.Target(name: hit.name, isText: false)),
+                                         on: TextStyleDrop.Target(name: hit.name, isText: false,
+                                                                  copyPiece: copyPiece)),
                     [], [])
         }
         // Everything the drop would reach: the text under the pointer alone,

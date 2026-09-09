@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 /// Picking a saved text style up off the Library shelf and letting go of it on
@@ -30,6 +31,34 @@ public enum TextStyleDrop {
         }
     }
 
+    /// Words that belong to a COPY of a component, in the terms the sentence
+    /// about them needs.
+    ///
+    /// A copy answers as a whole: its contents are its original's, rebuilt from
+    /// the original after every edit, so nothing can be set on one of them
+    /// where it would stay. The hit test stops at the copy for exactly that
+    /// reason, and the refusal used to describe the copy — "Save button is not
+    /// text" — over the top of words anybody can read. Reaching one level
+    /// further to SAY what is there costs nothing and stops the app
+    /// contradicting the screen.
+    public struct CopyPiece: Hashable, Sendable {
+        /// The original's name for this piece, "Label" for a button's words.
+        /// Empty when nobody named it.
+        public var piece: String
+        /// What the original is called, empty when nobody named it.
+        public var component: String
+        /// Whether stopping this copy from following its original is a real way
+        /// forward. It is not for a copy inside another copy: the outer copy
+        /// rebuilds the inner one, so detaching the inner one does not stick.
+        public var canDetach: Bool
+
+        public init(piece: String, component: String, canDetach: Bool) {
+            self.piece = piece
+            self.component = component
+            self.canDetach = canDetach
+        }
+    }
+
     /// What is under the pointer, in the only terms the answer depends on.
     public struct Target: Hashable, Sendable {
         /// The name of the layer under the pointer, nil when there is nothing
@@ -48,14 +77,20 @@ public enum TextStyleDrop {
         /// when the text under the pointer is part of a bigger selection, the
         /// same way a swatch paints everything its row speaks for.
         public var reaches: Int
+        /// Set when the pointer is on the words of a copy. The hit test stops
+        /// at the copy, so `isText` is false and `name` is the copy's name;
+        /// this is what the words themselves are.
+        public var copyPiece: CopyPiece?
 
         public init(name: String?, isText: Bool, wearingID: UUID? = nil,
-                    wearingName: String? = nil, reaches: Int = 1) {
+                    wearingName: String? = nil, reaches: Int = 1,
+                    copyPiece: CopyPiece? = nil) {
             self.name = name
             self.isText = isText
             self.wearingID = wearingID
             self.wearingName = wearingName
             self.reaches = reaches
+            self.copyPiece = copyPiece
         }
     }
 
@@ -84,6 +119,22 @@ public enum TextStyleDrop {
             return Answer(lands: false,
                           note: "Drop this on a piece of text to set it in \(style.name).")
         }
+        if let copy = target.copyPiece {
+            // The words are right there under the pointer, so saying the copy
+            // "is not text" tells somebody that what they can see is false.
+            // What is true is where the words come from, and it comes with the
+            // moves that DO work: the style goes on the original, which every
+            // copy then follows, or this copy stops following and becomes
+            // ordinary layers a style can land on.
+            let piece = copy.piece.isEmpty ? "This text" : copy.piece
+            let origin = copy.component.isEmpty ? "the original" : copy.component
+            // "there" rather than "on the original" when the sentence has
+            // already had to call it that, so it is not said twice.
+            let place = copy.component.isEmpty ? "there" : "on the original"
+            var sentence = "\(piece) comes from \(origin). Set \(style.name) \(place)"
+            if copy.canDetach { sentence += ", or detach this copy" }
+            return Answer(lands: false, note: sentence + ".")
+        }
         guard target.isText else {
             // The one place a name earns its keep. Nothing is outlined, so what
             // somebody needs told is what KIND of thing they are pointing at,
@@ -107,5 +158,26 @@ public enum TextStyleDrop {
         let letsGoOf = target.reaches > 1 ? nil : target.wearingName
         if let letsGoOf { sentence += " and lets go of \(letsGoOf)" }
         return Answer(lands: true, note: sentence + ".", letsGoOf: letsGoOf)
+    }
+}
+
+extension PhotonzDocument {
+
+    /// The words of a copy under a canvas point, described for the one line the
+    /// canvas says while a style is in the air. Nil everywhere else, which is
+    /// every point that is not on a copy's own words.
+    ///
+    /// This only ever changes what is SAID. A style still cannot land inside a
+    /// copy, because a copy's contents are rebuilt from its original and
+    /// anything written onto one of them is gone by the next redraw.
+    public func textStyleCopyPiece(at point: CGPoint, zoom: CGFloat = 1)
+    -> TextStyleDrop.CopyPiece? {
+        guard let words = textPiece(at: point, zoom: zoom),
+              let piece = componentPiece(of: words) else { return nil }
+        return TextStyleDrop.CopyPiece(
+            piece: layer(id: piece.source)?.name ?? "",
+            component: mainComponent(componentID: piece.componentID)?.name
+                ?? layer(id: piece.instance)?.name ?? "",
+            canDetach: !piece.isNested)
     }
 }

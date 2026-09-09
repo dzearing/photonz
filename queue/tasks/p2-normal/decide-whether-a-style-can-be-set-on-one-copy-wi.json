@@ -1,0 +1,32 @@
+{
+  "id": "decide-whether-a-style-can-be-set-on-one-copy-wi",
+  "title": "Decide whether a style can be set on one copy without detaching it",
+  "goal": "Today a saved text style cannot be set on the words inside a copy of a component. The app now says so plainly and offers the two moves that work, but the person who dragged the style there usually wanted THIS one button to look different, and both moves are bigger than that: setting it on the original changes every copy, and detaching gives up following the original for good. Whether one copy should be allowed to wear its own text style is a question about what a copy is, and it is the user's call.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2410,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T11:43:16.924Z",
+  "updated": "2026-09-09T11:44:06.254Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Comes out of the wording fix landed 2026-09-09 (Sources/PhotonzCore/TextStyleDrop.swift, CopyPiece). A copy can already own its colour, its size, its room, its opacity and its wording; a text style would be one more of the same family, but styles are the one thing that reach a copy from OUTSIDE the component (the Library shelf), so it is not obviously the same shape. Building it means a new kind of instance override plus a way back on the panel, so it should not start before the card is answered.",
+  "acceptance": [
+    "A decision card is on the dashboard with the options written in terms of what a person sees and does",
+    "The answer is written into this task before any code is written",
+    "If the answer is yes, a style let go on the words inside a copy sets that copy alone and the copy says it has a look of its own",
+    "If the answer is no, nothing about the refusal changes and this task is retired"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T11:43:16.926Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-09T11:44:06.252Z",
+      "note": "waiting on the decision card: should one copy be able to wear its own text style"
+    }
+  ]
+}

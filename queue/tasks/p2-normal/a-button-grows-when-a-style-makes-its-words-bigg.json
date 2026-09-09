@@ -1,0 +1,28 @@
+{
+  "id": "a-button-grows-when-a-style-makes-its-words-bigg",
+  "title": "A button grows when a style makes its words bigger",
+  "goal": "Drop a saved text style on the words inside a button and the words get bigger but the button stays the size it was, so the label hangs out of both ends of the pill. Typing longer words into the same button already makes it grow. Changing what the words look like should too.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 2400,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-09T11:42:58.308Z",
+  "updated": "2026-09-09T11:42:58.311Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED on 2026-09-09. Scripts/playtest.sh Scripts/playtest/style-on-a-copy-walk.json --no-build: the walk places the starter Button as an original, saves a 32 px Georgia Bold text style called Heading, and lets it go on the original label. Compare /tmp/photonz-playtest/style-on-a-copy/2-copy.png with 5-copy-follows.png: the words grow from about 11 px to 32 px, the blue pill stays about 78 px wide in both, and the label hangs out of both ends on the original AND on the copy. Scripts/playtest/button-hug-walk.json proves the other path works, so the hug does re-run when the WORDS change (a wording knob) and does not when the TREATMENT changes. Likely the text-style path sets the treatment and re-measures the text box without asking the enclosing group to lay out again. Entry point: EditorState+TextStyles onDropTextStyle, and whatever button-hug-walk s retype path calls after commitTextEdit.",
+  "acceptance": [
+    "A text style dropped on a button label makes the button grow around the new words, the same way typing longer words does",
+    "The copies of that button grow with it",
+    "Scripts/playtest.sh Scripts/playtest/style-on-a-copy-walk.json --no-build shows the pill around the words in its last render",
+    "button-hug-walk still passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-09T11:42:58.310Z",
+      "note": "created (manual)"
+    }
+  ]
+}
