@@ -5,11 +5,10 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 2190,
-  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T02:04:55.976Z",
-  "updated": "2026-09-09T06:09:37.281Z",
+  "updated": "2026-09-09T06:24:11.502Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while doing corner-radius-folds-like-an-effect-with-its-chev, which converted the Corner Radius row and left these two behind on purpose. Sources/Photonz/ArrangementInspector.swift line 471 (padding) and line 735 (the shared row helper's chevron, used for Limits) both draw Image(systemName: open ? chevron.down : chevron.right) at caption2 semibold in a 12x12 frame, placed after the Text, and the rows they open are indented with number(..., indent: 20). The pieces to adopt are PanelFoldChevron (Sources/Photonz/PanelSectionLook.swift) and OwnedSettings (Sources/Photonz/PartsInspector.swift line 299), which is exactly what CornerRadiusRow now uses. The reason it was NOT done in the same task: ArrangementInspector draws its labels at .callout while Appearance is on .caption, so the effect heading font (footnote semibold) cannot be copied across without deciding what the Layout section's heading weight should be, and that is a look decision rather than a mechanical swap. Walks to rerun: anything pressing Each side or Limits.",
@@ -47,7 +46,15 @@
     {
       "t": "2026-09-09T06:39:00.000Z",
       "note": "Audit written: queue/audits/2026-09-08-layout-folds.json, with two real window captures. No sweep requested: the change is confined to one section of one inspector and its walks were all run by name."
+    },
+    {
+      "t": "2026-09-09T06:24:11.500Z",
+      "note": "Padding and each axis' size Limits now use PanelFoldChevron in the panel's leading column and OwnedSettings for the rows they open, so they draw exactly as Corner Radius and an effect do (Sources/Photonz/ArrangementInspector.swift, new foldHead()). Layout keeps its callout secondary type; non-folding rows did not move. Verified on the probe with Screen Recording granted: real window captures show the rule hung under each twist, and two axes open give two brackets. All 13 walks pressing Each side or Limits pass; Scripts/test.sh green. Audit: queue/audits/2026-09-08-layout-folds.json. Pushed as 85052100.",
+      "since": "2026-09-09T06:23:51.838Z",
+      "count": 2
     }
   ],
-  "started": "2026-09-09T06:09:37.279Z"
+  "started": "2026-09-09T06:09:37.279Z",
+  "completed": "2026-09-09T06:24:11.501Z",
+  "status": "done"
 }
