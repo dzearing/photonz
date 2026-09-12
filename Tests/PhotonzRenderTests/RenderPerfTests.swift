@@ -174,9 +174,17 @@ struct RenderPerfTests {
         let styled = median(groupStyle: LayerStyle(opacity: 0.9,
                                                    shadow: ShadowStyle(radius: 24, offset: CGSize(width: 0, height: 12))),
                             label: "a styled group of five")
-        // A plain group costs what the same layers cost loose.
-        #expect(plain < 100, "interactive re-render inside a plain group regressed badly: \(plain)ms")
-        #expect(styled < 200, "interactive re-render inside a styled group regressed badly: \(styled)ms")
+        // A plain group costs what the same layers cost loose. Loose CI bounds
+        // for the same reason every other budget in this file has a pair: a
+        // shared runner is several times slower than any machine this is
+        // developed on, and it failed a release at 210ms against a flat 200
+        // while the same code measured 7ms locally. The printed numbers are
+        // the real deliverable; these bounds only catch a bad regression.
+        let onCI = ProcessInfo.processInfo.environment["CI"] != nil
+        #expect(plain < (onCI ? 175 : 100),
+                "interactive re-render inside a plain group regressed badly: \(plain)ms")
+        #expect(styled < (onCI ? 350 : 200),
+                "interactive re-render inside a styled group regressed badly: \(styled)ms")
     }
 
     /// Zoomed in, the canvas asks for a crisp tile of just the part of the
@@ -302,8 +310,12 @@ struct RenderPerfTests {
         print("[perf] 12MP/10-layer export at 2x — median \(String(format: "%.1f", median))ms, " +
               "min \(String(format: "%.1f", samples[0]))ms, " +
               "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
-        // Measured ~90ms locally, the same as the old enlarge-afterwards path.
-        let bound: Double = ProcessInfo.processInfo.environment["CI"] != nil ? 700 : 400
+        // Measured ~90ms locally, the same as the old enlarge-afterwards path;
+        // 128ms on the machine this was last released from. The CI bound was
+        // 700 and shared runners came in at 843ms and 985ms on two runs an hour
+        // apart, failing a release on hardware speed rather than on a change.
+        // Raised with headroom over the worst of those.
+        let bound: Double = ProcessInfo.processInfo.environment["CI"] != nil ? 1400 : 400
         #expect(median < bound, "2x export regressed badly: \(median)ms")
     }
 
