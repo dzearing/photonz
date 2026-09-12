@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:21:41.434Z",
-  "updated": "2026-09-12T13:35:02.901Z",
+  "updated": "2026-09-12T14:29:04.830Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass as an extraction candidate: this was built three times in three days.\n\nEvidence. Sources/Photonz/LayersPanel.swift:1618, LayerRowDropDelegate, hand-rolls the dispatch: acceptedTypes is [.text] + FileDrop.types + the text style type, styleInFlight() is asked first, then carriesARow(), then the file path, and the comments argue the ordering locally (\"Asked FIRST, before anything else about the drag\"). The canvas does the same thing again across CanvasDrop.swift and CanvasTextStyleDrop.swift. ColorSwatchDropDelegate, LibraryColorDropDelegate and OffPartDropDelegate are three more.\n\nThe fourth branch is already queued: a-saved-colour-dropped-on-a-layer-row-paints-the will add colour to the same chain in the same file. Doing this first would make that task smaller; doing it after is fine too, but then it is a fifth branch, not a fourth.\n\nThe drag SIDE is deliberately not in scope: ColorDrag speaks the system colour and plain text types on purpose and TextStyleDrag speaks only the app's own type on purpose, and both files explain why. What repeats is the receiving side.",
@@ -80,7 +80,12 @@
     {
       "t": "2026-09-12T14:28:58.272462Z",
       "note": "Audit at queue/audits/2026-09-12-drag-cargo.json with a real screen capture (Screen Recording was granted) at queue/audits/2026-09-12-drag-cargo-row-drop.png."
+    },
+    {
+      "t": "2026-09-12T14:29:04.828Z",
+      "note": "DragCargo is the one place: it names the five kinds a drag can carry, owns the ask order, owns the type table, and answers both an NSPasteboard and a DropInfo. The layer row and the picture each lose their own dispatch chain; the three identical colour drop delegates become one ColorDropTarget; two spellings of the same styles gate become Experiments.textStyleDragEnabled. Net 260 lines out, 175 in, no behaviour change. Verified with Scripts/test.sh (5690 tests green, twice) and the walks for every drop path read from done.json: text-style-row-drop, text-style-drag, style-on-a-copy, row-drop-slot, drop-into-open-group, panel-takes-picture, four colour walks, component-walk, live-color-drag, multi-drag, plus batches component 16/16, drop 7/7, colour 12/12, drag 10/10, layer 14/14. Audit at queue/audits/2026-09-12-drag-cargo.json with a real screen capture. Two follow-ups filed: a-style-tile-clicked-with-nothing-selected-shoul (reproduced on clean main, not from this change) and find-out-whether-a-text-style-can-be-dragged-ont (not reproduced, filed as a question)."
     }
   ],
-  "started": "2026-09-12T13:35:02.899Z"
+  "started": "2026-09-12T13:35:02.899Z",
+  "completed": "2026-09-12T14:29:04.829Z"
 }

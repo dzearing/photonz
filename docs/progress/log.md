@@ -14309,3 +14309,38 @@ step; reproduced on clean main with this work stashed, so filed on its own.
 Next: the piece's own panel still says nothing about the type it was given, and
 a style let go on a copy's ROW in the layers list is still refused. Both are in
 the audit's rough list for the user to weigh in on.
+
+## 2026-09-12 — one place decides what a drop is carrying
+
+Extracted `Sources/Photonz/DragCargo.swift`: the one reading of what a drag
+carries. It names the five kinds (text style, component, colour, file, layer
+row), owns the ask order as `Kind.allCases`, owns the table of what each kind
+travels as, and answers both an `NSPasteboard` (the picture) and a SwiftUI
+`DropInfo` (the panel). A surface now says only which kinds it takes.
+
+The layer row (`LayersListView.LayerRowDropDelegate`) and the picture
+(`CanvasDrop.swift`) each lose a hand-rolled chain that argued the order
+locally. The three byte-identical colour drop delegates collapse into one
+`ColorDropTarget` worn by the swatch, the switched-off part, the switched-off
+effect and the Library shelf. Two spellings of one styles gate become
+`Experiments.textStyleDragEnabled`. A redundant pasteboard read on the
+component path, and the unreachable branch behind it, are gone. 260 lines out,
+175 in, nothing visible changed.
+
+Two things found and deliberately not fixed, so the move stayed a move:
+
+- `CanvasView.swift:1773` never registers `com.photonz.text-style`, so a real
+  pointer drag of a style may never reach the picture. Every green walk drives
+  `trackTextStyleDrag` directly, so none of them would notice. Could not
+  reproduce (the harness cannot start a real AppKit drag session), filed as the
+  question `find-out-whether-a-text-style-can-be-dragged-ont`. Note for whoever
+  takes it: add the one type, not `FileDrop.types` wholesale, or `.image` drags
+  get pulled off the window-level drop that handles them today.
+- `text-style-arming-walk` fails at step 48. A/B'd against clean `main` with the
+  same command and it fails identically there, so it is not from this work.
+  Filed as `a-style-tile-clicked-with-nothing-selected-shoul` with the command
+  and the output.
+
+Next: `a-saved-colour-dropped-on-a-layer-row-paints-the` is now a one-line
+change on the receiving side (`.color` joins `LayerRowDropDelegate.takes`) plus
+the branch that decides what a row does with it.
