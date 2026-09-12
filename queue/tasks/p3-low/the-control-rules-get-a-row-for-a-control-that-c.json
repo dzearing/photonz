@@ -1,0 +1,32 @@
+{
+  "id": "the-control-rules-get-a-row-for-a-control-that-c",
+  "title": "The control rules get a row for a control that can only act over part of its range",
+  "goal": "The written rules have one settled ladder for a control that cannot act at all: a command dims, a chooser is replaced by the answer, a field keeps its number read only, a bare handle is removed, a key press speaks on the canvas. There is no row for the control that turned up this week: one that works fine, but only across part of its range, because something else decided its floor. The next person who meets one will invent an answer, which is the exact thing the ladder was written to stop.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T12:02:12.215Z",
+  "updated": "2026-09-12T12:02:46.357Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-09-12 design review. Evidence: queue/audits/2026-09-12-corner-over-a-group.json, both of its last two rough notes, where Corner Radius over a group has a floor of 18 that only a tooltip explains, and a pill's slider switches itself off silently.\n\nThe existing rule is UX-PATTERNS.md section 4, \"A control that cannot act\", written 2026-09-04 after six fixes answered the same question six ways. It is a good rule and it holds; it just stops one row short. Its own field row already settles the look of a number you cannot type and says \"Never a hover tip alone\", so the shape of the answer is there to follow.\n\nThis serves the design-system epic, which is staged next, so it sits at p3 rather than taking a place ahead of focus work. The concrete case is fixed under a-slider-says-where-its-track-starts-when-someth at p2 without waiting for this.",
+  "acceptance": [
+    "UX-PATTERNS section 4 gains a row for a control whose range is clamped by something else, saying what it must show without the pointer on it",
+    "The rule cites the case it was taken from and the audit it came out of",
+    "The audit gates in section 9 gain the matching check",
+    "No behaviour changes in this task; anything the new rule names as already wrong is filed rather than quietly fixed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T12:02:12.217Z",
+      "note": "created (triage)"
+    },
+    {
+      "t": "2026-09-12T12:02:46.356Z",
+      "note": "seq 1320 -> 60"
+    }
+  ]
+}

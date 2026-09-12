@@ -4,12 +4,12 @@
   "goal": "Pick a measurement and the Appearance section offers a Corner Radius slider, under the parts that paint it. A caliper and its readout chip have no corners the slider reaches: pulling it does nothing you can see. Take the row off a measurement, so the section never offers a control that cannot answer.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 2290,
+  "seq": 190,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T14:39:42.635Z",
-  "updated": "2026-09-09T14:39:42.638Z",
+  "updated": "2026-09-12T12:02:45.476Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on the probe on 2026-09-09 while building a-measurement-s-parts-live-in-appearance-like-ev, and visible in every screenshot of that audit: queue/audits/2026-09-09-measure-parts-1-panel-sc.png shows Corner Radius 0 px under Chip Text on a picked measurement. Reproduce with Scripts/playtest.sh Scripts/playtest/measure-parts-walk.json and look at measure-parts-1-panel-sc.png. Not caused by that work: the row comes from EditorState.corneredRadiusSelection, which calls document.cornerRadiusSelection(layerIDs:cornersOnly:true) and evidently counts a measure layer as cornered. The fix belongs in whatever cornersOnly tests, in PhotonzCore, with a test first.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-09T14:39:42.637Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:45.475Z",
+      "note": "seq 2290 -> 190"
     }
   ]
 }

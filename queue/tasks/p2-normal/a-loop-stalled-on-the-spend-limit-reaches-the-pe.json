@@ -1,0 +1,33 @@
+{
+  "id": "a-loop-stalled-on-the-spend-limit-reaches-the-pe",
+  "title": "A loop stalled on the spend limit reaches the person who can clear it",
+  "goal": "The build loop sat still for sixty two hours because the monthly spend limit was reached, and the only thing that can clear it is a person raising the limit. The loop handled it correctly in every other way, but it says so only in the terminal window it runs in and in the dashboard hero, so unless somebody happens to be looking at one of those, the stall is silent for days. Nothing shipped for two and a half days and two daily digests were never written. Make the loop tell the person who can act, once, so a stall costs hours instead of days. This serves the ui-building focus by buying back the days the focus loses when nobody knows the loop has stopped: the last stall cost sixty two hours of focus work.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 150,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T12:02:20.316Z",
+  "updated": "2026-09-12T12:03:29.342Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-09-12 triage pass, from queue/history.jsonl.\n\nThe outage: the last task finished 2026-09-09T17:37Z and the next finished 2026-09-12T08:26Z, sixty two hours later. Across it the loop recorded 128 consecutive runner_failed events with reason \"spend\", one every thirty minutes, plus 38 digest_deferred events. The digests for 2026-09-10 and 2026-09-11 were never written.\n\nWhat the loop already does right, and must not be changed: it reads the refusal out of the runner's own words, marks it an environment failure, counts nothing against the task, never parks anything, backs off to thirty minutes, banners the Ghoztty window (go-loop.sh:248-253), retitles it \"photonz: go-loop (spend limit)\", and resumes on its own the moment the limit clears. It did all of that. The recovery was clean: eleven tasks finished in the three and a half hours after it resumed.\n\nThe gap is only reach. There is no osascript, no notification, nothing that leaves the terminal window (grep for osascript or notify in go-loop.sh returns nothing).\n\nThis serves the unmanned-loop epic, which is staged next, and it is filed at p2 rather than p3 because it is the single largest loss of focus work this cycle: two and a half days of ui-building progress that the loop could not make and could not ask for.\n\nqueue/bin/failure-drill.sh already runs the real loop against fake runners, so it is the place to prove this.\n\nSame cause, worth knowing when you build this: six decision cards are sitting unanswered on the dashboard and five of them have been waiting since 2026-09-08 and 2026-09-09, right through the stall. They freeze five p2 tasks. The loop is not short of ways to say something; it is short of a way to reach somebody who is not looking at the dashboard. If this lands well, a question that has waited a day is the obvious next thing to carry, but that is a separate task and not this one.",
+  "acceptance": [
+    "When the loop hits a refusal only a person can clear, the spend limit or a sign-in, it raises a macOS notification naming what is wrong and what to do",
+    "It notifies once per stall, not once per retry, so a long stall is one notification and not a hundred and thirty",
+    "It notifies again if the stall is still going a day later, so a stall that outlives the first notice is not forgotten",
+    "Clearing the limit and letting the loop resume sends nothing, and the notification is proven by the failure drill rather than by hand",
+    "The behaviour is written into queue/README.md beside the rest of the failure handling"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T12:02:20.318Z",
+      "note": "created (triage)"
+    },
+    {
+      "t": "2026-09-12T12:02:45.324Z",
+      "note": "seq 2520 -> 150"
+    }
+  ]
+}

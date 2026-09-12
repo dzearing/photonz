@@ -4,12 +4,12 @@
   "goal": "Today a saved text style cannot be set on the words inside a copy of a component. The app now says so plainly and offers the two moves that work, but the person who dragged the style there usually wanted THIS one button to look different, and both moves are bigger than that: setting it on the original changes every copy, and detaching gives up following the original for good. Whether one copy should be allowed to wear its own text style is a question about what a copy is, and it is the user's call.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 160,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:43:16.924Z",
-  "updated": "2026-09-09T13:13:32.550Z",
+  "updated": "2026-09-12T12:02:45.097Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the wording fix landed 2026-09-09 (Sources/PhotonzCore/TextStyleDrop.swift, CopyPiece). A copy can already own its colour, its size, its room, its opacity and its wording; a text style would be one more of the same family, but styles are the one thing that reach a copy from OUTSIDE the component (the Library shelf), so it is not obviously the same shape. Building it means a new kind of instance override plus a way back on the panel, so it should not start before the card is answered.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-09-09T13:13:32.549Z",
       "note": "decision \"Should one copy of a component be able to wear its own text style?\" resolved: A copy can wear its own style"
+    },
+    {
+      "t": "2026-09-12T12:02:45.096Z",
+      "note": "seq 160 -> 90"
     }
   ]
 }

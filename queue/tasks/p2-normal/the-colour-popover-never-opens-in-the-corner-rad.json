@@ -4,12 +4,12 @@
   "goal": "A saved walk that sets a border colour cannot find the shades it is meant to click. Either the colour popover is not opening when the walk presses the Border colour swatch, or its shades are no longer reachable the way the walk reaches them. Until it is fixed that walk cannot claim anything it was written to claim.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 2480,
+  "seq": 340,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T11:13:00.032Z",
-  "updated": "2026-09-12T11:13:00.035Z",
+  "updated": "2026-09-12T12:02:46.054Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pre-existing, NOT caused by the corner-over-a-group work: reproduced on a clean tree with that work git-stashed away, same failure both times.\n\nRun: Scripts/playtest.sh Scripts/playtest/corner-radius-rounds-walk.json\nOutput: done.json status failed, step 12 (press): no control called \"Shades 9\" is in the panel. The listed controls include Color (Border, Color) and Twist (Border, open), so the row is there and the walk found it at step 9; what is missing is anything called Shades N, so the popover the press was supposed to open is not contributing controls. Walk steps 9-11: press Color in Border, wait 0.8s, press \"Shades 9\".\n\nEither the popover needs longer than 0.8s, or presses on a popover no longer register its controls in the panel list. Check Scripts/playtest/corner-names-walk.json, which passes and also touches colour, for the pattern that still works.",
@@ -21,6 +21,10 @@
     {
       "t": "2026-09-12T11:13:00.034Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:46.053Z",
+      "note": "seq 2480 -> 340"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Borders are now composited in a way that shares each pixel out by area, which fixed the hairline seams but made every layer with a border cost more to draw. The extra work only matters in the thin band the border occupies, so it should only be done there.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2320,
+  "seq": 220,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T16:28:47.840Z",
-  "updated": "2026-09-09T16:28:47.843Z",
+  "updated": "2026-09-12T12:02:45.590Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the border seam fix on 2026-09-09. DocumentRenderer.laid runs about ten filters over the layer's WHOLE extent, but its answer only differs from a plain composite inside the ring's band. The band is an annulus, so the work can be confined to four thin strips (top, bottom, left, right of the outer rect, each the ring's width plus a pixel or two), with the rest of the picture passed straight through and the strips composited back over whole pixel boundaries so no new seam is introduced. roundedRectMask could bake per strip too. Measured cost of the fix: 12MP/10-layer interactive edit 5.5ms -> 6.4ms, full render 38.2ms -> 36.9ms, edit inside a styled group of five 35.8ms -> 45.9ms, export at 2x 96ms -> 118ms.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-09T16:28:47.842Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:45.589Z",
+      "note": "seq 2320 -> 220"
     }
   ]
 }

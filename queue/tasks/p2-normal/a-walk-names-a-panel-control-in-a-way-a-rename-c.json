@@ -4,12 +4,12 @@
   "goal": "Scripted walks find panel controls by the words printed on them, so the day a row is renamed or moves into another section, every walk that touched it fails and somebody spends a task repairing them. That bill was paid four separate times in the last day alone, and it lands on the feature work in focus, because building UI means editing that panel. Give a walk a way to name a control that survives its label changing.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 200,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:21:41.489Z",
-  "updated": "2026-09-09T12:23:41.453Z",
+  "updated": "2026-09-12T12:02:45.248Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass. This serves the ui-building focus by removing a tax that focus work pays: the panel is the file nearly every focus task edits.\n\nThe bill, from the last day of the queue: \"Thirteen scripted walks still look for an Outline row that is now a Border\", \"Five stale walks still ask for the outline that moved into Effects\", \"Four walks cannot find the Shadow entry in the Effects list\", \"Four walks stop on a panel control that has scrolled out of reach\", plus \"Bring the scripted walks back in line with the split panel\", which was dropped. Five tasks, one cause.\n\nNot all of it is renaming: some of those were controls scrolled out of view, which is a different fix and already landed (reveal steps). What is left is the name.\n\nSee docs/design/playtest-harness.md and Scripts/playtest/. Worth checking whether the accessibility identifier already on these controls can be the stable name, since the harness reads the accessibility tree already.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-09T12:23:41.452Z",
       "note": "seq 190 -> 200"
+    },
+    {
+      "t": "2026-09-12T12:02:45.247Z",
+      "note": "seq 200 -> 130"
     }
   ]
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:01:53.423Z",
-  "updated": "2026-09-08T18:41:51.083Z",
+  "updated": "2026-09-12T12:02:46.168Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rewritten 2026-09-08 after the original premise expired. The old notes said the padding slot returns nil when the sides disagree; that has not been true since 19b75988 (2026-09-06), which gave ComponentPropertyValue a .room(GroupPadding) case so the knob carries all four sides. Four separate side knobs are explicitly NOT wanted (Add menu bloat, 264pt panel). What is left is partial following: ComponentPropertyValue.room holds a whole GroupPadding, so setInstanceRoom reads the original's four sides, writes one and stores all four as the copy's answer. Doing this means the stored answer has to record WHICH sides were answered (an optional per side, or an answered-side set beside the room) and the resolve path in ComponentProperties has to merge answered sides over the original's rather than replacing. Panel work is in ComponentPanel.sides(of:): per-side ink and a per-side revert. Blocked on the decision room-on-one-side-can-be-a-knob-when-a-copy-of-a-component-is-gi. Was titled 'Room on one side can be a knob'.",
@@ -63,6 +63,10 @@
     {
       "t": "2026-09-08T18:41:51.082Z",
       "note": "Three of the four acceptance items already shipped on 2026-09-06 with the four-sided room knob (19b75988), verified by running the 23 tests in ComponentRoomKnobTests and ComponentRoomOfferTests. The fourth is real and I reproduced it: a copy typed to left 40 keeps top 10 even after the original's top is changed to 32, because answering one side hands the copy all four. Whether the untouched sides should keep following is a UX bargain the user picks, and the knob's own audit asked it in September and was never answered, so it is a decision card now. Task retitled and its goal rewritten to the one thing left."
+    },
+    {
+      "t": "2026-09-12T12:02:46.167Z",
+      "note": "seq 10 -> 10"
     }
   ],
   "started": "2026-09-08T18:36:36.855Z"

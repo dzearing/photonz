@@ -4,12 +4,12 @@
   "goal": "A saved text style can now be let go on a row in the layers list. A saved colour still cannot: aiming a colour tile at a row does nothing and says nothing. The open question is what a colour on a row should paint, because a row is not a colour well: a shape has a fill and an outline, text has its own colour, and a screenshot has neither.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 180,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:13:00.774Z",
-  "updated": "2026-09-09T12:23:41.344Z",
+  "updated": "2026-09-12T12:02:45.172Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-saved-style-can-be-dropped-on-a-row-in-the-lay, which shipped the TEXT STYLE half on 2026-09-09. The two do not share a target resolution and the task file said to split them if they did not.\n\nWhat is already there to build on. The layers row is now a drop target for the app own pasteboard types: Sources/Photonz/LayersPanel.swift, LayerRowDropDelegate, which reads TextStyleDrag.payloadInFlight() first and falls through to the row and file paths. ColorDrag.payloadInFlight() is the colour twin and already exists. The row mark and the one line under the list are StyleRowDrop / StyleRowMarking (Sources/PhotonzCore/StyleRowMarking.swift) plus StyleRowDropNote in LayersPanel.swift, and both are written around TextStyleDrop.Answer, so a colour answer either needs the same shape or the mark needs to carry either kind.\n\nThe hard part is not the plumbing, it is WHICH part a colour lands on. ColorDrop.Target is built around a named part (Fill, Outline, Shadow) that a swatch row supplies; a layer row supplies none. Candidate rule: the first colour row the inspector would show for that layer, which is Text for text and Fill for a shape. That is a product judgment about a silent choice among several parts, so open a decision on it before building rather than guessing, and write the options in terms of what the line under the list would say.",
@@ -33,6 +33,10 @@
     {
       "t": "2026-09-09T12:23:41.343Z",
       "note": "seq 160 -> 180"
+    },
+    {
+      "t": "2026-09-12T12:02:45.171Z",
+      "note": "seq 180 -> 110"
     }
   ]
 }

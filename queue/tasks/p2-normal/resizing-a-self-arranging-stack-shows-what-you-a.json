@@ -4,12 +4,12 @@
   "goal": "Drag a handle on a group that arranges itself and nothing on screen changes until you let go: its rows are left aligned so they do not stretch, and a group has no edge of its own to follow, so the only sign anything is happening is the width in the panel. Resizing a stack should show the shape you are choosing while your hand is still on it.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2330,
+  "seq": 230,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T17:35:22.431Z",
-  "updated": "2026-09-09T17:35:22.434Z",
+  "updated": "2026-09-12T12:02:45.627Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing \"Resizing a frame shows what you are getting while you drag\" (2026-09-09). REPRODUCED, picture in the repo: run Scripts/playtest.sh Scripts/playtest/frame-live-other-kinds-walk.json --no-build and look at /tmp/photonz-playtest/frame-live-other-kinds/kinds-2-stack-mid-sc.png. It is the hold shot, taken with the button still down near the end of the drag. Position & Size reads W 294 H 410; the three rows on the canvas are still exactly where and how wide they were before the press. That much is CORRECT behaviour for a Left-aligned hug stack (the rows are not supposed to stretch), which is why this is a design question rather than a bug: the frame case was fixed by making the frame edge chrome live (CanvasNSView.liveCanvasBounds in Sources/Photonz/CanvasFrames.swift), and a group has no equivalent edge. Note CanvasDisplay hides the blue outline AND the eight handles for the whole of any resize, deliberately, so there is nothing else left. Deciding what to show is the work here; do not just un-hide the outline for groups without weighing what it costs the alignment case that rule exists for.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-09T17:35:22.433Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:45.626Z",
+      "note": "seq 2330 -> 230"
     }
   ]
 }

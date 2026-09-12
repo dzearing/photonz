@@ -4,12 +4,12 @@
   "goal": "Every setting in the Effects list is a slider you drag: a shadow blur, a border width, a border offset, a glow size. There is nowhere to type an exact number, so a border offset of exactly 12 is a matter of nudging the knob until the readout says 12. Let the readout beside each slider be typed into, the way X and Y in Position and Size already are.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2300,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:43:59.616Z",
-  "updated": "2026-09-09T15:43:59.619Z",
+  "updated": "2026-09-12T12:02:45.513Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while adding the border Offset row on 2026-09-09: the task asked for it typed and dragged like its Width, and Width turned out not to be typeable either. LayerStyleSlider (Sources/Photonz/InspectorControls.swift line 49) draws the readout as a Text with .panelReadout; making it editable there fixes every Effects row at once, and the Appearance sliders that use the same view.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-09T15:43:59.618Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:45.512Z",
+      "note": "seq 2300 -> 200"
     }
   ]
 }

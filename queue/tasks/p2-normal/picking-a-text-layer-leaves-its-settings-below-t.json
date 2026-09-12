@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-08T09:45:45.773Z",
-  "updated": "2026-09-09T12:22:11.331Z",
+  "updated": "2026-09-12T12:02:44.796Z",
   "deps": [],
   "blockedBy": [],
   "notes": "TRIAGED 2026-09-09: the p1 bug this was filed as no longer reproduces, so it is a p2 open question now, not a critical bug.\n\nWhat I ran, on a clean tree at HEAD 7e1e4d6d with the probe rebuilt from that commit:\n  Scripts/playtest-all.sh dock-picked-first          -> 1 passed, 0 failed, 18s\n  Scripts/playtest-all.sh --no-build panel-controls  -> 1 passed, 0 failed, 16s\nBoth were also green on the earlier 05:02 probe, so this is not a build fluke.\n\nWhat fixed it: 7f65ae4d, Picking a layer brings its own section into view, audit queue/audits/2026-09-09-dock-picked-first-reveal.json. The panel now scrolls itself to the picked section. That is option scroll on this task's own decision card, shipped by a neighbouring task while the card was still pending, and unflagged. So the question was answered by the app rather than by the user.\n\nWhy the card still stands. The shipped scroll has a cost the audit names itself: the panel holds about 1030 points of sections in a 690 point window, so showing the Text section means the layers list goes off the top. You click a row and the list of rows leaves. Picking from the layers list is the main way anybody moves between layers while building UI, so a click that takes the list away is worth an answer rather than a default.\n\nIt also crosses a written rule. UX-PATTERNS section 3, Reveal: ambient changes never may, a selection moving, a document loading, a background update leave a shut header shut and do not scroll. A selection moving now scrolls the dock. Either the rule moves or the behaviour does; that scrub is filed separately.\n\nFolded in from two-panel-walks-are-failing-on-main, closed as done by the same pass: panel-controls-walk was fixed by 64ac9f3c, and a verified alternative to the scroll is in hand there, a v5 order migration moving the picked section above Effects, guarded by shapePartsEnabled, which makes the walk pass at 1200x720 with no self-scrolling at all.",
@@ -60,6 +60,10 @@
     {
       "t": "2026-09-09T12:22:11.330Z",
       "note": "seq 30 -> 10"
+    },
+    {
+      "t": "2026-09-12T12:02:44.795Z",
+      "note": "seq 10 -> 10"
     }
   ],
   "started": "2026-09-08T10:47:13.019Z"

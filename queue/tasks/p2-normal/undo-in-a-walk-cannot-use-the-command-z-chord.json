@@ -1,15 +1,15 @@
 {
   "id": "undo-in-a-walk-cannot-use-the-command-z-chord",
   "title": "Undo in a walk cannot use the command Z chord",
-  "goal": "A scripted walk that presses Command Z to check an undo step fails outright, because the probe never comes to the front and macOS leaves its menu bar frozen at launch, so Edit then Undo has no action behind it. One walk is failing on this today and every future walk that reaches for the chord will too.",
+  "goal": "A scripted walk that presses Command Z to check an undo step fails outright, because the probe never comes to the front and macOS leaves its menu bar frozen at launch, so Edit then Undo has no action behind it. One walk is failing on this today and every future walk that reaches for the chord will too. This serves the ui-building focus because undo is what every focus task has to prove, and every walk that reaches for the chord fails the same way until this is answered.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 2490,
+  "seq": 350,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T11:47:48.900Z",
-  "updated": "2026-09-12T11:47:48.903Z",
+  "updated": "2026-09-12T12:03:05.739Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on a CLEAN tree (git stash, swift build, run), so this is not from the group turning work.\n\n$ Scripts/playtest.sh Scripts/playtest/turn-into-a-picture-walk.json\n  [37 shortcut] FAILED: command+z is Edit > Undo, but that item has no action behind it, so pressing it does nothing. macOS will not give a background app focus, so SwiftUI leaves the probes menu bar frozen at its launch state: every window-scoped command is dimmed and empty for the whole walk, however the document changes. Use an `action` step for the outcome and keep a `key` step if you want the press on record.\n  \"status\" : \"failed\"\n\nThe harness already suggests the workaround (an `action` step with action undo), which is what Scripts/playtest/turn-a-group-walk.json does. Either fix turn-into-a-picture-walk the same way, or make the harness fall back to the action when the menu item is dead so no walk has to know.",
@@ -21,6 +21,10 @@
     {
       "t": "2026-09-12T11:47:48.902Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:46.090Z",
+      "note": "seq 2490 -> 350"
     }
   ]
 }

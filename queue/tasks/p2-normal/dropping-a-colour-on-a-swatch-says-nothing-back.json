@@ -4,12 +4,12 @@
   "goal": "Drag a text style over some text and a sentence appears in a pill under the pointer saying exactly what letting go would do. Drag a colour onto a swatch and the same sentence is worked out, but nobody ever sees it: the swatch only lights up. The colour drop should speak up the way the text style drop does.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2410,
+  "seq": 170,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:43:38.493Z",
-  "updated": "2026-09-12T09:43:38.496Z",
+  "updated": "2026-09-12T12:02:45.400Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-12 with Scripts/playtest.sh Scripts/playtest/mixed-part-keeps-its-colour-walk.json --no-build. The hold capture 2-colour-over-the-swatch-sc.png shows the Fill swatch lit with a blue ring and no sentence anywhere in the window.\n\nThe sentence exists: ColorDrop.answer(...).note. Sources/Photonz/ColorSwatchDrag.swift:84, LibraryColorDrop.swift:52 and OffPartColorDrop.swift:45 and :150 hang it on .accessibilityValue only, with a comment saying a tip does not show while a drag is in the air. The text style equivalent is drawn: StyleRowDropNote in Sources/Photonz/InspectorSections.swift:222 for the panel, CanvasTextStyleDrop.swift:141 for the canvas pill.\n\nThe playtest dragColor step has no \"says\" field, so no walk can pin the colour sentence today; dragTile does (Sources/PhotonzCore/PlaytestScript.swift:1503). Adding the same field is part of this.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-12T09:43:38.495Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:45.399Z",
+      "note": "seq 2410 -> 170"
     }
   ]
 }

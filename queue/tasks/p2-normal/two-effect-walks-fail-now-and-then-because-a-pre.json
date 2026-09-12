@@ -1,27 +1,36 @@
 {
   "id": "two-effect-walks-fail-now-and-then-because-a-pre",
-  "title": "Two effect walks fail now and then because a press does not take",
-  "goal": "Two of the scripted walks that check the Effects list fail about one run in three, always the same way: a press aimed at an effect's switch or its chevron does not change anything, and the next check reads the control still in the state it started in. Nothing is wrong with what they check, so each false failure sends a runner off after a bug that is not there.",
-  "epic": "ui-components",
+  "title": "A walk waits for the panel instead of racing it",
+  "goal": "Scripted walks fail every so often and pass on the very next run of the same build, always the same shape: the walk looks for a control in the right hand panel and the control is not there yet, or presses one and the press lands where the control used to be. Four separate walks did this in the last three days. A walk that answers differently twice in a row is worse than no walk, because a real break looks exactly like the flake, and every false failure costs a runner a task on the feature in focus. Give a walk a way to wait for the panel to settle instead of guessing a delay, so these stop.",
+  "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 2470,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T10:45:48.177Z",
-  "updated": "2026-09-12T10:45:48.180Z",
+  "updated": "2026-09-12T12:02:45.287Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced 2026-09-12 on a clean tree.\n\neffects-say-their-reach-walk: failed 1 run in 3 standalone.\n  Scripts/playtest.sh Scripts/playtest/effects-say-their-reach-walk.json --no-build\n  status failed, [51 expect] FAILED: the control called \"Switch\" in \"Shadow\" reads \"Shadow, on\", not \"Shadow, off\"\n  and in a suite run, the same walk at a different step: [34 expect] FAILED: the control called \"Switch\" in \"Shadow\" reads \"Shadow, on for 1 of 2\", not \"Shadow, off for 1 of 2\"\n\neffects-room-for-the-one-you-opened-walk: passed 3 of 3 standalone, failed inside\n  Scripts/playtest-all.sh --no-build effect\n  with [32 expect] FAILED: the control called \"Twist\" in \"Border\" reads \"Border, shut\", not \"Border, open\"\n  Step 29 is the second of two presses on the Border's chevron, and step 28's comment already says a full second is needed there because folding a pane slides every heading below it. That points at a press landing mid relayout: the walk waits a fixed time, and when the panel is slower than the wait the press lands where the chevron was.\n\nBoth misses are the same shape: a press that finds its target's old position. Worth looking at whether a press should settle the layout before it lands, rather than every walk guessing a wait long enough.",
+  "notes": "Reproduced 2026-09-12 on a clean tree.\n\neffects-say-their-reach-walk: failed 1 run in 3 standalone.\n  Scripts/playtest.sh Scripts/playtest/effects-say-their-reach-walk.json --no-build\n  status failed, [51 expect] FAILED: the control called \"Switch\" in \"Shadow\" reads \"Shadow, on\", not \"Shadow, off\"\n  and in a suite run, the same walk at a different step: [34 expect] FAILED: the control called \"Switch\" in \"Shadow\" reads \"Shadow, on for 1 of 2\", not \"Shadow, off for 1 of 2\"\n\neffects-room-for-the-one-you-opened-walk: passed 3 of 3 standalone, failed inside\n  Scripts/playtest-all.sh --no-build effect\n  with [32 expect] FAILED: the control called \"Twist\" in \"Border\" reads \"Border, shut\", not \"Border, open\"\n  Step 29 is the second of two presses on the Border's chevron, and step 28's comment already says a full second is needed there because folding a pane slides every heading below it. That points at a press landing mid relayout: the walk waits a fixed time, and when the panel is slower than the wait the press lands where the chevron was.\n\nBoth misses are the same shape: a press that finds its target's old position. Worth looking at whether a press should settle the layout before it lands, rather than every walk guessing a wait long enough.\n\n--- MERGED BY TRIAGE 2026-09-12 ---\nThree tasks filed separately over three days describe the same race. They are dropped into this one so a single fix answers all of them.\n\nfind-out-why-effect-style-walk-sometimes-cannot (2026-09-12):\n  Scripts/playtest-all.sh --no-build style swatch\n  effect-style-walk  16s  FAILED  step 55 (press): no control called \"Slider\" in \"Softness\" is in the panel; the ones that are: none.\n  \"the ones that are: none\" says the panel had NO controls at that moment, which reads as the dock not having finished rebuilding. Passed 3 of 3 alone.\n\nfind-out-why-a-walk-sometimes-cannot-find-the-si (2026-09-12, seen twice):\n  Scripts/playtest-all.sh --no-build text-style\n  text-style-walk         step 58 (panelMenu): no menu called \"Size\" is in the window\n  text-style-arming-walk  step 73 (panelMenu): no menu called \"Size\" is in the window\n  The only menu visible at that moment was the zoom control, so the whole Text section was missing. Both passed alone.\n\nfind-out-why-the-lazy-rows-walk-sometimes-cannot (2026-09-09):\n  Scripts/playtest-all.sh --no-build layers\n  layers-lazy-rows-walk  45s  FAILED  step 270 (scrollPanel): nothing called \"Background\" is in the panel to scroll from.\n  Passed alone before and after, and passed in the same group run straight afterwards.\n\nAll four share one shape: the walk reads or presses the panel while the dock is still rebuilding. Related but NOT merged, because each is deterministic rather than a race: effects-remembered-walk-fails-at-step-24, the-colour-popover-never-opens-in-the-corner-rad, undo-in-a-walk-cannot-use-the-command-z-chord.",
   "acceptance": [
+    "The cause is named in one sentence: what the walk sees at the moment it misses, and why the panel is not ready yet",
+    "A walk can wait for a control to be present and settled rather than sleeping a guessed number of seconds, and it is written up in docs/design/playtest-harness.md",
     "Scripts/playtest.sh Scripts/playtest/effects-say-their-reach-walk.json --no-build passes ten runs in a row",
     "Scripts/playtest.sh Scripts/playtest/effects-room-for-the-one-you-opened-walk.json --no-build passes ten runs in a row",
-    "The log says whether the miss was the app's or the walk's, and names what changed"
+    "Scripts/playtest-all.sh --no-build text-style passes five runs in a row",
+    "Scripts/playtest-all.sh --no-build style swatch passes five runs in a row",
+    "Scripts/playtest-all.sh --no-build layers passes five runs in a row",
+    "A control that has genuinely gone away still fails the walk, so the wait does not turn a real break into a pass"
   ],
   "log": [
     {
       "t": "2026-09-12T10:45:48.179Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:45.286Z",
+      "note": "seq 2470 -> 140"
     }
   ]
 }

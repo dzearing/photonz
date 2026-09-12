@@ -4,12 +4,12 @@
   "goal": "The written dock rules say that a selection moving must never scroll the panel. Since 2026-09-09 the app scrolls the panel to whatever you just picked. One of the two is wrong, and until somebody says which, the next person to work on the panel is reading a rule the app already broke.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 190,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "docs",
   "created": "2026-09-09T12:21:41.380Z",
-  "updated": "2026-09-09T12:23:41.399Z",
+  "updated": "2026-09-12T12:02:45.210Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass.\n\nThe rule, docs/design/mocks/shared/UX-PATTERNS.md section 3, Reveal: \"Only a command the user just issued about that group may re-open a group they collapsed on purpose (Show Library, or making the thing the group holds). Ambient changes never may: a selection moving, a document loading, a background update leave a shut header shut and do not scroll.\"\n\nThe behaviour: 7f65ae4d, Picking a layer brings its own section into view, audit queue/audits/2026-09-09-dock-picked-first-reveal.json. Clicking a layer scrolls the dock to that layer's section. The audit's own setup line reads \"Nothing to turn on; this is how the panel behaves now.\"\n\nThere is a real argument on each side: clicking a layer is not ambient, the user just did it. But the audit also records the cost, that the layers list you clicked in scrolls off the top. Whoever writes the rule should read the open decision card on the-panel-has-one-settled-rule task first, since the answer there decides this.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-09T12:23:41.398Z",
       "note": "seq 170 -> 190"
+    },
+    {
+      "t": "2026-09-12T12:02:45.209Z",
+      "note": "seq 190 -> 120"
     }
   ]
 }

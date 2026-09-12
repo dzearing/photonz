@@ -2728,3 +2728,53 @@
 {"t":"2026-09-12T11:47:48.904Z","ev":"task_created","id":"undo-in-a-walk-cannot-use-the-command-z-chord","priority":"p2-normal","title":"Undo in a walk cannot use the command Z chord"}
 {"t":"2026-09-12T11:47:53.215Z","ev":"task_created","id":"a-piece-inside-a-turned-card-moves-on-its-own","priority":"p2-normal","title":"A piece inside a turned card moves on its own"}
 {"t":"2026-09-12T12:00:04.021Z","ev":"task_done","id":"a-group-turns-like-anything-else","from":"in_progress","note":"A group takes the rotate knob and the A field, and turns with everything inside it in one undo step. One pivot question (Layer.turnPivot / turnBox) is asked by the renderer, the outline, the knob, the handles, the hit test and the rubber band, so a group swings about the middle of the box its contents make rather than about its anchor. The renderer turns the group buffer after the blur and before the shadow, and renderBounds grew to read a child's turn so a turned card inside a container is not clipped away. Screens deliberately hold still and say why. A piece inside a turned card is outlined where it is and still takes colour and wording, but offers no handles and a drag on it takes the card; follow-up filed. Committed as 028a2187 and pushed. Unit suite green at 5659; 33 walks pass (group, component, selection, angle field) plus a new turn-a-group-walk; verified on the probe with real screen captures. Audit: queue/audits/2026-09-12-group-turn.json. Sweep requested."}
+{"t":"2026-09-12T12:02:01.176Z","ev":"task_dropped","id":"find-out-why-effect-style-walk-sometimes-cannot","from":"pending","note":"duplicate of two-effect-walks-fail-now-and-then-because-a-pre (retitled: A walk waits for the panel instead of racing it); evidence folded in"}
+{"t":"2026-09-12T12:02:01.217Z","ev":"task_dropped","id":"find-out-why-a-walk-sometimes-cannot-find-the-si","from":"pending","note":"duplicate of two-effect-walks-fail-now-and-then-because-a-pre (retitled: A walk waits for the panel instead of racing it); evidence folded in"}
+{"t":"2026-09-12T12:02:01.255Z","ev":"task_dropped","id":"find-out-why-the-lazy-rows-walk-sometimes-cannot","from":"pending","note":"duplicate of two-effect-walks-fail-now-and-then-because-a-pre (retitled: A walk waits for the panel instead of racing it); evidence folded in"}
+{"t":"2026-09-12T12:02:08.152Z","ev":"task_created","id":"a-slider-says-where-its-track-starts-when-someth","priority":"p2-normal","title":"A slider says where its track starts when something under it sets the floor"}
+{"t":"2026-09-12T12:02:12.219Z","ev":"task_created","id":"the-control-rules-get-a-row-for-a-control-that-c","priority":"p3-low","title":"The control rules get a row for a control that can only act over part of its range"}
+{"t":"2026-09-12T12:02:20.320Z","ev":"task_created","id":"a-loop-stalled-on-the-spend-limit-reaches-the-pe","priority":"p2-normal","title":"A loop stalled on the spend limit reaches the person who can clear it"}
+{"t":"2026-09-12T12:02:44.797Z","ev":"task_resequenced","id":"picking-a-text-layer-leaves-its-settings-below-t","from":10,"to":10}
+{"t":"2026-09-12T12:02:44.836Z","ev":"task_resequenced","id":"a-paint-tool-throws-your-marquee-away-for-good","from":60,"to":20}
+{"t":"2026-09-12T12:02:44.872Z","ev":"task_resequenced","id":"a-shape-s-border-arrives-the-same-colour-as-its","from":70,"to":30}
+{"t":"2026-09-12T12:02:44.910Z","ev":"task_resequenced","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a","from":100,"to":40}
+{"t":"2026-09-12T12:02:44.947Z","ev":"task_resequenced","id":"find-out-what-corner-radius-should-say-over-a-gr","from":110,"to":50}
+{"t":"2026-09-12T12:02:44.985Z","ev":"task_resequenced","id":"find-out-whether-position-and-size-takes-numbers","from":130,"to":60}
+{"t":"2026-09-12T12:02:45.023Z","ev":"task_resequenced","id":"the-field-that-opens-on-a-spelled-out-name-says","from":140,"to":70}
+{"t":"2026-09-12T12:02:45.060Z","ev":"task_resequenced","id":"a-button-grows-when-a-style-makes-its-words-bigg","from":150,"to":80}
+{"t":"2026-09-12T12:02:45.098Z","ev":"task_resequenced","id":"decide-whether-a-style-can-be-set-on-one-copy-wi","from":160,"to":90}
+{"t":"2026-09-12T12:02:45.135Z","ev":"task_resequenced","id":"one-place-decides-what-a-layer-row-and-the-canva","from":170,"to":100}
+{"t":"2026-09-12T12:02:45.173Z","ev":"task_resequenced","id":"a-saved-colour-dropped-on-a-layer-row-paints-the","from":180,"to":110}
+{"t":"2026-09-12T12:02:45.211Z","ev":"task_resequenced","id":"the-dock-rules-say-what-picking-a-layer-may-do-t","from":190,"to":120}
+{"t":"2026-09-12T12:02:45.249Z","ev":"task_resequenced","id":"a-walk-names-a-panel-control-in-a-way-a-rename-c","from":200,"to":130}
+{"t":"2026-09-12T12:02:45.288Z","ev":"task_resequenced","id":"two-effect-walks-fail-now-and-then-because-a-pre","from":2470,"to":140}
+{"t":"2026-09-12T12:02:45.326Z","ev":"task_resequenced","id":"a-loop-stalled-on-the-spend-limit-reaches-the-pe","from":2520,"to":150}
+{"t":"2026-09-12T12:02:45.364Z","ev":"task_resequenced","id":"the-drop-rules-say-what-a-surface-says-while-som","from":210,"to":160}
+{"t":"2026-09-12T12:02:45.401Z","ev":"task_resequenced","id":"dropping-a-colour-on-a-swatch-says-nothing-back","from":2410,"to":170}
+{"t":"2026-09-12T12:02:45.438Z","ev":"task_resequenced","id":"a-slider-says-where-its-track-starts-when-someth","from":2510,"to":180}
+{"t":"2026-09-12T12:02:45.477Z","ev":"task_resequenced","id":"a-measurement-offers-a-corner-radius-it-has-noth","from":2290,"to":190}
+{"t":"2026-09-12T12:02:45.514Z","ev":"task_resequenced","id":"type-a-number-into-any-effects-slider-not-just-d","from":2300,"to":200}
+{"t":"2026-09-12T12:02:45.553Z","ev":"task_resequenced","id":"an-oval-s-outside-border-meets-the-oval-cleanly","from":2310,"to":210}
+{"t":"2026-09-12T12:02:45.591Z","ev":"task_resequenced","id":"drawing-a-border-costs-only-the-band-it-covers","from":2320,"to":220}
+{"t":"2026-09-12T12:02:45.628Z","ev":"task_resequenced","id":"resizing-a-self-arranging-stack-shows-what-you-a","from":2330,"to":230}
+{"t":"2026-09-12T12:02:45.666Z","ev":"task_resequenced","id":"a-walk-can-press-a-command-row-at-the-foot-of-a","from":2340,"to":240}
+{"t":"2026-09-12T12:02:45.706Z","ev":"task_resequenced","id":"a-zoom-callout-becomes-a-magnify-lens","from":2360,"to":250}
+{"t":"2026-09-12T12:02:45.743Z","ev":"task_resequenced","id":"a-lens-turned-on-its-side-still-shows-the-pictur","from":2370,"to":260}
+{"t":"2026-09-12T12:02:45.779Z","ev":"task_resequenced","id":"find-out-whether-command-z-works-after-clicking","from":2380,"to":270}
+{"t":"2026-09-12T12:02:45.819Z","ev":"task_resequenced","id":"a-measurement-end-follows-your-hand-instead-of-j","from":2390,"to":280}
+{"t":"2026-09-12T12:02:45.856Z","ev":"task_resequenced","id":"the-rest-of-the-panel-still-counts-at-two","from":2400,"to":290}
+{"t":"2026-09-12T12:02:45.895Z","ev":"task_resequenced","id":"effects-remembered-walk-fails-at-step-24","from":2420,"to":300}
+{"t":"2026-09-12T12:02:45.939Z","ev":"task_resequenced","id":"a-shelf-tile-says-where-the-component-came-from","from":2430,"to":310}
+{"t":"2026-09-12T12:02:45.977Z","ev":"task_resequenced","id":"a-shared-component-arrives-the-size-it-should-be","from":2440,"to":320}
+{"t":"2026-09-12T12:02:46.015Z","ev":"task_resequenced","id":"adding-an-effect-leaves-every-one-of-its-setting","from":2460,"to":330}
+{"t":"2026-09-12T12:02:46.055Z","ev":"task_resequenced","id":"the-colour-popover-never-opens-in-the-corner-rad","from":2480,"to":340}
+{"t":"2026-09-12T12:02:46.092Z","ev":"task_resequenced","id":"undo-in-a-walk-cannot-use-the-command-z-chord","from":2490,"to":350}
+{"t":"2026-09-12T12:02:46.129Z","ev":"task_resequenced","id":"a-piece-inside-a-turned-card-moves-on-its-own","from":2500,"to":360}
+{"t":"2026-09-12T12:02:46.169Z","ev":"task_resequenced","id":"room-on-one-side-can-be-a-knob","from":10,"to":10}
+{"t":"2026-09-12T12:02:46.209Z","ev":"task_resequenced","id":"a-wrapped-label-says-which-width-you-are-looking","from":20,"to":20}
+{"t":"2026-09-12T12:02:46.248Z","ev":"task_resequenced","id":"a-question-you-turned-off-can-be-turned-back-on","from":30,"to":30}
+{"t":"2026-09-12T12:02:46.285Z","ev":"task_resequenced","id":"a-decision-card-that-no-longer-needs-an-answer-c","from":40,"to":40}
+{"t":"2026-09-12T12:02:46.322Z","ev":"task_resequenced","id":"the-panel-keeps-its-height-sharing-in-a-file-of","from":1310,"to":50}
+{"t":"2026-09-12T12:02:46.358Z","ev":"task_resequenced","id":"the-control-rules-get-a-row-for-a-control-that-c","from":1320,"to":60}
+{"t":"2026-09-12T12:03:05.767Z","ev":"triage","summary":"merged 3 walk-race duplicates into one (A walk waits for the panel instead of racing it), filed 3 tasks from the design review (clamped slider floor p2, spend-stall notification p2, control-rules scrub p3), groomed 3 next-epic goals to name how they unblock the focus, renumbered p2 to 10-360 and p3 to 10-60, guard clean, 0 resets. Open: 42 -> 42 (p0 0, p1 0, p2 36, p3 6)."}
+{"t":"2026-09-12T12:04:05.126Z","ev":"digest","file":"2026-09-12.md"}

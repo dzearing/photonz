@@ -4,12 +4,12 @@
   "goal": "Inside a row or a column that arranges its own contents, every piece is in the line. There is one exception, the surface behind everything, and it is always behind. So a notification dot on the corner of an icon, or a New label over the top of a card, cannot be placed by hand: it joins the line and pushes everything along. The only way round it today is to wrap the card in a second group that arranges nothing.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 100,
+  "seq": 40,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:45:27.408Z",
-  "updated": "2026-09-09T12:23:40.906Z",
+  "updated": "2026-09-12T12:02:44.909Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED on its decision card: this adds an answer to a visible control, driven by parity rather than by an ask, and the 2026-09-02 loupe rule says those get a card first.\n\nThe evidence, read on 2026-09-09: Sources/PhotonzCore/LayerPlacement.swift:232 stepsOutOfTheFlow returns true for the surface and for a piece told to stretch along the flow, and nothing else. isSurface is horizontal == .stretch && vertical == .stretch (line 156), and the surface is placed once at the end and drawn behind everything (Sources/PhotonzCore/GroupFlow.swift:356). So the machinery for a piece that is not in the line already exists and has exactly one member.\n\nIf the answer is yes, the build is most likely a second role next to the surface rather than a new system: Sources/PhotonzCore/SurfaceCommand.swift is the command shape to copy, Sources/Photonz/PlacementInspector.swift is where the control lives, and queue/audits/2026-09-08-surface-role.json records how the surface answer was landed and what it costs.\n\nThe workaround that exists today (wrap the card in a group that arranges nothing) is why this is p2 and not p1.",
@@ -37,6 +37,10 @@
     {
       "t": "2026-09-09T12:23:40.905Z",
       "note": "seq 90 -> 100"
+    },
+    {
+      "t": "2026-09-12T12:02:44.908Z",
+      "note": "seq 100 -> 40"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "The written rule for a surface with something held over it covers what it draws: an accent edge, a wash, an insertion line. It says nothing about the sentence. The app now writes a plain line saying what letting go would do, or why it will not, and that line has grown up differently in each place it appears: it follows the pointer on the picture, it sits at one end of the layers list, and its wording for two selected things has already had to be fixed once. Write the rule so the next surface does not invent a fourth version.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 210,
+  "seq": 160,
   "status": "pending",
   "release": "next",
   "area": "docs",
   "created": "2026-09-09T12:23:40.483Z",
-  "updated": "2026-09-09T12:23:41.507Z",
+  "updated": "2026-09-12T12:02:45.363Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass.\n\nThe rule as it stands: docs/design/mocks/shared/UX-PATTERNS.md section 3, \"What a surface looks like while something is held over it\" (added 2026-09-04). Four bullets, all about drawing: will you take this, where exactly will it go, the promise is kept, the edge is not the answer on its own.\n\nWhat shipped since, all of it about words rather than marks: queue/audits/2026-09-09-text-style-drag.json (the line follows the pointer on the picture), 2026-09-09-text-style-row-drop.json (\"A sentence will not fit in a row this narrow, so it sits at the top or the bottom of the list, whichever end the aimed row is nearer\"), 2026-09-09-style-on-a-copy.json (the refusal now says where the words come from and names the two moves that work).\n\nAnd the evidence that it drifts without a rule: drag-a-style-over-two-things-and-the-app-counts is an open task because the same sentence is built in three places (ColorDrop.swift:206, TextStyleDrop.swift:102, EffectsListInspector.swift:382) and two of them count at you.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-09T12:23:41.506Z",
       "note": "seq 2280 -> 210"
+    },
+    {
+      "t": "2026-09-12T12:02:45.362Z",
+      "note": "seq 210 -> 160"
     }
   ]
 }

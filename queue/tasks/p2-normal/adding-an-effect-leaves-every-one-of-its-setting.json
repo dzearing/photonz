@@ -4,12 +4,12 @@
   "goal": "Add a second effect to a shape and you see its heading appear, but not one of its settings: Color, Kind, Size, Softness and Opacity all sit below the bottom edge of the Effects list, and nothing scrolls to them. Opening an effect with its chevron already brings it into view. Adding one should do the same, so the effect you just asked for is the one you are looking at.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 2460,
+  "seq": 330,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T10:45:43.596Z",
-  "updated": "2026-09-12T10:45:43.599Z",
+  "updated": "2026-09-12T12:02:46.014Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-12, three runs out of three each, on a clean tree.\n\nRepro A: Scripts/playtest.sh Scripts/playtest/glow-effect-walk.json --no-build\nOutput: status failed, [30 press] FAILED: the control \"Color\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel's edge cuts across the point a press would land on.\n\nRepro B: Scripts/playtest.sh Scripts/playtest/border-effect-walk.json --no-build\nOutput: status failed, [30 press] FAILED: the control \"Slider\" is not where a person could click it: (same message).\n\nBoth walks fail at the same beat: the step right after 'Add Effect' adds a SECOND effect (Glow 2 / Border 2) and then presses a control inside it.\n\nProof it is the app and not the walk: a copy of glow-effect-walk truncated after the add, with a `panel` step in place of the press, dumps Glow 2's controls as\n  Twist/Reorder/Switch/Remove/Style  inWindow true\n  Color, Kind, Size, Softness, Opacity  inWindow FALSE\nThe screen capture beside it shows the Glow 2 heading and its Style row on screen with the Effects list's edge cutting across immediately below, Position & Size underneath.\n\nCause: Sources/Photonz/EditorState.swift, effectToReveal is written in exactly one place, toggleEffectFolded (around line 1133). The chevron sets it; adding an effect never does. openedEffectRow, the room the dock keeps for the effect you are working on, is set in the same one place and has the same gap. InspectorPanel.swift:306 is the reader.\n\nThese two walks began failing when 6ec2bede tightened which row a control's frame may borrow its name from. Before that, a control the list had scrolled away still lent its frame to whatever row had drifted under it, so these presses landed on something and the walks passed over the top of a real bug. The failure is not new, the honesty about it is.\n\nThe capture is kept at queue/audits/2026-09-12-adding-an-effect-settings-below-the-cut.png.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-12T10:45:43.598Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:46.013Z",
+      "note": "seq 2460 -> 330"
     }
   ]
 }

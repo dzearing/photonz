@@ -1,0 +1,32 @@
+{
+  "id": "a-slider-says-where-its-track-starts-when-someth",
+  "title": "A slider says where its track starts when something under it sets the floor",
+  "goal": "Corner Radius over a group now reads the curve you can actually see, which is right, but the knob sits hard at the far left and will not go any lower, and nothing on the row says why. That looks exactly like the old broken row, where the knob sat at the far left reading nought. The same thing happens on a pill shape, where the slider quietly switches itself off because there is nothing left to round: it looks identical to a slider you simply have not touched yet. A person should be able to tell, without hovering, that the track starts partway along and what decided that.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 180,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T12:02:08.148Z",
+  "updated": "2026-09-12T12:02:45.437Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-09-12 design review in queue/audits/2026-09-12-corner-over-a-group.json, which says it plainly in its own rough notes:\n\n  \"The knob at the far left reading 18 looks exactly like the old knob at the far left reading 0. The number is right and the pull works from the first nudge, but nothing on the row itself says the track starts at 18. Only the tooltip does.\"\n  \"A group whose contents are already as round as the box goes, like a pill, has nothing left to pull, so the slider turns itself off. That is honest but silent: it looks the same as a slider you simply have not grabbed yet.\"\n\nUX-PATTERNS.md section 4 already rules that a control that cannot act must never explain itself with a hover tip alone: pressing it puts the reason in the line under the section straight away. That line under the section is section 4's own surface and is the obvious place for this. What the rule does NOT have is a row for a control that CAN act, but only over part of its range, which is what a clamped slider is. Filed alongside the scrub task for that gap.\n\nThis is separate from find-out-what-corner-radius-should-say-over-a-gr, which is blocked on a decision about a group with padding. This task is about the case that already shipped and works.",
+  "acceptance": [
+    "Picking a group whose contents are rounded 18 shows a Corner Radius row that says its floor is 18 without the pointer resting on it",
+    "A group whose contents are already as round as they go reads as a slider with nothing left to give, not as one that has not been grabbed",
+    "The answer is drawn from the rule in UX-PATTERNS section 4 rather than invented on the row, and if that rule has no answer for a clamped control, this task says so and the scrub task carries it",
+    "A screen capture of both states is in the audit report"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T12:02:08.150Z",
+      "note": "created (triage)"
+    },
+    {
+      "t": "2026-09-12T12:02:45.436Z",
+      "note": "seq 2510 -> 180"
+    }
+  ]
+}

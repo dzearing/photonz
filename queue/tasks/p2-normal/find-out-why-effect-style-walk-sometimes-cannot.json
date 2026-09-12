@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 2350,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T08:47:03.217Z",
-  "updated": "2026-09-12T08:47:03.220Z",
+  "updated": "2026-09-12T12:02:01.175Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-12 while working on a-color-swatch-and-its-style-picker-sit-together.\n\nCommand:\n  Scripts/playtest-all.sh --no-build style swatch\n\nOutput:\n  effect-style-walk                          16s  FAILED  step 55 (press): no control called \"Slider\" in \"Softness\" is in the panel; the ones that are: none. A `panel` step lists everything.\n\n\"the ones that are: none\" says the panel had NO controls at all at that moment, which reads more like the dock had not finished rebuilding than like the Softness row being gone. Re-ran the same walk three times against the same probe build (Scripts/playtest.sh Scripts/playtest/effect-style-walk.json, twice with --no-build): ok, ok, ok. Could not reproduce, so it is filed as something to look into rather than as a bug.\n\nLikely worth a wait or waitFor before step 55 in Scripts/playtest/effect-style-walk.json, but confirm what the panel is doing first rather than papering over it.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-12T08:47:03.219Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-12T12:02:01.174Z",
+      "note": "duplicate of two-effect-walks-fail-now-and-then-because-a-pre (retitled: A walk waits for the panel instead of racing it); evidence folded in"
     }
   ]
 }
