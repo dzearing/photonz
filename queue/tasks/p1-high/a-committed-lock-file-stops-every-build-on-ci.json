@@ -1,0 +1,27 @@
+{
+  "id": "a-committed-lock-file-stops-every-build-on-ci",
+  "title": "A committed lock file stops every build on CI",
+  "goal": "A lock file that only means something on the machine someone is playtesting on is checked into the repository, so the build machine finds it too and refuses to build the app. Every run on the build machine has failed at that step since it was committed, and a release would fail the same way. The lock should only ever exist on the machine that made it.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 270,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T20:29:49.384Z",
+  "updated": "2026-09-12T20:29:49.387Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on CI run 34716668729 (main, e5462576), step \"Build release app bundle\":\n\n  Run Scripts/build-app.sh\n  !! Refusing to rebuild \"dist/Photonz Dev.app\": a playtest is in progress (queue/playtest.lock).\n  ##[error]Process completed with exit code 2.\n\nConfirmed tracked: `git ls-files queue/playtest.lock` prints the path, and .gitignore has no playtest entry. The file has been in the tree since 2026-08-23.\n\nThis is the same shape of problem as the perf-gate task: .github/workflows/release.yml runs Scripts/build-app.sh in its \"Build app\" step, so a release would die there for a reason that has nothing to do with the release. Fix is `git rm --cached queue/playtest.lock` plus a .gitignore entry; check whether queue/bin/*.sh expects the file to be tracked before removing it.",
+  "acceptance": [
+    "queue/playtest.lock is no longer tracked by git and is ignored, so a fresh checkout never has one",
+    "A CI run on main gets past the Build release app bundle step",
+    "The lock still does its job locally: with the file present, Scripts/build-app.sh refuses to rebuild the dev app"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T20:29:49.386Z",
+      "note": "created (manual)"
+    }
+  ]
+}

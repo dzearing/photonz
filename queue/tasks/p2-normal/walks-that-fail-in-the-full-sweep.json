@@ -9,10 +9,10 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-12T18:37:26.051Z",
+  "updated": "2026-09-12T20:12:49.075Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Last sweep 2026-09-12T18:37:25Z: 352 of 358 walks passed in 64 minutes.\n\nFailing walks (6): border-effect-walk, contents-for-several-walk, dock-picked-first-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk\n\nFull output: queue/sweep/2026-09-12-103336.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: the-caret-sits-where-the-words-will-and-the-outl: inkBox is the box EVERY selection outline is drawn from and it changed; a caption being typed now feeds it a live rect",
+  "notes": "Last sweep 2026-09-12T20:12:48Z: 350 of 359 walks passed in 64 minutes.\n\nFailing walks (9): border-effect-walk, contents-for-several-walk, dock-picked-first-walk, effect-style-walk, effects-open-into-view-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk, wrapped-label-width-walk\n\nFull output: queue/sweep/2026-09-12-120859.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-layer-s-box-is-the-pixels-it-actually-has: Every walk that reads a number in the right hand panel now goes through a new path: a read-only readout is claimable by a walk for the first time (PlaytestHarness panelReading .field falls back to readout anchors), and the Position & Size readouts register as panel field rows. Also Handles.layout now offers nothing for a zero-size box and snapPeers skips a layer with no pixels.",
   "acceptance": [
     "Every walk named in the notes either passes or is rewritten to match what the app does now",
     "Each one is run on its own and passes twice in a row",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-12T18:37:26.050Z",
       "note": "sweep 2026-09-12T18:37:25Z: 6 failing (border-effect-walk, contents-for-several-walk, dock-picked-first-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk)"
+    },
+    {
+      "t": "2026-09-12T20:12:49.074Z",
+      "note": "sweep 2026-09-12T20:12:48Z: 9 failing (border-effect-walk, contents-for-several-walk, dock-picked-first-walk, effect-style-walk, effects-open-into-view-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk, wrapped-label-width-walk)"
     }
   ]
 }

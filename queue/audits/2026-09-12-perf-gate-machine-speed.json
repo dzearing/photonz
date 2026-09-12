@@ -1,0 +1,29 @@
+{
+  "feature": "A performance budget that measures the machine it is standing on",
+  "epic": "unmanned-loop",
+  "summary": "The render speed checks used to compare against a flat number, with a second flat number for the build machine, so a slow build machine read as a slower app and stopped the v0.15.0 release twice. Each check now measures how fast the machine it is running on actually is and scales its limit to that, and a release never gates on a timing at all.",
+  "setup": "Nothing to install or turn on. This is the test suite and the two build workflows. Run it from the repo root.",
+  "try": [
+    { "do": "Run `Scripts/test.sh --no-parallel --filter RenderPerfTests` and read the `[perf] machine yardstick` lines: they say how fast this machine is against the one the numbers were recorded on." },
+    { "do": "Read a `[perf] budget:` line under it. It prints what was measured, what it was allowed, and the machine speed that decided the allowance." },
+    { "do": "Open https://github.com/dzearing/photonz/actions/runs/34717321829 and find the same lines in the Run tests step, to see the build machine describe itself as 2.74x and 3.45x slower." },
+    { "do": "Compare against the run an hour earlier, https://github.com/dzearing/photonz/actions/runs/34713295488, which failed the export check at 1439ms against a limit that had just been raised to 1400." },
+    { "do": "Run `PHOTONZ_PERF_GATE=report Scripts/test.sh --no-parallel --filter RenderPerfTests`. Every number still prints, nothing asserts. This is exactly what the release workflow now does." },
+    { "do": "Read the new section at the bottom of docs/progress/perf.md for the before and after margins on every budget." }
+  ],
+  "evaluate": [
+    "When a budget does fail, does the printed line tell you enough to know whether the app got slower or the machine was slow?",
+    "Is a release that never checks its own speed the right trade, given every commit in it already passed the check on the way to main?",
+    "The limits are now two and a half times a recorded number rather than seven to sixteen times it. Is that too tight for comfort, or still too loose to be interesting?",
+    "The recorded numbers are constants with a date in the file. Is hand-updating them when the development machine changes acceptable, or should that be automatic?",
+    "Is `[perf] budget:` on every run useful, or is it noise in a 5745-test log?"
+  ],
+  "rough": [
+    "No screenshot: this change has no on-screen surface at all. It lives in the test suite and two workflow files, so the evidence is log lines and CI runs, linked above.",
+    "The done task 'timing-budget-tests-pass-reliably-on-a-busy-machi' (2026-09-02) did not cover this, and could not have. It fixed CPU-bound checks by timing them on the thread's own CPU clock and asserting a ratio against a probe run back to back. PerfClock's own header says why that cannot reach here: it 'cannot see work handed to another thread or the GPU', and these renders are Core Image. Proof: ten CPU burners running flat out moved these numbers not at all, while running the same suite in parallel with everything else moved them by 30 to 40 percent.",
+    "The rulers under-read the machine a little. On the last CI run the composite subjects were 2.7x to 4.9x slower while the filter-graph ruler said 2.74x, and the export was 5.25x while its ruler said 3.45x. The two-and-a-half times tolerance absorbs that; the thinnest margins left are the 200 percent zoom tile at 1.8x and the export at 1.7x. Not a problem today, worth a look if either ever fails.",
+    "First attempt at the export ruler was wrong in exactly the way the task warned about. Reading 12 megapixels back from a trivial graph measured the runner at 3.4x while the real export was 8.2x, leaving six percent of headroom. Fixed by making the ruler produce a big picture rather than copy one. Caught only because the change was run on a real runner before being called done.",
+    "A budget whose recorded number is under about 16ms only catches regressions bigger than about 3.7x, because of the 8ms of absolute slack that keeps scheduler noise from deciding a 7ms measurement. That affects the interactive edits and the zoom tiles. It is still far better than the flat 100ms they had, which a 5x regression walked straight through.",
+    "The CI run is still red, for a different reason, now filed as 'A committed lock file stops every build on CI': queue/playtest.lock is tracked in git, so the build machine checks it out and Scripts/build-app.sh refuses to build. That would fail a release too, at the Build app step."
+  ]
+}
