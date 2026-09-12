@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 21,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.284Z",
-  "updated": "2026-09-12T22:49:36.765Z",
+  "updated": "2026-09-12T22:49:48.445Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they"
   ],
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-12T22:49:36.764Z",
       "note": "Verified, not assumed. Scripts/test.sh: 5805 tests, 481 suites, green (one existing test updated: the playtest memory list grew by 'tutorials'). Scripts/playtest-all.sh tutorial: 3 walks green, including the new tutorial-hub-walk (50 steps). Scripts/playtest-all.sh --no-build menu: 12 walks green, which is the set that reads the menu bar. Real screen captures (Screen Recording granted) of the window in all three states are in the audit. The Help menu itself could not be photographed (opening a menu bar menu needs the Accessibility grant this terminal does not have), so the evidence for the menu is the exact tree the walk reads back. The window's buttons and its reading are checked through the accessibility tree, the same tree VoiceOver reads, asked of our own process: the walk fails if a button says nothing or if a guide in the catalogue is never said out loud, and it presses the row's own button to prove starting a guide closes the hub and starts the guide ('pressed \"Again Take the Tour\"; the hub is closed and the guide is running'). A full sweep was requested because EditorState now registers itself on canvas mount."
+    },
+    {
+      "t": "2026-09-12T22:49:48.443Z",
+      "note": "Help now holds Tutorials: the tour on top, one submenu per populated track, and All Tutorials into a new Tutorials window showing each track's guides, how long each takes, a finished tick, where you stopped, and how far through the track you are. Both read off the catalogue (PhotonzCore TutorialMenu.swift), so a new guide adds its rows with no menu or window code touched. Progress persists, resets per guide or all at once, and a finished guide runs again from the top. Verified: Scripts/test.sh green (5805 tests), 3 tutorial walks and 12 menu walks green, real screen captures in queue/audits/2026-09-12-tutorials-ia.json. Sweep requested."
     }
   ],
-  "started": "2026-09-12T22:22:38.454Z"
+  "started": "2026-09-12T22:22:38.454Z",
+  "completed": "2026-09-12T22:49:48.444Z"
 }
