@@ -8,23 +8,6 @@ import PhotonzCore
 
 extension CanvasNSView {
 
-    /// Whether a style can be carried onto the picture at all. The same two
-    /// switches the shelf tile reads, so a tile that cannot be picked up is
-    /// never met by a canvas that would have taken it.
-    var textStyleDropEnabled: Bool {
-        Experiments.shared.libraryEnabled
-            && Experiments.shared.isEnabled(FeatureCatalog.stylesFlag)
-            && Experiments.shared.colorDragEnabled
-    }
-
-    /// The saved text style a drag in the air is carrying, nil for everything
-    /// else. Its own pasteboard type, so a style and a component and a file can
-    /// never be mistaken for one another.
-    func droppedTextStyle(_ sender: NSDraggingInfo) -> TextStyleDrop.SavedStyle? {
-        guard textStyleDropEnabled else { return nil }
-        return TextStyleDrag.payload(on: sender.draggingPasteboard)
-    }
-
     /// Follows a style across the picture: works out what is under the pointer,
     /// outlines the text that would take it, and says in one line what letting
     /// go would do. A drop that would do nothing is refused with the ordinary

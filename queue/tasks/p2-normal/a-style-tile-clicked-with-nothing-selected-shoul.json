@@ -1,0 +1,27 @@
+{
+  "id": "a-style-tile-clicked-with-nothing-selected-shoul",
+  "title": "A style tile clicked with nothing selected should open that style for editing",
+  "goal": "Clicking a saved text style on the Library shelf while nothing on the picture is selected should show that style's own settings, so you can change its size or weight from the shelf. Right now the panel shows nothing, so the only way to edit a saved style is to first select something wearing it.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2490,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T14:27:52.281Z",
+  "updated": "2026-09-12T14:27:52.284Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on clean main (no local changes), 2026-09-12. Command:\n\n  git stash push -u -- Sources/ && swift build && Scripts/probe-app.sh && Scripts/playtest-all.sh --no-build text-style\n\nOutput:\n\n  text-style-arming-walk  13s  FAILED  step 48 (panelMenu): no menu called \"Size\" is in the window; the ones that are: 100% 58.0pt wide at x 869.0 says \"Choose a zoom level. Double click for actual size\"\n  text-style-comes-away-walk   9s  ok\n  text-style-drag-walk        18s  ok\n  text-style-row-drop-walk    20s  ok\n  text-style-walk             19s  ok\n  ==> 4 passed, 1 failed\n\nSame failure alone: Scripts/playtest-all.sh --no-build text-style-arming.\n\nWhat the log says. Step 44 clicks empty canvas at (650,560), which deselects everything; step 46 presses the Heading tile and the harness confirms the press landed (\"Heading\" in Styles at window (1105, 624), one click); step 48 then wants the Size menu and the window has no panel menus at all. State captured at step 46: selected = nil, selection = [], inspector = true.\n\nSo either the shelf tile no longer opens a style for editing with an empty selection, or the walk is asserting something that was never promised. It is NOT flaky-by-timing in the usual way: it passed in a text-style batch twice earlier the same day and has failed every run since, on both clean main and a working tree, so something about the probe's saved state may also be in play. Whoever takes this should decide which of the two it is before touching either.\n\nFound while doing one-place-decides-what-a-layer-row-and-the-canva; A/B tested against that change and it is not the cause.",
+  "acceptance": [
+    "With nothing selected, clicking a text style tile on the Library shelf shows that style's Font, Size and Weight",
+    "Scripts/playtest.sh Scripts/playtest/text-style-arming-walk.json --no-build reports status ok in its done.json",
+    "The same walk passes when it is the only walk in the run, not just after its neighbours"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T14:27:52.283Z",
+      "note": "created (manual)"
+    }
+  ]
+}

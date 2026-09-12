@@ -36,9 +36,9 @@ struct OffPartColorDrop: ViewModifier {
                 // drop is the thing this exists to stop.
                 .contentShape(Rectangle())
                 .overlay { ring }
-                .onDrop(of: ColorDrag.acceptedTypes,
-                        delegate: OffPartDropDelegate(answer: answer, incoming: $incoming,
-                                                      apply: apply))
+                .onDrop(of: ColorDropTarget.types,
+                        delegate: ColorDropTarget(answer: answer, incoming: $incoming,
+                                                  apply: apply))
                 // A tip does not show while a drag is in the air, so this is
                 // here for the accessibility reader and for the pointer
                 // resting on the row mid-thought.
@@ -50,7 +50,7 @@ struct OffPartColorDrop: ViewModifier {
 
     /// What this row would do with whatever is in the air right now.
     private func answer() -> ColorDrop.Answer? {
-        guard let payload = ColorDrag.payloadInFlight() else { return nil }
+        guard let payload = DragCargo.colorInFlight() else { return nil }
         let target = ColorTarget(row.colors)
         // The shadow has no colour of the layer's own, so it wears no names —
         // exactly as its swatch already answers once the shadow is on.
@@ -92,41 +92,6 @@ struct OffPartColorDrop: ViewModifier {
     }
 }
 
-/// The row as a drop target, shaped exactly like the swatch's own delegate:
-/// the answer is read BEFORE the pointer is let go, because the ring is a
-/// promise about what letting go would do.
-struct OffPartDropDelegate: DropDelegate {
-    let answer: () -> ColorDrop.Answer?
-    @Binding var incoming: ColorDrop.Answer?
-    let apply: (ColorDrop.Landing) -> Void
-
-    func validateDrop(info: DropInfo) -> Bool {
-        !info.itemProviders(for: ColorDrag.acceptedTypes).isEmpty
-    }
-
-    func dropEntered(info: DropInfo) {
-        incoming = answer()
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        let next = answer()
-        if incoming != next { incoming = next }
-        return DropProposal(operation: next?.lightsUp == true ? .copy : .forbidden)
-    }
-
-    func dropExited(info: DropInfo) {
-        incoming = nil
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        let landing = answer()?.landing
-        incoming = nil
-        guard let landing else { return false }
-        apply(landing)
-        return true
-    }
-}
-
 /// The same landing spot, for a switched-off row in the Effects list.
 ///
 /// A shadow that is off shows its name and its tick and nothing else, exactly
@@ -144,9 +109,9 @@ struct OffEffectColorDrop: ViewModifier {
             content
                 .contentShape(Rectangle())
                 .overlay { ring }
-                .onDrop(of: ColorDrag.acceptedTypes,
-                        delegate: OffPartDropDelegate(answer: answer, incoming: $incoming,
-                                                      apply: apply))
+                .onDrop(of: ColorDropTarget.types,
+                        delegate: ColorDropTarget(answer: answer, incoming: $incoming,
+                                                  apply: apply))
                 .accessibilityValue(incoming?.note ?? "")
         } else {
             content
@@ -160,7 +125,7 @@ struct OffEffectColorDrop: ViewModifier {
     /// it: the row answers through its own `ColorTarget`, which is the same
     /// value the Color row under it uses once the effect is on.
     private func answer() -> ColorDrop.Answer? {
-        guard let payload = ColorDrag.payloadInFlight() else { return nil }
+        guard let payload = DragCargo.colorInFlight() else { return nil }
         let target = ColorTarget(effect: row)
         var welcome = ColorDrop.StyleWelcome.neverWearsNames
         if let style = payload.style, let target {

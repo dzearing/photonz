@@ -324,20 +324,6 @@ extension PhotonzDocument {
 /// drop lands the same single undo step.
 extension EditorState {
 
-    /// Whether a style can be carried out of the Library at all. The same two
-    /// switches the shelf tile reads, so a tile that cannot be picked up is
-    /// never met by a row that would have taken it.
-    var textStyleDropEnabled: Bool {
-        Experiments.shared.colorStylesEnabled && Experiments.shared.colorDragEnabled
-    }
-
-    /// The saved style being carried right now, nil for every other drag —
-    /// a row on its way up the list, a picture from the Finder, a colour.
-    func textStyleInFlight() -> TextStyleDrop.SavedStyle? {
-        guard textStyleDropEnabled else { return nil }
-        return TextStyleDrag.payloadInFlight()
-    }
-
     /// What letting this style go on this row would do, and which layers it
     /// would reach.
     func textStyleRowDrop(_ style: TextStyleDrop.SavedStyle, onRow id: UUID) -> StyleRowDrop {

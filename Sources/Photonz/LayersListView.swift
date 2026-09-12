@@ -30,11 +30,17 @@ struct LayerCanvasRowHeightKey: PreferenceKey {
 /// A drop is one document mutation, so a drag is one undo step, and every
 /// layer keeps its place on the canvas.
 struct LayerRowDropDelegate: DropDelegate {
-    /// Everything a layer row answers for: a row being carried up or down the
-    /// list (which travels as its id in plain text), a picture arriving from
-    /// outside, and a saved text style off the Library shelf.
-    static let acceptedTypes: [UTType] =
-        [.text] + FileDrop.types + [UTType(TextStyleDrag.typeIdentifier) ?? .data]
+    /// Everything a layer row answers for: a saved text style off the Library
+    /// shelf, a picture arriving from outside, and a row being carried up or
+    /// down the list. Named as kinds, so the day a row takes a fourth thing it
+    /// is named here and nowhere else (`DragCargo`).
+    static let takes: [DragCargo.Kind] = [.textStyle, .file, .layerRow]
+
+    /// The types those kinds travel as, which is what the row registers for.
+    /// Registration is not gated on the styles switches: a row registers for
+    /// everything it could ever answer, and `DragCargo` decides what is
+    /// actually in the air.
+    static let acceptedTypes: [UTType] = DragCargo.types(takes)
 
     let row: LayerPanelRow
     let rowHeight: CGFloat
@@ -61,32 +67,17 @@ struct LayerRowDropDelegate: DropDelegate {
                                  pointerY: info.location.y, rowHeight: rowHeight)
     }
 
-    /// Whether THIS drag is a row being carried up or down the list, rather
-    /// than a file arriving from outside it.
+    /// What this drag is carrying, read the one way the whole app reads it.
     ///
-    /// It asks what is in the air and not just whether a row was picked up,
-    /// because a row can be picked up and then let go somewhere that never
-    /// reports it — over the canvas, outside the window, cancelled with escape
-    /// — and the list is still holding it afterwards. A picture dragged in next
-    /// would then be read as that row coming back: no accept mark, and a drop
-    /// that reordered layers instead of adding the picture. What you are
-    /// holding decides, and a file is always answered as a file.
-    private func carriesARow(_ info: DropInfo) -> Bool {
-        dragging != nil && !FileDrop.isAboutAFile(info)
-    }
-
-    /// The saved text style in the air right now, nil for every other drag.
-    /// Read off the drag pasteboard rather than out of the carrier the drop
-    /// hands over, because a row has to answer on the frame the pointer
-    /// arrives: a carrier gives up its bytes asynchronously, and a ring that
-    /// appears two frames late flickers as the pointer runs down a list.
-    ///
-    /// Asked FIRST, before anything else about the drag: a style is the app's
-    /// own pasteboard type, so it can never be mistaken for a file, and a row
-    /// left stale in the list's hand by a drag that ended without saying so
-    /// must not turn a style into a reorder.
-    private func styleInFlight() -> TextStyleDrop.SavedStyle? {
-        editorState.textStyleInFlight()
+    /// The row does not decide the order any more — `DragCargo` does — and it
+    /// does not decide what a style or a file looks like either. All it says is
+    /// WHICH kinds it takes, and it drops `.textStyle` from that list while the
+    /// styles switches are off, so a shelf nobody can drag from is never met by
+    /// a row that would have taken one.
+    private func cargo(_ info: DropInfo) -> DragCargo? {
+        var takes = Self.takes
+        if !Experiments.shared.textStyleDragEnabled { takes.removeAll { $0 == .textStyle } }
+        return DragCargo.inFlight(info, among: takes, rowInHand: dragging)
     }
 
     /// Says what this row would do with the style over it, and answers the
@@ -100,34 +91,35 @@ struct LayerRowDropDelegate: DropDelegate {
     }
 
     func dropEntered(info: DropInfo) {
-        if let style = styleInFlight() {
+        switch cargo(info) {
+        case .textStyle(let style):
             _ = offerStyle(style)
-            return
-        }
-        guard carriesARow(info) else {
+        case .layerRow:
+            editorState.sayLayerRowLanding(proposal(info))
+        default:
             offerFile(info)
-            return
         }
-        editorState.sayLayerRowLanding(proposal(info))
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        if let style = styleInFlight() { return DropProposal(operation: offerStyle(style)) }
-        return rowOrFileUpdate(info)
-    }
-
-    private func rowOrFileUpdate(_ info: DropInfo) -> DropProposal? {
-        // Nothing was picked up in the list, so this is a file coming in from
-        // outside. A row answers for one because nothing behind it can, and it
-        // answers the way the rest of the window does: a picture is taken, and
-        // anything else shows the no-entry sign.
-        guard carriesARow(info) else { return DropProposal(operation: offerFile(info)) }
-        let proposed = proposal(info)
-        // Said on every frame even when it has not changed, because each answer
-        // is also what pushes the put-it-down deadline out: a pointer resting
-        // still over one row must not be read as a drag that ended.
-        editorState.sayLayerRowLanding(proposed)
-        return DropProposal(operation: proposed == nil ? .forbidden : .move)
+        switch cargo(info) {
+        case .textStyle(let style):
+            return DropProposal(operation: offerStyle(style))
+        case .layerRow:
+            let proposed = proposal(info)
+            // Said on every frame even when it has not changed, because each
+            // answer is also what pushes the put-it-down deadline out: a
+            // pointer resting still over one row must not be read as a drag
+            // that ended.
+            editorState.sayLayerRowLanding(proposed)
+            return DropProposal(operation: proposed == nil ? .forbidden : .move)
+        default:
+            // Nothing of the list's own is in the air, so this is a file coming
+            // in from outside. A row answers for one because nothing behind it
+            // can, and it answers the way the rest of the window does: a
+            // picture is taken, and anything else shows the no-entry sign.
+            return DropProposal(operation: offerFile(info))
+        }
     }
 
     func dropExited(info: DropInfo) {
@@ -135,28 +127,32 @@ struct LayerRowDropDelegate: DropDelegate {
         // already spoken for the new row, and this goodbye is ignored, which is
         // what stops the ring blinking off at every row edge.
         editorState.endTextStyleRowDrop(from: row.id)
-        guard carriesARow(info) else {
+        switch cargo(info) {
+        case .layerRow:
+            // The row is still in the hand — the drag is only off THIS row — so
+            // this takes the line away and nothing more.
+            if editorState.layerRowLanding?.targetID == row.id {
+                editorState.sayLayerRowLanding(nil)
+            }
+        default:
             editorState.endPanelDrop(from: row.id)
-            return
         }
-        // The row is still in the hand — the drag is only off THIS row — so
-        // this takes the line away and nothing more.
-        if editorState.layerRowLanding?.targetID == row.id { editorState.sayLayerRowLanding(nil) }
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        if let style = styleInFlight() {
+        switch cargo(info) {
+        case .textStyle(let style):
             return editorState.dropTextStyle(style, onRow: row.id)
-        }
-        guard carriesARow(info) else {
+        case .layerRow:
+            defer { editorState.letGoOfLayerRow() }
+            guard let drop = proposal(info) else { return false }
+            editorState.dropRows(ids: carried, drop)
+            return true
+        default:
             let landing = fileLanding(info)
             editorState.endPanelDrop(from: row.id)
             return FileDrop.accept(info, into: editorState, landingAt: landing)
         }
-        defer { editorState.letGoOfLayerRow() }
-        guard let drop = proposal(info) else { return false }
-        editorState.dropRows(ids: carried, drop)
-        return true
     }
 
     /// Where the picture in the air lands if it is let go on this row now: the
@@ -176,6 +172,7 @@ struct LayerRowDropDelegate: DropDelegate {
     /// Library shelf, words dragged out of a field. None of them is a file, and
     /// the panel says nothing at all about them. The pointer still shows the
     /// no-entry sign, because a colour does not belong on a layer row either.
+    /// The day it does, `.color` joins `takes` above and gets its own branch.
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
         guard FileDrop.isAboutAFile(info) else { return .forbidden }

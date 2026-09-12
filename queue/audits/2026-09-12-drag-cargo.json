@@ -1,0 +1,29 @@
+{
+  "feature": "One place decides what a drop is carrying",
+  "epic": "ui-components",
+  "summary": "Nothing new is on screen. Every surface you can let something go on now asks one place what is in the air, in one order, instead of five surfaces each working it out again. What you are checking is that all four drops still behave exactly as they did.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs the Library, Styles, Components and colour drag flags on, which is the default.",
+  "try": [
+    { "do": "Open the Library, switch the shelf to Styles, and drag the Heading tile onto a text layer's ROW in the Layers list.", "shot": "2026-09-12-drag-cargo-row-drop.png" },
+    { "do": "Drag that same Heading tile onto the words themselves on the picture." },
+    { "do": "Drag a colour off the Fill swatch onto the Outline swatch." },
+    { "do": "Drag a colour onto an Outline row whose switch is OFF." },
+    { "do": "Drag a colour onto the Library shelf and give it a name." },
+    { "do": "Drag a component off the Comps shelf onto the picture." },
+    { "do": "Drag a layer row up and down the Layers list, then drop a PNG from the Finder onto a row." }
+  ],
+  "evaluate": [
+    "Does the layer row still light up and say what letting go would do, on the frame the pointer arrives, with no flicker as you run down the list?",
+    "Does a colour still light up exactly the swatches that would take it and no others?",
+    "Does dropping a PNG onto a layer row still land it in the slot the drop line promised, rather than on top of everything?",
+    "Does reordering rows still feel identical, including carrying a whole selection at once?",
+    "Is there any drop anywhere that now answers more slowly, or answers the wrong thing?"
+  ],
+  "rough": [
+    "This is a move, not a feature. If anything at all looks different, that is a bug in the move and worth saying so.",
+    "Screen Recording was granted, so the shot above is a real capture of the window, not an offscreen render.",
+    "One thing was deliberately left alone: the picture registers for a narrower set of drag types than it can now read. Widening it would change which drags reach the picture at all, which is behaviour, so it is filed separately (find-out-whether-a-text-style-can-be-dragged-ont).",
+    "One hole was closed as a side effect rather than on purpose. A colour carried over a layer row while the list was still holding a row it never got told about could read as a reorder. It now cannot, because the order lives in one place. Nothing you can see changes.",
+    "text-style-arming-walk fails, and it fails the same way on clean main with none of this work applied, so it is not from this change. Filed as a-style-tile-clicked-with-nothing-selected-shoul with the command and the output."
+  ]
+}

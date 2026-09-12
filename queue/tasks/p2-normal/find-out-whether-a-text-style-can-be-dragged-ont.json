@@ -1,0 +1,27 @@
+{
+  "id": "find-out-whether-a-text-style-can-be-dragged-ont",
+  "title": "Find out whether a text style can be dragged onto the picture at all",
+  "goal": "Carrying a saved text style off the Library shelf and letting it go on some words on the picture is meant to dress those words. It is not clear the picture ever receives that drag from a real pointer: everything that proves the feature works today drives it from a script instead. Someone needs to try it by hand and either confirm it works or fix it.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2500,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T14:27:57.579Z",
+  "updated": "2026-09-12T14:27:57.582Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "NOT REPRODUCED - filed as a question, not a bug, because the playtest harness cannot synthesise a real AppKit drag session (TextStyleDrag.playtestPasteboard exists precisely because of that), so there is no way for a runner to see the failure happen.\n\nThe code reason for the suspicion: Sources/Photonz/CanvasView.swift:1773 is the only registerForDraggedTypes call in the app and it registers [.fileURL, ComponentDrag.pasteboardType]. It does not register com.photonz.text-style. AppKit only delivers dragging messages to a view for types it registered, so CanvasNSView.draggingEntered may never fire for a style drag, and DragCargo would never get the chance to read it. The nearest enclosing SwiftUI drop is EditorView.swift:244, registered for FileDrop.types, which does not take that type either.\n\nEvery green walk here (text-style-drag-walk, style-on-a-copy-walk) calls trackTextStyleDrag / dropTextStyle on the view directly, so all of them would still pass with the registration missing.\n\nIf this is real, the fix is one type in the registration list, and the reason it was left out of one-place-decides-what-a-layer-row-and-the-canva is that widening that list also changes which OTHER drags reach the canvas: adding FileDrop.types wholesale would pull .image drags (a picture dragged out of a browser) away from the window-level drop that handles them today. So add the one type, not the whole list.",
+  "acceptance": [
+    "Someone has dragged a text style tile from the Library onto text on the picture with a real pointer and said what happened",
+    "If it does not work, the picture takes the drop and shows the same sentence a layer row shows",
+    "A note in the task says how it was confirmed, since a scripted walk cannot start a real drag"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T14:27:57.581Z",
+      "note": "created (manual)"
+    }
+  ]
+}

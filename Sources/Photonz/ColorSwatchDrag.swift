@@ -74,10 +74,9 @@ struct ColorSwatchDrag: ViewModifier {
             // handed over redraws the swatch and SwiftUI asks all over again.
             .onDrag(item, preview: { travelling })
             .overlay { ring }
-            .onDrop(of: ColorDrag.acceptedTypes,
-                    delegate: ColorSwatchDropDelegate(target: target,
-                                                      incoming: $incoming,
-                                                      apply: onDrop))
+            .onDrop(of: ColorDropTarget.types,
+                    delegate: ColorDropTarget(answer: answer, incoming: $incoming,
+                                              apply: onDrop))
             // The sentence the swatch would say. A tip does not show while a
             // drag is in the air, so this is here for the times the pointer
             // rests on a swatch mid-thought, and for the accessibility reader.
@@ -100,6 +99,13 @@ struct ColorSwatchDrag: ViewModifier {
     /// The colour under the pointer while it travels.
     private var travelling: some View {
         DraggedColorChip(paint: paint() ?? Paint(hex: "#FFFFFF"))
+    }
+
+    /// What this swatch would do with whatever is in the air right now.
+    private func answer() -> ColorDrop.Answer? {
+        guard let payload = DragCargo.colorInFlight() else { return nil }
+        return ColorDrop.answer(dropping: payload.paint, bringing: payload.style,
+                                on: target(for: payload))
     }
 
     /// This swatch as the thing being dropped on, worked out fresh every time
@@ -143,22 +149,30 @@ struct ColorSwatchDrag: ViewModifier {
     }
 }
 
-/// The swatch as a drop target.
+/// Anywhere a colour can be let go of: a swatch, a row whose switch is off, the
+/// Library shelf.
 ///
-/// The paint is READ before the pointer is let go, because the ring is a
-/// promise about what letting go would do. It comes off the drag pasteboard
-/// rather than out of the carrier the drop hands over: a carrier gives up its
-/// bytes asynchronously, and a ring that appears two frames after the pointer
-/// arrives is a ring that flickers on an 18pt square.
-private struct ColorSwatchDropDelegate: DropDelegate {
-    /// This swatch, told what is in the air: which swatch the colour came
-    /// from, and the saved colour it is, if it is one.
-    let target: (ColorDrag.Payload) -> ColorDrop.Target
+/// One delegate rather than one per surface, because the sequence never varies.
+/// The answer is READ BEFORE the pointer is let go, because the ring the
+/// surface draws is a promise about what letting go would do; it is re-read on
+/// every move, because a selection can change under an open drag; it is thrown
+/// away on the way out; and what lands is the very answer the ring promised,
+/// so nothing can slip past a no-entry pointer and land anyway.
+///
+/// What differs between surfaces is only `answer` — what THIS place would do
+/// with the colour in the air — and `apply`, what letting go actually does.
+struct ColorDropTarget: DropDelegate {
+    /// What this surface would do with whatever is in the air right now, nil
+    /// when what is in the air is not a colour at all.
+    let answer: () -> ColorDrop.Answer?
     @Binding var incoming: ColorDrop.Answer?
     let apply: (ColorDrop.Landing) -> Void
 
+    /// The types a surface registers for to be offered a colour.
+    static let types: [UTType] = DragCargo.types([.color])
+
     func validateDrop(info: DropInfo) -> Bool {
-        !info.itemProviders(for: ColorDrag.acceptedTypes).isEmpty
+        !info.itemProviders(for: Self.types).isEmpty
     }
 
     func dropEntered(info: DropInfo) {
@@ -166,9 +180,9 @@ private struct ColorSwatchDropDelegate: DropDelegate {
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        let answer = answer()
-        if incoming != answer { incoming = answer }
-        return DropProposal(operation: answer?.lightsUp == true ? .copy : .forbidden)
+        let next = answer()
+        if incoming != next { incoming = next }
+        return DropProposal(operation: next?.lightsUp == true ? .copy : .forbidden)
     }
 
     func dropExited(info: DropInfo) {
@@ -181,13 +195,6 @@ private struct ColorSwatchDropDelegate: DropDelegate {
         guard let landing else { return false }
         apply(landing)
         return true
-    }
-
-    /// What this swatch would do with whatever is in the air right now.
-    private func answer() -> ColorDrop.Answer? {
-        guard let payload = ColorDrag.payloadInFlight() else { return nil }
-        return ColorDrop.answer(dropping: payload.paint, bringing: payload.style,
-                                on: target(payload))
     }
 }
 

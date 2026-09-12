@@ -10,27 +10,48 @@ import SwiftUI
 extension CanvasNSView {
     // MARK: - Drag destination (drop an image to add it as a layer)
 
+    /// What the picture takes, as kinds: a saved text style, a component off
+    /// the Library shelf, a file from the Finder. `DragCargo` decides the order
+    /// those questions are asked in, so the canvas and the layers panel can
+    /// never end up disagreeing about what the same drag is.
+    ///
+    /// A style drops out of the list while the styles switches are off, so a
+    /// shelf nobody can drag from is never met by a picture that would have
+    /// taken one.
+    private var takes: [DragCargo.Kind] {
+        Experiments.shared.textStyleDragEnabled ? [.textStyle, .component, .file] : [.component, .file]
+    }
+
+    /// What this drag is carrying.
+    private func cargo(_ sender: NSDraggingInfo) -> DragCargo? {
+        DragCargo.on(sender.draggingPasteboard, among: takes)
+    }
+
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        // A saved style first: it is the app's own type, so it can never be
-        // mistaken for a file, and everything else the canvas takes is a thing
-        // being ADDED rather than a name being put on what is already here.
-        if let style = droppedTextStyle(sender) {
-            return trackTextStyleDrag(style, atViewPoint: viewPoint(sender))
-        }
-        if droppedComponent(sender) != nil { return trackComponentDrag(sender) }
-        return trackImageDrag(sender)
+        track(sender)
     }
 
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if let style = droppedTextStyle(sender) {
+        track(sender)
+    }
+
+    /// Follows whatever is in the air across the picture, and answers the drag
+    /// with what letting go here would do. Entering and moving are the same
+    /// question, so they are the same answer.
+    private func track(_ sender: NSDraggingInfo) -> NSDragOperation {
+        switch cargo(sender) {
+        case .textStyle(let style):
             return trackTextStyleDrag(style, atViewPoint: viewPoint(sender))
+        case .component(let dragged):
+            // A component off the shelf lands wherever the pointer is: there is
+            // no collage slot to highlight, and the copy is centred on the
+            // drop. What it needs instead is the box it would fill and the
+            // frame it would join, drawn while the button is still down.
+            return trackComponentDrag(dragged.componentID, version: dragged.version,
+                                      atViewPoint: viewPoint(sender))
+        default:
+            return trackImageDrag(sender)
         }
-        // A component off the shelf lands wherever the pointer is: there is no
-        // collage slot to highlight, and the copy is centred on the drop. What
-        // it needs instead is the box it would fill and the frame it would
-        // join, drawn while the button is still down.
-        if droppedComponent(sender) != nil { return trackComponentDrag(sender) }
-        return trackImageDrag(sender)
     }
 
     override func draggingExited(_ sender: NSDraggingInfo?) {
@@ -49,33 +70,33 @@ extension CanvasNSView {
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        // Read before the chrome is cleared: the answer depends only on the
-        // pointer and the document, but the sentence it drew has to go the
-        // moment the button comes up either way.
-        let style = droppedTextStyle(sender)
-        let stylePoint = viewPoint(sender)
+        // Read before the chrome is cleared, and read the one way the tracking
+        // read it, so what lands is what the pointer promised. The sentence the
+        // canvas drew has to go the moment the button comes up either way.
+        let cargo = cargo(sender)
+        let point = viewPoint(sender)
         hoverSlot = nil
         dropLanding = nil
         dropHostBox = nil
         draggedImage = nil
         clearTextStyleNote()
-        if let style {
+        if case .textStyle(let style) = cargo {
             refreshOverlays()
-            return dropTextStyle(style, atViewPoint: stylePoint)
+            return dropTextStyle(style, atViewPoint: point)
         }
         // The room closes before the piece lands in it: the drop draws the real
         // picture straight after, and one that is refused still gets its own
         // picture back rather than a gap left open for nothing.
         onComponentDragEnded()
         refreshOverlays()
-        if let dragged = droppedComponent(sender) {
+        if case .component(let dragged) = cargo {
             return dropComponent(dragged.componentID, version: dragged.version,
-                                 atViewPoint: convert(sender.draggingLocation, from: nil))
+                                 atViewPoint: point)
         }
         // The same reading the pointer answered with: a file the canvas refused
         // in the air is refused on the way down too, so nothing can slip past a
         // no-entry pointer and land anyway.
-        guard let url = droppedURL(sender) else { return false }
+        guard let url = DragCargo.fileURL(on: sender.draggingPasteboard) else { return false }
         let file = CanvasFileDrop.of(url)
         guard file.isAccepted else { return false }
         if file != .package, let target = dropTarget(for: sender) {
@@ -101,34 +122,16 @@ extension CanvasNSView {
         Experiments.shared.layerGroupsEnabled ? groupContext : nil
     }
 
-    /// The component a drag off the Library shelf is carrying, nil for
-    /// everything else. Its own pasteboard type, so a dropped file and a
-    /// dropped component can never be mistaken for each other.
-    private func droppedComponent(_ sender: NSDraggingInfo) -> ComponentDrag.Payload? {
-        ComponentDrag.payload(on: sender.draggingPasteboard)
-    }
-
     /// Follows a component drag across the canvas: works out the box the copy
     /// would fill and the frame it would join, draws both, and answers the drag
     /// with what letting go here would actually do. A drop that would be
     /// refused (a copy landing inside its own original) says so with the
     /// ordinary no-entry pointer instead of accepting the drag and scolding
     /// afterwards.
-    private func trackComponentDrag(_ sender: NSDraggingInfo) -> NSDragOperation {
-        guard let dragged = droppedComponent(sender) else {
-            dropLanding = nil
-            dropHostBox = nil
-            onComponentDragEnded()
-            refreshOverlays()
-            return []
-        }
-        return trackComponentDrag(dragged.componentID, version: dragged.version,
-                                  atViewPoint: convert(sender.draggingLocation, from: nil))
-    }
-
-    /// The same tracking from a point in this view. Internal so a playtest can
-    /// hold a component over the canvas without synthesising a drag session,
-    /// which is the only way to photograph what a drag looks like mid air.
+    ///
+    /// Takes a point rather than the drag, so a playtest can hold a component
+    /// over the canvas without synthesising a drag session, which is the only
+    /// way to photograph what a drag looks like mid air.
     @discardableResult
     func trackComponentDrag(_ componentID: UUID, version: UUID? = nil,
                             atViewPoint viewPoint: CGPoint) -> NSDragOperation {
@@ -200,7 +203,7 @@ extension CanvasNSView {
     /// pointer shows the no-entry sign instead of a copy badge that promises a
     /// layer and then leaves nothing behind.
     private func trackImageDrag(_ sender: NSDraggingInfo) -> NSDragOperation {
-        guard let url = droppedURL(sender),
+        guard let url = DragCargo.fileURL(on: sender.draggingPasteboard),
               draggedFile(url, sequence: sender.draggingSequenceNumber).isAccepted else {
             dropLanding = nil
             hoverSlot = nil
@@ -242,9 +245,4 @@ extension CanvasNSView {
         return drop
     }
 
-    private func droppedURL(_ sender: NSDraggingInfo) -> URL? {
-        sender.draggingPasteboard.readObjects(
-            forClasses: [NSURL.self],
-            options: [.urlReadingFileURLsOnly: true])?.first as? URL
-    }
 }

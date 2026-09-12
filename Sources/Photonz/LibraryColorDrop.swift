@@ -41,10 +41,9 @@ struct LibraryColorDrop: ViewModifier {
     func body(content: Content) -> some View {
         if Experiments.shared.colorDragEnabled && editorState.colorStylesEnabled {
             content
-                .onDrop(of: ColorDrag.acceptedTypes,
-                        delegate: LibraryColorDropDelegate(answer: answer,
-                                                           incoming: $incoming,
-                                                           apply: save))
+                .onDrop(of: ColorDropTarget.types,
+                        delegate: ColorDropTarget(answer: answer, incoming: $incoming,
+                                                  apply: save))
                 .overlay { highlight }
                 // The sentence the shelf would say. A tip does not show while
                 // a drag is in the air, so this is for the accessibility
@@ -60,7 +59,7 @@ struct LibraryColorDrop: ViewModifier {
 
     /// What the shelf would do with the paint in the air right now.
     private func answer() -> ColorDrop.Answer? {
-        guard let payload = ColorDrag.payloadInFlight() else { return nil }
+        guard let payload = DragCargo.colorInFlight() else { return nil }
         return editorState.colorShelfDrop(payload.paint, from: payload.style)
     }
 
@@ -94,45 +93,6 @@ struct LibraryColorDrop: ViewModifier {
                 .allowsHitTesting(false)
                 .transition(.opacity)
         }
-    }
-}
-
-/// The shelf as a drop target.
-///
-/// The paint is READ before the pointer is let go, off the drag pasteboard
-/// rather than out of the carrier the drop hands over, for the reason the
-/// swatch delegate gives: a carrier gives up its bytes asynchronously and the
-/// highlight is a promise that has to be on screen the frame the pointer
-/// arrives.
-private struct LibraryColorDropDelegate: DropDelegate {
-    let answer: () -> ColorDrop.Answer?
-    @Binding var incoming: ColorDrop.Answer?
-    let apply: (ColorDrop.Landing) -> Void
-
-    func validateDrop(info: DropInfo) -> Bool {
-        !info.itemProviders(for: ColorDrag.acceptedTypes).isEmpty
-    }
-
-    func dropEntered(info: DropInfo) {
-        incoming = answer()
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        let next = answer()
-        if incoming != next { incoming = next }
-        return DropProposal(operation: next?.lightsUp == true ? .copy : .forbidden)
-    }
-
-    func dropExited(info: DropInfo) {
-        incoming = nil
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        let landing = answer()?.landing
-        incoming = nil
-        guard let landing else { return false }
-        apply(landing)
-        return true
     }
 }
 

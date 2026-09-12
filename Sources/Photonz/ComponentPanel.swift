@@ -155,6 +155,15 @@ enum ComponentDrag {
     static func componentID(on pasteboard: NSPasteboard) -> UUID? {
         payload(on: pasteboard)?.componentID
     }
+
+    /// The component on the drag pasteboard right now, nil when what is in the
+    /// air is not one. The board a drag in flight is written on, for the reason
+    /// `ColorDrag.payloadInFlight` gives: a surface has to answer on the frame
+    /// the pointer arrives, and the carrier a drop hands over gives up its
+    /// bytes too late for that.
+    @MainActor static func payloadInFlight() -> Payload? {
+        payload(on: NSPasteboard(name: .drag))
+    }
 }
 
 // MARK: - The selected main's own section

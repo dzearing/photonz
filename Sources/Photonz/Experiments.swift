@@ -357,6 +357,16 @@ extension Experiments {
     /// in both releases: what changes here is whether it is a handle.
     var colorDragEnabled: Bool { isEnabled(FeatureCatalog.colorDragFlag) }
 
+    /// Whether a saved text style can be carried off the Library shelf and let
+    /// go on text. Both switches, because carrying one needs somewhere to
+    /// carry it FROM (the shelf, which is what `next-styles` puts there) and a
+    /// gesture to carry it WITH (which is what `next-color-drag` turns on).
+    ///
+    /// One place, because the shelf tile, the layers row and the picture all
+    /// have to agree: a tile that cannot be picked up must never be met by a
+    /// row that would have taken it.
+    var textStyleDragEnabled: Bool { colorStylesEnabled && colorDragEnabled }
+
     /// Whether the canvas redraws what you can see at the zoom you are looking
     /// at it through, so placed words stay as sharp as the ones being typed.
     var crispZoomEnabled: Bool { isEnabled(FeatureCatalog.crispZoomFlag) }

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:21:41.434Z",
-  "updated": "2026-09-12T12:02:45.134Z",
+  "updated": "2026-09-12T13:35:02.901Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass as an extraction candidate: this was built three times in three days.\n\nEvidence. Sources/Photonz/LayersPanel.swift:1618, LayerRowDropDelegate, hand-rolls the dispatch: acceptedTypes is [.text] + FileDrop.types + the text style type, styleInFlight() is asked first, then carriesARow(), then the file path, and the comments argue the ordering locally (\"Asked FIRST, before anything else about the drag\"). The canvas does the same thing again across CanvasDrop.swift and CanvasTextStyleDrop.swift. ColorSwatchDropDelegate, LibraryColorDropDelegate and OffPartDropDelegate are three more.\n\nThe fourth branch is already queued: a-saved-colour-dropped-on-a-layer-row-paints-the will add colour to the same chain in the same file. Doing this first would make that task smaller; doing it after is fine too, but then it is a fifth branch, not a fourth.\n\nThe drag SIDE is deliberately not in scope: ColorDrag speaks the system colour and plain text types on purpose and TextStyleDrag speaks only the app's own type on purpose, and both files explain why. What repeats is the receiving side.",
@@ -40,6 +40,47 @@
     {
       "t": "2026-09-12T12:02:45.133Z",
       "note": "seq 170 -> 100"
+    },
+    {
+      "t": "2026-09-12T13:35:02.900Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T13:36:42.116565Z",
+      "note": "Adversarial review before building. Read all five receiving surfaces. Two real duplications, not one: (a) the ORDER-OF-QUESTIONS chain, which exists twice (LayersListView.LayerRowDropDelegate and CanvasNSView draggingEntered/Updated/performDragOperation), and (b) three byte-identical DropDelegate structs for colour (ColorSwatchDropDelegate, LibraryColorDropDelegate, OffPartDropDelegate) that differ in nothing at all. Shortest version that delivers the value is one DragCargo that names the kinds and owns the order, plus one shared colour delegate. Deliberately NOT in scope: the drag side (ColorDrag/TextStyleDrag/ComponentDrag stay as they are, each documents why it speaks the types it speaks), and the canvas's registerForDraggedTypes list, which is narrower than what DragCargo can read on purpose - widening it would change which drags reach the canvas at all, and that is behaviour."
+    },
+    {
+      "t": "2026-09-12T13:36:42.116565Z",
+      "note": "Two things found while reading that are NOT fixed here (acceptance item 4). 1. CanvasNSView registers only [.fileURL, component] for dragged types, never the text-style type, so droppedTextStyle() in draggingEntered may never fire for a real pointer drag - only the playtest path, which calls trackTextStyleDrag directly, exercises it. Cannot reproduce with the harness (it cannot start a real AppKit drag session), so filing as a p2 question rather than a bug. 2. LayerRowDropDelegate.carriesARow is (layerRowInHand != nil && !isAboutAFile), so a colour dragged over a row while a stale row is still in the list's hand reads as a reorder. Preserved exactly by keeping .color out of the row's kinds; the next queued task adds it, which closes the hole as a side effect."
+    },
+    {
+      "t": "2026-09-12T14:28:58.272462Z",
+      "note": "Shipped. New Sources/Photonz/DragCargo.swift names the five kinds (textStyle, component, color, file, layerRow), owns the ask order as Kind.allCases, owns the type table, and answers both an NSPasteboard (the picture) and a SwiftUI DropInfo (the panel). A surface now says only WHICH kinds it takes."
+    },
+    {
+      "t": "2026-09-12T14:28:58.272462Z",
+      "note": "Callers moved over. LayerRowDropDelegate: acceptedTypes is now DragCargo.types(takes) and the four callbacks switch on one cargo() instead of styleInFlight()/carriesARow()/offerFile chains. CanvasNSView: draggingEntered and draggingUpdated collapse into one track(), performDragOperation reads the cargo once at the top, and the duplicate droppedComponent/droppedURL readers are gone (DragCargo.fileURL replaces the latter). The three byte-identical colour delegates (ColorSwatchDropDelegate, LibraryColorDropDelegate, OffPartDropDelegate) collapse into one ColorDropTarget that all four colour surfaces wear, asking DragCargo.colorInFlight(). Two spellings of the same gate (CanvasNSView.textStyleDropEnabled and EditorState.textStyleDropEnabled, provably equal since colorStylesEnabled == libraryEnabled && stylesFlag) become Experiments.textStyleDragEnabled. Net 260 lines out, 175 in."
+    },
+    {
+      "t": "2026-09-12T14:28:58.272462Z",
+      "note": "Also removed a second pasteboard read the extraction made visible: trackComponentDrag(_ sender:) re-read the pasteboard to get the payload the caller had just read, and its guard-else branch was unreachable. Deleted; the point-taking overload the playtest already used is now the only one."
+    },
+    {
+      "t": "2026-09-12T14:28:58.272462Z",
+      "note": "Verified. Scripts/test.sh green twice, 5690 tests. Walks run from done.json (not stdout): text-style-row-drop, text-style-drag, style-on-a-copy, row-drop-slot, drop-into-open-group, panel-takes-picture, colour-onto-a-swatch, colour-onto-an-off-part, colour-onto-the-library, colour-off-the-shelf, component-walk, live-color-drag, multi-drag - all ok. Batches: component 16/16, drop 7/7, colour 12/12, drag 10/10, layer 14/14, shelf 4/4."
+    },
+    {
+      "t": "2026-09-12T14:28:58.272462Z",
+      "note": "One walk fails, text-style-arming-walk, at step 48 (no Size menu after pressing the Heading tile with nothing selected). A/B tested: git stash push -u -- Sources/, rebuild, same command, SAME failure on clean main. Not from this change. Filed with the command and the output as a-style-tile-clicked-with-nothing-selected-shoul (p2)."
+    },
+    {
+      "t": "2026-09-12T14:28:58.272462Z",
+      "note": "Second follow-up filed: find-out-whether-a-text-style-can-be-dragged-ont (p2, NOT reproduced). CanvasView.swift:1773 never registers com.photonz.text-style, so a real pointer drag of a style may never reach the picture; every green walk drives trackTextStyleDrag directly so none of them would notice. Could not reproduce because the harness cannot start a real drag session. Left unfixed here on purpose: widening that registration also changes which other drags reach the picture."
+    },
+    {
+      "t": "2026-09-12T14:28:58.272462Z",
+      "note": "Audit at queue/audits/2026-09-12-drag-cargo.json with a real screen capture (Screen Recording was granted) at queue/audits/2026-09-12-drag-cargo-row-drop.png."
     }
-  ]
+  ],
+  "started": "2026-09-12T13:35:02.899Z"
 }
