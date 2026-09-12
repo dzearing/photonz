@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 13,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:31:14.610Z",
-  "updated": "2026-09-12T09:21:41.862524Z",
+  "updated": "2026-09-12T09:22:37.324Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09: they raised Photoshop's layer mixing modes as the powerful-but-unintuitive prior art and asked whether Photonz should have them.\n\nWorth being straight about in the build: a blend mode CANNOT blur or pixelate. Those are neighbourhood operations that read surrounding pixels; a blend mode is per-pixel maths between this layer's colour and the backdrop's. Photoshop does blur-through-a-shape with a smart filter or a blurred duplicate, not with a blend mode. So this task is the tinting and burning axis only; blur, pixelate, greyscale and invert belong to the sibling task 'A layer can change what is underneath it', which is the other axis. Neither replaces the other.\n\nMost of this already exists and is not exposed. BlendMode is in Sources/PhotonzCore/Layer.swift:931 with normal, multiply and screen; LayerStyle carries it (Layer.swift:964); DocumentRenderer.swift:478 composites with it and DocumentRenderer.swift:1307 maps it to CIMultiplyBlendMode and CIScreenBlendMode. Nothing in Sources/Photonz puts it in front of a person - grep for blendMode in the app layer finds only the drag preview. So the work is mostly the model round-trip, the panel row, and deciding which modes earn a place.\n\nWhich modes: resist shipping Photoshop's full list. Start from what a redline or a screenshot markup actually needs - multiply (burn a colour in, highlighter), screen (lighten), and consider darken, lighten and overlay - and justify each addition in the audit. A list of twenty with names like 'linear burn' is precisely the unintuitive thing the user objected to.\n\nNot confirmed: whether the group buffering path composites a child's blend mode against the group's own buffer or against the canvas. DocumentRenderer.swift:430 has a pass-through fast path for a plain group that composites children straight onto the output, which likely means a multiply child inside such a group already mixes with the whole canvas. Reproduce that before deciding what correct means, and write the test for it first.\n\nCheck Sources/Photonz/Releases/ before assuming one shared change reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -98,7 +98,12 @@
     {
       "t": "2026-09-12T09:21:41.862524Z",
       "note": "Shared or Current code touched: none of it is Current behaviour. BlendMode, the renderer and the selection types are shared and reach both releases by themselves; the row itself is behind next-blend-mode, which exists only in Next's catalog. The drag-sprite switch is shared and was already mapping the modes, so it now covers all five in both releases, which is the same thing it did before for the modes that existed."
+    },
+    {
+      "t": "2026-09-12T09:22:37.322Z",
+      "note": "Blending row under Opacity in the Appearance section (Next, next-blend-mode, on by default). Five modes with a plain sentence each, live preview as you move down the list, one undo step per choice, carried into export. 14 model tests, 19 pixel tests, Scripts/playtest/blend-mode-walk.json (63 steps, ok) plus the 26 panel/appearance/parts walks, all green with Screen Recording granted so the pictures are real captures. Audit: queue/audits/2026-09-12-blend-mode.json. Did NOT build the group acceptance item: grouping must change no pixels, so a plain group passes through and a styled one isolates; both pixel-tested and the audit asks the user which default they want."
     }
   ],
-  "started": "2026-09-12T09:02:56.548Z"
+  "started": "2026-09-12T09:02:56.548Z",
+  "completed": "2026-09-12T09:22:37.323Z"
 }
