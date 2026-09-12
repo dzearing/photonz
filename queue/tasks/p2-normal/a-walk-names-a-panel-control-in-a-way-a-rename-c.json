@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:21:41.489Z",
-  "updated": "2026-09-12T12:02:45.248Z",
+  "updated": "2026-09-12T14:34:59.979Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass. This serves the ui-building focus by removing a tax that focus work pays: the panel is the file nearly every focus task edits.\n\nThe bill, from the last day of the queue: \"Thirteen scripted walks still look for an Outline row that is now a Border\", \"Five stale walks still ask for the outline that moved into Effects\", \"Four walks cannot find the Shadow entry in the Effects list\", \"Four walks stop on a panel control that has scrolled out of reach\", plus \"Bring the scripted walks back in line with the split panel\", which was dropped. Five tasks, one cause.\n\nNot all of it is renaming: some of those were controls scrolled out of view, which is a different fix and already landed (reveal steps). What is left is the name.\n\nSee docs/design/playtest-harness.md and Scripts/playtest/. Worth checking whether the accessibility identifier already on these controls can be the stable name, since the harness reads the accessibility tree already.",
@@ -35,6 +35,19 @@
     {
       "t": "2026-09-12T12:02:45.247Z",
       "note": "seq 200 -> 130"
+    },
+    {
+      "t": "2026-09-12T14:34:59.978Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T14:36:29.694398Z",
+      "note": "Read the harness. A walk names a panel row by the words on it (playtestField(title)); PlaytestPanelPress.fields() hands those words to `narrow`, which is what `in:` matches. So `in` is pure product copy and a copy change breaks every walk that used it."
+    },
+    {
+      "t": "2026-09-12T14:36:29.694398Z",
+      "note": "Adversarial review of the idea, before building. (1) Aliases rejected: keeping the old word alive means a retired row can drift onto a neighbour and a walk passes on the wrong control, which is exactly acceptance item 2. (2) A separate stable KEY is only steady if whoever edits the copy leaves it alone, so it must not be typed at the call site: it comes off the model (EffectKind.rawValue, LayerPartRow.id), where a copy edit physically cannot reach it. (3) Discoverability is the real risk -- an author writes what they see. Fix: the panel listing and every not-found failure print the steady name beside the word, so the first failure hands you the durable name. (4) Shortest version: only the two lists whose row words come from the model get steady names (Appearance parts, the Effects list). Width/Height/Layout are structural words that have not moved, and giving everything a key would be noise."
     }
-  ]
+  ],
+  "started": "2026-09-12T14:34:59.977Z"
 }

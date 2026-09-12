@@ -1,0 +1,43 @@
+{
+  "id": "tutorials-the-looks-track",
+  "title": "Tutorials: the Looks track",
+  "goal": "How a layer is painted and what can be added to it: the fill and outline a shape simply has, the effects you add on top, and the two ways a layer can act on what is underneath it.\n\nThe guides in this track: Fill and outline: what a shape has; Add a shadow, a border, a glow; Blur or pixelate what is underneath; Mix a layer with what is below it.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T15:17:24.792Z",
+  "updated": "2026-09-12T15:17:33.202Z",
+  "deps": [
+    "a-walkthrough-framework-guides-are-data-and-they",
+    "help-has-a-tutorials-menu-organised-in-tracks-an"
+  ],
+  "blockedBy": [],
+  "notes": "One of the seven track tasks. Depends on the framework task and on the Help menu IA task.\n\nWhat this track is for: The split this track has to teach is the one the panel turns on (docs/design/shape-parts.md): Appearance is what a shape HAS, Effects is a list you ADD to. Get that across in the first two guides and the rest of the panel explains itself. The last two guides cover the lens layers and the mix modes that landed in September 2026 - read those tasks (a-layer-can-change-what-is-underneath-it-blur-pi, a-layer-can-say-how-it-mixes-with-what-is-under) so the guide teaches what actually shipped. Worth teaching the redaction case out loud in the blur guide, since hiding a name before sending a screenshot is the reason most people will want it.\n\nWrite the guides as DATA in the catalogue. If a guide in this track cannot be expressed without new framework machinery, that is a finding: file it against the framework rather than special casing it here, and say so in the audit.\n\n---\nSHARED CONTEXT for every tutorials task (asked for by the user on 2026-09-12):\n\nThe user's words: \"I would like a help > tutorials > * set of guides which walks you through basics of various features. Maybe a nice getting started tutorial, maybe a 'building components' walkthrough, etc. ... And maybe a first run experience which lets you get an intro to the app, or just gogogo. Use the design clickthroughs as inspiration, where you have pointers and can point to various parts of the application. Build a nice framework for defining these walkthroughs so that we can extend it over time. I'd like the tutorials system to be well organized and not just a long list of things.\"\n\nThe agreed shape (settled in the intake conversation, 2026-09-12):\n- TRACKS, not a flat list. Help > Tutorials holds \"Take the Tour\" plus one SUBMENU per track, and a Tutorials window is the hub. The tracks are: Basics, Redlining, Looks, Colours & Styles, Building UI, Components, Video.\n- A guide is DATA, not code: a Codable value in PhotonzCore describing steps. Adding a guide means adding data to the catalogue, and the menu, the window and the progress list all pick it up with no UI edited. That is the whole point of the framework and the thing that makes it extensible.\n- Steps POINT AT REAL UI, clickthrough-style: a callout with a pointer aimed at a named control, not a page of prose.\n- Design doc: docs/design/tutorials.md is the source of truth for the framework and the track list, written by the foundation task and extended by the rest.\n\nTHE TRAP that will waste a runner's day if it is not read first: the app already has a registry of named UI targets, the playtest harness (playtestControl / playtestField / steady names, Sources/Photonz/Playtest/PanelTarget.swift). It looks like exactly the right thing to reuse and it is NOT USABLE here: it is compiled out of the shipping build (Scripts/build-app.sh defines PHOTONZ_PLAYTEST for the dev and probe variants only, see docs/design/playtest-harness.md, \"Who can run it\"), and PanelTarget.swift:141 onwards is the no-op stub release actually gets. Tutorials ship to users, so the anchor registry has to be its own thing that is compiled IN for release. Model it on the playtest one - especially the STEADY NAME idea at PanelTarget.swift:126-138, a name taken off the model rather than off the copy, so rewording a label cannot break a guide - but do not depend on it.\n\nExisting surfaces a tutorial entry point must fit with rather than duplicate:\n- The Welcome window (Sources/Photonz/Welcome/WelcomeController.swift), first-run permissions setup, re-reachable from the menu-bar menu as \"Welcome & Permissions...\". It already owns first launch.\n- The empty-editor onboarding card (Sources/Photonz/EditorView.swift:590-615): open a file, capture a rectangle, paste an image, blank canvas.\n- There is NO Help menu in the app today: EditorCommands.swift declares Capture, Image, Video, Layer and the standard groups, and macOS supplies the default Help menu. Help > Tutorials has to be created.\n\nQueue-driven app work targets the NEXT release unless the task says otherwise (CLAUDE.md), and a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Every guide in the track exists in the catalogue as data and appears under its track in the Help menu and the Tutorials window with no UI edited",
+    "Every guide runs start to finish in the real app, pointing at real controls, each one captured step by step in the audit",
+    "Every guide is short: a person can finish one in the time the entry claims, and the claim is measured rather than guessed",
+    "Every step points at something a person can actually see at that moment: nothing points at a control that is scrolled out of view, disabled or behind a closed panel without opening it first",
+    "A guide that needs something on the canvas brings its own sample document rather than depending on what the person has open",
+    "Copy obeys the repo rules: no em dashes, nothing about the tooling that built it, plain short human sentences",
+    "Every guide is checked with the features it teaches flagged off as well as on, and behaves sensibly either way",
+    "Audit under queue/audits/ with each guide captured step by step, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T15:17:24.794Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-12T15:17:24.856Z",
+      "note": "seq 270 -> 25"
+    },
+    {
+      "t": "2026-09-12T15:17:33.202Z",
+      "note": "deps set: framework first"
+    }
+  ]
+}
