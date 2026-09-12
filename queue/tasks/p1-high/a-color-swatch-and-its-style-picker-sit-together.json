@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:15:52.144Z",
-  "updated": "2026-09-12T08:47:23.971Z",
+  "updated": "2026-09-12T08:47:34.297Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words, with a screenshot of the Fill row: \"colors that have style pickers in the various panes should have the style picker closer to the swatch. like some standard gap away. it feels far away right now which makes it feel disconnected.\"\n\nSuspected cause (found by reading, NOT reproduced in a running app): Sources/Photonz/ColorStylePanel.swift:224 ColorPartLayout reserves readoutWidth = 52 for the color column, while the swatch itself is 18x18 (ColorStylePanel.swift:804, :826, :1192). ColorStyleRow's body (ColorStylePanel.swift:~493-500) puts the readout in .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading) and then ColorStyleControl right after it with spacing ColorPartLayout.spacing (= EditorChromeLayout.panelRowGap). So there is roughly 34pt of empty reserved column plus the row gap between the chip and the palette button. That matches the screenshot.\n\nTrap a naive fix hits: readoutWidth is not arbitrary. Its comment says it is wide enough for the 18pt swatch AND for the word Mixed, and the column exists so the picker starts in the same place on every row of the section. Simply deleting the minWidth makes the picker slide left and right whenever a row flips between a chip and the word Mixed, or when a part is absent. The same constant is used by PartsInspector.swift:295, EffectsListInspector.swift:182, and LandingSwatch (PartsInspector.swift:295-296), so changing the number moves several panels at once - check all of them, and check the drag-landing swatch too.\n\nSensible shape of the fix (runner's call, but justify it in the audit): keep a shared column so rows agree, but size it to the chip plus one standard gap rather than to the word Mixed - e.g. let Mixed have its own narrower treatment or let it truncate - so the picker sits a normal gap from the chip while rows still line up. Whatever is chosen, measure the resulting gap and put the number in the audit.\n\nNot confirmed: whether the toolbar swatches (EditorView.swift:1350+) have the same gap, and whether the Next release has forked any of these files. Check Sources/Photonz/Releases/ before assuming a single shared fix reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -76,7 +76,7 @@
     }
   ],
   "started": "2026-09-12T08:27:18.261Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-09T17:54:50.900Z",
     "exit": 1,

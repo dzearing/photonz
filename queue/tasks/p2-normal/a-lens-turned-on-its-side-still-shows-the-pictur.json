@@ -1,0 +1,27 @@
+{
+  "id": "a-lens-turned-on-its-side-still-shows-the-pictur",
+  "title": "A lens turned on its side still shows the picture straight",
+  "goal": "A lens (the box that blurs or pixelates what is underneath it) can be rotated like any other layer, but when you turn it the picture inside it turns with it, so a blurred region sits at an angle to everything around it. What a person expects is the BOX to turn while the picture underneath stays where it is. The zoom callout has the same behaviour today.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2370,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T09:01:09.419Z",
+  "updated": "2026-09-12T09:01:09.422Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the lens on 2026-09-12 and recorded in its audit rather than fixed, because it is a visible-but-rare case and the fix is not small. DocumentRenderer.ciImage samples the backdrop axis-aligned from the layer frame, then the shared path applies layer.transform, so the sampled pixels rotate too. Fixing it means sampling the backdrop over the ROTATED bounding box and counter-rotating before the shared transform, which collides with the extent-based box maths that rounded()/borderEffects() use (they read image.extent, which a counter-rotated image grows). The zoom callout behaves the same way and would be fixed by the same change.",
+  "acceptance": [
+    "A lens rotated to any angle shows the picture underneath unrotated: the region it covers looks like the surrounding picture, only adjusted",
+    "Its box, its corner radius, its border and its shadow all still turn with the rotation",
+    "A lens at zero degrees is byte for byte what it is today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T09:01:09.421Z",
+      "note": "created (manual)"
+    }
+  ]
+}

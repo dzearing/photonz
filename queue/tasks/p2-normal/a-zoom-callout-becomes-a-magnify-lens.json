@@ -1,0 +1,28 @@
+{
+  "id": "a-zoom-callout-becomes-a-magnify-lens",
+  "title": "A zoom callout becomes a Magnify lens",
+  "goal": "Photonz now has two layers that do the same kind of thing: a zoom callout, which draws a magnified copy of a region of the picture, and a lens, which draws the picture underneath it through an adjustment. They are the same idea with different settings, but they are two separate tools with two separate sections in the panel, so somebody has to learn both. Fold the callout in as a sixth adjustment, Magnify, so there is one box on the tool bar and one section in the panel.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2360,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T09:01:09.379Z",
+  "updated": "2026-09-12T09:01:09.382Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Held back from the lens task on purpose, on the task file's own instruction: the callout carries canvas-space chrome (leader lines, source outline drawn OUTSIDE the layer frame by ZoomCalloutOverlayRasterizer) and a source rect that is not the layer's own box, and it is shipped. The lens model was shaped so this can happen: LayerContent.lens holds an adjustment enum, Layer.readsBackdrop and Layer.backdropSource are already generic over both kinds, and DocumentRenderer builds the backdrop for any layer that answers readsBackdrop. The work is (a) a .magnify case with a sourceRect and a magnification, (b) migrating .zoomCallout on decode, (c) moving the overlay rasterizer call onto the lens path, (d) merging CalloutInspector into LensInspector.",
+  "acceptance": [
+    "The Lens tool offers Magnify alongside Blur, Pixelate, Greyscale, Invert and Brightness",
+    "A callout already in a saved document opens as a Magnify lens and draws exactly as it did, leader lines and source outline included",
+    "There is one section in the panel for both, and one slot on the tool bar",
+    "Every existing zoom callout walk still passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T09:01:09.381Z",
+      "note": "created (manual)"
+    }
+  ]
+}
