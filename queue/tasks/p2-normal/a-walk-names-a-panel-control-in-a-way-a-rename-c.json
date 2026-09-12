@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:21:41.489Z",
-  "updated": "2026-09-12T14:34:59.979Z",
+  "updated": "2026-09-12T15:21:23.131Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass. This serves the ui-building focus by removing a tax that focus work pays: the panel is the file nearly every focus task edits.\n\nThe bill, from the last day of the queue: \"Thirteen scripted walks still look for an Outline row that is now a Border\", \"Five stale walks still ask for the outline that moved into Effects\", \"Four walks cannot find the Shadow entry in the Effects list\", \"Four walks stop on a panel control that has scrolled out of reach\", plus \"Bring the scripted walks back in line with the split panel\", which was dropped. Five tasks, one cause.\n\nNot all of it is renaming: some of those were controls scrolled out of view, which is a different fix and already landed (reveal steps). What is left is the name.\n\nSee docs/design/playtest-harness.md and Scripts/playtest/. Worth checking whether the accessibility identifier already on these controls can be the stable name, since the harness reads the accessibility tree already.",
@@ -83,7 +83,12 @@
     {
       "t": "2026-09-12T15:21:12.912507Z",
       "note": "Audit: queue/audits/2026-09-12-steady-panel-names.json, with a real screen capture (Grants said the probe had Screen Recording). Written up for walk authors in docs/design/playtest-harness.md, 'A row of the panel has a second name that a rename cannot touch'."
+    },
+    {
+      "t": "2026-09-12T15:21:23.129Z",
+      "note": "Rows in Appearance and the Effects list now carry a steady name off the model beside their words; a walk writes in: \"@border\" and it survives the row being renamed. PlaytestSteadyName in PhotonzCore (unit tested), matched by the harness in in/menu/scrollPanel/expectInView/rightClick/dragColor and the plus menu's choose. Twenty walks converted (the ones the Outline-to-Border rename broke). Proved by renaming EffectKind.border.title to Outline, rebuilding the probe and re-running: converted walks green, a word-named walk failed. A row that has gone still fails loudly. Docs in docs/design/playtest-harness.md, audit 2026-09-12-steady-panel-names.json, sweep requested."
     }
   ],
-  "started": "2026-09-12T14:34:59.977Z"
+  "started": "2026-09-12T14:34:59.977Z",
+  "completed": "2026-09-12T15:21:23.130Z"
 }
