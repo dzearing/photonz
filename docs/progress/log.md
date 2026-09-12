@@ -14067,3 +14067,35 @@ Next: a screen nobody has arranged shows a Padding in Layout read off where its
 contents already sit, and the columns deliberately do not follow that one. If
 that reads as the same bug to anyone, the answer is to make that reading commit
 rather than to make guides chase the contents.
+
+## 2026-09-12 — A tool's own list picks that tool up
+
+Fixed the user's report from 2026-09-09: press and hold Measure or Crop,
+choose a mode, and only the mode changed while you kept holding whatever you
+had. Reproduced it first with a walk (the old behaviour logs "chose Gap" and
+then "tool(measure) did not happen within 10.0s"), then fixed it.
+
+`ToolModeButton`'s flyout rows are Toggles calling `choose(mode)` rather than a
+`Picker`: a picker only writes when the selection changes, so choosing the row
+already ticked wrote nothing and the press looked broken. `choose` writes the
+mode and then activates, in that order, so Crop's rect arrives already fitted
+to the aspect and Measure's chip names the mode you picked. Next only; Current
+keeps the plain button and the crop chips.
+
+New playtest step `toolFlyout` reads a tool's list and fires a row's own
+closure, since the list is drawn while the mouse is held down and nothing can
+capture or click it. Two bugs in the probe left by the earlier run: it
+registered from a zero-size background view that never came up, and a rebuilt
+button's outgoing copy wiped the incoming registration (owner tokens now).
+
+Verified: `Scripts/test.sh` green (5498 tests); the new walk plus 23
+measure/crop/tool walks pass. Audit
+`queue/audits/2026-09-12-tool-flyout-picks-tool.json` with two real captures.
+Asked for a full sweep, since `describe()` now reports the crop aspect and rect
+in every walk's state line.
+
+Open: Crop's Resize Image footer is verified by reading, not by a walk. Nothing
+in the harness can press a footer row or see the resize dialog. Filed p2
+`a-walk-can-press-a-command-row-at-the-foot-of-a`.
+
+Next: whatever the loop picks up next from `p1-high`.
