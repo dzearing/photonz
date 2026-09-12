@@ -5,11 +5,11 @@
   "epic": "app-polish",
   "priority": "p1-high",
   "seq": 11,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:15:52.144Z",
-  "updated": "2026-09-12T08:47:09.361533Z",
+  "updated": "2026-09-12T08:47:23.971Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words, with a screenshot of the Fill row: \"colors that have style pickers in the various panes should have the style picker closer to the swatch. like some standard gap away. it feels far away right now which makes it feel disconnected.\"\n\nSuspected cause (found by reading, NOT reproduced in a running app): Sources/Photonz/ColorStylePanel.swift:224 ColorPartLayout reserves readoutWidth = 52 for the color column, while the swatch itself is 18x18 (ColorStylePanel.swift:804, :826, :1192). ColorStyleRow's body (ColorStylePanel.swift:~493-500) puts the readout in .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading) and then ColorStyleControl right after it with spacing ColorPartLayout.spacing (= EditorChromeLayout.panelRowGap). So there is roughly 34pt of empty reserved column plus the row gap between the chip and the palette button. That matches the screenshot.\n\nTrap a naive fix hits: readoutWidth is not arbitrary. Its comment says it is wide enough for the 18pt swatch AND for the word Mixed, and the column exists so the picker starts in the same place on every row of the section. Simply deleting the minWidth makes the picker slide left and right whenever a row flips between a chip and the word Mixed, or when a part is absent. The same constant is used by PartsInspector.swift:295, EffectsListInspector.swift:182, and LandingSwatch (PartsInspector.swift:295-296), so changing the number moves several panels at once - check all of them, and check the drag-landing swatch too.\n\nSensible shape of the fix (runner's call, but justify it in the audit): keep a shared column so rows agree, but size it to the chip plus one standard gap rather than to the word Mixed - e.g. let Mixed have its own narrower treatment or let it truncate - so the picker sits a normal gap from the chip while rows still line up. Whatever is chosen, measure the resulting gap and put the number in the audit.\n\nNot confirmed: whether the toolbar swatches (EditorView.swift:1350+) have the same gap, and whether the Next release has forked any of these files. Check Sources/Photonz/Releases/ before assuming a single shared fix reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -36,7 +36,7 @@
     },
     {
       "t": "2026-09-09T17:54:50.901Z",
-      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
     },
     {
       "t": "2026-09-12T08:27:18.262Z",
@@ -69,6 +69,10 @@
     {
       "t": "2026-09-12T08:47:09.361533Z",
       "note": "rough, recorded in the audit: a row saying Mixed now puts its palette button ~24pt right of where a chip row puts its, since the column no longer holds the word's width. Deliberate; the audit asks the user whether that reads right."
+    },
+    {
+      "t": "2026-09-12T08:47:23.969Z",
+      "note": "The colour chip and its styles button now sit 8pt apart, one standard panel row gap, down from 44.5pt: ColorPartLayout's colour column is the chip (18pt) instead of the width of the word Mixed, and a measured styleGap cancels the menu's own bezel. Sources/Photonz/ColorStylePanel.swift and PartsInspector.swift; neither is release-forked, and Current draws nothing in that space so it is unchanged. Verified by probe capture, not by eye: new walk Scripts/playtest/style-picker-sits-with-swatch-walk.json reads the positions back (chip 1130-1148, palette ink from 1156). 59 walks across style/swatch/colour/panel/parts/mixed pass, Scripts/test.sh green (5498 tests). Audit: queue/audits/2026-09-12-swatch-and-styles.json"
     }
   ],
   "started": "2026-09-12T08:27:18.261Z",
@@ -76,6 +80,7 @@
   "lastError": {
     "at": "2026-09-09T17:54:50.900Z",
     "exit": 1,
-    "message": "You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
-  }
+    "message": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+  },
+  "completed": "2026-09-12T08:47:23.970Z"
 }
