@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:18:21.644Z",
-  "updated": "2026-09-12T10:06:49.639221Z",
+  "updated": "2026-09-12T10:07:12.919Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Answered 2026-09-09: One shelf the whole app shares. BUILT 2026-09-12; see the log and queue/audits/2026-09-12-shared-components.json.\n\nOBJECTIVE GAP named by the spec itself. docs/design/ui-building.md, What the first version deliberately does not do: components live in the document they were made in, there is no shared library across documents, no publishing, no versioning and no update notifications, and the starter set is the one exception. The epic ui-components is titled Component design: create once, reuse everywhere, so the plan and the objective disagree, and the 2026-09-04 manager report flagged it as an open thread that has sat unfiled since.\n\nThe machinery to copy: Sources/PhotonzCore/StarterComponents.swift is already a set of components that live outside any document and are copied in on drop, with a stable id so a document saved today opens tomorrow still pointing at it. Whatever the user chooses, build it on that, not beside it. Sources/PhotonzCore/LinkBreaks.swift already says what happens when a link breaks and is where the missing original case belongs.\n\nSuggested flag: next-shared-library, off by default in Next until it has been played with. Keep PhotonzCore pure: where the shelf is stored on disk is app layer work, the model of what a shared component IS is core.\n\nWHAT LANDED. Core: Sources/PhotonzCore/SharedComponents.swift. The shelf holds the drawing (every version of it, corner at zero, plus the named colour, text and effect styles it paints from); a document that uses it keeps its OWN original marked GroupContent.isShared, so nothing downstream of the document model learns a new word. Two rules keep it from looping: a publish happens only from a local edit that changed a component that was already shared BEFORE that edit (PhotonzDocument.sharedComponentsToPublish), and a pull never records an edit (History.applyOutsideHistory, which also rewrites the undo stack so a local undo can never resurrect somebody else's older drawing). Styles are matched by id only, never by name, because name matching is what makes two documents repaint each other forever; the arriving drawing is then repainted from THIS document's styles so the name on a piece is true of the colour on it. App: Sources/Photonz/SharedComponentStore.swift, EditorState+SharedComponents.swift, the switch in ComponentPanel.ComponentShareRow. Walk: Scripts/playtest/shared-component-walk.json (two documents in one walk; snapshot takes a window title, which is how the first document is photographed while the second is being driven).",
@@ -65,7 +65,12 @@
     {
       "t": "2026-09-12T10:06:49.639221Z",
       "note": "audit queue/audits/2026-09-12-shared-components.json with four shots. Two follow-ups filed: a-shelf-tile-says-where-the-component-came-from (a shared tile is indistinguishable from a local one) and a-shared-component-arrives-the-size-it-should-be (pixel scale does not travel)."
+    },
+    {
+      "t": "2026-09-12T10:07:12.917Z",
+      "note": "A component can be put on one shelf every document on this Mac can reach, and every document that uses it follows it. Core model in Sources/PhotonzCore/SharedComponents.swift (24 tests, 5601 green), shelf storage and the Share across documents switch in the app, flag next-shared-library on by default in Next. Verified end to end on the probe with Scripts/playtest/shared-component-walk.json across two documents, plus 21 component and library walks. Audit: queue/audits/2026-09-12-shared-components.json. Committed 13348f37 and pushed."
     }
   ],
-  "started": "2026-09-12T09:45:12.742Z"
+  "started": "2026-09-12T09:45:12.742Z",
+  "completed": "2026-09-12T10:07:12.918Z"
 }

@@ -14149,3 +14149,30 @@ which fails on clean main and is not caused by this change.
 
 Open question for the user, in the audit: whether "both of them" and the
 panel's own "2 layers" a few inches away clash.
+
+## 2026-09-12 — a component you made in one document can be used in every document
+
+Shared components landed in Next (`next-shared-library`, on by default).
+Turn on Share across documents in the Component section and the component
+joins one shelf every document on this Mac can reach; drop it into another
+document and it stays linked, so an edit made in any of them reaches all of
+them.
+
+Built on the starters' machinery rather than beside it: the shelf holds the
+drawing, a document keeps its own original marked `GroupContent.isShared`,
+and nothing downstream of the document model learns a new word. A document
+whose shared original has gone keeps its drawing and says the link broke, in
+the same pill every other break uses. Two rules stop two documents repainting
+each other forever: a publish only ever comes from a local edit to a
+component that was already shared, and a pull records no edit
+(`History.applyOutsideHistory`, which also rewrites the undo stack so a local
+undo cannot resurrect somebody else's older drawing).
+
+Verified with a new two-document walk, `Scripts/playtest/shared-component-walk`,
+plus the 21 component and library walks. Audit and four shots:
+`queue/audits/2026-09-12-shared-components.json`.
+
+Next: the two follow-ups the audit raised — a shelf tile that says where a
+component came from, and a shared component arriving at the right size in a
+document of a different pixel scale — and the full sweep that was requested,
+since the Component section grew a row.
