@@ -22,12 +22,17 @@ import Foundation
 ///   born holding it; `nil` means the window opens and asks for the size
 ///   itself, which is the fallback for asking from a window that has no
 ///   canvas to hang the question on.
+/// - `tutorial` — a window a guide opened for itself, holding the guide's own
+///   sample picture. A guide never teaches over your work: it brings something
+///   of its own to point at. The string is the guide's id, so the window knows
+///   which sample to put in it and which guide to start once it is up.
 enum EditorWindowID: Hashable, Codable, Sendable {
     case file(URL)
     case fresh(UUID)
     case clipboard(UUID)
     case video(URL)
     case blankCanvas(UUID, CGSize?)
+    case tutorial(UUID, String)
 
     /// A video-editor id for `url`, standardized so the same recording always
     /// hashes to the same window (re-opening focuses rather than duplicates),

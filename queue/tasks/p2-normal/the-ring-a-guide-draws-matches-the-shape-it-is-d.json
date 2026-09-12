@@ -1,0 +1,28 @@
+{
+  "id": "the-ring-a-guide-draws-matches-the-shape-it-is-d",
+  "title": "The ring a guide draws matches the shape it is drawn round",
+  "goal": "When a tutorial puts a highlight ring on a control, the ring should take the shape of that control. Today it is always a rounded rectangle with the same corner radius, so on the pill shaped floating tool bar the corners do not line up with the thing they are ringing.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2550,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T21:18:08.898Z",
+  "updated": "2026-09-12T21:18:08.901Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/audits/2026-09-12-tutorials-01-tool-bar.png shows the ring round the tool bar with a 10pt corner radius against the bar own pill. Ran Scripts/playtest.sh Scripts/playtest/tutorial-tour-walk.json and read the first capture.\n\nThe radius is hard coded at the one call site: TutorialController.placeCue passes TutorialCueView(cornerRadius: 10). The anchor itself is the only thing that knows its shape, so the shape probably has to travel with the anchor: either a corner radius on TutorialAnchor, or a small shape enum set where the anchor is hung. See docs/design/tutorials.md.",
+  "acceptance": [
+    "The ring round the floating tool bar is a pill, matching the bar",
+    "The ring round a round tool button is round",
+    "The ring round a panel section keeps the squarer corner it has now",
+    "A walk captures each of the three and the audit shows them side by side"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T21:18:08.900Z",
+      "note": "created (manual)"
+    }
+  ]
+}

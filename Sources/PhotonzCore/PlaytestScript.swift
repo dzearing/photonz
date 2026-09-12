@@ -328,6 +328,11 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// ...and the weaker claim, for a section too tall to ever fit whole: its
     /// header is on screen, so you at least know the settings are there.
     case sectionHeaderInView(String)
+    /// A guide is running and it is on this step, named by the step's id. What
+    /// a walk waits on after doing the thing a waiting step asked for, so
+    /// "picking the Measure tool really moved the guide on" is a step the walk
+    /// fails on rather than a claim in a report.
+    case tutorialStep(String)
 }
 
 /// A direct call on the editor, for when a shortcut is not honoured by a
@@ -368,6 +373,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case closeDocument
     /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
     /// taken while a sheet is up photographs the sheet.
+    /// The guided tutorials, driven from a walk (`TutorialController`).
+    /// `startTour` is the real entry point: it opens the guide's OWN sample
+    /// window, which is where the guide then runs, so a walk photographing it
+    /// names that window. `startTourHere` runs the same guide over the window
+    /// the walk is already driving, so the walk can press real controls with
+    /// real coordinates and prove a waiting step advances on the thing itself.
+    case startTour, startTourHere, tutorialNext, tutorialBack, tutorialClose
     case newCanvasDialog
     /// Answer the New Canvas sheet with the size it opens on, which is what
     /// pressing Return in it does. A sheet cannot be typed into from a walk,
@@ -1560,7 +1572,8 @@ public enum PlaytestStep: Sendable, Equatable {
             case "measureMode": .measureMode(try f.enumValue("value", MeasureToolMode.self))
             case "sectionInView": .sectionInView(try f.string("value"))
             case "sectionHeaderInView": .sectionHeaderInView(try f.string("value"))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView or sectionHeaderInView")
+            case "tutorialStep": .tutorialStep(try f.string("value"))
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView or tutorialStep")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "snapshot":

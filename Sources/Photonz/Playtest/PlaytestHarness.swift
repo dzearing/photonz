@@ -1026,6 +1026,25 @@ private final class Run {
             note(number, step.name, "closeDocument; \(PlaytestHarness.readyEditors.count) editor(s) still open",
                  state: describe())
 
+        // Take the Tour opens a window of its own holding the guide's sample
+        // picture, so the walk moves over to that window: everything after this
+        // step is aimed at the window the person would really be looking at.
+        case .action(let action) where action == .startTour:
+            guard let tour = TutorialLauncher.tour else {
+                throw Failure(description: "there is no tour in the catalogue")
+            }
+            TutorialLauncher.start(tour, coordinator: coordinator, editor: editor)
+            var opened: EditorState?
+            try await poll("the tutorial window", within: 8) {
+                opened = PlaytestHarness.readyEditors.last {
+                    $0.untitledName == TutorialSampleScreen.documentName
+                }
+                return opened != nil
+            }
+            guard let opened else { throw Failure(description: "the tour opened no window") }
+            try await adopt(opened, window: nil, step: step.name,
+                            subject: "Take the Tour in its own window", number: number)
+
         case .action(let action):
             let editor = try requireEditor()
             // Zeroed here so `showInspector` reports the cost of the panel
@@ -1405,6 +1424,15 @@ private final class Run {
             case .hideLibrary: editor.setLibraryVisible(false)
             case .placeLibraryPick: editor.placeLibraryPick()
             case .insertPickedComponent: editor.insertPickedComponent()
+            case .startTour:
+                break // handled above: it retargets the walk at the guide's window
+            case .startTourHere:
+                if let tour = TutorialLauncher.tour {
+                    TutorialController.shared.restart(tour, in: editor)
+                }
+            case .tutorialNext: TutorialController.shared.next()
+            case .tutorialBack: TutorialController.shared.back()
+            case .tutorialClose: TutorialController.shared.close()
             case .toggleGrid: editor.toggleCanvasGrid()
             case .showGrid: if !editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
             case .hideGrid: if editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
@@ -4617,6 +4645,8 @@ private final class Run {
             InspectorLayoutProbe.shared.measured
                 .first { $0.title == title }
                 .map { InspectorLayoutProbe.shared.isHeaderVisible($0) } ?? false
+        case .tutorialStep(let id):
+            TutorialController.shared.run?.step.id == id
         }
     }
 
@@ -4904,6 +4934,24 @@ private final class Run {
         NSGraphicsContext.restoreGraphicsState()
     }
 
+    /// The same trick for any panel hung on the window: a guide's cue ring and
+    /// its card are windows of their own, so an offscreen draw of the editor
+    /// alone would show a walkthrough with no walkthrough in it.
+    private func draw(panel: NSPanel, over view: NSView, into rep: NSBitmapImageRep) {
+        guard let window = view.window, let content = panel.contentView,
+              let panelRep = content.bitmapImageRepForCachingDisplay(in: content.bounds) else { return }
+        content.cacheDisplay(in: content.bounds, to: panelRep)
+        let image = NSImage(size: content.bounds.size)
+        image.addRepresentation(panelRep)
+        var rect = view.convert(window.convertFromScreen(panel.frame), from: nil)
+        if view.isFlipped { rect.origin.y = view.bounds.height - rect.maxY }
+        guard let context = NSGraphicsContext(bitmapImageRep: rep) else { return }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        image.draw(in: rect)
+        NSGraphicsContext.restoreGraphicsState()
+    }
+
     /// The window's own background, under everything drawn so far.
     ///
     /// A content view runs the full height of the window, so the band behind
@@ -4926,6 +4974,9 @@ private final class Run {
     /// offscreen draw of the editor alone would never show one. Paint it in
     /// where it sits, so the picture is what a person would see.
     private func drawTooltip(over view: NSView, into rep: NSBitmapImageRep) {
+        for panel in TutorialController.shared.panels(over: view.window) {
+            draw(panel: panel, over: view, into: rep)
+        }
         guard let window = view.window,
               let panel = HintTooltipController.shared.panel(over: window),
               let tipView = panel.contentView,
@@ -5257,6 +5308,10 @@ private final class Run {
             // and that one fact is why most menu shortcuts cannot be pressed
             // in one. See `frozenMenuBar`.
             "appActive": NSApp.isActive,
+            // What a guide is doing, if one is running: which step, and where
+            // the anchor it is pointing at resolved to. A walk that cannot see
+            // this can only say the callout looked wrong in a picture.
+            "tutorial": TutorialController.shared.liveDescription(in: window),
             // The canvas's own size, so a walk can prove a number typed into
             // the Canvas section landed on the document rather than nowhere.
             "canvas": document.map { "\(Int($0.canvasSize.width))x\(Int($0.canvasSize.height))" } ?? "none",

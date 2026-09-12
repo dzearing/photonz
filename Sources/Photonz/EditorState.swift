@@ -180,6 +180,7 @@ final class EditorState {
     func setInspectorVisible(_ visible: Bool) {
         isLayersPanelVisible = visible
         inspectorPreferredVisible = visible
+        if visible { TutorialController.shared.note(.panelShown, from: self) }
         // A person's choice beats the shell's: asking for the dock on a narrow
         // window keeps it, and closing a dock the shell had already taken away
         // means it stays away when the window grows back.
@@ -520,6 +521,12 @@ final class EditorState {
                 // same way. It is never a step of its OWN: clicking a row must
                 // not cost a press of ⌘Z (`SelectionSnapshot`).
                 history?.syncSelection(selectionSnapshot)
+                // A guide step waiting on "pick a layer" moves on here, from
+                // the row or from the canvas, because both land in this one
+                // place (`TutorialController`).
+                if selectedLayerID != nil {
+                    TutorialController.shared.note(.layerSelected, from: self)
+                }
             }
             // Selecting anything (or explicitly deselecting) drops the Canvas
             // pseudo-selection; selectCanvas() re-raises the flag afterwards.
@@ -829,9 +836,32 @@ final class EditorState {
                 PlaytestHarness.register(self)
                 #endif
             }
+        case .tutorial(_, let guideID):
+            untitledName = TutorialSampleScreen.documentName
+            openTutorialSample(for: guideID)
+            #if PHOTONZ_PLAYTEST
+            // A walk that starts a guide has to be able to take over the window
+            // the guide opened for itself.
+            PlaytestHarness.register(self)
+            #endif
         case .video:
             break // routed to the video editor (VideoEditorState), never here
         }
+    }
+
+    /// The picture a guide brings with it. A tutorial must never edit what you
+    /// already have open, so it opens a window of its own holding a small made
+    /// up screen: a card, a heading and a button, five layers to pick from.
+    /// The drawing itself is data in PhotonzCore (`TutorialSampleScreen`); all
+    /// that happens here is a white canvas under it.
+    private func openTutorialSample(for guideID: String) {
+        let sample = TutorialCatalog.guide(id: guideID)?.sample ?? .starterScreen
+        let size = TutorialSampleScreen.canvasSize
+        guard let white = SolidImage.make(size: size, hex: Self.blankCanvasBackgroundHex) else { return }
+        let ref = store.register(white)
+        var document = PhotonzDocument.withBaseImage(ref)
+        document.layers.append(contentsOf: TutorialSampleScreen.layers(for: sample))
+        installDocument(document, url: nil)
     }
 
     /// The document as it was last opened or saved — the clean baseline for
@@ -1734,6 +1764,11 @@ final class EditorState {
         }
         activeTool = tool
         remember(tool)
+        // A guide step that says "pick the Measure tool" is waiting for exactly
+        // this, whichever way the tool was picked: the button, the key, or the
+        // menu. Nothing happens unless a guide is running and that is the step
+        // it is on (`TutorialController`).
+        TutorialController.shared.note(.toolPicked(tool), from: self)
         // Picking a tool, by any route, is the paste letting go of the one it
         // borrowed: whatever undo would have handed back is no longer owed
         // (`PasteToolReturn`). The paste and undo paths re-arm it themselves,

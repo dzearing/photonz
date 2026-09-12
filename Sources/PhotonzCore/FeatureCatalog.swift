@@ -122,6 +122,8 @@ public enum FeatureCatalog {
 
     public static let blendModeFlag = "next-blend-mode"
 
+    public static let tutorialsFlag = "next-tutorials"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -368,6 +370,15 @@ public enum FeatureCatalog {
                     name: toolBarFeedbackFlag,
                     title: "Tool bar buttons respond to the pointer",
                     description: "Pointing at a tool in the floating tool bar shows the soft fill every other icon button in the app shows, and pressing one shows the stronger fill with a slight shrink. The tool in hand keeps its accent circle and still lights up under the pointer. Off means the buttons sit still until clicked.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: tutorialsFlag,
+                    title: "Guided tutorials",
+                    description: "Adds a Help menu with guided tutorials. A guide opens a small sample picture of its own, puts a ring around the control it is talking about, and floats a card beside it with one short thing to read and one button. Some steps wait for you to actually do the thing before moving on. Back, Skip and close work at every step, nothing is ever blocked while a guide runs, and closing part way keeps your place. Off means no Help menu row and no guides.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

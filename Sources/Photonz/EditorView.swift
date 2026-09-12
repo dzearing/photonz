@@ -72,6 +72,7 @@ struct EditorView: View {
             HStack(spacing: 0) {
                 canvas
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .tutorialAnchor(.canvas)
                     // Canvas surround adapts to the system appearance (Preview-
                     // style): near-black in dark mode, light gray in light mode.
                     .background(Color(nsColor: .underPageBackgroundColor))
@@ -105,6 +106,7 @@ struct EditorView: View {
                             GlassEffectContainer {
                                 toolbar
                             }
+                            .tutorialAnchor(.toolBar)
                             // The grid's settings when the bar has no grid icon
                             // to hang them off. Same popover, same controls,
                             // rising out of the same strip of the window: the
@@ -167,6 +169,7 @@ struct EditorView: View {
                             .ignoresSafeArea(.container, edges: .vertical)
                         InspectorPanel()
                             .frame(width: panelWidth)
+                            .tutorialAnchor(.panel)
                     }
                     .frame(maxHeight: .infinity)
                     .transition(.move(edge: .trailing))
@@ -1292,6 +1295,10 @@ struct EditorView: View {
             pickRemembered: { editorState.setTool(editorState.lastTool(in: group)) },
             pick: { pickWithKey($0, in: group) },
             cycle: { cycleGroup(group) })
+        // A family slot answers to the member it is wearing right now, which is
+        // the only tool a guide could honestly point a person at: the others
+        // are behind a press and hold (`TutorialAnchorRegistry`).
+        .tutorialAnchor(.tool(editorState.lastTool(in: group)))
     }
 
     /// A plain family letter: whichever member that letter hands over now.
@@ -1829,6 +1836,9 @@ struct EditorView: View {
                 editorState.measureToolMode = editorState.measureToolMode
                     .cycled(alignmentEnabled: Experiments.shared.measureAlignEnabled)
             })
+            // Measure's button is a mode button, so the shared tool button
+            // funnel never reaches it: name it here (`TutorialAnchorRegistry`).
+            .tutorialAnchor(.tool(.measure))
     }
 
     /// The Crop tool's button, which owns its aspect locks (D15). Free, 1:1,
@@ -1859,6 +1869,7 @@ struct EditorView: View {
                 keyCycles: false,
                 footer: Experiments.shared.toolGroupsEnabled ? AnyView(resizeMenuRow) : nil,
                 pressedKey: { editorState.setTool(.crop) })
+            .tutorialAnchor(.tool(.crop))
         } else {
             toolButton(.crop, "crop", "Crop")
         }
@@ -2433,6 +2444,10 @@ struct EditorView: View {
         // Tools are sticky (17.12), so no double-click-to-lock is needed.
         .toolTip(help, key: keyLabel, fallback: "\(help)\(keyHint)")
         .accessibilityLabel(help)
+        // Every tool button is named for a tutorial here, once, off the tool
+        // itself. Renaming the button's words cannot reach the name a guide
+        // points at (`TutorialAnchorRegistry`).
+        .tutorialAnchor(.tool(tool))
         .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: modifiers) })
     }
 

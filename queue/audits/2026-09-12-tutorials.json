@@ -1,0 +1,34 @@
+{
+  "feature": "Guided tutorials, and the first guide",
+  "epic": "ui-building",
+  "summary": "Help now has a Take the Tour row. It opens a little sample picture of its own, puts a ring round one real control at a time, and floats a card beside it with one short thing to read. Two of the six steps wait for you to actually do the thing before moving on.",
+  "setup": "Photonz Dev, Experiments window, release Next. The next-tutorials flag is on by default. Nothing needs to be open first: the tour brings its own picture.",
+  "try": [
+    { "do": "Open the Help menu and pick Take the Tour.", "shot": "2026-09-12-tutorials-01-tool-bar.png" },
+    { "do": "Read step one, then press Next.", "shot": "2026-09-12-tutorials-02-pick-measure.png" },
+    { "do": "Step two waits for you. Click the ruler in the tool bar, or press I, and watch it move on by itself.", "shot": "2026-09-12-tutorials-03-layers.png" },
+    { "do": "On the Layers step, scroll the panel with two fingers and watch the ring and the card go with the list.", "shot": "2026-09-12-tutorials-04-panel-scrolled.png" },
+    { "do": "Click any row in the Layers list. That step is waiting too.", "shot": "2026-09-12-tutorials-05-properties.png" },
+    { "do": "Press Back once, then Next, and carry on to the last step.", "shot": "2026-09-12-tutorials-06-last-step.png" },
+    { "do": "Drag the window around and resize it while the callout is up." },
+    { "do": "Press the X on the card at any step, then pick Help again: the row now says Resume the Tour." }
+  ],
+  "evaluate": [
+    "Does the card land where your eye already is, or do you have to hunt for it after each Next?",
+    "On a waiting step the button says Skip This Step rather than Next. Does that read as helpful, or does the missing Next feel like the guide is refusing to let you move on?",
+    "Six steps and about two minutes: is that the right length for a first lap of the app, or should the tour be shorter and the detail live in the track guides?",
+    "The ring pulses. Is that right for a teaching flow, or is it too much movement next to a card you are trying to read?",
+    "The tour opens its own sample picture in a new window rather than teaching over what you have open. Is a second window the right trade for never touching your work?",
+    "Closing part way keeps your place and the menu row changes to Resume the Tour. Would you rather it always started again from the top?"
+  ],
+  "rough": [
+    "The ring is a rounded rectangle with one fixed corner radius, so on the pill shaped tool bar the corners do not match the shape they are drawn round. It is right on tool buttons and panel sections.",
+    "A tool hidden inside a family button (Line, Rectangle, Ellipse share one slot) or pushed behind the tool bar's more affordance cannot be pointed at while it is hidden. A family slot answers for whichever member it is currently wearing, which is the only tool a person could honestly be pointed at.",
+    "Changed from the mock deliberately: the mock's walkthrough puts a caption panel with dots and a Reset button UNDER the app screenshot, because a web page has an under. A real window does not, so the caption became a floating card with a beak, placed by the same law the tooltip uses. Dots became a plain n of m, because a dot promises you can jump to step five and step five may depend on something step three made. Reset is gone.",
+    "Three real editor events are wired for waiting steps: a tool being picked, a layer being selected, and the panel coming on screen. Every other 'now do the thing' step a future track wants will need its event added and wired where it actually happens. Nothing advances on a timer.",
+    "When a step's control is genuinely not on screen, the card falls back to the middle of the window with no ring and no beak. It is honest and nobody gets stranded, but it is a jump. The real fix is the queued check that walks every guide in a live window and fails the build.",
+    "The Help menu has exactly one row today. The track submenus, the hub window and first launch are their own queued tasks.",
+    "The tour leaves the Measure tool in hand in the sample window when it finishes, because step two really did pick it up. Harmless on a sample, and the last step tells you V brings the pointer back.",
+    "Screen Recording was granted to the probe, so every shot above is a real capture of the window (the -sc.png kind), not an offscreen render."
+  ]
+}

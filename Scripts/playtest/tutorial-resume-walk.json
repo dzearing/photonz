@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-resume-walk",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "describe", "stage": "0-fresh", "note": "starting the tour over in this window, so the walk begins from a known step" },
+    { "do": "action", "action": "startTourHere" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "tool-bar", "timeout": 10 },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-measure", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "layers-list", "timeout": 5 },
+
+    { "do": "action", "action": "tutorialClose" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-left", "note": "closed part way through, on step three of six" },
+    { "do": "snapshot", "name": "1-left-part-way" },
+
+    { "do": "action", "action": "startTour" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "layers-list", "timeout": 10 },
+    { "do": "describe", "stage": "2-resumed", "note": "starting it again picked up on step three, where it was left, rather than back at step one" },
+    { "do": "snapshot", "name": "2-resumed" },
+
+    { "do": "action", "action": "tutorialClose" },
+    { "do": "wait", "seconds": 0.5 }
+  ]
+}

@@ -281,6 +281,9 @@ extension Experiments {
     /// reads false and keeps `.help`.
     var toolTipsEnabled: Bool { isEnabled(FeatureCatalog.toolTipsFlag) }
 
+    /// Help ▸ guided tutorials (Next, `next-tutorials`).
+    var tutorialsEnabled: Bool { isEnabled(FeatureCatalog.tutorialsFlag) }
+
     /// `next-blank-canvas`: whether an empty window offers Blank canvas
     /// alongside open, capture and paste. Exists only in the Next release's
     /// catalog, so Current always reads false and its empty window is

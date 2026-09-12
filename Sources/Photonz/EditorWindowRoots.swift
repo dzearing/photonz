@@ -36,6 +36,13 @@ struct ImageEditorRootView: View {
                 editorState.followSharedShelf()
                 if let windowID {
                     editorState.seed(from: windowID, capture: coordinator.capture)
+                    // A window a guide opened for itself starts that guide as
+                    // soon as its sample picture is in it, so picking the
+                    // tutorial off the menu is one step, not two.
+                    if case .tutorial(_, let guideID) = windowID,
+                       let guide = TutorialCatalog.guide(id: guideID) {
+                        TutorialController.shared.start(guide, in: editorState)
+                    }
                 }
             }
     }

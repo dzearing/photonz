@@ -217,6 +217,10 @@ struct InspectorPanel: View {
                             // gap it left behind.
                             Divider().opacity(drag.section == id ? 0 : 0.4)
                         }
+                        // Named for a tutorial off the section's id, never off
+                        // its heading, so renaming a section cannot break a
+                        // guide that points at it (`TutorialAnchorRegistry`).
+                        .tutorialAnchor(.panelSection(id.rawValue))
                         // Where this section sits inside the dock: for the
                         // reveal below, and for a reorder, which reads every
                         // section's resting place the moment one is picked up.

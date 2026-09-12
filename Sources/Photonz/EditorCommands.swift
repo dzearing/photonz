@@ -120,6 +120,12 @@ struct EditorCommands: Commands {
         }
     }
 
+    /// Resume rather than Take the Tour when you stopped part way, so the row
+    /// says what pressing it will actually do.
+    private func tourMenuTitle(_ tour: TutorialGuide) -> String {
+        TutorialController.shared.progress.isResumable(tour) ? "Resume the Tour" : tour.title
+    }
+
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.name)") { coordinator.showAbout() }
@@ -653,6 +659,13 @@ struct EditorCommands: Commands {
             }
         }
 
+        viewAndHelpCommands
+    }
+
+    /// The View menu's additions and the Help menu, together in one place.
+    /// They are paired only because a `Commands` body takes ten statements and
+    /// this file had ten before the guides arrived.
+    @CommandsBuilder private var viewAndHelpCommands: some Commands {
         CommandGroup(after: .sidebar) {
             let hasDocument = editor?.document != nil
             // A setting, so one name and a checkmark: the item never renames
@@ -747,6 +760,19 @@ struct EditorCommands: Commands {
                           || (editor?.isAdjustingGrid ?? false))
             }
             Divider()
+        }
+        // There is no Help menu until this: macOS supplies a default one whose
+        // single row opens a help book Photonz does not have. Replacing the
+        // group puts the guides there instead, which is the first place anybody
+        // looks for them. The track submenus and the hub window are their own
+        // task; this is the one row that proves the framework.
+        CommandGroup(replacing: .help) {
+            if Experiments.shared.tutorialsEnabled, let tour = TutorialLauncher.tour {
+                Button(tourMenuTitle(tour)) {
+                    TutorialLauncher.start(tour, coordinator: coordinator, editor: editor)
+                }
+                .help(tour.summary)
+            }
         }
     }
 }

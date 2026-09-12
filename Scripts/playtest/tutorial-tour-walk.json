@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-tour-walk",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "describe", "stage": "0-before", "note": "an ordinary window, nothing started yet" },
+    { "do": "menus", "stage": "help-menu", "menu": "Help" },
+
+    { "do": "action", "action": "startTour" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "tool-bar", "timeout": 10 },
+    { "do": "describe", "stage": "1-tool-bar", "note": "the tour opened its own window holding the sample screen, and step one points at the floating tool bar" },
+    { "do": "snapshot", "name": "1-tool-bar" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-measure", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-pick-measure", "note": "a waiting step: the ring is on the Measure button and the button offers to skip, never to claim you did it" },
+    { "do": "snapshot", "name": "2-pick-measure" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "layers-list", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-layers", "note": "picking the tool for real moved the guide on by itself, and the next step opened the panel to point at the Layers list" },
+    { "do": "snapshot", "name": "3-layers-list" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-layer", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "4-pick-a-layer" },
+
+    { "do": "scrollPanel", "by": -200 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4b-scrolled", "note": "the panel scrolled under the callout; the ring and the card should have gone with the Layers list rather than stayed where they were" },
+    { "do": "snapshot", "name": "4b-panel-scrolled" },
+
+    { "do": "selectRow", "row": "Heading" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "properties", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-properties", "note": "clicking a real row advanced it, and the callout moved to the settings the selection brought in" },
+    { "do": "snapshot", "name": "5-properties" },
+
+
+    { "do": "action", "action": "tutorialBack" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-layer", "timeout": 5 },
+    { "do": "describe", "stage": "5b-back", "note": "Back works at every step" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "properties", "timeout": 5 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "back-to-select", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-last", "note": "the last step reads Done rather than Next" },
+    { "do": "snapshot", "name": "6-last-step" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-finished", "note": "Done closed the guide and left the window alone" },
+    { "do": "snapshot", "name": "7-finished" }
+  ]
+}

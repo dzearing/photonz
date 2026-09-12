@@ -1,0 +1,28 @@
+{
+  "id": "a-guide-can-point-at-a-tool-that-shares-a-slot-w",
+  "title": "A guide can point at a tool that shares a slot with others",
+  "goal": "Several tools share one button in the tool bar (Line, Rectangle and Ellipse are one slot, and on a narrow window the last tools move behind a more affordance). A tutorial cannot point at one of those tools while it is hidden, so a guide that wants to teach the Ellipse has no way to show you where it is.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2560,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T21:18:08.950Z",
+  "updated": "2026-09-12T21:18:08.953Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Today the family slot answers to whichever member it is wearing: EditorView.groupButton hangs .tutorialAnchor(.tool(editorState.lastTool(in: group))). So .tool(.rectangle) resolves when Rectangle is the remembered member and silently does not when it is not, which lands the callout in the middle of the window (the honest fallback, but not a good tutorial).\n\nEvidence: Scripts/playtest.sh Scripts/playtest/tutorial-tour-walk.json logs where every anchor resolved to; the family slot only ever reports one tool. See docs/design/tutorials.md, \"What this framework deliberately does not do\".",
+  "acceptance": [
+    "A step naming a tool that is currently hidden inside a family slot points at the slot and says the tool is behind it",
+    "A step naming a tool that has moved behind the more affordance points at that affordance",
+    "Neither case opens the menu for the person: the step still asks them to open it",
+    "A walk shows both cases on a narrow window"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T21:18:08.952Z",
+      "note": "created (manual)"
+    }
+  ]
+}
