@@ -593,6 +593,98 @@ struct MeasureLabelPlacementTests {
         #expect(back.labelNudge == 0)
     }
 
+    // MARK: - Parking a hand-placed number: the click is the middle, but it
+    // never crowds what was measured
+
+    /// The Save Changes button from the settings capture, in document points,
+    /// and a width caliper whose feet sit on its bottom edge.
+    private func parkedOnButton(headOffset: CGFloat) -> (button: CGRect, feet: (CGPoint, CGPoint),
+                                                         content: MeasureContent) {
+        let button = CGRect(x: 236, y: 750, width: 328, height: 66) // bottom edge at y = 816
+        let edge = headOffset >= 0 ? button.maxY : button.minY
+        let feet = (CGPoint(x: button.minX, y: edge), CGPoint(x: button.maxX, y: edge))
+        let content = MeasureContent(start: feet.0, end: feet.1,
+                                     headOffset: headOffset, mode: .horizontal)
+        return (button, feet, content)
+    }
+
+    private let parkingCanvas = CGSize(width: 1440, height: 960)
+
+    /// The premise, pinned: a third click 24 points under the button centres a
+    /// 43 point pill there, so the pill's top edge lands two and a half points
+    /// under the button and reads as part of it. This is what the user was
+    /// shown and asked about.
+    @Test func aNumberCentredOnTheClickWouldTouchTheButtonItMeasured() {
+        var (button, _, m) = parkedOnButton(headOffset: 24)
+        m.apply(MeasureLabelPlanner.plan(for: m, canvas: parkingCanvas, describing: [button]))
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(m.labelPlacement == .onLine)
+        #expect(rect.minY - button.maxY < m.subjectClearance,
+                "the premise is gone: the pill already keeps \(rect.minY - button.maxY) px")
+    }
+
+    /// And the answer the user picked: told the button is owed its air, the
+    /// readout slides out far enough to leave it, rather than resting against
+    /// the button.
+    @Test func aParkedNumberSlidesClearOfTheButtonItMeasured() {
+        var (button, _, m) = parkedOnButton(headOffset: 24)
+        m.apply(MeasureLabelPlanner.plan(for: m, canvas: parkingCanvas,
+                                         describing: m.subjectsWithClearance([button])))
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(rect.minY - button.maxY >= m.subjectClearance,
+                "only \(rect.minY - button.maxY) px of air under the button")
+        #expect(CGRect(origin: .zero, size: parkingCanvas).contains(rect))
+        // It slid AWAY from the button, never back over it.
+        #expect(rect.midY > m.labelAnchor.y)
+    }
+
+    /// The same manners parking above an element as below it: the number keeps
+    /// the button's air on whichever side the third click went.
+    @Test func aNumberParkedAboveAnElementKeepsTheSameAir() {
+        var (button, _, m) = parkedOnButton(headOffset: -24)
+        m.apply(MeasureLabelPlanner.plan(for: m, canvas: parkingCanvas,
+                                         describing: m.subjectsWithClearance([button])))
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(button.minY - rect.maxY >= m.subjectClearance,
+                "only \(button.minY - rect.maxY) px of air above the button")
+        #expect(rect.midY < m.labelAnchor.y)
+    }
+
+    /// The promise that makes this safe to ship: a click with room around it
+    /// still means exactly "put the middle of the number here". Nothing about
+    /// parking in open space changes.
+    @Test func aNumberParkedInOpenSpaceLandsExactlyOnTheClick() {
+        var (button, _, m) = parkedOnButton(headOffset: 90)
+        let anchor = m.labelAnchor
+        m.apply(MeasureLabelPlanner.plan(for: m, canvas: parkingCanvas,
+                                         describing: m.subjectsWithClearance([button])))
+        #expect(m.labelPlacement == .onLine)
+        #expect(m.labelNudge == 0)
+        #expect(m.labelPosition(chipSize: m.estimatedLabelSize) == anchor)
+    }
+
+    /// A measurement across empty canvas has nothing to stand off from, so the
+    /// click is simply the middle — which is the right answer there anyway.
+    @Test func aNumberParkedWithNothingDetectedStaysOnTheClick() {
+        var m = MeasureContent(start: CGPoint(x: 400, y: 500), end: CGPoint(x: 700, y: 500),
+                               headOffset: 24, mode: .horizontal)
+        let anchor = m.labelAnchor
+        m.apply(MeasureLabelPlanner.plan(for: m, canvas: parkingCanvas,
+                                         describing: m.subjectsWithClearance([])))
+        #expect(m.labelPosition(chipSize: m.estimatedLabelSize) == anchor)
+    }
+
+    /// The air is the same one Size and Gap keep, so a page of redlines reads
+    /// as one hand: growing a rect by the clearance grows it on every side.
+    @Test func theClearanceGrowsASubjectOnEverySide() {
+        let m = MeasureContent(start: .zero, end: CGPoint(x: 100, y: 0), mode: .horizontal)
+        let rect = CGRect(x: 100, y: 100, width: 200, height: 50)
+        guard let grown = m.subjectsWithClearance([rect]).first else {
+            Issue.record("no subject came back"); return
+        }
+        #expect(grown == rect.insetBy(dx: -m.subjectClearance, dy: -m.subjectClearance))
+    }
+
     // MARK: - The frame reserves room where the chip actually lands
 
     @Test func theLayerFrameHoldsARelocatedReadout() {

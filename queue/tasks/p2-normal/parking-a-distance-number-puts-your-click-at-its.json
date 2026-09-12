@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T00:57:43.170Z",
-  "updated": "2026-09-09T14:02:41.220Z",
+  "updated": "2026-09-12T10:46:32.011Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing a-measurement-number-keeps-clear-of-the-edge-it. NOT a bug: the app obeys the click. The readout centres on labelAnchor, which is the head line, and the third click sets headOffset (CanvasMeasure.swift, measureHeadOffset). Evidence: Scripts/playtest/distance-three-clicks.json clicks [357, 840] to park the number on a button whose bottom edge is at y=816, i.e. 24 px of gap, and the pill (43 px tall) centres there, so it ends 2.5 px under the edge. That picture is queue/audits/2026-09-08-distance-three-clicks.png, the one that filed the clearance task. Size and Gap mode are unaffected: they place their own head and now stand off by half the pill height plus half the chip (MeasureBuilder.clearingHeadOffset). This is a UX judgement about what a click means, so it wants a decision card rather than a unilateral change.",
@@ -66,7 +66,35 @@
     {
       "t": "2026-09-09T14:02:41.219Z",
       "note": "decision \"When you click to park a distance number, which part of the number should land on your click?\" resolved: Your click is the middle, but it never crowds what you measured"
+    },
+    {
+      "t": "2026-09-12T10:46:32.010Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T10:58:25.848054Z",
+      "note": "Resumed on the resolved decision: option c, \"your click is the middle, but it never crowds what you measured\". Re-read queue/decisions/parking-a-distance-number-puts-your-click-at-its-when-you-click-to-park-a-distanc.json before starting; status resolved, choice c."
+    },
+    {
+      "t": "2026-09-12T10:58:25.848054Z",
+      "note": "Adversarial review before building. The catch in c is that the app can only stand off from something it can SEE, so a click into a gap the detector missed still centres. Accepted: the preview under the pointer already shows where the number will sit, so a non-slide is visible rather than a surprise. Also checked the other direction: inflating subjects inside MeasureLabelPlanner.plan for every caller was tempting (one place, one rule) but it moves Size and Gap numbers too - plannerLeavesAMeasurementWithOpenSpaceExactlyWhereItWas fails, and those modes already keep the air via clearingHeadOffset. So the growth belongs to the caller that lacks a computed standoff: the caliper you place by hand."
+    },
+    {
+      "t": "2026-09-12T10:58:25.848054Z",
+      "note": "Shipped. New MeasureContent.subjectsWithClearance(_:) in PhotonzCore grows the detected subjects by subjectClearance; wired into EditorState.addMeasure (the commit), CanvasMeasure.layoutMeasureReadoutPreview (the number riding under the pointer, so the preview and the commit agree and nothing jumps) and EditorState.commitMeasureEndpoints (a handle drag replans with the same manners). Size and Gap untouched. Design note added to docs/design/next-measure.md."
+    },
+    {
+      "t": "2026-09-12T10:58:25.848054Z",
+      "note": "Tests, written first: 6 in MeasureLabelPlacementTests (premise, slide below, slide above, open space unchanged, nothing detected, the clearance grows on every side) and 5 in MeasureCalloutClearanceTests on the real capture, including a sweep over every gap on the capture proving the request for air never leaves a number worse off - where a clear spot exists it takes it, where none does it keeps the classic centred spot. Scripts/test.sh green: 5614 tests."
+    },
+    {
+      "t": "2026-09-12T10:58:25.848054Z",
+      "note": "Verified in the app, not just in tests. Screen Recording granted. distance-three-clicks and distance-parking-preview: the pill lands in exactly the spot the preview showed (no jump), the head bar stays on the click, and the air under the Save Changes button went from 2.5 pt to about 30 pt. Walks run: distance-* (2), caliper-* (5), measure-*/size-* (7), redline-* (3), all 17 pass. Audit with both real captures at queue/audits/2026-09-12-distance-parking-clearance.json."
+    },
+    {
+      "t": "2026-09-12T10:58:25.848054Z",
+      "note": "Review of the built thing: with the new caliper still selected, the blue head handle now draws on the pill's top edge rather than hiding under the pill, because the number no longer centres on the bar. Left as is - it is the existing rule for any relocated readout (aRelocatedReadoutLeavesTheHeadHandleBare) and the dot is the thing you grab to change the standoff - but it is in the audit's rough list for the user to judge."
     }
   ],
-  "started": "2026-09-09T05:20:04.923Z"
+  "started": "2026-09-12T10:46:32.009Z"
 }

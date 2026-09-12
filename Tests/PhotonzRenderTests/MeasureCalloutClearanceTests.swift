@@ -568,6 +568,96 @@ struct MeasureCalloutClearanceTests {
         #expect(offenders.isEmpty, "a foot lost its row: \(offenders)")
     }
 
+    // MARK: - Parking a number by hand: the click is the middle, but it never
+    // crowds what was measured
+
+    /// The Save Changes button's width, measured by hand exactly the way the
+    /// `distance-three-clicks` walk does it: a click on each side of the button
+    /// at mid-height, then a third click to park the number. The subjects are
+    /// read with the same settings `EditorState.caliperSubjects` uses, so this
+    /// is the app's own answer and not a near miss of it.
+    private func parkedByHand(feet: (CGPoint, CGPoint), parkAt park: CGFloat,
+                              withClearance: Bool) -> MeasureContent {
+        var c = MeasureContent(mode: .horizontal, unit: .points)
+        c.headOffset = park - feet.0.y
+        c.start = feet.0
+        c.end = feet.1
+        let scale: CGFloat = 2 // the fixture is a 2x capture
+        let subjects = ElementBounds.subjects(from: c.start, to: c.end, mode: .horizontal,
+                                              in: Self.analysis.edges, luma: Self.analysis.luma,
+                                              minElement: max(10, 10 * scale),
+                                              textGap: AlignmentScan.visibleGap * scale)
+        c.apply(MeasureLabelPlanner.plan(for: c, canvas: Self.canvas,
+                                         describing: withClearance
+                                             ? c.subjectsWithClearance(subjects) : subjects))
+        return c
+    }
+
+    /// The two clicks the walk makes on the Save Changes button, and the spot
+    /// 24 points under it that the third click aims at.
+    private let buttonFeet = (CGPoint(x: 234, y: 786), CGPoint(x: 480, y: 786))
+
+    /// The premise the user was shown: a 43 point pill centred on a click 24
+    /// points under the button leaves two and a half points of daylight, so the
+    /// number reads as part of the button rather than as a note about it.
+    @Test func aNumberCentredOnAClickUnderTheButtonWouldTouchIt() {
+        guard let button = element(at: CGPoint(x: 292, y: 786)) else {
+            Issue.record("no button detected on the capture")
+            return
+        }
+        let c = parkedByHand(feet: buttonFeet, parkAt: 840, withClearance: false)
+        let chip = c.labelRect(chipSize: c.estimatedLabelSize)
+        #expect(chip.minY - button.maxY < c.subjectClearance,
+                "the premise is gone: the pill already keeps \(chip.minY - button.maxY) px")
+    }
+
+    /// And the answer the user picked, on the real capture: the number slides
+    /// out far enough to keep the air, and it is the SAME air Size mode keeps
+    /// on the same button, so a page of redlines reads as one hand.
+    @Test func aParkedNumberKeepsTheSameAirAsASizeNumberOnTheSameButton() {
+        guard let button = element(at: CGPoint(x: 292, y: 786)) else {
+            Issue.record("no button detected on the capture")
+            return
+        }
+        let parked = parkedByHand(feet: buttonFeet, parkAt: 840, withClearance: true)
+        let chip = parked.labelRect(chipSize: parked.estimatedLabelSize)
+        #expect(!chip.intersects(button.insetBy(dx: -parked.subjectClearance,
+                                                dy: -parked.subjectClearance)),
+                "the parked number crowds the button: \(chip) vs \(button)")
+        #expect(CGRect(origin: .zero, size: Self.canvas).contains(chip))
+        // The head bar is still exactly where the third click went: only the
+        // number moved (D14 rule 5).
+        #expect(parked.labelAnchor.y == 840)
+        // Below the button, never back over it.
+        #expect(chip.minY > button.maxY)
+    }
+
+    /// The same manners on the other side: a third click just above the button
+    /// leaves the number above it with the same air.
+    @Test func aNumberParkedAboveTheButtonKeepsTheSameAir() {
+        guard let button = element(at: CGPoint(x: 292, y: 786)) else {
+            Issue.record("no button detected on the capture")
+            return
+        }
+        let parked = parkedByHand(feet: buttonFeet, parkAt: 731, withClearance: true)
+        let chip = parked.labelRect(chipSize: parked.estimatedLabelSize)
+        #expect(!chip.intersects(button.insetBy(dx: -parked.subjectClearance,
+                                                dy: -parked.subjectClearance)),
+                "the parked number crowds the button: \(chip) vs \(button)")
+        #expect(chip.maxY < button.minY)
+    }
+
+    /// The promise that makes it safe: park with room to spare and the click
+    /// still means exactly "the middle of the number goes here".
+    @Test func aNumberParkedWithRoomLandsExactlyOnTheClick() {
+        let parked = parkedByHand(feet: buttonFeet, parkAt: 900, withClearance: true)
+        #expect(parked.labelPlacement == .onLine)
+        #expect(parked.labelNudge == 0)
+        #expect(parked.labelCrossReach == 0)
+        let chip = parked.labelRect(chipSize: parked.estimatedLabelSize)
+        #expect(abs(chip.midY - 900) < 0.001, "\(chip)")
+    }
+
     // MARK: - Boxed in: the answer the user picked
 
     /// The rows on this capture run nearly the full width, so a caliper in the
@@ -672,5 +762,50 @@ struct MeasureCalloutClearanceTests {
         }
         #expect(protected > 0, "no gap on the capture had elements at its feet")
         #expect(offenders.isEmpty, "readouts on what their feet landed on: \(offenders)")
+    }
+
+    /// The guard on the answer the user picked, swept over the whole capture:
+    /// asking every hand-placed number to keep the air must never make one
+    /// worse off. Wherever a spot exists that keeps the air, the number takes
+    /// it; wherever none does, it keeps the classic spot rather than wandering.
+    @Test func askingForTheAirNeverLeavesANumberWorseOffAnywhereOnTheCapture() {
+        var checked = 0
+        var crowders: [String] = []
+        var wanderers: [String] = []
+        for gap in Self.gapsOnTheCapture {
+            for head in [CGFloat(16), -16] {
+                let plain = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head)
+                guard !plain.subjects.isEmpty else { continue }
+                checked += 1
+                var c = MeasureContent(mode: gap.axis, unit: .points)
+                c.headOffset = head
+                c.start = gap.start
+                c.end = gap.end
+                let grown = c.subjectsWithClearance(plain.subjects)
+                c.apply(MeasureLabelPlanner.plan(for: c, canvas: Self.canvas, describing: grown))
+                let chip = c.labelRect(chipSize: c.estimatedLabelSize)
+                let where_ = "\(gap.axis) \(gap.start)->\(gap.end) head=\(head)"
+                if clearSpotExists(for: c, subjects: grown) {
+                    if grown.contains(where: { chip.intersects($0) }), crowders.count < 8 {
+                        crowders.append("\(where_) chip=\(chip) placement=\(c.labelPlacement)")
+                    }
+                } else if c.labelPlacement != .onLine || c.labelNudge != 0 || c.labelCrossReach != 0,
+                          crowders.count + wanderers.count < 8 {
+                    // Nowhere keeps the air, so the answer is the one the user
+                    // already picked for a boxed-in caliper: stay on the line.
+                    wanderers.append("\(where_) placement=\(c.labelPlacement) "
+                                     + "nudge=\(c.labelNudge) reach=\(c.labelCrossReach)")
+                }
+                // And it is never pushed further out than the leash allows.
+                let leash = MeasureLabelPlanner.maxCrossReach(for: c, chip: c.estimatedLabelSize)
+                let travel = gap.axis == .horizontal ? abs(chip.midY - c.labelAnchor.y)
+                                                     : abs(chip.midX - c.labelAnchor.x)
+                #expect(travel <= leash + c.estimatedLabelSize.height,
+                        "\(where_) sent its number \(travel) px away")
+            }
+        }
+        #expect(checked > 20, "the capture stopped producing hand-placed calipers: \(checked)")
+        #expect(crowders.isEmpty, "a number crowded its subject with room to move: \(crowders)")
+        #expect(wanderers.isEmpty, "a boxed-in number left the classic spot: \(wanderers)")
     }
 }

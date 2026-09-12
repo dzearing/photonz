@@ -404,7 +404,10 @@ extension EditorState {
         // again; an alignment guide's subjects are its own checked runs.
         let subjects: [CGRect] = {
             guard let m = document?.layer(id: id)?.measure, m.alignment == nil else { return [] }
-            return caliperSubjects(from: start, to: end, mode: m.mode)
+            // Grown by the air the number keeps, the same as a fresh placement:
+            // a caliper you dragged by its handles is a caliper you placed by
+            // hand, and it keeps the same manners.
+            return m.subjectsWithClearance(caliperSubjects(from: start, to: end, mode: m.mode))
         }()
         perform {
             $0.updateLayer(id: id) {

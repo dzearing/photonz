@@ -80,6 +80,28 @@ extension MeasureContent {
 
     private func alongCoordinate(_ p: CGPoint) -> CGFloat { mode == .horizontal ? p.x : p.y }
 
+    /// The elements a caliper you placed BY HAND is about, as the planner
+    /// should see them: each one grown by `subjectClearance`, the air a
+    /// readout keeps from the thing it describes.
+    ///
+    /// Size and Gap never needed this. They place their own head, far enough
+    /// out that the pill lands with that air already (`clearingHeadOffset`). A
+    /// caliper you drew puts its head wherever your third click went, and a
+    /// click into the 24 points of space under a button centres a 43 point
+    /// pill on it, leaving two and a half points of daylight: the number reads
+    /// as part of the button rather than as a note about it. Growing the
+    /// element by the air it is owed makes the planner count "hard against the
+    /// button" as covering it, so the readout steps out to the first spot with
+    /// real daylight and the head bar stays exactly where the click landed.
+    ///
+    /// This is the answer the user picked when asked which part of the number
+    /// their third click should land on: still the middle, except in the one
+    /// case where the middle crowds what was just measured. Nothing grows in
+    /// open space, so a click with room around it means exactly what it says.
+    public func subjectsWithClearance(_ subjects: [CGRect]) -> [CGRect] {
+        subjects.map { $0.insetBy(dx: -subjectClearance, dy: -subjectClearance) }
+    }
+
     /// Takes on a planner's answer in one step, so no caller can carry the
     /// placement without the reach that goes with it.
     public mutating func apply(_ plan: MeasureLabelPlanner.Plan) {

@@ -155,6 +155,24 @@ what makes the last resort sane — when a full-bleed element leaves nowhere
 clear, every option is equally bad and the classic on-the-line spot wins, so
 nothing jumps.
 
+**Parking a number by hand.** A caliper you drew has no standoff to compute: its
+head goes wherever the third click went, and the number centres there. Click into
+the 24 points of space under a button and a 43 point pill centres on it, leaving
+two and a half points of daylight, so the number reads as part of the button.
+Asked which part of the number their click should land on, the user picked
+"still the middle, but it never crowds what you measured" over "the click is the
+near edge" (decision
+`parking-a-distance-number-puts-your-click-at-its-when-you-click-to-park-a-distanc`).
+
+So the commit, the preview under the pointer, and a handle drag all hand the
+planner `content.subjectsWithClearance(...)`: the detected elements grown by
+`subjectClearance`, the same air Size and Gap keep. A number with room around it
+does not move at all, because nothing it is describing reaches it. A number that
+would come to rest against the button counts as covering it and steps out to the
+first spot with real daylight, while the head bar stays exactly where the click
+landed — only the readout moves (D14 rule 5). Where nothing is clear, the
+boxed-in answer still wins and the number keeps the classic spot.
+
 **Neighbours.** `ElementBounds.neighbors(of:in:luma:reaches:)` probes the middle
 of each side at two distances — one close enough to catch what is touching the
 element, one as far out as the number itself travels — and drops anything that

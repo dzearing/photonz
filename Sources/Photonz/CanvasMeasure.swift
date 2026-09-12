@@ -760,7 +760,8 @@ extension CanvasNSView {
         content.apply(MeasureLabelPlanner.plan(
             for: content, canvas: viewport.documentSize,
             avoiding: placedReadoutRects(),
-            describing: placementSubjects(foot1: foot1, foot2: foot2, mode: mode)))
+            describing: content.subjectsWithClearance(
+                placementSubjects(foot1: foot1, foot2: foot2, mode: mode))))
         measureReadoutPreviewLayer.bounds = CGRect(
             origin: .zero, size: CGSize(width: sizes.bitmap.width * viewport.zoom,
                                         height: sizes.bitmap.height * viewport.zoom))

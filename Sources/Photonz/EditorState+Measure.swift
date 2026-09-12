@@ -65,9 +65,13 @@ extension EditorState {
             ?? MeasureBuilder.clearingHeadOffset(content: content, from: start, to: end,
                                                  canvas: document?.canvasSize)
         // A hand-drawn caliper knows what its feet landed on, so its number
-        // stays off those elements and not just off its own thin line.
+        // stays off those elements and not just off its own thin line — and
+        // keeps the same air from them that a Size or Gap number keeps, so a
+        // third click into a gap narrower than the pill is tall does not leave
+        // the number resting on the button it just measured.
         planReadout(&content, from: start, to: end,
-                    describing: caliperSubjects(from: start, to: end, mode: mode))
+                    describing: content.subjectsWithClearance(
+                        caliperSubjects(from: start, to: end, mode: mode)))
         var layer = MeasureBuilder.layer(content: content, from: start, to: end)
         // Inherit the last caliper's non-destructive effects (a drop shadow added
         // in Effects carries to the next measure), like annotations do per shape.

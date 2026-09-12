@@ -1,0 +1,47 @@
+{
+  "feature": "Parking a distance number",
+  "epic": "measure-redline",
+  "summary": "The third click of a distance measure still puts the middle of the number on the spot you clicked, except when that would leave the number resting on the thing you just measured: then it slides out far enough to keep the same air a Size or Gap number keeps, and the caliper's bar stays exactly where you clicked.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open a screenshot with some UI in it (the settings capture at Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png is the one these shots use).",
+  "try": [
+    {
+      "do": "Press I for the measure tool and pick Distance in the tool options."
+    },
+    {
+      "do": "Click the left edge of a button, then its right edge."
+    },
+    {
+      "do": "Move the pointer into the narrow space just under that button and hold it there: the real number rides under the pointer.",
+      "shot": "2026-09-12-distance-parking-clearance-2.png"
+    },
+    {
+      "do": "Click to park it.",
+      "shot": "2026-09-12-distance-parking-clearance-1.png"
+    },
+    {
+      "do": "Look at the gap between the button and the number: it should be clear air, not the number touching the button."
+    },
+    {
+      "do": "Undo, and this time park the number well below the button, out in open space."
+    },
+    {
+      "do": "Check that one: the number should be centred exactly on the spot you clicked."
+    },
+    {
+      "do": "Drag the caliper's middle handle up and down and watch the number keep its air as it passes the button."
+    }
+  ],
+  "evaluate": [
+    "Parking into the tight spot under the button: does the number land where you were aiming, or does it feel like the app moved it on you?",
+    "Is the air under the button now the same air you see under a Size measurement of the same button?",
+    "With the number no longer centred on the caliper's bar, does the bar still read as belonging to the number?",
+    "Out in open space, does the click still feel like it means exactly what it says?",
+    "While you aim, the preview shows the number already slid clear. Is that enough warning, or does the slide still surprise you on the click?"
+  ],
+  "rough": [
+    "The number only stands off things the app can see in the picture. Measure across empty canvas, or over an element the edge detection misses, and there is nothing to keep clear of, so the click is simply the middle.",
+    "With the new caliper selected, the blue head handle now sits right on the top edge of the number instead of being hidden under it, because the number is no longer centred on the bar. It is readable but slightly untidy.",
+    "Where nothing in reach is clear (a caliper boxed in between two full-width rows), the number keeps the classic centred spot rather than travelling, which is the answer picked in the earlier boxed-in decision. So in that one case it can still end up touching a row.",
+    "Screen Recording was granted for this run, so both pictures are real window captures from Scripts/playtest/distance-three-clicks.json and Scripts/playtest/distance-parking-preview.json, not offscreen renders."
+  ]
+}
