@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 260,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:03:31.418Z",
-  "updated": "2026-09-12T09:30:57.442916Z",
+  "updated": "2026-09-12T09:31:08.043Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-09 with a playtest walk on the probe build. A caliper was placed with the magnets off at feet (600, 500) to (800, 500), reading 100 px. One click at (795, 504), five points off the right foot dot, no drag: feet became (600, 504) to (795, 504), reading 98 px. Both ends moved and the number changed, from a click. Walk used: /tmp/foot-click.json (steps: open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, key i, distance mode, three command-clicks to place, key v, describe, click at [795, 504] with command, describe).\n\nWhy: the handle grab has about nine points of tolerance around the dot (Sources/Photonz/CanvasPointerDrags.swift, mouseDown, the measureHandleDrag branch) and seeds MeasureHandleDrag with current = the press point rather than the handle point. mouseUp then commits drag.params() unconditionally (same file, the measureHandleDrag branch of mouseUp), and params() puts the dragged foot at current and levels the opposite foot onto it. So a press that never travels still commits the press point.\n\nThe fix wants the same shape the caption drag already has a few lines below in mouseUp: it measures how far the thing actually travelled and calls onCaptionPlaceCancel() when it did not, so no history step is taken and the render settles back. A foot drag should do the equivalent, and the head/readout drag needs the same treatment since it commits the same way. There is now a moved flag on MeasureHandleDrag, set on the first mouse-moved event, which is most of the answer already.\n\nFound while building holding-shift-while-dragging-a-caliper-end-keeps; it predates that work and was deliberately left alone there to keep that change small.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-09-12T09:30:57.442916Z",
       "note": "Audit written: queue/audits/2026-09-12-measure-click-holds.json, with a real window capture (Screen Recording was granted this run) at queue/audits/2026-09-12-caliper-click-holds.png."
+    },
+    {
+      "t": "2026-09-12T09:31:08.041Z",
+      "note": "A press on a caliper foot or its readout that never travels now commits nothing and takes no undo step. New pure MeasureHandlePress in PhotonzCore (6 tests, written first) decides when a press becomes a drag at 2 view points, the same threshold the caption pill uses; CanvasPointerDrags gates the preview and the commit on it, and the Esc and tool-switch paths use it too. Verified on the probe build with a new walk, Scripts/playtest/caliper-click-holds-walk.json: the bug reproduced first (100 px became 98 px from one click), and after the fix a foot click, a chip click and a one-point jiggle all leave it at 100 px with both feet unmoved, a real drag still reads 150 px, one undo steps straight back to the placed caliper, and the shift hold and magnets are unchanged. 5 caliper, 7 measure, 2 snap-hold and 3 redline walks pass; Scripts/test.sh green at 5571 tests. Audit queue/audits/2026-09-12-measure-click-holds.json with a real window capture. Follow-up filed at p2-normal: a foot still jumps to the pointer once the drag starts, reproduced (hand 6 right, foot 2 left). Commit 10e815e7, pushed."
     }
   ],
-  "started": "2026-09-12T09:23:00.310Z"
+  "started": "2026-09-12T09:23:00.310Z",
+  "completed": "2026-09-12T09:31:08.042Z"
 }

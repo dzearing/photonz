@@ -14099,3 +14099,32 @@ in the harness can press a footer row or see the resize dialog. Filed p2
 `a-walk-can-press-a-command-row-at-the-foot-of-a`.
 
 Next: whatever the loop picks up next from `p1-high`.
+
+## 2026-09-12 — Clicking a measurement end does not move it
+
+Fixed the bug where taking hold of a measurement changed it. A caliper's
+feet and its readout are grabbed with about nine points of slack around the
+dot, and mouseUp committed wherever the press landed whether or not the
+pointer had moved, so a click meant only to take hold moved the end under
+the pointer, levelled the other end onto it, and silently changed the
+reading. Reproduced first on the probe build (100 px became 98 px from one
+click), then fixed.
+
+A press is now only an edit once the hand has travelled two view points,
+the same threshold the arrow caption pill already uses. The decision lives
+in a new pure `MeasureHandlePress` in PhotonzCore with tests written first;
+`CanvasPointerDrags` gates both the live preview and the commit on it, and
+the Esc cancel and the tool-switch abandon use the same gate (the latter
+previously dropped a previewed drag without putting the render back).
+
+Verified with a new walk, `Scripts/playtest/caliper-click-holds-walk.json`.
+5 caliper, 7 measure, 2 snap-hold and 3 redline walks pass; `Scripts/test.sh`
+green at 5571 tests. Audit at
+`queue/audits/2026-09-12-measure-click-holds.json` with a real window capture.
+
+Next / open: a foot still jumps to the pointer once the drag does start, so
+a short pull can move it the opposite way from the hand (reproduced: hand 6
+points right, foot 2 points left). Filed at p2-normal as "A measurement end
+follows your hand instead of jumping to it". Fixing it means teaching the
+magnets to judge the point the end is going to rather than the point the
+pointer is on, which is why it was kept out of this change.
