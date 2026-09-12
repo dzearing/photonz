@@ -4999,6 +4999,21 @@ private final class Run {
                     : (reading.value.map { "\(Int($0.rounded()))" } ?? "none")
                 return "\(body) ×\(selection.count)"
             }(),
+            // The row the Appearance panel actually SHOWS, which over a group
+            // is not the same row: it reads the curve on screen rather than the
+            // group's own invisible mask, and its knob starts where the group's
+            // contents already are rather than at the far left with a dead
+            // stretch of track in front of it (`ContainerRounding.swift`).
+            // Printed as "<reading> from <floor> ×<count>".
+            "cornerRadiusShown": {
+                let selection = editor.corneredRadiusSelection
+                guard !selection.isEmpty else { return "none" }
+                let reading = selection.reading
+                let body = reading.isMixed
+                    ? "mixed"
+                    : (reading.value.map { "\(Int($0.rounded()))" } ?? "none")
+                return "\(body) from \(Int(selection.floor.rounded())) ×\(selection.count)"
+            }(),
             "shapeSection": editor.shapeSelection.title,
             // What the toolbar swatch is showing: the outline and the inside
             // the tool in your hand would draw with. Painting a shape from the

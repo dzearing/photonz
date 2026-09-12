@@ -1,0 +1,28 @@
+{
+  "feature": "Corner Radius over a group",
+  "epic": "ui-components",
+  "summary": "Pick a group whose contents fill it, like a button made of a rounded box with a label on top, and Corner Radius now reads the curve you can see instead of nought, and the very first nudge of the slider rounds the button. It used to read nought with the knob at the far left, and the first fifth of the pull did nothing at all.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to turn on: this rides the Appearance panel that Next already shows.",
+  "try": [
+    { "do": "Draw a rectangle and round its corners to about 18." },
+    { "do": "Type a word on top of it with the Text tool, keeping the word inside the box." },
+    { "do": "Select both and press Command G to group them." },
+    { "do": "Read the Corner Radius row in Appearance. It says 18 px, not 0 px.", "shot": "2026-09-12-corner-over-a-group-1.png" },
+    { "do": "Nudge the Corner Radius slider right by one notch and watch the button get rounder straight away." },
+    { "do": "Try to drag the slider below 18. It will not go, and resting on it says what is inside is already rounded 18 px." },
+    { "do": "Undo back to the loose rectangle and pick it on its own. Its row still reads 18 and still pulls all the way down to 0." }
+  ],
+  "evaluate": [
+    "Reading 18 over the group instead of 0: does that match what your eye tells you the button is?",
+    "The knob sits at the far left and will not go lower. Did that read as broken, or as the bottom of the range?",
+    "Was the tooltip enough to explain why it will not go lower, or does the row need to say it out loud?",
+    "One nudge of the slider now rounds the button immediately. Does that feel like the right amount of response?",
+    "Does the row still behave the way you expect over a plain rectangle and over a screenshot?"
+  ],
+  "rough": [
+    "The half of this that is NOT fixed: a group with room around its contents, which is the exact case the task was filed from. Group a button, set Padding to 16, and Corner Radius still reads 0, and pulling it rounds nothing but the dashed selection outline, which disappears the moment you click away. The second picture is that group pulled to 22: the button is untouched. A decision card is open asking what that slider should round.",
+    "The knob at the far left reading 18 looks exactly like the old knob at the far left reading 0. The number is right and the pull works from the first nudge, but nothing on the row itself says the track starts at 18. Only the tooltip does.",
+    "Went against the task's own suggestion. The task guessed the row should probably disappear over a group, following the precedent that room is not offered as a knob when nothing can show it. That turned out to be wrong: the row does real work over a group, it was just counting from the wrong place. Rounding a group past its contents visibly rounds the button, so hiding the row would have taken away a working control.",
+    "A group whose contents are already as round as the box goes, like a pill, has nothing left to pull, so the slider turns itself off. That is honest but silent: it looks the same as a slider you simply have not grabbed yet."
+  ]
+}

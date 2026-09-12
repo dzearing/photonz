@@ -31,12 +31,19 @@ public struct CornerRadiusSelection: Hashable, Sendable {
         /// is a part of its look. A rectangle curves the outline it draws
         /// instead, which is part of the shape rather than part of the look.
         public let roundsViaStyle: Bool
+        /// The lowest this layer's corners can be taken. Nought for everything
+        /// that rounds itself; for a group, the curve its contents already
+        /// have, because a group masks its corners off and a mask can never put
+        /// a curve back (`ContainerRounding.swift`).
+        public let floor: CornerRadii
 
-        public init(id: UUID, radii: CornerRadii, limit: CGFloat, roundsViaStyle: Bool) {
+        public init(id: UUID, radii: CornerRadii, limit: CGFloat, roundsViaStyle: Bool,
+                    floor: CornerRadii = .none) {
             self.id = id
             self.radii = radii
             self.limit = limit
             self.roundsViaStyle = roundsViaStyle
+            self.floor = floor
         }
     }
 
@@ -101,6 +108,18 @@ public struct CornerRadiusSelection: Hashable, Sendable {
         max(1, members.map { Double($0.limit) }.max() ?? 1)
     }
 
+    /// Where the knob STARTS: the lowest anything picked can be taken.
+    ///
+    /// Over a group whose contents are already round this is their curve, so
+    /// the knob sits where the eye says it should instead of at the far left
+    /// with a dead stretch of track in front of it. It is the LOWEST floor in
+    /// the selection for the same reason `limit` is the highest: a group that
+    /// cannot go below 18 must not stop the plain box picked with it going all
+    /// the way down.
+    public var floor: Double {
+        members.map { Double($0.floor.uniform ?? $0.floor.largest) }.min() ?? 0
+    }
+
     /// The one picked layer whose rounding is a part of its look that a copy
     /// of a component can own, when exactly one is picked and it rounds that
     /// way. It is what puts the "follow the original again" arrow on this row,
@@ -162,9 +181,17 @@ extension PhotonzDocument {
     /// (`InstanceRounding.swift`). Asked for by the panel that has a Component
     /// section to hand the number to; the release before it asks for the row
     /// exactly as it always did.
+    ///
+    /// `readingWhatShows` makes the row speak for the picture rather than for
+    /// the model underneath it: over a group, it reads the curve on screen and
+    /// stops where the group's contents already are, instead of reading a
+    /// mask nobody can see and leaving a dead stretch at the start of the pull
+    /// (`ContainerRounding.swift`). Asked for by the panel that reads what is
+    /// drawn; the release before it asks for the row exactly as it always did.
     public func cornerRadiusSelection(layerIDs: [UUID],
                                       cornersOnly: Bool = false,
                                       skippingKnobbedCopies: Bool = false,
+                                      readingWhatShows: Bool = false,
                                       style: (Layer) -> LayerStyle = { $0.style })
     -> CornerRadiusSelection {
         var members: [CornerRadiusSelection.Member] = []
@@ -173,11 +200,15 @@ extension PhotonzDocument {
             guard !cornersOnly || layer.hasCorners else { continue }
             guard !skippingKnobbedCopies || !roundingIsAKnob(layerID: id) else { continue }
             let bounds = layer.localBounds
+            let shown = readingWhatShows
+                ? layer.shownCornerRadii(style: style(layer))
+                : displayedCornerRadii(of: layer, style: style(layer))
             members.append(CornerRadiusSelection.Member(
                 id: id,
-                radii: displayedCornerRadii(of: layer, style: style(layer)),
+                radii: shown,
                 limit: max(1, min(bounds.width, bounds.height) / 2),
-                roundsViaStyle: !layer.roundsItsOwnOutline))
+                roundsViaStyle: !layer.roundsItsOwnOutline,
+                floor: readingWhatShows ? layer.cornerRadiusFloor : .none))
         }
         return CornerRadiusSelection(members: members, selectionCount: layerIDs.count)
     }
@@ -196,18 +227,29 @@ extension PhotonzDocument {
     /// One pull, every picked layer, each rounded the way it rounds. Returns
     /// how many took it, so a caller can tell a no-op from an edit. Locked
     /// layers are left exactly as they are.
+    ///
+    /// `onlyWhatShows` writes a container nothing but the part of the number
+    /// that does something. A group masks its corners off and a mask can never
+    /// put a curve back, so a number at or under the curve its contents already
+    /// have leaves the group carrying no mask at all rather than one that cuts
+    /// nothing: square the button inside it later and it goes square with it,
+    /// instead of staying clipped to a curve nobody chose
+    /// (`ContainerRounding.swift`).
     @discardableResult
-    public mutating func setCornerRadii(layerIDs: [UUID], to radii: CornerRadii) -> Int {
+    public mutating func setCornerRadii(layerIDs: [UUID], to radii: CornerRadii,
+                                        onlyWhatShows: Bool = false) -> Int {
         let radii = radii.used
         var changed = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
+            let floor = onlyWhatShows ? layer.cornerRadiusFloor : .none
+            let wanted = floor.isRound ? radii.doingSomethingOver(floor) : radii
             // Each layer rounded the way it rounds, and the other number put to
             // nought: two radii fighting over one rectangle is the thing this
             // row exists to end (`ComponentNumberKnob.swift`, which is where a
             // number knob on a copy rounds from too, so the two can never
             // disagree).
-            updateLayer(id: id) { $0.setRoundedCorners(radii) }
+            updateLayer(id: id) { $0.setRoundedCorners(wanted) }
             changed += 1
         }
         return changed
@@ -226,11 +268,17 @@ extension PhotonzDocument {
     /// opened corner row writes.
     @discardableResult
     public mutating func setCornerRadius(layerIDs: [UUID], corner: CornerRadii.Corner,
-                                         to radius: CGFloat) -> Int {
+                                         to radius: CGFloat,
+                                         onlyWhatShows: Bool = false) -> Int {
         var changed = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
-            updateLayer(id: id) { $0.setRoundedCorner(corner, to: radius) }
+            // The same rule the one slider follows: over a container, a number
+            // at or under the curve its contents already have cuts nothing, so
+            // it is not written at all.
+            let floor = onlyWhatShows ? layer.cornerRadiusFloor[corner] : 0
+            let wanted = radius > floor ? radius : 0
+            updateLayer(id: id) { $0.setRoundedCorner(corner, to: wanted) }
             changed += 1
         }
         return changed

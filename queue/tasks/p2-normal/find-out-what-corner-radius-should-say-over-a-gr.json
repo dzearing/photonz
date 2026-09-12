@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:19:55.263Z",
-  "updated": "2026-09-09T12:23:40.961Z",
+  "updated": "2026-09-12T10:58:58.647Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while fixing two-rows-called-corner-radius-on-one-copy-hold-d, on a probe build of that fix. Reproduce: Scripts/probe-app.sh then Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json --no-build, and look at path-4-knobs-sc.png: the original Save button is picked, Appearance reads Corner Radius 0 px with its slider at minimum, and the button under it is drawn with an 18pt curve. The walks describe at 4-knobs prints cornerRadius 0 x1 for the picked group.\n\nThis is NOT the copy bug that was just fixed: there is only one row here (the original section lists its knobs by name, not by value), so nothing on screen disagrees with anything else. It is the softer question of whether a group should show its own mask at all when nothing is painted to its edges. Layer.spendsRoom in LayerPlacement.swift is the nearby precedent: room is not offered as a knob when nothing can show it. The corner mask wants a geometric version of the same test, and the risk of hiding the row is that it is jumpy, appearing and disappearing as the contents are moved. Could easily be a decision card for the user rather than a fix. Files: Sources/PhotonzCore/CornerRadiusSelection.swift (hasCorners), Sources/Photonz/PartsInspector.swift.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-09T12:23:40.960Z",
       "note": "seq 100 -> 110"
+    },
+    {
+      "t": "2026-09-12T10:58:58.646Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T00:00:00.000Z",
+      "note": "Reproduced first. Scripts/playtest.sh Scripts/playtest/component-whole-path-walk.json, path-4-knobs-sc.png: the picked Save button group reads Corner Radius 0 px, knob at the far left, over a button drawn with an 18pt curve. Confirmed."
+    },
+    {
+      "t": "2026-09-12T00:00:00.000Z",
+      "note": "The task's hypothesis was wrong, and the evidence overturned it. The note guessed the row should probably vanish over a group, following Layer.spendsRoom. It should not: a probe walk pulling the group to 24 visibly rounded the button (canvas render diff in the button region, and the corners are plainly rounder in the capture). The row does real work over a group. It was never dead, it was OFFSET: a group rounds by masking, a mask can cut a corner away but never put a curve back, so the stretch of the pull below the contents' own curve did nothing at all."
+    },
+    {
+      "t": "2026-09-12T00:00:00.000Z",
+      "note": "Answer, acceptance 1: Corner Radius over a group should read WHAT IS DRAWN, not the group's invisible box, and it should stop where the contents already are. Reading = the group's own mask and its contents' curve, whichever cuts more. Bottom stop = the contents' curve. Writing = only the part of a number that does something, so pulling back down leaves the group carrying no mask rather than one that cuts nothing."
+    },
+    {
+      "t": "2026-09-12T00:00:00.000Z",
+      "note": "Shipped: PhotonzCore/ContainerRounding.swift (containedCornerRadii, shownCornerRadii, cornerRadiusFloor) plus 22 tests in ContainerRoundingTests.swift, all green; cornerRadiusSelection gains readingWhatShows and setCornerRadii/setCornerRadius gain onlyWhatShows, both defaulted off so the current release reads and writes exactly as before; EditorState routes them through Experiments.shared.shapePartsEnabled so only Next is touched; the row's track now starts at selection.floor and explains itself in its tooltip."
+    },
+    {
+      "t": "2026-09-12T00:00:00.000Z",
+      "note": "Acceptance 2 and 3 claimed by Scripts/playtest/corner-over-a-group-walk.json, on a probe build: plain-rounded-box PANEL 18 from 0 (a plain rectangle is unaffected and still pulls to 0), group-picked PANEL 18 from 18 (was 0), pulled-past-the-contents PANEL 22 from 18. Added cornerRadiusShown to the harness describe so a walk can read the row the Appearance panel actually shows."
+    },
+    {
+      "t": "2026-09-12T00:00:00.000Z",
+      "note": "Full suite green: 5636 tests. Walks re-run against a probe built from THIS tree after an earlier stash check rebuilt it clean: component (16 ok), group (8 ok), knob (2 ok), round (4 ok), corner (7, one flaky). corner-radius-rounds-walk failed once then passed; reproduced the identical failure on a clean tree with this work stashed, so it is pre-existing and is filed as the-colour-popover-never-opens-in-the-corner-rad."
+    },
+    {
+      "t": "2026-09-12T00:00:00.000Z",
+      "note": "Blocked on the other half, which is a product decision rather than an engineering one. The case the task was filed from has 16pt of padding, so the group's corners are EMPTY and reading 0 is truthful. But its slider runs to 76 and the crop does not reach the button until about 73: pulling it to 22 changed nothing on the canvas but the dashed selection marquee, with the button's pixels identical before and after (/tmp/photonz-playtest/padded-group, pad-1-before.png vs pad-2-at22.png). Whether that slider should reach through and round the button is the user's call, so it is a decision card, not a guess."
     }
-  ]
+  ],
+  "started": "2026-09-12T10:58:58.645Z"
 }

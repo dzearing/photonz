@@ -1,0 +1,56 @@
+{
+  "id": "find-out-what-corner-radius-should-say-over-a-gr-when-you-pick-a-group-and-pull-c",
+  "taskId": "find-out-what-corner-radius-should-say-over-a-gr",
+  "question": "When you pick a group and pull Corner Radius, what should get rounder?",
+  "context": "Picking a group that holds a rounded button showed Corner Radius 0 while the button was plainly round. Where the button fills the group edge to edge that is now fixed and shipped: the row reads the button curve and the first nudge rounds it. Where there is room around the button it still reads 0, and pulling it rounds nothing but the dashed selection outline, which disappears as soon as you click away. Proven on a probe build: the button pixels are identical before and after the pull.",
+  "options": [
+    {
+      "id": "inside",
+      "label": "Round what is inside it",
+      "summary": "Pick the group and pull Corner Radius, and the shape inside gets rounder, however much room is around it. The number always describes something you can see on the canvas.",
+      "pros": [
+        "Pick a group called Save button, pull Corner Radius, the button rounds. That is what people came for.",
+        "The slider always does something. There is no stretch of it that changes nothing.",
+        "One row means one thing over every group, whether its contents fill it or sit in from the edges."
+      ],
+      "cons": [
+        "Cropping a group by its own corners stops being something this row does, so it needs another way in if anyone wants it.",
+        "A group holding several different shapes has to decide what inside means."
+      ],
+      "mitigation": "A group holding several shapes rounds all of them together, exactly the way picking several shapes at once and pulling the row already works."
+    },
+    {
+      "id": "crop",
+      "label": "Keep it a crop, and show the crop",
+      "summary": "The row goes on rounding the group own box, but while you pull, the box being rounded is drawn on the canvas, so the pull is never invisible even when it is cutting empty space.",
+      "pros": [
+        "Nothing changes meaning, so nothing has to be relearned.",
+        "Cropping a group by its corners stays reachable, which is the one thing the other option gives up.",
+        "Honest: it shows you the thing the number is about."
+      ],
+      "cons": [
+        "The number still reads 0 beside a button that is plainly round.",
+        "You still cannot round the button from here, which is the reason most people reach for the row."
+      ],
+      "mitigation": "The drawn box appears only while the knob is held, so it is not one more thing on the canvas the rest of the time."
+    },
+    {
+      "id": "leave",
+      "label": "Leave it as it is",
+      "summary": "Groups whose contents fill them keep the fix that just shipped. Groups with room around their contents go on reading 0, and pulling the row goes on rounding only the dashed selection outline.",
+      "pros": [
+        "No further work and nothing new to learn.",
+        "The common case, a button whose box is its background, already reads right."
+      ],
+      "cons": [
+        "The exact case this was filed from stays broken.",
+        "A slider that changes nothing but the selection outline is the thing you objected to on 2026-09-07."
+      ],
+      "mitigation": "The tooltip could at least say the row rounds the group box rather than what is in it.",
+      "declines": true
+    }
+  ],
+  "recommended": "inside",
+  "status": "pending",
+  "created": "2026-09-12T11:25:24.709Z"
+}

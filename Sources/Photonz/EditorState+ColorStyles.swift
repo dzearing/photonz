@@ -316,6 +316,15 @@ extension EditorState {
         return document.cornerRadiusSelection(layerIDs: colorStyleTargetIDs)
     }
 
+    /// Whether the Corner Radius row speaks for the PICTURE rather than for
+    /// the model underneath it, which is the panel that reads what is drawn
+    /// (`PartsInspector`, `next-shape-parts`). Over a group it reads the curve
+    /// on screen, stops where the group's contents already are, and writes the
+    /// group nothing but the part of a number that does something
+    /// (`PhotonzCore/ContainerRounding.swift`). The release before it reads and
+    /// writes exactly as it always did.
+    private var roundsOnlyWhatShows: Bool { Experiments.shared.shapePartsEnabled }
+
     /// The document as the corner rows should READ it: the one being edited,
     /// plus whatever a corner dot being pulled on the canvas is showing. A
     /// number that says 0 over a shape that is visibly round is the row lying
@@ -323,7 +332,8 @@ extension EditorState {
     private var cornerReadingDocument: PhotonzDocument? {
         guard var document else { return nil }
         guard let preview = cornerRadiiPreview else { return document }
-        document.setCornerRadii(layerIDs: preview.ids, to: preview.radii)
+        document.setCornerRadii(layerIDs: preview.ids, to: preview.radii,
+                                onlyWhatShows: roundsOnlyWhatShows)
         return document
     }
 
@@ -342,7 +352,7 @@ extension EditorState {
         // previous drag left there would be read back as the current look.
         stylePreview = nil
         discardDragPreview()
-        doc.setCornerRadii(layerIDs: ids, to: radii)
+        doc.setCornerRadii(layerIDs: ids, to: radii, onlyWhatShows: roundsOnlyWhatShows)
         // The rows read this while the drag is in flight, so what the panel
         // says and what the canvas draws are the same number.
         cornerRadiiPreview = (ids, radii)
@@ -362,7 +372,7 @@ extension EditorState {
         guard !ids.isEmpty, let doc = document else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { $0.setCornerRadii(layerIDs: ids, to: radii) }
+        perform { $0.setCornerRadii(layerIDs: ids, to: radii, onlyWhatShows: roundsOnlyWhatShows) }
         if ids.contains(where: { doc.layer(id: $0)?.annotation?.shape == .rectangle }) {
             annotationStyles.setCornerRadii(radii, forShape: .rectangle)
             saveAnnotationStyles()
@@ -375,7 +385,8 @@ extension EditorState {
         guard !ids.isEmpty, var doc = document else { return }
         stylePreview = nil
         discardDragPreview()
-        doc.setCornerRadius(layerIDs: ids, corner: corner, to: radius)
+        doc.setCornerRadius(layerIDs: ids, corner: corner, to: radius,
+                            onlyWhatShows: roundsOnlyWhatShows)
         submit(doc)
     }
 
@@ -384,7 +395,8 @@ extension EditorState {
         guard !ids.isEmpty, let doc = document else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { $0.setCornerRadius(layerIDs: ids, corner: corner, to: radius) }
+        perform { $0.setCornerRadius(layerIDs: ids, corner: corner, to: radius,
+                                     onlyWhatShows: roundsOnlyWhatShows) }
         if let shaped = ids.first(where: { doc.layer(id: $0)?.annotation?.shape == .rectangle }),
            let radii = document?.layer(id: shaped)?.roundedCornerRadii {
             annotationStyles.setCornerRadii(radii, forShape: .rectangle)
@@ -550,7 +562,8 @@ extension EditorState {
             return CornerRadiusSelection(members: [], selectionCount: 0)
         }
         return document.cornerRadiusSelection(layerIDs: colorStyleTargetIDs, cornersOnly: true,
-                                              skippingKnobbedCopies: true)
+                                              skippingKnobbedCopies: true,
+                                              readingWhatShows: true)
     }
 
     /// What Appearance says in place of the Corner Radius row it handed over to
