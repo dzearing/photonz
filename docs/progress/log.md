@@ -14269,3 +14269,43 @@ group, median 6.8ms).
 
 Next: `a-piece-inside-a-turned-card-moves-on-its-own` is the follow-up, but
 the audit asks the user first whether they want pieces editable on the slant.
+
+## 2026-09-12 — one copy can wear its own text style
+
+The decision card from 2026-09-09 was already answered ("A copy can wear its
+own style"), so this session built it. A saved text style let go on the words
+inside a copy of a component used to be refused with a sentence naming the two
+moves that do work; both are bigger than what somebody aiming at one button
+meant. Now it lands, on that copy and nothing else.
+
+The record is `PhotonzCore/ComponentPieceTextStyle.swift`: the layer inside the
+original it reaches, the type, and the name it came from — the same shape a
+colour answer has, and for the same two reasons. Editing the style later
+reaches the copy wearing it; taking the style off the shelf leaves the copy
+wearing exactly the type it had. It is put on in the sync that runs after every
+edit, after the knob answers, so the original's picture arrives whole and the
+copy's own few facts go over the top: re-wording the original still reaches a
+copy that chose its own type.
+
+Deliberately not a knob, and that is the one place this differs from every
+other per-copy fact. A knob is exposed by the original, which is what keeps
+adjusting from becoming drifting, but a style arrives from outside the
+component in one gesture, often onto a copy whose original somebody else drew,
+so there is nobody to ask first. Honesty comes instead from the copy saying so:
+an "Its own type" row beside "Its own size" and "Its own look", reading
+"Label in Heading", with the same one press way back.
+
+The second adversarial pass, on the probe, caught the app putting
+"Updated 1 copy of Button" on screen after a drop on one copy — the app
+repeating your own action back at you. A drop that landed entirely inside
+copies now announces nothing; a drop on the ORIGINAL's words still does,
+because then the copies that moved are the news.
+
+Verified: 5690 tests green, `style-on-a-copy-walk` rewritten for the new
+behaviour, and all 9 copy walks and all 16 component walks passing, with real
+window captures in the audit. Two text-style walks fail at a panelMenu "Size"
+step; reproduced on clean main with this work stashed, so filed on its own.
+
+Next: the piece's own panel still says nothing about the type it was given, and
+a style let go on a copy's ROW in the layers list is still refused. Both are in
+the audit's rough list for the user to weigh in on.
