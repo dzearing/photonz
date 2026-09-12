@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:27:56.619Z",
-  "updated": "2026-09-12T12:29:19.609455Z",
+  "updated": "2026-09-12T12:29:29.790Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Landed 2026-09-09 with the spelled-out canvas name (queue/audits/2026-09-09-copy-names.json). The word drawn is CanvasNameChip.word (live caption); the rename target is still canvasRenameVersion(of:) in Sources/Photonz/CanvasNames.swift, which reads the RESTING caption. Cheapest honest fix is probably to open the field over just the version part of the words, so the box lines up with the letters it will replace.",
@@ -66,7 +66,12 @@
     {
       "t": "2026-09-12T12:29:19.609455Z",
       "note": "Audit: queue/audits/2026-09-12-rename-which-word.json with two real screen captures."
+    },
+    {
+      "t": "2026-09-12T12:29:29.788Z",
+      "note": "The typing box now opens over the letters it will replace: a drawing reading 'Primary · Disabled' keeps 'Primary · ' printed in front and the box sits on 'Disabled' alone. Core geometry (Caption.versionPrefix, CanvasNameLabels.fieldBox) with 5 new tests; Scripts/test.sh green at 5667 tests; verified on the probe with real screen captures in queue/audits/2026-09-12-rename-which-word.json. Committed 0bc08681."
     }
   ],
-  "started": "2026-09-12T12:23:30.132Z"
+  "started": "2026-09-12T12:23:30.132Z",
+  "completed": "2026-09-12T12:29:29.789Z"
 }
