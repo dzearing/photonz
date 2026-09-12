@@ -466,7 +466,11 @@ public extension PhotonzDocument {
         func collect(_ list: [Layer], origin: CGPoint) {
             for layer in list {
                 guard layer.isVisible, !dragged.contains(layer.id) else { continue }
-                if !ancestors.contains(layer.id) {
+                // A layer with nothing painted on it has no edge on screen,
+                // so it is nothing to line up with: left in, its empty box at
+                // the top left corner would pull every drag towards a layer
+                // you cannot even see.
+                if !ancestors.contains(layer.id), !layer.hasNothingOnIt {
                     // The box a person can SEE: a label lines up by its last
                     // letter, not by the empty room past it.
                     boxes.append(layer.contentBounds.offsetBy(dx: origin.x, dy: origin.y))

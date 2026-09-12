@@ -1413,6 +1413,9 @@ private final class Run {
             case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
             case .newLayerViaCopy: editor.newLayerViaCopy()
+            case .newLayer: editor.newEmptyLayer()
+            case .fillWithForeground: editor.fillSelectedLayer(useBackground: false)
+            case .fillWithBackground: editor.fillSelectedLayer(useBackground: true)
             case .renameSelectedLayer:
                 if let id = editor.selectedLayerID {
                     editor.renameLayer(id: id, to: "Renamed Layer")
@@ -2191,7 +2194,22 @@ private final class Run {
                 [box.placeholderString, box.accessibilityLabel()].compactMap { $0 }
             }
             guard let match = boxes.first(where: { labels($0).contains(where: matches) }) else {
-                return (false, "", "", boxes.compactMap { labels($0).first }.filter { !$0.isEmpty })
+                // A number a person can see but cannot type into is not a box
+                // at all: it is a readout, and it says its words to the probe
+                // rather than to accessibility (`PanelReadoutProbe`). Ask
+                // those too, or a field that goes read-only goes dark to a
+                // walk at the very moment what it says matters most — which is
+                // how the Position & Size numbers vanished from a walk the day
+                // a layer with nothing on it started reporting dashes.
+                let readings = try namedPanelReadings()
+                func lastPart(_ name: String) -> String {
+                    name.components(separatedBy: " \u{25B8} ").last ?? name
+                }
+                if let reading = readings.first(where: { matches(lastPart($0.name)) }) {
+                    return (true, reading.reads, reading.reads, [])
+                }
+                let names = boxes.compactMap { labels($0).first }.filter { !$0.isEmpty }
+                return (false, "", "", names + readings.map { lastPart($0.name) })
             }
             // While a field is being typed into, the words live in the window's
             // field editor and the control still holds the value it had before

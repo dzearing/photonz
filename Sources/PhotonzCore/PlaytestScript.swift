@@ -465,6 +465,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the one that decides whether the marquee takes the layer you picked or
     /// every layer flattened together.
     case newLayerViaCopy
+    /// Layer ▸ New Layer (⌘N): a fresh empty layer on top, with the marquee
+    /// left up so the select → new layer → fill flow can be walked. A menu
+    /// chord like the rest of the Layer menu, so this is a walk's way in.
+    case newLayer
+    /// Edit ▸ Fill with Foreground (⌥⌫) and Fill with Background. Both are
+    /// menu rows, and the first carries a chord the field editor claims for
+    /// itself, so a walk asks for them here rather than through the keyboard.
+    case fillWithForeground, fillWithBackground
     /// Expose the first piece of the selected original that could take a
     /// wording knob (Next, `next-components`, step C6). The Add menu is in the
     /// dock, which a walk cannot reach with the pointer, so this is how a knob

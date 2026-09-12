@@ -168,6 +168,13 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// instead, in the same words the hover tip uses, so the reason is where
     /// the eye already is rather than one hover away.
     public var caption: String {
+        // A layer with nothing painted on it has no numbers at all, so the
+        // line says that rather than promising numbers somebody else worked
+        // out. It comes first: a lock on a layer with no pixels is not what is
+        // stopping you typing a width into it.
+        if !members.isEmpty, members.allSatisfy(\.editing.hasNoBox) {
+            return count > 1 ? Self.nothingOnThemYet : LayerGeometryEditing.nothingOnItReason
+        }
         if isLocked {
             // The hover tip for X already says everything a locked layer has to
             // say, including the half a stack or a grid owns rather than the
@@ -216,6 +223,9 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         return "\(head) \(Self.letters(typeable)) land on every one of them. "
             + "Arrow steps them by 1, Shift by 10."
     }
+
+    /// The same for several layers picked at once, all of them still empty.
+    static let nothingOnThemYet = "There is nothing on any of these layers yet, so they have no position or size. Paint or fill something and each box will be whatever you put there."
 
     /// What the line says when NONE of the four takes a number and no lock is
     /// the reason. There is no keyboard to describe, so it points at the thing

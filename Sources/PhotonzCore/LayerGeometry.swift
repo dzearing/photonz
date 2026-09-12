@@ -262,6 +262,11 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// position: the room around it is the group's Padding.
     public static let huggedReason = "The group this is in is as big as what is inside it, so the room around this is the group's Padding in the Layout section."
 
+    /// Why a layer with nothing painted on it has no numbers at all. Its box
+    /// is the pixels it has, and it has none yet, so all four fields are a
+    /// dash rather than a position and a size that describe nothing.
+    public static let nothingOnItReason = "There is nothing on this layer yet, so it has no position or size. Paint or fill something and its box will be whatever you put there."
+
     /// Why nothing on a locked layer can be typed. All three of the things
     /// this section holds are named, because it is also the caption for a
     /// locked selection and a sentence that stopped at size would be the panel
@@ -393,6 +398,12 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// to say the same thing in the plural.
     public let containerOwnsPosition: Bool
 
+    /// Whether this layer has nothing painted on it, so it has no box and none
+    /// of the four numbers means anything. The panel needs it apart from the
+    /// reasons because the line under the fields says it once for the whole
+    /// selection rather than four times over.
+    public var hasNoBox: Bool { !hasABox }
+
     /// Whether a lock is what is stopping this layer. It is the one state that
     /// takes all four numbers away at once and for a single reason, which is
     /// why the panel can say it in one line under the fields instead of making
@@ -404,6 +415,11 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// drawn between two points and their box is padding around the stroke, so
     /// its width was never a number about the shape.
     private let frameIsTheShape: Bool
+
+    /// Whether this layer has a box at all. A layer with nothing painted on it
+    /// has none (`Layer.hasNothingOnIt`), and a panel reporting 0, 0, 0 by 0
+    /// for it would be four numbers that describe nothing.
+    private let hasABox: Bool
 
     /// The narrowest a typed width may make this layer, and the shortest a
     /// typed height may. A text box stops at the width its drag stops at, so
@@ -478,6 +494,9 @@ public struct LayerGeometryEditing: Hashable, Sendable {
             .map { LayerSizeHold(limit: $0, rule: .layoutSection) }
         minimumHeight = max(heightFloor?.limit ?? 0, LayerGeometry.minimumSide)
         frameIsTheShape = !layer.hasEndpointHandles
+        // Nothing painted on it yet, so there is no box: the four numbers are
+        // dashes and the line under them says what to do about it.
+        hasABox = !layer.hasNothingOnIt
         isLocked = layer.isLocked
         // Turning, decided the same way the canvas decides whether to float
         // the knob above the outline (`EditorState.offersRotation`). A shape
@@ -493,9 +512,13 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         } else {
             nil
         }
-        turnsAtAll = cannotTurn == nil
+        turnsAtAll = cannotTurn == nil && hasABox
         canRotate = turnsAtAll && !layer.isLocked
-        rotationReason = cannotTurn ?? (layer.isLocked ? Self.lockedReason : nil)
+        rotationReason = if !hasABox {
+            Self.nothingOnItReason
+        } else {
+            cannotTurn ?? (layer.isLocked ? Self.lockedReason : nil)
+        }
         // A container that arranges its contents, or that closes around them,
         // owns where they sit; one that was given a size on both axes and
         // arranges nothing leaves them exactly where you put them.
@@ -503,6 +526,18 @@ public struct LayerGeometryEditing: Hashable, Sendable {
             $0.arranges || $0.hugsWidth || $0.hugsHeight ? $0 : nil
         }
         containerOwnsPosition = owningLayout != nil
+        // A layer with nothing on it comes first, before the lock and before
+        // the container: there is no number to take, so there is nothing for
+        // either of them to be the reason for.
+        if !hasABox {
+            canMove = false
+            canSetWidth = false
+            canSetHeight = false
+            widthReason = Self.nothingOnItReason
+            heightReason = Self.nothingOnItReason
+            moveReason = Self.nothingOnItReason
+            return
+        }
         if layer.isLocked {
             canMove = false
             canSetWidth = false
@@ -589,6 +624,10 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// caliper still shows no size — its box is padding around a stroke, and a
     /// width that never matched the shape you drew is worse than a blank.
     public func shows(_ field: LayerGeometryField) -> Bool {
+        // A layer with nothing on it shows none of the four. Zeroes here would
+        // be a position and a size that describe nothing, which is exactly
+        // what the dash is for.
+        guard hasABox else { return false }
         switch field {
         case .x, .y: return true
         case .width, .height: return frameIsTheShape

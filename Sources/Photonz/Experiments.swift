@@ -442,6 +442,13 @@ extension Experiments {
     /// nothing about one is restored, which is exactly how it behaved before.
     var selectionUndoEnabled: Bool { isEnabled(FeatureCatalog.selectionUndoFlag) }
 
+    /// Whether a layer's box is the pixels it actually has: a new layer with
+    /// nothing on it has no size, and filling a marquee box leaves the layer
+    /// exactly that box.
+    var layerBoxIsItsPixelsEnabled: Bool {
+        isEnabled(FeatureCatalog.layerBoxIsItsPixelsFlag)
+    }
+
     /// `next-copy-picks-your-layer`: whether the layer you picked survives a
     /// marquee. On, ⌘C takes that layer's pixels inside the marquee and ⇧⌘C
     /// is Copy Merged; off, the marquee supersedes the layer and ⌘C hands back

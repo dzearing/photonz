@@ -1,0 +1,30 @@
+{
+  "feature": "A layer's box is the pixels it actually has",
+  "epic": "ui-building",
+  "summary": "A new layer now has no size until you paint something on it, and filling a marquee box leaves the layer exactly that box instead of claiming the whole picture. Painting again somewhere else grows the box to take the new paint in and no further.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"A layer is the size of the pixels on it\", on by default.",
+  "try": [
+    { "do": "Open any picture, or press Shift Command N for a blank canvas." },
+    { "do": "Press Command N to make a new layer.", "shot": "2026-09-12-layer-box-1-empty-sc.png" },
+    { "do": "Read Position & Size: all five numbers should be dashes, with a line saying the layer has nothing on it." },
+    { "do": "Press M for the marquee and drag a box somewhere in the middle." },
+    { "do": "Press B for the paint bucket and click inside the box.", "shot": "2026-09-12-layer-box-2-filled-sc.png" },
+    { "do": "Read Position & Size again: it should be exactly the box you drew." },
+    { "do": "Drag a second marquee well clear of the first and fill that too.", "shot": "2026-09-12-layer-box-3-grown-sc.png" },
+    { "do": "Press Command Z once and watch both the colour and the box come back together." }
+  ],
+  "evaluate": [
+    "When the new layer reports dashes instead of numbers, is it obvious that nothing is wrong, or does it read as the panel failing to load?",
+    "Is the line under the fields the right thing to say, or would you rather the section just showed nothing at all until the layer has pixels?",
+    "A new layer has no handles on the canvas and cannot be clicked on there, only picked in the layers list. Does that feel right, or do you want something on screen to grab?",
+    "After the second fill the box spans both patches with transparent space between them, which is what Photoshop does. Is that the box you expected, or did you expect a box round just the newest paint?",
+    "The row thumbnail for an empty layer is a plain grey well, the same as a thumbnail that has not rendered yet. Should an empty layer look different from a loading one?"
+  ],
+  "rough": [
+    "Erasing every pixel of a layer still DELETES the layer rather than leaving it empty, which is what it did before. Now that an empty layer is a real state, Photoshop's answer would be to keep it. Left alone deliberately: the task asked for the erase direction to stay as it is, and it is worth deciding rather than changing quietly.",
+    "An empty layer still offers Opacity, Blending and Corner Radius in Appearance. They do nothing until there are pixels, but they are settings you are arming for the paint to come, so they were left live.",
+    "Screen Recording was granted, so every picture here is a real capture of the window, not an offscreen render.",
+    "Memory: an empty layer used to hold a transparent sheet the size of the picture. On a 12 megapixel document that is about 48 MB per empty layer; it now holds a single transparent pixel, 4 bytes. A stack of ten scratch layers used to cost about 480 MB of nothing.",
+    "A walk could not read the Position & Size numbers at all once they stopped being typeable, because the probe only ever looked at boxes you can type in. Fixed on the way past, so a read-only number can now be claimed by a walk."
+  ]
+}

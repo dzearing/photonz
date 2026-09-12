@@ -103,7 +103,14 @@ extension EditorState {
             guard let solid = Self.solidImage(hex: hex) else { return }
             solidRef = store.register(solid)
         }
-        guard let filled = Fill.filled(layer, colorHex: hex, solidRef: solidRef) else { return }
+        guard var filled = Fill.filled(layer, colorHex: hex, solidRef: solidRef) else { return }
+        // Filling a layer with no marquee up fills the WHOLE layer, and on a
+        // layer with nothing on it the whole of it is the picture — the same
+        // answer Photoshop gives. Without this the colour would land on a box
+        // with no size and nothing would appear.
+        if layer.hasNothingOnIt, let canvas = document?.canvasSize {
+            filled.frame = CGRect(origin: .zero, size: canvas)
+        }
         discardDragPreview()
         perform { $0.updateLayer(id: id) { $0 = filled } }
         recordRecentColor(hex: hex)
@@ -211,11 +218,53 @@ extension EditorState {
 
     /// Fills the selection region with `hex` into the target image layer's
     /// pixels. The selection stays up afterwards (Photoshop).
+    ///
+    /// The layer comes out the size of the pixels it now has
+    /// (`RegionFill`): a box filled on a layer with nothing on it makes the
+    /// layer exactly that box, and paint that lands outside the box grows it
+    /// to take the new paint in. That is the same rule a region delete already
+    /// follows in the other direction, and the colour and the new box land in
+    /// ONE undo step, so a single ⌘Z puts both back.
+    ///
+    /// The locked Background is the exception, exactly as it is for a delete:
+    /// it must stay the size of the picture, so it takes the plain bake.
     @discardableResult
     func fillRegion(hex: String, into id: UUID) -> Bool {
+        if Experiments.shared.layerBoxIsItsPixelsEnabled,
+           document?.layer(id: id)?.isLocked == false {
+            return fillRegionSizingTheLayer(hex: hex, into: id)
+        }
         let filled = bakeRegion(into: id) { RegionOps.filled($0, path: $1, hex: hex) }
         if filled { recordRecentColor(hex: hex) }
         return filled
+    }
+
+    /// The fill that leaves the layer the size of its pixels. Separate from
+    /// `bakeRegion` because that one paints INTO the bitmap it was handed and
+    /// can only ever keep the box it already had; this one may hand back a
+    /// bigger sheet, a smaller one, or the layer's first one.
+    private func fillRegionSizingTheLayer(hex: String, into id: UUID) -> Bool {
+        guard let region = selection, let document,
+              let layer = document.layer(id: id), layer.imageRef != nil,
+              layer.crop == nil, layer.transform.isIdentity else { return false }
+        // A layer with a box but no bitmap in the store is not a layer this can
+        // reason about; one with nothing on it has no bitmap by design.
+        let bitmap = layer.imageRef.flatMap { store.image(for: $0) }
+        guard bitmap != nil || layer.hasNothingOnIt else { return false }
+        guard let painted = RegionFill.fill(image: bitmap, frame: layer.frame,
+                                            path: region.path, hex: hex,
+                                            pixelsPerPoint: document.pixelScale,
+                                            within: CGRect(origin: .zero,
+                                                           size: document.canvasSize))
+        else { return false }
+        let newRef = store.register(painted.image)
+        discardDragPreview()
+        perform { $0.updateLayer(id: id) {
+            $0.content = .image(newRef)
+            $0.frame = painted.frame
+        } }
+        recordRecentColor(hex: hex)
+        return true
     }
 
     /// ⌫ with a pixel region: SLICE the target image layer — erase the
@@ -357,21 +406,32 @@ extension EditorState {
         dragPreview = nil
     }
 
-    /// Layer ▸ New Layer: a canvas-sized transparent image layer on top,
-    /// selected — with the selection region PRESERVED, so select → new layer
-    /// → fill lands paint on the fresh layer (the Photoshop flow).
+    /// Layer ▸ New Layer: an empty image layer on top, selected — with the
+    /// selection region PRESERVED, so select → new layer → fill lands paint on
+    /// the fresh layer (the Photoshop flow).
+    ///
+    /// It has NO BOX. Nothing has been painted on it, so it has no size to
+    /// report, no handles, and no sheet of transparent pixels behind it: on a
+    /// twelve megapixel picture that sheet was about 48 MB of nothing. The
+    /// first paint gives it its box (`fillRegion`).
     func newEmptyLayer() {
         guard let document else { return }
         let size = document.canvasSize
-        let w = Int(size.width.rounded()), h = Int(size.height.rounded())
+        // One transparent pixel rather than a picture-sized sheet: a layer has
+        // to reference a bitmap to be a picture at all, and this is the
+        // smallest one that says "a picture with nothing on it yet".
+        let pixels = Experiments.shared.layerBoxIsItsPixelsEnabled
+            ? CGSize(width: 1, height: 1) : size
+        let frame = Experiments.shared.layerBoxIsItsPixelsEnabled
+            ? CGRect.zero : CGRect(origin: .zero, size: size)
+        let w = Int(pixels.width.rounded()), h = Int(pixels.height.rounded())
         guard w > 0, h > 0, let space = CGColorSpace(name: CGColorSpace.sRGB),
               let context = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8,
                                       bytesPerRow: w * 4, space: space,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
               let transparent = context.makeImage() else { return }
         let ref = store.register(transparent)
-        let layer = Layer(name: "Layer", content: .image(ref),
-                          frame: CGRect(origin: .zero, size: size))
+        let layer = Layer(name: "Layer", content: .image(ref), frame: frame)
         perform { $0.addLayer(layer) }
         selectedLayerID = layer.id
     }

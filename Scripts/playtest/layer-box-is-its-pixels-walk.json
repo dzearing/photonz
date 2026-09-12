@@ -1,0 +1,309 @@
+{
+  "out": "/tmp/photonz-playtest/layer-box-is-its-pixels",
+  "seed": "A layer's box is the pixels it actually has. The walk makes a new layer and checks it reports no size at all, fills a marquee box on it and checks the layer became exactly that box, paints again outside the box and checks it grew to take the new paint in, undoes both, and finishes on the locked Background to prove it still keeps the size of the picture.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "row": "Layer",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "\u2013"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "\u2013"
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "reads": "\u2013"
+    },
+    {
+      "do": "describe",
+      "stage": "1-empty-layer",
+      "note": "THE FIRST TEST: a brand new layer with nothing painted on it. Its tree entry should read 0x0, and Position and Size should be dashes rather than the whole 1200 by 800 picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "layerbox-1-empty"
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        200
+      ],
+      "to": [
+        500,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "fill"
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-filled-box",
+      "note": "THE SECOND TEST: a 200 by 200 box was filled on the empty layer, so the layer's tree entry should read (300, 200, 200, 200) - the box, not the picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "layerbox-2-filled"
+    },
+    {
+      "do": "render",
+      "name": "layerbox-2-filled-doc"
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        500
+      ],
+      "to": [
+        800,
+        600
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "fill"
+    },
+    {
+      "do": "click",
+      "at": [
+        750,
+        550
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-grown",
+      "note": "THE THIRD TEST: painting again outside the box grows it to take the new paint in and no further, so the tree entry should read (300, 200, 500, 400) - from the first box's top left to the second box's bottom right"
+    },
+    {
+      "do": "snapshot",
+      "name": "layerbox-3-grown"
+    },
+    {
+      "do": "render",
+      "name": "layerbox-3-grown-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-undo",
+      "note": "THE FOURTH TEST: one Command Z puts back both the colour and the box, so the layer is back to (300, 200, 200, 200) in a single press"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-two-undos",
+      "note": "the second press takes back the marquee that was drawn between the two fills, which is a step of its own now that a marquee is undoable, so the layer stays where the first fill left it"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-back-to-nothing",
+      "note": "THE FIFTH TEST: undoing the first fill takes the layer back to having nothing on it at all, 0x0, so nothing about the new state is one way"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "\u2013"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        100
+      ],
+      "to": [
+        300,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "fill"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "6-background-keeps-the-picture",
+      "note": "THE EXCEPTION: the locked Background takes the same fill and keeps the size of the picture, (0, 0, 1200, 800). It must never shrink to the box that was filled on it"
+    },
+    {
+      "do": "snapshot",
+      "name": "layerbox-6-background"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "fillWithForeground"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "1200"
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "reads": "800"
+    },
+    {
+      "do": "describe",
+      "stage": "7-no-marquee-fills-the-lot",
+      "note": "THE OTHER EXCEPTION: filling with NO marquee up still fills the whole layer, and the whole of a layer with nothing on it is the picture, so the second Layer reads (0, 0, 1200, 800)"
+    },
+    {
+      "do": "snapshot",
+      "name": "layerbox-7-no-marquee"
+    }
+  ]
+}

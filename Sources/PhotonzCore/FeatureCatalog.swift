@@ -116,6 +116,8 @@ public enum FeatureCatalog {
 
     public static let marqueeIntentFlag = "next-a-box-says-what-it-picks"
 
+    public static let layerBoxIsItsPixelsFlag = "next-a-layer-is-its-pixels"
+
     public static let lensFlag = "next-lens"
 
     public static let blendModeFlag = "next-blend-mode"
@@ -564,6 +566,15 @@ public enum FeatureCatalog {
                     name: pasteHandsYouThePointerFlag,
                     title: "A new picture hands you the pointer",
                     description: "Paste something, or drag a picture in from the Finder, and you are left holding the pointer with the new thing picked, so the obvious next move, dragging it where you want it, works straight away. Before this you kept whatever tool you had, and a drag on the thing you just added drew a new shape over it instead of moving it. The marquee you had up is cleared, since the new thing is what you are working on now. Undo hands your tool back: press Command Z and the rectangle, arrow or brush you were using is in your hand again, and redo takes the pointer back up. Pasting several times in a row still steps each copy past the last, each one picked in turn, and undoing the run puts back the tool you started with. A picture let go on a row in the layers list, and one placed off the Library shelf, arrive the same way. Off means paste and drop leave the tool alone, the way they always did.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: layerBoxIsItsPixelsFlag,
+                    title: "A layer is the size of the pixels on it",
+                    description: "A layer's box follows what is painted on it. Make a new layer and it has nothing on it, so it has no size at all: no handles, and Position and Size read as dashes with a line saying to paint something. Before this a new layer claimed the whole picture the moment it was made, so the handles went round the entire image and the numbers described nothing, and it cost a full sheet of transparent pixels nobody could see. Fill a marquee box on it and the layer becomes exactly that box, in one undo step with the colour. Paint again somewhere else on the same layer and the box grows to take the new paint in and no further, stopping at the edge of the picture. This is the other half of a rule the app already had: taking a piece out of a layer with Backspace already shrinks it to the pixels that survive. The locked Background is the exception either way and keeps the size of the picture. Filling with no marquee up still fills the whole layer, and on a layer with nothing on it that means the whole picture. Off means a new layer is picture-sized from birth and a filled box leaves it that way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

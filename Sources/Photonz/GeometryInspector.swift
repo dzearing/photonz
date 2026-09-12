@@ -476,10 +476,16 @@ private struct GeometryReadout: View {
         .buttonStyle(.plain)
         .panelHelp(help)
         .playtestControl(field.label, detail: "Position & Size")
+        // A readout is a row with a number on it, the same as a field is, so a
+        // walk can ask what it reads. Without this the four numbers went dark
+        // to a walk the moment they stopped being typeable, which is exactly
+        // when what they say matters most.
+        .playtestField(field.label)
     }
 
     private var number: some View {
         Text(text)
+            .panelReadout(text)
             .font(.system(size: 11))
             .monospacedDigit()
             .foregroundStyle(.secondary)

@@ -443,6 +443,11 @@ extension EditorState {
     /// The panel row thumbnail: cached per layer, re-rendered asynchronously
     /// whenever the layer changes (the hash covers content, frame, and style).
     func thumbnail(for layer: Layer) -> CGImage? {
+        // A layer with nothing on it has no picture to make. Asking anyway
+        // gets nil back every time, and a nil is never cached, so the row
+        // would order a fresh render on every redraw for a picture that
+        // cannot exist: 95 renders for one new layer, measured on 2026-09-12.
+        guard !layer.hasNothingOnIt else { return nil }
         let hash = layer.hashValue
         if let cached = thumbnailCache[layer.id], cached.hash == hash { return cached.image }
         guard let doc = document else { return thumbnailCache[layer.id]?.image }

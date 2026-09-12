@@ -105,6 +105,13 @@ public enum Handles {
     /// where it is a picture.
     public static func layout(in frame: CGRect, zoom: CGFloat) -> HandleLayout {
         let z = zoom > 0 ? zoom : 1
+        // A box with no size is a layer with nothing on it. Eight squares
+        // stacked on one point is a target you can grab and a resize that
+        // multiplies nothing, so it offers none: paint something and the
+        // handles arrive with the pixels.
+        guard frame.standardized.width > 0, frame.standardized.height > 0 else {
+            return HandleLayout(frame: frame, handles: [], outset: .zero)
+        }
         let crampedX = frame.width * z < crampedSpan
         let crampedY = frame.height * z < crampedSpan
         return HandleLayout(

@@ -35,6 +35,22 @@ extension Layer {
         return false
     }
 
+    /// Whether this layer has nothing painted on it yet, so it has no box.
+    ///
+    /// A layer's box is the pixels it actually has. A brand new layer has
+    /// none, so it has no size to report, no handles to put round it and
+    /// nothing for a drag to line itself up with — it is a place for paint to
+    /// land, and the first paint gives it its box.
+    ///
+    /// Only a picture can be in this state. A line or an arrow is drawn
+    /// between two ends and its box is flat on purpose, so a zero there is the
+    /// shape rather than the absence of one.
+    public var hasNothingOnIt: Bool {
+        guard imageRef != nil, !hasEndpointHandles else { return false }
+        let box = frame.standardized
+        return box.width <= 0 || box.height <= 0
+    }
+
     /// A measure reference point's position in document coordinates.
     public func measureEndpoint(_ endpoint: AnnotationEndpoint) -> CGPoint? {
         guard let m = measure else { return nil }
