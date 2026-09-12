@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:52:03.358Z",
-  "updated": "2026-09-12T12:04:47.659Z",
+  "updated": "2026-09-12T12:22:40.623Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced. Noticed on 2026-09-09 while adding the angle field: Sources/Photonz/CanvasGroups.swift offersOwnHandles excludes a component piece (componentPiece(of:) != nil), but Sources/PhotonzCore/LayerGeometry.swift LayerGeometryEditing takes only the layer and its container and has no idea about components, so nothing in it can refuse on those grounds. I did not get as far as selecting a piece inside a copy in the probe to watch it happen, so this is an open question rather than a bug. To check: Scripts/probe-app.sh, drop a Button from the Library, step into the copy, pick the label inside it, type an X and watch.\n\nANSWERED 2026-09-12. The panel already refuses, so there is nothing to do.\n\nWhat it does today: with a piece inside a copy picked, Position & Size is not on the panel at all. InspectorPanel.swift:791 subtracts it, with colour, effects, type, layout and arrange, in sectionsAPieceDoesNotOwn: 'A piece INSIDE a copy owns nothing.' The only section left is Component, which names the piece and its original and offers Select Copy, Edit Original and Detach. Watched in the probe, five expect claims, screenshot piecegeo-8-no-numbers-for-a-piece-sc.png.\n\nThe original note was right that LayerGeometryEditing has no idea about components: over a piece it returns canMove=true canSetWidth=true canRotate=true with fixedReason nil on every field, and writing x=999 onto that piece then syncing restores x=20. It simply never gets asked, because the section is gone before it would be. That is the right height for the refusal: a piece owns none of its colour, type or effects either, and five dead boxes with a sentence under each would say the same thing five times. LayerGeometryEditing's doc comment now says so.\n\nThe note also assumed you reach a piece by stepping into a copy on the canvas. You cannot: Document.hitTestPath folds a copy's contents into the copy (Document.swift:332) and Layer.isOpenableGroup is false for a copy (ComponentInstances.swift:33), so a click, a double click, a band and the Layers list all land on the whole copy. The route that DOES put a piece in the selection is Library > Styles > Select What Uses This, because a piece carries its original's style bindings.\n\nWalks: Scripts/playtest/piece-geometry-walk.json (the routes, and the panel over a piece), Scripts/playtest/style-users-walk.json (the style route). Tests: ComponentPieceEditingTests aClickOnAPiecePicksTheWholeCopy, aDoubleClickCannotStepIntoACopy, theLayersListNeverOpensACopy.",
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-12T12:21:41.803937Z",
       "note": "Closed as nothing to do on the panel. Shipped the evidence so the answer does not have to be found again: two walks, three tests in ComponentPieceEditingTests pinning that no gesture reaches a piece, a corrected note on LayerGeometryEditing saying where the refusal actually lives, and a playtestControl tag on Select What Uses This so a walk can press it. Filed one p2 follow-up about the Layers list saying 4 layers selected while only two of them have rows. No audit: nothing new to try in the app."
+    },
+    {
+      "t": "2026-09-12T12:22:40.621Z",
+      "note": "The panel already refuses. With a piece inside a copy picked there is no Position & Size section at all: InspectorPanel subtracts it with colour, effects, type and layout (sectionsAPieceDoesNotOwn), leaving one Component section that names the piece and its original. LayerGeometryEditing would offer all five fields and never gets asked. Watched in the probe: piece-geometry-walk claims X, Y, W, H and A all absent over a piece, and that a click, a double click, a band and the Layers list every one land on the whole copy; style-users-walk pins Select What Uses This, the one route that does put a piece in the selection. Nothing changed in the app; full suite and both walks green. Filed one p2 about the Layers list saying 4 layers selected over two visible rows."
     }
   ],
-  "started": "2026-09-12T12:04:47.657Z"
+  "started": "2026-09-12T12:04:47.657Z",
+  "completed": "2026-09-12T12:22:40.622Z"
 }
