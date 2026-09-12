@@ -12,7 +12,7 @@
 
     { "do": "click", "at": [400, 420] },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-copy", "note": "THE CLAIM: a copy of a component picked. Layout ran 502-771 (269 points) before 2026-09-06, with two three-line paragraphs in it. It should now be well under 200, and its Arrangement and Padding rows should read Free and 10/16/10/16 as plain words." },
+    { "do": "describe", "stage": "1-copy", "note": "THE CLAIM: a copy of a component picked. Layout ran 502-771 (269 points) before 2026-09-06, with two three-line paragraphs in it. It should now be well under 200, and its Arrangement and Padding rows should read Free and 9/16/9/16 as plain words." },
     { "do": "panel", "stage": "1-copy" },
     { "do": "snapshot", "name": "layout-fits-1-copy" },
 
@@ -22,7 +22,7 @@
     { "do": "panel", "stage": "2-original" },
     { "do": "snapshot", "name": "layout-fits-2-original" },
 
-    { "do": "scrollPanel", "by": -200, "row": "Layout section" },
+    { "do": "scrollPanel", "by": -280, "row": "Layout section" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "press", "control": "Each side" },
     { "do": "wait", "seconds": 0.6 },
@@ -40,7 +40,7 @@
     { "do": "type", "text": "20" },
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "5-typed-over-closed", "note": "THE THIRD CLAIM: nothing became unsettable. One number typed over the closed field still gives every side the same, so the Button grows by the 4 it gained on the left and the right and the 10 it gained top and bottom." },
+    { "do": "describe", "stage": "5-typed-over-closed", "note": "THE THIRD CLAIM: nothing became unsettable. One number typed over the closed field still gives every side the same, so the Button grows by the 4 it gained on the left and the right and the 11 it gained top and bottom." },
     { "do": "panel", "stage": "5-typed-over-closed" },
     { "do": "snapshot", "name": "layout-fits-5-typed-over-closed" },
     { "do": "render", "name": "layout-fits-5-typed-over-closed-doc" }

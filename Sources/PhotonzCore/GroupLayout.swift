@@ -130,8 +130,11 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// everything stays where it was put, and the box is as big as the pieces
     /// plus the room at the edges, on either axis that was given no size.
     public static func free(padding: GroupPadding = .none,
-                            width: CGFloat? = nil, height: CGFloat? = nil) -> GroupLayout {
-        GroupLayout(kind: nil, padding: padding, width: width, height: height)
+                            width: CGFloat? = nil, height: CGFloat? = nil,
+                            minWidth: CGFloat? = nil,
+                            minHeight: CGFloat? = nil) -> GroupLayout {
+        GroupLayout(kind: nil, padding: padding, width: width, height: height,
+                    minWidth: minWidth, minHeight: minHeight)
     }
 
     public init(kind: GroupLayoutKind?,

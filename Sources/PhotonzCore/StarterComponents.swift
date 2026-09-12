@@ -346,14 +346,22 @@ public enum StarterComponents {
     /// card 520 pixels wide rather than a half-size one.
     private static func layout(_ kind: StarterComponent, _ pen: Pen) -> GroupLayout? {
         switch kind {
+        // A button is 36 tall the way a real one is: that is the SHORTEST it
+        // ever gets, not a lid on it. Set its label in 32 point and the pill
+        // grows around the words the same way a longer label makes it wider,
+        // instead of leaving the words hanging out of the top and the bottom
+        // (reported 2026-09-09). The room above and below is what decides the
+        // height once the words outgrow the floor, so it is the room a 36 tall
+        // button has: with the label it arrives with, both answers are 36 and
+        // nothing about the starter has changed.
         case .button:
-            .free(padding: GroupPadding(top: pen.px(10), right: pen.px(16),
-                                        bottom: pen.px(10), left: pen.px(16)),
-                  height: pen.px(36))
+            .free(padding: GroupPadding(top: pen.px(9), right: pen.px(16),
+                                        bottom: pen.px(9), left: pen.px(16)),
+                  minHeight: pen.px(36))
         case .badge:
-            .free(padding: GroupPadding(top: pen.px(3), right: pen.px(8),
-                                        bottom: pen.px(3), left: pen.px(8)),
-                  height: pen.px(20))
+            .free(padding: GroupPadding(top: pen.px(2), right: pen.px(8),
+                                        bottom: pen.px(2), left: pen.px(8)),
+                  minHeight: pen.px(20))
         case .textField:
             .free(padding: GroupPadding(top: pen.px(8), right: pen.px(10),
                                         bottom: pen.px(8), left: pen.px(10)),
@@ -383,17 +391,36 @@ public enum StarterComponents {
         let noun = kind.contentsNoun
         let width = layout?.usedWidth
         let height = layout?.usedHeight
+        let body: String
         switch (width, height) {
         case (let w?, let h?):
-            return "A box \(number(w)) points wide and \(number(h)) points tall."
+            body = "A box \(number(w)) points wide and \(number(h)) points tall"
         case (let w?, nil):
-            return "\(number(w)) points wide, and as tall as \(noun) "
-                + "with the room above and below."
+            body = "\(number(w)) points wide, and as tall as \(noun) "
+                + "with the room above and below"
         case (nil, let h?):
-            return "As wide as \(noun) with the room either side, and \(number(h)) points tall."
+            body = "As wide as \(noun) with the room either side, and \(number(h)) points tall"
         case (nil, nil):
-            return "As wide as \(noun) with the room either side, "
-                + "and as tall as it with the room above and below."
+            body = "As wide as \(noun) with the room either side, "
+                + "and as tall as it with the room above and below"
+        }
+        return body + floor(layout) + "."
+    }
+
+    /// The floor under a side that is otherwise the size of its contents: the
+    /// number that keeps a button a button when its label is one letter. Only
+    /// a side that HUGS says it, because a side with a size of its own is
+    /// already that size and a floor under it would never come up.
+    private static func floor(_ layout: GroupLayout?) -> String {
+        guard let layout else { return "" }
+        let width = layout.hugsWidth ? layout.usedMinWidth : nil
+        let height = layout.hugsHeight ? layout.usedMinHeight : nil
+        switch (width, height) {
+        case (let w?, let h?):
+            return ", never under \(number(w)) by \(number(h)) points"
+        case (let w?, nil): return ", never under \(number(w)) points wide"
+        case (nil, let h?): return ", never under \(number(h)) points tall"
+        case (nil, nil): return ""
         }
     }
 

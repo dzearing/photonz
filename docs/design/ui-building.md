@@ -2604,8 +2604,8 @@ depends on what the thing IS:
 
 | Starter | What it is the size of |
 | --- | --- |
-| Button | As wide as its label with the room either side, and 36 points tall. |
-| Badge | As wide as its count with the room either side, and 20 points tall. |
+| Button | As wide as its label with the room either side, and as tall as it with the room above and below, never under 36 points tall. |
+| Badge | As wide as its count with the room either side, and as tall as it with the room above and below, never under 20 points tall. |
 | Text Field | 220 points wide, and as tall as its placeholder with the room above and below. |
 | Card | 260 points wide, and as tall as everything on it with the room above and below. |
 | Nav Bar | A box 320 points wide and 48 points tall. |

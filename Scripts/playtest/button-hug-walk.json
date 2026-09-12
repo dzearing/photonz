@@ -36,7 +36,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "action", "action": "showInspector" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "4-layout-section", "note": "the Button's Layout section: Arrangement Free, Width Hug, Height Fixed, and Padding showing the room it keeps" },
+    { "do": "describe", "stage": "4-layout-section", "note": "the Button's Layout section: Arrangement Free, Width Hug, Height Hug with a Smallest of 36, and Padding showing the room it keeps" },
     { "do": "snapshot", "name": "hug-4-layout-section" },
     { "do": "panel", "stage": "4-layout-section" },
 

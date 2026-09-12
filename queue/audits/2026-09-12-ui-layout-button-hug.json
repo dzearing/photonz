@@ -1,0 +1,28 @@
+{
+  "feature": "A button grows when a style makes its words bigger",
+  "epic": "ui-layout",
+  "summary": "Set a button's label in bigger type, by hand or by letting a saved text style go on it, and the pill now grows around the words instead of leaving them hanging out of the top and the bottom. A button is 36 points tall the way a real one is: that is the shortest it ever gets, not a lid on it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components and saved styles are on by default. Start from a blank canvas.",
+  "try": [
+    { "do": "Open the Components shelf and drag a Button onto the canvas.", "shot": "2026-09-12-button-hug-arrives.png" },
+    { "do": "Type some words on the canvas with the text tool, then pick them and set them to Georgia, 32 px, Bold." },
+    { "do": "On the Text section's Style row choose Save as Style, name it Heading, press Return." },
+    { "do": "Drag the Heading tile off the Library shelf and let it go on the word inside the Button.", "shot": "2026-09-12-button-hug-grown.png" },
+    { "do": "Pick the Button and open the Layout section: Height now says Hug, with Smallest 36 under it." },
+    { "do": "Set the label back to 14 px and watch the pill settle back to 36 tall rather than shrinking to the size of the word." },
+    { "do": "Drop a Badge and do the same to its count: it floors at 20 and grows from there." }
+  ],
+  "evaluate": [
+    "When the pill grows, does the word look centred in it, or does it sit low?",
+    "Is 36 the right shortest a button should ever be, now that it is a floor rather than a fixed height?",
+    "The Layout section now opens the Height limits by itself on every button, so Smallest 36 is always showing. Is that two rows well spent, or noise?",
+    "Should a Nav Bar do this too, or is a bar genuinely a fixed height whatever its title is set in?",
+    "Dropping a style also brings the style's colour, so the label went black on blue. Is that what you expect, or should a drop keep the colour the words already had?"
+  ],
+  "rough": [
+    "The words sit a touch low in a grown pill. The pill closes around the text box, and that box carries the room a descender would need even when the word has none, so 'Button' looks lower than it is. Left alone: it is the same measurement every other piece of text is placed by, and changing it is its own piece of work.",
+    "Only the Button and the Badge changed. A Nav Bar is still a fixed 48 tall, so a 32 px title in one still overhangs it.",
+    "The Button's room above and below now reads 9 rather than 10, and the Badge's 2 rather than 3. That is what keeps them arriving at exactly 36 and 20, the sizes they have always been, now that the room is what decides the height rather than a number typed over it. Nothing about the starters looks different until the type changes.",
+    "The screenshots are real captures of the window: the Screen Recording grant was in place for this run."
+  ]
+}

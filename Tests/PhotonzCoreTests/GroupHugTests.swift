@@ -397,6 +397,94 @@ struct GroupHugTests {
         #expect(history.current.layer(id: mainID)?.localBounds.width == before)
     }
 
+    // MARK: - Bigger words, not just longer ones
+
+    /// Sets one piece of text in a bigger (or smaller) size and re-fits its
+    /// box around it, which is what every route that changes type does — the
+    /// Size menu, a saved style let go on the words, a style re-set.
+    private func setType(_ history: inout History, _ id: UUID, size: CGFloat) {
+        history.perform { doc in
+            doc.updateLayer(id: id) { piece in
+                guard var treatment = piece.textTreatment else { return }
+                treatment.fontSize = size
+                piece.setTextTreatment(treatment)
+                piece = piece.textRefitted(hugging: true, anchor: .center)
+            }
+        }
+    }
+
+    /// The complaint behind this one: a saved text style let go on a button's
+    /// label sets the words in 32 point Georgia, the pill stays the height it
+    /// was, and the words hang out of the top and the bottom of it.
+    ///
+    /// Typing a longer label already widened the button. Setting the SAME
+    /// label in bigger type has to grow it too, because to the person doing it
+    /// there is no difference: both are "I changed the words and the button
+    /// did not follow".
+    @Test("Bigger type makes a starter button grow around its label")
+    func biggerTypeGrowsTheButton() {
+        var history = History(document: document())
+        var buttonID: UUID?
+        history.perform { buttonID = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
+        guard let buttonID, let before = history.current.layer(id: buttonID),
+              let label = before.children.first(where: { $0.name == "Label" })
+        else { Issue.record("no button"); return }
+        let room = before.group?.layout?.usedPadding ?? .none
+        setType(&history, label.id, size: 32)
+        guard let after = history.current.layer(id: buttonID),
+              let grown = after.children.first(where: { $0.name == "Label" }),
+              let surface = after.children.first(where: { $0.name == "Background" })
+        else { Issue.record("the button lost a piece"); return }
+        #expect(grown.contentBounds.height > label.contentBounds.height)
+        // The pill is as tall as the words plus the room above and below...
+        #expect(after.localBounds.height
+                == room.top + grown.contentBounds.height + room.bottom)
+        // ...so no part of the words is outside it, which is the whole bug.
+        #expect(grown.contentBounds.maxY <= after.localBounds.height)
+        #expect(grown.contentBounds.minY >= 0)
+        // ...and the surface behind them took the new box.
+        #expect(surface.frame == CGRect(origin: .zero, size: after.localBounds.size))
+    }
+
+    /// ...and the floor under it still holds, so a button does not shrink to
+    /// the height of one small word. The starter arrives at exactly the size
+    /// it always did.
+    @Test("A starter button still arrives 36 tall")
+    func theButtonStillArrivesAtItsOwnHeight() {
+        var history = History(document: document())
+        var buttonID: UUID?
+        history.perform { buttonID = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
+        guard let buttonID, let button = history.current.layer(id: buttonID)
+        else { Issue.record("no button"); return }
+        #expect(button.localBounds.height == 36)
+        #expect(button.group?.layout?.hugsHeight == true)
+        #expect(button.group?.layout?.usedMinHeight == 36)
+        // Smaller words cannot pull it under the floor either.
+        guard let label = button.children.first(where: { $0.name == "Label" })
+        else { Issue.record("no label"); return }
+        setType(&history, label.id, size: 8)
+        #expect(history.current.layer(id: buttonID)?.localBounds.height == 36)
+    }
+
+    /// The badge is the same shape of thing — a word in a pill — so it answers
+    /// the same way.
+    @Test("Bigger type grows a starter badge, and it still arrives 20 tall")
+    func biggerTypeGrowsTheBadge() {
+        var history = History(document: document())
+        var badgeID: UUID?
+        history.perform { badgeID = $0.insertStarterComponent(.badge, at: CGPoint(x: 100, y: 100)) }
+        guard let badgeID, let before = history.current.layer(id: badgeID),
+              let count = before.children.first(where: { $0.name == "Count" })
+        else { Issue.record("no badge"); return }
+        #expect(before.localBounds.height == 20)
+        setType(&history, count.id, size: 32)
+        guard let after = history.current.layer(id: badgeID),
+              let grown = after.children.first(where: { $0.name == "Count" })
+        else { Issue.record("the badge lost a piece"); return }
+        #expect(after.localBounds.height > 20)
+        #expect(grown.contentBounds.maxY <= after.localBounds.height)
+    }
+
     // MARK: - What gets written down
 
     @Test("A group that hugs writes no arrangement, and one that never had a layout writes nothing")

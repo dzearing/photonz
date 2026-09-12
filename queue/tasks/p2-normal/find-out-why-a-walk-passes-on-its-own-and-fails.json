@@ -1,0 +1,27 @@
+{
+  "id": "find-out-why-a-walk-passes-on-its-own-and-fails",
+  "title": "Find out why a walk passes on its own and fails in a batch",
+  "goal": "Some scripted walks pass when run one at a time but fail when several are run one after another, saying a menu they need is not on screen. That makes a batch run report failures that are not real, so a person reading it cannot tell a broken feature from a leftover from the walk before.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2470,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T13:05:13.746Z",
+  "updated": "2026-09-12T13:05:13.749Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED on 2026-09-12, twice, on the working tree for the button-hug task.\n\n  $ Scripts/playtest-all.sh --no-build style styled starter\n  ...\n  text-style-walk    16s  FAILED  step 58 (panelMenu): no menu called \"Size\" is in the window; the ones that are: 100% 58.0pt wide at x 869.0 says \"Choose a zoom level...\"\n  ==> 14 passed, 1 failed\n\nThe first run of the same 15-walk batch failed BOTH text-style-walk (step 58) and text-style-arming-walk (step 73) with the identical message; the second run failed only text-style-walk, so it is not fully deterministic.\n\nEach of those walks passes on its own:\n  $ Scripts/playtest.sh Scripts/playtest/text-style-walk.json          -> status ok\n  $ Scripts/playtest.sh Scripts/playtest/text-style-arming-walk.json --no-build -> status ok\n  $ Scripts/playtest-all.sh --no-build styles text-style               -> 6 passed, 0 failed\n\nNot caused by the button-hug change: text-style-walk inserts no components at all (grep for Button/component finds nothing but a Position & Size section press), and it passes on a clean tree too. Most likely the probe bundle keeps panel state (scroll position, or which section is open) in its own settings between launches, and a walk earlier in the batch leaves the Text section out of reach. text-style-walk has no setup.forget block, unlike style-on-a-copy-walk which forgets text, panel, shapes, color and tools. Starting point: the setup/forget handling in Sources/PhotonzCore/PlaytestScript.swift and whatever writes panel state on quit.",
+  "acceptance": [
+    "Running Scripts/playtest-all.sh --no-build style styled starter twice in a row gives the same answer both times, with no walk failing that passes on its own",
+    "The cause is written down in docs/design/playtest-harness.md, whether it is state the probe keeps between launches or something the walks leave behind",
+    "A walk starts from the same state whether it is first in a batch or last"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T13:05:13.748Z",
+      "note": "created (manual)"
+    }
+  ]
+}

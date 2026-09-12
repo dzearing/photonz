@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:42:58.308Z",
-  "updated": "2026-09-12T12:02:45.059Z",
+  "updated": "2026-09-12T13:05:21.410005Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED on 2026-09-09. Scripts/playtest.sh Scripts/playtest/style-on-a-copy-walk.json --no-build: the walk places the starter Button as an original, saves a 32 px Georgia Bold text style called Heading, and lets it go on the original label. Compare /tmp/photonz-playtest/style-on-a-copy/2-copy.png with 5-copy-follows.png: the words grow from about 11 px to 32 px, the blue pill stays about 78 px wide in both, and the label hangs out of both ends on the original AND on the copy. Scripts/playtest/button-hug-walk.json proves the other path works, so the hug does re-run when the WORDS change (a wording knob) and does not when the TREATMENT changes. Likely the text-style path sets the treatment and re-measures the text box without asking the enclosing group to lay out again. Entry point: EditorState+TextStyles onDropTextStyle, and whatever button-hug-walk s retype path calls after commitTextEdit.",
@@ -35,6 +35,39 @@
     {
       "t": "2026-09-12T12:02:45.058Z",
       "note": "seq 150 -> 80"
+    },
+    {
+      "t": "2026-09-12T12:29:51.243Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T13:05:21.410005Z",
+      "note": "REPRODUCED 2026-09-12 before touching anything: Scripts/playtest.sh Scripts/playtest/style-on-a-copy-walk.json. Only HALF of the original report still stood. The pill DID grow across (79 -> 138 wide, so the width hug already re-ran on a treatment change, fixed by some task between 2026-09-09 and now). What was left is the other axis: the starter Button's layout gave it height 36 as a FIXED size, so a 43 tall label at 32 px Georgia Bold hung 17 points out of the bottom of a 36 tall pill."
+    },
+    {
+      "t": "2026-09-12T13:05:21.410005Z",
+      "note": "ADVERSARIAL REVIEW BEFORE BUILDING. Two honest answers existed. (a) Height Fixed is deliberate: the Layout section already prints 'The pieces run past the bottom edge. Make it 63 tall.' and a person can fix it in one click. (b) 36 is what a button is AT LEAST, not a lid, which is how every real design system writes a button (min-height, not height). Went with (b) because the task asks for exactly that and the epic is auto layout that behaves like real UI; a control that clips its own label is not real UI. Did not open a decision because the task itself already states the wanted outcome."
+    },
+    {
+      "t": "2026-09-12T13:05:21.410005Z",
+      "note": "THE COST I NEARLY PAID AND DID NOT. minHeight 36 with the padding left at 10 makes a fresh Button 37 tall (10 + 17 of ink + 10), one point taller than every button ever drawn. Measured it rather than guessed, then set the room to 9: 9 + 17 + 9 = 35, floored to 36. So a starter Button and Badge arrive at EXACTLY the size they always did (79x36, 23x20) and only change once the type does. Badge: room 3 -> 2, minHeight 20."
+    },
+    {
+      "t": "2026-09-12T13:05:21.410005Z",
+      "note": "CHANGED: GroupLayout.free gains minWidth/minHeight; StarterComponents.layout for .button and .badge; StarterComponents.sizing now appends 'never under N points tall' for a hugging side with a floor, so the sentence and the thing still cannot drift. Tests first (three new ones in GroupHugTests), then the change. Full suite green: 5670 tests."
+    },
+    {
+      "t": "2026-09-12T13:05:21.410005Z",
+      "note": "WALKS: ran about 95 of them, every one that drops a starter or reads a Layout section. style-on-a-copy, button-hug, starter-sizing, starter-components, size-limits, container-too-small, group-says-it-overflows, retype-label, label-grows, short-label, then component*/copy* (25), layout/padding/placement (10), style* (15), stack/group/room/bar (34). Three walks needed updating and all three now pass: size-limits-walk pressed the Height limits twist-open, which a Button now opens by itself, so the press was closing it; layout-fits-walk needed 80 more points of scroll for the same reason; button-hug-walk's note said Height Fixed. Asked for a sweep for the rest."
+    },
+    {
+      "t": "2026-09-12T13:05:21.410005Z",
+      "note": "KNOWN SIDE EFFECT, in the audit for the user to react to: the Layout section opens its Height limits by itself whenever a floor is set, so every Button now shows Smallest 36 as two extra rows. Left the rule alone rather than changing when a disclosure opens itself, which is its own UX question."
+    },
+    {
+      "t": "2026-09-12T13:05:21.410005Z",
+      "note": "NOT MINE: text-style-walk and text-style-arming-walk fail inside a 15 walk batch and pass on their own, before and after this change. Filed as find-out-why-a-walk-passes-on-its-own-and-fails (p2) with both commands and both outputs."
     }
-  ]
+  ],
+  "started": "2026-09-12T12:29:51.242Z"
 }
