@@ -1,0 +1,28 @@
+{
+  "id": "picking-a-plain-shape-leaves-the-panel-parked-on",
+  "title": "Picking a plain shape leaves the panel parked on the last thing you picked",
+  "goal": "Click a piece of text or a zoom callout and the right hand panel scrolls down to its settings. Click a plain rectangle straight after, and the panel stays exactly where the first pick left it, so the top of the panel is a colour row with no heading above it and the layers list you clicked in is still off the top. A rectangle has nothing of its own down there, so the panel is holding a position that belongs to something you are no longer looking at.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2510,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T14:33:35.373Z",
+  "updated": "2026-09-12T14:33:35.376Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced twice on a clean tree at HEAD d7fe81a8 (only queue files dirty), probe rebuilt from that commit:\n\n  Scripts/playtest-all.sh dock-picked-first\n  -> dock-picked-first-walk  16s  FAILED  step 41 (waitFor): sectionInView(\"Appearance\") did not happen within 4.0s\n  Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json --no-build\n  -> same failure, same step\n\nThe measured state from /tmp/photonz-playtest/dock-picked-first/log.json:\n  step 38 (Zoom callout selected): dockSections [\"Layers -200--37\",\"Appearance -37-150\",\"Effects 150-487\",\"Measurements 487-574\",\"Zoom Callout 574-688\",\"Position & Size 688-850\"], pickReveal \"Zoom Callout 114pt at 780-894, dock 688pt: scrolled down to its bottom\"\n  step 39 (selectRow Rectangle 4): dockSections [\"Layers -172--9\",\"Appearance -9-214\",...], dockInView [\"Effects\",\"Measurements\",\"Position & Size\"]\n\nSo Appearance ends up 9pt short of whole at the top and sectionInView fails. Nothing regressed in the reveal itself: this is the shipped design meeting its own edge. InspectorPanel.applyPickedReveal deliberately does nothing when pickedSection is nil (a plain rectangle owns rows inside Appearance and no section of its own), so the dock keeps the offset the previous pick set. On 2026-09-09 the arithmetic happened to leave Appearance just barely whole and the walk passed; a few points of section height have moved since and it no longer does.\n\nThis is the same edge the reveal audit already put to the user as evaluate item 4 (queue/audits/2026-09-09-dock-picked-first-reveal.json: \"Clicking a plain rectangle leaves the panel exactly where it was. Should a rectangle pull the panel back to the top instead of leaving it wherever the last pick put it?\"), and rough item 2 names the headless-fragment symptom. It is written down in docs/design/mocks/shared/UX-PATTERNS.md under Reveal, \"A pick you made with your own hands is not ambient\", as the one edge that is filed rather than settled.\n\nDo not loosen the walk assertion to make it green: the walk is catching a real thing. If the answer is that a section-less pick should pull the dock back to the top of the general sections, that is the change. Read the open card queue/decisions/picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c.json first, since choosing an order instead of a scroll would dissolve this edge entirely.",
+  "acceptance": [
+    "Picking something with no settings section of its own, straight after picking something that had one, leaves the panel showing a section that starts with its own heading rather than a cut-off row",
+    "The layers list is reachable again without using the scroll wheel after such a pick",
+    "Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json --no-build passes",
+    "A section the user collapsed on purpose is still left collapsed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T14:33:35.375Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -284,12 +284,57 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   room it had: a group hanging past the bottom of the panel is room the thing
   inside it could have been given.
   **Only a command the user just issued about that group may re-open a group they
-  collapsed on purpose** (Show Library, or making the thing the group holds).
-  Ambient changes never may: a selection moving, a document loading, a background
-  update leave a shut header shut and do not scroll. The Library reveal audit put
-  the remaining question to the user, whether even a direct command should
-  overrule a deliberate collapse; until they answer, it does, because scrolling
-  to a shut header shows a title and nothing else.
+  collapsed on purpose** (Show Library, or making the thing the group holds). A
+  section somebody shut on purpose stays shut: that half of this rule has never
+  been in doubt and is not what changed below. Ambient changes never may: a
+  document loading, an undo running, a background update, a tool dropping what
+  was selected all leave a shut header shut and do not scroll. The Library reveal
+  audit put the remaining question to the user, whether even a direct command
+  should overrule a deliberate collapse; until they answer, it does, because
+  scrolling to a shut header shows a title and nothing else.
+
+  **A pick you made with your own hands is not ambient, and it may scroll the
+  dock** (corrected 2026-09-12 from
+  `the-dock-rules-say-what-picking-a-layer-may-do-t`; behaviour shipped
+  2026-09-09 in commit `7f65ae4d`, audit
+  `2026-09-09-dock-picked-first-reveal`). This rule used to list "a selection
+  moving" among the ambient changes and forbid it outright, and the app had
+  already stopped obeying that. The old wording was one rule covering two
+  different events: clicking a layer row, or clicking a shape on the canvas, is
+  a command the user just issued about that thing, while a selection that moves
+  because a document loaded or an undo ran is not. Only the second is ambient.
+  So a pick scrolls the dock so that the picked thing's OWN section is on
+  screen, by the same shortest move as any other reveal. What it may not do
+  while it does:
+  - **It may not open a collapse.** A shut section is scrolled to as a header
+    and left shut, exactly as above.
+  - **It may not reach past the pick's own section.** Appearance, Effects and
+    Position & Size are general, and they keep whatever place the reader left
+    them in. The dock is routinely taller than the panel (about 1030pt of
+    sections in a 690pt panel on a marked up screenshot), so something is always
+    off screen, and the one thing that must not be is what you just clicked.
+  - **It may not move for a pick that owns no section.** A plain rectangle owns
+    rows inside Appearance and nothing else, so it leaves the dock where it is.
+    Nor does clicking empty canvas: putting something down is not asking about
+    the canvas, and a dock that jumped on every deselect would be jumping most
+    of the time.
+  - **It may not twitch, and it may not move twice.** A section already whole on
+    screen stays exactly where the reader left it, and a fast run of picks moves
+    the dock once, at the end of the run.
+
+  Two things this rule states rather than hides. The cost is arithmetic: showing
+  a section near the bottom carries the layers list you clicked in off the top,
+  and nothing can show both. And **the mechanism is provisional**. An open
+  decision card asks the user whether picking should move the panel at all or
+  whether the sections should instead be ordered so it never has to
+  (`queue/decisions/picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c.json`).
+  Until they answer, the behaviour above is what the app does and what this rule
+  describes; if they choose an order, this block is what changes and the four
+  limits above are what survives. One edge is filed rather than settled: when a
+  pick that owns no section follows one that did, the dock stays parked where
+  the first pick left it, so the reader is left looking at a headless fragment
+  of Appearance (`dock-picked-first-walk` fails on exactly this at step 41,
+  reproduced 2026-09-12).
 - **Splitter** (`.splitter.v` / `.splitter.h`) — the drag-to-resize handle.
   Vertical between canvas and dock, horizontal between stacked groups. Visible
   grip at rest, accent on hover and drag, keyboard-resizable, bounded by
