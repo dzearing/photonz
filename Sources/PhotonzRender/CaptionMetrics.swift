@@ -24,6 +24,21 @@ public enum CaptionMetrics {
         ArrowCaptionEntry.caption(from: draft) ?? ""
     }
 
+    /// Whether the draft is laid out as SEVERAL LINES, which is a question
+    /// about the text on screen and not about the text that will commit.
+    ///
+    /// The two differ by exactly one keystroke and that is the whole point:
+    /// press Return after a word and the field holds "Hello\n" while
+    /// `committedText` still says "Hello". The bubble follows the committed
+    /// text, so a bare Return cannot make it grow a line it is about to throw
+    /// away; the LAYOUT follows the draft, so the caret waits on the new line
+    /// where the next character will land rather than at the bubble's left
+    /// edge. Asking this question of the committed text is what used to drop
+    /// the caret left and then jump the first character into the middle.
+    public static func draftIsMultiLine(_ draft: String) -> Bool {
+        draft.contains(where: \.isNewline)
+    }
+
     /// The laid-out text block inside the pill, in document points. A caption
     /// never wraps: it is measured unconstrained, so it is as wide as its
     /// longest line and as tall as the lines the person typed.

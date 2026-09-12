@@ -915,6 +915,11 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
+        case .expectCaption(let aligned, let caret, let outline):
+            note(number, step.name,
+                 try checkCaption(aligned: aligned, caret: caret, outline: outline),
+                 state: describe())
+
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
@@ -2303,6 +2308,86 @@ private final class Run {
         return count == 0
             ? "nothing has been measured, as claimed"
             : "\(count) \(plural(count)) on the canvas, as claimed"
+    }
+
+    /// What an open caption field is doing, checked rather than photographed.
+    ///
+    /// The caret blinks and the outline is a dashed line beside a bubble, so a
+    /// walk that only takes pictures of them proves nothing: on 2026-09-12 the
+    /// caret dropped to the bubble's left edge on Return and the outline kept
+    /// the shape it had when the field opened, and the two-line caption walk
+    /// had been photographing both for a week.
+    private func checkCaption(aligned: CaptionDraftAlignment?, caret: CaptionCaretSpot?,
+                              outline: CaptionOutlineClaim?) throws -> String {
+        let editor = try requireEditor()
+        guard let canvas, let field = canvas.playtestCaptionGeometry else {
+            throw Failure(description: "no arrow caption field is open, so there is nothing to claim about one")
+        }
+        var held: [String] = []
+        if let aligned {
+            let is_ = field.centred ? CaptionDraftAlignment.centred : .left
+            guard is_ == aligned else {
+                throw Failure(description: "the draft is laid out \(is_.rawValue), not \(aligned.rawValue)"
+                    + "; the field holds \"\(field.draft.replacingOccurrences(of: "\n", with: "\\n"))\"")
+            }
+            held.append("laid out \(aligned.rawValue)")
+        }
+        if let caret {
+            guard let box = field.caret else {
+                throw Failure(description: "the field will not say where its caret is")
+            }
+            let across = box.minX - field.bubble.minX
+            let middle = field.bubble.width / 2
+            // Half a character of slack: a centred line straddles the middle,
+            // so the caret waiting for its first letter sits within a glyph's
+            // half width of it rather than exactly on it.
+            let slack: CGFloat = 6
+            switch caret {
+            case .centred:
+                guard abs(across - middle) <= slack else {
+                    throw Failure(description: "the caret sits \(Self.round1(across)) points in from the "
+                        + "bubble's left edge, and the middle of a \(Self.round1(field.bubble.width)) point "
+                        + "bubble is \(Self.round1(middle)): that is where the next character lands")
+                }
+            case .left:
+                guard across < middle - slack else {
+                    throw Failure(description: "the caret sits \(Self.round1(across)) points in from the "
+                        + "bubble's left edge, which is not the left of a \(Self.round1(field.bubble.width)) point bubble")
+                }
+            }
+            held.append("caret \(caret.rawValue) at \(Self.round1(across)) in of \(Self.round1(field.bubble.width))")
+        }
+        if let outline {
+            let drawn = canvas.playtestSelectionOutlineBox
+            switch outline {
+            case .none:
+                guard drawn == nil else {
+                    throw Failure(description: "an outline is drawn round \(drawn!.integral), and the step claimed there would be none")
+                }
+                held.append("no outline, as claimed")
+            case .hugsTheBubble:
+                guard let drawn else {
+                    throw Failure(description: "no outline is drawn at all: \(canvas.playtestOutlineAbsence)")
+                }
+                guard let layer = editor.document?.canvasLayer(id: field.layerID) else {
+                    throw Failure(description: "the arrow being captioned is not on the canvas")
+                }
+                let wanted = layer.drawnBounds(liveCaptionPill: field.bubble)
+                let off = max(abs(drawn.minX - wanted.minX), abs(drawn.minY - wanted.minY),
+                              abs(drawn.maxX - wanted.maxX), abs(drawn.maxY - wanted.maxY))
+                guard off <= 1 else {
+                    throw Failure(description: "the outline is drawn round \(drawn.integral) while the bubble "
+                        + "being typed in is \(field.bubble.integral): together with the arrow's own ink that "
+                        + "should make \(wanted.integral), and the worst edge is \(Self.round1(off)) points out")
+                }
+                held.append("outline \(drawn.integral) round bubble \(field.bubble.integral)")
+            }
+        }
+        return held.joined(separator: ", ")
+    }
+
+    private static func round1(_ value: CGFloat) -> String {
+        String(format: "%.1f", value)
     }
 
     /// Whether the dock left the named section room for the pane it promised
@@ -5123,6 +5208,16 @@ private final class Run {
             // caliper takes three clicks, so a walk that clicks twice leaves
             // an empty `measures` list on purpose; this says so out loud.
             "measuring": canvas?.playtestMeasuringReport ?? "no canvas",
+            // An open arrow caption field, in numbers: the caret, how the
+            // draft is aligned, the bubble's box and the box the blue outline
+            // is drawn round. Neither the caret (it blinks) nor the outline
+            // (a dashed line to be eyeballed against a bubble) can be settled
+            // from a picture, so a walk reads them here.
+            "captionField": canvas?.playtestCaptionFieldReport ?? "no canvas",
+            // The box the blue selection outline is drawn round, in document
+            // points. Read beside `captionField` it says whether the outline
+            // is following the bubble being typed in or standing still.
+            "outline": canvas?.playtestOutlineReport ?? "no canvas",
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",
             "layers": layers.count,

@@ -1,0 +1,27 @@
+{
+  "id": "the-caret-on-a-caption-s-empty-new-line-is-drawn",
+  "title": "The caret on a caption's empty new line is drawn short",
+  "goal": "Press Return in an arrow caption and the blinking caret on the fresh line is noticeably shorter than the one on a line with words on it. Nothing moves and nothing is lost, it just looks wrong for the moment before you type.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2540,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T17:32:07.933Z",
+  "updated": "2026-09-12T17:32:07.936Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while fixing the caret position on 2026-09-12 (task the-caret-sits-where-the-words-will-and-the-outl). Measured, not guessed: Scripts/playtest/caption-caret-outline-walk.json step 3-after-return reports \"caret ... tall 14.5\" on the empty line against \"tall 23.8\" on every line with words. 23.8 is the line height of the captions 20pt face; 14.5 is about what the system default 12pt face gives, so AppKit is laying the extra line fragment out with typing attributes that have lost the caption font. Sources/Photonz/CanvasTextEditing.swift styleTextEditor sets editor.typingAttributes with the zoomed draft font, and Self.draftFont builds it through a descriptor with a scale AffineTransform - suspect the transform is the part NSLayoutManager ignores when it sizes the extra line fragment. The playtestCaptionGeometry probe on CanvasNSView reports the caret rect, so the fix is checkable without eyeballing a blink.",
+  "acceptance": [
+    "The caret on an empty new line in a caption is the same height as the caret on a line with words on it",
+    "Typing the first character of that line does not change the caret height",
+    "The bubble still does not resize on a bare Return"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T17:32:07.935Z",
+      "note": "created (manual)"
+    }
+  ]
+}

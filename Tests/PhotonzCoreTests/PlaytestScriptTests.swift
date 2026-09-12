@@ -1609,6 +1609,57 @@ struct PlaytestScriptTests {
 
     /// Zero is as much of the point as any other number: it is how a walk says
     /// nothing should have landed here.
+    // Neither of the two things that went wrong while a caption was being
+    // typed can be settled from a picture: the caret blinks, and the outline
+    // is a dashed line a person has to eyeball against a bubble. So a walk
+    // claims them instead.
+    @Test("An expectCaption step claims the caret, the alignment and the outline")
+    func expectCaptionNamesWhatMustHold() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectCaption", "aligned": "centred", "caret": "centred",
+                       "outline": "hugs the bubble" } ] }
+        """)
+        guard case .expectCaption(let aligned, let caret, let outline) = script.steps[0] else {
+            Issue.record("expectCaption"); return
+        }
+        #expect(aligned == .centred)
+        #expect(caret == .centred)
+        #expect(outline == .hugsTheBubble)
+        #expect(script.steps[0].name == "expectCaption")
+        #expect(PlaytestStep.names.contains("expectCaption"))
+    }
+
+    @Test("An expectCaption step can claim just one of the three")
+    func expectCaptionTakesOneClaim() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectCaption", "caret": "left" } ] }
+        """)
+        guard case .expectCaption(let aligned, let caret, let outline) = script.steps[0] else {
+            Issue.record("expectCaption"); return
+        }
+        #expect(aligned == nil)
+        #expect(caret == .left)
+        #expect(outline == nil)
+    }
+
+    /// A step that claims nothing passes whatever the app does, which is worse
+    /// than no step at all.
+    @Test func expectCaptionHasToClaimSomething() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectCaption" } ] }
+            """)
+        }
+    }
+
+    @Test func expectCaptionRefusesAWordItDoesNotKnow() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectCaption", "caret": "somewhere" } ] }
+            """)
+        }
+    }
+
     @Test func expectMeasuresTakesZero() throws {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 0 } ] }

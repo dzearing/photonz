@@ -859,6 +859,52 @@ public enum PlaytestHoverTarget: Sendable, Equatable {
     case point(PlaytestPoint)
 }
 
+/// A word an `expectCaption` claim is written with.
+public protocol CaptionClaimWord: Sendable, Equatable {
+    init?(claim: String)
+    static var claimWords: [String] { get }
+}
+
+/// How the draft is laid out ACROSS its bubble while it is being typed.
+public enum CaptionDraftAlignment: String, CaptionClaimWord {
+    /// One line, running from the bubble's left inset.
+    case left
+    /// Several lines, centred on each other the way the committed pill
+    /// centres them.
+    case centred
+    public init?(claim: String) { self.init(rawValue: claim) }
+    public static var claimWords: [String] { ["left", "centred"] }
+}
+
+/// Where the caret is waiting, across the bubble.
+public enum CaptionCaretSpot: String, CaptionClaimWord {
+    /// In the middle of the bubble, which is where the next character lands on
+    /// a centred line.
+    case centred
+    /// In from the bubble's left edge, which is where it belongs on a single
+    /// line that has nothing typed on it yet.
+    case left
+    public init?(claim: String) { self.init(rawValue: claim) }
+    public static var claimWords: [String] { ["centred", "left"] }
+}
+
+/// What the blue selection outline must be doing while the field is open.
+public enum CaptionOutlineClaim: CaptionClaimWord {
+    /// Drawn round the bubble on screen, not round the caption on disk.
+    case hugsTheBubble
+    /// No outline at all, which is the right answer with a tool other than
+    /// Select in hand.
+    case none
+    public init?(claim: String) {
+        switch claim {
+        case "hugs the bubble": self = .hugsTheBubble
+        case "none": self = .none
+        default: return nil
+        }
+    }
+    public static var claimWords: [String] { ["hugs the bubble", "none"] }
+}
+
 public enum PlaytestStep: Sendable, Equatable {
     /// Open a file in an editor window and wait until it is ready to drive.
     /// The window is kept invisible; `size` sets its frame first.
@@ -1191,6 +1237,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// Claims about the arrow caption field that is open right now: how the
+    /// draft is laid out across its bubble, where the caret is waiting, and
+    /// whether the blue outline is drawn round the bubble on screen.
+    ///
+    /// None of the three can be settled from a picture. The caret blinks, so
+    /// half the snapshots of it are of nothing; the outline is a dashed line a
+    /// person has to eyeball against a bubble. Both went wrong at once on
+    /// 2026-09-12 — Return left the caret at the bubble's left edge while the
+    /// next letter landed in the middle, and the outline kept the shape it had
+    /// when the field opened — and a walk had photographed both without
+    /// noticing either.
+    case expectCaption(aligned: CaptionDraftAlignment?, caret: CaptionCaretSpot?,
+                       outline: CaptionOutlineClaim?)
     /// The named dock section must be drawing whatever it holds down to and
     /// including its first OPEN entry, whole.
     ///
@@ -1336,7 +1395,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectInView", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectCaption", "expectInView", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor",
     ]
@@ -1383,6 +1442,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
         case .expectInView: "expectInView"
         case .expectOneUnit: "expectOneUnit"
@@ -1648,6 +1708,22 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
             self = .expectMeasures(count: Int(howMany))
+        case "expectCaption":
+            func word<V: CaptionClaimWord>(_ field: String) throws -> V? {
+                guard let raw = try f.optionalString(field) else { return nil }
+                guard let value = V(claim: raw) else {
+                    throw f.invalid(field, "\(field) on an expectCaption is one of "
+                        + V.claimWords.joined(separator: ", ") + ", not \"\(raw)\"")
+                }
+                return value
+            }
+            let aligned: CaptionDraftAlignment? = try word("aligned")
+            let caret: CaptionCaretSpot? = try word("caret")
+            let outline: CaptionOutlineClaim? = try word("outline")
+            guard aligned != nil || caret != nil || outline != nil else {
+                throw f.invalid("caret", "an expectCaption has to claim something: \"aligned\", \"caret\" or \"outline\". A step that claims nothing passes whatever the app does")
+            }
+            self = .expectCaption(aligned: aligned, caret: caret, outline: outline)
         case "expectSectionFits":
             self = .expectSectionFits(section: try f.string("section"))
         case "expectInView":

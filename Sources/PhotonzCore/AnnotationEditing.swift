@@ -161,6 +161,24 @@ extension Layer {
         return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
     }
 
+    /// The box this layer DRAWS while its caption is being typed: its own ink
+    /// and the bubble on screen, in canvas coordinates.
+    ///
+    /// A bubble grows and shrinks with every keystroke while the caption on
+    /// disk does not change until the field closes, so an outline drawn from
+    /// the stored label stops describing the thing being edited (reported
+    /// 2026-09-12). The stored label is left out entirely rather than added
+    /// to: a long caption being replaced by a short one would otherwise be
+    /// outlined at both sizes at once.
+    public func drawnBounds(liveCaptionPill pill: CGRect) -> CGRect {
+        var bare = self
+        if var a = annotation, a.hasCaption {
+            a.caption = nil
+            bare.content = .annotation(a)
+        }
+        return bare.drawnBounds().union(pill)
+    }
+
     /// The layer with its frame set to `frame`. Annotation content remaps its
     /// endpoints so the drawn shape scales with the frame (a bare frame
     /// assignment would clip or distort it); zoom callouts re-derive their

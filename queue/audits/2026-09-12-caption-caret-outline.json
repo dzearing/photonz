@@ -1,0 +1,30 @@
+{
+  "feature": "The caption caret, and the outline that follows the bubble",
+  "epic": "measure-redline",
+  "summary": "Press Return while typing a caption on an arrow and the caret now waits in the middle of the new line, where the letter you type next actually lands. And while you re-word a caption, the blue selection box follows the bubble as it grows and shrinks instead of keeping the shape it had when you opened the field.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions are behind next-arrow-captions, on by default.",
+  "try": [
+    { "do": "Open any screenshot. Press A for the Arrow tool and drag an arrow across it." },
+    { "do": "Type Hello, then press Return once. Watch where the caret goes.", "shot": "2026-09-12-caption-two-lines.png" },
+    { "do": "Type the second line. The first letter should appear where the caret was sitting, not somewhere else." },
+    { "do": "Press Command Return to land the caption. Press A, drag another arrow and press Escape, to leave a plain one." },
+    { "do": "Click the first arrow's pill once to pick it, and look at the blue dashed box around it." },
+    { "do": "Double-click the pill to re-open the field, then type Ok to replace the whole caption. The box should snap in around the smaller bubble as you type.", "shot": "2026-09-12-caption-outline-shrunk.png" },
+    { "do": "Keep typing until the caption is long. The box should keep pace with the bubble.", "shot": "2026-09-12-caption-outline-wider.png" },
+    { "do": "Press Command Return. Nothing should move at the moment the field closes." }
+  ],
+  "evaluate": [
+    "When you press Return, does the caret land where your eye expects the next letter to be?",
+    "Does the first letter of the second line appear to move at all as you type it?",
+    "Is a caption that is one word still typed left to right from the bubble's left edge, the way it used to be?",
+    "Does the blue box tracking the bubble keystroke by keystroke feel helpful, or is it busy enough that you would rather it hid while you type?",
+    "Does anything jump at the moment you press Command Return?"
+  ],
+  "rough": [
+    "A centred line straddles the middle, so a caret waiting on an empty line sits about half a character to the right of where the first letter's left edge lands. That is how every centred text field on the Mac behaves and it reads as correct, but it is not literally the same pixel.",
+    "The caret is drawn a bit shorter on a new empty line than on a line with words on it, because the empty line takes its height from the system's default rather than the caption's face. Nothing moves because of it, but it is visible. Filed as a follow-up.",
+    "The very first caption on a brand new arrow has no blue box at all while you type it, because the Arrow tool is still in hand and the selection box is Select-tool chrome. That is long-standing and deliberate, and it is why this only shows when you go back to re-word a caption. Left alone.",
+    "The bubble's border straddles its own edge (it is drawn centred on it) while the blue box is drawn on the metric edge, so on close inspection the pill's stroke pokes half a point outside the box. The committed pill does exactly the same, so the two agree; it is just not a hairline match.",
+    "Neither the caret nor the outline can be settled from a screenshot: the caret blinks and a walk's window is never active, so it does not even draw. Both are now claimed as numbers by a new expectCaption walk step, and the walk fails on the old behaviour."
+  ]
+}

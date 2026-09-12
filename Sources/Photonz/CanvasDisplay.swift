@@ -721,9 +721,64 @@ extension CanvasNSView {
     /// the screen (reported 2026-09-05). The pill goes in at the width it
     /// really measures, which only this side of the app can ask for.
     private func inkBox(of layer: Layer) -> CGRect {
+        // A caption being TYPED: the bubble on screen is not the caption on
+        // disk, which does not change until the field closes. The field
+        // publishes the bubble it is drawing every keystroke, so the outline
+        // follows it as it grows and shrinks instead of keeping the shape it
+        // had when the field opened (reported 2026-09-12). This is the ONE
+        // place a live draft reaches the chrome; every other caller of the
+        // measured pill is asking about a caption that has landed.
+        if let bubble = captionDraftPillRect, textSession?.layerID == layer.id {
+            return layer.drawnBounds(liveCaptionPill: bubble)
+        }
         guard let a = layer.annotation, a.hasCaption else { return layer.drawnBounds() }
         return layer.drawnBounds(
             captionPillSize: CaptionMetrics.pillSize(for: a.caption ?? "", in: a))
+    }
+
+    /// Redraws the selection chrome alone, for the caption field to call as
+    /// the bubble it is drawing changes shape. `refreshOverlays` would do it
+    /// too, but it lays the text editor out on the way past, and the caller is
+    /// the text editor's own layout.
+    func refreshSelectionChrome() {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        refreshLayerSelectionDisplay()
+        CATransaction.commit()
+    }
+
+    /// The box the blue selection outline is actually drawn round, in
+    /// document points, or nil when no outline is on screen. Read straight off
+    /// the drawn path rather than re-derived, so a walk asserting on it is
+    /// asserting on the line a person sees.
+    /// Why no outline is on screen, for a walk to print when there is none.
+    var playtestOutlineAbsence: String {
+        if selectedLayerID == nil { return "nothing selected" }
+        if selectedLayerFrame == nil { return "the selection has no frame yet" }
+        if resizeDrag != nil || endpointDrag != nil || measureHandleDrag != nil
+            || captionDrag != nil { return "mid-resize" }
+        if endpointHoldLayerID != nil { return "holding the ends just dragged" }
+        if !multiSelectedLayerIDs.isEmpty { return "a multi-selection" }
+        if multiMove != nil { return "mid multi-move" }
+        if isCanvasSelected { return "the canvas is selected" }
+        if let id = selectedLayerID, document?.canvasLayer(id: id) == nil {
+            return "the picked layer is not on the canvas"
+        }
+        // The outline is Select-mode chrome, so a fresh arrow's first caption
+        // — typed with the Arrow tool still in hand — has none at all.
+        if tool != .select { return "the \(tool.rawValue) tool is in hand" }
+        return "hidden"
+    }
+
+    var playtestSelectionOutlineBox: CGRect? {
+        guard !layerOutlineLayer.isHidden, let path = layerOutlineLayer.path,
+              let viewport else { return nil }
+        let box = path.boundingBoxOfPath
+        guard box.width.isFinite, box.height.isFinite else { return nil }
+        let zoom = max(viewport.zoom, 0.0001)
+        let origin = viewport.documentPoint(fromView: CGPoint(x: box.minX, y: box.minY))
+        return CGRect(x: origin.x, y: origin.y,
+                      width: box.width / zoom, height: box.height / zoom)
     }
 
     /// The turn a rotated or skewed layer's outline takes, the same way

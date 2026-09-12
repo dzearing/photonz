@@ -1133,6 +1133,12 @@ final class CanvasNSView: NSView {
     /// The bubble drawn behind an arrow caption's editor, so the draft sits in
     /// the same pill the committed caption renders in. Nil for text sessions.
     var captionPill: CaptionPillView?
+    /// The bubble an open caption field is drawing RIGHT NOW, in document
+    /// points, or nil when no caption is being typed. `layoutCaptionEditor`
+    /// works this box out every keystroke to place the field; publishing it is
+    /// what lets the blue selection outline be drawn round the same rectangle
+    /// instead of round the caption still on disk.
+    var captionDraftPillRect: CGRect?
     /// The zoom `textEditor`'s font was last scaled for.
     var textEditorZoom: CGFloat = 0
     /// The style `textEditor` was last configured with (string empty), so

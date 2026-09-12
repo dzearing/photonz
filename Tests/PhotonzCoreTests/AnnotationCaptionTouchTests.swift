@@ -178,6 +178,64 @@ struct DrawnBoundsTests {
         #expect(tight.insetBy(dx: -0.01, dy: -0.01).contains(pill))
     }
 
+    /// While a caption is being TYPED, the bubble on screen is not the caption
+    /// on disk: it grows and shrinks with every keystroke. The outline has to
+    /// be drawn round the bubble, so it asks for the box with the live bubble
+    /// in it rather than the stored label's.
+    @Test func aLiveBubbleReplacesTheStoredCaptionInTheDrawnBox() {
+        var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+        content.caption = "Focus ring"
+        var layer = AnnotationBuilder.layer(content: content,
+                                            from: CGPoint(x: 700, y: 400),
+                                            to: CGPoint(x: 900, y: 400))
+        layer = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+        let stored = layer.drawnBounds(captionPillSize: CGSize(width: 120, height: 46))
+        // The same arrow with a much wider bubble open over it.
+        let bubble = CGRect(x: 300, y: 377, width: 360, height: 46)
+        let live = layer.drawnBounds(liveCaptionPill: bubble)
+        #expect(live.insetBy(dx: -0.01, dy: -0.01).contains(bubble),
+                "the outline must contain the bubble being typed in: \(live) vs \(bubble)")
+        #expect(live.minX <= bubble.minX + 0.01)
+        #expect(live.width > stored.width,
+                "a wider bubble must widen the box, not leave the stored one")
+    }
+
+    /// ...and the stored caption is IGNORED while the bubble is open, or the
+    /// outline would cover both the label being replaced and the one replacing
+    /// it. The pill the arrow still holds sits to the LEFT of the tail here,
+    /// so a box that kept it would reach further left than the bubble does.
+    @Test func theStoredCaptionIsNotAddedToTheLiveBubble() {
+        var content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+        content.caption = "a much longer caption than anyone should write"
+        var layer = AnnotationBuilder.layer(content: content,
+                                            from: CGPoint(x: 900, y: 400),
+                                            to: CGPoint(x: 1100, y: 400))
+        layer = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+        // A tiny bubble, as if the long label had just been replaced by "Ok".
+        let bubble = CGRect(x: 830, y: 385, width: 60, height: 30)
+        let live = layer.drawnBounds(liveCaptionPill: bubble)
+        var bare = layer
+        if var a = layer.annotation {
+            a.caption = nil
+            bare.content = .annotation(a)
+        }
+        #expect(live == bare.drawnBounds().union(bubble),
+                "the box is the arrow's own ink and the bubble, and nothing else")
+    }
+
+    /// An arrow with no label at all, given a bubble because its first caption
+    /// is being typed: the box is the arrow plus the bubble.
+    @Test func anUncaptionedArrowStillTakesTheBubble() {
+        let content = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
+        let layer = AnnotationBuilder.layer(content: content,
+                                            from: CGPoint(x: 700, y: 400),
+                                            to: CGPoint(x: 900, y: 400))
+        let bubble = CGRect(x: 560, y: 377, width: 120, height: 46)
+        let live = layer.drawnBounds(liveCaptionPill: bubble)
+        #expect(live.insetBy(dx: -0.01, dy: -0.01).contains(bubble))
+        #expect(live.insetBy(dx: -0.01, dy: -0.01).contains(layer.drawnBounds()))
+    }
+
     /// Everything that is not an open stroke keeps the box it always had.
     @Test func otherContentKeepsItsOwnFrame() {
         let rect = Layer(name: "Rectangle",

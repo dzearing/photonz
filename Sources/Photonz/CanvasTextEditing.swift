@@ -324,7 +324,14 @@ extension CanvasNSView {
         // measured. One line keeps the whole bubble and sits at the pill's ink
         // inset; several lines are centred on each other the way the committed
         // pill centres them, in the width the rasterizer lays them out in.
-        let lines = CaptionMetrics.committedText(editor.string).contains(where: \.isNewline)
+        //
+        // Asked of the DRAFT, trailing Return and all, because this is a
+        // question about the text on screen. Everything else in this method
+        // keeps asking the committed text, which is what stops a bare Return
+        // resizing the bubble. Sharing one answer between the two questions is
+        // what dropped the caret to the left edge on Return and then jumped
+        // the first character of the new line into the middle.
+        let lines = CaptionMetrics.draftIsMultiLine(editor.string)
         if lines {
             let text = CaptionMetrics.textSize(for: editor.string,
                                                fontSize: caption.captionFontSize)
@@ -375,6 +382,16 @@ extension CanvasNSView {
         var shown = caption
         shown.caption = CaptionMetrics.committedText(editor.string)
         captionPill?.style(for: shown, zoom: zoom)
+        // The bubble, in document points, for the blue outline to be drawn
+        // round. Published from here because this is the one place that knows
+        // it: the pill is measured from the draft and then slid to stay on the
+        // picture, and the outline must follow both.
+        let bubble = CGRect(x: center.x - pill.width / 2, y: center.y - pill.height / 2,
+                            width: pill.width, height: pill.height)
+        if captionDraftPillRect != bubble {
+            captionDraftPillRect = bubble
+            refreshSelectionChrome()
+        }
     }
 
     /// Keeps the editor glued to the document while panning/zooming, and
@@ -419,6 +436,13 @@ extension CanvasNSView {
 
     private func teardownTextSession() {
         textSession = nil
+        // The outline goes back to reading the caption on disk, which is the
+        // one that just landed, so nothing jumps at the moment the field
+        // closes.
+        if captionDraftPillRect != nil {
+            captionDraftPillRect = nil
+            refreshSelectionChrome()
+        }
         textEditorContent = nil
         textEditorZoom = 0
         captionPill?.removeFromSuperview()
@@ -585,5 +609,80 @@ private final class InlineTextView: NSTextView {
         (placeholder as NSString).draw(
             at: NSPoint(x: origin.x + (textContainer?.lineFragmentPadding ?? 0), y: origin.y),
             withAttributes: [.font: font, .foregroundColor: color])
+    }
+}
+
+// MARK: - What an open caption field is doing, for a walk to read
+
+/// The numbers an open arrow caption field is laid out with, in DOCUMENT
+/// points — the units a walk's clicks are written in.
+///
+/// Two bugs lived exactly here and neither shows in a picture: a caret that
+/// sat at the bubble's left edge while the next letter landed in the middle,
+/// and an outline that kept the shape it had when the field opened. A snapshot
+/// cannot settle either, since the caret blinks and the outline is a dashed
+/// line to be eyeballed against a bubble, so a walk reads them as numbers.
+struct CaptionFieldGeometry {
+    /// The arrow being captioned.
+    let layerID: UUID
+    /// What is in the field, newline and all.
+    let draft: String
+    /// Whether the draft is laid out centred (several lines) rather than
+    /// running from the bubble's left inset (one line).
+    let centred: Bool
+    /// The bubble the draft is being typed inside.
+    let bubble: CGRect
+    /// Where AppKit will draw the insertion point: the rect the input system
+    /// is told about, so it is the caret a person sees.
+    let caret: CGRect?
+}
+
+extension CanvasNSView {
+    var playtestCaptionGeometry: CaptionFieldGeometry? {
+        guard let editor = textEditor, let session = textSession,
+              session.captionStyle != nil, let layerID = session.layerID,
+              let viewport else { return nil }
+        let zoom = max(viewport.zoom, 0.0001)
+        func doc(_ rect: CGRect) -> CGRect {
+            let origin = viewport.documentPoint(fromView: CGPoint(x: rect.minX, y: rect.minY))
+            return CGRect(x: origin.x, y: origin.y,
+                          width: rect.width / zoom, height: rect.height / zoom)
+        }
+        var caret: CGRect?
+        let screenRect = editor.firstRect(forCharacterRange: editor.selectedRange(),
+                                          actualRange: nil)
+        if let window, screenRect.width.isFinite, screenRect.height.isFinite {
+            caret = doc(convert(window.convertFromScreen(screenRect), from: nil))
+        }
+        return CaptionFieldGeometry(layerID: layerID, draft: editor.string,
+                                    centred: editor.alignment == .center,
+                                    bubble: doc(editor.frame), caret: caret)
+    }
+
+    /// The same, in the words a walk's log prints.
+    var playtestCaptionFieldReport: String {
+        guard let field = playtestCaptionGeometry else { return "no caption field" }
+        let draft = field.draft.replacingOccurrences(of: "\n", with: "\\n")
+        let caret = field.caret.map {
+            // The interesting number: how far in from the bubble's left edge
+            // the caret sits, against how wide the bubble is. A caret at 0
+            // with the words about to land in the middle is the reported bug.
+            "\(rounded($0.minX - field.bubble.minX)) in of \(rounded(field.bubble.width))"
+                + ", tall \(rounded($0.height))"
+        } ?? "unknown"
+        return "draft \"\(draft)\" \(field.centred ? "centred" : "left"), "
+            + "caret sits \(caret), bubble \(field.bubble.integral)"
+    }
+
+    /// The box the blue selection outline is drawn round, in document points,
+    /// or why there is no outline. A walk reads this beside `captionField` to
+    /// prove the outline follows the bubble while a caption is being typed.
+    var playtestOutlineReport: String {
+        guard let box = playtestSelectionOutlineBox else { return playtestOutlineAbsence }
+        return "\(box.integral)"
+    }
+
+    private func rounded(_ value: CGFloat) -> String {
+        String(format: "%.1f", value)
     }
 }
