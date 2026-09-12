@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:51:52.796Z",
-  "updated": "2026-09-12T11:26:17.367Z",
+  "updated": "2026-09-12T12:00:04.020Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today Sources/Photonz/CanvasGroups.swift:82 offersRotation returns false for any group (isGroup), and LayerGeometryEditing sets turnsAtAll false for the same reason, so the A field renders a dash with LayerGeometryEditing.groupTurnReason behind it. Renderer side: check DocumentRenderer composites a group transform before promising this. Written 2026-09-09 while landing the angle field; the angle field task deliberately left this alone and asked for it to be filed.",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-12T11:59:51.793Z",
       "note": "Walks on the final build: 9 group, 16 component, 7 selection, 1 angle field, all passing, 33 in total plus the new turn-a-group-walk. Whole unit suite green at 5659. Composite perf is unchanged, which is the perf note for this commit: an upright document pays one isIdentity check per group and nothing else (12MP/10-layer interactive edit inside a plain group, median 6.8ms; whole render median 45.6ms). A sweep was requested because the change touches the selection chrome, the hit test, the rubber band and the compositor's group path, which is more than the walks I could run inside one task."
+    },
+    {
+      "t": "2026-09-12T12:00:04.018Z",
+      "note": "A group takes the rotate knob and the A field, and turns with everything inside it in one undo step. One pivot question (Layer.turnPivot / turnBox) is asked by the renderer, the outline, the knob, the handles, the hit test and the rubber band, so a group swings about the middle of the box its contents make rather than about its anchor. The renderer turns the group buffer after the blur and before the shadow, and renderBounds grew to read a child's turn so a turned card inside a container is not clipped away. Screens deliberately hold still and say why. A piece inside a turned card is outlined where it is and still takes colour and wording, but offers no handles and a drag on it takes the card; follow-up filed. Committed as 028a2187 and pushed. Unit suite green at 5659; 33 walks pass (group, component, selection, angle field) plus a new turn-a-group-walk; verified on the probe with real screen captures. Audit: queue/audits/2026-09-12-group-turn.json. Sweep requested."
     }
   ],
-  "started": "2026-09-12T11:26:17.365Z"
+  "started": "2026-09-12T11:26:17.365Z",
+  "completed": "2026-09-12T12:00:04.019Z"
 }
