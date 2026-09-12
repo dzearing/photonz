@@ -861,6 +861,9 @@ private final class Run {
                                    number: number)
             }
 
+        case .pickUpTile(let tile, let to):
+            try await pickUpTile(tile, to: to, number: number)
+
         case .dragRow(let row, let onto, let zone, let hold):
             try await dragRow(row, onto: onto, zone: zone, hold: hold, number: number)
         case .dragColor(let from, let onto, let hold, let expect):
@@ -3283,6 +3286,101 @@ private final class Run {
                 + (sentence.map { ", saying \"\($0)\"" } ?? "")
                 + ", drop \(landed ? "landed" : "did not land")\(held)",
              state: describe())
+    }
+
+    /// Presses a tile on the Library shelf and pulls it towards the picture,
+    /// and says whether a drag came of it.
+    ///
+    /// This is the half of a tile drag `dragTile` cannot reach. `dragTile`
+    /// starts with the payload already in the air and proves everything from
+    /// there; nothing in it proves the tile ever left the shelf. So this posts
+    /// a press and a pull at the tile itself and watches for AppKit being asked
+    /// to start a drag, which is what a tile with a handle does and what a tile
+    /// without one does not.
+    ///
+    /// The session asked for is then refused rather than started, because a
+    /// real one runs a loop of its own that only a mouse coming up on a real
+    /// desk can end. So what this proves is the pick up, not the picture that
+    /// would follow the pointer afterwards: see `PlaytestTilePickUp.swift`.
+    private func pickUpTile(_ name: String, to at: PlaytestPoint, number: Int) async throws {
+        let canvas = try requireCanvas()
+        let target = try panelTarget(name, kind: .tile)
+        guard let window = target.window, let content = window.contentView else {
+            throw Failure(description: "the tile \"\(name)\" is in no window, so nothing could press it")
+        }
+        let box = target.convert(target.bounds, to: nil)
+        let inWindow = content.convert(content.bounds, to: nil)
+        // The same reach a press has to have: the whole tile inside the window
+        // AND inside whatever the shelf's own scrolling has left showing of it.
+        // A tile with a sliver out is a tile a person scrolls to first.
+        let showing = target.convert(target.visibleRect, to: nil)
+        guard inWindow.contains(box), showing.contains(box) else {
+            throw Failure(description: "the tile \"\(name)\" is not all the way where a person "
+                + "could pull on it: it is at \(short(box.origin)) "
+                + "\(short(CGPoint(x: box.width, y: box.height))) and the window is "
+                + "\(short(CGPoint(x: inWindow.width, y: inWindow.height))). "
+                + "A `reveal` step scrolls the shelf until it is.")
+        }
+        let alreadyPickedSomethingUp = PlaytestDragWatch.hasCaughtAnything
+        let from = CGPoint(x: box.midX, y: box.midY)
+        let to = canvas.convert(try viewPoint(at), to: nil)
+
+        PlaytestDragWatch.start()
+        defer { _ = PlaytestDragWatch.stop() }
+        var stamp = ProcessInfo.processInfo.systemUptime
+        func post(_ type: NSEvent.EventType, at point: CGPoint, pressure: Float) {
+            stamp += 0.016
+            guard let event = NSEvent.mouseEvent(
+                    with: type, location: point, modifierFlags: [], timestamp: stamp,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                    clickCount: 1, pressure: pressure) else { return }
+            NSApp.postEvent(event, atStart: false)
+        }
+        // The pointer arrives first. A tile fired at out of nowhere came away
+        // two times in three: the shelf has to have the pointer over it before
+        // the press, the way it does under a hand, or SwiftUI has nothing to
+        // begin a gesture from.
+        post(.mouseMoved, at: from, pressure: 0)
+        await sleep(0.15)
+        post(.leftMouseDown, at: from, pressure: 1)
+        await sleep(0.15)
+        // Then the pull, in the steps a hand makes and spread over real time
+        // rather than fired in a burst, far enough past the couple of points
+        // AppKit calls a twitch that no threshold can swallow it.
+        let pullSteps = 8
+        for step in 1...pullSteps {
+            let t = Double(step) / Double(pullSteps)
+            post(.leftMouseDragged,
+                 at: CGPoint(x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t),
+                 pressure: 1)
+            await sleep(0.04)
+        }
+        post(.leftMouseUp, at: to, pressure: 0)
+        await sleep(0.4)
+        let asks = PlaytestDragWatch.stop()
+
+        guard let ask = asks.first else {
+            // Which of the two this is matters more than anything else the step
+            // says, so it is the first thing said.
+            guard !alreadyPickedSomethingUp else {
+                throw Failure(description: "a walk gets ONE pick up per run of the app, and this "
+                    + "one has had its: after a tile has come away SwiftUI starts no further drag, "
+                    + "so nothing can be read into \"\(name)\" staying on the shelf. Put this step "
+                    + "in a walk of its own. See Sources/Photonz/Playtest/PlaytestTilePickUp.swift.")
+            }
+            throw Failure(description: "the tile \"\(name)\" did not come away: it was pressed at "
+                + "\(short(from)) and pulled to \(short(to)) in the window, and nothing asked to "
+                + "start a drag. A tile that cannot be picked up is a tile nothing can be done with.")
+        }
+        guard !ask.types.isEmpty else {
+            throw Failure(description: "the tile \"\(name)\" came away carrying nothing, so there "
+                + "would be nothing to let go of")
+        }
+        note(number, "pickUpTile",
+             "\"\(name)\" pressed at \(short(from)) and pulled to \(short(to)) = \(short(at.point)) "
+                + "\(at.space.rawValue): it came away carrying \(ask.items) "
+                + "thing\(ask.items == 1 ? "" : "s") (\(ask.types.joined(separator: ", ")))",
+             state: ["view": ask.view, "items": ask.items, "types": ask.types])
     }
 
     /// Picks a saved text style up off the Library shelf and lets it go on a ROW

@@ -4,14 +4,32 @@
   "summary": "A saved text style can now be picked up off its Library tile and let go on any piece of text on the picture, which sets that text in the style there and then. Until now the only way to wear one was to select the text first and find the name in a menu, so the shelf was a place text styles went and never came back out of.",
   "setup": "Photonz Dev, Experiments window, release Next. Needs \"Save a color as a style and reuse it\" and \"Drag a color from one swatch to another\", both on by default.",
   "try": [
-    { "do": "Type two headings with the Text tool: press T, click, type, press Command Return. Do it twice." },
-    { "do": "Click the first heading, set Font Georgia and Size 32 pt in the Text section, then open the Style menu and choose Save as Style. Name it Heading and press Return." },
-    { "do": "Click an empty part of the canvas so nothing is picked." },
-    { "do": "Press and hold on the Ag tile on the Library's Styles shelf and drag it out over the picture. THIS IS THE STEP TO WATCH: a walk cannot start a real drag, so whether the tile comes away in your hand at all is the one thing untested." },
-    { "do": "Hold it over bare canvas, then over the first heading, reading the line under the pointer each time.", "shot": "2026-09-09-text-style-drag-lands.png" },
-    { "do": "Let go on the second heading." },
-    { "do": "Press Command Z once." },
-    { "do": "Draw a rectangle and carry the tile over that instead.", "shot": "2026-09-09-text-style-drag-refused.png" }
+    {
+      "do": "Type two headings with the Text tool: press T, click, type, press Command Return. Do it twice."
+    },
+    {
+      "do": "Click the first heading, set Font Georgia and Size 32 pt in the Text section, then open the Style menu and choose Save as Style. Name it Heading and press Return."
+    },
+    {
+      "do": "Click an empty part of the canvas so nothing is picked."
+    },
+    {
+      "do": "Press and hold on the Ag tile on the Library's Styles shelf and drag it out over the picture. THIS IS THE STEP TO WATCH: a walk cannot start a real drag, so whether the tile comes away in your hand at all is the one thing untested."
+    },
+    {
+      "do": "Hold it over bare canvas, then over the first heading, reading the line under the pointer each time.",
+      "shot": "2026-09-09-text-style-drag-lands.png"
+    },
+    {
+      "do": "Let go on the second heading."
+    },
+    {
+      "do": "Press Command Z once."
+    },
+    {
+      "do": "Draw a rectangle and carry the tile over that instead.",
+      "shot": "2026-09-09-text-style-drag-refused.png"
+    }
   ],
   "evaluate": [
     "Does the tile feel like something you can pick up? Nothing on the shelf says so before you try.",
@@ -22,7 +40,7 @@
   ],
   "rough": [
     "Screen Recording was granted, so both pictures here are real window captures taken by a scripted walk (Scripts/playtest/text-style-drag-walk.json), not offscreen renders.",
-    "The one thing no walk can prove: a real drag has to START. The tile is a button so a click still selects it, and the drag sits outside the button, but AppKit only begins a drag session from an event that came off a real device, so a scripted walk hands the payload to the canvas directly instead. The click is proven still to work (text-style-walk presses the tile and gets its Style section); the pick-up is not. If the tile will not come away in your hand, say so and it is a small fix.",
+    "SETTLED on 2026-09-12, and no hand check is needed. A tile DOES come away in your hand: `Scripts/playtest/tile-comes-away-walk.json` presses a saved colour tile with the mouse and pulls, and `text-style-comes-away-walk.json` does the same for a saved text style; each fails outright if no drag starts. The colour tile comes away carrying com.photonz.paint and the text style tile carrying com.photonz.text-style. What a walk still cannot show is the picture that travels under the pointer, which the window server draws for a session only a real device starts. See the \"Does a tile really come away in your hand\" section of docs/design/playtest-harness.md.",
     "For the same reason the picture that travels under the pointer, a small Ag chip on the style's own plate, is unphotographed. It is the same drawing the tile uses, at the size a colour travels at.",
     "\"Sets all 2 of them in Heading\" is clumsy English. It is the phrasing a colour drop already uses (\"Paints Fill on all 2 of them\"), so it was left matching rather than fixed in one place and left wrong in the other. Worth fixing across both.",
     "Text inside a copy of a component reads as the copy rather than as text, so a style dropped on it is refused with \"is not text\". That is the same rule every click on a copy follows, but the sentence is misleading there.",

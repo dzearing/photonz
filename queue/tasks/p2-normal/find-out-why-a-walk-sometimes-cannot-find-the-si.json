@@ -1,0 +1,28 @@
+{
+  "id": "find-out-why-a-walk-sometimes-cannot-find-the-si",
+  "title": "Find out why a walk sometimes cannot find the Size menu after saving a text style",
+  "goal": "Two scripted walks that check saved text styles fail every so often, saying the panel has no Size menu when the panel plainly should have one. They pass when run on their own. Nobody has seen the app do this by hand, so the first job is to find out whether it is the app losing the text settings for a moment or only the walk looking too early.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2450,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T10:38:12.749Z",
+  "updated": "2026-09-12T10:38:12.752Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen twice on 2026-09-12 while running the text-style walks as a batch, on different walks each time, and never when the walk was run alone.\n\nRun 1: `Scripts/playtest-all.sh --no-build text-style`\n  text-style-walk  17s  FAILED  step 58 (panelMenu): no menu called \"Size\" is in the window; the ones that are: 100% 58.0pt wide at x 869.0 says \"Choose a zoom level. Double click for actual size\"\n\nRun 2: the same command, a few minutes later\n  text-style-arming-walk  18s  FAILED  step 73 (panelMenu): no menu called \"Size\" is in the window; the ones that are: 100% 58.0pt wide at x 869.0 says \"Choose a zoom level. Double click for actual size\"\n\nBoth then passed alone:\n  Scripts/playtest.sh Scripts/playtest/text-style-walk.json --no-build  ->  \"status\" : \"ok\"\n\nThe only menu the panel can see at the moment of failure is the zoom menu on the toolbar, which is what the panel shows when nothing with text settings is picked. So the likely shape is that the selection is gone, or the Text section has not been built yet, rather than the menu being renamed. Filed p2 and worded as a question because the cause is not confirmed.",
+  "acceptance": [
+    "The cause is known and written down: either the app drops the text settings for a moment, or the walk reads the panel before it has arrived",
+    "If it is the app, it is fixed and a walk proves it",
+    "If it is the walk, the walk waits for what it needs and stops failing",
+    "text-style-walk and text-style-arming-walk each pass five runs in a row"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T10:38:12.751Z",
+      "note": "created (manual)"
+    }
+  ]
+}

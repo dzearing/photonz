@@ -345,9 +345,39 @@ Four steps close it, and one more makes them writable:
   drawn while the drag is in the air is real and can be photographed with
   `hold`.
 
-What they do NOT do is synthesize the picture that follows the pointer during a
-drag. That lives in the window server and belongs to a session only a real
-device can start, so it is the one part of a panel drag a walk cannot see.
+What they do NOT do is start the drag. They begin with the payload already in
+the air, which proves everything that happens from there and nothing about the
+tile ever leaving the shelf.
+
+### Does a tile really come away in your hand? Yes, and here is the proof
+
+This was the open question behind three audits on 2026-09-09, each of which
+asked the person trying the feature to check the pick up by hand. It is
+settled, and `pickUpTile` is the step that settles it:
+
+| Step | Arguments | What it does |
+| --- | --- | --- |
+| `pickUpTile` | `tile`, `to`, optional `space` | Presses a tile on the Library shelf with the mouse and pulls it towards a point on the picture, and FAILS if no drag came of it. The press and the pull are real mouse events posted to the app's queue, so what is being proved is the tile's own handle: that pulling on THIS view starts a drag carrying the right payload. The log line says what came away and what it was carrying. |
+
+Two walks read it, and they answer the question for both kinds of tile:
+
+- `Scripts/playtest/tile-comes-away-walk.json` — a saved COLOUR tile comes away
+  carrying `com.photonz.paint`.
+- `Scripts/playtest/text-style-comes-away-walk.json` — a saved TEXT STYLE tile
+  comes away carrying `com.photonz.text-style`.
+
+Two things the step deliberately does not do. It never lets go, so it cannot
+change the document: the drag session is caught on its way to AppKit, written
+down, and refused. And it does not synthesize the picture that follows the
+pointer, which lives in the window server and belongs to a session only a real
+device can start. That picture remains the one part of a panel drag a walk
+cannot see, and it is AppKit's to draw rather than this app's.
+
+**One pick up per run of the app.** After the first, SwiftUI starts no further
+drag, so a second `pickUpTile` in the same walk always looks like a tile with no
+handle whatever the tile is — which is exactly how a perfectly good text style
+tile nearly got written up as broken on 2026-09-12. A walk that needs to prove
+two tiles is two walks. The step knows the difference and says so.
 
 Tiles and rows say their own names: each hangs an invisible marker behind itself
 (`PanelTarget.swift`) carrying the name a person reads and the same drag closure

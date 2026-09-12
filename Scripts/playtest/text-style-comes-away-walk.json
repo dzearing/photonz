@@ -1,0 +1,37 @@
+{
+  "out": "/tmp/photonz-playtest/text-style-comes-away",
+  "seed": "The same question as tile-comes-away, asked of the other kind of tile: does a saved TEXT STYLE come away in your hand? It is a walk of its own rather than two steps in one walk, because the app starts no second drag after the first: a second pick up in the same run always looks like a tile with no handle, whatever the tile.",
+  "setup": {
+    "forget": ["text", "panel", "shapes", "color", "tools"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Size", "choose": "32 px" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Style", "choose": "Save as Style" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "type", "text": "Heading" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-a-style-on-the-shelf", "note": "one saved text style, Heading, sitting on the Styles shelf" },
+
+    { "do": "reveal", "control": "Heading" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "1-the-tile-on-the-shelf" },
+
+    { "do": "pickUpTile", "tile": "Heading", "to": [430, 200] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-it-came-away", "note": "THE TEST: pressing the Heading tile and pulling it towards the picture started a drag carrying the text style. The step fails outright if nothing does." },
+    { "do": "snapshot", "name": "2-after-the-pull" }
+  ]
+}

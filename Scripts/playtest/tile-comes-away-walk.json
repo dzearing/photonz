@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/tile-comes-away",
+  "seed": "Does a saved colour tile actually come away in your hand? Every other tile walk starts with the payload already in the air: it hands the tile's own parcel straight to the canvas and proves what happens next. None of them press the tile. So three features shipped on 2026-09-09 each told the person trying them to check the pick up by hand. This walk presses the Accent tile with the mouse, pulls it towards the picture, and fails if nothing comes away. Its sister walk, text-style-comes-away, does the same for a saved text style: a walk gets ONE pick up per run of the app, so proving two tiles is two walks.",
+  "setup": {
+    "forget": ["text", "panel", "shapes", "color", "tools"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [520, 380], "to": [760, 500], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "showLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "focus", "field": "Style name" },
+    { "do": "type", "text": "Accent" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-a-colour-on-the-shelf", "note": "one saved colour, Accent, sitting on the Styles shelf" },
+
+    { "do": "reveal", "control": "Accent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "1-the-tile-on-the-shelf" },
+
+    { "do": "pickUpTile", "tile": "Accent", "to": [430, 200] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-it-came-away", "note": "THE TEST: pressing the Accent tile and pulling it towards the picture started a drag carrying the colour. The step fails outright if nothing does, so this walk going green IS the proof that the tile has a handle." },
+    { "do": "snapshot", "name": "2-after-the-pull" }
+  ]
+}

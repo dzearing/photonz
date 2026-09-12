@@ -1054,6 +1054,21 @@ public enum PlaytestStep: Sendable, Equatable {
     /// somebody.
     case dragTile(tile: String, to: PlaytestPoint?, onto: String?, hold: String?,
                   expect: PlaytestColorDropExpectation, says: String?)
+    /// Press a tile on the Library shelf with the mouse and pull it to a point
+    /// on the picture, the way a hand does.
+    ///
+    /// This is the other half of `dragTile`, and the two are not the same
+    /// check. `dragTile` hands the tile's own payload straight to whatever is
+    /// being dropped on, which proves everything that happens once a tile is
+    /// in the air; nothing in it proves the tile ever left the shelf. This
+    /// step proves exactly that one thing and nothing else: the press and the
+    /// pull are mouse events on the tile, and the step fails if no drag came
+    /// of them. Nothing is let go of, so the document is never changed.
+    ///
+    /// ONE PER WALK. The app starts no second drag after the first, so a walk
+    /// that wants to prove two tiles is two walks; the step says so rather than
+    /// reporting the second tile as broken.
+    case pickUpTile(tile: String, to: PlaytestPoint)
     /// Pick a row up in the layers list by its name and let go of it on
     /// another row: above it, below it, or inside it when that row is a group.
     /// `hold` names a picture taken before letting go, which is the only
@@ -1314,7 +1329,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "expect", "expectInView", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
-        "panel", "panelEdge", "panelMenu", "panelStart", "pinch", "press",
+        "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor",
     ]
 
@@ -1350,6 +1365,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .menuShot: "menuShot"
         case .rightClick: "rightClick"
         case .dragTile: "dragTile"
+        case .pickUpTile: "pickUpTile"
         case .dragRow: "dragRow"
         case .dragColor: "dragColor"
         case .dragSection: "dragSection"
@@ -1531,6 +1547,8 @@ public enum PlaytestStep: Sendable, Equatable {
                              to: onto == nil ? try f.point("to") : nil, onto: onto,
                              hold: try f.optionalString("hold"), expect: landing,
                              says: try f.optionalString("says"))
+        case "pickUpTile":
+            self = .pickUpTile(tile: try f.string("tile"), to: try f.point("to"))
         case "dragRow":
             let zone: PlaytestDropZone = if fields["zone"] == nil {
                 .above

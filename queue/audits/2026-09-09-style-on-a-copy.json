@@ -4,14 +4,32 @@
   "summary": "Carrying a saved text style over the label of a button that is a copy of a component used to be refused with \"Button is not text\", over the top of words anybody can read. It now says where those words come from and names the two moves that work: set the style on the original, or detach this copy.",
   "setup": "Photonz Dev, Experiments window, release Next. Needs Components, Save a color as a style and reuse it, and Drag a color from one swatch to another, all on by default.",
   "try": [
-    { "do": "Open the Library on the right, choose the Comps shelf, click the starter Button, and press Place." },
-    { "do": "Click the starter Button on the shelf again and drag it onto an empty part of the canvas. That one is a copy." },
-    { "do": "Press T, click somewhere empty, type a word, press Command Return." },
-    { "do": "Click that word, set Font Georgia and Size 32 px in the Text section, open the Style menu and choose Save as Style. Name it Heading and press Return." },
-    { "do": "Click an empty part of the canvas so nothing is picked." },
-    { "do": "Drag the Ag tile off the Styles shelf and hold it over the COPY's label. Read the line under the pointer.", "shot": "2026-09-09-style-on-a-copy-refused.png" },
-    { "do": "Without letting go there, carry the same tile over the ORIGINAL Button's label and let go.", "shot": "2026-09-09-style-on-a-copy-on-the-original.png" },
-    { "do": "Look at the copy: it changed too, because it follows the original." }
+    {
+      "do": "Open the Library on the right, choose the Comps shelf, click the starter Button, and press Place."
+    },
+    {
+      "do": "Click the starter Button on the shelf again and drag it onto an empty part of the canvas. That one is a copy."
+    },
+    {
+      "do": "Press T, click somewhere empty, type a word, press Command Return."
+    },
+    {
+      "do": "Click that word, set Font Georgia and Size 32 px in the Text section, open the Style menu and choose Save as Style. Name it Heading and press Return."
+    },
+    {
+      "do": "Click an empty part of the canvas so nothing is picked."
+    },
+    {
+      "do": "Drag the Ag tile off the Styles shelf and hold it over the COPY's label. Read the line under the pointer.",
+      "shot": "2026-09-09-style-on-a-copy-refused.png"
+    },
+    {
+      "do": "Without letting go there, carry the same tile over the ORIGINAL Button's label and let go.",
+      "shot": "2026-09-09-style-on-a-copy-on-the-original.png"
+    },
+    {
+      "do": "Look at the copy: it changed too, because it follows the original."
+    }
   ],
   "evaluate": [
     "The line reads \"Label comes from Button. Set Heading on the original, or detach this copy.\" Does that tell you enough to know what to do next, without knowing anything about components?",
@@ -22,6 +40,7 @@
   ],
   "rough": [
     "Screen Recording was granted, so both pictures here are real window captures from a scripted walk (Scripts/playtest/style-on-a-copy-walk.json), not offscreen renders.",
+    "SETTLED on 2026-09-12, and no hand check is needed. A tile DOES come away in your hand: `Scripts/playtest/tile-comes-away-walk.json` presses a saved colour tile with the mouse and pulls, and `text-style-comes-away-walk.json` does the same for a saved text style; each fails outright if no drag starts. The colour tile comes away carrying com.photonz.paint and the text style tile carrying com.photonz.text-style. What a walk still cannot show is the picture that travels under the pointer, which the window server draws for a session only a real device starts. See the \"Does a tile really come away in your hand\" section of docs/design/playtest-harness.md.",
     "The sentence names detaching but not where to find it. Detach lives on the Component section of the properties panel and on Layer > Detach Instance. A one line pill has no room to say so.",
     "The rule did not change and was not meant to: a style still cannot land on one copy alone. That is the right call for a wording fix, but it is probably not the right answer forever, so it is filed as its own question with a decision card: \"Decide whether a style can be set on one copy without detaching it\".",
     "Found while proving the way out: dropping the style on the ORIGINAL label makes the words much bigger and the blue pill stays the width it was, so the label hangs out of both ends, on the original and on every copy. Typing longer words into the same button does make it grow, so this is only the style path. Filed as \"A button grows when a style makes its words bigger\"."

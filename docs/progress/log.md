@@ -2,6 +2,44 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-12 — a tile really does come away in your hand
+
+Task `prove-a-tile-really-does-come-away-in-your-hand` (epic `ui-components`).
+
+Three features shipped on 2026-09-09 each ended their audit with the same
+apology: no scripted walk can prove a Library tile can be picked up at all,
+only what happens once something is in the air, so please check the pick up by
+hand. Three features handing the same risk to the person meant to be trying
+them. That is now settled, and the answer is yes.
+
+New walk step `pickUpTile` presses a tile with the mouse and pulls it towards
+the picture, and fails if no drag came of it. The moment SwiftUI asks AppKit to
+start a drag session is caught on its way past, written down with the payload
+it was carrying, and then refused: a real session runs a loop only a mouse
+coming up on a real desk can end, and refusing also means the step can never
+change the document. Two walks read it, one per kind of tile: a saved colour
+comes away carrying `com.photonz.paint`
+(`Scripts/playtest/tile-comes-away-walk.json`) and a saved text style carrying
+`com.photonz.text-style` (`text-style-comes-away-walk.json`). The three audits
+now carry the answer in place of the apology, and
+`docs/design/playtest-harness.md` has the section it points at.
+
+Nearly filed a false p1 on the way. The text style tile failed while the colour
+tile passed in the same walk, which reads exactly like a broken tile. The
+control that caught it: picking the COLOUR tile up a second time in the same
+walk fails the same way. After the first pick up the app starts no further
+drag, whatever the tile. That limit is the harness's, it is why there are two
+walks rather than one, and the step now says which of the two failures it is
+looking at rather than blaming the tile.
+
+Also filed, not fixed: `text-style-walk` and `text-style-arming-walk` each
+failed once in a batch with "no menu called Size" and passed alone
+(`find-out-why-a-walk-sometimes-cannot-find-the-si`, p2, worded as a question
+because the cause is not confirmed).
+
+Next: nothing is blocked on this. The next feature that adds a draggable tile
+gets its pick up proven for the price of two lines in a walk.
+
 ## 2026-09-08 — a distance measurement is three clicks, and the walk proves it
 
 Task `decide-whether-letting-go-of-a-drag-should-land` (epic `measure-redline`).

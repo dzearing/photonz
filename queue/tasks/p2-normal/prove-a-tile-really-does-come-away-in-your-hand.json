@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:23:40.425Z",
-  "updated": "2026-09-09T12:23:40.576Z",
+  "updated": "2026-09-12T10:07:37.685Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass, reading the day's audits as a user.\n\nThe same paragraph appears in queue/audits/2026-09-09-text-style-drag.json, 2026-09-09-text-style-row-drop.json and, by reference, 2026-09-09-style-on-a-copy.json: \"AppKit only begins a drag session from an event that came off a real device, so the walk hands the payload to the canvas directly instead... If the tile will not come away in your hand, say so and it is a small fix.\"\n\nWhat IS already proven, so this is narrower than it sounds. Sources/Photonz/Playtest/PanelTarget.swift:12 says the harness uses \"the SAME drag payload its own onDrag hands over, one closure, used by both\", so the bytes on the pasteboard are the real ones. PlaytestHarness.dragTile (line 3136) then builds a PlaytestDraggingInfo and calls draggingEntered/draggingUpdated/performDragOperation on the destination. So the receiving half and the payload are covered; what nothing exercises is the mouse-down on the tile turning into a drag session.\n\nWorth trying before concluding it is impossible: a CGEvent posted to the HID event tap is treated as a real device event, which is how other UI test harnesses start drags. Sources/Photonz/Playtest/PlaytestHarness.swift already imports CGEvent for keys.",
@@ -27,6 +27,31 @@
     {
       "t": "2026-09-09T12:23:40.575Z",
       "note": "seq 30 -> 40"
+    },
+    {
+      "t": "2026-09-12T10:07:37.684Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T10:20:00.000Z",
+      "note": "Adversarial review before building. The three audits ask one question, so the shortest thing that answers it is one step that presses a tile and says whether a drag came of it, plus one walk per kind of tile. Deliberately NOT built: a general real-mouse drag framework. dragTile already covers the receiving half well and fast, and driving a whole drag with HID events would move the person's own cursor and need an Accessibility grant nobody has given. The deliverable is as much words as code: the answer has to land where the next three features will look for it."
+    },
+    {
+      "t": "2026-09-12T10:55:00.000Z",
+      "note": "ANSWER: a tile DOES come away in your hand. A press and a pull posted at the tile makes SwiftUI ask AppKit for a drag session; the ask is caught, recorded and refused, which is the proof and also means the step never changes the document. Colour tile comes away carrying com.photonz.paint, text style tile carrying com.photonz.text-style."
+    },
+    {
+      "t": "2026-09-12T11:05:00.000Z",
+      "note": "Nearly filed a false p1. The text style tile failed while the colour tile passed in the same walk, which read exactly like a broken tile. The control that saved it: picking the COLOUR tile up a second time in the same walk fails the same way. The app starts no second drag after the first, whatever the tile. Both tiles are fine; the limit is the harness's. It is now written at the top of PlaytestTilePickUp.swift, said out loud by the step when it happens, and the reason there are two walks instead of one."
+    },
+    {
+      "t": "2026-09-12T11:20:00.000Z",
+      "note": "Flaky until the pointer arrived first: firing a press at a tile out of nowhere came away about two times in three. A mouseMoved onto the tile, then the pull spread over real time rather than posted in a burst, made it 10 runs green out of 10 (5 per walk)."
+    },
+    {
+      "t": "2026-09-12T11:30:00.000Z",
+      "note": "Found while running the neighbours: text-style-walk and text-style-arming-walk each failed once in a batch with \"no menu called Size\", and passed alone. Not caused by this change (no shared code touched). Filed as find-out-why-a-walk-sometimes-cannot-find-the-si at p2, worded as a question, with both commands and both outputs."
     }
-  ]
+  ],
+  "started": "2026-09-12T10:07:37.683Z"
 }

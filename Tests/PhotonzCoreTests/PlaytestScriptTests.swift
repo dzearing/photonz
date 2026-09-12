@@ -1010,6 +1010,33 @@ struct PlaytestScriptTests {
         #expect(says == "is not text")
     }
 
+    /// `dragTile` hands the payload to the canvas itself, which proves what
+    /// happens once a tile is in the air but not that it ever left the shelf.
+    /// `pickUpTile` is the other half: it presses the tile with the mouse and
+    /// pulls, and says whether a drag actually started.
+    @Test func aWalkCanPickATileUpWithTheMouse() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "pickUpTile", "tile": "Heading", "to": [400, 300] } ] }
+        """)
+        guard case .pickUpTile(let tile, let to) = script.steps[0] else {
+            Issue.record("pickUpTile"); return
+        }
+        #expect(tile == "Heading")
+        #expect(to.point == CGPoint(x: 400, y: 300))
+        #expect(to.space == .document)
+        #expect(script.steps[0].name == "pickUpTile")
+    }
+
+    /// Where the tile is pulled to is the whole of the gesture, so a step that
+    /// does not say is not a gesture.
+    @Test func pickingATileUpNeedsSomewhereToPullIt() throws {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "pickUpTile", "tile": "Heading" } ] }
+            """)
+        }
+    }
+
     @Test func aTileDragTakesTheSameViewSpaceEveryOtherPointDoes() throws {
         let script = try decode("""
         { "steps": [ { "do": "dragTile", "tile": "Button", "to": [40, 30], "space": "view" } ] }
