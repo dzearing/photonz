@@ -1,0 +1,41 @@
+{
+  "id": "a-layer-s-box-is-the-pixels-it-actually-has",
+  "title": "A layer's box is the pixels it actually has",
+  "goal": "Make a new layer and it claims the size of the whole picture even though there is nothing in it. Fill a small box on it with a colour and it still claims the whole picture, so the handles are round the entire image instead of round the thing you just painted, and Position and Size reports numbers that describe nothing. A new layer should have no size until something is put on it, and painting into it should leave it the size of what you painted.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T16:47:29.083Z",
+  "updated": "2026-09-12T16:47:37.628Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-12: \"i hit ctrl-n to create a new layer. It has nothing in it, so i expect its size is 0x0. I select a box and fill it with color. I now expect the layer is the size of the box. However, it's full size of the image.\"\n\nThis is an INCONSISTENCY, not a new feature, and that is the strongest thing to know before starting: the app has already adopted the user's model in one place. deleteRegion (Sources/Photonz/EditorState+Regions.swift, around line 222) erases a region and then tightens the layer's frame to the surviving pixels, and its own comment gives the reason out loud: \"Photoshop's bounds are derived from content, so deletes shrink layers there too.\" It deletes the layer entirely when the erase consumes every pixel. So a delete already makes the box follow the content; a fill does not. Bring the fill in line with the delete rather than inventing a rule.\n\nThe machinery is already written. RegionOps.trimmed(_) hands back the trimmed image and its rect; deleteRegion converts that rect back into a document frame with the docToBitmap transform it built (same function, the CGAffineTransform(scaleX: bitmap.width / layer.frame.width ...) lines). A fill can take the identical path.\n\nWhere the two causes are:\n1. newEmptyLayer, Sources/Photonz/EditorState+Regions.swift:363, deliberately allocates a transparent bitmap the size of the whole canvas and gives the layer a frame of CGRect(origin: .zero, size: canvasSize). So the layer is picture-sized from birth, before anything is painted. That is also roughly 48MB of transparent pixels per empty layer on a 12 megapixel document, so fixing this is a memory win as well as a correctness one.\n2. fillRegion, same file line 215, bakes the colour into the existing bitmap through bakeRegion and never re-measures the layer. Since the bitmap is picture-sized, the layer stays picture-sized.\n\nA useful implementation note: Self.solidImage(hex:) makes a TINY solid bitmap and the comment at EditorState+Regions.swift:387 says layer frames stretch it because identical pixels resample to the same colour. So a solid fill of a region wants a small bitmap with the frame set to the region, which is the mechanism already in the file rather than anything new.\n\nTraps:\n- Do not change what a fill with NO marquee does. Filling a layer with nothing selected fills the whole layer, which is what Photoshop does too; it is only a filled REGION that should produce a region-sized box. That is in the acceptance list.\n- The locked Background must stay picture-sized. deleteRegion already special cases it and says why; fill has to keep the same exception.\n- A layer with no box is a new state for a lot of code. deleteRegion sidesteps it by deleting the layer when the last pixel goes, so nothing has had to handle a 0 by 0 layer before. Go looking: Handles.hit, Layer.contains(canvasPoint:), the Position and Size fields (Sources/Photonz/GeometryInspector.swift), the layers row thumbnail, and snapPeers. The renderer already guards this one spot (Sources/PhotonzRender/DocumentRenderer.swift:829 checks layer.frame.width > 0), which is a sign the others may not.\n- Decide and record what an empty layer offers: Photoshop gives it no handles and no transform until it has pixels. Whatever is chosen, the layers list must still let you pick it, and it must still accept paint.\n\nNot confirmed: the key the user pressed. They said ctrl-n, while EditorCommands.swift:134 records a 2026-07-05 user decision that Command-N is Layer > New Layer. Check which key actually made the layer before assuming the report is about the menu command; if ctrl-n is bound to something else that also makes a layer, that is a second finding worth its own note.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Reproduce it first and write the numbers in the log: make a new layer, read its size, fill a marquee box on it, read its size again",
+    "A brand new empty layer reports no size rather than the size of the picture, and says so consistently in the layers list, in Position and Size, and on the canvas",
+    "Filling a marquee box on an empty layer leaves the layer exactly the size and position of that box, measured rather than eyeballed",
+    "Painting again outside the current box grows the box to include the new paint, and only to include it",
+    "Erasing part of a layer still shrinks it the way it does today, so the two directions agree",
+    "The locked Background keeps the size of the picture, exactly as it does today, and the audit says the exception was checked",
+    "Filling with no marquee at all still fills the whole layer the way it does now: only a filled REGION gives the layer a region-sized box",
+    "A layer with no pixels does not break anything that asks for its box: handles, hit testing, Position and Size, its row thumbnail, and anything a drag snaps to are each checked with an empty layer selected",
+    "Fill and trim land in one undo step: one Command-Z puts back both the colour and the box",
+    "An empty layer no longer holds a picture-sized sheet of transparent pixels, and the audit says how much memory that saves on a 12 megapixel document",
+    "Tests in PhotonzCore and PhotonzRender for the trim after a fill, for growing the box, and for the empty-layer case, written before the change",
+    "A playtest walk makes a layer, fills a box on it, and checks the reported size",
+    "Audit under queue/audits/ with the sizes before and after, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T16:47:29.085Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-12T16:47:37.627Z",
+      "note": "seq 270 -> 11"
+    }
+  ]
+}
