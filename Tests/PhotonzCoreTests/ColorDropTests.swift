@@ -94,6 +94,13 @@ struct ColorDropTests {
         #expect(answer.note == "Paints Fill on all 3 of them with this colour.")
     }
 
+    /// Two swatches are both, not "all 2": the same reach, said the way
+    /// somebody would say it.
+    @Test func twoLayersSayBoth() {
+        let answer = ColorDrop.answer(dropping: red, on: target(wearing: blue, reaches: 2))
+        #expect(answer.note == "Paints Fill on both of them with this colour.")
+    }
+
     // MARK: - Gradients
 
     @Test func aSlotThatHoldsARampKeepsIt() {
@@ -309,6 +316,13 @@ struct DraggingASavedColourTests {
                                       on: ColorDrop.Target(part: "Outline", wearing: blue,
                                                            reaches: 3, isAbsent: true))
         #expect(answer.note == "Turns Outline on for all 3 of them, painted with this colour.")
+    }
+
+    @Test func aPartThatIsNotThereOnTwoSaysBoth() {
+        let answer = ColorDrop.answer(dropping: red,
+                                      on: ColorDrop.Target(part: "Outline", wearing: blue,
+                                                           reaches: 2, isAbsent: true))
+        #expect(answer.note == "Turns Outline on for both of them, painted with this colour.")
     }
 
     @Test func aNameLandingOnAPartThatIsNotThereTurnsItOnWearingTheName() {

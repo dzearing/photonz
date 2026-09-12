@@ -196,15 +196,15 @@ public enum ColorDrop {
         // A part that is not there yet is being SWITCHED ON as well as
         // painted, and saying only that it would be painted would promise half
         // the drop.
+        let crowd = CrowdWords.them(target.reaches)
         if target.isAbsent {
-            let who = target.reaches > 1 ? " for all \(target.reaches) of them" : ""
+            let who = crowd.map { " for \($0)" } ?? ""
             var sentence = "Turns \(target.part) on\(who), painted with \(colour)"
             if let name = landing.letsGoOf { sentence += " and lets go of \(name)" }
             return sentence + "."
         }
-        var sentence = target.reaches > 1
-            ? "Paints \(target.part) on all \(target.reaches) of them with \(colour)"
-            : "Paints \(target.part) with \(colour)"
+        var sentence = crowd.map { "Paints \(target.part) on \($0) with \(colour)" }
+            ?? "Paints \(target.part) with \(colour)"
         if let name = landing.letsGoOf { sentence += " and lets go of \(name)" }
         return sentence + "."
     }

@@ -55,6 +55,14 @@ struct TextStyleDropTests {
         #expect(answer.note == "Sets all 3 of them in Heading.")
     }
 
+    /// Two is the count nobody says out loud. The line reaches both pieces of
+    /// text either way; it just stops sounding like a machine tallying them.
+    @Test func aDropOnTwoPickedTextsSaysBoth() {
+        let answer = TextStyleDrop.answer(dropping: heading, on: text(reaches: 2))
+        #expect(answer.lands)
+        #expect(answer.note == "Sets both of them in Heading.")
+    }
+
     // MARK: - The drops that change nothing
 
     /// Bare canvas is not a refusal to explain away, it is a signpost: the
@@ -299,7 +307,7 @@ struct TextStyleRowDropTests {
         let picked: Set<UUID> = [ids[0], ids[1], ids[2]]
         let drop = c.doc.textStyleRowDrop(c.style, onRow: ids[0], picked: picked)
         #expect(drop.answer.lands)
-        #expect(drop.answer.note == "Sets all 2 of them in Heading.")
+        #expect(drop.answer.note == "Sets both of them in Heading.")
         #expect(Set(drop.layerIDs) == Set([ids[0], ids[1]]))
     }
 
@@ -318,7 +326,7 @@ struct TextStyleRowDropTests {
         let ids = c.doc.layers.map(\.id)
         c.doc.updateLayer(id: ids[2]) { $0.isLocked = true }
         let drop = c.doc.textStyleRowDrop(c.style, onRow: ids[0], picked: Set(ids))
-        #expect(drop.answer.note == "Sets all 2 of them in Heading.")
+        #expect(drop.answer.note == "Sets both of them in Heading.")
         #expect(Set(drop.layerIDs) == Set([ids[0], ids[1]]))
     }
 

@@ -1,0 +1,27 @@
+{
+  "feature": "The drop line stops counting at two",
+  "epic": "ui-building",
+  "summary": "Carry a text style or a colour over two selected layers and the app now says \"both of them\" instead of \"all 2 of them\". Three or more still says the number, because that is the part worth knowing.",
+  "setup": "Photonz Probe or Photonz Dev, release Next. Nothing to switch on.",
+  "try": [
+    { "do": "Draw two pieces of text on the canvas." },
+    { "do": "Select the first, then shift click the second." },
+    { "do": "Save a text style called Heading from the Text section, so a tile appears on the Library shelf." },
+    { "do": "Drag the Heading tile over one of the two selected pieces of text and hold it there.", "shot": "2026-09-12-both-of-them-drop-line.png" },
+    { "do": "Read the blue pill under the pointer: it should say \"Sets both of them in Heading.\"" },
+    { "do": "Add a third piece of text, select all three, and hold the tile over them again: the pill goes back to \"Sets all 3 of them in Heading.\"" },
+    { "do": "Select two shapes, hover the Fill swatch while dragging a colour onto it, and let the tooltip settle: it says \"Paints Fill on both of them with this colour.\"" }
+  ],
+  "evaluate": [
+    "Does \"both of them\" read like something a person would say, where \"all 2 of them\" did not?",
+    "Is \"all 3 of them\" still the right shape from three up, or would you rather see a number at two as well?",
+    "The pill sits under the pointer and the panel a few inches away still says \"2 layers\" and \"1 of them\". Do those two ways of counting clash?",
+    "Dropping a text style shows a sentence in a pill. Dropping a colour on a swatch shows only a lit ring, with the sentence hidden in a tooltip. Should the colour drop speak up the same way?"
+  ],
+  "rough": [
+    "Screen Recording is granted for the probe, so the picture above is a real capture of the window, not an offscreen render.",
+    "Only the two drop sentences and the Effects list eye now share the wording. About eighteen other places in the panel still say \"all 2 of them\" in their tooltips and notes: Parts, Effects, the colour panel, the component panel, and the saved style warnings. Filed as a follow-up to sweep them with the same helper.",
+    "The colour drop sentence is never drawn on screen. It is a tooltip and a screen reader value only, so it has no photograph here and it is verified by unit tests instead. Filed as a follow-up, because the text style drop shows its sentence in a pill and the colour drop showing nothing is a difference nobody chose.",
+    "effects-remembered-walk fails on main, before and after this change, at step 24. Filed separately; it is not caused by this work."
+  ]
+}

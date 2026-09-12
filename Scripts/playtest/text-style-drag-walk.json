@@ -86,7 +86,7 @@
     { "do": "wait", "seconds": 0.8 },
     {
       "do": "dragTile", "tile": "Heading", "to": [200, 315],
-      "expect": "takes", "says": "Sets all 2 of them in Heading",
+      "expect": "takes", "says": "Sets both of them in Heading",
       "hold": "6-over-two-picked"
     },
     { "do": "wait", "seconds": 1 },

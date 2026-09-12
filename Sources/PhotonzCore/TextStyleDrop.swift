@@ -167,7 +167,7 @@ public enum TextStyleDrop {
         // outline round it and the pointer on it already say WHICH text, and
         // the made-up name a fresh block gets ("Text 2") would say less than
         // the two words it is drawn over.
-        let who = target.reaches > 1 ? "all \(target.reaches) of them" : "this text"
+        let who = CrowdWords.them(target.reaches) ?? "this text"
         var sentence = "Sets \(who) in \(style.name)"
         // Only worth saying for the one piece of text being named. A crowd
         // could be letting go of several different names at once, and picking

@@ -378,9 +378,9 @@ private struct EffectRowView: View {
         }
         .buttonStyle(.plain)
         .opacity(row.isMixed ? MixedLook.controlOpacity : 1)
-        .panelHelp(row.switchIDs.count > 1
-              ? "Stops it drawing on all \(row.switchIDs.count) of them, and keeps its settings"
-              : "Stops it drawing, and keeps its settings")
+        .panelHelp(CrowdWords.them(row.switchIDs.count)
+              .map { "Stops it drawing on \($0), and keeps its settings" }
+              ?? "Stops it drawing, and keeps its settings")
         .accessibilityLabel(isShowing ? "Hide \(row.title)" : "Show \(row.title)")
         // The row's own reading, not a bare on/off: over two shapes where only
         // one holds the effect the switch used to announce a flat "on" while

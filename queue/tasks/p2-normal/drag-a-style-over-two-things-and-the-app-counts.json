@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:42:19.780Z",
-  "updated": "2026-09-09T12:22:11.389Z",
+  "updated": "2026-09-12T09:31:31.388Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-09-text-style-drag.json, which asked for it to be fixed across both places rather than in one and left wrong in the other.\n\nExact strings, read on 2026-09-09: Sources/PhotonzCore/ColorDrop.swift:206 \"Paints \\(target.part) on all \\(target.reaches) of them with \\(colour)\" and Sources/PhotonzCore/TextStyleDrop.swift:102 \"Sets \\(who) in \\(style.name)\" where who is \"all \\(target.reaches) of them\". Sources/Photonz/EffectsListInspector.swift:382 has a third of the same shape (\"Stops it drawing on all N of them\"); include it if the extraction reaches, and say so either way.\n\nHouse copy rules apply: plain short human language, no em dashes.",
@@ -33,6 +33,47 @@
     {
       "t": "2026-09-09T12:22:11.388Z",
       "note": "seq 40 -> 20"
+    },
+    {
+      "t": "2026-09-12T09:31:31.387Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T09:44:42.658Z",
+      "note": "adversarial pass before building: two is both, and nothing about this needs the user to choose. Went wider than the mock asked in one way (one shared helper) and narrower in another (only the drop lines plus the Effects eye, not the eighteen other places that count at two, which is filed separately)."
+    },
+    {
+      "t": "2026-09-12T09:44:42.659Z",
+      "note": "built CrowdWords.them(_:) in PhotonzCore: nil for one, \"both of them\" for two, \"all N of them\" from three. Tests first, in Tests/PhotonzCoreTests/CrowdWordsTests.swift."
+    },
+    {
+      "t": "2026-09-12T09:44:42.659Z",
+      "note": "three sentences now read from it: ColorDrop.swift (both the painted case and the turns-a-part-on case), TextStyleDrop.swift, and EffectsListInspector.swift. The extraction DID reach the Effects eye, as the notes asked."
+    },
+    {
+      "t": "2026-09-12T09:44:42.659Z",
+      "note": "updated the tests that pinned the old strings and added two-selected cases on both drop sentences. Scripts/test.sh: 5577 tests, all pass."
+    },
+    {
+      "t": "2026-09-12T09:44:42.659Z",
+      "note": "walks: text-style-drag-walk.json and text-style-row-drop-walk.json now expect \"Sets both of them in Heading\"; all four text-style walks pass. mixed-part-keeps-its-colour-walk passes too."
+    },
+    {
+      "t": "2026-09-12T09:44:42.659Z",
+      "note": "verified live on the probe with Screen Recording granted: the capture shows the pill under the pointer reading \"Sets both of them in Heading.\" Copied to queue/audits/2026-09-12-both-of-them-drop-line.png."
+    },
+    {
+      "t": "2026-09-12T09:44:42.659Z",
+      "note": "adversarial pass on the built thing: the colour drop sentence is never DRAWN, only a tooltip and a screen reader value, so dropping a colour on a swatch shows a lit ring and no words while the text style drop shows a whole sentence. Filed as dropping-a-colour-on-a-swatch-says-nothing-back."
+    },
+    {
+      "t": "2026-09-12T09:44:42.659Z",
+      "note": "also filed the-rest-of-the-panel-still-counts-at-two (eighteen more sites) and effects-remembered-walk-fails-at-step-24 (pre-existing, reproduced on clean main with this work stashed)."
+    },
+    {
+      "t": "2026-09-12T09:44:42.659Z",
+      "note": "audit at queue/audits/2026-09-12-both-of-them-drop-line.json."
     }
-  ]
+  ],
+  "started": "2026-09-12T09:31:31.386Z"
 }

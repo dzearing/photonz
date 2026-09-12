@@ -1,0 +1,28 @@
+{
+  "id": "the-rest-of-the-panel-still-counts-at-two",
+  "title": "The rest of the panel still counts at two",
+  "goal": "Hold two layers selected and most of the panel still talks like a tally: \"Turns the shadow on or off for all 2 of them\", \"A color picked here takes all 2 of them off the style\". The drop lines were fixed to say \"both of them\"; everywhere else in the panel should say it too, so one selection is not described two different ways an inch apart.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2400,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T09:43:33.962Z",
+  "updated": "2026-09-12T09:43:33.965Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CrowdWords.them(_:) landed in Sources/PhotonzCore/CrowdWords.swift on 2026-09-12 and returns \"both of them\" / \"all N of them\" / nil for one. The drop lines (ColorDrop, TextStyleDrop) and EffectsListInspector already use it.\n\nThe sites still counting, read on 2026-09-12:\nSources/PhotonzCore/TextStyleLibrary.swift:438, Sources/PhotonzCore/EffectStyles.swift:537, Sources/PhotonzCore/ColorStyleSelection.swift:178, Sources/Photonz/PartsInspector.swift:324 and :327, Sources/Photonz/LayerEffectsInspector.swift:267 and :269, Sources/Photonz/ComponentPanel.swift:689 and :1865, Sources/Photonz/ColorStylePanel.swift:899 and :1004.\n\nCore ones are test-first; check Tests/PhotonzCoreTests for pinned strings (most use 3, so they should pass unchanged) and add a two-selected case per sentence.",
+  "acceptance": [
+    "With exactly two layers selected, no tooltip or panel note anywhere reads \"all 2 of them\"",
+    "Three or more still names the number",
+    "Every one of those sentences is built from the same helper the drop lines use, so none of them can drift back",
+    "Scripts/test.sh passes and the walks that pin any of these sentences pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T09:43:33.964Z",
+      "note": "created (manual)"
+    }
+  ]
+}

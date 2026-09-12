@@ -95,7 +95,7 @@
     { "do": "wait", "seconds": 0.8 },
     {
       "do": "dragTile", "tile": "Heading", "onto": "Text 2",
-      "expect": "takes", "says": "Sets all 2 of them in Heading",
+      "expect": "takes", "says": "Sets both of them in Heading",
       "hold": "7-over-two-picked-rows"
     },
     { "do": "wait", "seconds": 1 },

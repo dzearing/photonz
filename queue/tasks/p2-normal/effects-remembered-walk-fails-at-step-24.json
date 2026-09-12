@@ -1,0 +1,26 @@
+{
+  "id": "effects-remembered-walk-fails-at-step-24",
+  "title": "effects-remembered-walk fails at step 24",
+  "goal": "A scripted walk that checks the Effects list remembers what you had open is failing, so nobody is watching that behaviour. Find out what changed and either fix the app or fix the walk.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2420,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T09:43:42.058Z",
+  "updated": "2026-09-12T09:43:42.061Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-12, and it is NOT caused by the CrowdWords change that landed the same day: it fails identically on a clean checkout of main with that work stashed.\n\nWith the change:\n  $ Scripts/playtest-all.sh effects-open-into-view effects-remembered\n  effects-open-into-view-walk                10s  ok\n  effects-remembered-walk                     6s  FAILED  step 24 (expect): the control called \"Remove\" in \"Blur\" is in the panel, and this step says it should not be\n\nOn clean main (git stash push -u, same command):\n  effects-open-into-view-walk                11s  ok\n  effects-remembered-walk                     5s  FAILED  step 24 (expect): the control called \"Remove\" in \"Blur\" is in the panel, and this step says it should not be\n\nSeparately, effects-open-into-view-walk failed once inside a seven walk batch (Scripts/playtest-all.sh --no-build effects) at step 12 expecting \"Border, shut\" and reading \"Border, open\", then passed alone both with and without the change. That looks like state leaking between walks sharing one probe launch, and may be worth its own look.",
+  "acceptance": [
+    "Scripts/playtest-all.sh --no-build effects-remembered passes",
+    "If the app was wrong, the fix has a test; if the walk was wrong, the walk says what it now expects and why"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T09:43:42.060Z",
+      "note": "created (manual)"
+    }
+  ]
+}
