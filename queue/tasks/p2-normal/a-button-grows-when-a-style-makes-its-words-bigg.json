@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:42:58.308Z",
-  "updated": "2026-09-12T13:05:21.410005Z",
+  "updated": "2026-09-12T13:05:26.901Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED on 2026-09-09. Scripts/playtest.sh Scripts/playtest/style-on-a-copy-walk.json --no-build: the walk places the starter Button as an original, saves a 32 px Georgia Bold text style called Heading, and lets it go on the original label. Compare /tmp/photonz-playtest/style-on-a-copy/2-copy.png with 5-copy-follows.png: the words grow from about 11 px to 32 px, the blue pill stays about 78 px wide in both, and the label hangs out of both ends on the original AND on the copy. Scripts/playtest/button-hug-walk.json proves the other path works, so the hug does re-run when the WORDS change (a wording knob) and does not when the TREATMENT changes. Likely the text-style path sets the treatment and re-measures the text box without asking the enclosing group to lay out again. Entry point: EditorState+TextStyles onDropTextStyle, and whatever button-hug-walk s retype path calls after commitTextEdit.",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-12T13:05:21.410005Z",
       "note": "NOT MINE: text-style-walk and text-style-arming-walk fail inside a 15 walk batch and pass on their own, before and after this change. Filed as find-out-why-a-walk-passes-on-its-own-and-fails (p2) with both commands and both outputs."
+    },
+    {
+      "t": "2026-09-12T13:05:26.899Z",
+      "note": "The starter Button and Badge now floor their height instead of fixing it, so bigger type grows the pill instead of hanging out of it. Sources/PhotonzCore/StarterComponents.swift + GroupLayout.free; three new tests in GroupHugTests, 5670 green; verified in the app with style-on-a-copy-walk and about 95 other walks; audit at queue/audits/2026-09-12-ui-layout-button-hug.json."
     }
   ],
-  "started": "2026-09-12T12:29:51.242Z"
+  "started": "2026-09-12T12:29:51.242Z",
+  "completed": "2026-09-12T13:05:26.900Z"
 }
