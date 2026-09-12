@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:43:16.924Z",
-  "updated": "2026-09-12T13:34:24.311568Z",
+  "updated": "2026-09-12T13:34:26.776Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the wording fix landed 2026-09-09 (Sources/PhotonzCore/TextStyleDrop.swift, CopyPiece). A copy can already own its colour, its size, its room, its opacity and its wording; a text style would be one more of the same family, but styles are the one thing that reach a copy from OUTSIDE the component (the Library shelf), so it is not obviously the same shape. Building it means a new kind of instance override plus a way back on the panel, so it should not start before the card is answered.",
@@ -75,7 +75,12 @@
     {
       "t": "2026-09-12T13:34:24.311568Z",
       "note": "audit: queue/audits/2026-09-12-copy-own-text-style.json with two real window captures (Screen Recording granted)."
+    },
+    {
+      "t": "2026-09-12T13:34:26.774Z",
+      "note": "A saved text style let go on the words inside a copy now sets that copy alone (PhotonzCore/ComponentPieceTextStyle.swift, applied in the component sync), the sentence under the pointer says \"Sets Label in Heading on this copy only\", and the Component section carries an \"Its own type\" row with a one press way back. Verified: Scripts/test.sh 5690 green, style-on-a-copy-walk rewritten and passing, all 9 copy walks and all 16 component walks passing. Audit at queue/audits/2026-09-12-copy-own-text-style.json with two real window captures."
     }
   ],
-  "started": "2026-09-12T13:05:50.611Z"
+  "started": "2026-09-12T13:05:50.611Z",
+  "completed": "2026-09-12T13:34:26.775Z"
 }
