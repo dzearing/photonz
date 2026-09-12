@@ -311,6 +311,15 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                 let layer = list[index]
                 guard layer.isVisible, !layer.isLocked else { continue }
                 if layer.isGroup {
+                    // A turned group is clicked where the turn PUT it: the
+                    // point steps back into the group's own upright space
+                    // before anything inside is asked about it, so the walk
+                    // below never has to know the group is on a slant.
+                    var point = point
+                    if !layer.transform.isIdentity {
+                        point = point.applying(
+                            layer.transform.affineTransform(around: layer.turnPivot).inverted())
+                    }
                     // A container that cuts off what leaves it answers for everything
                     // inside it: what hangs off its edge is not on screen to be hit.
                     if layer.clipsToBounds, !layer.localBounds.contains(point) { continue }
@@ -385,8 +394,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // The box you can see: a band swept round a label's words catches
         // it, rather than stopping four points short of an edge that is
         // not drawn.
-        var bounds = layer.isGroup ? layer.localBounds : layer.withoutSlack(layer.frame)
-        if !layer.isGroup, !layer.transform.isIdentity {
+        var bounds = layer.turnBox
+        if !layer.transform.isIdentity {
             let corners = layer.transformedCorners
             guard let first = corners.first else { return false }
             bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {

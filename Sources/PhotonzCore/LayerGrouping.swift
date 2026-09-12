@@ -389,3 +389,57 @@ extension PhotonzDocument {
         }
     }
 }
+
+extension PhotonzDocument {
+
+    /// How everything inside this layer's containers has been TURNED, as one
+    /// map from the space the layer is drawn in to the canvas you see.
+    ///
+    /// Identity for a layer sitting loose on the canvas, and for every layer
+    /// in a document where no group has been turned, which is every document
+    /// that has never used the knob on a group. Where a group HAS been turned,
+    /// this is what the canvas has to put its chrome through to draw on the
+    /// piece rather than beside it.
+    ///
+    /// Composed innermost first, because each container's own turn is stated
+    /// in its parent's upright space: a badge turned inside a card turned
+    /// inside the canvas swings about its own middle first and then rides the
+    /// card's swing.
+    public func inheritedTurn(of id: UUID) -> CGAffineTransform {
+        guard let path = path(of: id), path.count > 1 else { return .identity }
+        var origin = CGPoint.zero
+        var list = layers
+        var turns: [CGAffineTransform] = []
+        for index in path.dropLast() {
+            guard list.indices.contains(index) else { break }
+            let container = list[index]
+            if !container.transform.isIdentity {
+                let pivot = container.turnPivot
+                turns.append(container.transform.affineTransform(
+                    around: CGPoint(x: pivot.x + origin.x, y: pivot.y + origin.y)))
+            }
+            origin.x += container.frame.origin.x
+            origin.y += container.frame.origin.y
+            list = container.children
+        }
+        return turns.reversed().reduce(CGAffineTransform.identity) { $0.concatenating($1) }
+    }
+
+    /// The OUTERMOST container above this layer that has been turned, or nil
+    /// when nothing above it has. A drag on a piece inside a turned card takes
+    /// hold of this instead of the piece: the piece's own place is stated in
+    /// the card's upright space, so dragging it would send it off at an angle
+    /// to the pointer, and taking the card is what the person grabbing it
+    /// meant anyway. Same rule, and the same reason, as a piece inside a copy
+    /// of a component.
+    public func turnedContainer(of id: UUID) -> UUID? {
+        guard let path = path(of: id), path.count > 1 else { return nil }
+        var list = layers
+        for index in path.dropLast() {
+            guard list.indices.contains(index) else { return nil }
+            if !list[index].transform.isIdentity { return list[index].id }
+            list = list[index].children
+        }
+        return nil
+    }
+}

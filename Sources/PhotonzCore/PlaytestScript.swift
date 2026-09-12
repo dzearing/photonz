@@ -631,6 +631,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// same preview-and-commit path the panel does rather than a shortcut past
     /// it. One undo step lands per drag, however many layers it reached.
     case dragCornerRadius, dragOpacity
+    /// The rotate knob as a hand drags it: a few live frames on its way round
+    /// and then a release, so a walk takes the same preview-and-commit path a
+    /// real turn takes rather than a shortcut past it. `turnKnob` puts the
+    /// picked layer on a twenty degree slant and `turnKnobStraight` brings it
+    /// back to nought, so a walk can show a thing turned and a thing put back.
+    /// The knob itself floats off the top edge, which a walk cannot aim at
+    /// without knowing the zoom, so this is the way in.
+    case turnKnob, turnKnobStraight
     /// A colour drag in the picker, taken in two halves so a walk can stand in
     /// the middle of one. `holdColorDrag` pushes a few live frames at the
     /// picked layers' first colour row and STAYS DOWN, which is the moment

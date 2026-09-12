@@ -499,6 +499,15 @@ extension CanvasNSView {
                let copy = document?.canvasLayer(id: piece.instance) {
                 hit = copy
             }
+            // And dragging a piece inside a card that has been TURNED drags
+            // the card, for the same reason: the piece's place is stated in
+            // the card's upright space, so a drag on the piece would send it
+            // off at an angle to the pointer. The card is what the hand on it
+            // meant (`CanvasGroups.offersOwnHandles`).
+            if let turned = document?.turnedContainer(of: pick.id),
+               let card = document?.canvasLayer(id: turned) {
+                hit = card
+            }
             // The drag preview (two full renders, then a pass to hand the
             // canvas its sprite) starts once the pointer really travels, in
             // mouseDragged, not here: most presses on a layer are clicks that

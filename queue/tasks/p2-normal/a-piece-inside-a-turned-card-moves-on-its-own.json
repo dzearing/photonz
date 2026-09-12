@@ -1,0 +1,28 @@
+{
+  "id": "a-piece-inside-a-turned-card-moves-on-its-own",
+  "title": "A piece inside a turned card moves on its own",
+  "goal": "You can turn a card of shapes and everything in it turns with it, but once it is on a slant you cannot nudge the label inside it: the piece is outlined where it is and takes colour and wording, yet dragging it moves the whole card instead. To move or resize one piece you have to straighten the card, edit, and type the angle back.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2500,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T11:47:53.211Z",
+  "updated": "2026-09-12T11:47:53.214Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Shipped 2026-09-12 with the group turning work, deliberately out of that slice. The handles are withheld by CanvasGroups.offersOwnHandles via PhotonzDocument.inheritedTurn, and the drag is redirected to PhotonzDocument.turnedContainer in CanvasPointerDrags, exactly the way a piece inside a component copy already behaves.\n\nThe real fix is to compose the inherited turn into the canvas-space doors: EditorState.canvasFrame / storedCanvasFrame and PhotonzDocument.canvasLayer / parentSpaceFrame. A child frame stays a CGRect whose centre is the turned centre and whose own transform.rotation gains the ancestor angle, so the chrome and the pointer maths already work; the write path has to un-turn the centre about the ancestor pivot before subtracting parentOrigin. The drag sprite also has to carry the ancestor angle or it floats upright over a turned card (that was the visible smear before the handles were withheld).\n\nThe audit queue/audits/2026-09-12-group-turn.json asks the user whether they want this at all, so check their answer before building.",
+  "acceptance": [
+    "A piece inside a turned card shows its own handles, sitting on the turned piece",
+    "Dragging that piece moves it with the pointer, not at an angle to it",
+    "Resizing it with a corner handle keeps the opposite corner where it was on screen",
+    "Snapping and the alignment guides read the turned positions"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T11:47:53.213Z",
+      "note": "created (manual)"
+    }
+  ]
+}

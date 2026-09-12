@@ -73,6 +73,29 @@ extension CanvasNSView {
     ///
     /// Empty when the document has nothing that wears a name, which is every
     /// screenshot anybody has taken.
+    /// The box a name hangs above once turning is in the picture: the box the
+    /// turn puts the drawing in, so the mark on a copy on a slant sits over
+    /// the slanted copy rather than over the upright box it used to fill.
+    ///
+    /// It is the box AROUND the turned drawing, not a turned box: a name is
+    /// read left to right whatever the thing under it is doing, and a label
+    /// printed on a slant would be a second thing to decipher.
+    private func turned(_ bounds: CGRect, of layer: Layer) -> CGRect {
+        let own = layer.transform.isIdentity
+            ? CGAffineTransform.identity
+            : layer.transform.affineTransform(
+                around: CGPoint(x: bounds.midX, y: bounds.midY))
+        let map = own.concatenating(inheritedTurn(of: layer.id))
+        guard !map.isIdentity else { return bounds }
+        let corners = [CGPoint(x: bounds.minX, y: bounds.minY),
+                       CGPoint(x: bounds.maxX, y: bounds.minY),
+                       CGPoint(x: bounds.maxX, y: bounds.maxY),
+                       CGPoint(x: bounds.minX, y: bounds.maxY)].map { $0.applying(map) }
+        return corners.dropFirst().reduce(CGRect(origin: corners[0], size: .zero)) {
+            $0.union(CGRect(origin: $1, size: .zero))
+        }
+    }
+
     func canvasNameChips() -> [CanvasNameChip] {
         guard let viewport, let document else { return [] }
         var chips: [CanvasNameChip] = []
@@ -85,7 +108,7 @@ extension CanvasNSView {
             // while that corner is being dragged (`liveCanvasBounds`).
             guard layer.isVisible, let bounds = liveCanvasBounds(of: layer.id),
                   bounds.width > 0, bounds.height > 0 else { return }
-            let rect = viewRect(forDocRect: bounds, in: viewport)
+            let rect = viewRect(forDocRect: turned(bounds, of: layer), in: viewport)
             let version = kind == .screen ? nil : versions[layer.id]
             let caption = CanvasNameLabels.caption(name: layer.name, version: version,
                                                    isCopy: kind == .copyMark)

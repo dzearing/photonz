@@ -24,7 +24,10 @@ public enum RenderDiff {
             // so the region it can touch comes from what it holds, already
             // grown by every style reach inside it. Callouts anywhere in the
             // tree also mirror the canvas they magnify.
-            var bounds = layer.renderBounds
+            // Through the group's own turn, so redrawing a card that has just
+            // been put on a slant repaints where it landed as well as where it
+            // was (`Layer.turnedReach`).
+            var bounds = layer.turnedReach
             for inner in layer.selfAndDescendants {
                 if case .zoomCallout(let callout) = inner.content {
                     bounds = bounds.union(callout.sourceRect.standardized)
@@ -35,8 +38,7 @@ public enum RenderDiff {
         }
         var bounds = layer.frame
         if !layer.transform.isIdentity {
-            let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
-            bounds = layer.frame.applying(layer.transform.affineTransform(around: center))
+            bounds = layer.frame.applying(layer.transform.affineTransform(around: layer.turnPivot))
         }
         if case .zoomCallout(let callout) = layer.content {
             bounds = bounds.union(callout.sourceRect.standardized)

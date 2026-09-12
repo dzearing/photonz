@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/turn-a-group",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1360, "height": 1080 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [240, 180], "to": [600, 300], "steps": 8 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [300, 220] },
+    { "do": "type", "text": "Save" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [190, 140], "to": [660, 360], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "group-upright" },
+    { "do": "snapshot", "name": "turn-group-1-upright" },
+
+    { "do": "action", "action": "turnKnob" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "group-on-a-slant" },
+    { "do": "snapshot", "name": "turn-group-2-turned" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "one-undo-puts-it-back" },
+    { "do": "snapshot", "name": "turn-group-3-undone" }
+  ]
+}

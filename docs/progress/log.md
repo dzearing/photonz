@@ -14231,3 +14231,41 @@ just stopped the walks passing over the top of them.
 
 Next: `adding-an-effect-leaves-every-one-of-its-setting` is the real feature bug
 of the three.
+
+## 2026-09-12 — a group turns like anything else
+
+A group now takes the rotate knob and the A field. The whole slice is one
+question asked in one place: `Layer.turnPivot` (with `Layer.turnBox` beside
+it), which is the middle of the box a group's contents make rather than the
+anchor its frame really is. The renderer, the outline, the knob, the frame
+handles, the hit test and the rubber band all ask it, so none of them can
+pivot somewhere the others do not. `LayerGeometryEditing` lets a group turn
+and keeps a sentence for SCREENS, which deliberately hold still: a screen is
+the surface you build on, printed with its name above its corner and sitting
+in a column, so one on a slant would tilt the room rather than the furniture.
+
+Renderer: a turned group composites into a buffer and the turn takes that one
+picture, after the blur and before the shadow, exactly where a single layer
+takes its own. A plain group that has been turned therefore no longer passes
+straight through the compositor. `Layer.renderBounds` grew to account for a
+child's turn (`turnedReach`), or a turned card inside a container that draws
+as one object was clipped away entirely; `RenderDiff.visualBounds` reads the
+same thing so a repaint covers where the card landed.
+
+The second adversarial pass caught the real problem: double clicking into a
+turned card and dragging a piece moved it off at an angle to the pointer,
+drew upright handles over a slanted card, and smeared the picture with an
+upright drag sprite. A piece under a turned container now offers no handles
+of its own and a drag on it takes hold of the card, which is the road a piece
+inside a component copy has always taken. Its outline composes the inherited
+turn (`PhotonzDocument.inheritedTurn`), so it is outlined exactly where it is
+and still takes colour, wording and styling.
+
+Verified on the probe with a new `turn-a-group-walk` and a scratch walk for
+stepping inside a turned card; real screen captures, not offscreen renders.
+Perf on the composite path is unchanged: an untturned document pays one
+`isIdentity` check per group (12MP/10-layer interactive edit inside a plain
+group, median 6.8ms).
+
+Next: `a-piece-inside-a-turned-card-moves-on-its-own` is the follow-up, but
+the audit asks the user first whether they want pieces editable on the slant.

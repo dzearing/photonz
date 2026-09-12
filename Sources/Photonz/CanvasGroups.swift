@@ -71,16 +71,38 @@ extension CanvasNSView {
     /// not: dragging one of its corners would resize something the next sync
     /// puts straight back, so there is nothing to grab. Dragging the piece
     /// itself moves the whole copy instead, which is what the person meant.
+    ///
+    /// Neither does a piece inside a card that has been TURNED. Its place and
+    /// its size are stated in the card's upright space, so a handle pulled
+    /// sideways would send it off at an angle to the pointer. Its outline
+    /// still draws on it, so you can see what you have picked and restyle it;
+    /// to move or resize it, straighten the card, which the A field puts back
+    /// to the degree.
     func offersOwnHandles(_ layer: Layer) -> Bool {
         layer.offersHandles && componentPiece(of: layer.id) == nil
+            && inheritedTurn(of: layer.id).isIdentity
     }
 
-    /// Whether the selected layer offers the rotate knob. A group never does:
-    /// groups translate and nothing else, so a knob that turned one would be a
-    /// control with nothing behind it. Neither does a locked layer, which
-    /// offers no handles of any kind (`Layer.offersHandles`).
+    /// How the containers above a layer have turned it, in canvas space.
+    /// Identity for everything at the top level, and for every layer in a
+    /// document where no group has been turned.
+    func inheritedTurn(of id: UUID) -> CGAffineTransform {
+        document?.inheritedTurn(of: id) ?? .identity
+    }
+
+    /// Whether the selected layer offers the rotate knob. A group does: the
+    /// knob turns the whole card and everything in it at once, about the
+    /// middle of the box its contents make (`Layer.turnPivot`).
+    ///
+    /// A SCREEN does not. A screen is the surface you build on, printed with
+    /// its name above its top left corner and sitting in a column with its
+    /// neighbours, so a screen on a slant would tilt the room rather than the
+    /// furniture. Neither does a shape held between two ends, which is aimed
+    /// by its ends, nor a locked layer, which offers no handles of any kind
+    /// (`Layer.offersHandles`). The Position and Size panel asks the same
+    /// question in the same words (`LayerGeometryEditing`).
     func offersRotation(_ layer: Layer) -> Bool {
-        offersOwnHandles(layer) && !layer.hasEndpointHandles && !layer.isGroup
+        offersOwnHandles(layer) && !layer.hasEndpointHandles && !layer.isFrame
     }
 }
 
@@ -127,11 +149,17 @@ extension CanvasNSView {
             return
         }
         applyGroupContextStyle(lit: sweeping)
-        let origin = viewport.viewPoint(fromDocument: bounds.origin)
-        let rect = CGRect(x: origin.x, y: origin.y,
-                          width: bounds.width * viewport.zoom,
-                          height: bounds.height * viewport.zoom)
-        groupContextLayer.path = CGPath(rect: rect.insetBy(dx: -3, dy: -3), transform: nil)
+        // The box follows the group's own turn, so stepping into a card on a
+        // slant lights up the slanted room rather than an upright box the
+        // contents hang out of on two corners.
+        let turn = document.layer(id: context)?.transform ?? .identity
+        let pivot = CGPoint(x: bounds.midX, y: bounds.midY)
+        var toView = (turn.isIdentity ? CGAffineTransform.identity
+                                      : turn.affineTransform(around: pivot))
+            .concatenating(viewport.documentToView)
+        let room = 3 / viewport.zoom
+        groupContextLayer.path = CGPath(rect: bounds.insetBy(dx: -room, dy: -room),
+                                        transform: &toView)
         groupContextLayer.isHidden = false
     }
 

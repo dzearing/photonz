@@ -35,6 +35,13 @@ struct LayerRotationFieldTests {
                      frame: CGRect(x: 5, y: 5, width: 0, height: 0))
     }
 
+    private func screen() -> Layer {
+        var content = GroupContent(children: [])
+        content.isFrame = true
+        return Layer(name: "Screen", content: .group(content),
+                     frame: CGRect(x: 0, y: 0, width: 320, height: 200))
+    }
+
     private func member(_ layer: Layer, at degrees: CGFloat = 0) -> LayerGeometrySelection.Member {
         LayerGeometrySelection.Member(id: layer.id, frame: layer.frame,
                                       editing: LayerGeometryEditing(layer: layer),
@@ -68,16 +75,27 @@ struct LayerRotationFieldTests {
         #expect(sel.isReadOnly(.rotation))
     }
 
-    @Test("A group has no angle at all: a dash and a sentence, not a live box showing 0")
-    func aGroupDoesNotTurn() {
+    @Test("A group takes an angle like anything else, and reads back the one it was turned to")
+    func aGroupTurns() {
         let editing = LayerGeometryEditing(layer: group())
+        #expect(editing.allows(.rotation))
+        #expect(editing.shows(.rotation))
+        #expect(editing.fixedReason(for: .rotation) == nil)
+        let sel = one(group(), at: 30)
+        #expect(sel.reading(.rotation) == .agreed(30))
+        #expect(!sel.isReadOnly(.rotation))
+    }
+
+    @Test("A screen has no angle at all: a dash and a sentence, not a live box showing 0")
+    func aScreenDoesNotTurn() {
+        let editing = LayerGeometryEditing(layer: screen())
         #expect(!editing.allows(.rotation))
         #expect(!editing.shows(.rotation))
-        #expect(editing.fixedReason(for: .rotation) == LayerGeometryEditing.groupTurnReason)
-        let sel = one(group())
+        #expect(editing.fixedReason(for: .rotation) == LayerGeometryEditing.screenTurnReason)
+        let sel = one(screen())
         #expect(sel.reading(.rotation) == .empty)
         #expect(sel.reading(.rotation).readoutText(for: .rotation) == LayerGeometrySelection.blankText)
-        #expect(sel.explanation(for: .rotation) == LayerGeometryEditing.groupTurnReason)
+        #expect(sel.explanation(for: .rotation) == LayerGeometryEditing.screenTurnReason)
     }
 
     @Test("A shape held between two ends is aimed by its ends, so it takes no typed angle")
@@ -153,11 +171,19 @@ struct LayerRotationFieldTests {
     }
 
     @Test("Layers that cannot turn sit the typed angle out")
-    func lockedAndGroupsSitOut() {
+    func lockedAndScreensSitOut() {
         let locked = rectangle(CGRect(x: 0, y: 0, width: 100, height: 50), locked: true)
         let turnable = rectangle(CGRect(x: 0, y: 0, width: 100, height: 50))
-        let sel = LayerGeometrySelection([member(locked), member(group()), member(turnable)])
+        let sel = LayerGeometrySelection([member(locked), member(screen()), member(turnable)])
         #expect(sel.turning(to: 45) == [turnable.id: 45])
+    }
+
+    @Test("A group in the selection takes the typed angle with everything else")
+    func aGroupTurnsWithTheRest() {
+        let group = group()
+        let turnable = rectangle(CGRect(x: 0, y: 0, width: 100, height: 50))
+        let sel = LayerGeometrySelection([member(group), member(turnable)])
+        #expect(sel.turning(to: 45) == [group.id: 45, turnable.id: 45])
     }
 
     @Test("A typed angle moves no box: the two write paths never cross")

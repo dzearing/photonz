@@ -220,10 +220,10 @@ struct LayerGeometryTests {
         }
         #expect(editing.fixedReason(for: .width) == nil)
         #expect(editing.fixedReason(for: .height) == nil)
-        // Turning is the one thing it does not do: a group moves as a whole,
-        // and the canvas offers it no rotate knob either.
-        #expect(!editing.allows(.rotation))
-        #expect(editing.fixedReason(for: .rotation) == LayerGeometryEditing.groupTurnReason)
+        // Turning too: the knob on the canvas turns the whole card at once,
+        // so the field beside it takes the same number.
+        #expect(editing.allows(.rotation))
+        #expect(editing.fixedReason(for: .rotation) == nil)
     }
 
     /// A copy used to be the one group whose size was read-only, on the grounds
@@ -243,8 +243,9 @@ struct LayerGeometryTests {
             #expect(editing.allows(field))
             #expect(editing.fixedReason(for: field) == nil)
         }
-        // A copy is a group, so it does not turn, for the group's reason.
-        #expect(!editing.allows(.rotation))
+        // A copy is a group, so it turns like one.
+        #expect(editing.allows(.rotation))
+        #expect(editing.fixedReason(for: .rotation) == nil)
     }
 
     @Test("Every reason a field is fixed reads as a plain sentence, not a code word")

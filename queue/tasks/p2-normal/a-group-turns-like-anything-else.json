@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T10:51:52.796Z",
-  "updated": "2026-09-09T12:23:41.016Z",
+  "updated": "2026-09-12T11:26:17.367Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today Sources/Photonz/CanvasGroups.swift:82 offersRotation returns false for any group (isGroup), and LayerGeometryEditing sets turnsAtAll false for the same reason, so the A field renders a dash with LayerGeometryEditing.groupTurnReason behind it. Renderer side: check DocumentRenderer composites a group transform before promising this. Written 2026-09-09 while landing the angle field; the angle field task deliberately left this alone and asked for it to be filed.",
@@ -31,6 +31,43 @@
     {
       "t": "2026-09-09T12:23:41.015Z",
       "note": "seq 110 -> 120"
+    },
+    {
+      "t": "2026-09-12T11:26:17.366Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T11:28:26.126Z",
+      "note": "Adversarial review before building. The ask is sound: a card, a badge or a nav bar is laid out upright and then tilted, and today that costs one turn per piece plus lining them all up again. Three things the ask does not say. 1. A SCREEN is a group too, and a screen is the surface you build on: it sits in an auto arranged column with its name printed above its top left corner, and every bit of that chrome is an upright rectangle. Turning one would tilt the room rather than the furniture, so screens are left out and their angle field says to group what is on the screen and turn the group. 2. Editing a PIECE inside a turned group is a much larger job: the drag maths, the snapping and the per child chrome all run in the group's unturned space. Not in this slice, and recorded honestly in the audit. 3. Turning a group means it can no longer pass straight through the compositor, so a plain group that has been turned now draws into a buffer of its own the way a styled one already does. The pieces inside keep their own angles because they are composited before the turn."
+    },
+    {
+      "t": "2026-09-12T11:28:26.127Z",
+      "note": "Plan. PhotonzCore gains one pivot question, turnPivot and turnBox, so a group turns about the centre of the box its contents make rather than about its anchor; every place that already turned something about frame.midX asks that question instead. hitTestPath inverts a group's turn before it walks inside. LayerGeometryEditing lets a group turn and keeps a sentence for screens. PhotonzRender turns the group buffer after the blur and before the shadow, the same order a single layer uses. App side: offersRotation stops excluding groups, and the faint box round the group you are inside follows the turn."
+    },
+    {
+      "t": "2026-09-12T11:48:06.672Z",
+      "note": "Built. PhotonzCore: Layer.turnBox and Layer.turnPivot are the one pivot question, so a group swings about the middle of the box its contents make rather than about its anchor; Layer.contains, transformedCorners, rotateKnobPoint, handleSpacePoint, Document.hitTestPath and the sweep all ask it. LayerGeometryEditing lets a group turn and keeps a sentence for screens (screenTurnReason replaces groupTurnReason). PhotonzRender turns the group's buffer after the blur and before the shadow, the same order a single layer takes, and a plain group that has been turned no longer passes straight through the compositor. App: offersRotation excludes screens instead of groups, and the faint box round the group you are inside follows the turn. 24 new tests in Tests/PhotonzCoreTests/GroupTurnTests.swift and Tests/PhotonzRenderTests/GroupTurnRenderTests.swift; whole suite green at 5656."
+    },
+    {
+      "t": "2026-09-12T11:48:06.672Z",
+      "note": "Second adversarial pass, on the probe. Turning works and reads well: the knob sits above the turned top edge, the card and its label turn as one, the A field follows the drag and one undo puts it straight. But double clicking into a turned card and dragging a piece was BROKEN: the piece's place is stated in the card's upright space, so it moved off at an angle to the pointer, its handles drew upright over a slanted card, and the floated drag sprite smeared the picture. Fixed by taking the same road a piece inside a component copy already takes: a piece under a turned container offers no handles of its own and a drag on it takes hold of the card. Its outline now composes the inherited turn, so it is outlined exactly where it is and still takes colour, wording and styling. PhotonzDocument.inheritedTurn and turnedContainer carry it, with three tests including nested turns."
+    },
+    {
+      "t": "2026-09-12T11:48:06.672Z",
+      "note": "Verified on the real app with Scripts/playtest/turn-a-group-walk.json (new) plus a scratch walk for stepping inside a turned card. Screen Recording was granted, so the audit carries real captures, not offscreen renders. All 9 group walks pass, angle-field-walk passes. turn-into-a-picture-walk fails on a command Z chord, which reproduces on a clean tree (git stash, swift build, run) and is filed separately as undo-in-a-walk-cannot-use-the-command-z-chord."
+    },
+    {
+      "t": "2026-09-12T11:48:06.672Z",
+      "note": "Also added a turnKnob playtest action so a walk can drive the rotate knob at all: the knob floats off the top edge and a walk cannot aim at it without knowing the zoom. Follow-up filed: a-piece-inside-a-turned-card-moves-on-its-own. Audit at queue/audits/2026-09-12-group-turn.json asks the user whether they want pieces editable on the slant before anybody builds it."
+    },
+    {
+      "t": "2026-09-12T11:59:51.793Z",
+      "note": "One more thing the second pass turned up, and it was worse than the drag: a turned card inside a container that draws as one object was clipped away entirely, because the container sizes its buffer from how far its contents reach BEFORE any of them turned. Layer.renderBounds now reads a child's turn (Layer.turnedReach), and RenderDiff.visualBounds reads the same thing so a repaint covers where the card landed rather than only where it was. A render test locks it and fails without the fix. The name above a copy follows the turn too, hanging over the box the turn puts the drawing in rather than over the upright box it used to fill."
+    },
+    {
+      "t": "2026-09-12T11:59:51.793Z",
+      "note": "Walks on the final build: 9 group, 16 component, 7 selection, 1 angle field, all passing, 33 in total plus the new turn-a-group-walk. Whole unit suite green at 5659. Composite perf is unchanged, which is the perf note for this commit: an upright document pays one isIdentity check per group and nothing else (12MP/10-layer interactive edit inside a plain group, median 6.8ms; whole render median 45.6ms). A sweep was requested because the change touches the selection chrome, the hit test, the rubber band and the compositor's group path, which is more than the walks I could run inside one task."
     }
-  ]
+  ],
+  "started": "2026-09-12T11:26:17.365Z"
 }

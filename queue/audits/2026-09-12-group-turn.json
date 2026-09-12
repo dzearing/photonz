@@ -1,0 +1,29 @@
+{
+  "feature": "A group turns like anything else",
+  "epic": "ui-building",
+  "summary": "A group of shapes now turns as one: the rotate knob floats above it, the A field reads and takes its angle, and everything inside keeps its own angle relative to the card.",
+  "setup": "Photonz Dev, release Next. Groups are on by default; no flag to find.",
+  "try": [
+    { "do": "Draw a rectangle, then put a word of text on top of it." },
+    { "do": "Sweep both and press Command G." },
+    { "do": "Drag the round knob above the group's top edge." },
+    { "do": "Watch the A field in Position and Size while you drag.", "shot": "2026-09-12-group-turn-2-turned.png" },
+    { "do": "Let go, then press Command Z once." },
+    { "do": "Turn it again, then type 45 into A and press Return." },
+    { "do": "Double click a piece inside the turned card.", "shot": "2026-09-12-group-turn-3-inside.png" },
+    { "do": "Drag that piece." }
+  ],
+  "evaluate": [
+    "Does the knob sit where your hand expects it on a group, the same distance out as it does on a single shape?",
+    "When the card turns, does it read as one object turning, or as a picture being re-rendered?",
+    "Is one Command Z the right amount of undo for a whole turn?",
+    "Picking a piece inside a turned card outlines it but offers no handles, and dragging it moves the whole card. Is that the right answer, or should the piece move on its own?",
+    "Should a screen be turnable too, or is holding it straight right?"
+  ],
+  "rough": [
+    "A piece inside a turned card cannot be moved or resized on its own. Its place is stated in the card's upright space, so a handle pulled sideways would send it off at an angle to the pointer. It is outlined where it really is, it still takes colour, wording and styling, and dragging it moves the card. Straighten the card, edit, and type the angle back. Making pieces editable on the slant is a much bigger job than this one.",
+    "The text inside a turned card is turned as pixels, not re-drawn on the slant, so letters soften slightly at an angle. A single turned label already does the same thing, so the app is at least consistent with itself.",
+    "Screens are deliberately left out. A screen is the surface you build on and it sits in a column with its name printed above it, so a screen on a slant would tilt the room rather than the furniture. Its A field says so.",
+    "Both pictures here are real screen captures from the probe, not offscreen renders."
+  ]
+}

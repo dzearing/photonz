@@ -305,10 +305,13 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// Whole points, the spelling every number in a reason uses.
     private static func whole(_ value: CGFloat) -> String { String(Int(value.rounded())) }
 
-    /// Why a group has no angle to read or type. The rotate knob is not
-    /// offered on one either, so the field says the same thing the canvas
-    /// says by leaving the knob off (`EditorState.offersRotation`).
-    public static let groupTurnReason = "A group moves as a whole and does not turn. Turn the layers inside it one at a time."
+    /// Why a screen has no angle to read or type. A screen is the surface you
+    /// build on, and it sits in a column with its name printed above it, so a
+    /// screen on a slant would tilt the room rather than the furniture. The
+    /// rotate knob is not offered on one either, so the field says the same
+    /// thing the canvas says by leaving the knob off
+    /// (`EditorState.offersRotation`).
+    public static let screenTurnReason = "A screen holds still, so everything you build on it lines up. Group what is on the screen and turn the group."
 
     /// Why a shape drawn end to end has no angle: it already points wherever
     /// its two ends are, so an angle typed here would be a second answer to a
@@ -468,11 +471,13 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         isLocked = layer.isLocked
         // Turning, decided the same way the canvas decides whether to float
         // the knob above the outline (`EditorState.offersRotation`). A shape
-        // held between two ends is aimed by its ends, and a group moves as a
-        // whole; both would be a field with nothing behind it, so both get a
-        // dash and a sentence rather than a live box.
-        let cannotTurn: String? = if layer.isGroup {
-            Self.groupTurnReason
+        // held between two ends is aimed by its ends, and a screen is the
+        // surface everything else is built on; both would be a field with
+        // nothing behind it, so both get a dash and a sentence rather than a
+        // live box. An ordinary group turns like anything else, about the
+        // middle of the box its contents make (`Layer.turnPivot`).
+        let cannotTurn: String? = if layer.isFrame {
+            Self.screenTurnReason
         } else if layer.hasEndpointHandles {
             layer.measure != nil ? Self.measurementTurnReason : Self.endpointTurnReason
         } else {

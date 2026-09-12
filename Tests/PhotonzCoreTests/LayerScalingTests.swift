@@ -248,12 +248,11 @@ struct LayerScalingTests {
         let group = card()
         #expect(group.allowsFrameResize)
         let editing = LayerGeometryEditing(layer: group)
-        // Every number but the angle: a group moves as a whole and does not
-        // turn, so the canvas floats no rotate knob over one either.
-        for field in [.x, .y, .width, .height] as [LayerGeometryField] {
+        // Every number, the angle included: the canvas floats a rotate knob
+        // over a group too, and it turns the whole card at once.
+        for field in [.x, .y, .width, .height, .rotation] as [LayerGeometryField] {
             #expect(editing.allows(field))
         }
-        #expect(!editing.allows(.rotation))
         #expect(editing.fixedReason(for: .width) == nil)
         #expect(editing.fixedReason(for: .height) == nil)
     }
@@ -268,12 +267,10 @@ struct LayerScalingTests {
         let copy = Layer(name: "Card", content: .group(content), frame: .zero)
         #expect(copy.allowsFrameResize)
         let editing = LayerGeometryEditing(layer: copy)
-        // Every number but the angle: a group moves as a whole and does not
-        // turn, so the canvas floats no rotate knob over one either.
-        for field in [.x, .y, .width, .height] as [LayerGeometryField] {
+        // Every number, the angle included: a copy turns like any other group.
+        for field in [.x, .y, .width, .height, .rotation] as [LayerGeometryField] {
             #expect(editing.allows(field))
         }
-        #expect(!editing.allows(.rotation))
         let before = copy.localBounds
         let wider = copy.resized(to: CGRect(x: before.minX, y: before.minY,
                                             width: 400, height: before.height))

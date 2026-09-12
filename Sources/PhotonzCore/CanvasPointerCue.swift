@@ -109,8 +109,7 @@ public enum CanvasPointer {
     /// same conversion frame-handle hit-testing and resizing use.
     public static func handleSpacePoint(_ p: CGPoint, layer: Layer) -> CGPoint {
         guard !layer.transform.isIdentity else { return p }
-        let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
-        return p.applying(layer.transform.affineTransform(around: center).inverted())
+        return p.applying(layer.transform.affineTransform(around: layer.turnPivot).inverted())
     }
 }
 
@@ -125,7 +124,7 @@ extension Layer {
                              y: (corners[0].y + corners[1].y) / 2)
         // The middle of the box the corners came from, so the knob floats
         // straight out from the top edge it is attached to.
-        let box = withoutSlack(frame)
+        let box = turnBox
         let center = CGPoint(x: box.midX, y: box.midY)
         let dx = topMid.x - center.x
         let dy = topMid.y - center.y

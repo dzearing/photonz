@@ -447,7 +447,12 @@ public final class DocumentRenderer: @unchecked Sendable {
             // edge to cut at, so it always draws as one object. Neither is a
             // group told to cut off what leaves it: there is no edge to cut at
             // until its children draw into a buffer of its own.
-            if let group = layer.group, !group.isFrame, !layer.clipsToBounds, layer.style.isPlain {
+            // Nor is a group that has been TURNED: a turn is a thing done to
+            // the whole card, so its contents have to be one picture before
+            // the turn can take them, and passing them through one by one
+            // would turn each piece about its own middle instead.
+            if let group = layer.group, !group.isFrame, !layer.clipsToBounds, layer.style.isPlain,
+               layer.transform.isIdentity {
                 output = compositeLayers(group.children, origin: frame.origin, onto: output,
                                          underlay: underlay, in: document, store: store, clip: clip,
                                          onDesignedSurface: holdsInside,
@@ -567,6 +572,25 @@ public final class DocumentRenderer: @unchecked Sendable {
         // as one — and its halo escapes the group's box the way its shadow
         // does. A group is always a drawn thing, never a photograph.
         image = blurred(image, radius: layer.style.blurRadius, fadesEdges: true)
+        // The turn, taken by the whole card at once and in the same place a
+        // single layer takes its own: after the blur, so the softness is part
+        // of what turns, and before the shadow, so the shadow is cast by the
+        // turned card rather than turning with it.
+        //
+        // It swings about the middle of the group's own box, which is the
+        // point everything else pivots about too (`Layer.turnPivot`); a group's
+        // stored frame is an anchor with no size and turning about that would
+        // throw the card clean off the canvas. `LayerTransform` angles are
+        // stated in top-left model space and this picture is y-up, so the
+        // angular parts are mirrored exactly as they are for a single layer.
+        if !layer.transform.isIdentity {
+            var mirrored = layer.transform
+            mirrored.rotation = -mirrored.rotation
+            mirrored.skewX = -mirrored.skewX
+            mirrored.skewY = -mirrored.skewY
+            image = image.transformed(by: mirrored.affineTransform(
+                around: CGPoint(x: box.midX, y: box.midY)))
+        }
         image = shadowed(image, glows: layer.style.paintedGlows,
                          shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return faded(image, opacity: layer.style.opacity)

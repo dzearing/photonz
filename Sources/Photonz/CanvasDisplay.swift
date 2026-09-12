@@ -729,10 +729,15 @@ extension CanvasNSView {
     /// The turn a rotated or skewed layer's outline takes, the same way
     /// `Layer.transformedCorners` turns its frame: about the centre of the
     /// STORED box, which is the point the renderer turns the layer about.
+    ///
+    /// Plus whatever the containers above it have been turned by, so the
+    /// outline on a label inside a card on a slant sits on the label rather
+    /// than beside it.
     private func inkTransform(of layer: Layer) -> CGAffineTransform {
-        guard !layer.transform.isIdentity else { return .identity }
-        return layer.transform.affineTransform(
-            around: CGPoint(x: layer.frame.midX, y: layer.frame.midY))
+        let own = layer.transform.isIdentity
+            ? CGAffineTransform.identity
+            : layer.transform.affineTransform(around: layer.turnPivot)
+        return own.concatenating(inheritedTurn(of: layer.id))
     }
 
     private func refreshLayerSelectionDisplay() {
@@ -878,9 +883,12 @@ extension CanvasNSView {
         // words the outline is drawn round.
         let slack = selectedLayer.boxSlack
         let center = CGPoint(x: frame.midX + slack.width / 2, y: frame.midY + slack.height / 2)
-        let docToHandle = activeTransform.isIdentity
+        // ...and then whatever the containers above it have been turned by, so
+        // a piece picked inside a card on a slant is outlined where it is.
+        let docToHandle = (activeTransform.isIdentity
             ? CGAffineTransform.identity
-            : activeTransform.affineTransform(around: center)
+            : activeTransform.affineTransform(around: center))
+            .concatenating(inheritedTurn(of: selectedLayer.id))
         func chromePoint(_ docPoint: CGPoint) -> CGPoint {
             viewport.viewPoint(fromDocument: docPoint.applying(docToHandle))
         }

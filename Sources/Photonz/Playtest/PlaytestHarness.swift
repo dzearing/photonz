@@ -1170,6 +1170,10 @@ private final class Run {
                 releaseColorDrag(editor)
             case .dragCornerRadius:
                 dragCornerRadius(editor, through: [4, 10, 16, 22])
+            case .turnKnob:
+                turnKnob(editor, through: [5, 12, 18, 20])
+            case .turnKnobStraight:
+                turnKnob(editor, through: [14, 7, 0])
             case .dragOpacity:
                 dragStyleSlider(editor, through: [0.9, 0.7, 0.55, 0.45]) { style, v in
                     style.opacity = v
@@ -4248,6 +4252,22 @@ private final class Run {
         guard !ids.isEmpty, let last = values.last else { return }
         for radius in values { editor.previewCornerRadius(ids: ids, radius) }
         editor.commitCornerRadius(ids: ids, last)
+    }
+
+    /// The rotate knob dragged round to `values.last`, in degrees, through the
+    /// frames before it: the same preview-per-move and one-step-on-release the
+    /// canvas takes, so a walk sees the panel follow the turn as well as the
+    /// picture.
+    private func turnKnob(_ editor: EditorState, through degrees: [CGFloat]) {
+        guard let id = editor.selectedLayerID, let layer = editor.document?.layer(id: id),
+              let last = degrees.last else { return }
+        var transform = layer.transform
+        for angle in degrees {
+            transform.rotation = LayerAngle.radians(fromDegrees: angle)
+            editor.previewLayerTransform(id: id, transform: transform)
+        }
+        transform.rotation = LayerAngle.radians(fromDegrees: last)
+        editor.commitLayerTransform(id: id, transform: transform)
     }
 
     private func dragStyleSlider(_ editor: EditorState, through values: [Double],

@@ -1674,9 +1674,22 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         if clipsToBounds { return box.insetBy(dx: -pad, dy: -pad) }
         var reach = box
         for child in group.children {
-            reach = reach.union(child.renderBounds.offsetBy(dx: frame.origin.x, dy: frame.origin.y))
+            // Through the child's own TURN: a card on a slant reaches corners
+            // its upright box never had, and a buffer sized without them cuts
+            // the card off at the moment it is turned.
+            reach = reach.union(child.turnedReach
+                .offsetBy(dx: frame.origin.x, dy: frame.origin.y))
         }
         return reach.insetBy(dx: -pad, dy: -pad)
+    }
+
+    /// `renderBounds` with this layer's own turn taken into account: the
+    /// upright box around everything the turned drawing can touch, in its
+    /// parent's space. What a container has to make room for.
+    public var turnedReach: CGRect {
+        let reach = renderBounds
+        guard !transform.isIdentity else { return reach }
+        return reach.applying(transform.affineTransform(around: turnPivot))
     }
 
     /// Whether "Turn Into Picture" applies: the layer is a shape or a piece of
@@ -1742,8 +1755,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          captionPillSize: CaptionPillSizing? = nil) -> Bool {
         var p = point
         if !transform.isIdentity {
-            let center = CGPoint(x: frame.midX, y: frame.midY)
-            p = point.applying(transform.affineTransform(around: center).inverted())
+            p = point.applying(transform.affineTransform(around: turnPivot).inverted())
         }
         if let a = annotation, a.shape == .line || a.shape == .arrow {
             let start = CGPoint(x: frame.minX + a.start.x, y: frame.minY + a.start.y)
