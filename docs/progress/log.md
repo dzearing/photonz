@@ -14214,3 +14214,20 @@ Next: the two follow-ups the audit raised — a shelf tile that says where a
 component came from, and a shared component arriving at the right size in a
 document of a different pixel scale — and the full sweep that was requested,
 since the Component section grew a row.
+
+## 2026-09-12 — folding an effect shut in a short window
+
+The reported bug is gone. `effects-open-into-view-walk` passes 4 of 4 (one
+fresh build, three `--no-build`); 6ec2bede fixed it an hour after the task was
+filed, by stopping a scrolled-away control from borrowing the name of the row
+that drifted under it. No code was needed.
+
+Checking the rest of the effect walks found 9 of 13 passing. Two solid failures
+(`border-effect-walk`, `glow-effect-walk`, 3 of 3 each) are one app bug: adding
+a second effect leaves all of its settings below the cut, because
+`EditorState.effectToReveal` is only ever written by the chevron. Two others are
+flaky presses. Both filed with reproductions; neither is new breakage, 6ec2bede
+just stopped the walks passing over the top of them.
+
+Next: `adding-an-effect-leaves-every-one-of-its-setting` is the real feature bug
+of the three.
