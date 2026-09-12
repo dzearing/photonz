@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:42:19.780Z",
-  "updated": "2026-09-12T09:31:31.388Z",
+  "updated": "2026-09-12T09:44:51.345Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-09-text-style-drag.json, which asked for it to be fixed across both places rather than in one and left wrong in the other.\n\nExact strings, read on 2026-09-09: Sources/PhotonzCore/ColorDrop.swift:206 \"Paints \\(target.part) on all \\(target.reaches) of them with \\(colour)\" and Sources/PhotonzCore/TextStyleDrop.swift:102 \"Sets \\(who) in \\(style.name)\" where who is \"all \\(target.reaches) of them\". Sources/Photonz/EffectsListInspector.swift:382 has a third of the same shape (\"Stops it drawing on all N of them\"); include it if the extraction reaches, and say so either way.\n\nHouse copy rules apply: plain short human language, no em dashes.",
@@ -73,7 +73,12 @@
     {
       "t": "2026-09-12T09:44:42.659Z",
       "note": "audit at queue/audits/2026-09-12-both-of-them-drop-line.json."
+    },
+    {
+      "t": "2026-09-12T09:44:51.343Z",
+      "note": "CrowdWords.them(_:) in PhotonzCore now builds the crowd phrase for the colour drop, the text style drop and the Effects list eye: both of them at two, all N of them from three. 5577 tests pass, the four text-style walks and mixed-part-keeps-its-colour pass, and a live probe capture shows the pill reading \"Sets both of them in Heading.\" Audit: queue/audits/2026-09-12-both-of-them-drop-line.json. Three follow-ups filed."
     }
   ],
-  "started": "2026-09-12T09:31:31.386Z"
+  "started": "2026-09-12T09:31:31.386Z",
+  "completed": "2026-09-12T09:44:51.344Z"
 }

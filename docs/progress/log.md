@@ -14128,3 +14128,24 @@ points right, foot 2 points left). Filed at p2-normal as "A measurement end
 follows your hand instead of jumping to it". Fixing it means teaching the
 magnets to judge the point the end is going to rather than the point the
 pointer is on, which is why it was kept out of this change.
+
+## 2026-09-12 — the drop line stops counting at two
+
+Dragging a text style or a colour over two selected layers made the app count
+at you: "Sets all 2 of them in Heading", "Paints Fill on all 2 of them with
+Danger". `CrowdWords.them(_:)` (PhotonzCore) is now the one place that decides
+how a crowd is named: nil for one, "both of them" for two, "all N of them" from
+three. `ColorDrop`, `TextStyleDrop` and the Effects list eye all read from it,
+so the three sentences cannot drift apart again.
+
+Verified live on the probe with Screen Recording granted; the capture is at
+`queue/audits/2026-09-12-both-of-them-drop-line.png`.
+
+Next: three follow-ups are in the queue. `the-rest-of-the-panel-still-counts-at-two`
+(about eighteen tooltips and notes still say "all 2 of them"),
+`dropping-a-colour-on-a-swatch-says-nothing-back` (the colour drop works out a
+sentence nobody ever sees), and `effects-remembered-walk-fails-at-step-24`,
+which fails on clean main and is not caused by this change.
+
+Open question for the user, in the audit: whether "both of them" and the
+panel's own "2 layers" a few inches away clash.
