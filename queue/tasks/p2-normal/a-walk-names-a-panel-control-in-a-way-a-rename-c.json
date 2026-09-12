@@ -47,6 +47,42 @@
     {
       "t": "2026-09-12T14:36:29.694398Z",
       "note": "Adversarial review of the idea, before building. (1) Aliases rejected: keeping the old word alive means a retired row can drift onto a neighbour and a walk passes on the wrong control, which is exactly acceptance item 2. (2) A separate stable KEY is only steady if whoever edits the copy leaves it alone, so it must not be typed at the call site: it comes off the model (EffectKind.rawValue, LayerPartRow.id), where a copy edit physically cannot reach it. (3) Discoverability is the real risk -- an author writes what they see. Fix: the panel listing and every not-found failure print the steady name beside the word, so the first failure hands you the durable name. (4) Shortest version: only the two lists whose row words come from the model get steady names (Appearance parts, the Effects list). Width/Height/Layout are structural words that have not moved, and giving everything a key would be noise."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Built it. A row in Appearance and a row in the Effects list now carry a steady name beside their words, taken off the model (LayerEffectRow.steadyNames off EffectKind + ordinal, LayerPartRow.steadyNames off LayerPart/ColorSlot), and a walk writes it with a mark: in: \"@border\". PlaytestSteadyName in PhotonzCore owns the convention and is unit tested; the app layer carries it on PanelTargetView.steady and matches it in narrow(), pressTarget, panelTarget, panelScrollTarget, checkInView, openPanelMenu, the tooltip reading and the colour drag."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Adversarial review of the BUILT thing, on the real probe. (a) An author writes what they can see, so a `panel` step now prints the steady names beside every control -- Switch (Border, on, @border @border.1) -- and a step naming a row that is not there answers \"the steady names on screen: @border, @border.1, @fill\", paste-ready. Verified both by running throwaway walks. (b) The first cut put the steady names inside the joined detail string, which would have silently broken all 19 `in: \"Border, Width\"` steps, since that form is matched as a substring of that very string. Caught before running anything; steady names now travel in their own field and `in` splits on commas and asks for each piece separately, so `@border, Width` works and words and steady names may be mixed. (c) Naming a control by a steady name is rejected outright rather than falling through to press whatever sits in the row. (d) @fill.1 beside @fill was noise, since nothing in Appearance is countable: an uncounted part gets one name."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Proof for the rename. Changed EffectKind.border.title from \"Border\" to \"Outline\", rebuilt the probe, ran the twenty converted walks: seventeen passed, the three that did not had failed identically at baseline. Ran border-offset-walk.json, left naming the row by its word, and it failed: 'no menu called \"Border\" is in the window'. Then put the title back and re-ran: same seventeen green."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Proof that a real break is still a break. A walk asking for `in: \"@glow\"` on a layer with no glow fails with 'no row called \"@glow\" is in the panel, so there is nothing on it to press; the steady names on screen: @border, @border.1, @fill'. It does not drift onto the Border switch that IS on screen. That is why this is a steady name and not an alias: keeping the old word alive would have let a retired row answer for its neighbour."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Twenty walks converted -- the ones repaired by 202256d8 (fifteen walks) and deb5d9d2 (five walks), which are the walks the Outline-to-Border rename broke. Also converted their reads claims, which quoted the row word, and their panelMenu/dragColor/rightClick row names."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Not done, on purpose: the rows of an ordinary menu still go by their words, the plus menu in Effects being the one exception (choose: \"@border\"), because that menu is built off the same model the rows are. Giving every menu item in the app a durable id is a different job. Also left alone: Width, Height, Layout, Position & Size -- structural words that have not moved."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Ran only the walks I touched (20) plus two throwaway ones, never the full sweep. Asked for a sweep with queue/bin/sweep.sh request. Scripts/test.sh green, 5705 tests."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Three of the twenty still fail and failed the same way at baseline before any of this: border-effect, glow-effect, label-fills-a-row each stop on a control the dock has scrolled out of reach. Filed with the commands and output as three-walks-stop-on-a-panel-control-the-dock-has (p2-normal)."
+    },
+    {
+      "t": "2026-09-12T15:21:12.912507Z",
+      "note": "Audit: queue/audits/2026-09-12-steady-panel-names.json, with a real screen capture (Grants said the probe had Screen Recording). Written up for walk authors in docs/design/playtest-harness.md, 'A row of the panel has a second name that a rename cannot touch'."
     }
   ],
   "started": "2026-09-12T14:34:59.977Z"

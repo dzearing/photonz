@@ -272,9 +272,13 @@ private struct PartRowView: View {
             }
         }
         // Every row holds a control called Switch and one called Color, so the
-        // row's own word is what tells the outline's from the fill's:
-        // `press "Switch" in "Outline"`.
-        .playtestField(row.title)
+        // row's own name is what tells the border's from the fill's:
+        // `press "Switch" in "Fill"`. It answers to its steady name too --
+        // `in: "@fill"` -- which is the one to write when the word on the row
+        // might change, and on the ink row it is the ONLY one that always
+        // works, since that row reads Line or Color depending on what is
+        // picked (`PlaytestSteadyName`).
+        .playtestField(row.title, steady: row.steadyNames)
         .panelStartProbe(.row, owner: row.title)
     }
 

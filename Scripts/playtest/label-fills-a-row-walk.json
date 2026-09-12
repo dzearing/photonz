@@ -84,7 +84,7 @@
     {
       "do": "panelMenu",
       "menu": "Add Effect",
-      "choose": "Border"
+      "choose": "@border"
     },
     {
       "do": "wait",

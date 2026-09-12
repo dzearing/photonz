@@ -19,6 +19,7 @@
 // covered or wired to nothing has to fail a walk the way it fails a person.
 #if PHOTONZ_PLAYTEST
 import AppKit
+import PhotonzCore
 
 /// One thing in the panel a `press` step can land on.
 struct PlaytestPressTarget {
@@ -26,6 +27,16 @@ struct PlaytestPressTarget {
     var name: String
     /// Where it lives, for the log and for the list a `panel` step writes.
     var detail: String
+    /// What the control ITSELF is saying, without the rows it sits in in front
+    /// of it: "off" where `detail` reads "Border, off". A walk that has named
+    /// the row in "in" may claim this alone, so the words on the row stay out
+    /// of the claim (`PlaytestSteadyName`).
+    var says: String = ""
+    /// The steady names of the rows it sits in, marked: `["@border"]`. What
+    /// `in:` matches when a walk wrote a steady name instead of a word, and
+    /// what the panel listing prints beside this control so an author can see
+    /// there is a durable name to use (`PlaytestSteadyName`).
+    var steadyRows: [String] = []
     /// Where to put the pointer, in the coordinates of `window`.
     var point: CGPoint
     /// The control's own box, in the same coordinates. A press lands in its
@@ -116,6 +127,7 @@ enum PlaytestPanelPress {
             let shown = control.convert(control.visibleRect, to: nil)
             let chosen = control.selectedSegment
             let row = field(of: control, among: fields)
+            let steadyRows = steadyFields(of: control, among: fields)
             let anchors = hintAnchors(in: content)
             return (0..<control.segmentCount).compactMap { index in
                 guard let label = name(ofSegment: index, in: control) else { return nil }
@@ -128,7 +140,7 @@ enum PlaytestPanelPress {
                 // picture's own middle.
                 detail += ", tooltip \(tip(at: point, among: anchors).map { "\"\($0)\"" } ?? "none")"
                 return PlaytestPressTarget(
-                    name: label, detail: detail,
+                    name: label, detail: detail, steadyRows: steadyRows,
                     point: point,
                     box: box,
                     visible: shown,
@@ -155,9 +167,20 @@ enum PlaytestPanelPress {
     }
 
     /// The row a thing sits on: the smallest labelled row it falls inside, so
-    /// a picker takes its own row's word and not the one below it.
+    /// a picker takes its own row's word and not the one below it. The WORD,
+    /// for reading: a steady name in a log line would say less than the thing
+    /// it stands for.
     @MainActor static func field(of view: NSView, among fields: [PanelTargetView]) -> String? {
-        Self.fields(of: view, among: fields).last
+        Self.fieldViews(of: view, among: fields).last?.name
+    }
+
+    /// The steady names of that same smallest row, marked. What names a MENU,
+    /// which takes the name of the one row it sits directly on rather than of
+    /// every row around it: the Border holds three menus, and all three would
+    /// answer to the border if the wider rows counted.
+    @MainActor static func steadyField(of view: NSView, among fields: [PanelTargetView]) -> [String] {
+        (Self.fieldViews(of: view, among: fields).last?.steady ?? [])
+            .map(PlaytestSteadyName.written)
     }
 
     /// EVERY labelled row this sits inside, widest first, so a control says who
@@ -190,13 +213,33 @@ enum PlaytestPanelPress {
     /// Appearance's Corner Radius row -- a row that has no switch at all -- and
     /// pass.
     @MainActor static func fields(of view: NSView, among fields: [PanelTargetView]) -> [String] {
+        fieldViews(of: view, among: fields).map(\.name)
+    }
+
+    /// The steady names of every row this sits inside, marked the way a walk
+    /// writes them: `["@border", "@border.1"]`.
+    ///
+    /// Kept apart from the words above rather than mixed in with them, because
+    /// the words are joined into one line that a walk can match a PIECE of --
+    /// `in: "Border, Width"` names the Width row inside the Border -- and
+    /// slipping "@border" in between the two would have quietly broken every
+    /// step written that way. Steady names are matched whole and on their own
+    /// (`PlaytestSteadyName`).
+    @MainActor static func steadyFields(of view: NSView,
+                                        among fields: [PanelTargetView]) -> [String] {
+        fieldViews(of: view, among: fields).flatMap(\.steady).map(PlaytestSteadyName.written)
+    }
+
+    /// The rows this sits inside, as markers, widest first.
+    @MainActor static func fieldViews(of view: NSView,
+                                      among fields: [PanelTargetView]) -> [PanelTargetView] {
         let box: CGRect = view.convert(view.bounds, to: nil)
         let areas: [ObjectIdentifier] = scrollAreas(of: view)
         let holding: Set<ObjectIdentifier> = Set(areas)
         // What is left of the control once every scroller above it has had its
         // cut: empty when it has scrolled clean out of the list it lives in.
         let showing: CGRect = view.convert(view.visibleRect, to: nil)
-        var around: [(name: String, frame: CGRect)] = []
+        var around: [(view: PanelTargetView, frame: CGRect)] = []
         for field in fields {
             let frame: CGRect = field.convert(field.bounds, to: nil)
             // The row's own scrolling area has to hold this too. A row that
@@ -213,12 +256,12 @@ enum PlaytestPanelPress {
                 // honestly be said to sit in it.
                 guard !showing.isEmpty, frame.contains(showing) else { continue }
             }
-            around.append((field.name, frame))
+            around.append((field, frame))
         }
         around.sort { first, second in
             first.frame.width * first.frame.height > second.frame.width * second.frame.height
         }
-        return around.map(\.name)
+        return around.map(\.view)
     }
 
     /// The scrolling areas that cut this view off, nearest first. Empty for

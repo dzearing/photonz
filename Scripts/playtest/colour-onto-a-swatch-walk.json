@@ -63,8 +63,8 @@
     },
     {
       "do": "dragColor",
-      "from": "Fill",
-      "onto": "Border",
+      "from": "@fill",
+      "onto": "@border",
       "hold": "colour-2-in-flight",
       "expect": "takes"
     },
@@ -83,14 +83,14 @@
     },
     {
       "do": "dragColor",
-      "from": "Fill",
-      "onto": "Border",
+      "from": "@fill",
+      "onto": "@border",
       "expect": "refuses"
     },
     {
       "do": "dragColor",
-      "from": "Fill",
-      "onto": "Fill",
+      "from": "@fill",
+      "onto": "@fill",
       "expect": "refuses"
     },
     {
@@ -142,8 +142,8 @@
     },
     {
       "do": "dragColor",
-      "from": "Border",
-      "onto": "Fill",
+      "from": "@border",
+      "onto": "@fill",
       "hold": "colour-5-lets-go-of-brand",
       "expect": "takes"
     },
@@ -163,7 +163,7 @@
     {
       "do": "press",
       "control": "Color",
-      "in": "Fill"
+      "in": "@fill"
     },
     {
       "do": "wait",

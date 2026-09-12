@@ -419,6 +419,74 @@ layers list builds a row only once it is on screen, so every row inside a shut
 group is invisible to `panel`, `press` and `dragRow` until a walk has pressed
 the twist on the group above it.
 
+### A row of the panel has a second name that a rename cannot touch
+
+`in: "Border"` is the natural way to write a step, because Border is what the
+row says. It is also why one word change breaks walks by the dozen. In a single
+day of September 2026 the queue carried "Thirteen scripted walks still look for
+an Outline row that is now a Border", "Five stale walks still ask for the
+outline that moved into Effects" and "Four walks cannot find the Shadow entry
+in the Effects list": five repair tasks, one cause, and every one of them took a
+slot from whatever feature was in focus, because building panel UI means editing
+that copy.
+
+So a row in **Appearance** and a row in the **Effects list** each carry a second
+name that the words on it cannot reach, and a walk may use either:
+
+```json
+{ "do": "press",  "control": "Switch", "in": "@border" }
+{ "do": "press",  "control": "Slider", "in": "@border, Width", "across": 0.35 }
+{ "do": "expect", "control": "Switch", "in": "@shadow.2", "reads": "off" }
+{ "do": "panelMenu", "menu": "Add Effect", "choose": "@border" }
+{ "do": "panelMenu", "menu": "@border", "choose": "Outside" }
+{ "do": "dragColor", "from": "@fill", "onto": "@border", "expect": "takes" }
+```
+
+The `@` is what tells the two apart. A plain word only ever matches words and a
+marked name only ever matches steady names, so nothing is made ambiguous by the
+two namespaces meeting.
+
+**The names.** They come off the model, never off the copy, so an edit to what a
+row SAYS physically cannot reach what it IS:
+
+| Row | Steady name |
+| --- | --- |
+| An effect in the Effects list | `@shadow`, `@border`, `@glow`, `@blur` |
+| The second of a kind | `@shadow.2`, `@border.2` — the bare name is always the top one |
+| A part in Appearance | `@fill`, `@arrowHead`, `@captionFill`, `@chipBorder`, … |
+| A colour row that is not a part | `@color.stroke`, `@color.captionText`, … |
+| The plus menu's row that ADDS one | the same name the row will wear: `choose: "@border"` |
+
+**You do not have to look them up.** A `panel` step prints them beside every
+control it lists — `Switch (Border, on, @border @border.1)` — and a step that
+names a row that is not there says which ones are:
+
+```
+no row called "@glow" is in the panel, so there is nothing on it to press;
+the steady names on screen: @border, @border.1, @fill, @fill.1
+```
+
+**What it does not do.** A steady name for a row that has genuinely GONE matches
+nothing and fails the walk, which is the whole reason it is not an alias scheme:
+keeping an old word alive would let a retired row's name drift onto a neighbour
+and turn a real break into a pass.
+
+**Two things to remember when you write one.**
+
+- It names the ROW, never the control on it. `Switch`, `Color` and `Slider` are
+  structural words that no copy edit touches, so they stay words: write
+  `{ "control": "Switch", "in": "@border" }`. A steady name in `control` is
+  rejected with that advice rather than quietly pressing something.
+- With an `in`, a `reads` claim may be the control's own words alone —
+  `"reads": "off"` rather than `"reads": "Border, off"`. Prefer it: the row is
+  already said by `in`, and the half you would be repeating is the copy.
+
+Everything else in the panel still goes by its word. A row whose name is
+structural — Width, Height, Layout, Position & Size — has nothing steadier to
+be, and the rows of an ordinary menu are read off a list rather than addressed,
+so `choose` takes the words on them (the plus menu's effect rows being the one
+exception above).
+
 ### The colour picker is a window of its own, and a walk can use it
 
 A popover does not live inside the window it appears to grow out of: it is a

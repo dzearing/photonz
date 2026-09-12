@@ -492,6 +492,17 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
     /// you asked for and what arrives are named the same thing.
     public var title: String { kind.title }
 
+    /// The plus row a scripted walk asked for by steady name: `@border` is the
+    /// row that adds a border, whatever that row is currently called.
+    ///
+    /// One vocabulary, both ends of the same move: `@border` names the thing
+    /// in the plus menu that makes a border AND the row it becomes, so a walk
+    /// that adds an effect and then sets it up never writes the word once
+    /// (`PlaytestSteadyName`). Nil for a name no kind answers to.
+    public static func steadyNamed(_ written: String) -> AddableEffect? {
+        allCases.first { PlaytestSteadyName.matches(written, steady: [$0.kind.rawValue]) }
+    }
+
     /// The row it becomes once added.
     public var kind: EffectKind {
         switch self {
@@ -665,6 +676,17 @@ public struct LayerEffectRow: Hashable, Sendable, Identifiable {
     }
 
     public var id: String { "\(kind.rawValue).\(index)" }
+
+    /// What a scripted walk calls this row when it wants a name that outlives
+    /// the word on it: `border`, or `shadow.2` for the second shadow
+    /// (`PlaytestSteadyName`).
+    ///
+    /// Not `id`, which counts down the WHOLE list and so moves the moment
+    /// anything is dropped above this. A walk that said `@border` meant the
+    /// border, wherever it has since been dragged to.
+    public var steadyNames: [String] {
+        PlaytestSteadyName.entry(kind: kind.rawValue, ordinal: ordinal)
+    }
 
     /// What the row is called on screen, told from its own twin when it has
     /// one.

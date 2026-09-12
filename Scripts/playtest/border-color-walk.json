@@ -30,8 +30,8 @@
     { "do": "snapshot", "name": "border-color-3-both-painted" },
     { "do": "render", "name": "both-borders-crimson" },
 
-    { "do": "panelMenu", "menu": "Color", "in": "Border", "shot": "border-color-4-save-menu" },
-    { "do": "panelMenu", "menu": "Color", "in": "Border", "choose": "Save as Style for All 2" },
+    { "do": "panelMenu", "menu": "Color", "in": "@border", "shot": "border-color-4-save-menu" },
+    { "do": "panelMenu", "menu": "Color", "in": "@border", "choose": "Save as Style for All 2" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "type", "text": "Hairline" },
     { "do": "wait", "seconds": 0.3 },

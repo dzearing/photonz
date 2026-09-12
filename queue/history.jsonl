@@ -2801,3 +2801,27 @@
 {"t":"2026-09-12T14:31:28.567Z","ev":"task_started","id":"the-dock-rules-say-what-picking-a-layer-may-do-t","title":"The dock rules say what picking a layer may do to the panel","priority":"p2-normal"}
 {"t":"2026-09-12T14:33:35.377Z","ev":"task_created","id":"picking-a-plain-shape-leaves-the-panel-parked-on","priority":"p2-normal","title":"Picking a plain shape leaves the panel parked on the last thing you picked"}
 {"t":"2026-09-12T14:34:41.101Z","ev":"task_done","id":"the-dock-rules-say-what-picking-a-layer-may-do-t","from":"in_progress","note":"UX-PATTERNS section 3, Reveal, now says plainly that a pick you made with your own hands is not ambient and may scroll the dock, with the four limits on that scroll (no opening a collapse, no reaching past the pick's own section, no move for a pick that owns no section, no twitch and no double move). Ambient keeps a document loading, an undo, a background update, a tool dropping the selection. Collapse guarantee untouched. Dated and evidenced like its neighbours: corrected 2026-09-12, behaviour shipped 2026-09-09 in 7f65ae4d, audit 2026-09-09-dock-picked-first-reveal. Behaviour reproduced first via Scripts/playtest-all.sh dock-picked-first (probe pickReveal line). That run also found dock-picked-first-walk failing deterministically at step 41; filed with its output as picking-a-plain-shape-leaves-the-panel-parked-on rather than loosening the assertion. No second decision card: the direction question is already pending on picking-a-text-layer-leaves-its-settings-below-t and the rule points at it and marks the mechanism provisional. Scripts/test.sh green, 5690 tests. Commit 0d92c264."}
+{"t":"2026-09-12T14:34:59.980Z","ev":"task_started","id":"a-walk-names-a-panel-control-in-a-way-a-rename-c","title":"A walk names a panel control in a way a rename cannot break","priority":"p2-normal"}
+{"t":"2026-09-12T15:17:24.154Z","ev":"task_created","id":"a-walkthrough-framework-guides-are-data-and-they","priority":"p1-high","title":"A walkthrough framework: guides are data, and they point at real controls"}
+{"t":"2026-09-12T15:17:24.216Z","ev":"task_resequenced","id":"a-walkthrough-framework-guides-are-data-and-they","from":270,"to":20}
+{"t":"2026-09-12T15:17:24.288Z","ev":"task_created","id":"help-has-a-tutorials-menu-organised-in-tracks-an","priority":"p1-high","title":"Help has a Tutorials menu organised in tracks, and a window that shows your progress"}
+{"t":"2026-09-12T15:17:24.350Z","ev":"task_resequenced","id":"help-has-a-tutorials-menu-organised-in-tracks-an","from":270,"to":21}
+{"t":"2026-09-12T15:17:24.413Z","ev":"task_created","id":"first-launch-offers-the-tour-or-gets-out-of-your","priority":"p1-high","title":"First launch offers the tour or gets out of your way"}
+{"t":"2026-09-12T15:17:24.472Z","ev":"task_resequenced","id":"first-launch-offers-the-tour-or-gets-out-of-your","from":270,"to":22}
+{"t":"2026-09-12T15:17:24.538Z","ev":"task_created","id":"tutorials-the-basics-track","priority":"p1-high","title":"Tutorials: the Basics track"}
+{"t":"2026-09-12T15:17:24.598Z","ev":"task_resequenced","id":"tutorials-the-basics-track","from":270,"to":23}
+{"t":"2026-09-12T15:17:24.665Z","ev":"task_created","id":"tutorials-the-redlining-track","priority":"p1-high","title":"Tutorials: the Redlining track"}
+{"t":"2026-09-12T15:17:24.726Z","ev":"task_resequenced","id":"tutorials-the-redlining-track","from":270,"to":24}
+{"t":"2026-09-12T15:17:24.796Z","ev":"task_created","id":"tutorials-the-looks-track","priority":"p1-high","title":"Tutorials: the Looks track"}
+{"t":"2026-09-12T15:17:24.858Z","ev":"task_resequenced","id":"tutorials-the-looks-track","from":270,"to":25}
+{"t":"2026-09-12T15:17:24.924Z","ev":"task_created","id":"tutorials-the-colours-and-styles-track","priority":"p1-high","title":"Tutorials: the Colours and Styles track"}
+{"t":"2026-09-12T15:17:24.987Z","ev":"task_resequenced","id":"tutorials-the-colours-and-styles-track","from":270,"to":26}
+{"t":"2026-09-12T15:17:25.057Z","ev":"task_created","id":"tutorials-the-building-ui-track","priority":"p1-high","title":"Tutorials: the Building UI track"}
+{"t":"2026-09-12T15:17:25.115Z","ev":"task_resequenced","id":"tutorials-the-building-ui-track","from":270,"to":27}
+{"t":"2026-09-12T15:17:25.181Z","ev":"task_created","id":"tutorials-the-components-track","priority":"p1-high","title":"Tutorials: the Components track"}
+{"t":"2026-09-12T15:17:25.250Z","ev":"task_resequenced","id":"tutorials-the-components-track","from":270,"to":28}
+{"t":"2026-09-12T15:17:25.314Z","ev":"task_created","id":"tutorials-the-video-track","priority":"p1-high","title":"Tutorials: the Video track"}
+{"t":"2026-09-12T15:17:25.374Z","ev":"task_resequenced","id":"tutorials-the-video-track","from":270,"to":29}
+{"t":"2026-09-12T15:17:25.440Z","ev":"task_created","id":"a-renamed-control-breaks-the-build-not-somebody","priority":"p1-high","title":"A renamed control breaks the build, not somebody's tutorial"}
+{"t":"2026-09-12T15:17:25.506Z","ev":"task_resequenced","id":"a-renamed-control-breaks-the-build-not-somebody","from":270,"to":30}
+{"t":"2026-09-12T15:20:46.715Z","ev":"task_created","id":"three-walks-stop-on-a-panel-control-the-dock-has","priority":"p2-normal","title":"Three walks stop on a panel control the dock has scrolled out of reach"}

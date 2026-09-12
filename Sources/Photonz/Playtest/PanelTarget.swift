@@ -13,6 +13,7 @@
 // so a walk can never drag something the pointer would not.
 //
 // Probe builds only; the shipping app compiles the no-ops at the bottom.
+import PhotonzCore
 import SwiftUI
 
 #if PHOTONZ_PLAYTEST
@@ -45,18 +46,29 @@ final class PanelTargetView: NSView {
     /// What the panel would say this is, for the log: which shelf scope, or
     /// whether the row is a group.
     var detail: String
+    /// The names for this that do NOT change when its words do, taken off the
+    /// model rather than typed beside the copy. Empty for something whose word
+    /// IS structural -- Width, Layout -- and so has nothing steadier to offer.
+    /// See `PlaytestSteadyName`.
+    var steady: [String]
     /// Exactly the closure the view's own `onDrag` uses. Nil for something
     /// that cannot be picked up, so a walk that tries is told so.
     var payload: (@MainActor () -> NSItemProvider)?
 
-    init(name: String, kind: PanelTargetKind, detail: String,
+    init(name: String, kind: PanelTargetKind, detail: String, steady: [String] = [],
          payload: (@MainActor () -> NSItemProvider)?) {
         self.name = name
         self.kind = kind
         self.detail = detail
+        self.steady = steady
         self.payload = payload
         super.init(frame: .zero)
     }
+
+    /// Every name a walk could write for this, its words first and the steady
+    /// ones marked, for a listing or a failure that has to hand an author
+    /// something to paste: `Border, @border, @border.1`.
+    var everyName: [String] { [name] + steady.map(PlaytestSteadyName.written) }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { nil }
@@ -68,16 +80,18 @@ private struct PanelTargetAnchor: NSViewRepresentable {
     let name: String
     let kind: PanelTargetKind
     let detail: String
+    let steady: [String]
     let payload: (@MainActor () -> NSItemProvider)?
 
     func makeNSView(context: Context) -> PanelTargetView {
-        PanelTargetView(name: name, kind: kind, detail: detail, payload: payload)
+        PanelTargetView(name: name, kind: kind, detail: detail, steady: steady, payload: payload)
     }
 
     func updateNSView(_ view: PanelTargetView, context: Context) {
         view.name = name
         view.kind = kind
         view.detail = detail
+        view.steady = steady
         view.payload = payload
     }
 }
@@ -86,8 +100,10 @@ extension View {
     /// Names this tile or row for a scripted walk, and tells it what picking
     /// the thing up hands over. Pass the very closure `onDrag` is given.
     func playtestTarget(_ name: String, kind: PanelTargetKind, detail: String = "",
+                        steady: [String] = [],
                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View {
-        background(PanelTargetAnchor(name: name, kind: kind, detail: detail, payload: payload))
+        background(PanelTargetAnchor(name: name, kind: kind, detail: detail,
+                                     steady: steady, payload: payload))
     }
 
     /// Names a control in the panel by the words on it, so a `press` step can
@@ -110,8 +126,15 @@ extension View {
     /// Names one labelled row of the panel, so a `press` step can say which
     /// row it means when two of them wear the same words. Put it on the whole
     /// row, word and control together. The row itself is never pressed.
-    func playtestField(_ title: String) -> some View {
-        playtestTarget(title, kind: .field)
+    ///
+    /// `steady` is the name that does NOT change when the title does, for a row
+    /// whose words are product copy: an effect in the Effects list, a part in
+    /// Appearance. Take it off the model -- `EffectKind.rawValue`,
+    /// `LayerPartRow.id` -- and never type it beside the copy, or an edit to
+    /// the copy can reach it and it was never steady. A walk writes it with a
+    /// mark in front: `in: "@border"` (`PlaytestSteadyName`).
+    func playtestField(_ title: String, steady: [String] = []) -> some View {
+        playtestTarget(title, kind: .field, steady: steady)
     }
 }
 
@@ -123,12 +146,13 @@ enum PanelTargetKind: String {
 
 extension View {
     func playtestTarget(_ name: String, kind: PanelTargetKind, detail: String = "",
+                        steady: [String] = [],
                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View { self }
 
     func playtestControl(_ name: String, detail: String = "",
                          payload: (@MainActor () -> NSItemProvider)? = nil) -> some View { self }
 
-    func playtestField(_ title: String) -> some View { self }
+    func playtestField(_ title: String, steady: [String] = []) -> some View { self }
 }
 
 #endif

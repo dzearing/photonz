@@ -60,7 +60,7 @@
     {
       "do": "panelMenu",
       "menu": "Add Effect",
-      "choose": "Shadow"
+      "choose": "@shadow"
     },
     {
       "do": "wait",
@@ -80,7 +80,7 @@
     {
       "do": "expect",
       "control": "Color",
-      "in": "Shadow",
+      "in": "@shadow",
       "present": true
     },
     {
@@ -99,7 +99,7 @@
     {
       "do": "press",
       "control": "Switch",
-      "in": "Fill"
+      "in": "@fill"
     },
     {
       "do": "wait",
@@ -108,7 +108,7 @@
     {
       "do": "press",
       "control": "Switch",
-      "in": "Border"
+      "in": "@border"
     },
     {
       "do": "wait",
@@ -117,7 +117,7 @@
     {
       "do": "press",
       "control": "Switch",
-      "in": "Shadow"
+      "in": "@shadow"
     },
     {
       "do": "wait",
@@ -126,32 +126,32 @@
     {
       "do": "expect",
       "control": "Switch",
-      "in": "Fill",
-      "reads": "Fill, off"
+      "in": "@fill",
+      "reads": "off"
     },
     {
       "do": "expect",
       "control": "Color",
-      "in": "Fill",
+      "in": "@fill",
       "present": false
     },
     {
       "do": "expect",
       "control": "Switch",
-      "in": "Border",
-      "reads": "Border, off"
+      "in": "@border",
+      "reads": "off"
     },
     {
       "do": "expect",
       "control": "Slider",
-      "in": "Border, Width",
+      "in": "@border, Width",
       "present": true
     },
     {
       "do": "expect",
       "control": "Switch",
-      "in": "Shadow",
-      "reads": "Shadow, off"
+      "in": "@shadow",
+      "reads": "off"
     },
     {
       "do": "expect",
@@ -162,7 +162,7 @@
     {
       "do": "expect",
       "control": "Remove",
-      "in": "Shadow",
+      "in": "@shadow",
       "present": true
     },
     {
@@ -181,7 +181,7 @@
     {
       "do": "press",
       "control": "Twist",
-      "in": "Border"
+      "in": "@border"
     },
     {
       "do": "wait",
@@ -190,7 +190,7 @@
     {
       "do": "press",
       "control": "Twist",
-      "in": "Shadow"
+      "in": "@shadow"
     },
     {
       "do": "wait",
@@ -199,26 +199,26 @@
     {
       "do": "expect",
       "control": "Twist",
-      "in": "Border",
-      "reads": "Border, shut"
+      "in": "@border",
+      "reads": "shut"
     },
     {
       "do": "expect",
       "control": "Slider",
-      "in": "Border, Width",
+      "in": "@border, Width",
       "present": false
     },
     {
       "do": "expect",
       "control": "Color",
-      "in": "Border",
+      "in": "@border",
       "present": false
     },
     {
       "do": "expect",
       "control": "Twist",
-      "in": "Shadow",
-      "reads": "Shadow, shut"
+      "in": "@shadow",
+      "reads": "shut"
     },
     {
       "do": "expect",
@@ -229,13 +229,13 @@
     {
       "do": "expect",
       "control": "Color",
-      "in": "Shadow",
+      "in": "@shadow",
       "present": false
     },
     {
       "do": "expect",
       "control": "Remove",
-      "in": "Shadow",
+      "in": "@shadow",
       "present": true
     },
     {
@@ -254,7 +254,7 @@
     {
       "do": "press",
       "control": "Twist",
-      "in": "Border"
+      "in": "@border"
     },
     {
       "do": "wait",
@@ -263,7 +263,7 @@
     {
       "do": "press",
       "control": "Twist",
-      "in": "Shadow"
+      "in": "@shadow"
     },
     {
       "do": "wait",
@@ -272,21 +272,7 @@
     {
       "do": "press",
       "control": "Switch",
-      "in": "Fill"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.4
-    },
-    {
-      "do": "reveal",
-      "control": "Switch",
-      "in": "Border"
-    },
-    {
-      "do": "press",
-      "control": "Switch",
-      "in": "Border"
+      "in": "@fill"
     },
     {
       "do": "wait",
@@ -295,12 +281,26 @@
     {
       "do": "reveal",
       "control": "Switch",
-      "in": "Shadow"
+      "in": "@border"
     },
     {
       "do": "press",
       "control": "Switch",
-      "in": "Shadow"
+      "in": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Switch",
+      "in": "@shadow"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@shadow"
     },
     {
       "do": "wait",
@@ -315,31 +315,31 @@
     {
       "do": "expect",
       "control": "Color",
-      "in": "Shadow",
+      "in": "@shadow",
       "present": true
     },
     {
       "do": "expect",
       "control": "Color",
-      "in": "Fill",
+      "in": "@fill",
       "present": true
     },
     {
       "do": "expect",
       "control": "Slider",
-      "in": "Border, Width",
+      "in": "@border, Width",
       "present": true
     },
     {
       "do": "expect",
       "control": "Color",
-      "in": "Border",
+      "in": "@border",
       "present": true
     },
     {
       "do": "reveal",
       "control": "Twist",
-      "in": "Border"
+      "in": "@border"
     },
     {
       "do": "wait",

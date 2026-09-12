@@ -1518,11 +1518,14 @@ private final class Run {
         // The name on screen first, then the steadier one beside it: a capture
         // tile reads "10 hours ago" today and "yesterday" tomorrow, so a walk
         // that has to keep working names it by its file instead.
-        guard let match = ofKind.first(where: { $0.name == name })
+        guard let match = ofKind.first(where: { PlaytestSteadyName.matches(name, steady: $0.steady) })
+                ?? ofKind.first(where: { $0.name == name })
                 ?? ofKind.first(where: { $0.detail == name })
                 ?? ofKind.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
-            let seen = ofKind.map { $0.detail.isEmpty ? $0.name : "\($0.name) / \($0.detail)" }
-                .joined(separator: ", ")
+            let seen = ofKind.map { target -> String in
+                let names = target.everyName.joined(separator: " / ")
+                return target.detail.isEmpty ? names : "\(names) / \(target.detail)"
+            }.joined(separator: ", ")
             throw Failure(description: "no \(kind.rawValue) called \"\(name)\" is in the panel; the ones that are: "
                 + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
         }
@@ -1539,14 +1542,19 @@ private final class Run {
     /// is in.
     private func panelScrollTarget(_ name: String) throws -> PanelTargetView {
         let all = try panelTargets()
+        if let steady = all.first(where: { PlaytestSteadyName.matches(name, steady: $0.steady) }) {
+            return steady
+        }
         if let row = all.first(where: { $0.kind == .row && $0.name == name }) { return row }
         if let other = all.first(where: { $0.name == name })
             ?? all.first(where: { $0.detail == name })
             ?? all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
             return other
         }
-        let seen = all.map { $0.detail.isEmpty ? $0.name : "\($0.name) / \($0.detail)" }
-            .joined(separator: ", ")
+        let seen = all.map { target -> String in
+            let names = target.everyName.joined(separator: " / ")
+            return target.detail.isEmpty ? names : "\(names) / \(target.detail)"
+        }.joined(separator: ", ")
         throw Failure(description: "nothing called \"\(name)\" is in the panel to scroll from; the ones that are: "
             + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
     }
@@ -1789,19 +1797,60 @@ private final class Run {
     /// row's control can claim what that same control reads.
     static func narrow(_ targets: [PlaytestPressTarget], to row: String?) -> [PlaytestPressTarget] {
         guard let wanted = row else { return targets }
-        let whole = targets.filter { target in
-            target.detail.split(separator: ",").contains {
-                $0.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(wanted) == .orderedSame
+        // An "in" may name more than one row at once, outermost first, because
+        // a Border holds a Width and so does the Border under it: `"@border,
+        // Width"`. Each piece is asked for on its own and every one has to
+        // hold, so the pieces may be words, steady names, or a mix -- which is
+        // what lets the steady name be used on the rows that need it without
+        // rewriting the word beside it.
+        let pieces = wanted.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        guard !pieces.isEmpty else { return targets }
+        func holds(_ target: PlaytestPressTarget, _ piece: String) -> Bool {
+            if PlaytestSteadyName.isSteady(piece) {
+                return target.steadyRows.contains { $0.caseInsensitiveCompare(piece) == .orderedSame }
+            }
+            return target.detail.split(separator: ",").contains {
+                $0.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(piece) == .orderedSame
             }
         }
-        return whole.isEmpty
-            ? targets.filter { $0.detail.range(of: wanted, options: .caseInsensitive) != nil }
-            : whole
+        let whole = targets.filter { target in pieces.allSatisfy { holds(target, $0) } }
+        // The loose pass is words only, and it is what lets `in: "Border"`
+        // reach the controls of a row the panel is calling "Border 2" because
+        // a second one arrived. A steady name never takes it: it is the one
+        // thing a walk can write that promises to mean exactly one row, and
+        // handing "@shadow" the second shadow because nothing matched outright
+        // would break the only promise it makes (`PlaytestSteadyName`).
+        guard whole.isEmpty, !pieces.contains(where: PlaytestSteadyName.isSteady) else { return whole }
+        return targets.filter { $0.detail.range(of: wanted, options: .caseInsensitive) != nil }
     }
 
     private func pressTarget(_ name: String, in row: String?) throws -> PlaytestPressTarget {
-        let all = Self.narrow(try pressTargets(), to: row)
+        // A steady name belongs to a labelled ROW, never to the control on it:
+        // Switch, Color and Slider are structural words that no copy edit
+        // touches, so they have nothing steadier to be. Left to fall through,
+        // "@border" would match the row's name sitting in every one of its
+        // controls' details and press whichever came first, which is the silent
+        // wrong press this whole idea exists to stop.
+        if PlaytestSteadyName.isSteady(name) {
+            throw Failure(description: "\"\(name)\" is a steady name, and a steady name names the ROW "
+                + "a control sits on, not the control. Put it in \"in\" and name the control by its "
+                + "own word: { \"control\": \"Switch\", \"in\": \"\(name)\" }.")
+        }
+        let everything = try pressTargets()
+        let all = Self.narrow(everything, to: row)
         let inRow = row.map { " in \"\($0)\"" } ?? ""
+        // A steady name that reaches no row at all is its own failure, and it
+        // has to read as one: "there is no such row", not "there is no such
+        // control", which is what an empty narrowing leaves behind. The steady
+        // names that ARE on screen go in the message, because that is the list
+        // the author needs and they are spelled ready to paste.
+        if let row, PlaytestSteadyName.isSteady(row), all.isEmpty {
+            let seen = Array(Set(everything.flatMap(\.steadyRows))).sorted().joined(separator: ", ")
+            throw Failure(description: "no row called \"\(row)\" is in the panel, so there is nothing "
+                + "on it to press; the steady names on screen: " + (seen.isEmpty ? "none" : seen)
+                + ". A `panel` step lists everything.")
+        }
         let exact = all.filter { $0.name == name }
         if exact.count == 1 { return exact[0] }
         if exact.count > 1 {
@@ -1883,6 +1932,9 @@ private final class Run {
                 pieces.append(target.detail)
             }
             return PlaytestPressTarget(name: target.name, detail: pieces.joined(separator: ", "),
+                                       says: target.detail,
+                                       steadyRows: PlaytestPanelPress.steadyFields(of: target,
+                                                                                   among: fields),
                                        point: CGPoint(x: frame.midX, y: frame.midY),
                                        box: frame,
                                        visible: target.convert(target.visibleRect, to: nil),
@@ -2117,7 +2169,8 @@ private final class Run {
     /// tile say their own names, which is why `expect` will not let a walk ask
     /// those two what they read.
     private func panelReading(_ thing: PlaytestPanelThing, named: String,
-                              inRow: String?) throws -> (found: Bool, reads: String, others: [String]) {
+                              inRow: String?) throws
+    -> (found: Bool, reads: String, says: String, others: [String]) {
         func matches(_ candidate: String) -> Bool {
             candidate.caseInsensitiveCompare(named) == .orderedSame
         }
@@ -2133,13 +2186,14 @@ private final class Run {
                 [box.placeholderString, box.accessibilityLabel()].compactMap { $0 }
             }
             guard let match = boxes.first(where: { labels($0).contains(where: matches) }) else {
-                return (false, "", boxes.compactMap { labels($0).first }.filter { !$0.isEmpty })
+                return (false, "", "", boxes.compactMap { labels($0).first }.filter { !$0.isEmpty })
             }
             // While a field is being typed into, the words live in the window's
             // field editor and the control still holds the value it had before
             // the caret arrived. Read the editor when there is one, or a walk
             // can never claim what a `key` step just typed.
-            return (true, match.currentEditor()?.string ?? match.stringValue, [])
+            let showing = match.currentEditor()?.string ?? match.stringValue
+            return (true, showing, showing, [])
         case .menu:
             let menus = try panelWindows().compactMap(\.contentView).flatMap { surface -> [(String, String)] in
                 let fields = Self.findAll(PanelTargetView.self, in: surface)
@@ -2150,19 +2204,26 @@ private final class Run {
                 }
             }
             guard let match = menus.first(where: { matches($0.0) }) else {
-                return (false, "", menus.map(\.0))
+                return (false, "", "", menus.map(\.0))
             }
-            return (true, match.1, [])
+            return (true, match.1, match.1, [])
         case .control:
-            let controls = Self.narrow(try pressTargets(), to: inRow)
+            let everything = try pressTargets()
+            let controls = Self.narrow(everything, to: inRow)
             guard let match = controls.first(where: { matches($0.name) }) else {
-                return (false, "", controls.map(\.name))
+                // An "in" that reached no row leaves nothing to list, and "the
+                // ones that are: none" tells an author nothing. Name the steady
+                // rows that ARE on screen instead, spelled ready to paste.
+                if let inRow, PlaytestSteadyName.isSteady(inRow), controls.isEmpty {
+                    return (false, "", "", Array(Set(everything.flatMap(\.steadyRows))).sorted())
+                }
+                return (false, "", "", controls.map(\.name))
             }
-            return (true, match.detail, [])
+            return (true, match.detail, match.says, [])
         case .row, .tile:
             let kind: PanelTargetKind = thing == .row ? .row : .tile
             let targets = try panelTargets().filter { $0.kind == kind }
-            return (targets.contains { matches($0.name) }, named, targets.map(\.name))
+            return (targets.contains { matches($0.name) }, named, named, targets.map(\.name))
         case .tooltip:
             // Named by the control it belongs to, and read the way a pointer
             // reads it: at that control's own middle, smallest marker winning.
@@ -2178,8 +2239,13 @@ private final class Run {
                 let fields = Self.findAll(PanelTargetView.self, in: surface)
                     .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
                 for button in PlaytestPanelMenu.buttons(in: surface) {
-                    if let inRow, !PlaytestPanelPress.fields(of: button, among: fields)
-                        .contains(where: { $0.caseInsensitiveCompare(inRow) == .orderedSame }) { continue }
+                    if let inRow {
+                        let names = PlaytestSteadyName.isSteady(inRow)
+                            ? PlaytestPanelPress.steadyFields(of: button, among: fields)
+                            : PlaytestPanelPress.fields(of: button, among: fields)
+                        guard names.contains(where: { $0.caseInsensitiveCompare(inRow) == .orderedSame })
+                        else { continue }
+                    }
                     let box = button.convert(button.bounds, to: nil)
                     guard let said = PlaytestPanelHelp.tip(at: CGPoint(x: box.midX, y: box.midY),
                                                            in: surface) else { continue }
@@ -2195,9 +2261,9 @@ private final class Run {
                 talking.append((control.name, said))
             }
             guard let match = talking.first(where: { matches($0.name) }) else {
-                return (false, "", talking.map(\.name))
+                return (false, "", "", talking.map(\.name))
             }
-            return (true, match.says, [])
+            return (true, match.says, match.says, [])
         }
     }
 
@@ -2292,10 +2358,11 @@ private final class Run {
     /// there, since the room was the panel's to decide.
     private func checkInView(_ name: String, whole: Bool = false) throws -> String {
         let all = try panelTargets()
-        guard let match = all.first(where: { $0.name == name })
+        guard let match = all.first(where: { PlaytestSteadyName.matches(name, steady: $0.steady) })
+                ?? all.first(where: { $0.name == name })
                 ?? all.first(where: { $0.detail == name })
                 ?? all.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
-            let seen = all.map(\.name).joined(separator: ", ")
+            let seen = all.flatMap(\.everyName).joined(separator: ", ")
             throw Failure(description: "nothing called \"\(name)\" is in the panel at all; what is: "
                 + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
         }
@@ -2503,9 +2570,23 @@ private final class Run {
                 throw Failure(description: "no \(thing.rawValue) called \"\(named)\"\(onRow) is in the panel to read; "
                     + "the ones that are: \(list(reading.others))")
             }
+            let wanted = reads.trimmingCharacters(in: .whitespaces)
             let showing = reading.reads.trimmingCharacters(in: .whitespaces)
-            guard showing.caseInsensitiveCompare(reads.trimmingCharacters(in: .whitespaces))
-                    == .orderedSame else {
+            // A control reads as the rows it sits in and then what it is
+            // saying: "Border, off". A walk that has already said which row in
+            // "in" may claim the second half alone -- `reads: "off"` -- and
+            // that is the form to write, because the first half is the words on
+            // the row and the words on a row change. Three walks failed a
+            // rename on nothing but this, having found the row perfectly well
+            // by its steady name (`PlaytestSteadyName`).
+            //
+            // Only WITH an "in", though. Without one there is nothing pinning
+            // which switch is being read, and "off" alone would happily answer
+            // for whichever the panel built first.
+            let own = reading.says.trimmingCharacters(in: .whitespaces)
+            let asClaimed = showing.caseInsensitiveCompare(wanted) == .orderedSame
+                || (inRow != nil && !own.isEmpty && own.caseInsensitiveCompare(wanted) == .orderedSame)
+            guard asClaimed else {
                 throw Failure(description: "the \(thing.rawValue) called \"\(named)\"\(onRow) reads "
                     + "\"\(showing)\", not \"\(reads)\"")
             }
@@ -2672,6 +2753,11 @@ private final class Run {
             "rows": targets.filter { $0.kind == .row }.map(describe),
             "controls": try pressTargets().map { control in
                 ["name": control.name, "detail": control.detail, "enabled": control.isEnabled,
+                 // What to write in "in" for a step that should survive the
+                 // words on the row changing (`PlaytestSteadyName`). An author
+                 // writes what they can see, so the durable name has to be
+                 // visible too, spelled the way it gets pasted into a step.
+                 "steadyRows": control.steadyRows,
                  // Something scrolled out of the dock is still built, and still
                  // listed, but a press cannot reach it until the walk scrolls.
                  "inWindow": Self.isInReach(control),
@@ -2717,7 +2803,9 @@ private final class Run {
         func names(_ key: String) -> String {
             let list = (inventory[key] as? [[String: Any]] ?? []).map { entry -> String in
                 let name = entry["name"] as? String ?? "?"
-                let detail = entry["detail"] as? String ?? ""
+                var detail = entry["detail"] as? String ?? ""
+                let steady = (entry["steadyRows"] as? [String] ?? []).joined(separator: " ")
+                if !steady.isEmpty { detail += detail.isEmpty ? steady : ", \(steady)" }
                 return detail.isEmpty ? name : "\(name) (\(detail))"
             }
             return list.isEmpty ? "none" : list.joined(separator: ", ")
@@ -3063,8 +3151,10 @@ private final class Run {
         // in the panel that happens to be called Color.
         if let row {
             let inside = buttons.filter { button in
-                PlaytestPanelPress.fields(of: button, among: fields)
-                    .contains { $0.caseInsensitiveCompare(row) == .orderedSame }
+                let names = PlaytestSteadyName.isSteady(row)
+                    ? PlaytestPanelPress.steadyFields(of: button, among: fields)
+                    : PlaytestPanelPress.fields(of: button, among: fields)
+                return names.contains { $0.caseInsensitiveCompare(row) == .orderedSame }
             }
             guard !inside.isEmpty else {
                 let seen = buttons.map { Self.menuName(of: $0, among: fields, in: content) }
@@ -3080,7 +3170,12 @@ private final class Run {
         // menu on no named row has nothing but its words — and the words win,
         // so naming one exactly is never made ambiguous by a row elsewhere.
         let byWords = buttons.first { PlaytestPanelMenu.title(of: $0) == name }
-        let byRow = buttons.filter { PlaytestPanelMenu.naming(of: $0, among: fields).name == name }
+        let byRow = PlaytestSteadyName.isSteady(name)
+            ? buttons.filter { button in
+                PlaytestPanelPress.steadyField(of: button, among: fields)
+                    .contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+            }
+            : buttons.filter { PlaytestPanelMenu.naming(of: $0, among: fields).name == name }
         if byWords == nil, byRow.count > 1 {
             let showing = byRow.map { PlaytestPanelMenu.title(of: $0) }
             throw Failure(description: "\(byRow.count) menus sit on a row called \"\(name)\", "
@@ -3130,17 +3225,27 @@ private final class Run {
                 reading.problem = "the menu opened but showed in no window this app can see, so there is no picture"
             }
             if let choose {
+                // A steady name works here too, so "add a border" is one
+                // vocabulary from the plus menu through to the row it makes:
+                // `choose: "@border"` then `in: "@border"`, and neither one is
+                // the word on screen (`PlaytestSteadyName`). SwiftUI leaves
+                // nothing on a menu row to hang an id off, so the name is
+                // resolved through the model that built the menu and then
+                // matched by title like any other.
+                let wanted = PlaytestSteadyName.isSteady(choose)
+                    ? (AddableEffect.steadyNamed(choose)?.title ?? choose)
+                    : choose
                 if let index = menu?.items.firstIndex(where: {
-                    PlaytestPanelMenu.readable($0.title) == choose
+                    PlaytestPanelMenu.readable($0.title) == wanted
                 }) {
                     if menu?.items[index].isEnabled == true {
                         menu?.performActionForItem(at: index)
-                        reading.chose = choose
+                        reading.chose = wanted
                     } else {
-                        reading.problem = "the row \"\(choose)\" is dimmed, so picking it would do nothing"
+                        reading.problem = "the row \"\(wanted)\" is dimmed, so picking it would do nothing"
                     }
                 } else {
-                    reading.problem = "no row called \"\(choose)\"; the rows are: "
+                    reading.problem = "no row called \"\(wanted)\"; the rows are: "
                         + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", ")
                 }
             }
@@ -3660,6 +3765,13 @@ private final class Run {
     /// saved under. The swatch wins a tie, because every swatch answers to the
     /// word Color and a tile answers to a name somebody typed.
     private func colorDragSource(_ name: String) throws -> PanelTargetView {
+        if PlaytestSteadyName.isSteady(name) {
+            guard let well = try steadyColorWell(name) else {
+                throw Failure(description: "the row \"\(name)\" has no colour swatch to pick a "
+                    + "colour up from; a part that is switched off shows none.")
+            }
+            return well
+        }
         if let well = try? colorWell(name) { return well }
         let tiles = try panelTargets().filter { $0.kind == .tile && $0.detail == "Styles" }
         guard let tile = tiles.first(where: { $0.name == name })
@@ -3677,6 +3789,14 @@ private final class Run {
     /// or the Library shelf, which is named as itself because it belongs to no
     /// row and takes a colour to KEEP it rather than to paint with it.
     private func colorDropTarget(_ name: String) throws -> PanelTargetView {
+        // A steady name says which ROW, so it finds that row's swatch if the
+        // part is on and the row itself if it is off -- the same two answers
+        // the word gives, and the same thing a pointer would be over
+        // (`PlaytestSteadyName`).
+        if PlaytestSteadyName.isSteady(name) {
+            if let well = try steadyColorWell(name) { return well }
+            return try steadyField(name)
+        }
         if name.caseInsensitiveCompare(Self.libraryShelfTarget) == .orderedSame,
            let shelf = try panelTargets().first(where: {
                $0.kind == .row && $0.name == Self.libraryShelfTarget
@@ -3703,6 +3823,30 @@ private final class Run {
     /// A colour swatch in the panel, named by the row it sits on. Every swatch
     /// answers to the word Color, so the row's own word is what tells Fill's
     /// from Shadow's.
+    /// The labelled row carrying this steady name.
+    private func steadyField(_ name: String) throws -> PanelTargetView {
+        let fields = try panelTargets().filter { $0.kind == .field }
+        guard let match = fields.first(where: { PlaytestSteadyName.matches(name, steady: $0.steady) })
+        else {
+            let seen = fields.flatMap(\.steady).map(PlaytestSteadyName.written).joined(separator: ", ")
+            throw Failure(description: "no row called \"\(name)\" is in the panel; the steady names "
+                + "on screen: " + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
+        }
+        return match
+    }
+
+    /// The colour swatch on the row carrying this steady name, or nil when
+    /// that row is showing none because its part is switched off.
+    private func steadyColorWell(_ name: String) throws -> PanelTargetView? {
+        let all = try panelTargets()
+        let fields = all.filter { $0.kind == .field }
+        return all.first { target in
+            target.kind == .control && target.name == "Color"
+                && PlaytestPanelPress.steadyFields(of: target, among: fields)
+                    .contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+        }
+    }
+
     private func colorWell(_ part: String) throws -> PanelTargetView {
         let wells = try panelTargets().filter { $0.kind == .control && $0.name == "Color" }
         // An effect's swatch says where it lives AND what it is — "Shadow,

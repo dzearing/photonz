@@ -1,0 +1,27 @@
+{
+  "id": "three-walks-stop-on-a-panel-control-the-dock-has",
+  "title": "Three walks stop on a panel control the dock has scrolled out of reach",
+  "goal": "Three scripted walks stop partway through because the control they are about to press has been scrolled off the visible part of the panel, so the run reports a failure that is about the window being short rather than about anything the app got wrong. Fix them so a full sweep tells the truth.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2520,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T15:20:46.711Z",
+  "updated": "2026-09-12T15:20:46.714Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-12 against the probe built from main at that time, BEFORE and AFTER the steady-name change, with identical failures both times, so the steady names are not the cause.\n\n  Scripts/playtest.sh Scripts/playtest/border-effect-walk.json --no-build\n  [30 press] FAILED: the control \"Slider\" is not where a person could click it: it is off the window, or the dock has scrolled it far enough that the panel edge cuts across the point a press would land on.\n\n  Scripts/playtest.sh Scripts/playtest/glow-effect-walk.json --no-build\n  [30 press] FAILED: the control \"Color\" is not where a person could click it: ...\n\n  Scripts/playtest.sh Scripts/playtest/label-fills-a-row-walk.json --no-build\n  [23 press] FAILED: the control \"Fixed\" is not where a person could click it: ...\n\nThe baseline was taken by running the walk files as they stand at git HEAD (git show HEAD:Scripts/playtest/<name>.json > /tmp/...) and they failed at the same step numbers with the same messages.\n\nThe `reveal` step exists for exactly this (docs/design/playtest-harness.md) and landed on 2026-09-08; these three were never given one. Three earlier tasks about scrolled-away controls are all marked done: an-alignment-button-the-panel-has-scrolled-away, a-switch-in-the-parts-list-the-walk-cannot-reach, a-control-scrolled-out-of-its-own-section-gets-c. So this is most likely three walks that were missed rather than a new defect, but worth checking whether the window these three ask for is simply too short for what they open.",
+  "acceptance": [
+    "Scripts/playtest.sh runs border-effect-walk.json, glow-effect-walk.json and label-fills-a-row-walk.json to completion",
+    "Each one still proves what its seed says it proves, rather than having the failing claim deleted",
+    "No new walk in the set fails as a result"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T15:20:46.713Z",
+      "note": "created (manual)"
+    }
+  ]
+}

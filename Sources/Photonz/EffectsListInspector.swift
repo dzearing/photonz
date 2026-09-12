@@ -233,7 +233,11 @@ private struct EffectRowView: View {
         .onGeometryChange(for: CGRect.self) {
             $0.frame(in: .named(inspectorDockSpace))
         } action: { onFrame($0) }
-        .playtestField(row.title)
+        // Named twice: the word a person reads, and the steady name a walk
+        // writes when it wants to survive that word changing. The row that
+        // reads Border today read Outline last week and broke thirteen walks
+        // doing it (`PlaytestSteadyName`).
+        .playtestField(row.title, steady: row.steadyNames)
         .panelStartProbe(.row, owner: row.title)
         // The same three moves the grip and the cross make, for a hand that is
         // not going to drag a 20pt strip: a pointer that right clicks, and a

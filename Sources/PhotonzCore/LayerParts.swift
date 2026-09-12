@@ -205,6 +205,22 @@ public struct LayerPartRow: Hashable, Sendable, Identifiable {
         return "color.\(slot?.rawValue ?? "none")"
     }
 
+    /// What a scripted walk calls this row when it wants a name that outlives
+    /// the word on it: `fill`, `color.stroke` (`PlaytestSteadyName`).
+    ///
+    /// It matters most on the rows whose word is not even fixed for one
+    /// selection: the ink row reads Line when everything picked is a line and
+    /// Color otherwise, so no word a walk could write reaches it every time.
+    public var steadyNames: [String] {
+        guard let part else { return ["color.\(slot?.rawValue ?? "none")"] }
+        // Nothing in Appearance is countable yet, so a part that sits in no
+        // list is one name and not two: `@fill`, with no `@fill.1` beside it
+        // saying there might one day be a second. The moment a part does arrive
+        // more than once it counts like an effect does.
+        guard let index else { return [part.rawValue] }
+        return PlaytestSteadyName.entry(kind: part.rawValue, ordinal: index + 1)
+    }
+
     /// Whether this row shows a switch at all.
     public var hasSwitch: Bool { !switchIDs.isEmpty }
 

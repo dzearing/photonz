@@ -14415,3 +14415,43 @@ loosen the assertion to make it green.
 
 Next: that walk failure, and the pending panel-order card, which would dissolve
 the edge entirely if the user picks an order over a scroll.
+
+## 2026-09-12 — a walk names a panel row by something a rename cannot break
+
+Scripted walks found a row in Appearance or the Effects list by the words
+printed on it, so one copy change broke walks by the dozen: five repair tasks in
+a single day, all of them Outline becoming Border, and each one took a runner
+cycle from the focus.
+
+Every row in those two lists now carries a **steady name** beside its words,
+taken off the model rather than typed next to the copy, and a walk may use
+either: `in: "@border"` reaches the same row `in: "Border"` does and keeps
+reaching it after the word changes. `PlaytestSteadyName` (PhotonzCore, unit
+tested) owns the convention; `LayerEffectRow.steadyNames` and
+`LayerPartRow.steadyNames` derive the names; the harness matches them in every
+place a row can be named — `in`, `menu`, `scrollPanel`, `expectInView`,
+`rightClick`, `dragColor` — plus the plus menu's `choose`, so adding an effect
+and then setting it up is one vocabulary end to end.
+
+Two rules keep it honest. A plain word only matches words and a marked name only
+matches steady names, so a row that has genuinely gone matches nothing and fails
+the walk loudly instead of drifting onto a neighbour — which is why this is not
+an alias scheme. And a steady name names the ROW, never the control on it;
+writing one in `control` is rejected with that advice.
+
+Proved by renaming `EffectKind.border.title` to "Outline", rebuilding the probe
+and re-running: the twenty converted walks stayed green, and a walk left naming
+the row by its word failed. Also: a `panel` step now prints the steady names
+beside every control, and a step that names a row that is not there answers with
+the ones that are, spelled ready to paste.
+
+Twenty walks converted (the ones the rename broke, from 202256d8 and deb5d9d2).
+Written up in `docs/design/playtest-harness.md`. Audit:
+`queue/audits/2026-09-12-steady-panel-names.json`.
+
+**Next / open:** three of those twenty still fail, exactly as they did before
+this change — border-effect, glow-effect and label-fills-a-row each stop on a
+control the dock has scrolled out of reach. Filed as
+`three-walks-stop-on-a-panel-control-the-dock-has`. The other three hundred walks
+were left naming rows by their words; whether to convert them in one pass or as
+they are next touched is a question in the audit.

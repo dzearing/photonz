@@ -1,0 +1,29 @@
+{
+  "feature": "A walk names a panel row by something a rename cannot break",
+  "epic": "unmanned-loop",
+  "summary": "Scripted walks used to find a row in Appearance or the Effects list by the words printed on it, so changing one word broke walks by the dozen: five repair tasks in one day, all from Outline becoming Border. Every one of those rows now carries a second name that comes off the model instead of the copy, and a walk can use it: in: \"@border\" keeps working the day the row starts saying something else.",
+  "setup": "Nothing to turn on in the app. This is the scripted playtest harness, so it is read rather than clicked: Scripts/playtest/*.json and docs/design/playtest-harness.md.",
+  "try": [
+    { "do": "Open docs/design/playtest-harness.md and read \"A row of the panel has a second name that a rename cannot touch\"." },
+    { "do": "Open Scripts/playtest/effects-remembered-walk.json and read the steps: every Border, Shadow and Blur is now @border, @shadow, @blur." },
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/effects-remembered-walk.json and watch it pass.", "shot": "2026-09-12-steady-panel-names.png" },
+    { "do": "Change EffectKind.border.title in Sources/PhotonzCore/LayerEffects.swift from \"Border\" to \"Outline\"." },
+    { "do": "Run the same walk again. It still passes, and the picture now says Outline where it said Border." },
+    { "do": "Run Scripts/playtest.sh Scripts/playtest/border-offset-walk.json, which was left naming the row by its word. It fails." },
+    { "do": "Put the title back." }
+  ],
+  "evaluate": [
+    "Reading a converted walk, can you still tell what it is doing, or does @border make it harder to follow than Border did?",
+    "Is the mark the right one? @border reads as a handle to me, but #border or border: were both on the table.",
+    "Twenty walks were converted and about three hundred were not. Should the rest be converted in one pass, or only as they are next touched?",
+    "A steady name says the row, never the control: press \"Switch\" in \"@border\". Does that split feel natural, or would you expect @border.switch?",
+    "A walk can now write reads: \"off\" instead of reads: \"Border, off\". Is the shorter claim still saying enough?"
+  ],
+  "rough": [
+    "The rows of an ordinary menu still go by their words. The one exception is the plus menu in Effects, where choose: \"@border\" works, because that menu is built straight off the same model the rows are. Everywhere else a menu row is read off a list rather than addressed, and giving every menu item in the app a durable id is a separate job.",
+    "Only the two lists whose words are product copy were given steady names: the parts in Appearance and the entries in the Effects list. Width, Height, Layout and Position & Size are structural words that have not moved in the whole history of the queue, and giving them ids would be noise for no cover.",
+    "Three of the twenty walks still fail, and they failed the same way before this change: border-effect, glow-effect and label-fills-a-row each stop on a control the dock has scrolled out of reach. Filed separately as \"Three walks stop on a panel control the dock has scrolled out of reach\" with the commands and output.",
+    "I did not run the whole 322-walk sweep, which is about 52 minutes and five times a runner's ceiling. I ran the twenty walks I changed plus two controls, and asked the loop for a sweep.",
+    "The screenshot is a real screen capture: the Grants line said the probe had Screen Recording."
+  ]
+}

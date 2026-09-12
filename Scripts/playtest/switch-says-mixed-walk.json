@@ -17,9 +17,9 @@
 
     { "do": "click", "at": [260, 240] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Switch", "in": "Border" },
+    { "do": "press", "control": "Switch", "in": "@border" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, off" },
+    { "do": "expect", "control": "Switch", "in": "@border", "reads": "off" },
     { "do": "panel", "stage": "1-one-bare" },
     { "do": "describe", "stage": "1-one-bare", "note": "one box with no line round it, so the selection about to be made really does disagree" },
 
@@ -27,14 +27,14 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "panel", "stage": "2-three-picked" },
     { "do": "describe", "stage": "2-three-picked", "note": "three picked, one bare: the Border row says Mixed beside a switch drawn one step quieter, and the line under it says 2 of the 3 have one" },
-    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, mixed" },
+    { "do": "expect", "control": "Switch", "in": "@border", "reads": "mixed" },
     { "do": "snapshot", "name": "1-outline-mixed" },
 
-    { "do": "press", "control": "Switch", "in": "Border" },
+    { "do": "press", "control": "Switch", "in": "@border" },
     { "do": "wait", "seconds": 0.7 },
     { "do": "panel", "stage": "3-all-outlined" },
     { "do": "describe", "stage": "3-all-outlined", "note": "one press: all three have a line, the word is gone and the switch is at full strength" },
-    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, on" },
+    { "do": "expect", "control": "Switch", "in": "@border", "reads": "on" },
     { "do": "snapshot", "name": "2-outline-on" },
     { "do": "render", "name": "three-outlined" },
 
@@ -42,18 +42,18 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "panel", "stage": "4-one-undo" },
     { "do": "describe", "stage": "4-one-undo", "note": "ONE undo puts all three back: the first box is bare again and the row says Mixed again" },
-    { "do": "expect", "control": "Switch", "in": "Border", "reads": "Border, mixed" },
+    { "do": "expect", "control": "Switch", "in": "@border", "reads": "mixed" },
     { "do": "render", "name": "after-one-undo" },
 
     { "do": "click", "at": [540, 240] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Switch", "in": "Fill" },
+    { "do": "press", "control": "Switch", "in": "@fill" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "drag", "from": [100, 110], "to": [1000, 360], "steps": 10 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "panel", "stage": "5-fill-mixed" },
     { "do": "describe", "stage": "5-fill-mixed", "note": "the same answer on another part: two of the three still have a fill, so the Fill row says Mixed too" },
-    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, mixed" },
+    { "do": "expect", "control": "Switch", "in": "@fill", "reads": "mixed" },
     { "do": "snapshot", "name": "3-fill-mixed" }
   ]
 }

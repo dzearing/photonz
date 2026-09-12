@@ -70,7 +70,7 @@
     },
     {
       "do": "dragColor",
-      "from": "Fill",
+      "from": "@fill",
       "onto": "Library",
       "expect": "takes"
     },
@@ -102,7 +102,7 @@
     {
       "do": "press",
       "control": "Color",
-      "in": "Fill"
+      "in": "@fill"
     },
     {
       "do": "wait",
@@ -136,7 +136,7 @@
     {
       "do": "dragColor",
       "from": "Brand",
-      "onto": "Fill",
+      "onto": "@fill",
       "hold": "shelf-2-in-flight",
       "expect": "takes"
     },
@@ -164,7 +164,7 @@
     {
       "do": "dragColor",
       "from": "Brand",
-      "onto": "Fill",
+      "onto": "@fill",
       "expect": "refuses"
     },
     {
@@ -186,7 +186,7 @@
     {
       "do": "dragColor",
       "from": "Brand",
-      "onto": "Border",
+      "onto": "@border",
       "expect": "takes"
     },
     {
