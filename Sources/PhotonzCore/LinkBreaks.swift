@@ -32,17 +32,21 @@ public enum LinkBreakKind: String, Hashable, Sendable, CaseIterable {
     case effectStyle
     /// One part of a copy's look was set by hand, so it stopped following.
     case instanceStyle
+    /// A component that followed the shared shelf is no longer on it, so this
+    /// document's original is its own from here on (`SharedComponents`).
+    case sharedOriginalMissing
 
     /// Which break leads when an edit broke more than one thing. Heaviest
     /// first: work left stranded outranks one slider on one copy.
     var weight: Int {
         switch self {
         case .originalDeleted: return 0
-        case .instanceUngrouped: return 1
-        case .colorStyle: return 2
-        case .textStyle: return 3
-        case .effectStyle: return 4
-        case .instanceStyle: return 5
+        case .sharedOriginalMissing: return 1
+        case .instanceUngrouped: return 2
+        case .colorStyle: return 3
+        case .textStyle: return 4
+        case .effectStyle: return 5
+        case .instanceStyle: return 6
         }
     }
 }
@@ -88,6 +92,8 @@ public struct LinkBreak: Hashable, Sendable {
             return count == 1 ? "The pieces of this copy" : "The pieces of \(count) copies"
         case .originalDeleted:
             return count == 1 ? "1 copy" : "\(count) copies"
+        case .sharedOriginalMissing:
+            return count == 1 ? "1 component" : "\(count) components"
         }
     }
 
@@ -97,7 +103,8 @@ public struct LinkBreak: Hashable, Sendable {
         switch kind {
         case .instanceUngrouped: return true
         case .instanceStyle: return count != 1
-        case .colorStyle, .textStyle, .effectStyle, .originalDeleted: return count != 1
+        case .colorStyle, .textStyle, .effectStyle, .originalDeleted,
+             .sharedOriginalMissing: return count != 1
         }
     }
 
@@ -367,7 +374,10 @@ extension LinkBreakReport {
             case .originalDeleted:
                 guard let count = stranded[componentID] else { return nil }
                 return LinkBreak(kind: kind, count: count, source: name)
-            case .colorStyle, .textStyle, .effectStyle:
+            case .colorStyle, .textStyle, .effectStyle, .sharedOriginalMissing:
+                // Not something a diff of one document can see: the shelf lives
+                // outside it, so the sync that reads it reports its own break
+                // (`SharedComponentSyncReport`).
                 return nil
             }
         }

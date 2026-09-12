@@ -1,0 +1,28 @@
+{
+  "id": "a-shared-component-arrives-the-size-it-should-be",
+  "title": "A shared component arrives the size it should be in this document",
+  "goal": "A component built on a Retina screenshot is drawn in image pixels, so dropping it into a document that is one to one makes it arrive twice as big as it looks where it was made. It should arrive the size a person expects, whatever document it came from.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2440,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T10:06:40.786Z",
+  "updated": "2026-09-12T10:06:40.789Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/PhotonzCore/SharedComponents.swift: adoptSharedComponent takes the drawing verbatim. The starters solve this by BUILDING at max(pixelScale, 1); a shared component is a drawing rather than a recipe, so it needs scaling on the way in (LayerScaling) plus a note of the scale it was shared at on SharedComponent. Raised by the audit queue/audits/2026-09-12-shared-components.json.",
+  "acceptance": [
+    "A component shared from a document at pixel scale 2 and dropped into one at pixel scale 1 arrives at the same apparent size it had where it was made",
+    "The reverse direction works too",
+    "A component shared and dropped between two documents at the same scale is unchanged from today",
+    "A test covers both directions"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T10:06:40.788Z",
+      "note": "created (manual)"
+    }
+  ]
+}

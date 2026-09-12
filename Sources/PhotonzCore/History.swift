@@ -85,6 +85,34 @@ public struct History: Sendable {
         return EditReport(componentSync: sync, linkBreaks: breaks)
     }
 
+    /// A change that came from OUTSIDE this document: the shared shelf moved
+    /// under it because another window published an edit (`SharedComponents`).
+    ///
+    /// It records no step, because it is not something this person did. And it
+    /// is applied to every step the stack can return to as well as to the
+    /// picture, so ⌘Z on some unrelated local edit can never hand back
+    /// somebody else's older drawing of a shared component: what the shelf
+    /// holds is not part of this document's history.
+    ///
+    /// Returns whether anything moved.
+    @discardableResult
+    public mutating func applyOutsideHistory(_ update: (inout PhotonzDocument) -> Void) -> Bool {
+        func applied(_ document: PhotonzDocument) -> PhotonzDocument {
+            var next = document
+            update(&next)
+            guard next != document else { return document }
+            next.reflowLayouts()
+            if next.syncComponentInstances().updatedInstances > 0 { next.reflowLayouts() }
+            return next
+        }
+        let next = applied(current)
+        guard next != current else { return false }
+        current = next
+        undoStack = undoStack.map { Step(document: applied($0.document), selection: $0.selection) }
+        redoStack = redoStack.map { Step(document: applied($0.document), selection: $0.selection) }
+        return true
+    }
+
     /// The marquee moved without that being a step of its own — the canvas was
     /// resized out from under it, a tool that has no use for it put it down,
     /// or an edit consumed it. The stack simply follows along, so the NEXT

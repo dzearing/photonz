@@ -1286,6 +1286,12 @@ final class EditorState {
     /// Installs a freshly opened document, resetting every per-document bit
     /// of editor state.
     private func installDocument(_ document: PhotonzDocument, url: URL?) {
+        // The shelf first, so a file opened today comes up already wearing the
+        // edits made to its shared components while it was closed, and the
+        // history it starts with is the picture somebody is actually looking at
+        // (`EditorState+SharedComponents`).
+        var document = document
+        let sharedReport = syncSharedComponentsOnOpen(&document)
         history = History(document: document)
         savedDocument = document
         documentURL = url
@@ -1317,6 +1323,9 @@ final class EditorState {
         needsOpenSizing = true
         sizeWindowToImageIfReady()
         restoreExpandedGroups()
+        // ...and last, because it is the one thing here a person has to read:
+        // a component whose shared original has been taken off the shelf.
+        announceSharedComponents(sharedReport)
     }
 
     // MARK: - Fit window to image on open
@@ -2192,6 +2201,16 @@ final class EditorState {
     /// `reportingLinkBreaks` is off for the few commands whose whole point IS
     /// the break — Unlink takes a color off its style on purpose — because a
     /// notice there is the app repeating your own command back at you.
+    /// Applies a change that came from OUTSIDE this document — the shared shelf
+    /// moved under it — without recording an undo step
+    /// (`History.applyOutsideHistory`). Here rather than beside the rest of the
+    /// shared-shelf code because the stack is this file's to write to.
+    @discardableResult
+    func applyOutsideHistory(_ update: (inout PhotonzDocument) -> Void) -> Bool {
+        guard history != nil else { return false }
+        return history!.applyOutsideHistory(update)
+    }
+
     func perform(announcing: Bool = true, reportingLinkBreaks: Bool = true,
                  _ mutate: (inout PhotonzDocument) -> Void) {
         // Anything recorded supersedes a colour drag's live frames, including
@@ -2202,8 +2221,13 @@ final class EditorState {
         // and a tool reappearing several presses later is its own surprise.
         // The paste path re-arms this itself, right after its own edit lands.
         pasteToolReturn = nil
+        let before = document
         let report = history?.perform(mutate) ?? EditReport()
         rerender()
+        // Anything this edit changed about a component that follows the shared
+        // shelf goes to the shelf, and from there to every other open window
+        // (`EditorState+SharedComponents`).
+        publishSharedComponents(changedFrom: before)
         if announcing { announceComponentSync(report.componentSync) }
         // Last, so a break wins the one canvas slot: an edit that reached ten
         // copies is expected, and one that quietly severed something is not.
@@ -2287,9 +2311,13 @@ final class EditorState {
         dropStaleBreakNotice()
         let returning = pasteToolReturn
         let pastedWasThere = returning.map { document?.layer(id: $0.layer) != nil } ?? false
+        let before = document
         history?.undo()
         restoreSelectionFromHistory()
         rerender()
+        // Stepping over an edit to a shared original is still an edit to it
+        // everywhere: taking it back here takes it back in every document.
+        publishSharedComponents(changedFrom: before)
         // Taking a paste back hands your tool back with it: the paste borrowed
         // the pointer, and the copy it borrowed it for is gone again.
         if var returning, pastedWasThere, document?.layer(id: returning.layer) == nil,
@@ -2307,9 +2335,13 @@ final class EditorState {
         dropStaleBreakNotice()
         let returning = pasteToolReturn
         let pastedWasGone = returning.map { document?.layer(id: $0.layer) == nil } ?? false
+        let before = document
         history?.redo()
         restoreSelectionFromHistory()
         rerender()
+        // Stepping over an edit to a shared original is still an edit to it
+        // everywhere: taking it back here takes it back in every document.
+        publishSharedComponents(changedFrom: before)
         // ...and putting the paste back takes the pointer up again, so undo
         // and redo of one paste read the same both ways round.
         if var returning, pastedWasGone, document?.layer(id: returning.layer) != nil,

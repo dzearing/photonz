@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/shared-component-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 300], "to": [700, 420] },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [340, 480] },
+    { "do": "type", "text": "Save" },
+    { "do": "tool", "tool": "select" },
+    { "do": "drag", "from": [220, 220], "to": [860, 600] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "group" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "makeComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Save Button" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [500, 360] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-made", "note": "the first document: a component called Save Button, selected, with the Component section showing the Share across documents switch off" },
+    { "do": "snapshot", "name": "shared-1-made" },
+
+    { "do": "action", "action": "shareSelectedComponent" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-shared", "note": "the switch is on and the line under it says it is on the shelf every document can reach" },
+    { "do": "snapshot", "name": "shared-2-shared" },
+
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "3-second-document", "note": "a BRAND NEW document: the Components shelf already holds Save Button, marked shared, ahead of the five starters" },
+    { "do": "snapshot", "name": "shared-3-second-document" },
+
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "insertPickedComponent" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-dropped", "note": "the shared button is in the second document, selected, and its Component section says it is shared" },
+    { "do": "snapshot", "name": "shared-4-dropped" },
+    { "do": "render", "name": "shared-4-dropped-doc" },
+
+    { "do": "action", "action": "renameSelectedLayer" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-edited-here", "note": "renaming it in the second document is an edit to the shared original" },
+    { "do": "snapshot", "name": "shared-5-edited-here" },
+    { "do": "describe", "stage": "5-followed-there", "note": "the FIRST document, untouched since: its component took the new name on its own" },
+    { "do": "snapshot", "name": "shared-5-followed-there", "window": "Untitled 1" },
+
+    { "do": "action", "action": "unshareSelectedComponent" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "6-gone", "note": "taking it off the shelf: the first document keeps its drawing and says the link broke" },
+    { "do": "snapshot", "name": "shared-6-gone", "window": "Untitled 1" }
+  ]
+}

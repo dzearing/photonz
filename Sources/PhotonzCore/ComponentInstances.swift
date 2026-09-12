@@ -190,16 +190,23 @@ extension PhotonzDocument {
     ///
     /// `context` is the group you have stepped INSIDE, so a piece let go on a
     /// bar or a card you are arranging joins it rather than landing beside it.
+    ///
+    /// `arriving` is the drawing of something that is NOT in this document yet
+    /// — a component off the shared shelf — so the answer is the same one a
+    /// starter gets rather than a refusal for a component this document has
+    /// never heard of (`SharedComponents`).
     public func componentDropTarget(of componentID: UUID, at point: CGPoint,
-                                    inside context: UUID? = nil) -> ComponentDropTarget {
+                                    inside context: UUID? = nil,
+                                    arriving: Layer? = nil) -> ComponentDropTarget {
         // A starter is still the app's rather than the document's until it is
         // dropped, so there is no main to reason about: it arrives whole and
         // joins whatever container it lands on, the way a drawn shape does.
-        let isArrivingStarter = mainComponent(componentID: componentID) == nil
-            && StarterComponent(componentID: componentID) != nil
-        guard isArrivingStarter || mainComponent(componentID: componentID) != nil else { return .refused }
+        // Anything else off a shelf outside this document arrives the same way.
+        let isArriving = mainComponent(componentID: componentID) == nil
+            && (arriving != nil || StarterComponent(componentID: componentID) != nil)
+        guard isArriving || mainComponent(componentID: componentID) != nil else { return .refused }
         guard let host = dropHostID(under: point, inside: context) else { return .canvas }
-        if isArrivingStarter { return canDropNewLayer(intoGroup: host) ? .inside(host) : .canvas }
+        if isArriving { return canDropNewLayer(intoGroup: host) ? .inside(host) : .canvas }
         // A copy landing inside its own original would draw forever, so that
         // one drop is refused rather than quietly landed somewhere else.
         if encloses(componentID: componentID, at: host) { return .refused }
@@ -228,11 +235,13 @@ extension PhotonzDocument {
     /// size of the one being placed.
     public func componentDropSize(
         of componentID: UUID, version: UUID? = nil,
-        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
+        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize,
+        arriving: Layer? = nil
     ) -> CGSize? {
         if let main = mainComponent(componentID: componentID, version: version) {
             return main.localBounds.size
         }
+        if let arriving { return arriving.localBounds.size }
         guard let starter = StarterComponent(componentID: componentID) else { return nil }
         return StarterComponents.layer(starter, scale: max(pixelScale, 1),
                                        measure: measure).localBounds.size
@@ -285,11 +294,14 @@ extension PhotonzDocument {
     public func componentDropLanding(
         of componentID: UUID, at point: CGPoint, inside context: UUID? = nil,
         version: UUID? = nil,
-        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
+        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize,
+        arriving: Layer? = nil
     ) -> ComponentDropLanding? {
-        let target = componentDropTarget(of: componentID, at: point, inside: context)
+        let target = componentDropTarget(of: componentID, at: point, inside: context,
+                                         arriving: arriving)
         guard target != .refused,
-              let size = componentDropSize(of: componentID, version: version, measure: measure)
+              let size = componentDropSize(of: componentID, version: version, measure: measure,
+                                           arriving: arriving)
         else { return nil }
         let loose = CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2,
                            width: size.width, height: size.height)
@@ -325,11 +337,13 @@ extension PhotonzDocument {
     public func holdingRoomForComponentDrop(
         of componentID: UUID, at point: CGPoint, inside context: UUID? = nil,
         version: UUID? = nil,
-        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize
+        measure: @escaping StarterTextMeasure = StarterComponents.estimatedTextSize,
+        arriving: Layer? = nil
     ) -> PhotonzDocument? {
         guard case .inside(let host) = componentDropTarget(of: componentID, at: point,
-                                                           inside: context),
-              let size = componentDropSize(of: componentID, version: version, measure: measure),
+                                                           inside: context, arriving: arriving),
+              let size = componentDropSize(of: componentID, version: version, measure: measure,
+                                           arriving: arriving),
               let slot = dropSlot(inGroup: host, at: point) else { return nil }
         var room = standIn(size: size, at: slot.origin)
         room.style.opacity = 0

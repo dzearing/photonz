@@ -170,6 +170,7 @@ private final class Run {
         // Then every remembered setting, so the walk after this one starts from
         // the machine this one did rather than from whatever this one left.
         note(steps, "setup", setupRunner.restoreSettings())
+        if let shelf = setupRunner.restoreSharedShelf() { note(steps, "setup", shelf) }
         var done: [String: Any] = [
             "status": status, "steps": steps, "script": scriptURL.path, "out": out.path,
             "seconds": (Date().timeIntervalSince(startedAt) * 100).rounded() / 100,
@@ -1108,6 +1109,16 @@ private final class Run {
                     actionDetail = "no frame was made"
                 }
             case .makeComponent: editor.makeComponent()
+            case .shareSelectedComponent:
+                if let id = editor.selectedLayerID,
+                   let componentID = editor.document?.layer(id: id)?.componentID {
+                    editor.setComponentShared(componentID, true)
+                }
+            case .unshareSelectedComponent:
+                if let id = editor.selectedLayerID,
+                   let componentID = editor.document?.layer(id: id)?.componentID {
+                    editor.setComponentShared(componentID, false)
+                }
             case .exposeWording: editor.exposeFirstProperty(kind: .text)
             case .exposeChoice: editor.exposeFirstProperty(kind: .variant)
             case .exposeShow: editor.exposeFirstProperty(kind: .visible)

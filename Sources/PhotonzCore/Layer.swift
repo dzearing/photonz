@@ -783,6 +783,11 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// over it and pulling at a drag (`FrameColumns`). Nil is a screen nobody
     /// has given columns, which is every screen made before this existed.
     public var columns: FrameColumns?
+    /// Set on a **main component** that follows the shared shelf
+    /// (`SharedComponents`): editing it publishes it, and an edit made to it in
+    /// another document arrives here. False is a component that belongs to this
+    /// document alone, which is every component made before the shelf existed.
+    public var isShared: Bool = false
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool? = nil, backgroundHex: String? = nil,
@@ -806,7 +811,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
-        case versionID, versionName, instanceVersion, columns
+        case versionID, versionName, instanceVersion, columns, shared
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -822,6 +827,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
         if componentID != nil {
             try c.encodeIfPresent(versionID, forKey: .versionID)
             try c.encodeIfPresent(versionName, forKey: .versionName)
+            // Only a component somebody put on the shared shelf writes this, so
+            // one that belongs to its document alone is byte for byte what it
+            // always was.
+            if isShared { try c.encode(true, forKey: .shared) }
         }
         if instanceOf != nil { try c.encodeIfPresent(instanceVersion, forKey: .instanceVersion) }
         // A group that exposes nothing and answers nothing writes neither key,
@@ -876,6 +885,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         contentPlacement = try c.decodeIfPresent(LayerPlacement.self, forKey: .contentPlacement)
         layout = try c.decodeIfPresent(GroupLayout.self, forKey: .layout)
         columns = try c.decodeIfPresent(FrameColumns.self, forKey: .columns)
+        isShared = try c.decodeIfPresent(Bool.self, forKey: .shared) ?? false
     }
 }
 

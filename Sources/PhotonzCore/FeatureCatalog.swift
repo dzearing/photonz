@@ -88,6 +88,8 @@ public enum FeatureCatalog {
 
     public static let starterComponentsFlag = "next-starter-components"
 
+    public static let sharedLibraryFlag = "next-shared-library"
+
     public static let placementFlag = "next-placement"
 
     public static let autoLayoutFlag = "next-auto-layout"
@@ -436,6 +438,15 @@ public enum FeatureCatalog {
                     name: stylesFlag,
                     title: "Save a color, a text style or an effect and reuse it",
                     description: "Save a fill, an outline or a text color under a name, and any layer can wear it. The Fill and Color rows in the panel grow a small styles button: save what is there as a style, or pick one you already have. Text goes further: the Style row at the top of the Text section saves the font, size, weight and color together under one name, so changing the heading size across a screen is one edit instead of one per heading. An effect goes the same way: the Style row at the top of a shadow, a glow, a border or a blur saves all of its settings under one name, and the plus on the Effects header puts that name on any other layer. Saved styles sit on the Library\u{2019}s Styles shelf, where you rename one, change it, or take it off the shelf. Changing a style re-sets every layer wearing it in one step, which one undo puts back. Needs Keep reusable pieces in a Library. Off means colors, text and effects are one-offs again and the Styles shelf is empty; styles already in a document keep painting either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: sharedLibraryFlag,
+                    title: "Use a component you made in every document",
+                    description: "A component you make belongs to the document you made it in. The Component section grows a Share across documents switch: turn it on and the component joins a shelf every document on this Mac can reach, so the button, card and nav bar you built for one screen are already in the Library when you start a file tomorrow. Drop one in and it stays linked \u{2014} edit the original in any document and every other document takes the change the next time you look at it, copies and all. The colors it paints from travel with it, and a document that already has a color of that name keeps its own. A document whose shared original has been taken off the shelf keeps its drawing and says the link broke rather than losing the picture. Needs Make a component out of what you drew. Off means components stay in the document they were made in and the shelf holds only what this document has; a component already shared keeps drawing either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

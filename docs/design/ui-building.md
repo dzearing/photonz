@@ -727,10 +727,18 @@ real limit of the slices above, not an oversight.
 - **No auto layout and no constraints.** A child does not move or stretch when
   its frame changes size. This is the single largest piece of the vision left
   out, and it is sequenced after the whole ladder.
-- **Components live in the document they were made in.** There is no shared
-  library across documents, no publishing, no versioning and no update
-  notifications. The starter set is the one exception: it is provided by the app
-  and available everywhere, and dropping one copies it into your document.
+- **A component is in its document until you share it.** Turn on Share across
+  documents in the Component section and it joins one shelf every document on
+  this Mac can reach; drop it into another document and that document keeps its
+  own original of it, marked as following the shelf, so an edit made in any of
+  them reaches all of them (`Sources/PhotonzCore/SharedComponents.swift`, the
+  decision "One shelf the whole app shares", 2026-09-09). Still left out: the
+  shelf is one flat list with no folders and no kits, it does not travel with a
+  document you hand to somebody else, there are no versions of a shared
+  component over time and no update notifications, and a document rebuilt at a
+  different pixel scale takes the drawing at the scale it was shared at. The
+  starter set is unchanged: it is provided by the app, available everywhere, and
+  dropping one copies it into your document.
 - **Styles are per document too**, and have no token layer underneath, so there
   is no light and dark resolution of a named color yet.
 - **Five kinds of exposed property**: wording, whether a part shows, a choice

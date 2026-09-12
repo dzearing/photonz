@@ -377,6 +377,10 @@ struct EditorView: View {
                                                                 version: version, at: point)
                        },
                        onComponentDragEnded: { editorState.releaseRoomForComponentDrag() },
+                       arrivingComponentDrawing: { componentID in
+                           editorState.sharedComponent(entryID: componentID.uuidString)?
+                               .drawings.first
+                       },
                        onDropTextStyle: { styleID, layerIDs in
                            editorState.dropTextStyle(styleID: styleID, onLayers: layerIDs)
                        },

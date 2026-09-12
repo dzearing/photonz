@@ -371,6 +371,16 @@ extension Experiments {
         componentsEnabled && isEnabled(FeatureCatalog.starterComponentsFlag)
     }
 
+    /// `next-shared-library`: whether a component can be put on a shelf every
+    /// document on this Mac can reach, and whether the Components shelf offers
+    /// what is on it. A shared component is still a component, so this needs
+    /// components: with them off there is no way in and the switch reads as
+    /// off. A component already shared keeps drawing either way, because
+    /// turning a flag off takes away a way in, never a document's contents.
+    var sharedLibraryEnabled: Bool {
+        componentsEnabled && isEnabled(FeatureCatalog.sharedLibraryFlag)
+    }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its

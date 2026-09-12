@@ -146,7 +146,9 @@ extension CanvasNSView {
         // drawn — not under the pointer it is about to leave.
         guard let landing = document.componentDropLanding(
             of: componentID, at: point, inside: dropGroupContext, version: version,
-            measure: { TextRasterizer.naturalSize($0) }) else {
+            measure: { TextRasterizer.naturalSize($0) },
+            arriving: arrivingComponentDrawing(componentID))
+        else {
             dropLanding = nil
             dropHostBox = nil
             onComponentDragEnded()

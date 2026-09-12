@@ -1,0 +1,31 @@
+{
+  "feature": "Use a component you made in every document",
+  "epic": "ui-components",
+  "summary": "A component can now be put on one shelf every document on this Mac can reach. Build a button once, start a file tomorrow, and it is already in the Library; drop it in and it stays linked, so editing it in any document changes it in all of them.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is on by default; nothing is shared until you turn the switch on for a component.",
+  "try": [
+    { "do": "Draw a box and some words, select both, and press ⌘G to group them." },
+    { "do": "Press ⌥⌘K to make it a component, and type a name like Save Button." },
+    { "do": "Click it on the canvas and turn on Share across documents in the Component section.", "shot": "2026-09-12-shared-components-1.png" },
+    { "do": "File ▸ New, and open the Library on Comps in the new window. Your component is already there, ahead of the five starters.", "shot": "2026-09-12-shared-components-2.png" },
+    { "do": "Drag it onto the canvas of the new document." },
+    { "do": "Change it here: rename it, or move a piece inside it." },
+    { "do": "Look back at the first document. It took the change on its own.", "shot": "2026-09-12-shared-components-3.png" },
+    { "do": "Turn the switch off in one of them. Both keep their drawing, and each says the link broke.", "shot": "2026-09-12-shared-components-4.png" }
+  ],
+  "evaluate": [
+    "On the shelf of a brand new document, can you tell which tiles come from other documents and which are the app's five? They read identically right now.",
+    "Is one switch the right control for this, given that turning it off takes the component off the shelf for every document rather than only this one?",
+    "When another document's edit lands in yours, the picture changes with nothing said. Should it say something, or would a notice every time be noise?",
+    "Is Share across documents in the right place in the Component section, under the line that says this is the original?",
+    "A shared component arrives painted in THIS document's colors when the name matches, rather than in the colors it was shared with. Is that the behaviour you expect?"
+  ],
+  "rough": [
+    "A shared tile looks exactly like a tile for a component in this document: same picture, same violet mark, no word under it saying where it came from. Filed as a follow-up.",
+    "The shelf is one flat list, in the order things were shared. No folders, no kits, no way to rename or remove a component from the shelf except by finding a document that has it and turning the switch off.",
+    "A shared component carries its drawing at the pixel scale it was shared at, so one built on a Retina capture arrives twice the size in a one-to-one document. Starters solve this by rebuilding at the document's scale; a shared component cannot, because it is a drawing rather than a recipe. Filed as a follow-up.",
+    "Named colors travel by id only. Two documents that each made their own Accent by hand end up with two Accents rather than one, because there is no way to tell whether they mean the same thing.",
+    "The shelf does not travel with a document you hand to somebody else. Their copy draws correctly and says the link is broken, which is the honest answer but not a useful one.",
+    "The walk that proves all this is Scripts/playtest/shared-component-walk.json. The second window's screen captures come out blank because the harness hides its windows, so shot 2 is the offscreen render rather than a real capture; the other three are real window captures."
+  ]
+}

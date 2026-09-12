@@ -5,14 +5,14 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T22:18:21.644Z",
-  "updated": "2026-09-09T14:02:56.187Z",
+  "updated": "2026-09-12T10:06:49.639221Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "BLOCKED ON A DECISION CARD until the user says where the shared shelf lives. Do not start building before the card is answered.\n\nOBJECTIVE GAP named by the spec itself. docs/design/ui-building.md, What the first version deliberately does not do: components live in the document they were made in, there is no shared library across documents, no publishing, no versioning and no update notifications, and the starter set is the one exception. The epic ui-components is titled Component design: create once, reuse everywhere, so the plan and the objective disagree, and the 2026-09-04 manager report flagged it as an open thread that has sat unfiled since.\n\nThe machinery to copy: Sources/PhotonzCore/StarterComponents.swift is already a set of components that live outside any document and are copied in on drop, with a stable id so a document saved today opens tomorrow still pointing at it. Whatever the user chooses, build it on that, not beside it. Sources/PhotonzCore/LinkBreaks.swift already says what happens when a link breaks and is where the missing original case belongs.\n\nSuggested flag: next-shared-library, off by default in Next until it has been played with. Keep PhotonzCore pure: where the shelf is stored on disk is app layer work, the model of what a shared component IS is core.",
+  "notes": "Answered 2026-09-09: One shelf the whole app shares. BUILT 2026-09-12; see the log and queue/audits/2026-09-12-shared-components.json.\n\nOBJECTIVE GAP named by the spec itself. docs/design/ui-building.md, What the first version deliberately does not do: components live in the document they were made in, there is no shared library across documents, no publishing, no versioning and no update notifications, and the starter set is the one exception. The epic ui-components is titled Component design: create once, reuse everywhere, so the plan and the objective disagree, and the 2026-09-04 manager report flagged it as an open thread that has sat unfiled since.\n\nThe machinery to copy: Sources/PhotonzCore/StarterComponents.swift is already a set of components that live outside any document and are copied in on drop, with a stable id so a document saved today opens tomorrow still pointing at it. Whatever the user chooses, build it on that, not beside it. Sources/PhotonzCore/LinkBreaks.swift already says what happens when a link breaks and is where the missing original case belongs.\n\nSuggested flag: next-shared-library, off by default in Next until it has been played with. Keep PhotonzCore pure: where the shelf is stored on disk is app layer work, the model of what a shared component IS is core.\n\nWHAT LANDED. Core: Sources/PhotonzCore/SharedComponents.swift. The shelf holds the drawing (every version of it, corner at zero, plus the named colour, text and effect styles it paints from); a document that uses it keeps its OWN original marked GroupContent.isShared, so nothing downstream of the document model learns a new word. Two rules keep it from looping: a publish happens only from a local edit that changed a component that was already shared BEFORE that edit (PhotonzDocument.sharedComponentsToPublish), and a pull never records an edit (History.applyOutsideHistory, which also rewrites the undo stack so a local undo can never resurrect somebody else's older drawing). Styles are matched by id only, never by name, because name matching is what makes two documents repaint each other forever; the arriving drawing is then repainted from THIS document's styles so the name on a piece is true of the colour on it. App: Sources/Photonz/SharedComponentStore.swift, EditorState+SharedComponents.swift, the switch in ComponentPanel.ComponentShareRow. Walk: Scripts/playtest/shared-component-walk.json (two documents in one walk; snapshot takes a window title, which is how the first document is photographed while the second is being driven).",
   "acceptance": [
     "A component put on the shared shelf in one document can be dropped into a different document",
     "Editing the shared original changes the copies in a document that is open, and a document opened later comes up already following it",
@@ -37,6 +37,35 @@
     {
       "t": "2026-09-09T14:02:56.186Z",
       "note": "decision \"A component you build is only in the document you built it in. Should it be reusable across documents, and where should the shared shelf live?\" resolved: One shelf the whole app shares"
+    },
+    {
+      "t": "2026-09-12T09:45:12.743Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T10:06:49.639221Z",
+      "note": "adversarial review, before building. (1) The mock says nothing here: docs/design/ui-building.md lists this as deliberately out. The decision card IS the spec. (2) First question a person asks is where the switch is; it went in the Component section under \"This is the original\", which is the only place a person is already looking at a component as a thing rather than as layers. (3) The shortest version that delivers the value is NOT a new kind of object: a document keeps its own ORIGINAL of a shared component, marked as following the shelf, so the renderer, hit testing, export, the package writer and the whole instance machinery need to know nothing. That also means a document handed to somebody else still draws. (4) Cut from the slice: folders on the shelf, renaming from the shelf, versions of a shared component over time, update notifications, conflict resolution. (5) The one real trap found in review was a publish/pull ping-pong: if a pull can cause a publish, two documents with different Accent colours repaint each other forever. Fixed by rule: a publish happens only from a LOCAL edit that changed a component that was already shared before that edit, and a pull never records an edit."
+    },
+    {
+      "t": "2026-09-12T10:06:49.639221Z",
+      "note": "core model landed, TDD: Sources/PhotonzCore/SharedComponents.swift (SharedComponent, SharedComponentShelf, share/unshare/adopt/sync), GroupContent.isShared (written only by a shared component, so old documents are byte for byte what they were), LinkBreakKind.sharedOriginalMissing, History.applyOutsideHistory. 24 tests in Tests/PhotonzCoreTests/SharedComponentTests.swift, 5601 green."
+    },
+    {
+      "t": "2026-09-12T10:06:49.639221Z",
+      "note": "app layer: Sources/Photonz/SharedComponentStore.swift (one JSON file under the bundle id in Application Support, weak follower list of open windows), EditorState+SharedComponents.swift, the Share across documents switch in the Component section, shared tiles on the Components shelf, drop path. Flag next-shared-library, ON by default in Next rather than off as the task notes suggested: nothing is shared until a person turns the per-component switch on, and the acceptance says to try it by choosing Next in the Experiments window rather than by hunting a flag."
+    },
+    {
+      "t": "2026-09-12T10:06:49.639221Z",
+      "note": "verified end to end on the probe: Scripts/playtest/shared-component-walk.json makes a component in one document, shares it, opens a SECOND document, finds it already on the shelf, drops it, edits it there, and photographs the first document taking the change on its own; then takes it off the shelf and photographs the first document saying the link broke. Screen Recording granted, so three of the four audit shots are real window captures. Found and fixed one bug on the way: a component taken off the shelf changes nothing about the picture, so the announce was being skipped along with the redraw and the canvas said nothing."
+    },
+    {
+      "t": "2026-09-12T10:06:49.639221Z",
+      "note": "21 component and library walks pass (playtest-all --no-build component, library). Asked for a full sweep: the Component section grew a row and the drop path changed shape, so the pictures in every walk that photographs the dock with a component selected have moved."
+    },
+    {
+      "t": "2026-09-12T10:06:49.639221Z",
+      "note": "audit queue/audits/2026-09-12-shared-components.json with four shots. Two follow-ups filed: a-shelf-tile-says-where-the-component-came-from (a shared tile is indistinguishable from a local one) and a-shared-component-arrives-the-size-it-should-be (pixel scale does not travel)."
     }
-  ]
+  ],
+  "started": "2026-09-12T09:45:12.742Z"
 }

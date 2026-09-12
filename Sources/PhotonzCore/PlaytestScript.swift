@@ -408,6 +408,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Layer > Make Component (Next, `next-components`), a menu chord too, so
     /// a walk can promote a group and photograph what it becomes.
     case makeComponent
+    /// Share across documents (Next, `next-shared-library`): puts the selected
+    /// component on the shelf every document can reach, which is what the
+    /// Component section's switch does. A walk cannot reach the dock with the
+    /// pointer, so this is how a component gets onto the shared shelf.
+    case shareSelectedComponent
+    /// ...and takes it back off, which is how a walk photographs what a
+    /// document says when its shared original has gone.
+    case unshareSelectedComponent
     /// Pick the first component on the Library shelf, which is what a click on
     /// its tile does. A walk cannot reach the dock with the pointer, so this is
     /// how the picked component's own section gets photographed.

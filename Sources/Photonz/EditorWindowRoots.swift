@@ -31,6 +31,9 @@ struct ImageEditorRootView: View {
                 editorState.openBlankCanvasWindow = { [coordinator] size in
                     coordinator.newBlankCanvasWindow(size: size)
                 }
+                // From here on this window takes the shared shelf's edits as
+                // they happen (`EditorState+SharedComponents`).
+                editorState.followSharedShelf()
                 if let windowID {
                     editorState.seed(from: windowID, capture: coordinator.capture)
                 }

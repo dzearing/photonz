@@ -161,7 +161,8 @@ struct LibraryPanel: View {
     /// layer it stands for so the tile can draw a picture of it (Next,
     /// `next-components` and `next-starter-components`). A starter's layer is
     /// not in the document — it is what a drop would bring in.
-    private var visibleComponents: [(entry: LibraryEntry, layer: Layer, starter: StarterComponent?)] {
+    private var visibleComponents: [(entry: LibraryEntry, layer: Layer,
+                                     starter: StarterComponent?, shared: SharedComponent?)] {
         guard scope == .components, let document = editorState.document else { return [] }
         let hits = LibrarySearch.filter(editorState.componentEntries, query: query)
         // One walk of the tree for all the tiles, not one per tile: this runs
@@ -172,10 +173,14 @@ struct LibraryPanel: View {
         }, uniquingKeysWith: { first, _ in first })
         return hits.prefix(Self.maxTiles).compactMap { entry in
             guard let id = UUID(uuidString: entry.id) else { return nil }
-            if let layer = mains[id] { return (entry, layer, nil) }
+            if let layer = mains[id] { return (entry, layer, nil, nil) }
+            if let shared = editorState.sharedComponent(entryID: entry.id),
+               let drawing = editorState.sharedPreviewLayer(shared) {
+                return (entry, drawing, nil, shared)
+            }
             guard editorState.starterComponentsEnabled,
                   let starter = StarterComponent(componentID: id) else { return nil }
-            return (entry, editorState.starterPreviewLayer(starter), starter)
+            return (entry, editorState.starterPreviewLayer(starter), starter, nil)
         }
     }
 
@@ -296,7 +301,8 @@ struct LibraryPanel: View {
                             store: coordinator.capture.store)
             }
             ForEach(visibleComponents, id: \.entry.id) { pair in
-                LibraryComponentTile(entry: pair.entry, layer: pair.layer, starter: pair.starter)
+                LibraryComponentTile(entry: pair.entry, layer: pair.layer, starter: pair.starter,
+                                     shared: pair.shared)
             }
             ForEach(visibleStyles, id: \.entry.id) { pair in
                 LibraryStyleTile(entry: pair.entry, style: pair.style)

@@ -77,6 +77,11 @@ struct PlaytestSetupRunner {
     /// fails before setup runs, and putting settings "back" from a reading
     /// that was never taken would wipe every one of them.
     private var tookReading = false
+    /// The shared component shelf as it stood before step one. It is a file
+    /// rather than a setting, so it is taken and put back by hand — same
+    /// reason: a walk that shares a component must not leave it on the shelf
+    /// of every walk that follows (`SharedComponentStore`).
+    private var sharedShelfBefore: SharedComponentShelf?
 
     /// Which keys belong to which area of memory, read from the memories
     /// themselves so a renamed setting cannot slip out of the net.
@@ -91,6 +96,7 @@ struct PlaytestSetupRunner {
     /// that starts anyway is a walk whose failure means nothing.
     mutating func perform(_ setup: PlaytestSetup, besides scriptURL: URL) throws -> String {
         settingsBefore = Self.readSettings()
+        sharedShelfBefore = SharedComponentStore.shared.shelf
         tookReading = true
         declared = setup.forget
         var said: [String] = []
@@ -206,6 +212,16 @@ struct PlaytestSetupRunner {
         // without saying so is one it may be reading later without saying so.
         return ledger.report + "; changed without saying so: "
             + quiet.map(\.rawValue).joined(separator: ", ")
+    }
+
+    /// Puts the shared component shelf back to what it was before step one.
+    /// Says so only when the walk actually changed it.
+    mutating func restoreSharedShelf() -> String? {
+        guard let before = sharedShelfBefore else { return nil }
+        sharedShelfBefore = nil
+        guard SharedComponentStore.shared.shelf != before else { return nil }
+        SharedComponentStore.shared.replace(with: before)
+        return "put the shared component shelf back as it found it"
     }
 
     /// Every remembered setting, encoded so two readings can be compared and

@@ -203,6 +203,9 @@ struct ComponentInspector: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            if let componentID, editorState.sharedLibraryEnabled {
+                ComponentShareRow(componentID: componentID)
+            }
             if let componentID {
                 ComponentVersionList(componentID: componentID, layerID: layer.id)
                 ComponentPropertyList(componentID: componentID,
@@ -257,6 +260,61 @@ struct ComponentInspector: View {
         }
         guard name != live?.name else { return }
         editorState.renameComponent(componentID: componentID, to: name)
+    }
+}
+
+/// Share across documents (Next, `next-shared-library`).
+///
+/// One switch, because to a person there is one question: is this button mine
+/// alone, or is it part of the kit I use everywhere. Under it, one sentence
+/// saying what that means right now — how many other documents could be
+/// following it is not something this app can know, so it says what IS true:
+/// where the component lives and what editing it here does.
+struct ComponentShareRow: View {
+    @Environment(EditorState.self) private var editorState
+    let componentID: UUID
+
+    private var isShared: Bool { editorState.isComponentShared(componentID) }
+    private var isMissing: Bool { editorState.isSharedOriginalMissing(componentID) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Toggle("", isOn: Binding(get: { isShared },
+                                         set: { editorState.setComponentShared(componentID, $0) }))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .accessibilityLabel("Share across documents")
+                    .playtestControl("Share across documents", detail: "the shared shelf switch")
+                Text("Share across documents")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            Text(note)
+                .font(.caption)
+                .foregroundStyle(isMissing ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
+                .fixedSize(horizontal: false, vertical: true)
+            if isMissing {
+                Button("Put it back on the shelf") {
+                    editorState.reshareComponent(componentID)
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+                .playtestControl("Put it back on the shelf", detail: "re-shares this component")
+            }
+        }
+    }
+
+    private var note: String {
+        if isMissing {
+            return "Its shared original has gone. This drawing is its own from here on."
+        }
+        return isShared
+            ? "It is on the shelf every document can reach. Editing it here changes it "
+                + "everywhere. Switching this off takes it off the shelf, and every document "
+                + "that uses it keeps the drawing it has."
+            : "It lives in this document. Sharing puts it on the Library shelf of every document."
     }
 }
 
@@ -426,6 +484,11 @@ struct LibraryComponentTile: View {
     /// the same picture, the same drag and the same double click, because the
     /// moment it lands it is an ordinary component.
     var starter: StarterComponent?
+    /// Set when this tile is on the SHARED shelf rather than in this document
+    /// (Next, `next-shared-library`). Same again: same picture, same drag, same
+    /// double click, because the moment it lands it is an ordinary component
+    /// that happens to follow the shelf.
+    var shared: SharedComponent?
     /// How wide the grid made this tile, measured rather than assumed.
     @State private var wellWidth: CGFloat = 0
 
@@ -436,7 +499,7 @@ struct LibraryComponentTile: View {
     /// (`ComponentVersions`). Everything about the tile follows it: the picture
     /// it draws, what a drag carries and what a double click places.
     private var shelfVersion: ComponentVersion? {
-        guard starter == nil, let componentID = layer.componentID else { return nil }
+        guard starter == nil, shared == nil, let componentID = layer.componentID else { return nil }
         return editorState.shelfComponentVersion(of: componentID)
     }
 
@@ -582,6 +645,7 @@ struct LibraryComponentTile: View {
     private var image: CGImage? {
         let pixels = LibraryShelfLayout.pictureSourceDimension(for: placement.size)
         if let starter { return editorState.starterThumbnail(starter, dimension: pixels) }
+        if let shared { return editorState.sharedThumbnail(shared, dimension: pixels) }
         return editorState.shelfThumbnail(for: shown, dimension: pixels)
     }
 

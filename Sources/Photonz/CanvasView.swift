@@ -203,6 +203,11 @@ struct CanvasView: NSViewRepresentable {
     let onComponentDragMoved: (UUID, UUID?, CGPoint) -> Void
     /// That drag left or landed: the room closes back up.
     let onComponentDragEnded: () -> Void
+    /// The drawing a component off the shared shelf would arrive as, nil for
+    /// one this document already holds (Next, `next-shared-library`). The
+    /// outline in the air has to be the size of a thing that is not in the
+    /// document yet.
+    let arrivingComponentDrawing: (UUID) -> Layer?
     /// A saved text style let go of on a piece of text (Next, `next-styles`).
     let onDropTextStyle: (UUID, [UUID]) -> Void
     let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
@@ -333,6 +338,7 @@ struct CanvasView: NSViewRepresentable {
         view.onDropComponent = onDropComponent
         view.onComponentDragMoved = onComponentDragMoved
         view.onComponentDragEnded = onComponentDragEnded
+        view.arrivingComponentDrawing = arrivingComponentDrawing
         view.onDropTextStyle = onDropTextStyle
         view.onAbsorbLayerIntoCollage = onAbsorbLayerIntoCollage
         view.onSwapCollageSlots = onSwapCollageSlots
@@ -452,6 +458,7 @@ final class CanvasNSView: NSView {
     /// (style, the text it reached). Next, `next-styles`.
     var onDropTextStyle: ((UUID, [UUID]) -> Void) = { _, _ in }
     var onComponentDragMoved: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
+    var arrivingComponentDrawing: ((UUID) -> Layer?) = { _ in nil }
     var onComponentDragEnded: (() -> Void) = { }
     /// A photo layer dropped onto a collage slot: (photo layer, collage, slot).
     var onAbsorbLayerIntoCollage: ((UUID, UUID, Int) -> Void) = { _, _, _ in }

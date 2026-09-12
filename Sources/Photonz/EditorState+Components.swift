@@ -69,8 +69,12 @@ extension EditorState {
     var componentEntries: [LibraryEntry] {
         guard componentsEnabled else { return [] }
         let mine = document?.componentLibraryEntries ?? []
-        guard starterComponentsEnabled else { return mine }
-        return mine + (document?.starterComponentEntries ?? [])
+        // ...then the shared shelf, then the app's five. Nearest first: what
+        // you made in this file, what you made in another one, what came with
+        // the app (`EditorState+SharedComponents`).
+        let shared = sharedComponentEntries
+        guard starterComponentsEnabled else { return mine + shared }
+        return mine + shared + (document?.starterComponentEntries ?? [])
     }
 
     /// Whether the shelf is stocked with the app's own components.
@@ -136,6 +140,12 @@ extension EditorState {
     /// drop of the same starter, is a copy.
     @discardableResult
     func placeComponent(componentID: UUID, at point: CGPoint, version: UUID? = nil) -> UUID? {
+        // A component off the shared shelf that this document has not taken
+        // yet arrives as the ORIGINAL, following the shelf; the second drop of
+        // the same tile is a copy, the same as everything else here.
+        if let shared = sharedComponent(entryID: componentID.uuidString) {
+            return insertSharedComponent(shared, at: point)
+        }
         if let starter = StarterComponent(componentID: componentID),
            document?.mainComponent(componentID: componentID) == nil {
             return insertStarterComponent(starter, at: point)
@@ -175,15 +185,18 @@ extension EditorState {
     func holdRoomForComponentDrag(componentID: UUID, version: UUID?, at point: CGPoint) {
         guard componentsEnabled, let document else { return releaseRoomForComponentDrag() }
         let measure: StarterTextMeasure = { TextRasterizer.naturalSize($0) }
+        // A component off the shared shelf is not in this document yet, so the
+        // drawing it would arrive as is handed in (`SharedComponents`).
+        let arriving = sharedComponent(entryID: componentID.uuidString)?.drawings.first
         guard let landing = document.componentDropLanding(of: componentID, at: point,
                                                           inside: dropContext, version: version,
-                                                          measure: measure),
+                                                          measure: measure, arriving: arriving),
               let host = landing.host, let index = landing.index
         else { return releaseRoomForComponentDrag() }
         guard componentDropRoom?.host != host || componentDropRoom?.index != index else { return }
         guard let held = document.holdingRoomForComponentDrop(of: componentID, at: point,
                                                               inside: dropContext, version: version,
-                                                              measure: measure)
+                                                              measure: measure, arriving: arriving)
         else { return releaseRoomForComponentDrag() }
         componentDropRoom = (host, index)
         submit(held)
@@ -222,6 +235,12 @@ extension EditorState {
     /// picked on the shelf, whether it is one of yours or one of the app's.
     var canInsertPickedComponent: Bool {
         selectedComponentID != nil || selectedStarterComponent != nil
+            || selectedSharedComponent != nil
+    }
+
+    /// The shared component behind the picked Components tile.
+    var selectedSharedComponent: SharedComponent? {
+        selectedLibraryItemID.flatMap { sharedComponent(entryID: $0) }
     }
 
     /// Layer ▸ Insert Component, and what a double click on a Components tile
@@ -236,6 +255,8 @@ extension EditorState {
                                     version: shelfComponentVersion(of: componentID)?.id)
         } else if let starter = selectedStarterComponent {
             insertStarterComponent(starter, at: visibleCanvasCentre)
+        } else if let shared = selectedSharedComponent {
+            insertSharedComponent(shared, at: visibleCanvasCentre)
         }
     }
 
