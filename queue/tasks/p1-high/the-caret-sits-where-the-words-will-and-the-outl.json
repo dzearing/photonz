@@ -1,0 +1,40 @@
+{
+  "id": "the-caret-sits-where-the-words-will-and-the-outl",
+  "title": "The caret sits where the words will, and the outline follows the pill as you type",
+  "goal": "Two things go wrong while you are typing a caption on an arrow. Press Return and the caret drops to the left edge of the new line, then the first character you type jumps to the middle: the caret was never where the words were going to be. And while the bubble grows and shrinks around what you type, the layer's own outline stays the shape it was when you started, so the box on screen stops describing the thing you are editing. The caret should sit where the next character will land, and the outline should follow the bubble.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T16:41:37.799Z",
+  "updated": "2026-09-12T16:41:57.542Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-12: \"when im typing in a pill in the arrow tool, and press enter, the cursor goes to the left of the next line. i type a char and it's centered. Why isn't the cursor where it should be? I like centered, i just expected the cursor to be there. Also as i'm typing and changing the shape of the pill the layer outline doesn't change with the shape of the content. It stays fixed.\"\n\nTwo bugs, filed as one task because they are in the same function and a runner fixing either is already standing in the right place. Both causes found by READING and not yet reproduced in the app; reproduce first.\n\nCAUSE OF THE CARET, and it explains both halves of what the user saw exactly. Sources/Photonz/CanvasTextEditing.swift, layoutCaptionEditor, around line 327:\n\n    let lines = CaptionMetrics.committedText(editor.string).contains(where: \\.isNewline)\n    if lines { editor.alignment = .center ... } else { editor.alignment = .left ... }\n\nThe alignment is chosen from the COMMITTED text, and CaptionMetrics.committedText (Sources/PhotonzRender/CaptionMetrics.swift:23) runs the commit rule ArrowCaptionEntry.caption(from:), which trims the edges — its comment says so: \"a stray space or a trailing Return cannot shrink the bubble on commit\". So with \"Hello\" typed and Return pressed, the field holds \"Hello\\n\" but the committed text is \"Hello\", which contains no newline, so the field is left aligned and the caret goes to the left edge. Type one character and the committed text becomes \"Hello\\nX\", the branch flips to centred, and the character appears in the middle. That is precisely the reported sequence.\n\nTHE TRAP in fixing it. Do not simply force .center. The single line branch deliberately uses .left with the container set to the pill width and positions the ink with editor.textContainerInset, computed from CaptionMetrics.textInset (same function, around line 311, with a comment explaining that the pill centres the ink rather than the box). Centring on top of that inset would double apply and slide the words. The narrow correct change is that TWO DIFFERENT QUESTIONS are currently sharing one string: alignment and container width should follow the DRAFT (editor.string, newline included, even a trailing one), while every MEASUREMENT — pillSize, textSize, and what commits — must keep using committedText, because not shrinking the bubble on a bare Return is exactly why committedText exists. Keep that behaviour; it is in the acceptance list as a thing that must not regress.\n\nCAUSE OF THE OUTLINE. The same function measures the live pill (`var pill = CaptionMetrics.pillSize(for: editor.string, in: caption)`) but uses it only for the editor's own frame; nothing is written back. The layer's on canvas bounds take the caption from Layer.measuredCaptionPillSize (Sources/Photonz/CaptionPillSizing.swift:19), which reads the STORED caption (`caption ?? \"\"`), and the stored caption does not change until commit. So the selection chrome keeps the pre edit pill. The bounds are asked for in several places — CanvasView.swift:1085, CanvasGroups.swift:37 (captionPillSizing), CanvasPointerCue.swift:58 and :95, EditorState.swift:2027 — so decide in ONE place how a live draft reaches them rather than patching each call site, and say which you chose in the audit.\n\nWorth deciding deliberately and recording: the alternative to a live outline is hiding it while the field is open, which is what the canvas already does with handles during a drag (CanvasDisplay.swift:913 and :932 gate on !dragInFlight). The user asked for it to follow, so follow; but if following turns out to fight the chrome at some zoom, hiding is the honest fallback and not a failure.\n\nThis sits in the shipped arrow captions work (epic-uehjr1, all done), including 'the caption bubble you type in is the exact width of the one that lands' and 'an arrow caption can hold more than one line' — the multi line case was added and the caret was never part of it.\n\nCaptions are behind the next-arrow-captions flag; check Sources/Photonz/Releases/ and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Reproduce both first and record them: type a word, press Return, and note where the caret sits and where the first character of the second line lands; separately, type into a caption and note the outline against the growing bubble",
+    "Press Return in a caption and the caret sits centred on the new line, in the spot the next character will actually occupy",
+    "Typing that character does not move it: where the caret was is where the letter lands",
+    "The bubble does not change size when Return is pressed on its own, which is the behaviour that exists today and must not regress: a trailing Return still commits nothing and still leaves the pill the size of its words",
+    "The same holds on the third line and beyond, and on a line that is longer than the one above it",
+    "While you type, the layer's selection outline follows the bubble as it grows and shrinks, rather than keeping the shape it had when the field opened",
+    "The outline and the bubble agree on their edges at every zoom, checked at one hundred percent and zoomed in, since the two are drawn by different code paths",
+    "Committing leaves the outline exactly where the live one was: no jump at the moment the field closes",
+    "Deleting back to a single line returns both the caret and the outline to the single-line behaviour",
+    "Tests cover the alignment decision and the live bounds, written before the change, including the bare trailing Return case",
+    "A playtest walk types a two line caption and checks the caret and the outline",
+    "Audit under queue/audits/ with captures of the caret after Return and the outline mid-type, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T16:41:37.801Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-12T16:41:57.541Z",
+      "note": "seq 270 -> 10"
+    }
+  ]
+}
