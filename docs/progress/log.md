@@ -14382,3 +14382,36 @@ Two things found and deliberately not fixed, so the move stayed a move:
 Next: `a-saved-colour-dropped-on-a-layer-row-paints-the` is now a one-line
 change on the receiving side (`.color` joins `LayerRowDropDelegate.takes`) plus
 the branch that decides what a row does with it.
+
+## 2026-09-12 — The dock rules say what picking a layer may do to the panel
+
+The written Reveal rule and the app had been contradicting each other since
+2026-09-09. UX-PATTERNS section 3 listed "a selection moving" among the ambient
+changes that may never scroll the dock; commit `7f65ae4d` had made the dock
+scroll to the section named after whatever you just picked. Reproduced the
+behaviour first (`Scripts/playtest-all.sh dock-picked-first`, probe reports
+`pickReveal "Zoom Callout 114pt at 780-894, dock 688pt: scrolled down to its
+bottom"`) rather than taking the filing at its word.
+
+The rule was wrong, not the app, and for a specific reason: it covered two
+unrelated events with one sentence. A pick you made with your own hands is a
+command you just issued about that thing; a selection that moves because a
+document loaded or an undo ran is not. Only the second is ambient. The rewritten
+block keeps the collapse guarantee verbatim, narrows the ambient list, and adds
+a dated sub-rule carrying the four limits on a pick's scroll, read off
+`InspectorPanel.applyPickedReveal`: no opening a collapse, no reaching past the
+pick's own section, no move at all for a pick that owns no section, no twitch
+and no double move. It states the cost out loud and marks the mechanism
+provisional, pointing at the user's still-pending card on whether the sections
+should instead be ordered so no scroll is needed.
+
+That run also surfaced a deterministic walk failure on main:
+`dock-picked-first-walk` step 41, `sectionInView("Appearance")`. A pick that owns
+no section leaves the dock parked where the previous pick left it, so the top of
+the panel is a headless fragment of Appearance. Filed with both commands and
+their output as `picking-a-plain-shape-leaves-the-panel-parked-on`, and named in
+the rule as the one edge that is filed rather than settled. Deliberately did not
+loosen the assertion to make it green.
+
+Next: that walk failure, and the pending panel-order card, which would dissolve
+the edge entirely if the user picks an order over a scroll.

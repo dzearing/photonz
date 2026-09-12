@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "docs",
   "created": "2026-09-09T12:21:41.380Z",
-  "updated": "2026-09-12T14:34:31.578Z",
+  "updated": "2026-09-12T14:34:41.100Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass.\n\nThe rule, docs/design/mocks/shared/UX-PATTERNS.md section 3, Reveal: \"Only a command the user just issued about that group may re-open a group they collapsed on purpose (Show Library, or making the thing the group holds). Ambient changes never may: a selection moving, a document loading, a background update leave a shut header shut and do not scroll.\"\n\nThe behaviour: 7f65ae4d, Picking a layer brings its own section into view, audit queue/audits/2026-09-09-dock-picked-first-reveal.json. Clicking a layer scrolls the dock to that layer's section. The audit's own setup line reads \"Nothing to turn on; this is how the panel behaves now.\"\n\nThere is a real argument on each side: clicking a layer is not ambient, the user just did it. But the audit also records the cost, that the layers list you clicked in scrolls off the top. Whoever writes the rule should read the open decision card on the-panel-has-one-settled-rule task first, since the answer there decides this.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-09-12T14:34:31.578Z",
       "note": "UX-PATTERNS.md section 3, Reveal, rewritten. The collapse guarantee is untouched and now says out loud that it is not the part that changed. The ambient list keeps a document loading, an undo running, a background update and a tool dropping the selection, and loses \"a selection moving\". A new dated sub-rule, \"A pick you made with your own hands is not ambient, and it may scroll the dock\", carries the four limits: it may not open a collapse, may not reach past the pick own section, may not move for a pick that owns no section (a plain rectangle, empty canvas), may not twitch or move twice on a fast run of picks. Dated and evidenced the way the neighbouring rules are: corrected 2026-09-12 from this task, behaviour shipped 2026-09-09 in commit 7f65ae4d, audit 2026-09-09-dock-picked-first-reveal. Scripts/test.sh green, 5690 tests."
+    },
+    {
+      "t": "2026-09-12T14:34:41.098Z",
+      "note": "UX-PATTERNS section 3, Reveal, now says plainly that a pick you made with your own hands is not ambient and may scroll the dock, with the four limits on that scroll (no opening a collapse, no reaching past the pick's own section, no move for a pick that owns no section, no twitch and no double move). Ambient keeps a document loading, an undo, a background update, a tool dropping the selection. Collapse guarantee untouched. Dated and evidenced like its neighbours: corrected 2026-09-12, behaviour shipped 2026-09-09 in 7f65ae4d, audit 2026-09-09-dock-picked-first-reveal. Behaviour reproduced first via Scripts/playtest-all.sh dock-picked-first (probe pickReveal line). That run also found dock-picked-first-walk failing deterministically at step 41; filed with its output as picking-a-plain-shape-leaves-the-panel-parked-on rather than loosening the assertion. No second decision card: the direction question is already pending on picking-a-text-layer-leaves-its-settings-below-t and the rule points at it and marks the mechanism provisional. Scripts/test.sh green, 5690 tests. Commit 0d92c264."
     }
   ],
-  "started": "2026-09-12T14:31:28.564Z"
+  "started": "2026-09-12T14:31:28.564Z",
+  "completed": "2026-09-12T14:34:41.099Z"
 }
