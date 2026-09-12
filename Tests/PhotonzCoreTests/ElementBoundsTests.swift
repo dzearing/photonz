@@ -218,7 +218,9 @@ struct ElementBoundsTests {
         }
         // About 5 ms unoptimized on a performance core, 8 on an efficiency
         // core; scanning whole rows again would read in the hundreds.
-        #expect(perCall < .milliseconds(20), "a hover pick took \(perCall)")
+        if PerfGate.isOn {
+            #expect(perCall < .milliseconds(20), "a hover pick took \(perCall)")
+        }
     }
 
     // MARK: The neighbours (what a readout has to steer around)
@@ -282,7 +284,9 @@ struct ElementBoundsTests {
         } to: {
             for probe in probes { _ = ElementBounds.detect(at: probe, in: map, luma: luma) }
         }
-        #expect(ratio < 1.3, "reading the neighbours cost \(ratio) times its eight probes")
+        if PerfGate.isOn {
+            #expect(ratio < 1.3, "reading the neighbours cost \(ratio) times its eight probes")
+        }
     }
 
     @Test func neighborsOfAnUnanalyzedImageAreEmpty() {
@@ -618,6 +622,8 @@ struct ElementBoundsSubjectTests {
         } to: {
             for probe in probes { _ = ElementBounds.detect(at: probe, in: map, luma: luma) }
         }
-        #expect(ratio < 1.3, "reading the subjects cost \(ratio) times its four probes")
+        if PerfGate.isOn {
+            #expect(ratio < 1.3, "reading the subjects cost \(ratio) times its four probes")
+        }
     }
 }

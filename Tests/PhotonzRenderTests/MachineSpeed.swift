@@ -77,15 +77,16 @@ enum MachineSpeed {
         /// A Core Image filter chain: blur, colour, composite. Tracks the cost
         /// of compositing a document.
         case filterGraph = "filter graph"
-        /// 12 megapixels produced and forced all the way back to bytes. Tracks
-        /// the cost of writing an export.
+        /// A 2x-sized picture built and forced all the way back to bytes: 48
+        /// megapixels out, the way an export at 2x is 48 megapixels out.
+        /// Tracks the cost of writing a file.
         case pixelPush = "pixel push"
 
         /// What this workload measured on the calibration machine, below.
         var baselineMS: Double {
             switch self {
             case .filterGraph: return 8.0
-            case .pixelPush: return 15.4
+            case .pixelPush: return 61.0
             }
         }
     }
@@ -150,7 +151,7 @@ enum MachineSpeed {
     // Big enough that the reading is tens of milliseconds: a one-millisecond
     // ruler is mostly per-call overhead and tracks nothing.
     private static let filterGraphSource = CIImage(cgImage: texture(width: 2400, height: 1800))
-    private static let pixelPushSource = CIImage(cgImage: texture(width: 4000, height: 3000))
+    private static let pixelPushSource = CIImage(cgImage: texture(width: 2000, height: 1500))
 
     private static func filterGraphRound() -> () -> Void {
         let source = filterGraphSource
@@ -170,12 +171,28 @@ enum MachineSpeed {
         }
     }
 
+    /// Deliberately shaped like an export: a picture drawn at four times the
+    /// area of the source, with a little filtering on it, then forced out to
+    /// bytes. A probe that only read back 12 megapixels of a trivial graph
+    /// measured a shared runner at 3.4x while the real export on the same run
+    /// came in at 8.2x, which left the export budget with six percent of
+    /// headroom. What is slow on that hardware is producing a big picture, not
+    /// copying one, so the ruler has to produce a big picture too.
     private static func pixelPushRound() -> () -> Void {
         let source = pixelPushSource
+        let big = CGRect(x: 0, y: 0, width: source.extent.width * 4,
+                         height: source.extent.height * 4)
         return {
-            let shifted = source.applyingFilter("CIColorControls",
-                                                parameters: [kCIInputBrightnessKey: 0.02])
-            let out = probeContext.createCGImage(shifted, from: source.extent)
+            let enlarged = source
+                .transformed(by: CGAffineTransform(scaleX: 4, y: 4))
+                .cropped(to: big)
+            let graded = enlarged
+                .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: 6])
+                .cropped(to: big)
+                .applyingFilter("CIColorControls", parameters: [kCIInputBrightnessKey: 0.02])
+            let stacked = graded.applyingFilter("CISourceOverCompositing",
+                                                parameters: [kCIInputBackgroundImageKey: enlarged])
+            let out = probeContext.createCGImage(stacked, from: big)
             _ = out?.dataProvider?.data
         }
     }

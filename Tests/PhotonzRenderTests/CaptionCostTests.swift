@@ -22,6 +22,8 @@ struct CaptionCostTests {
         // ~22µs on the machine this landed on; the ceiling is loose on purpose
         // so a busy runner does not fail the build, and tight enough that
         // losing the font cache would be caught.
-        #expect(each < 200)
+        if MachineSpeed.isGating {
+            #expect(each < 200)
+        }
     }
 }

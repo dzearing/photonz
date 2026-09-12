@@ -248,7 +248,9 @@ struct ElementDetectionFixtureTests {
             _ = Self.analysis.edges.verticalEdges(inYRange: 754...818)
         })
         let ratio = String(format: "%.2f", reading.ratio)
-        #expect(reading.cost < reading.baseline * 4,
-                "detection costs \(ratio)x the edge query it rides on")
+        if MachineSpeed.isGating {
+            #expect(reading.cost < reading.baseline * 4,
+                    "detection costs \(ratio)x the edge query it rides on")
+        }
     }
 }
