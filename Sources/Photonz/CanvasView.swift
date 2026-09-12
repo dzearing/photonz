@@ -158,6 +158,8 @@ struct CanvasView: NSViewRepresentable {
     /// The frame tool's drag, in document coordinates. A drag that is really a
     /// click arrives with both points equal, and drops the last size used.
     let onFrameCreate: (CGPoint, CGPoint) -> Void
+    /// A finished lens drag (Next, `next-lens`): the box a lens lands in.
+    let onLensCreate: (CGPoint, CGPoint) -> Void
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -301,6 +303,7 @@ struct CanvasView: NSViewRepresentable {
         view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
         view.onZoomCalloutCommit = onZoomCalloutCommit
         view.onFrameCreate = onFrameCreate
+        view.onLensCreate = onLensCreate
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
         view.onElementSizeCommit = onElementSizeCommit
@@ -403,6 +406,7 @@ final class CanvasNSView: NSView {
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onFrameCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
+    var onLensCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }

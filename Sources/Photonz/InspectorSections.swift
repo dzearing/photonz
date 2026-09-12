@@ -19,6 +19,11 @@ enum InspectorSectionID: String, CaseIterable {
     // tool-in-hand sections, and the picked-callout section below carries the
     // same choice for one that is already on the canvas.
     case calloutTool
+    // The Lens tool's own settings (Next, `next-lens`): what the next lens you
+    // draw does to the picture underneath it, and how hard. Beside the other
+    // tool-in-hand sections, with the picked-lens section below carrying the
+    // same two for one already on the canvas.
+    case lensTool
     case measurements
     // Above Position & Size, because the two answer the same question at
     // different scales: where do these sit, and where does this one sit.
@@ -50,6 +55,10 @@ enum InspectorSectionID: String, CaseIterable {
     // layer's border, so the ring's color stays in Color and its thickness
     // stays in Effects, like every other layer's.
     case callout
+    // A picked lens's own two settings (Next, `next-lens`): what it does to
+    // the picture underneath it and how hard. Its ring, its rounding and its
+    // fade are the layer's own, so they stay in Appearance and Effects.
+    case lens
     case text
     case measure
     case collage
@@ -102,6 +111,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .wandTool: "Magic Wand"
         case .cropTool: "Crop Tool"
         case .calloutTool: "Zoom Callout Tool"
+        case .lensTool: "Lens Tool"
         case .measurements: "Measurements"
         case .arrange: "Arrange"
         case .geometry: "Position & Size"
@@ -112,6 +122,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .color: "Color"
         case .annotation: "Annotation"
         case .callout: "Zoom Callout"
+        case .lens: LensCopy.sectionTitle
         case .text: "Text"
         case .measure: "Measure"
         case .collage: "Collage"

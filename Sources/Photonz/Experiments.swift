@@ -293,6 +293,13 @@ extension Experiments {
     /// is the flat one it always was.
     var layersListShowsGroups: Bool { layerGroupsEnabled }
 
+    /// `next-lens`: whether the Lens tool, its capsule settings and the Lens
+    /// section of the panel exist. The model and the renderer are never
+    /// flagged: a document that already holds a lens opens and draws correctly
+    /// either way, because turning a flag off takes away a way IN, never a
+    /// document's contents.
+    var lensEnabled: Bool { isEnabled(FeatureCatalog.lensFlag) }
+
     /// `next-frames`: whether the frame tool, the two Layer rows and the
     /// export scope exist. A frame is a group with a size, so this needs
     /// groups: with them off there is no way in to a frame and the switch

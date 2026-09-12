@@ -455,11 +455,15 @@ public final class DocumentRenderer: @unchecked Sendable {
                 continue
             }
 
-            // What a zoom callout magnifies: everything under it on the canvas,
-            // which inside a group means its group's contents so far over the
-            // canvas beneath the group.
+            // What a layer that reads what is BELOW it gets to see: everything
+            // under it on the canvas, which inside a group means its group's
+            // contents so far over the canvas beneath the group. A zoom callout
+            // magnifies a region of this; a lens draws the part of it under its
+            // own box. Either way it is `output`, the composite so far, so a
+            // layer can never read itself or anything above it, at any nesting
+            // depth.
             var backdrop = output
-            if case .zoomCallout = layer.content, let underlay {
+            if layer.readsBackdrop, let underlay {
                 backdrop = output.composited(over: underlay)
             }
             guard let layerImage = ciImage(for: layer, origin: origin, in: document, store: store,
@@ -647,20 +651,34 @@ public final class DocumentRenderer: @unchecked Sendable {
         // as an empty square the moment its line moved outside
         // (`BorderPosition.swift`). A shadow's reach is deliberately still left
         // out, since a tile of mostly shadow is a smaller picture of the layer.
+        // A lens has no picture of its own: rendered alone there is nothing
+        // below it to read, so its tile would be empty glass. Its row shows the
+        // part of the REAL composite it covers instead, which is both the
+        // honest answer and the useful one — you see the blur you made.
+        if let layer = document.detachedLayer(id: id), case .lens = layer.content {
+            return resampled(rasterize(region: layer.frame.standardized, of: document, store: store),
+                             maxDimension: maxDimension)
+        }
         let outset = document.layer(id: id)?.outlineOutset ?? 0
         guard let sprite = renderSprite(for: id, in: document, store: store,
                                         padding: outset) else { return nil }
-        let scale = min(1, maxDimension / CGFloat(max(sprite.width, sprite.height)))
-        guard scale < 1 else { return sprite }
-        let width = max(1, Int((CGFloat(sprite.width) * scale).rounded()))
-        let height = max(1, Int((CGFloat(sprite.height) * scale).rounded()))
+        return resampled(sprite, maxDimension: maxDimension)
+    }
+
+    /// `image` fitted inside `maxDimension` on its longer side. Never upscales.
+    private func resampled(_ image: CGImage?, maxDimension: CGFloat) -> CGImage? {
+        guard let image else { return nil }
+        let scale = min(1, maxDimension / CGFloat(max(image.width, image.height)))
+        guard scale < 1 else { return image }
+        let width = max(1, Int((CGFloat(image.width) * scale).rounded()))
+        let height = max(1, Int((CGFloat(image.height) * scale).rounded()))
         guard let space = CGColorSpace(name: CGColorSpace.sRGB),
               let context = CGContext(data: nil, width: width, height: height,
                                       bitsPerComponent: 8, bytesPerRow: 0,
                                       space: space,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         context.interpolationQuality = .high
-        context.draw(sprite, in: CGRect(x: 0, y: 0, width: width, height: height))
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
         return context.makeImage()
     }
 
@@ -753,6 +771,18 @@ public final class DocumentRenderer: @unchecked Sendable {
                 CollageRasterizer.rasterize(collage, size: boxInPoints, store: store, scale: bake)
             }) else { return nil }
             image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
+        case .lens(let lens):
+            // The lens's box in Core Image's bottom-left space. Both it and
+            // every length on `lens` are already stated in output pixels: the
+            // document was magnified before it got here, and `LensContent`
+            // magnifies its blur strength and block size with it.
+            let box = CGRect(x: frame.minX,
+                             y: document.canvasSize.height - frame.maxY,
+                             width: frame.width, height: frame.height)
+            guard let lensed = LensFilter.image(of: lens, over: backdrop, box: box) else { return nil }
+            // Back to the origin every other content kind hands back from, so
+            // the shared styling and placement below apply unchanged.
+            image = lensed.transformed(by: CGAffineTransform(translationX: -box.minX, y: -box.minY))
         case .zoomCallout(let callout):
             let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
             let source = callout.sourceRect.standardized.intersection(canvasRect)

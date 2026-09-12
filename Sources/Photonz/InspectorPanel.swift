@@ -145,7 +145,7 @@ struct InspectorPanel: View {
     /// The sections named after the thing you have picked, in the order they
     /// sit in. One list, so the migration and the rule stay the same sentence.
     private static let pickedSections: [InspectorSectionID] =
-        [.annotation, .callout, .text, .measure, .collage, .canvas]
+        [.annotation, .callout, .lens, .text, .measure, .collage, .canvas]
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
     /// The section currently in the reader's hand, and where it is being
     /// carried. See `sectionDragChanged`.
@@ -693,6 +693,10 @@ struct InspectorPanel: View {
             // picked, the way Color and Effects are: what a callout magnifies
             // is a property of the callout, not of the tool in your hand.
             if layer.zoomCallout != nil { set.insert(.callout) }
+            // A picked lens's own settings, on the same terms: what it does to
+            // the picture underneath is a property of the lens, not of the tool
+            // in your hand.
+            if Experiments.shared.lensEnabled, layer.lens != nil { set.insert(.lens) }
             // With the parts split on, everything that said how a measurement
             // LOOKS is in Appearance, so this section is here only for what it
             // is called and the numbers it can tell you about itself. Where
@@ -774,6 +778,11 @@ struct InspectorPanel: View {
         if editorState.activeTool == .zoomCallout, CalloutToolInspector.hasAnySetting {
             set.insert(.calloutTool)
         }
+        // The Lens tool's own settings, while the tool is in hand
+        // (`next-lens`). Same test again: what the drag PRODUCES.
+        if editorState.activeTool == .lens, Experiments.shared.lensEnabled {
+            set.insert(.lensTool)
+        }
         // A piece INSIDE a copy owns nothing. Its size, its colors, its type
         // and its effects all come from the original and are written back over
         // on the next redraw, so a panel full of those controls is a panel full
@@ -789,7 +798,7 @@ struct InspectorPanel: View {
     /// fact the original decides.
     private static let sectionsAPieceDoesNotOwn: Set<InspectorSectionID> = [
         .arrange, .geometry, .frame, .columns, .placement, .color, .effects, .shadow,
-        .annotation, .callout, .text, .measure, .collage,
+        .annotation, .callout, .lens, .text, .measure, .collage,
     ]
 
     private var orderedAvailableSections: [InspectorSectionID] {
@@ -894,6 +903,8 @@ struct InspectorPanel: View {
             CropToolInspector()
         case .calloutTool:
             CalloutToolInspector()
+        case .lensTool:
+            LensToolInspector()
         case .frame:
             if let layer = selectedLayer, layer.isFrame {
                 FrameInspector(layer: layer)
@@ -936,6 +947,10 @@ struct InspectorPanel: View {
         case .callout:
             if let layer = selectedLayer, layer.zoomCallout != nil {
                 CalloutInspector(layer: layer)
+            }
+        case .lens:
+            if let layer = selectedLayer, layer.lens != nil {
+                LensInspector(layer: layer)
             }
         case .text:
             TextInspector()

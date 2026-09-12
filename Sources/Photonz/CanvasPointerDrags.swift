@@ -166,7 +166,8 @@ extension CanvasNSView {
         }
         // Drawing tools own the pointer: every drag creates a new annotation
         // (or, for the zoom tool, defines the callout's source box).
-        if tool.createsAnnotationByDrag || tool == .zoomCallout || tool == .frame {
+        if tool.createsAnnotationByDrag || tool == .zoomCallout || tool == .frame
+            || tool == .lens {
             // The end you START from lands on an edge too. There is no shaft yet
             // to say which way the mark points, so the first point takes
             // whichever lines are near it — the same thing a caliper's first
@@ -1007,6 +1008,14 @@ extension CanvasNSView {
                     ? drag.anchor
                     : drag.end(constrained: event.modifierFlags.contains(.shift), shape: .rectangle)
                 onFrameCreate(drag.anchor, end)
+            } else if tool == .lens, !drag.isClick(atZoom: viewport.zoom) {
+                // The composite has to be redrawn for a lens anyway — its
+                // picture is whatever is underneath it — so the draft box goes
+                // now rather than being held over a commit it cannot match.
+                clearAnnotationPreview()
+                onLensCreate(drag.anchor,
+                             drag.end(constrained: event.modifierFlags.contains(.shift),
+                                      shape: .rectangle))
             } else if drag.isClick(atZoom: viewport.zoom) {
                 clearAnnotationPreview()
                 // The press only dismissed the caption field: the arrow is

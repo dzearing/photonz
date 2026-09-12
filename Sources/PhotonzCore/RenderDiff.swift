@@ -135,14 +135,18 @@ public enum RenderDiff {
         // which can in turn feed another callout.
         // Callouts inside a group mirror the canvas the same way, so read the
         // leaves: for a document without groups this is the layer stack itself.
-        let callouts = new.flattenedLayers.filter { $0.isVisible && $0.magnifiedSource != nil }
+        // A lens is the same shape of problem with a different region: it
+        // reads the part of the canvas under its own box (grown by however far
+        // its adjustment samples), so anything changing there redraws it, and
+        // a lens can sit over a callout or another lens.
+        let readers = new.flattenedLayers.filter { $0.isVisible && $0.backdropSource != nil }
         var changed = true
         var iterations = 0
-        while changed, iterations <= callouts.count {
+        while changed, iterations <= readers.count {
             changed = false
             iterations += 1
-            for layer in callouts {
-                guard let source = layer.magnifiedSource else { continue }
+            for layer in readers {
+                guard let source = layer.backdropSource else { continue }
                 let bounds = visualBounds(of: layer)
                 if dirty.intersects(source), !dirty.contains(bounds) {
                     dirty = dirty.union(bounds)

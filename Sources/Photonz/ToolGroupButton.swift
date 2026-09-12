@@ -14,6 +14,7 @@ extension Tool {
         case .highlight: "highlighter"
         case .text: "character.cursor.ibeam"
         case .zoomCallout: "plus.magnifyingglass"
+        case .lens: LensCopy.symbol
         case .measure: "ruler"
         case .fill: "drop"
         case .rectSelect: "rectangle.dashed"
@@ -35,6 +36,7 @@ extension Tool {
         case .highlight: "Highlight"
         case .text: "Text"
         case .zoomCallout: "Zoom Callout"
+        case .lens: LensCopy.toolTitle
         case .measure: "Measure"
         case .fill: "Fill"
         case .rectSelect: "Rectangle Select"

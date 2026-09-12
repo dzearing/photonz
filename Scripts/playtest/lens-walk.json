@@ -1,0 +1,81 @@
+{
+  "out": "/tmp/photonz-playtest/lens-walk",
+  "seed": "A lens is a layer whose job is to change what is UNDERNEATH it. This walk opens a real settings-pane screenshot, drags one box over a row of text with the Lens tool, and then puts that one lens through all five adjustments in turn (Blur, Pixelate, Greyscale, Invert, Brightness), photographing each. It then pulls the adjustment's own slider to both ends to show the setting doing something, moves the lens over a different part of the picture to show it re-reads what it lands on, rounds its corners, and undoes. Canvas coordinates are window points measured down from the top-left of the editor view.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-open", "note": "the capture as it arrived, nothing touched" },
+    { "do": "snapshot", "name": "1-open" },
+
+    { "do": "key", "key": "k" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-tool", "note": "K picked up the Lens tool; the capsule over the tool bar should now say Lens with its adjustment and its setting" },
+    { "do": "snapshot", "name": "2-tool-in-hand" },
+
+    { "do": "drag", "from": [88, 348], "to": [376, 396], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-drawn", "note": "THE TEST: one drag made a lens the size of the box drawn, and the words under it are blurred. The tool handed back to Select with the lens picked, and the panel has a Lens section saying what it does" },
+    { "do": "panel", "stage": "3-drawn" },
+    { "do": "snapshot", "name": "3-blur" },
+
+    { "do": "action", "action": "pullLensAmount" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-blur-strong", "note": "the Strength slider pulled to its far end: the same lens, softer" },
+    { "do": "snapshot", "name": "4-blur-strong" },
+    { "do": "action", "action": "pullLensAmountBack" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "4-blur-gentle" },
+
+    { "do": "action", "action": "lensPixelate" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-pixelate", "note": "the same lens switched to Pixelate; the words break into blocks and the layer row renames itself" },
+    { "do": "snapshot", "name": "5-pixelate" },
+    { "do": "action", "action": "pullLensAmount" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-pixelate-big", "note": "Block size at its far end: fewer, bigger blocks" },
+    { "do": "snapshot", "name": "5-pixelate-big" },
+
+    { "do": "action", "action": "lensGreyscale" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-greyscale", "note": "colour drained out of the region, everything else untouched" },
+    { "do": "snapshot", "name": "6-greyscale" },
+
+    { "do": "action", "action": "lensInvert" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-invert", "note": "Invert is the one adjustment with nothing to set, so the panel shows no slider beside it" },
+    { "do": "panel", "stage": "7-invert" },
+    { "do": "snapshot", "name": "7-invert" },
+
+    { "do": "action", "action": "lensBrightness" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "pullLensAmount" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-brightness", "note": "brightness at its top end lifts the region towards white" },
+    { "do": "snapshot", "name": "8-brighten" },
+    { "do": "action", "action": "pullLensAmountBack" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-darken", "note": "and the same slider the other way pushes it down; one adjustment covers both" },
+    { "do": "snapshot", "name": "8-darken" },
+
+    { "do": "action", "action": "lensPixelate" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "drag", "from": [232, 372], "to": [232, 190], "steps": 12 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "9-moved", "note": "THE TEST for the whole idea: the lens was dragged up the picture and now shows what it landed ON, not a copy of what it was over before" },
+    { "do": "snapshot", "name": "9-moved" },
+
+    { "do": "action", "action": "dragCornerRadius" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "10-rounded", "note": "rounding the layer rounds the region it covers, because a lens is an ordinary layer in every other way" },
+    { "do": "snapshot", "name": "10-rounded" },
+
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "11-undone", "note": "two undos step back over the rounding and the move; the lens is back where it was drawn" },
+    { "do": "snapshot", "name": "11-undone" }
+  ]
+}

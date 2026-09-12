@@ -53,7 +53,9 @@ public enum Fill {
         case .collage(var collage):
             collage.backdropColorHex = colorHex
             filled.content = .collage(collage)
-        case .zoomCallout:
+        // Neither of these has paint of its own: both draw the picture
+        // underneath, so there is nothing for a bucket to fill.
+        case .zoomCallout, .lens:
             return nil
         // A group has no paint of its own; filling one would mean deciding for
         // every layer inside it, which the bucket does not get to do.

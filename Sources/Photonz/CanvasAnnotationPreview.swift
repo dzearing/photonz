@@ -47,6 +47,16 @@ extension CanvasNSView {
         AnnotationContent(shape: .rectangle, strokeWidth: 1, colorHex: "#8E8E93")
     }
 
+    /// What the lens tool's drag previews with: a thin dashed-looking hairline
+    /// box in the accent blue, so it reads as a region you are marking out
+    /// rather than as a rectangle you are about to draw on the picture. The
+    /// adjustment itself cannot be previewed live — it needs the composite
+    /// underneath, which is only rebuilt on commit — so what the draft promises
+    /// is the BOX, and the box is exactly what lands.
+    private var lensDraftContent: AnnotationContent {
+        AnnotationContent(shape: .rectangle, strokeWidth: 1, colorHex: "#0A84FF")
+    }
+
     /// In-flight drag-to-create: preview the active tool's styled content.
     func refreshAnnotationPreview(constrained: Bool) {
         guard let drag = annotationDrag else {
@@ -63,6 +73,7 @@ extension CanvasNSView {
                                                  height: abs(docEnd.y - drag.anchor.y)))
             : nil
         if tool == .frame { draft = frameDraftContent }
+        if tool == .lens { draft = lensDraftContent }
         guard let content = annotationContent ?? draft ?? tool.defaultAnnotation else {
             clearAnnotationPreview()
             return

@@ -385,21 +385,33 @@ struct ToolGroupTests {
 
 struct ToolBarLayoutTests {
 
+    /// The tools a flag adds, and so the ones a bar may legitimately not hold.
+    /// Every OTHER tool is in every bar, exactly once.
+    private static let flaggedTools: Set<Tool> = [.frame, .lens]
+
+    private func counts(in bar: ToolBarLayout) -> [Tool: Int] {
+        var counts: [Tool: Int] = [:]
+        for entry in bar.entries {
+            switch entry {
+            case .tool(let tool): counts[tool, default: 0] += 1
+            case .group(let group): for tool in group.tools { counts[tool, default: 0] += 1 }
+            }
+        }
+        return counts
+    }
+
     @Test func everyToolAppearsExactlyOnce() {
-        // The frame tool is flagged (`next-frames`), so the plain bar does not
-        // hold it and the bar that does holds it exactly once.
-        for bar in [ToolBarLayout.families, ToolBarLayout.familiesWithFrame] {
-            var counts: [Tool: Int] = [:]
-            for entry in bar.entries {
-                switch entry {
-                case .tool(let tool): counts[tool, default: 0] += 1
-                case .group(let group): for tool in group.tools { counts[tool, default: 0] += 1 }
+        // The frame tool (`next-frames`) and the lens (`next-lens`) are each
+        // behind a flag, so a bar either holds one exactly once or not at all.
+        for frames in [false, true] {
+            for lens in [false, true] {
+                let counts = counts(in: ToolBarLayout.bar(withFrame: frames, withLens: lens))
+                for tool in Tool.allCases where !Self.flaggedTools.contains(tool) {
+                    #expect(counts[tool] == 1, "\(tool) appears \(counts[tool] ?? 0) times")
                 }
+                #expect(counts[.frame] == (frames ? 1 : nil))
+                #expect(counts[.lens] == (lens ? 1 : nil))
             }
-            for tool in Tool.allCases where tool != .frame {
-                #expect(counts[tool] == 1, "\(tool) appears \(counts[tool] ?? 0) times")
-            }
-            #expect(counts[.frame] == (bar == ToolBarLayout.familiesWithFrame ? 1 : nil))
         }
     }
 

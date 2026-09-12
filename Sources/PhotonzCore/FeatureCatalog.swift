@@ -114,6 +114,8 @@ public enum FeatureCatalog {
 
     public static let marqueeIntentFlag = "next-a-box-says-what-it-picks"
 
+    public static let lensFlag = "next-lens"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -378,6 +380,15 @@ public enum FeatureCatalog {
                     name: layerGroupsFlag,
                     title: "Group what you selected",
                     description: "Select two or more layers and press Command G to make them one thing you can move, hide, lock and delete together; Shift Command G takes it apart again and leaves the pieces exactly where they were. On the canvas a click picks the whole group, and a double click goes inside it so you can pick one piece; Escape comes back out. Off means the Layer menu has no Group or Ungroup rows and a click always picks a single layer. Groups already in a document keep drawing either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: lensFlag,
+                    title: "A layer that changes what is under it",
+                    description: "Adds the Lens tool, K, next to the Zoom Callout. Drag a box over anything and the picture underneath is drawn through it: Blur to soften an address until it cannot be read, Pixelate to break a name into blocks, Greyscale to drain the colour out of a region, Invert to flip it, or Brightness to lift it or push it down. Each one has its own setting, in the capsule over the tool bar before you draw and in the Lens section of the panel after. It is an ordinary layer otherwise: move it, resize it, turn it, round its corners, give it a border or a shadow, fade it, reorder it, undo it. What leaves the app is flattened, so a pixelated region really is pixelated in the picture you export or copy. Off means no Lens tool and no Lens section; a lens already in a document keeps drawing either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

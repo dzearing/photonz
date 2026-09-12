@@ -651,6 +651,18 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// callout used to be drawn at. Also in the dock and the settings capsule,
     /// so also out of a pointer's reach.
     case armCalloutMagnification, armCalloutDefaultMagnification
+    /// The LENS TOOL's own settings, the choice made with the tool in your hand
+    /// and before any lens exists. They live in the dock and in the capsule
+    /// over the tool bar, so a pointer cannot reach them.
+    case armLensBlur, armLensPixelate
+    /// A PICKED lens's Does row: what the lens on the canvas does to the
+    /// picture underneath it. Also in the dock, so also out of reach.
+    case lensBlur, lensPixelate, lensGreyscale, lensInvert, lensBrightness
+    /// A PICKED lens's own slider, pulled the way a finger pulls it: live
+    /// previews, then one committed undo step on release. `pullLensAmount`
+    /// takes it to the strong end and `pullLensAmountBack` to the gentle one,
+    /// so a walk can show the same lens at two settings.
+    case pullLensAmount, pullLensAmountBack
     case setTextSize, setTextWeight
     /// The same menus set the other way, so a walk can put the picked labels
     /// into a known state whatever the last walk left the new-text default at.

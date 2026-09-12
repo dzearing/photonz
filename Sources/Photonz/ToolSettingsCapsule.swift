@@ -34,6 +34,9 @@ struct ToolSettingsCapsule: View {
 
     var body: some View {
         let settings = Self.settings(for: editorState.activeTool)
+        // The lens tool's memory lives in UserDefaults, which nothing observes;
+        // reading the counter here is what redraws the capsule when it changes.
+        let _ = editorState.lensToolRevision
         if !settings.isEmpty {
             ToolSettingsWrap(spacing: 18, rowSpacing: 8) {
                 ForEach(settings, id: \.self) { setting in
@@ -56,9 +59,14 @@ struct ToolSettingsCapsule: View {
     /// place recognises it in the other.
     @ViewBuilder private func field(_ setting: ToolSetting) -> some View {
         HStack(spacing: 8) {
-            Text(setting.title)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+            // The lens's number is named after the adjustment in hand
+            // (Strength, Block size, Amount), so its control prints its own
+            // word and this row prints none.
+            if setting != .lensAmount {
+                Text(setting.title)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
             control(setting)
         }
         // Named apart from the panel's own row of the same name, so a scripted
@@ -125,6 +133,41 @@ struct ToolSettingsCapsule: View {
             .controlSize(.small)
             .fixedSize()
             .help("What measure points magnetize to. Hold Command to drag free.")
+        case .lensAdjustment:
+            // A menu rather than five segments: five words side by side is
+            // wider than the narrowest window, and the capsule may never be
+            // wider than the picture.
+            Picker("Lens", selection: $state.lensToolAdjustment) {
+                ForEach(LensAdjustment.allCases, id: \.self) { adjustment in
+                    Text(adjustment.title).tag(adjustment)
+                }
+            }
+            .labelsHidden()
+            .controlSize(.small)
+            .fixedSize()
+            .help("What the next lens does to the picture underneath it. A lens "
+                  + "already on the canvas is switched in its own section of the panel.")
+        case .lensAmount:
+            // Nothing to set on Invert, so nothing is drawn: the capsule
+            // narrows to the one control rather than parking a dead slider.
+            if let title = editorState.lensToolAdjustment.settingTitle {
+                HStack(spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    Slider(value: Binding(get: { Double(editorState.lensToolAmount) },
+                                          set: { editorState.lensToolAmount = CGFloat($0) }),
+                           in: editorState.lensToolAdjustment.sliderRange)
+                        .controlSize(.small)
+                        .frame(width: 96)
+                    Text(editorState.lensToolAdjustment.label(editorState.lensToolAmount))
+                        .font(.system(size: 11).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .frame(width: 38, alignment: .trailing)
+                }
+                .help("How hard the next lens does it. A lens already on the canvas "
+                      + "is tuned in its own section of the panel.")
+            }
         case .measureShow:
             Picker("Show", selection: Binding(
                 get: { editorState.measureShowFilter },

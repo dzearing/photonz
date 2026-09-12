@@ -139,25 +139,31 @@ public struct ToolBarLayout: Hashable, Sendable {
     /// The grouped bar. Resize Image is not a tool and is not listed: it rides
     /// at the foot of the Crop flyout, the same family (change the picture's
     /// bounds), and in the Image menu.
-    public static let families = ToolBarLayout(families: [
-        [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
-        [.tool(.arrow), .group(.shapes), .tool(.highlight), .tool(.text), .tool(.zoomCallout)],
-        [.tool(.fill)],
-    ])
+    public static let families = bar(withFrame: false)
 
     /// The bar with the frame tool in it (Next, `next-frames`). It joins the
     /// end of the drawing family — a frame IS something you draw on the canvas —
     /// rather than being spliced in earlier, so no tool anybody already reaches
     /// for moves to a new slot.
-    public static let familiesWithFrame = ToolBarLayout(families: [
-        [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
-        [.tool(.arrow), .group(.shapes), .tool(.highlight), .tool(.text), .tool(.zoomCallout),
-         .tool(.frame)],
-        [.tool(.fill)],
-    ])
+    public static let familiesWithFrame = ToolBarLayout.bar(withFrame: true)
 
     /// The bar as this release's flags leave it.
-    public static func bar(withFrame: Bool) -> ToolBarLayout {
-        withFrame ? familiesWithFrame : families
+    ///
+    /// Every tool a flag adds joins the END of the drawing family, never the
+    /// middle: a slot a person has already learned the position of must not
+    /// move because they turned something else on. The lens sits right after
+    /// the zoom callout because the two are the same idea — a box that shows
+    /// the picture underneath differently — and one day the callout becomes a
+    /// Magnify lens.
+    public static func bar(withFrame: Bool, withLens: Bool = false) -> ToolBarLayout {
+        var drawing: [Entry] = [.tool(.arrow), .group(.shapes), .tool(.highlight),
+                                .tool(.text), .tool(.zoomCallout)]
+        if withLens { drawing.append(.tool(.lens)) }
+        if withFrame { drawing.append(.tool(.frame)) }
+        return ToolBarLayout(families: [
+            [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
+            drawing,
+            [.tool(.fill)],
+        ])
     }
 }

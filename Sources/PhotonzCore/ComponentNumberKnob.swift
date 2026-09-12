@@ -137,7 +137,9 @@ extension Layer {
     var hasRoundableCorners: Bool {
         switch content {
         case .annotation(let annotation): return annotation.shape == .rectangle
-        case .image, .collage, .group: return true
+        // A lens is masked to its box the way a picture is, so rounding it
+        // rounds the region it covers: a blurred pill instead of a blurred box.
+        case .image, .collage, .group, .lens: return true
         case .text, .measure, .zoomCallout: return false
         }
     }

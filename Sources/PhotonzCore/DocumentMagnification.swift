@@ -46,6 +46,12 @@ extension Layer {
             callout.sourceRect = callout.sourceRect.magnified(by: scale)
             layer.content = .zoomCallout(callout)
         }
+        // A lens states its blur strength and its block size in document
+        // points, so both have to be restated in output pixels or a 12pt block
+        // comes out half the size it should be on a render at 2x.
+        if case .lens(let lens) = content {
+            layer.content = .lens(lens.magnified(by: scale))
+        }
         if case .group(var group) = content {
             group.children = group.children.map { $0.magnified(by: scale) }
             // A group that arranges itself measures its own box out of these

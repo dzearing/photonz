@@ -14,6 +14,9 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     case highlight
     case text
     case zoomCallout
+    /// Draws a lens: a box that changes whatever is underneath it (Next,
+    /// `next-lens`). Blur an address, pixelate a name, grey out a region.
+    case lens
     case measure
     /// Paint bucket: click a layer to fill it with the foreground color
     /// (⌥ = background color). See `Fill` for per-content semantics.
@@ -59,6 +62,10 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .highlight: "h"
         case .text: "t"
         case .zoomCallout: "z"
+        // K is one of the two letters Photoshop leaves unassigned, so a tool
+        // Photoshop has no equivalent for displaces nothing. B, E, S, J, U and
+        // Y all belong to brushes, erasers and stamps this app will want later.
+        case .lens: "k"
         case .measure: "i"
         case .fill: "g"
         case .wand: "w"
@@ -84,7 +91,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .rectangle: .rectangle
         case .ellipse: .ellipse
         case .highlight: .highlight
-        case .select, .crop, .text, .zoomCallout, .measure, .fill,
+        case .select, .crop, .text, .zoomCallout, .lens, .measure, .fill,
              .rectSelect, .ellipseSelect, .wand, .frame: nil
         }
     }
@@ -128,7 +135,9 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .fill: .foregroundBackground
         // Everything else picks, cuts, measures or frames. None of them put a
         // colour on the picture. The frame tool draws its own fixed grey.
-        case .select, .crop, .zoomCallout, .measure,
+        // A lens puts no colour on the picture either: it shows the colours
+        // already there, changed.
+        case .select, .crop, .zoomCallout, .lens, .measure,
              .rectSelect, .ellipseSelect, .wand, .frame: .hidden
         }
     }

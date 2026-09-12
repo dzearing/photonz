@@ -340,6 +340,7 @@ struct EditorView: View {
                        onAnnotationEndpointsCommit: { editorState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
                        onZoomCalloutCommit: { editorState.addZoomCallout(from: $0, to: $1) },
                        onFrameCreate: { editorState.addFrame(from: $0, to: $1) },
+                       onLensCreate: { editorState.addLens(from: $0, to: $1) },
                        onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
                        onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
                        onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
@@ -887,7 +888,8 @@ struct EditorView: View {
     /// each: pick, cut and measure the picture; draw on it; paint it. Every
     /// slot is the same widget the compact bar uses, so the two never drift.
     @ViewBuilder private var groupedToolRow: some View {
-        ForEach(Array(ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled)
+        ForEach(Array(ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
+                                        withLens: Experiments.shared.lensEnabled)
             .families.enumerated()), id: \.offset) { index, family in
             if index > 0 {
                 Divider().frame(height: 20)
@@ -1058,6 +1060,9 @@ struct EditorView: View {
     private enum ToolbarSlot: String, CaseIterable {
         case select, marquee, arrow, line, rectangle, ellipse, highlight, text
         case crop, resize, zoomCallout, measure, fill
+        /// The lens tool (Next, `next-lens`): a box that changes what is
+        /// underneath it.
+        case lens
         /// The frame tool (Next, `next-frames`): the screen you build on.
         case frame
         /// Line, Rectangle and Ellipse as one family. Only in the grouped bar.
@@ -1096,6 +1101,7 @@ struct EditorView: View {
             case .crop: "Crop"
             case .resize: "Resize Image"
             case .zoomCallout: "Zoom Callout"
+            case .lens: "Lens"
             case .measure: "Measure"
             case .fill: "Fill"
             case .frame: "Frame"
@@ -1117,6 +1123,7 @@ struct EditorView: View {
             case .crop: "crop"
             case .resize: "arrow.down.right.and.arrow.up.left.rectangle"
             case .zoomCallout: "plus.magnifyingglass"
+            case .lens: LensCopy.symbol
             case .measure: "ruler"
             case .fill: "drop"
             case .frame: "macwindow"
@@ -1151,6 +1158,7 @@ struct EditorView: View {
             case .text: .text
             case .crop: .crop
             case .zoomCallout: .zoomCallout
+            case .lens: .lens
             case .measure: .measure
             case .fill: .fill
             case .frame: .frame
@@ -1165,10 +1173,14 @@ struct EditorView: View {
     /// while the Crop flyout (tool-options flag) is not there to hold it.
     private var toolbarSlots: [ToolbarSlot] {
         let frames = Experiments.shared.framesEnabled
+        let lens = Experiments.shared.lensEnabled
         guard Experiments.shared.toolGroupsEnabled else {
-            return ToolbarSlot.allCases.filter { $0 != .shapes && ($0 != .frame || frames) }
+            return ToolbarSlot.allCases.filter {
+                $0 != .shapes && ($0 != .frame || frames) && ($0 != .lens || lens)
+            }
         }
-        var slots = ToolBarLayout.bar(withFrame: frames).entries.map(ToolbarSlot.init)
+        var slots = ToolBarLayout.bar(withFrame: frames, withLens: lens)
+            .entries.map(ToolbarSlot.init)
         if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
             slots.insert(.resize, at: crop + 1)
         }
@@ -1208,6 +1220,7 @@ struct EditorView: View {
         case .crop: cropToolButton
         case .resize: resizeButton
         case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
+        case .lens: toolButton(.lens, LensCopy.symbol, LensCopy.toolTitle)
         case .frame: toolButton(.frame, "macwindow", "Frame")
         case .measure: measureToolButton
         case .fill:

@@ -21,6 +21,10 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
     case measureSnap
     /// Which measurements the canvas draws.
     case measureShow
+    /// What the next lens does to the picture underneath it.
+    case lensAdjustment
+    /// How strongly it does it.
+    case lensAmount
 
     /// The word on the setting, the same one the right hand panel uses, so
     /// the two places read as one thing rather than two.
@@ -31,6 +35,10 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
         case .wandTolerance: "Tolerance"
         case .measureSnap: "Snap"
         case .measureShow: "Show"
+        case .lensAdjustment: "Lens"
+        // The word changes with the adjustment (Strength, Block size, Amount),
+        // so the capsule asks `LensAdjustment.settingTitle` rather than this.
+        case .lensAmount: "Amount"
         }
     }
 }
@@ -89,6 +97,10 @@ public enum ToolSettingsBar {
             [.measureSnap, .measureShow].filter {
                 $0 == .measureSnap ? availability.measureSnap : availability.measureShow
             }
+        case .lens:
+            // No flag of their own: the lens tool is itself behind `next-lens`,
+            // so a release that cannot pick the tool up never draws the capsule.
+            [.lensAdjustment, .lensAmount]
         default:
             []
         }

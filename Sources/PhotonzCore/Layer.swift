@@ -884,6 +884,11 @@ public enum LayerContent: Hashable, Codable, Sendable {
     case text(TextContent)
     case annotation(AnnotationContent)
     case zoomCallout(ZoomCalloutContent)
+    /// A layer that draws what is composited BELOW it, through one adjustment
+    /// (`Lens.swift`). Beside the zoom callout rather than in the Effects list
+    /// on purpose: both take the picture underneath as their input, which is
+    /// what makes them content rather than something added on top.
+    case lens(LensContent)
     case measure(MeasureContent)
     case collage(CollageContent)
     case group(GroupContent)
@@ -898,7 +903,10 @@ public enum LayerContent: Hashable, Codable, Sendable {
         case .image, .collage: true
         // A group holds strokes, glyphs and ticks whose sizes are fixed in
         // points, so scaling a sprite of it stretches them.
-        case .annotation, .text, .zoomCallout, .measure, .group: false
+        // A lens shows MORE of the picture as it grows, it does not stretch
+        // what was already inside it, so a sprite of its start frame is never
+        // the right picture.
+        case .annotation, .text, .zoomCallout, .lens, .measure, .group: false
         }
     }
 

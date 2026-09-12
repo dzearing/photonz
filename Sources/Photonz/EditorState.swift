@@ -593,6 +593,18 @@ final class EditorState {
     /// the canvas puts every layer it carries in here at once, so the numbers
     /// in the inspector track all of them rather than just one.
     var previewMoves: [UUID: CGRect] = [:]
+    /// The setting a lens's slider is being pulled to right now (Next,
+    /// `next-lens`), committed to history only when the slider is let go.
+    /// It cannot ride in `previewMoves` because a blur strength is not a box:
+    /// the canvas and the panel both read it from here while a pull is live, so
+    /// the picture follows your finger and one pull is one step to undo.
+    var lensAmountPreview: (id: UUID, amount: CGFloat)?
+    /// Where that pull started, so the undo step spans the whole of it.
+    var lensAmountBeforeDrag: CGFloat?
+    /// Bumped whenever the LENS TOOL's own memory changes, so the capsule over
+    /// the tool bar and the panel's tool section redraw. The memory itself
+    /// lives in UserDefaults, which nothing observes.
+    var lensToolRevision: UInt = 0
     /// The same for the rotate knob: the angle a turn in flight is at, in
     /// RADIANS, committed to history only on mouse-up. `previewMoves` cannot
     /// carry it because an angle is not in the box, and the panel needs it for
@@ -2096,7 +2108,10 @@ final class EditorState {
         // and the leader lines must track the frame live. Text can't either: it
         // re-wraps on resize, so a stretched start-bitmap would distort glyphs.
         // Both fall back to full re-renders per move, which keeps them right.
-        guard layer.zoomCallout == nil else { return }
+        // A lens is in the same position and for the same reason: its picture
+        // is whatever is underneath it, so a sprite of where it started shows
+        // the wrong picture the moment it moves.
+        guard layer.zoomCallout == nil, !layer.readsBackdrop else { return }
         if case .text = layer.content { return }
         // A group's own style is usually plain, but the shadows and blur of the
         // pieces INSIDE it still reach past the box they make, so the sprite is
@@ -2411,6 +2426,15 @@ final class EditorState {
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {
             document.updateLayer(id: id) { $0.isVisible = false }
+        }
+        // A lens slider under a finger: the canvas shows where the pull is
+        // now, not where the document still says it is.
+        if let preview = lensAmountPreview {
+            document.updateLayer(id: preview.id) { layer in
+                guard var lens = layer.lens else { return }
+                lens.amount = preview.amount
+                layer.content = .lens(lens)
+            }
         }
         // A caption edit suppresses just the pill; the arrow stays visible.
         if let id = editingCaptionLayerID {

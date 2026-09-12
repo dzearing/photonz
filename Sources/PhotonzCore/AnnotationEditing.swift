@@ -78,7 +78,9 @@ extension Layer {
         // sync (`InstanceSize`), which is what lets one nav bar be 1200 wide on
         // a desktop screen and 375 on a phone.
         case .group: true
-        case .image, .zoomCallout, .collage: true
+        // A lens resizes like any box, and growing one shows more of the
+        // picture underneath rather than stretching what was already there.
+        case .image, .zoomCallout, .lens, .collage: true
         }
     }
 

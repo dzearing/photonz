@@ -1175,6 +1175,34 @@ private final class Run {
                 editor.calloutToolMagnification = 4
             case .armCalloutDefaultMagnification:
                 editor.calloutToolMagnification = ZoomCalloutBuilder.defaultMagnification
+            case .armLensBlur:
+                editor.lensToolAdjustment = .blur
+            case .armLensPixelate:
+                editor.lensToolAdjustment = .pixelate
+            case .lensBlur:
+                editor.setLensAdjustment(.blur)
+            case .lensPixelate:
+                editor.setLensAdjustment(.pixelate)
+            case .lensGreyscale:
+                editor.setLensAdjustment(.greyscale)
+            case .lensInvert:
+                editor.setLensAdjustment(.invert)
+            case .lensBrightness:
+                editor.setLensAdjustment(.brightness)
+            case .pullLensAmount, .pullLensAmountBack:
+                // Exactly what a pull on the slider does: live previews on the
+                // way, one undo step when it is let go.
+                if let lens = editor.selectedLens {
+                    let range = lens.content.adjustment.range
+                    let target = action == .pullLensAmount
+                        ? range.upperBound
+                        : range.lowerBound + (range.upperBound - range.lowerBound) / 4
+                    let from = lens.content.amount
+                    for step in 1...4 {
+                        editor.previewLensAmount(from + (target - from) * CGFloat(step) / 4)
+                    }
+                    editor.commitLensAmount()
+                }
             case .setTextSize:
                 let ids = editor.textSelection.layerIDs
                 if !ids.isEmpty { editor.setTextStyle(ids: ids, fontSize: 14) }
@@ -4753,6 +4781,9 @@ private final class Run {
                 case .text: kind = "text"
                 case .annotation(let a): kind = "\(a.shape)"
                 case .zoomCallout: kind = "callout"
+                // What the lens DOES is the whole of what it is, so the tree
+                // says it rather than making a walk read a picture.
+                case .lens(let lens): kind = "lens:\(lens.adjustment.rawValue)"
                 case .measure: kind = "measure"
                 case .collage: kind = "collage"
                 case .group(let g): kind = g.isFrame ? "frame" : (g.instanceOf != nil ? "copy" : "group")
