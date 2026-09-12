@@ -1,0 +1,29 @@
+{
+  "feature": "The box that opens on a name says which word it renames",
+  "epic": "ui-components",
+  "summary": "Double clicking a drawing labelled with both a component name and a version now opens the typing box over the version alone, with the component's name still printed in front of it. Before, the label read \"Primary · Disabled\" and the box appeared at the start of the words holding just \"Disabled\", so it looked like the whole name was about to be replaced.",
+  "setup": "Photonz Dev, Experiments window, release Next, Components on. Flags are on by default.",
+  "try": [
+    { "do": "Drag a Button off the Library shelf onto the canvas." },
+    { "do": "Double click the word above it and type Primary, then press Return." },
+    { "do": "With it picked, press Add beside Versions and name the new version Disabled." },
+    { "do": "Rest the pointer on the second drawing: it spells out Primary · Disabled." },
+    { "do": "Double click that label.", "shot": "2026-09-12-rename-which-word-sc.png" },
+    { "do": "Read what happened: Primary and the dot are still printed, the box is sitting on Disabled with Disabled selected inside it." },
+    { "do": "Type Off and press Return.", "shot": "2026-09-12-rename-which-word-landed-sc.png" },
+    { "do": "Check the Component panel: the version is now Off and the component is still called Primary." }
+  ],
+  "evaluate": [
+    "Looking at the open box, is it obvious which of the two words is about to change?",
+    "Does the name left standing in front of the box read as part of the same label, or as a leftover that should have gone away?",
+    "The kept words are violet while the box is outlined violet too. Is the split between them clear enough, or should the part you cannot type in be dimmer?",
+    "Once a component has more than one version there is no way to rename the COMPONENT from the canvas: the label always opens the version. Is that a gap worth closing, or is the Component panel the right place for it?",
+    "A drawing wearing one word opens its box over that word exactly as before. Does anything about single-name renaming feel different now?"
+  ],
+  "rough": [
+    "This is geometry, not a new control: nothing was added to the canvas. The words in front of the box are the same violet letters that were already printed there, and only the box moved along to sit on the version.",
+    "Clicking the component's half of the name to rename the component was considered and left out. Splitting a ten point label into two separately clickable halves needs its own hover feedback to be findable, and that is a UX call rather than a fix. It is the fourth question above.",
+    "The box still opens at least 72 points wide, so a short version like Off sits in a box with empty room to its right. That is the width rule every name field has always used.",
+    "Both screenshots are real screen captures: the probe held the Screen Recording grant for this run."
+  ]
+}

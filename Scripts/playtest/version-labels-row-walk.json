@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/version-labels-row",
-  "seed": "Four versions of one button standing side by side. Every version of a component carries the component's name, so a label reading \"Button . Disabled\" on every drawing repeats the useless word four times and is two and a half times the width of the drawing it names. This walk photographs the row at 100% and at 50%, and then double clicks one of the labels to prove the word you can read is the word you type over.",
+  "seed": "Four versions of one button standing side by side. Every version of a component carries the component's name, so a label reading \"Button . Disabled\" on every drawing repeats the useless word four times and is two and a half times the width of the drawing it names. This walk photographs the row at 100% and at 50%, and then double clicks one of the labels to prove the box that opens stands on the letters it is going to replace: the component's name stays printed in front of it and only the version sits inside the box.",
   "setup": {
     "forget": [
       "panel",
@@ -223,7 +223,7 @@
     {
       "do": "describe",
       "stage": "renaming",
-      "note": "the field is open over the SECOND drawing's label, and it should be holding the word that was on screen there"
+      "note": "the field is open over the SECOND drawing's label. The label is spelled out, so it reads Primary . Disabled: Primary and the dot stay printed in violet in front of the box, and the box holds Disabled alone, selected. Which of the two words the typing replaces is plain before a key is pressed"
     },
     {
       "do": "snapshot",
@@ -296,7 +296,7 @@
     {
       "do": "describe",
       "stage": "hovered",
-      "note": "the pointer is resting on the FIRST drawing, which nobody has picked. It spells out the component it is a version of, Primary \u00b7 Default, on a plate over the row; the other three keep the short word they wear at rest. That is the only place on the canvas the component's name appears once a component has more than one drawing"
+      "note": "the pointer is resting on the FIRST drawing, which nobody has picked. It spells out the component it is a version of, Primary · Default, on a plate over the row; the other three keep the short word they wear at rest. That is the only place on the canvas the component's name appears once a component has more than one drawing"
     },
     {
       "do": "snapshot",

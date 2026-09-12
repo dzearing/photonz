@@ -124,6 +124,34 @@ public enum CanvasNameLabels {
                       height: box.height + slop + (gap - 1))
     }
 
+    // MARK: The box a name is typed in
+
+    /// How much room the typing box leaves past the letters already in it, so
+    /// it grows ahead of the typing rather than under it.
+    public static let fieldSlack: CGFloat = 28
+    /// The narrowest that box gets, so a five letter name does not sit in a
+    /// field wide enough for a sentence and an empty one is still visible.
+    public static let fieldMinimumWidth: CGFloat = 72
+
+    /// Where the box for typing a name opens: **over the letters it is going
+    /// to replace, and nowhere else.**
+    ///
+    /// `keeping` is how wide the words printed in front of it measure, the
+    /// ones the typing will not touch. On a drawing reading "Save button
+    /// \u{00B7} Disabled" whose double click renames the version, that is the
+    /// width of "Save button \u{00B7} ", and the box lands on "Disabled". Zero,
+    /// which is every plain name, opens the box over the whole word exactly as
+    /// it always did.
+    ///
+    /// `typed` is how wide what is currently in the box measures.
+    public static func fieldBox(for label: CanvasNameLabel, keeping kept: CGFloat = 0,
+                                typed: CGFloat = 0) -> CGRect {
+        let box = box(for: label)
+        let width = min(max(typed.rounded(.up) + fieldSlack, fieldMinimumWidth), maximumWidth)
+        return CGRect(x: box.minX + kept - 3, y: box.minY - 2,
+                      width: width, height: box.height + 4)
+    }
+
     /// The area a click on `label` lands in.
     public static func hitBox(for label: CanvasNameLabel) -> CGRect {
         hitBox(forFrameRect: label.frameRect, textWidth: label.textWidth,
@@ -152,6 +180,24 @@ public enum CanvasNameLabels {
         public var word: String? {
             let parts = [name, version].compactMap { $0 }.filter { !$0.isEmpty }
             return parts.isEmpty ? nil : parts.joined(separator: " \u{00B7} ")
+        }
+
+        /// The part of `word` that comes before the version: on a caption
+        /// saying "Save button \u{00B7} Disabled", the string "Save button
+        /// \u{00B7} ".
+        ///
+        /// Double clicking a drawing that says both renames the VERSION, so
+        /// these are the words the typing will NOT replace. Knowing how wide
+        /// they print is what lets the box open over "Disabled" and leave
+        /// "Save button" standing in front of it, which is the whole answer to
+        /// somebody reading the longer words and expecting to rename all of
+        /// them.
+        ///
+        /// Nil when the version is the entire caption, or when there is no
+        /// version, because then nothing stands in front of anything.
+        public var versionPrefix: String? {
+            guard let name, !name.isEmpty, let version, !version.isEmpty else { return nil }
+            return name + " \u{00B7} "
         }
     }
 

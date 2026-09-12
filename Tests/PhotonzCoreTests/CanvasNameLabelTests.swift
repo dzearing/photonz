@@ -491,3 +491,73 @@ struct CanvasVersionRowTests {
                 "repeating the name forces the row into a staircase")
     }
 }
+
+/// Typing over a name that says more than one thing. A drawing reading
+/// "Save button · Disabled" renames its VERSION, so the box that opens holds
+/// only "Disabled" — and somebody who just read the longer words can
+/// reasonably expect to be renaming all of them. The fix is geometry: the box
+/// opens over the letters it is going to replace, with the words it will not
+/// touch still printed in front of it.
+@Suite("The box that opens over a name")
+struct CanvasNameFieldBoxTests {
+
+    private var label: CanvasNameLabel {
+        CanvasNameLabel(id: UUID(),
+                        frameRect: CGRect(x: 200, y: 160, width: 180, height: 60),
+                        textWidth: 120,
+                        leadingInset: 18,
+                        fitsWholeText: true)
+    }
+
+    @Test("The words in front of a version are the name and the dot")
+    func versionPrefixIsTheNameAndTheDot() {
+        let caption = CanvasNameLabels.Caption(name: "Save button", version: "Disabled")
+        #expect(caption.versionPrefix == "Save button \u{00B7} ")
+        // What it prints is the prefix followed by the version, with nothing
+        // added or dropped in between: the field can stand exactly where the
+        // version's letters were.
+        #expect(caption.word == (caption.versionPrefix ?? "") + "Disabled")
+    }
+
+    @Test("A caption saying one thing has nothing standing in front of it")
+    func oneWordCaptionHasNoPrefix() {
+        #expect(CanvasNameLabels.Caption(name: nil, version: "Disabled").versionPrefix == nil)
+        #expect(CanvasNameLabels.Caption(name: "Home", version: nil).versionPrefix == nil)
+        #expect(CanvasNameLabels.Caption(name: nil, version: nil).versionPrefix == nil)
+        #expect(CanvasNameLabels.Caption(name: "Save button", version: "").versionPrefix == nil)
+    }
+
+    @Test("A plain name opens its box over the whole word")
+    func plainNameOpensOverTheWholeWord() {
+        let box = CanvasNameLabels.box(for: label)
+        let field = CanvasNameLabels.fieldBox(for: label, typed: 40)
+        #expect(field.minX == box.minX - 3)
+        #expect(field.minY == box.minY - 2)
+        #expect(field.height == box.height + 4)
+    }
+
+    @Test("A box that keeps some words opens after them")
+    func keptWordsPushTheBoxAlong() {
+        let kept: CGFloat = 74
+        let plain = CanvasNameLabels.fieldBox(for: label, typed: 40)
+        let shifted = CanvasNameLabels.fieldBox(for: label, keeping: kept, typed: 40)
+        #expect(shifted.minX == plain.minX + kept)
+        // Same line, same height: the words in front and the letters inside
+        // the box have to read as one label rather than two.
+        #expect(shifted.minY == plain.minY)
+        #expect(shifted.height == plain.height)
+        // And it starts where those words end, so it covers the letters it
+        // replaces and none of the ones it keeps.
+        #expect(shifted.minX >= CanvasNameLabels.box(for: label).minX + kept - 3)
+    }
+
+    @Test("The box grows ahead of the typing and stops at the cap")
+    func boxGrowsWithWhatIsTyped() {
+        let empty = CanvasNameLabels.fieldBox(for: label, typed: 0)
+        #expect(empty.width == CanvasNameLabels.fieldMinimumWidth)
+        let some = CanvasNameLabels.fieldBox(for: label, typed: 90)
+        #expect(some.width == 90 + CanvasNameLabels.fieldSlack)
+        let long = CanvasNameLabels.fieldBox(for: label, typed: 900)
+        #expect(long.width == CanvasNameLabels.maximumWidth)
+    }
+}

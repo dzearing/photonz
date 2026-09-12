@@ -278,6 +278,23 @@ extension CanvasNSView {
         return (componentID, version)
     }
 
+    /// The words printed in front of the open field, the ones the typing will
+    /// NOT replace: on a drawing saying "Save button \u{00B7} Disabled" whose
+    /// double click renames the version, that is "Save button \u{00B7} ".
+    ///
+    /// This is what answers "which of those two words am I renaming": the
+    /// field stands over "Disabled" alone, with "Save button \u{00B7} " still
+    /// printed where it was, so the split is visible before a key is pressed.
+    /// Nil for every drawing wearing one word, which opens its field over that
+    /// word exactly as it always did.
+    func canvasRenamePrefix(of id: UUID) -> String? {
+        guard canvasRenameVersion(of: id) != nil,
+              let chip = canvasNameChips().first(where: { $0.layer.id == id }),
+              chip.spelledOut
+        else { return nil }
+        return chip.liveCaption.versionPrefix
+    }
+
     // MARK: Typing a name
 
     /// Opens a name for typing, right where it is drawn, with the whole name
@@ -342,13 +359,12 @@ extension CanvasNSView {
             cancelCanvasRename()
             return
         }
-        let box = CanvasNameLabels.box(for: entry.label)
         let typed = (field.string as NSString)
             .size(withAttributes: [.font: Self.nameLabelFont]).width
-        // Room for a few more letters past what is there, so the field grows
-        // ahead of the typing rather than under it.
-        let width = min(max(typed.rounded(.up) + 28, 72), CanvasNameLabels.maximumWidth)
-        field.frame = CGRect(x: box.minX - 3, y: box.minY - 2, width: width, height: box.height + 4)
+        // Past the words this rename is not touching, so the field sits on the
+        // letters it will replace and those words stay readable in front of it.
+        let kept = Self.captionWidth(canvasRenamePrefix(of: id))
+        field.frame = CanvasNameLabels.fieldBox(for: entry.label, keeping: kept, typed: typed)
     }
 
     /// Return, or a click anywhere else: the typed name lands as one undo step.

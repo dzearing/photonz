@@ -72,12 +72,20 @@ extension CanvasNSView {
         let strip = CanvasNameLabels.box(forFrameRect: chip.label.frameRect)
         let renaming = chip.layer.id == canvasRenameID
 
+        // What this chip puts on the canvas right now. Usually the word it is
+        // saying; while it is being renamed, only the words the typing will
+        // NOT replace, because the field stands over the rest. On a drawing
+        // reading "Save button \u{00B7} Disabled" that leaves "Save button
+        // \u{00B7} " printed and the box sitting on "Disabled", so which of the
+        // two words is being renamed is plain before anything is typed.
+        let printed = renaming ? canvasRenamePrefix(of: chip.layer.id) : chip.word
+
         // A name that is only there because you are looking gets something to
         // be read against. Where the names sit was decided by what they say at
         // REST, so this one is wider than the room it was given and may reach
         // over a neighbour's mark; a plate under it means it lands as a chip on
         // top rather than as a smear.
-        if chip.spelledOut, !renaming, let word = chip.word {
+        if chip.spelledOut, let word = printed {
             let text = CanvasNameLabels.box(for: chip.label)
             let plate = CALayer()
             plate.frame = CGRect(x: strip.minX - 4, y: strip.minY - 1,
@@ -110,14 +118,12 @@ extension CanvasNSView {
         glyph.frame = layer?.bounds ?? strip
         componentChromeLayer.addSublayer(glyph)
 
-        // The component being renamed has a field standing where its name was,
-        // so nothing is drawn under it.
-        guard !renaming else { return }
-
         // A copy of the first version wears its mark and nothing else, until
         // you look at it: a screen built out of twelve ordinary buttons would
-        // otherwise carry twelve labels all saying the same word.
-        guard let word = chip.word else { return }
+        // otherwise carry twelve labels all saying the same word. A name being
+        // renamed with nothing kept in front of the field draws nothing either:
+        // the field is standing exactly where the word was.
+        guard let word = printed else { return }
 
         // The component violet at rest, the selection accent when the word is
         // live: the mark in front of it goes on saying "component", so the word
@@ -127,7 +133,10 @@ extension CanvasNSView {
         // A copy's version is a caption rather than a handle, so it stays in the
         // component violet however the copy is picked and the accent goes on
         // meaning "this word answers a click".
-        let ink = chip.kind == .component && isNameLabelLive(chip.layer.id)
+        // Words kept in front of an open field stay violet however the drawing
+        // is picked: the accent means "this answers a click", and right now the
+        // thing answering is the box, not the name standing beside it.
+        let ink = !renaming && chip.kind == .component && isNameLabelLive(chip.layer.id)
             ? NSColor.controlAccentColor.cgColor
             : ComponentGlyph.cgColor
         componentChromeLayer.addSublayer(nameTextLayer(

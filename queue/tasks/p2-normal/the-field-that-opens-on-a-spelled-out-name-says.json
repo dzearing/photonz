@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:27:56.619Z",
-  "updated": "2026-09-12T12:02:45.022Z",
+  "updated": "2026-09-12T12:29:19.609455Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Landed 2026-09-09 with the spelled-out canvas name (queue/audits/2026-09-09-copy-names.json). The word drawn is CanvasNameChip.word (live caption); the rename target is still canvasRenameVersion(of:) in Sources/Photonz/CanvasNames.swift, which reads the RESTING caption. Cheapest honest fix is probably to open the field over just the version part of the words, so the box lines up with the letters it will replace.",
@@ -34,6 +34,39 @@
     {
       "t": "2026-09-12T12:02:45.021Z",
       "note": "seq 140 -> 70"
+    },
+    {
+      "t": "2026-09-12T12:23:30.133Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T12:29:19.609455Z",
+      "note": "Pre-build review: the mock-free fix is geometry, not a new control. Rejected splitting the label into two clickable halves (component name | version): at 10pt a half needs its own hover feedback to be findable, and 'what does clicking the name half do' is a UX call for the user, not a guess. Rejected renaming BOTH: the version and the component are two different things and the Library tile reads the component name. Shortest thing that answers the acceptance is to open the box over the letters it will replace and leave the rest printed."
+    },
+    {
+      "t": "2026-09-12T12:29:19.609455Z",
+      "note": "Core (TDD, tests first): Caption.versionPrefix gives the words in front of the version ('Save button · '); CanvasNameLabels.fieldBox(for:keeping:typed:) places the typing box, shifted right by the kept width, with fieldSlack/fieldMinimumWidth moved out of the app. 5 new tests in CanvasNameFieldBoxTests."
+    },
+    {
+      "t": "2026-09-12T12:29:19.609455Z",
+      "note": "App: canvasRenamePrefix(of:) in CanvasNames.swift (non-nil only when the chip is spelled out AND the double click renames a version); layoutCanvasNameField uses fieldBox; drawNameChip prints the kept words while renaming instead of drawing nothing, on the same plate, in violet rather than the accent (the accent means 'answers a click' and the box is what answers now)."
+    },
+    {
+      "t": "2026-09-12T12:29:19.609455Z",
+      "note": "Verified on the probe with Screen Recording granted. version-labels-row-walk labels-2-renaming-sc.png shows the chip reading '◈ Primary · [Disabled]' with the box exactly on Disabled, selected; labels-3-renamed-sc.png plus the Component panel show the VERSION became Off and the component stayed Primary (acceptance 1 and 2). component-name-rename-walk comp-name-2-field-sc.png shows a one-word component still opening its box over the whole word (acceptance 3)."
+    },
+    {
+      "t": "2026-09-12T12:29:19.609455Z",
+      "note": "Scripts/test.sh green: 5667 tests in 470 suites. Walks re-run: version-labels-row, component-name-rename, frame-name-rename, version-row-name, all ok. No sweep requested: the change only touches the canvas name strip and those four walks are the ones that photograph it."
+    },
+    {
+      "t": "2026-09-12T12:29:19.609455Z",
+      "note": "Left undone on purpose: once a component has more than one version there is still no way to rename the COMPONENT from the canvas. Put to the user as evaluate question 4 in the audit rather than filed, because the answer decides whether it is a feature at all."
+    },
+    {
+      "t": "2026-09-12T12:29:19.609455Z",
+      "note": "Audit: queue/audits/2026-09-12-rename-which-word.json with two real screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-12T12:23:30.132Z"
 }
