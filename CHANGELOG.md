@@ -2,6 +2,38 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.15.0 — 2026-09-12
+
+**Build interfaces, not just mark them up.** A document can hold several screens, a screen is a frame you can size and name, and groups can hold groups as deep as you like. Drop a capture or a shape onto a screen and it goes inside that screen. Everything you build is still layers, so nothing you already knew stops working.
+
+**Things arrange themselves.** A group can lay its contents out as a row, a column or a grid, with room on each of its four sides, a gap between pieces, and wrapping onto the next line when it runs out of width. Tell a container the smallest and largest it may be, tell one piece to take the room left over, or tell it to stretch. A label is as wide as its words, and a button and a card grow to fit their text. A container that is hiding something says so, and can be made to fit in one step.
+
+**Components: make it once, use it everywhere.** Turn what you drew into a component and it goes on the Library shelf. Drag out as many copies as you like and they follow the original when it changes. Give one copy its own color, its own size, its own room or its own words without breaking the link, and everything you type is kept. A component can hold more than one version of itself, and a copy can be placed from any version. Components made in one document can be used in another.
+
+**A Library for everything you want to reuse.** Save a color, a gradient, a text treatment or an effect under a name, then drag it off the shelf onto a swatch, onto a row in the layers list, or straight onto the picture. Edit the saved one and everything wearing it follows. The Library arrives with components already in it.
+
+**One way to say what a shape paints.** Appearance holds what a shape simply has: its fill, its outline, its corner radius and its opacity. Effects is a list you add to: shadows, borders, glows and blur. Every part has a switch, a color and its own settings, all in the same shape, so a new effect works the way the last one did. Borders can sit inside the edge, on it, or outside it, can be offset from it, and you can have more than one. Each corner of a shape can be rounded on its own.
+
+**A layer can change what is underneath it.** Put a box over part of a picture and blur it, pixelate it, drain the color out of it or invert it, with a setting to control how much. A layer can also say how it mixes with what is below it. Hiding a name or an email address before you send a screenshot is now something you do in the app, in one move, and it is baked into what you export.
+
+**Columns and a grid you design to.** A screen can show the columns you are building to, starting where its padding starts. The canvas has a grid that thins and thickens as you zoom without ever disappearing, that things snap to while you resize as well as move, and that the arrow keys step by. Guides can be pinned to it.
+
+**Redlining got sharper everywhere.** Measure has explicit modes for a distance, a size and a gap, picked from the tool button itself. Measurements snap to the edges the app finds in your screenshot, to the centres of things, to your guides and to the layers you drew, and Command still drags free. Hold Shift to lock the direction you are measuring. Numbers step out of the way instead of sitting on the thing they measure, and you can slide a number along its own line to any spot that reads better. You can measure shapes you drew yourself, not only screenshots.
+
+**A Measurements panel and a spec you can hand over.** Every measurement in the document is a row you can name, select and delete, with Shift-click and Command-click to take several at once. One copy hands off both the redlined picture and its spec list.
+
+**Arrows that carry a caption.** Type straight after you draw one and the words appear in a bubble that grows from the arrow, over more than one line if you need it. Drag the bubble wherever it reads best, make it a pill or a badge, and pick a different arrowhead.
+
+**Capture a window by clicking it.** Point at a window and it lights up with its title, click and you have it, with its shadow and rounded corners intact. Dragging out a region gives you a loupe with pixel coordinates, the screen dims the instant you start, and the toast afterwards tells you how to open the editor.
+
+**A tool bar that stops moving.** Tools are grouped the way a pro editor groups them, with press and hold on a button to reach the rest of its family or its modes, so picking up a tool never changes how wide the bar is. Choosing a mode from a tool's list now picks that tool up as well. The panel toggle sits in the window title bar where a Mac keeps it, and there is one color picker everywhere a color is chosen.
+
+**Text that behaves.** A text box wraps its words instead of hanging out of its container, keeps room you gave it on purpose, and stays crisp when you zoom in or export at 2x. The font and size menus stop changing width as you move through them.
+
+**Next is where all of this lives.** Open Experiments from the app menu to switch between Current and Next. Both ship in the same app, so there is nothing extra to install, and switching takes a relaunch.
+
+**Fixes worth naming.** A border meets the fill and the edge cleanly, with no hairline of either showing through. A frame shows what you are getting while you drag its handle. Undo puts back a selection you lost. Locked layers stop offering handles that would resize them.
+
 ## 0.14.0 — 2026-08-22
 
 **Saving a trimmed recording actually trims it.** Trim a video, press Command-S, and the file itself becomes the trimmed one. Dragging it out of History, pasting it, or opening it later all give you the clip you saved, not the original full length. Video windows now behave like image windows: Command-S saves, the title bar shows an edited dot, and closing with unsaved changes asks first. The untouched original is kept alongside, so trims never stack and "Revert to Original" in the Video menu brings the whole clip back. Recordings you trimmed in an earlier version open with unsaved changes so you can commit or discard them.
