@@ -1,0 +1,27 @@
+{
+  "id": "find-out-whether-the-layers-list-should-show-the",
+  "title": "Find out whether the Layers list should show the pieces Select What Uses This picked",
+  "goal": "Saving a colour as a style and then pressing Select What Uses This picks every layer wearing it, and that includes the pieces inside every copy of a component. The Layers list then says 4 layers selected while showing rows for only two of them, because a copy has no twist and its pieces have no rows. It is not clear whether that reads as the app quietly picking things you cannot see, or as the right amount of detail about copies you were not editing.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2460,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T12:21:46.712Z",
+  "updated": "2026-09-12T12:21:46.715Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-12 with Scripts/playtest/style-users-walk.json (run it with --no-build). The walk paints one rectangle, saves its fill as the style Accent, groups it with a second rectangle, makes a component and drops one copy. The style then reads 4 colors use this and Select What Uses This picks Rectangle, Rectangle 2, Rectangle, Rectangle 2 - the originals two children and the copys two pieces. See /tmp/photonz-playtest/style-users/styleusers-4-selected-sc.png and the earlier capture at /tmp/photonz-playtest/style-piece/stylepiece-5-typed-sc.png, which shows the list reading 4 layers selected over two visible rows.\\n\\nThe numbers themselves are honest: Position & Size shows over that mixed selection (the section is only taken away when a piece is picked ON ITS OWN, InspectorPanel.swift:791), and typing 900 into X moved the original with the copy following, so nothing on screen ended up saying two different things. This is about what the selection LOOKS like, not about a wrong number. Found while answering find-out-whether-position-and-size-takes-numbers.",
+  "acceptance": [
+    "There is a plain answer, written into this task, about what a person should see in the Layers list when the selection includes pieces they cannot see rows for",
+    "If the count should change, the list says a number that matches the rows it is showing",
+    "If the pieces should not be picked at all, the button picks only the layers a person can see and the task says why"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T12:21:46.714Z",
+      "note": "created (manual)"
+    }
+  ]
+}

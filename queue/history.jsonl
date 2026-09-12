@@ -2778,3 +2778,7 @@
 {"t":"2026-09-12T12:02:46.358Z","ev":"task_resequenced","id":"the-control-rules-get-a-row-for-a-control-that-c","from":1320,"to":60}
 {"t":"2026-09-12T12:03:05.767Z","ev":"triage","summary":"merged 3 walk-race duplicates into one (A walk waits for the panel instead of racing it), filed 3 tasks from the design review (clamped slider floor p2, spend-stall notification p2, control-rules scrub p3), groomed 3 next-epic goals to name how they unblock the focus, renumbered p2 to 10-360 and p3 to 10-60, guard clean, 0 resets. Open: 42 -> 42 (p0 0, p1 0, p2 36, p3 6)."}
 {"t":"2026-09-12T12:04:05.126Z","ev":"digest","file":"2026-09-12.md"}
+{"t":"2026-09-12T12:04:17.518Z","ev":"runner_failed","id":null,"kind":"digest","exit":0,"consecutive":1,"outcome":"spend","environment":true,"signIn":false,"reason":"spend","error":"▸ Bash node queue/bin/queue.mjs addjson \"$(cat <<'EOF' { \"title\": \"A loop stalled on the spend limit reaches the per…"}
+{"t":"2026-09-12T12:04:17.547Z","ev":"digest_deferred","reason":"spend"}
+{"t":"2026-09-12T12:04:47.660Z","ev":"task_started","id":"find-out-whether-position-and-size-takes-numbers","title":"Find out whether Position and Size takes numbers on a piece inside a copy","priority":"p2-normal"}
+{"t":"2026-09-12T12:21:46.716Z","ev":"task_created","id":"find-out-whether-the-layers-list-should-show-the","priority":"p2-normal","title":"Find out whether the Layers list should show the pieces Select What Uses This picked"}

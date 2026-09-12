@@ -1200,6 +1200,8 @@ struct LibraryStyleInspector: View {
                     .controlSize(.small)
                     .disabled(editorState.colorStyleUsageCount(styleID: style.id) == 0)
                     .panelHelp("Selects the layers this style paints")
+                    .playtestControl("Select What Uses This",
+                                     detail: "Style, \(editorState.colorStyleUsageCount(styleID: style.id)) colors")
                     Button("Remove") {
                         editorState.deleteColorStyle(styleID: style.id)
                     }

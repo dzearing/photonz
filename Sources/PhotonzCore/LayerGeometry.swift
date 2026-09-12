@@ -246,6 +246,16 @@ public struct LayerSizeHold: Hashable, Sendable {
 /// A field that takes nothing is not always a field with nothing to say:
 /// `shows(_:)` is the second question, and it is how a wrapped paragraph
 /// reports the height it turned out to be.
+///
+/// Nothing here knows about COPIES, and it does not have to. A piece inside a
+/// copy would spring back on the next sync, so all five of its numbers would
+/// be lies — and the refusal is made a level up, by leaving Position & Size
+/// off the panel entirely for a picked piece, next to the rest of what a piece
+/// does not own (`InspectorPanel.sectionsAPieceDoesNotOwn`). It is the right
+/// height for it: a piece owns none of its colour, its type or its effects
+/// either, and five dead boxes with a sentence under each would say the same
+/// thing five times. `Scripts/playtest/piece-geometry-walk.json` reads the
+/// panel over a piece and claims all five fields are absent.
 public struct LayerGeometryEditing: Hashable, Sendable {
 
     /// Why a piece inside a group that closes around its contents has no typed

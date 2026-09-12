@@ -1,0 +1,329 @@
+{
+  "out": "/tmp/photonz-playtest/piece-geometry",
+  "seed": "What the Position and Size panel does about a piece inside a copy. A piece owns nothing: its place and its size are refilled from the original after every edit, and the canvas offers it no handles. This walk shows first that no ordinary gesture even reaches one - a click, the double click that steps into any other group, a band and the Layers list all land on the whole copy - and then makes a piece the selection outright and reads the panel. There is no Position and Size section on it at all, and none of X, Y, W, H or A. The panel does not offer numbers it could never keep; the Component section says where they come from instead. Scripts/playtest/style-users-walk.json walks the one route that does put a piece in the selection.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        360,
+        260
+      ],
+      "to": [
+        560,
+        320
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        275
+      ],
+      "to": [
+        430,
+        305
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        320,
+        220
+      ],
+      "to": [
+        640,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "1-original",
+      "note": "a component holding a plate with a small tile on top of it"
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dragTile",
+      "tile": "Component",
+      "to": [
+        420,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        1000,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-copy",
+      "note": "a copy of it on the canvas, following the original, nothing picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "piecegeo-2-copy"
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        615
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Component 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-click-on-the-tile",
+      "note": "a plain click on the small tile inside the copy picks the WHOLE COPY"
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        615
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Component 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-double-click-on-the-tile",
+      "note": "and so does the double click that steps into any ordinary group: a copy is one object"
+    },
+    {
+      "do": "snapshot",
+      "name": "piecegeo-4-piece-unreachable"
+    },
+    {
+      "do": "panel",
+      "stage": "4-piece-unreachable"
+    },
+    {
+      "do": "click",
+      "at": [
+        1000,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        250,
+        560
+      ],
+      "to": [
+        620,
+        700
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Component 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "5-band",
+      "note": "a band thrown across the copy catches the copy, never one of its pieces"
+    },
+    {
+      "do": "selectRow",
+      "row": "Component 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Component 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "6-layers-list",
+      "note": "and the Layers list gives the copy's row no twist to open, so there is no piece to click there either"
+    },
+    {
+      "do": "focus",
+      "field": "X"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "7-the-copys-numbers",
+      "note": "with the copy picked the panel shows X, Y, W, H and A, and they are the copy's own numbers, which the copy really does keep"
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "piecegeo-7-the-copys-numbers"
+    },
+    {
+      "do": "action",
+      "action": "stepIntoSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "8-a-piece-is-the-selection",
+      "note": "THE TEST: now a PIECE inside that copy is the selection. No gesture above can do this, but Select What Uses This on a colour or effect style can, so it has to be right."
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "field": "Y",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "field": "H",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Edit Original",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "piecegeo-8-no-numbers-for-a-piece"
+    },
+    {
+      "do": "panel",
+      "stage": "8-a-piece-is-the-selection"
+    }
+  ]
+}

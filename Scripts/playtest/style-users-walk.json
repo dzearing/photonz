@@ -1,0 +1,274 @@
+{
+  "out": "/tmp/photonz-playtest/style-users",
+  "seed": "Select What Uses This, on a colour style worn by a component. A copy's pieces carry the original's style bindings, so the button picks the original's own layers AND every copy's pieces alongside them. It is the one thing in the app that puts a piece in the selection, which no click can do, so what it picks and what the panel offers afterwards both have to be right. The panel keeps Position and Size here, because that section is only taken away when a piece is picked ON ITS OWN; a number typed into it reaches the original, and every copy follows.",
+  "setup": {
+    "forget": [
+      "text",
+      "panel",
+      "shapes",
+      "color",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        360,
+        260
+      ],
+      "to": [
+        560,
+        320
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "saveColorStyle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Style name"
+    },
+    {
+      "do": "type",
+      "text": "Accent"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-style",
+      "note": "one box wearing a colour style called Accent"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        340
+      ],
+      "to": [
+        540,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        320,
+        220
+      ],
+      "to": [
+        640,
+        420
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dragTile",
+      "tile": "Component",
+      "to": [
+        520,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-copy",
+      "note": "one copy of it, whose pieces wear the same style because their original does"
+    },
+    {
+      "do": "press",
+      "control": "Styles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstColorStyle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Style section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Select What Uses This",
+      "reads": "Style, 4 colors"
+    },
+    {
+      "do": "describe",
+      "stage": "3-four-colours",
+      "note": "THE COUNT: two shapes in the original and the two pieces of the one copy, so the style says four"
+    },
+    {
+      "do": "snapshot",
+      "name": "styleusers-3-four-colours"
+    },
+    {
+      "do": "press",
+      "control": "Select What Uses This"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Rectangle",
+        "Rectangle 2",
+        "Rectangle",
+        "Rectangle 2"
+      ]
+    },
+    {
+      "do": "expect",
+      "field": "X",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "4-selected",
+      "note": "THE TEST: four layers picked, and two of them are pieces inside the copy. Position and Size is still on the panel, because the section only goes away when a piece is picked on its own."
+    },
+    {
+      "do": "snapshot",
+      "name": "styleusers-4-selected"
+    },
+    {
+      "do": "panel",
+      "stage": "4-selected"
+    },
+    {
+      "do": "focus",
+      "field": "X"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "type",
+      "text": "900"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "5-typed",
+      "note": "900 typed into X: the original's two shapes go there, and the copy follows its original across, so nothing on screen is left saying two different things"
+    },
+    {
+      "do": "snapshot",
+      "name": "styleusers-5-typed"
+    },
+    {
+      "do": "render",
+      "name": "styleusers-5-typed-doc"
+    }
+  ]
+}

@@ -258,4 +258,56 @@ struct ComponentPieceEditingTests {
         _ = c.doc.syncComponentInstances()
         #expect(c.doc.layer(id: c.piece)?.frame == before)
     }
+
+    // MARK: - A piece is never the thing you have picked
+
+    /// No ordinary gesture reaches a piece: a copy answers for everything
+    /// inside it, so a click, the double click that steps into any other
+    /// group, a band and the Layers list all land on the whole copy. That is
+    /// why nothing on screen offers a piece's place or size to be dragged.
+    ///
+    /// It is not the whole story — Select What Uses This on a colour or effect
+    /// style does put pieces in the selection, which is why the panel drops
+    /// the sections a piece does not own rather than relying on this. But it
+    /// is the reason the gestures need no special case of their own, and it is
+    /// worth failing loudly the day it stops being true.
+    ///
+    /// `Scripts/playtest/piece-geometry-walk.json` walks the same claim
+    /// against the running app, and goes on to read the panel over a piece;
+    /// `style-users-walk.json` walks the route that does reach one.
+
+    /// A click that lands squarely on a piece picks the copy around it.
+    @Test func aClickOnAPiecePicksTheWholeCopy() {
+        let c = withCopy()
+        let piece = c.doc.canvasLayer(id: c.piece)!
+        let point = CGPoint(x: piece.frame.midX, y: piece.frame.midY)
+        #expect(c.doc.hitTest(point)?.id == c.copy)
+        #expect(c.doc.selectionTarget(at: point, inside: nil)?.id == c.copy)
+    }
+
+    /// And the double click that steps into any ordinary group has nowhere to
+    /// go: there is no level below a copy to descend to.
+    @Test func aDoubleClickCannotStepIntoACopy() {
+        let c = withCopy()
+        let piece = c.doc.canvasLayer(id: c.piece)!
+        let point = CGPoint(x: piece.frame.midX, y: piece.frame.midY)
+        #expect(c.doc.descendTarget(at: point, inside: nil) == nil)
+        // The same point inside the ORIGINAL does descend, so this is the copy
+        // refusing rather than the descent being broken.
+        let label = c.doc.canvasLayer(id: c.labelID)!
+        let inOriginal = CGPoint(x: label.frame.midX, y: label.frame.midY)
+        #expect(c.doc.descendTarget(at: inOriginal, inside: nil)?.id == c.labelID)
+    }
+
+    /// Nor is there a row to click: the Layers list gives a copy no twist to
+    /// open, however many of its rows are expanded.
+    @Test func theLayersListNeverOpensACopy() {
+        let c = withCopy()
+        let everything = Set(c.doc.allLayers.map(\.id))
+        let rows = c.doc.panelRows(expanded: everything)
+        #expect(!rows.map(\.id).contains(c.piece))
+        #expect(rows.first { $0.id == c.copy }?.isGroup == false)
+        // The original's own label IS there, so the list is opening groups.
+        #expect(rows.map(\.id).contains(c.labelID))
+    }
 }
