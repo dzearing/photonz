@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T08:25:19.599Z",
-  "updated": "2026-09-09T12:23:40.633Z",
+  "updated": "2026-09-12T10:46:07.095Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-09 on a clean tree (only Scripts/playtest/parts-settings-inline-walk.json and queue files were modified, neither touches this walk). Not a flake: failed twice in a row, once via Scripts/playtest-all.sh --no-build effect and once on its own.\n\nRepro: Scripts/playtest.sh Scripts/playtest/effects-open-into-view-walk.json --no-build\n\nOutput: status failed, [12 expect] FAILED: the control called \"Twist\" in \"Border\" reads \"Border, open\", not \"Border, shut\"\n\nStep 9 presses the Border twist to fold it and step 12 expects it shut. The window is 1280x600, short enough that the Effects list scrolls inside itself, which is what this walk exists to cover. Worth checking whether the press is landing on the twist at all once the list has scrolled, and whether the keep-room-for-the-effect-you-opened scroll (877780bf) re-opens it. 12 of the 13 effect walks pass, so this is specific to the short window.",
@@ -33,6 +33,40 @@
     {
       "t": "2026-09-09T12:23:40.632Z",
       "note": "seq 40 -> 50"
+    },
+    {
+      "t": "2026-09-12T10:38:56.899Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T10:45:59.961Z",
+      "note": "Adversarial review before touching anything: the task says the walk fails, so the first act was to make it fail. It does not. Scripts/playtest.sh Scripts/playtest/effects-open-into-view-walk.json passes end to end on a fresh build, and --no-build three more times after that: 4 of 4, status ok, step 43 done. The failing expect the task quotes (step 12, Twist in Border reads open not shut) now reads shut."
+    },
+    {
+      "t": "2026-09-12T10:45:59.961Z",
+      "note": "What fixed it: 6ec2bede (2026-09-09 02:33), \"A row scrolled out of its own list no longer answers to a row it drifted under\", landed about an hour after this task was filed at 01:25. It stopped a control the list had scrolled away from borrowing the name of whatever row had drifted under it, which is exactly the misattribution the task guessed at (\"worth checking whether the press is landing on the twist at all once the list has scrolled\"). Nothing needed building here."
+    },
+    {
+      "t": "2026-09-12T10:45:59.961Z",
+      "note": "Acceptance 2, the rest of the effect walks, is NOT met, and not because of this walk. Scripts/playtest-all.sh --no-build effect: 9 passed, 4 failed. Re-ran all four on their own, three times each, to sort real from flaky."
+    },
+    {
+      "t": "2026-09-12T10:45:59.961Z",
+      "note": "Two are solid, 3 of 3 each: border-effect-walk and glow-effect-walk both fail at step 30, pressing a control inside a SECOND effect just added. Proved it is the app: a truncated copy of glow-effect-walk with a panel dump in place of the press reports the Glow 2 heading, Style, Switch and Remove as inWindow true and its Color, Kind, Size, Softness and Opacity all inWindow false, and the screen capture shows the list edge cutting across right below the Style row. Cause is one line: EditorState.effectToReveal (and openedEffectRow) is written only in toggleEffectFolded, so the chevron reveals an effect and adding one never does. Filed as adding-an-effect-leaves-every-one-of-its-setting with the commands, the output and the dump."
+    },
+    {
+      "t": "2026-09-12T10:45:59.961Z",
+      "note": "Two are flaky: effects-say-their-reach-walk failed 1 of 3 standalone, effects-room-for-the-one-you-opened-walk passed 3 of 3 standalone and failed once in the suite. Both are a press that does not take, on a switch or a chevron, after a fixed wait. Filed as two-effect-walks-fail-now-and-then-because-a-pre."
+    },
+    {
+      "t": "2026-09-12T10:45:59.961Z",
+      "note": "None of those four failures is breakage from this run: nothing under Sources was touched. 6ec2bede most likely exposed the two solid ones rather than causing them, since before it a press could land on a row that had drifted under the control and the walk would pass over the top of the real bug. Did not request a sweep: one is already pending."
+    },
+    {
+      "t": "2026-09-12T10:46:07.093Z",
+      "note": "Not reproducible any more: the walk passes 4 of 4 (one fresh build, three --no-build). 6ec2bede fixed it an hour after the task was filed, by stopping a scrolled-away control from borrowing the name of the row that drifted under it. Nothing built. The other 4 effect-walk failures found while checking are unrelated and filed: adding-an-effect-leaves-every-one-of-its-setting (app bug, reproduced 3 of 3 with a panel dump and a capture) and two-effect-walks-fail-now-and-then-because-a-pre (flakes)."
     }
-  ]
+  ],
+  "started": "2026-09-12T10:38:56.898Z",
+  "completed": "2026-09-12T10:46:07.094Z"
 }

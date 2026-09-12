@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:23:40.425Z",
-  "updated": "2026-09-12T10:07:37.685Z",
+  "updated": "2026-09-12T10:38:40.321Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-09 triage pass, reading the day's audits as a user.\n\nThe same paragraph appears in queue/audits/2026-09-09-text-style-drag.json, 2026-09-09-text-style-row-drop.json and, by reference, 2026-09-09-style-on-a-copy.json: \"AppKit only begins a drag session from an event that came off a real device, so the walk hands the payload to the canvas directly instead... If the tile will not come away in your hand, say so and it is a small fix.\"\n\nWhat IS already proven, so this is narrower than it sounds. Sources/Photonz/Playtest/PanelTarget.swift:12 says the harness uses \"the SAME drag payload its own onDrag hands over, one closure, used by both\", so the bytes on the pasteboard are the real ones. PlaytestHarness.dragTile (line 3136) then builds a PlaytestDraggingInfo and calls draggingEntered/draggingUpdated/performDragOperation on the destination. So the receiving half and the payload are covered; what nothing exercises is the mouse-down on the tile turning into a drag session.\n\nWorth trying before concluding it is impossible: a CGEvent posted to the HID event tap is treated as a real device event, which is how other UI test harnesses start drags. Sources/Photonz/Playtest/PlaytestHarness.swift already imports CGEvent for keys.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-09-12T11:30:00.000Z",
       "note": "Found while running the neighbours: text-style-walk and text-style-arming-walk each failed once in a batch with \"no menu called Size\", and passed alone. Not caused by this change (no shared code touched). Filed as find-out-why-a-walk-sometimes-cannot-find-the-si at p2, worded as a question, with both commands and both outputs."
+    },
+    {
+      "t": "2026-09-12T10:38:40.319Z",
+      "note": "A tile does come away in your hand, proven by two walks. New pickUpTile step presses a tile and pulls; it catches the moment AppKit is asked for a drag session and fails if none is. tile-comes-away-walk (colour, com.photonz.paint) and text-style-comes-away-walk (text style, com.photonz.text-style), 5 runs green each. The three 2026-09-09 audits now carry the answer instead of the apology, and docs/design/playtest-harness.md has the section they point at. No bug to file: the text style tile looked broken until the control showed the colour tile fails the same way on a second pick up, which is a one-per-app-run limit of the harness, now documented and reported as itself. Scripts/test.sh green."
     }
   ],
-  "started": "2026-09-12T10:07:37.683Z"
+  "started": "2026-09-12T10:07:37.683Z",
+  "completed": "2026-09-12T10:38:40.320Z"
 }

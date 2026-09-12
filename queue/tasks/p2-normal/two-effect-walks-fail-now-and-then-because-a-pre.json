@@ -1,0 +1,27 @@
+{
+  "id": "two-effect-walks-fail-now-and-then-because-a-pre",
+  "title": "Two effect walks fail now and then because a press does not take",
+  "goal": "Two of the scripted walks that check the Effects list fail about one run in three, always the same way: a press aimed at an effect's switch or its chevron does not change anything, and the next check reads the control still in the state it started in. Nothing is wrong with what they check, so each false failure sends a runner off after a bug that is not there.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2470,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T10:45:48.177Z",
+  "updated": "2026-09-12T10:45:48.180Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-12 on a clean tree.\n\neffects-say-their-reach-walk: failed 1 run in 3 standalone.\n  Scripts/playtest.sh Scripts/playtest/effects-say-their-reach-walk.json --no-build\n  status failed, [51 expect] FAILED: the control called \"Switch\" in \"Shadow\" reads \"Shadow, on\", not \"Shadow, off\"\n  and in a suite run, the same walk at a different step: [34 expect] FAILED: the control called \"Switch\" in \"Shadow\" reads \"Shadow, on for 1 of 2\", not \"Shadow, off for 1 of 2\"\n\neffects-room-for-the-one-you-opened-walk: passed 3 of 3 standalone, failed inside\n  Scripts/playtest-all.sh --no-build effect\n  with [32 expect] FAILED: the control called \"Twist\" in \"Border\" reads \"Border, shut\", not \"Border, open\"\n  Step 29 is the second of two presses on the Border's chevron, and step 28's comment already says a full second is needed there because folding a pane slides every heading below it. That points at a press landing mid relayout: the walk waits a fixed time, and when the panel is slower than the wait the press lands where the chevron was.\n\nBoth misses are the same shape: a press that finds its target's old position. Worth looking at whether a press should settle the layout before it lands, rather than every walk guessing a wait long enough.",
+  "acceptance": [
+    "Scripts/playtest.sh Scripts/playtest/effects-say-their-reach-walk.json --no-build passes ten runs in a row",
+    "Scripts/playtest.sh Scripts/playtest/effects-room-for-the-one-you-opened-walk.json --no-build passes ten runs in a row",
+    "The log says whether the miss was the app's or the walk's, and names what changed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T10:45:48.179Z",
+      "note": "created (manual)"
+    }
+  ]
+}
