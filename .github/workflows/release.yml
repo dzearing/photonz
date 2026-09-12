@@ -25,6 +25,14 @@ jobs:
       #   APPLE_TEAM_ID               10-char team id
       #   APPLE_APP_PASSWORD          app-specific password for notarytool
       HAVE_SIGNING: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
+      # Collect the render timings, never gate on them. v0.15.0 failed to
+      # publish twice on a shared runner that was four to eight times slower
+      # than the machine the app is developed on, with nothing actually slower
+      # in the app. The budgets still gate on every push and pull request (see
+      # ci.yml), which is where a regression should be caught; by the time a
+      # tag exists, that code has already been through them, and a stopwatch
+      # reading on hired hardware is not a reason to hold a release.
+      PHOTONZ_PERF_GATE: report
     steps:
       - uses: actions/checkout@v4
 

@@ -5,9 +5,15 @@ import PhotonzCore
 @testable import PhotonzRender
 
 /// Performance baseline for the composite path (CLAUDE.md target: <16ms for a
-/// 12-megapixel document with 10 layers). The assertion bound is deliberately
-/// loose (CI machines vary); the printed numbers are the real deliverable and
-/// get recorded in docs/progress/perf.md.
+/// 12-megapixel document with 10 layers). The printed numbers are the real
+/// deliverable and get recorded in docs/progress/perf.md.
+///
+/// Every bound here goes through `MachineSpeed.check`, which compares the
+/// measurement against what this test recorded on the calibration machine,
+/// scaled by how much slower the machine it is running on actually is —
+/// measured in this process, not guessed from an environment variable. See
+/// MachineSpeed.swift for why, and for how to set `PHOTONZ_PERF_GATE=report`
+/// so a stopwatch can never stop a release going out.
 // Serialized: these 12-megapixel renders are heavy, and letting them run
 // concurrently with the rest of the (parallel) render suite thrashes GPU memory
 // on constrained machines. Timings are meaningful only when run alone anyway.
@@ -83,11 +89,9 @@ struct RenderPerfTests {
               "min \(String(format: "%.1f", samples[0]))ms, " +
               "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
 
-        // Loose regression guard; the 16ms product target is tracked in docs/progress/perf.md.
-        // Shared CI runners jitter above the local bound (observed 260ms on a run whose
-        // identical code passed the next run) — give them extra headroom.
-        let bound: Double = ProcessInfo.processInfo.environment["CI"] != nil ? 350 : 250
-        #expect(median < bound, "median render time regressed badly: \(median)ms")
+        // The 16ms product target is tracked in docs/progress/perf.md; this is
+        // the regression guard.
+        MachineSpeed.check("12MP/10-layer full render", medianMS: median, baselineMS: 36)
     }
 
     /// The same 12MP document with five of its layers wrapped in one styled
@@ -124,8 +128,8 @@ struct RenderPerfTests {
               "min \(String(format: "%.1f", samples[0]))ms, " +
               "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
 
-        let bound: Double = ProcessInfo.processInfo.environment["CI"] != nil ? 350 : 250
-        #expect(median < bound, "grouped render time regressed badly: \(median)ms")
+        MachineSpeed.check("12MP/10-layer full render, five in one styled group",
+                           medianMS: median, baselineMS: 38)
     }
 
     /// The 16ms budget, on the path the budget is about, with a group in the
@@ -174,17 +178,16 @@ struct RenderPerfTests {
         let styled = median(groupStyle: LayerStyle(opacity: 0.9,
                                                    shadow: ShadowStyle(radius: 24, offset: CGSize(width: 0, height: 12))),
                             label: "a styled group of five")
-        // A plain group costs what the same layers cost loose. Loose CI bounds
-        // for the same reason every other budget in this file has a pair: a
-        // shared runner is several times slower than any machine this is
-        // developed on, and it failed a release at 210ms against a flat 200
-        // while the same code measured 7ms locally. The printed numbers are
-        // the real deliverable; these bounds only catch a bad regression.
-        let onCI = ProcessInfo.processInfo.environment["CI"] != nil
-        #expect(plain < (onCI ? 175 : 100),
-                "interactive re-render inside a plain group regressed badly: \(plain)ms")
-        #expect(styled < (onCI ? 350 : 200),
-                "interactive re-render inside a styled group regressed badly: \(styled)ms")
+        // A plain group costs what the same layers cost loose; a styled group
+        // repaints all of itself, and in this benchmark it covers most of the
+        // canvas. This is the pair that failed the v0.15.0 release: the styled
+        // number read 210ms on a shared runner against a flat 200ms bound the
+        // same code cleared at 46ms at home. It is now measured against what
+        // that runner can actually do.
+        MachineSpeed.check("interactive edit inside a plain group of five",
+                           medianMS: plain, baselineMS: 7)
+        MachineSpeed.check("interactive edit inside a styled group of five",
+                           medianMS: styled, baselineMS: 46)
     }
 
     /// Zoomed in, the canvas asks for a crisp tile of just the part of the
@@ -229,11 +232,12 @@ struct RenderPerfTests {
         let at200 = median(zoom: 2)
         let at400 = median(zoom: 4)
         let at800 = median(zoom: 8)
-        // Loose CI bound; the real numbers land in docs/progress/perf.md. What
-        // matters is that zooming further in does not cost more.
-        #expect(at200 < 100, "crisp tile at 200% regressed badly: \(at200)ms")
-        #expect(at400 < 100, "crisp tile at 400% regressed badly: \(at400)ms")
-        #expect(at800 < 100, "crisp tile at 800% regressed badly: \(at800)ms")
+        // The real numbers land in docs/progress/perf.md. What matters is that
+        // zooming further in does not cost more, so all three carry the same
+        // baseline.
+        MachineSpeed.check("crisp tile at 200% zoom", medianMS: at200, baselineMS: 10)
+        MachineSpeed.check("crisp tile at 400% zoom", medianMS: at400, baselineMS: 11)
+        MachineSpeed.check("crisp tile at 800% zoom", medianMS: at800, baselineMS: 11)
     }
 
     /// The benchmark document's shapes span the whole canvas, so they are the
@@ -278,7 +282,8 @@ struct RenderPerfTests {
               "median \(String(format: "%.1f", median))ms, " +
               "min \(String(format: "%.1f", samples[0]))ms, " +
               "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
-        #expect(median < 100, "crisp tile over a redlined capture regressed badly: \(median)ms")
+        MachineSpeed.check("crisp tile over a redlined capture at 400% zoom",
+                           medianMS: median, baselineMS: 8)
     }
 
     /// Exporting a 12MP document at 2x draws the whole thing at 2x instead of
@@ -310,13 +315,14 @@ struct RenderPerfTests {
         print("[perf] 12MP/10-layer export at 2x — median \(String(format: "%.1f", median))ms, " +
               "min \(String(format: "%.1f", samples[0]))ms, " +
               "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
-        // Measured ~90ms locally, the same as the old enlarge-afterwards path;
-        // 128ms on the machine this was last released from. The CI bound was
-        // 700 and shared runners came in at 843ms and 985ms on two runs an hour
-        // apart, failing a release on hardware speed rather than on a change.
-        // Raised with headroom over the worst of those.
-        let bound: Double = ProcessInfo.processInfo.environment["CI"] != nil ? 1400 : 400
-        #expect(median < bound, "2x export regressed badly: \(median)ms")
+        // The other budget that failed the v0.15.0 release: a 700ms CI bound
+        // against 843ms and 985ms on two shared runners an hour apart, for code
+        // that measured 113ms at home. Export is the one measurement here that
+        // forces every pixel back out, so it is scaled by the pixel-push
+        // yardstick rather than the filter-graph one — that runner was roughly
+        // 4.5x slower on a composite and 8x slower on this.
+        MachineSpeed.check("12MP/10-layer export at 2x", medianMS: median,
+                           baselineMS: 125, yardstick: .pixelPush)
     }
 
     /// The 16ms budget applies to *re-renders during editing* — that's what
@@ -351,7 +357,7 @@ struct RenderPerfTests {
               "min \(String(format: "%.1f", samples[0]))ms, " +
               "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
 
-        // Loose CI bound; the real numbers land in docs/progress/perf.md.
-        #expect(median < 100, "interactive re-render regressed badly: \(median)ms")
+        // The budget-bearing number; the real values land in docs/progress/perf.md.
+        MachineSpeed.check("12MP/10-layer interactive edit", medianMS: median, baselineMS: 7)
     }
 }

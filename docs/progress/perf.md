@@ -23,3 +23,69 @@ multiply highlight). One warm-up render, then median of 10 timed runs. Re-run wi
 The interactive benchmark (`[perf] … interactive edit`) is the budget-bearing
 number: it is what every drag tick and slider tweak pays. The full-render
 number still matters for document open and export, where ~35ms is fine.
+
+## How a budget is decided (2026-09-12)
+
+Until now each budget was a flat number, with a second flat number picked when
+`CI` was set in the environment. That is a guess about hardware wearing the
+clothes of a measurement, and on 2026-09-12 it stopped the v0.15.0 release
+twice: a shared GitHub runner measured 210.6ms on the styled-group interactive
+edit against a flat 200ms bound the same commit cleared at 46.1ms here, and
+842.7ms then 984.7ms on the 2x export against a 700ms bound it cleared at
+112.9ms here. The suite was identical in both places (5705 tests in 474
+suites). Nothing had got slower; the machine was slower — roughly 4.5x on the
+composite and 8x on the export.
+
+Every budget in `RenderPerfTests.swift` now reads:
+
+    bound = (recorded baseline x 2.5 + 8ms) x how much slower this machine is
+
+and the last term is **measured in the same process** by
+`Tests/PhotonzRenderTests/MachineSpeed.swift`, which runs two fixed reference
+workloads made of plain Core Image and no Photonz code at all:
+
+| Yardstick | What it runs | Calibration reading | Which budgets use it |
+| --- | --- | --- | --- |
+| `filter graph` | Two gaussian blurs, a colour grade and a composite over a textured 2400x1800 image | 8.0ms | full render, grouped render, interactive edits, zoom tiles |
+| `pixel push` | 12 megapixels produced and forced all the way back to bytes | 15.4ms | the 2x export |
+
+Two of them because one scalar cannot describe a machine that is 4.5x slower at
+one of these and 8x slower at the other. The yardsticks use their own
+`CIContext` with its own fixed options, so a change to how the app builds its
+renderer never moves the ruler, and neither of them runs app code, so a
+regression in the composite path moves the subject while the reference stays
+put and the gate still fires.
+
+The factor is clamped at 1: a quick reading never tightens a budget below what
+it was calibrated to allow. Every run prints both yardsticks and every budget
+line, so a failure says what it measured, what it was allowed, and how fast the
+machine it was on actually is.
+
+**Releases are never gated on a timing.** `.github/workflows/release.yml` sets
+`PHOTONZ_PERF_GATE=report`, so the release run collects and prints every number
+and asserts none of them. The budgets still gate every push and pull request in
+`ci.yml`, which is where a regression belongs — by the time a tag exists, that
+code has already been through them.
+
+### Calibration baselines, 2026-09-12
+
+arm64 Mac (the development machine), suite serialized, nothing else running.
+"Old bound" is the flat local/CI pair these replaced.
+
+| Measurement | Baseline | New budget here | Old bound (local / CI) | Headroom then | Headroom now |
+| --- | --- | --- | --- | --- | --- |
+| 12MP/10-layer full render | 36ms | 98ms | 250 / 350 | 7.2x | 2.7x |
+| Full render, five in one styled group | 38ms | 103ms | 250 / 350 | 7.0x | 2.7x |
+| Interactive edit inside a plain group | 7ms | 26ms | 100 / 175 | 15.4x | 3.8x |
+| Interactive edit inside a styled group | 46ms | 123ms | 200 / 350 | 4.5x | 2.7x |
+| Crisp tile at 200% / 400% / 800% | 10 / 11 / 11ms | 33 / 36 / 36ms | 100 flat | ~10x | ~3.4x |
+| Crisp tile over a redlined capture | 8ms | 28ms | 100 flat | 13.2x | 3.7x |
+| 2x export | 125ms | 320ms | 400 / 1400 | 3.1x | 2.6x |
+| 12MP/10-layer interactive edit | 7ms | 26ms | 100 flat | 16.1x | 3.8x |
+
+The old flat bounds were so loose that a real regression walked straight
+through them: switching the interactive path back to a full repaint (no
+dirty-rect patching) took the interactive edit from 6.9ms to 37.3ms and the
+edit inside a plain group from 6.3ms to 39.2ms — both comfortably inside the
+old 100ms bound, both failing the new one. That is the gate now saying
+something true.
