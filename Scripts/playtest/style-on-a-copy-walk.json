@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/style-on-a-copy",
-  "seed": "A text style carried over the words of a COPY of a component. The words are plainly text, but a copy answers as a whole, so the drop is refused. It used to be refused with \"Button is not text\", which contradicts what anybody can see. This walk reads back the sentence over a copy's label, and then proves the way out it offers by letting the same style go on the ORIGINAL, where it does land and every copy follows.",
+  "seed": "A text style carried over the words of a COPY of a component. The words are plainly text, and a copy is now allowed to wear a type of its own for them, so the drop lands on THAT copy and nothing else: the copy beside it and the original do not move. This walk reads back the sentence over a copy's label, lets the style go, checks the other copy stayed put, and then finds the row on the copy's panel that says its type is its own and puts it back.",
   "setup": {
     "forget": ["text", "panel", "shapes", "color", "tools"]
   },
@@ -19,9 +19,13 @@
     { "do": "action", "action": "pickFirstComponent" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "dropComponent", "at": [650, 470] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "pickFirstComponent" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dropComponent", "at": [250, 470] },
     { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "2-copy", "note": "a copy of the Button at (650, 470), following the original. Its words are the thing this walk aims at." },
-    { "do": "render", "name": "2-copy" },
+    { "do": "describe", "stage": "2-two-copies", "note": "two copies of the Button, at (650, 470) and (250, 470), both following the original. The first one's words are what this walk aims at; the second one is the control." },
+    { "do": "render", "name": "2-two-copies" },
 
     { "do": "tool", "tool": "text" },
     { "do": "click", "at": [140, 130] },
@@ -50,20 +54,33 @@
 
     {
       "do": "dragTile", "tile": "Heading", "to": [650, 470],
-      "expect": "refuses", "says": "Label comes from Button",
+      "expect": "takes", "says": "on this copy only",
       "hold": "4-over-a-copys-words"
     },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "4-refused", "note": "THE TEST: the pointer is on words anybody can read, and the sentence says where they come from and what to do instead, rather than claiming they are not text." },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "4-landed", "note": "THE TEST: the pointer was on words anybody can read, the sentence said it would set them on this copy only, and it did. The copy at (250, 470) and the original at (450, 300) should both be untouched." },
+    { "do": "snapshot", "name": "4-one-copy-in-heading" },
+    { "do": "render", "name": "4-one-copy-in-heading" },
+
+    { "do": "click", "at": [650, 470] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "5-its-own-type" },
+    { "do": "describe", "stage": "5-its-own-type", "note": "the copy picked: the Component section should carry an \"Its own type\" row reading \"Label in Heading\", with the way back beside it." },
+    { "do": "snapshot", "name": "5-its-own-type" },
+
+    { "do": "press", "control": "Revert Type" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "6-back", "note": "one press and the words follow the original again, so a copy that has drifted is both visible and reversible." },
+    { "do": "render", "name": "6-back-to-the-original" },
 
     {
       "do": "dragTile", "tile": "Heading", "to": [450, 300],
       "expect": "takes", "says": "Sets this text in Heading",
-      "hold": "5-over-the-originals-words"
+      "hold": "7-over-the-originals-words"
     },
     { "do": "wait", "seconds": 1.2 },
-    { "do": "describe", "stage": "5-on-the-original", "note": "THE WAY OUT the refusal offered, taken: the same style let go on the ORIGINAL's words lands, and the copy follows it." },
-    { "do": "snapshot", "name": "5-copy-follows-the-original" },
-    { "do": "render", "name": "5-copy-follows" }
+    { "do": "describe", "stage": "7-on-the-original", "note": "the other move, still there: the same style let go on the ORIGINAL's words lands, and every copy follows it." },
+    { "do": "snapshot", "name": "7-every-copy-follows" },
+    { "do": "render", "name": "7-every-copy-follows" }
   ]
 }

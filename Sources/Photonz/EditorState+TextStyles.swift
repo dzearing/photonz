@@ -115,8 +115,18 @@ extension EditorState {
               let style = document?.textStyle(id: styleID) else { return }
         discardDragPreview()
         let sizes = restyledTextSizes(ids: ids, treatment: style.treatment)
-        perform { document in
-            _ = document.bindTextStyle(layerIDs: ids, styleID: styleID)
+        // A drop that landed entirely inside copies says nothing about copies
+        // following: the one copy that changed is the one the pointer was on,
+        // and "Updated 1 copy of Button" is the app repeating your own action
+        // back at you. A drop on the ORIGINAL's words still announces, because
+        // then the news is the copies nobody touched that moved with it.
+        let allInsideCopies = document?.allAreComponentPieces(ids) ?? false
+        perform(announcing: !allInsideCopies) { document in
+            // The drop does not have to know what it landed on: words inside a
+            // copy of a component become that copy's own answer, which is
+            // where an answer sticks, and everything else is bound to the name
+            // (`ComponentPieceTextStyle`).
+            _ = document.applyTextStyle(styleID, to: ids)
             document.applyTextBoxes(sizes)
         }
     }

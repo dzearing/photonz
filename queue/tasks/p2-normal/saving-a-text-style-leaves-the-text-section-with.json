@@ -1,0 +1,27 @@
+{
+  "id": "saving-a-text-style-leaves-the-text-section-with",
+  "title": "Saving a text style leaves the Text section without a Size menu",
+  "goal": "Two walks that save a text style and then reach for the Size menu find no Size menu in the window at all. If that is what a person sees too, the Text controls disappear after saving a style, which would be a plain bug in the most ordinary path through styles.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2480,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T13:33:11.221Z",
+  "updated": "2026-09-12T13:33:11.224Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on a CLEAN checkout of main (1c851abe, my own changes stashed), so it is not from the copy-own-text-style work: `git stash -u && Scripts/playtest-all.sh text-style-walk` -> `text-style-walk 18s FAILED step 58 (panelMenu): no menu called \"Size\" is in the window; the ones that are: 100% 58.0pt wide at x 869.0 says \"Choose a zoom level. Double click for actual size\"`. text-style-arming-walk fails the same way at its step 48. The other three text-style walks (drag, row-drop, comes-away) pass. Both failing steps come after a Save as Style, so the first thing to check is whether the selection or the Text section survives saving.",
+  "acceptance": [
+    "Running Scripts/playtest-all.sh --no-build text-style-walk passes",
+    "Running Scripts/playtest-all.sh --no-build text-style-arming-walk passes",
+    "Whatever the walks were waiting for is either present in the panel or the walks say plainly why it is not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T13:33:11.223Z",
+      "note": "created (manual)"
+    }
+  ]
+}

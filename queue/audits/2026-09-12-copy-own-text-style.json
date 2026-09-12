@@ -1,0 +1,28 @@
+{
+  "feature": "One copy can wear its own text style",
+  "epic": "ui-components",
+  "summary": "A saved text style let go on the words inside a copy of a component now lands on that copy and nothing else, and the copy says its type is its own with one press to put it back.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components, Library and Styles flags are on by default.",
+  "try": [
+    { "do": "Open the Library, drop the starter Button on the canvas, then drop two more copies of it." },
+    { "do": "Type a heading anywhere, set it to Georgia 32 Bold, and choose Style > Save as Style. Name it Heading." },
+    { "do": "Drag the Heading tile off the Styles shelf and hold it over the words inside ONE of the button copies. Read the sentence under the pointer before letting go." },
+    { "do": "Let go. Check that the other copy and the original did not move.", "shot": "2026-09-12-copy-own-text-style-1.png" },
+    { "do": "Click that copy and find the \"Its own type\" row in the Component section.", "shot": "2026-09-12-copy-own-text-style-2.png" },
+    { "do": "Press the u-turn button on that row and watch the words follow the original again." },
+    { "do": "Drag Heading onto the ORIGINAL's words instead, and watch every copy follow." }
+  ],
+  "evaluate": [
+    "Does \"Sets Label in Heading on this copy only\" tell you what will happen without having to try it?",
+    "Would you notice weeks later that this one button has drifted, with only the \"Its own type\" row to tell you?",
+    "Is the u-turn button on the row the way back you would reach for, or would you look for it on the words themselves?",
+    "Was letting go on one copy the thing you wanted, or did you expect to be asked which you meant?",
+    "The button grows around bigger type instead of clipping. Is growing what you expect, or did you want the words to stay inside the button it was?"
+  ],
+  "rough": [
+    "Click into a copy to select the words themselves and the panel shows the copy's knobs but says nothing about the type that copy was given, and offers no way back from there. The way back is on the copy's own panel only.",
+    "A style let go on a copy's ROW in the layers list is still refused with \"Button is not text\". A row names the copy, not which words inside it, and a copy can hold several pieces of text, so there was no honest thing to pick.",
+    "A copy inside another copy is still refused, with the sentence it always had: the outer copy rebuilds the inner one after every edit, so an answer given there would be gone by the next redraw.",
+    "Screen Recording was granted, so both pictures here are real captures of the window rather than offscreen renders."
+  ]
+}

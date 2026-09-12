@@ -538,7 +538,9 @@ extension PhotonzDocument {
     /// derived from this copy so two layers never share one, and with any copy
     /// found inside filled in the same way.
     private func resolvedChildren(of componentID: UUID, version: UUID?, instance: UUID,
-                                  overrides: [ComponentOverride], stack: [UUID]) -> [Layer] {
+                                  overrides: [ComponentOverride],
+                                  pieceTextStyles: [ComponentPieceTextStyle] = [],
+                                  stack: [UUID]) -> [Layer] {
         guard stack.count < Self.componentNestingLimit, !stack.contains(componentID),
               let main = mainComponent(componentID: componentID, version: version) else { return [] }
         var children = main.children.map { rebound($0, instance: instance, stack: stack + [componentID]) }
@@ -547,6 +549,11 @@ extension PhotonzDocument {
         // still reach a copy that has overridden something else.
         applyOverrides(overrides, of: componentID, version: version, to: &children,
                        instance: instance, contents: main.group?.contentPlacement)
+        // ...and the type this copy chose for words inside it, last, for the
+        // same reason: it is one of the facts the copy owns
+        // (`ComponentPieceTextStyle`).
+        applyPieceTextStyles(pieceTextStyles, to: &children, instance: instance,
+                             contents: main.group?.contentPlacement)
         return children
     }
 
@@ -576,7 +583,8 @@ extension PhotonzDocument {
               ga.instanceOf == gb.instanceOf, ga.instanceVersion == gb.instanceVersion,
               ga.versionID == gb.versionID, ga.versionName == gb.versionName,
               ga.properties == gb.properties,
-              ga.overrides == gb.overrides, ga.instanceSize == gb.instanceSize,
+              ga.overrides == gb.overrides, ga.pieceTextStyles == gb.pieceTextStyles,
+              ga.instanceSize == gb.instanceSize,
               ga.layout == gb.layout,
               ga.contentPlacement == gb.contentPlacement else { return false }
         return !differsBeyondIdentity(ga.children, gb.children)
@@ -594,7 +602,9 @@ extension PhotonzDocument {
         if let nested = layer.instanceOf {
             let version = layer.instanceVersionID
             copy.children = resolvedChildren(of: nested, version: version, instance: id,
-                                             overrides: layer.componentOverrides, stack: stack)
+                                             overrides: layer.componentOverrides,
+                                             pieceTextStyles: layer.group?.pieceTextStyles ?? [],
+                                             stack: stack)
             // A copy inside a component follows ITS original's look here as
             // well, rather than carrying whatever look it happened to be
             // holding when this pass started: the two are put in step in the
@@ -661,6 +671,10 @@ extension PhotonzDocument {
                         group.instanceOf = nil
                         group.instanceVersion = nil
                         group.overrides = []
+                        // The type it chose for its own words is already
+                        // written onto them, so letting go of the record
+                        // changes nothing on screen.
+                        group.pieceTextStyles = []
                         group.followedStyle = nil
                         // The size it was wearing is already in its layout, so
                         // letting go of the record changes nothing on screen.
@@ -689,10 +703,10 @@ extension PhotonzDocument {
                     // A copy left holding a version that is gone is put back on
                     // one that exists, in writing, so it stops asking.
                     group.instanceVersion = version
-                    group.children = snapshot.resolvedChildren(of: componentID, version: version,
-                                                               instance: layer.id,
-                                                               overrides: group.overrides,
-                                                               stack: stack)
+                    group.children = snapshot.resolvedChildren(
+                        of: componentID, version: version, instance: layer.id,
+                        overrides: group.overrides,
+                        pieceTextStyles: group.pieceTextStyles, stack: stack)
                     // The look follows part by part: everything this copy has
                     // not set for itself comes from the original again, and the
                     // original's look is remembered so the next edit can tell

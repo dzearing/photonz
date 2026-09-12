@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T11:43:16.924Z",
-  "updated": "2026-09-12T12:02:45.097Z",
+  "updated": "2026-09-12T13:34:24.311568Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the wording fix landed 2026-09-09 (Sources/PhotonzCore/TextStyleDrop.swift, CopyPiece). A copy can already own its colour, its size, its room, its opacity and its wording; a text style would be one more of the same family, but styles are the one thing that reach a copy from OUTSIDE the component (the Library shelf), so it is not obviously the same shape. Building it means a new kind of instance override plus a way back on the panel, so it should not start before the card is answered.",
@@ -43,6 +43,39 @@
     {
       "t": "2026-09-12T12:02:45.096Z",
       "note": "seq 160 -> 90"
+    },
+    {
+      "t": "2026-09-12T13:05:50.612Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T13:34:24.311568Z",
+      "note": "the card was already answered on 2026-09-09: \"A copy can wear its own style\". Nothing to block on, so this run built it."
+    },
+    {
+      "t": "2026-09-12T13:34:24.311568Z",
+      "note": "adversarial review before building. (1) The mock-free question was whether to make this a KNOB like every other per-copy fact; rejected, because a knob is exposed by the original and a style arrives from outside the component in one gesture, often onto a copy whose original somebody else drew, so there is nobody to ask first. Honesty comes instead from the copy saying its type is its own with a one press way back. (2) Cut the \"ask which you meant\" dialog (option c) as the decision did: a question in the middle of a drag is a stop. (3) Kept the refusal for a copy inside a copy, where an answer has nowhere to live, rather than taking the drop and quietly dropping it. (4) Shortest version: one record on the copy, applied in the same sync that applies every other answer, one row on the panel, no new flag."
+    },
+    {
+      "t": "2026-09-12T13:34:24.311568Z",
+      "note": "core landed: ComponentPieceTextStyle.swift (record + set/clear/label/applyTextStyle), applied in resolvedChildren after the knob answers, cleared on detach and when an original is gone, refreshed when a style is edited or deleted. GroupContent.pieceTextStyles only written to the file when a copy has one. 16 new tests in ComponentPieceTextStyleTests, 5 more in TextStyleDropTests."
+    },
+    {
+      "t": "2026-09-12T13:34:24.311568Z",
+      "note": "app landed: the canvas drop reaches the words inside a copy and lands on them, the sentence reads \"Sets Label in Heading on this copy only\", and the Component section carries an \"Its own type\" row with the same u-turn button \"Its own size\" and \"Its own look\" have."
+    },
+    {
+      "t": "2026-09-12T13:34:24.311568Z",
+      "note": "adversarial review of the built thing, on the probe: the first run put \"Updated 1 copy of Button\" on screen after a drop on one copy, which is the app repeating your own action back at you. Fixed: a drop that landed entirely inside copies announces nothing, a drop on the original's words still does."
+    },
+    {
+      "t": "2026-09-12T13:34:24.311568Z",
+      "note": "verified: Scripts/test.sh 5690 green. Walks: style-on-a-copy-walk rewritten for the new behaviour and passing, plus all 9 copy walks and all 16 component walks. text-style-walk and text-style-arming-walk fail at a panelMenu \"Size\" step, reproduced on a clean checkout of main with my work stashed, so filed separately as saving-a-text-style-leaves-the-text-section-with. Sweep requested."
+    },
+    {
+      "t": "2026-09-12T13:34:24.311568Z",
+      "note": "audit: queue/audits/2026-09-12-copy-own-text-style.json with two real window captures (Screen Recording granted)."
     }
-  ]
+  ],
+  "started": "2026-09-12T13:05:50.611Z"
 }

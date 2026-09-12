@@ -883,6 +883,27 @@ extension EditorState {
         perform(announcing: false) { _ = $0.clearInstanceStyleOverrides(instances: instances) }
     }
 
+    /// What the "its own type" row says for the picked copies: which words
+    /// this copy set in a style of its own and in what, or how many of several
+    /// copies did (`ComponentPieceTextStyle`).
+    func instanceOwnTypeLabel(instances: [UUID]) -> String? {
+        guard componentsEnabled, textStylesEnabled else { return nil }
+        return document?.instanceOwnTypeLabel(instances: instances)
+    }
+
+    /// Puts every picked copy's words back to the type their original wears,
+    /// in one undo step. Without the "copies followed" pill and without the
+    /// broken-link notice: the copy letting go of a name it chose for itself
+    /// is the thing that was just asked for, not news.
+    func clearInstancePieceTextStyles(instances: [UUID]) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform(announcing: false, reportingLinkBreaks: false) {
+            _ = $0.clearInstancePieceTextStyles(instances: instances)
+        }
+    }
+
     /// Puts a copy's whole look back to the original's.
     func clearInstanceStyleOverrides(instance: UUID) {
         guard componentsEnabled else { return }

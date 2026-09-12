@@ -193,6 +193,10 @@ extension PhotonzDocument {
     public mutating func setTextStyle(styleID: UUID, treatment: TextTreatment) -> Int {
         guard let index = textStyles.firstIndex(where: { $0.id == styleID }) else { return 0 }
         textStyles[index].treatment = treatment
+        // A copy wearing this name on words inside it follows the edit too,
+        // through the answer it stored rather than through the layer, because
+        // the layer is rebuilt from the original after every edit.
+        refreshPieceTextStyles()
         var dressed = 0
         mapTextLayers { layer in
             guard layer.textStyleID == styleID else { return }
@@ -219,6 +223,9 @@ extension PhotonzDocument {
         mapTextLayers { layer in
             if layer.textStyleID == id { layer.textStyleID = nil }
         }
+        // ...and a copy that set words inside it in this name keeps the type
+        // as its own, for exactly the same reason.
+        refreshPieceTextStyles()
     }
 
     /// How many pieces of text wear this style.

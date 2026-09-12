@@ -729,6 +729,7 @@ struct ComponentInstanceInspector: View {
                 ComponentInstanceProperties(selection: selection)
                 offer
                 ownSize
+                ownType
                 ownLook
                 HStack(spacing: 6) {
                     Button("Edit Original") {
@@ -818,6 +819,40 @@ struct ComponentInstanceInspector: View {
                 .controlSize(.small)
                 .panelHelp("Be the size of the original again")
                 .playtestControl("Revert Size")
+            }
+        }
+    }
+
+    /// The words inside this copy that were set in a style of their own, and
+    /// the one press that puts them back.
+    ///
+    /// A text style let go on the words inside a copy sets THAT copy
+    /// (`ComponentPieceTextStyle`), which is what somebody aiming at one
+    /// button meant. The whole worry about letting one copy differ is
+    /// somebody not noticing later that it does, so the copy says it here,
+    /// beside what else it owns, with a way back in the same row.
+    @ViewBuilder private var ownType: some View {
+        if let own = editorState.instanceOwnTypeLabel(instances: selection.instances) {
+            Divider().padding(.vertical, 2)
+            HStack(spacing: 6) {
+                Text("Its own type")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 74, alignment: .leading)
+                Text(own)
+                    .font(.caption)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button {
+                    editorState.clearInstancePieceTextStyles(instances: selection.instances)
+                } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+                .panelHelp("Set these words the way the original sets them again")
+                .playtestControl("Revert Type")
             }
         }
     }

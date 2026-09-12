@@ -3548,3 +3548,60 @@ same round button, because a group's own box is not what is rounded. That is
 ordinary group behaviour rather than this bug (there is only one row, and the
 original's section lists its knobs by name rather than by value), and it is
 filed as its own question.
+
+## Landed: one copy can wear its own text style (Next, `next-components`, 2026-09-12)
+
+A saved text style is a handle: the tile is picked up off the Library shelf and
+let go on a piece of text. Let go on the words inside a COPY of a component it
+used to be refused, with a sentence that named the piece and pointed at the two
+moves that do work: set the style on the original, which every copy follows, or
+detach this copy. Both are bigger than what the person aiming at one button
+meant. The decision "Should one copy of a component be able to wear its own
+text style?" was answered on 2026-09-09: it should.
+
+A copy already owns its colour, its size, its room, its opacity and its
+wording. Its type is one more of the same family.
+
+- **It lands on the copy under the pointer and nothing else.** The sentence
+  says so before the pointer is let go: "Sets Label in Heading on this copy
+  only." The copy beside it and the original do not move.
+- **It is the NAME, not a snapshot of the look.** Editing Heading later reaches
+  the copy wearing it; taking Heading off the shelf leaves the copy wearing
+  exactly the type it had, owned outright, because removing a style must never
+  re-set somebody's work.
+- **The original still reaches it.** The copy takes the original's picture
+  whole after every edit and the few facts it owns are written over the top, so
+  re-wording the label on the original reaches a copy that chose its own type.
+- **The words are re-measured.** A label hugging its words keeps hugging, so a
+  button set in 32 point type grows around it instead of clipping.
+- **The copy says so, and one press puts it back.** An "Its own type" row on
+  the Component section reads `Label in Heading`, beside "Its own size" and
+  "Its own look", with the same u-turn button. Several copies picked at once
+  read "1 of the 2 copies has type of its own".
+- **A copy inside a copy is still refused**, with the sentence it always had.
+  The outer copy rebuilds the inner one after every edit, so an answer given
+  there is gone by the next redraw, exactly as detaching it would not stick.
+- **No pill about copies following.** A drop that landed entirely inside copies
+  says nothing: the copy that changed is the one the pointer was on. A drop on
+  the ORIGINAL's words still announces, because then the copies that moved are
+  news.
+
+It is not a knob, and that is the one place this differs from every other
+per-copy fact. A knob is exposed by the original, which is the rule that keeps
+adjusting from becoming drifting; a text style arrives from outside the
+component altogether, in one gesture, often onto a copy whose original somebody
+else drew, so there is nobody to ask first. What keeps it honest instead is
+that the copy says out loud that its type is its own and gives it back in one
+press.
+
+`PhotonzCore/ComponentPieceTextStyle.swift` is the record and the rules, put on
+during the sync that runs after every edit; `TextStyleDrop` is the sentence;
+`PhotonzDocument.applyTextStyle(_:to:)` is the one way in, so a drop never has
+to know whether the words it landed on belong to a copy. Tested in
+`ComponentPieceTextStyleTests` and `TextStyleDropTests`, walked by
+`style-on-a-copy-walk`.
+
+Still rough: the piece's own panel (click into a copy) shows the copy's knobs
+but not the type it was given, and a style let go on a copy's ROW in the layers
+list is still refused, because a row names the copy rather than which words
+inside it.

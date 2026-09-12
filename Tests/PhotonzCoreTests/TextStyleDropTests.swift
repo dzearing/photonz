@@ -95,28 +95,55 @@ struct TextStyleDropTests {
     // MARK: - Words that belong to a copy
 
     private func copyWords(piece: String = "Label", component: String = "Button",
-                           canDetach: Bool = true) -> TextStyleDrop.Target {
+                           canDetach: Bool = true, canWearItsOwn: Bool = false,
+                           wearingID: UUID? = nil,
+                           wearingName: String? = nil) -> TextStyleDrop.Target {
         TextStyleDrop.Target(name: "Button", isText: false,
                              copyPiece: TextStyleDrop.CopyPiece(piece: piece, component: component,
-                                                                canDetach: canDetach))
+                                                                canDetach: canDetach,
+                                                                canWearItsOwn: canWearItsOwn,
+                                                                wearingID: wearingID,
+                                                                wearingName: wearingName))
     }
 
-    /// The lie this exists to stop. The pointer is on the words of a button
-    /// that is a copy of a component; the hit stops at the copy, because that
-    /// is the rule every click on a copy follows, and the old sentence then
-    /// said "Save button is not text" over the top of words anybody can read.
-    /// It says instead where the words come from, and the two moves that work.
-    @Test func wordsInsideACopySayWhereTheyComeFrom() {
-        let answer = TextStyleDrop.answer(dropping: heading, on: copyWords())
+    /// What somebody aiming a style at one button meant, answered on
+    /// 2026-09-09: it lands, on that button and nothing else. The sentence
+    /// says "only" out loud, because the whole worry about letting one copy
+    /// differ is somebody not noticing that it does.
+    @Test func wordsInsideACopyTakeTheStyleForThatCopyAlone() {
+        let answer = TextStyleDrop.answer(dropping: heading,
+                                          on: copyWords(canWearItsOwn: true))
+        #expect(answer.lands)
+        #expect(answer.note == "Sets Label in Heading on this copy only.")
+    }
+
+    /// A copy already set in a style of its own says which name it is letting
+    /// go of, the same way any other piece of text does.
+    @Test func aCopyAlreadySetInAStyleSaysWhatItLetsGoOf() {
+        let answer = TextStyleDrop.answer(
+            dropping: heading,
+            on: copyWords(canWearItsOwn: true, wearingID: UUID(), wearingName: "Caption"))
+        #expect(answer.lands)
+        #expect(answer.note == "Sets Label in Heading on this copy only and lets go of Caption.")
+        #expect(answer.letsGoOf == "Caption")
+    }
+
+    /// Words already in this style, whether this copy chose it or the original
+    /// did, have nothing to do. Lighting up and writing an undo step for
+    /// nothing is worse than saying so.
+    @Test func wordsInsideACopyAlreadyWearingItDoNotLightUp() {
+        let answer = TextStyleDrop.answer(dropping: heading,
+                                          on: copyWords(canWearItsOwn: true,
+                                                        wearingID: heading.id))
         #expect(!answer.lands)
-        #expect(answer.note
-                == "Label comes from Button. Set Heading on the original, or detach this copy.")
+        #expect(answer.note == "Label is already Heading.")
     }
 
-    /// A copy inside another copy is rebuilt by the OUTER copy, so detaching
-    /// the inner one does not stick. Offering it there would be a second lie,
-    /// so only the move that works is offered.
-    @Test func wordsInsideANestedCopyDoNotOfferDetach() {
+    /// A copy inside another copy is rebuilt by the OUTER copy, so an answer
+    /// given to the inner one has nowhere to live and detaching it does not
+    /// stick either. That is the one case still refused, and the refusal says
+    /// where the words come from and the move that does work.
+    @Test func wordsInsideANestedCopySayWhereTheyComeFrom() {
         let answer = TextStyleDrop.answer(dropping: heading, on: copyWords(canDetach: false))
         #expect(!answer.lands)
         #expect(answer.note == "Label comes from Button. Set Heading on the original.")
@@ -130,6 +157,9 @@ struct TextStyleDropTests {
                                           on: copyWords(piece: "", component: ""))
         #expect(answer.note
                 == "This text comes from the original. Set Heading there, or detach this copy.")
+        let lands = TextStyleDrop.answer(dropping: heading,
+                                         on: copyWords(piece: "", canWearItsOwn: true))
+        #expect(lands.note == "Sets these words in Heading on this copy only.")
     }
 
     /// Text is never named in the sentence, however the layers list names it.
@@ -190,6 +220,33 @@ struct TextStyleDropOnACopyTests {
         #expect(found?.piece == "Label")
         #expect(found?.component == "Button")
         #expect(found?.canDetach == true)
+    }
+
+    /// The words of a copy that is not itself inside another copy may simply
+    /// wear the style, so the canvas is told so before the pointer is let go.
+    @Test func theWordsOfACopyMayWearAStyleOfTheirOwn() {
+        let c = withCopy()
+        let words = c.doc.canvasLayer(id: c.piece)!.frame
+        let found = c.doc.textStyleCopyPiece(at: CGPoint(x: words.midX, y: words.midY))
+        #expect(found?.canWearItsOwn == true)
+        #expect(found?.wearingID == nil)
+        #expect(found?.wearingName == nil)
+    }
+
+    /// Once this copy has set those words in a name, the drop that follows
+    /// knows what it is taking them off.
+    @Test func aCopyThatAlreadyChoseSaysWhichName() {
+        var c = withCopy()
+        let styleID = c.doc.addTextStyle(
+            name: "Caption",
+            treatment: TextTreatment(fontName: "Helvetica", fontSize: 11,
+                                     weight: .regular, colorHex: "#333333"))
+        _ = c.doc.setPieceTextStyle(of: c.piece, styleID: styleID)
+        c.doc.syncComponentInstances()
+        let words = c.doc.canvasLayer(id: c.piece)!.frame
+        let found = c.doc.textStyleCopyPiece(at: CGPoint(x: words.midX, y: words.midY))
+        #expect(found?.wearingID == styleID)
+        #expect(found?.wearingName == "Caption")
     }
 
     /// Only the words. The rest of a copy genuinely is not text, so a style

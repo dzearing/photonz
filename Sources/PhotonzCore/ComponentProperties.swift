@@ -1144,8 +1144,10 @@ extension PhotonzDocument {
     /// `contents` is how the group holding this list lines its contents up; it
     /// travels down with the walk so the change knows what the layer it lands
     /// on is following.
+    /// Not private: the piece a copy dresses in type of its own is reached
+    /// the same way, from `ComponentPieceTextStyle.swift`.
     @discardableResult
-    private static func mutate(id: UUID, in layers: inout [Layer],
+    static func mutate(id: UUID, in layers: inout [Layer],
                                contents: LayerPlacement?,
                                _ change: (inout Layer, LayerPlacement?) -> Void) -> Bool {
         for index in layers.indices {
@@ -1260,6 +1262,10 @@ extension PhotonzDocument {
             guard var group = layer.group else { return }
             group.instanceOf = nil
             group.overrides = []
+            // The type it chose for words inside it is a fact about following
+            // an original too, and it is already written onto those words, so
+            // letting go of the record changes nothing on screen.
+            group.pieceTextStyles = []
             // A size of its own is a fact about following an original, and it
             // has already been written into the layout the copy is wearing, so
             // letting go of the record changes nothing on screen.

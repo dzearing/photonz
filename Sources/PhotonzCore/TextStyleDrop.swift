@@ -34,13 +34,13 @@ public enum TextStyleDrop {
     /// Words that belong to a COPY of a component, in the terms the sentence
     /// about them needs.
     ///
-    /// A copy answers as a whole: its contents are its original's, rebuilt from
-    /// the original after every edit, so nothing can be set on one of them
-    /// where it would stay. The hit test stops at the copy for exactly that
-    /// reason, and the refusal used to describe the copy — "Save button is not
-    /// text" — over the top of words anybody can read. Reaching one level
-    /// further to SAY what is there costs nothing and stops the app
-    /// contradicting the screen.
+    /// The hit test stops at the copy, because a copy's contents are its
+    /// original's and a click picks the whole thing. So words inside one used
+    /// to arrive looking like anything that is not text, and got told "Save
+    /// button is not text" over the top of words anybody can read. Reaching
+    /// one level further to say what is really there is what this is for: the
+    /// name of the piece, the name of the original, and whether this copy may
+    /// simply wear the style itself.
     public struct CopyPiece: Hashable, Sendable {
         /// The original's name for this piece, "Label" for a button's words.
         /// Empty when nobody named it.
@@ -51,11 +51,31 @@ public enum TextStyleDrop {
         /// forward. It is not for a copy inside another copy: the outer copy
         /// rebuilds the inner one, so detaching the inner one does not stick.
         public var canDetach: Bool
+        /// Whether this copy may wear a type of its own for these words
+        /// (`ComponentPieceTextStyle`). It may not inside a copy that is
+        /// itself inside another copy, for the same reason detaching does not
+        /// stick there: the outer copy rebuilds the inner one, and the answer
+        /// goes with it.
+        public var canWearItsOwn: Bool
+        /// The style these words already wear, by id, whether it came from the
+        /// original or from this copy's own answer. The same name arriving on
+        /// them has nothing to do.
+        public var wearingID: UUID?
+        /// The style this copy has already set these words in, by name. A drop
+        /// takes them off it, and says so before it does. Nil when the type
+        /// they wear is the original's, because nothing is being given up
+        /// there: what the original says still reaches every other part.
+        public var wearingName: String?
 
-        public init(piece: String, component: String, canDetach: Bool) {
+        public init(piece: String, component: String, canDetach: Bool,
+                    canWearItsOwn: Bool = false, wearingID: UUID? = nil,
+                    wearingName: String? = nil) {
             self.piece = piece
             self.component = component
             self.canDetach = canDetach
+            self.canWearItsOwn = canWearItsOwn
+            self.wearingID = wearingID
+            self.wearingName = wearingName
         }
     }
 
@@ -129,12 +149,28 @@ public enum TextStyleDrop {
                           note: "Drop this on a piece of text to set it in \(style.name).")
         }
         if let copy = target.copyPiece {
-            // The words are right there under the pointer, so saying the copy
-            // "is not text" tells somebody that what they can see is false.
-            // What is true is where the words come from, and it comes with the
-            // moves that DO work: the style goes on the original, which every
-            // copy then follows, or this copy stops following and becomes
-            // ordinary layers a style can land on.
+            // One copy may wear its own type, answered on 2026-09-09: somebody
+            // aiming a style at the words in ONE button meant that button, and
+            // the two moves that used to be offered instead are both bigger
+            // than what was asked for. So it lands, on this copy and nothing
+            // else, and the sentence says which of the two it is before the
+            // pointer is let go.
+            if copy.canWearItsOwn {
+                guard copy.wearingID != style.id else {
+                    let subject = copy.piece.isEmpty ? "This text" : copy.piece
+                    return Answer(lands: false, note: "\(subject) is already \(style.name).")
+                }
+                let subject = copy.piece.isEmpty ? "these words" : copy.piece
+                var sentence = "Sets \(subject) in \(style.name) on this copy only"
+                if let worn = copy.wearingName { sentence += " and lets go of \(worn)" }
+                return Answer(lands: true, note: sentence + ".", letsGoOf: copy.wearingName)
+            }
+            // Nowhere for an answer to live — a copy inside a copy is rebuilt
+            // by the outer one — and the words are right there under the
+            // pointer, so saying the copy "is not text" would tell somebody
+            // that what they can see is false. What is true is where the words
+            // come from, and it comes with the move that DOES work: the style
+            // goes on the original, which every copy then follows.
             let piece = copy.piece.isEmpty ? "This text" : copy.piece
             let origin = copy.component.isEmpty ? "the original" : copy.component
             // "there" rather than "on the original" when the sentence has
@@ -181,21 +217,32 @@ public enum TextStyleDrop {
 extension PhotonzDocument {
 
     /// The words of a copy under a canvas point, described for the one line the
-    /// canvas says while a style is in the air. Nil everywhere else, which is
-    /// every point that is not on a copy's own words.
+    /// canvas says while a style is in the air, and for the drop itself. Nil
+    /// everywhere else, which is every point that is not on a copy's own
+    /// words.
     ///
-    /// This only ever changes what is SAID. A style still cannot land inside a
-    /// copy, because a copy's contents are rebuilt from its original and
-    /// anything written onto one of them is gone by the next redraw.
+    /// A style let go here lands on THIS copy and nothing else
+    /// (`ComponentPieceTextStyle`), except inside a copy that is itself inside
+    /// another copy: the outer one rebuilds the inner one after every edit, so
+    /// an answer given there is gone by the next redraw, and that is the one
+    /// case still refused with a reason.
     public func textStyleCopyPiece(at point: CGPoint, zoom: CGFloat = 1)
     -> TextStyleDrop.CopyPiece? {
         guard let words = textPiece(at: point, zoom: zoom),
               let piece = componentPiece(of: words) else { return nil }
+        // What this copy has already set these words in, which is the only
+        // name a drop takes them off: the type they get from the original is
+        // not given up by one copy answering for itself.
+        let own = pieceTextStyles(instance: piece.instance)
+            .first { $0.source == piece.source }
         return TextStyleDrop.CopyPiece(
             piece: layer(id: piece.source)?.name ?? "",
             component: mainComponent(componentID: piece.componentID)?.name
                 ?? layer(id: piece.instance)?.name ?? "",
-            canDetach: !piece.isNested)
+            canDetach: !piece.isNested,
+            canWearItsOwn: canSetPieceTextStyle(of: words),
+            wearingID: pieceTextStyleID(of: words),
+            wearingName: own?.styleID.flatMap { textStyle(id: $0)?.name })
     }
 }
 

@@ -751,6 +751,13 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// exposes. They are the only things a copy owns; everything else inside it
     /// is refilled from the original after every edit.
     public var overrides: [ComponentOverride]
+    /// Set on an **instance**: the type this copy has chosen for pieces inside
+    /// it (`ComponentPieceTextStyle`). A saved text style let go on the words
+    /// inside ONE copy sets that copy and nothing else, which is one more of
+    /// the things a copy is allowed to own alongside its colour, its size, its
+    /// room and its wording. Empty is a copy whose type is all its original's,
+    /// which is every copy until somebody drops a style on it.
+    public var pieceTextStyles: [ComponentPieceTextStyle] = []
     /// Set on an **instance**: the original's look as of the last time this
     /// copy was put in step with it. Anything the copy's own look differs from
     /// this by is a part somebody set on the copy, and that part stops
@@ -811,7 +818,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
-        case versionID, versionName, instanceVersion, columns, shared
+        case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -837,6 +844,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // so a document saved before knobs existed is byte for byte what it was.
         if !properties.isEmpty { try c.encode(properties, forKey: .properties) }
         if !overrides.isEmpty { try c.encode(overrides, forKey: .overrides) }
+        // ...and only a copy somebody gave its own type to writes this one, so
+        // a document saved before a copy could wear a style of its own is byte
+        // for byte what it was.
+        if !pieceTextStyles.isEmpty { try c.encode(pieceTextStyles, forKey: .pieceTextStyles) }
         // Only a copy remembers a look, so a group that is not one encodes
         // exactly as it did before the look followed.
         if instanceOf != nil { try c.encodeIfPresent(followedStyle, forKey: .followedStyle) }
@@ -880,6 +891,8 @@ public struct GroupContent: Hashable, Codable, Sendable {
         instanceVersion = try c.decodeIfPresent(UUID.self, forKey: .instanceVersion)
         properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []
         overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []
+        pieceTextStyles = try c.decodeIfPresent([ComponentPieceTextStyle].self,
+                                                forKey: .pieceTextStyles) ?? []
         followedStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .followedStyle)
         instanceSize = try c.decodeIfPresent(InstanceSize.self, forKey: .instanceSize)
         contentPlacement = try c.decodeIfPresent(LayerPlacement.self, forKey: .contentPlacement)

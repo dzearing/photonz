@@ -74,16 +74,25 @@ extension CanvasNSView {
             // A copy of a component is hit whole, contents and all, so words
             // inside one arrive here looking like anything else that is not
             // text. Saying so over the top of readable words is a lie, so the
-            // one line names the piece and its original instead, and points at
-            // the two moves that work. The rule does not change: nothing lands
-            // inside a copy, because the next sync would write it straight back
-            // over.
-            let copyPiece = componentsEnabled
-                ? document.textStyleCopyPiece(at: point, zoom: viewport.zoom) : nil
-            return (TextStyleDrop.answer(dropping: style,
-                                         on: TextStyleDrop.Target(name: hit.name, isText: false,
-                                                                  copyPiece: copyPiece)),
-                    [], [])
+            // words are found one level down and the style lands on THIS copy
+            // and nothing else (`ComponentPieceTextStyle`). Inside a copy that
+            // is itself inside another copy there is nowhere for the answer to
+            // live, and that one is still refused, with the move that works.
+            guard componentsEnabled,
+                  let words = document.textPiece(at: point, zoom: viewport.zoom),
+                  let copyPiece = document.textStyleCopyPiece(at: point, zoom: viewport.zoom)
+            else {
+                return (TextStyleDrop.answer(dropping: style,
+                                             on: TextStyleDrop.Target(name: hit.name,
+                                                                      isText: false)),
+                        [], [])
+            }
+            let answer = TextStyleDrop.answer(
+                dropping: style,
+                on: TextStyleDrop.Target(name: hit.name, isText: false, copyPiece: copyPiece))
+            let boxes = answer.lands
+                ? [document.canvasLayer(id: words)?.frame].compactMap { $0 } : []
+            return (answer, answer.lands ? [words] : [], boxes)
         }
         // Everything the drop would reach: the text under the pointer alone,
         // or the whole picked crowd when the pointer is aimed at one of them.
