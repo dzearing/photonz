@@ -598,6 +598,31 @@ private final class Run {
                 note(number, step.name, "reached \(mode.rawValue) after \(presses) presses of I", state: describe())
             }
 
+        case .toolFlyout(let tool, let choose, let ticked):
+            _ = try requireEditor()
+            let probe = ToolModeFlyoutProbe.shared
+            guard let rows = probe.rows(of: tool), !rows.isEmpty else {
+                let seen = probe.tools
+                throw Failure(description: "no tool called \"\(tool)\" is keeping a list in its own button; "
+                    + "the ones that are: " + (seen.isEmpty ? "none" : seen.joined(separator: ", ")))
+            }
+            let reading = rows.map { "\($0.title)\($0.isLive ? " (ticked)" : "")" }.joined(separator: ", ")
+            let live = rows.first(where: \.isLive)?.title ?? "nothing"
+            if let ticked, live != ticked {
+                throw Failure(description: "\(tool)'s list has \(live) ticked and it should be \"\(ticked)\"; "
+                    + "it reads: \(reading)")
+            }
+            var detail = "\(tool) lists \(reading)"
+            if let choose {
+                guard let row = rows.first(where: { $0.title == choose }) else {
+                    throw Failure(description: "\(tool)'s list has no row called \"\(choose)\"; it reads: \(reading)")
+                }
+                row.choose()
+                await sleep(0.2)
+                detail += "; chose \(choose)"
+            }
+            note(number, step.name, detail, state: describe())
+
         case .waitFor(let condition, let timeout):
             let editor = try requireEditor()
             let deadline = Date().addingTimeInterval(timeout)
@@ -4783,6 +4808,13 @@ private final class Run {
             "foregroundFill": editor.foregroundFillHex,
             "backgroundFill": editor.backgroundFillHex,
             "measureMode": editor.measureToolMode.rawValue,
+            // The aspect the Crop tool is locked to, and the rect it is
+            // holding. A lock chosen from Crop's own list has to leave a rect
+            // that ALREADY fits it, so this is what a walk reads to prove the
+            // tool and the lock arrived in the right order rather than
+            // photographing the overlay and hoping.
+            "crop": editor.cropRect.map { "\(editor.cropAspect.label) \($0.integral)" }
+                ?? "\(editor.cropAspect.label), no rect",
             // What a half-placed caliper is still waiting for. A Distance
             // caliper takes three clicks, so a walk that clicks twice leaves
             // an empty `measures` list on purpose; this says so out loud.

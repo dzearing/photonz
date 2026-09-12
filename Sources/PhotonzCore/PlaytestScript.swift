@@ -920,6 +920,20 @@ public enum PlaytestStep: Sendable, Equatable {
     case tool(Tool)
     /// Press I until the Measure tool is in this mode.
     case measureMode(MeasureToolMode)
+    /// Choose a row from a tool's OWN list, the one a press and hold on its
+    /// button opens: `tool` is the tool's words on the button ("Measure",
+    /// "Crop") and `choose` is the row's ("Gap", "16:9").
+    ///
+    /// The list is drawn by the app rather than by AppKit, so there is no
+    /// button in the window a synthetic click can land on. What the step fires
+    /// instead is the row's OWN closure, the very one a click on it runs, so a
+    /// walk can never choose something the pointer would not.
+    ///
+    /// With no `choose` it only reads: every row, and which one is wearing the
+    /// tick, reaches the log. `ticked` claims which row that must be BEFORE
+    /// anything is picked, and fails the walk when the list is telling a
+    /// person the wrong mode.
+    case toolFlyout(tool: String, choose: String?, ticked: String?)
     case waitFor(PlaytestCondition, timeout: Double)
     /// Drop the component picked on the Library shelf onto the canvas at a
     /// point, which is where a drag off the shelf ends. A synthesized mouse
@@ -1281,7 +1295,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "expect", "expectInView", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "type", "wait", "waitFor",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
@@ -1303,6 +1317,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .focus: "focus"
         case .tool: "tool"
         case .measureMode: "measureMode"
+        case .toolFlyout: "toolFlyout"
         case .waitFor: "waitFor"
         case .dropComponent: "dropComponent"
         case .dragComponent: "dragComponent"
@@ -1420,6 +1435,10 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .tool(try f.enumValue("tool", Tool.self))
         case "measureMode":
             self = .measureMode(try f.enumValue("mode", MeasureToolMode.self))
+        case "toolFlyout":
+            self = .toolFlyout(tool: try f.string("tool"),
+                               choose: try f.optionalString("choose"),
+                               ticked: try f.optionalString("ticked"))
         case "waitFor":
             let condition = try f.string("condition")
             let parsed: PlaytestCondition = switch condition {

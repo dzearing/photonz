@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:50:12.044Z",
-  "updated": "2026-09-09T15:50:12.082Z",
+  "updated": "2026-09-12T08:26:38.801724Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-09: \"if i long press on a tool to reveal menu of sub options (like ruler measure tool options), i select another sub tool and it changes the mode of the tool but doesn't select it, should have selected it.\"\n\nCause, found by reading (NOT yet reproduced in a running app - reproduce first): Sources/Photonz/ToolModeButton.swift builds its flyout as a Picker bound to $selection (the `modeMenu` property, around line 145). Picking a row writes the mode and nothing else. `activate()` is wired ONLY to the menu's `primaryAction:` (line ~188), which is the plain click on the button. So the flyout can change a tool's mode without that tool ever coming into hand. The binding's own doc comment at line 49 says it outright: \"The live mode. Writing it switches modes; it is never used to activate.\" That comment records the old intent and must be updated with the change, not left contradicting the code.\n\nToolGroupButton next door already does the right thing: each of its menu rows is a Button calling `activate(tool)` (ToolGroupButton.swift:~136). So the two flyouts in the same tool bar behave differently, which is the drift to remove.\n\nTrap a naive fix hits: adding an activate call to the Picker's binding setter does NOT fix the already-ticked case. SwiftUI only writes the binding when the selection CHANGES, so with Measure out of hand and its mode already Distance, picking Distance writes nothing and the press does nothing at all - the worst version of this bug, because the list closes and the app looks broken. The robust shape is to drop the Picker and use explicit Buttons the way ToolGroupButton does, each one activating the tool and setting its mode, with the live row marked (checkmark or a Label with a tick) so the list still says where you are.\n\nOrdering trap for Crop: EditorView.swift:1830 wires Crop's selection to editorState.setCropAspect, and the code comment there explains that switching lock REFITS the crop rect, which is why Crop deliberately does not cycle on its key. Setting the aspect while a different tool is in hand may refit against a rect that is not live yet. Decide and test the order - pick the tool up first, then set the mode - and say in the audit which one is right and why.\n\nCrop's footer (the Resize Image row, EditorView.swift:~1838, passed as `footer:`) is a command, not a mode. It must keep its current behaviour.\n\nThis is a miss in the shipped task 'tool-modes-move-into-a-flyout-on-the-tool-button' (done, p0, seq 3), which moved the modes into the button but never made the list activate its tool.\n\nBoth flyouts sit behind flags (measureModesEnabled, toolOptionsEnabled, toolGroupsEnabled in Experiments.swift), so check which release actually shows them and confirm per CLAUDE.md that the change reaches Next.",
@@ -32,6 +32,471 @@
     {
       "t": "2026-09-09T15:50:12.081Z",
       "note": "seq 270 -> 9"
+    },
+    {
+      "t": "2026-09-09T17:37:47.259Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T17:47:10.395Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T17:47:41.257Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T17:47:43.703Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T17:49:44.664Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T17:49:47.505Z",
+      "note": "parked after 3 runner failures in a row; last error: You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T17:54:50.897Z",
+      "note": "unparked: runners are failing regardless of which task runs, so the earlier failures were not this task"
+    },
+    {
+      "t": "2026-09-09T18:09:51.777Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T18:09:54.587Z",
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T18:39:55.617Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T18:39:58.182Z",
+      "note": "runner failed (exit 1, attempt 2): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T19:09:59.116Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T19:10:01.721Z",
+      "note": "runner failed (exit 1, attempt 3): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T19:40:02.836Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T19:40:06.027Z",
+      "note": "runner failed (exit 1, attempt 4): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T20:10:07.508Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T20:10:11.229Z",
+      "note": "runner failed (exit 1, attempt 5): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T20:40:12.550Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T20:40:15.668Z",
+      "note": "runner failed (exit 1, attempt 6): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T21:10:16.720Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T21:10:19.213Z",
+      "note": "runner failed (exit 1, attempt 7): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T21:40:20.000Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T21:40:22.527Z",
+      "note": "runner failed (exit 1, attempt 8): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T22:10:23.304Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T22:10:26.869Z",
+      "note": "runner failed (exit 1, attempt 9): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T22:40:28.588Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T22:40:31.232Z",
+      "note": "runner failed (exit 1, attempt 10): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T23:10:32.027Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T23:10:34.513Z",
+      "note": "runner failed (exit 1, attempt 11): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-09T23:40:35.502Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-09T23:40:38.087Z",
+      "note": "runner failed (exit 1, attempt 12): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T00:10:38.838Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T00:11:56.139Z",
+      "note": "runner failed (exit 1, attempt 13): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T00:41:56.929Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T00:41:59.505Z",
+      "note": "runner failed (exit 1, attempt 14): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T01:12:00.308Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T01:12:04.024Z",
+      "note": "runner failed (exit 1, attempt 15): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T01:42:05.067Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T01:42:07.658Z",
+      "note": "runner failed (exit 1, attempt 16): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T02:12:08.664Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T02:12:11.141Z",
+      "note": "runner failed (exit 1, attempt 17): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T02:42:12.233Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T02:42:15.017Z",
+      "note": "runner failed (exit 1, attempt 18): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T03:12:15.969Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T03:12:18.167Z",
+      "note": "runner failed (exit 1, attempt 19): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T03:42:18.870Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T03:42:21.439Z",
+      "note": "runner failed (exit 1, attempt 20): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T04:12:22.195Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T04:12:25.472Z",
+      "note": "runner failed (exit 1, attempt 21): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T04:42:26.294Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T04:42:28.526Z",
+      "note": "runner failed (exit 1, attempt 22): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T05:12:29.313Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T05:12:31.631Z",
+      "note": "runner failed (exit 1, attempt 23): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T05:42:32.431Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T05:42:34.749Z",
+      "note": "runner failed (exit 1, attempt 24): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T06:12:35.515Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T06:12:37.900Z",
+      "note": "runner failed (exit 1, attempt 25): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T06:42:38.606Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T06:42:40.909Z",
+      "note": "runner failed (exit 1, attempt 26): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T07:12:41.668Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T07:12:44.077Z",
+      "note": "runner failed (exit 1, attempt 27): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T07:42:44.801Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T07:42:47.059Z",
+      "note": "runner failed (exit 1, attempt 28): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T08:12:47.840Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T08:12:50.142Z",
+      "note": "runner failed (exit 1, attempt 29): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T08:42:50.972Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T08:42:53.276Z",
+      "note": "runner failed (exit 1, attempt 30): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T09:12:54.060Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T09:12:56.476Z",
+      "note": "runner failed (exit 1, attempt 31): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T09:42:57.279Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T09:42:59.481Z",
+      "note": "runner failed (exit 1, attempt 32): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T10:13:00.146Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T10:13:02.466Z",
+      "note": "runner failed (exit 1, attempt 33): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T10:43:03.276Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T10:43:05.584Z",
+      "note": "runner failed (exit 1, attempt 34): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T11:13:06.413Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T11:13:08.753Z",
+      "note": "runner failed (exit 1, attempt 35): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-10T11:43:09.505Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-10T11:43:11.590Z",
+      "note": "runner failed (exit 1, attempt 36): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T07:14:42.533Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T07:14:44.656Z",
+      "note": "runner failed (exit 1, attempt 37): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T07:44:45.433Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T07:44:48.451Z",
+      "note": "runner failed (exit 1, attempt 38): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T08:14:49.345Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T08:14:51.715Z",
+      "note": "runner failed (exit 1, attempt 39): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T08:44:52.437Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T08:44:54.700Z",
+      "note": "runner failed (exit 1, attempt 40): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T09:14:55.770Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T09:14:58.047Z",
+      "note": "runner failed (exit 1, attempt 41): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T09:44:58.811Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T09:45:01.116Z",
+      "note": "runner failed (exit 1, attempt 42): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T10:15:02.066Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T10:15:04.428Z",
+      "note": "runner failed (exit 1, attempt 43): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T10:45:05.209Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T10:45:07.536Z",
+      "note": "runner failed (exit 1, attempt 44): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T11:15:08.733Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T11:15:11.035Z",
+      "note": "runner failed (exit 1, attempt 45): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-11T11:45:11.856Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-11T11:45:13.968Z",
+      "note": "runner failed (exit 1, attempt 46): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-12T07:16:47.730Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T07:16:50.125Z",
+      "note": "runner failed (exit 1, attempt 47): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-12T07:46:50.742Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T07:46:53.222Z",
+      "note": "runner failed (exit 1, attempt 48): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-12T08:16:54.106Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "Adversarial review before building: the mock-free question was whether picking the ticked row should pick the tool up. It must. From a person's side the press is identical to any other row, and a list that closes having done nothing is the worst outcome. That ruled out the naive fix (activate from the picker's binding setter), because a picker only writes when the selection CHANGES."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "REPRODUCED, not read. Built the probe with choose() restored to the pre-fix behaviour (write the mode, do not activate) and ran Scripts/playtest.sh Scripts/playtest/tool-flyout-picks-tool-walk.json: '[7 toolFlyout] Measure lists Distance (ticked), Size, Gap, Alignment; chose Gap' then '[8 waitFor] FAILED: tool(PhotonzCore.Tool.measure) did not happen within 10.0s'. That is exactly the user's report: the mode changed, the tool did not."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "Fix: ToolModeButton's flyout rows are Toggles calling choose(mode), which writes the mode and then calls activate(). Mode first so a tool that reads its mode on the way in reads the new one. Toggles rather than a Picker so the already-ticked row still fires. The stale doc comment on `selection` ('never used to activate') is rewritten."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "Crop ordering settled by evidence, not by guessing. cropRect is nil while Crop is out of hand, so setCropAspect only records the aspect and refits nothing; setTool(.crop) then builds the rect already fitted. The walk reads it back: choosing 16:9 from Select lands 'crop=16:9 (0.0, 75.0, 1440.0, 810.0)' - 1440x810 is 16:9 exactly, so no half-applied rect and no double fit."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "The probe the previous run left behind never worked, and it took two fixes. (1) It registered from a zero-size Color.clear in .background, which the tool bar never brought up, so the walk reported 'no tool is keeping a list; the ones that are: none'. It is now a View modifier on the button itself, the way ToolBarLayoutProbe registers. (2) SwiftUI brings the new copy of a rebuilt button up BEFORE taking the old one down, so the outgoing onDisappear wiped the incoming registration; each copy now carries an owner token and only the live one can forget."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "Verified: Scripts/test.sh green (5498 tests). Walks: tool-flyout-picks-tool-walk ok, plus playtest-all --no-build on 'measure' (7 ok), 'crop' (1 ok) and 'tool' (15 ok). Real window captures, Screen Recording was granted."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "Not verified by a walk, and said so in the audit: Crop's Resize Image footer. It reaches the button as an opaque AnyView and the harness has no way to press it or to see the resize dialog, so the evidence is that the change never touches the footer path and that the list reports only the four aspects. Filed p2 'a-walk-can-press-a-command-row-at-the-foot-of-a'."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "Current is untouched: measureModesEnabled and toolOptionsEnabled are Next-only, so Current renders the plain Measure button and the old crop chips and never reaches this code. ToolModeButton is a shared file, so Next has the change by construction; no port needed."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "Asked for a full sweep (queue/bin/sweep.sh request) because describe() now reports the crop aspect and rect in every walk's state line."
+    },
+    {
+      "t": "2026-09-12T08:26:38.801724Z",
+      "note": "Audit: queue/audits/2026-09-12-tool-flyout-picks-tool.json with two real captures."
     }
-  ]
+  ],
+  "started": "2026-09-12T08:16:54.105Z",
+  "failures": 48,
+  "lastError": {
+    "at": "2026-09-12T07:46:53.221Z",
+    "exit": 1,
+    "message": "You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets 1am (America/Los_Angeles)"
+  },
+  "parked": false,
+  "parkReason": ""
 }

@@ -459,6 +459,30 @@ struct PlaytestScriptTests {
         #expect(action == .copySpecList)
     }
 
+    /// A tool that owns modes keeps them in its own button, and choosing one
+    /// there is a different act from pressing the tool's key: it picks the tool
+    /// up AND sets the mode in one move. A walk names the button by the tool's
+    /// words and the row by its own, and can claim which row is wearing the
+    /// tick before it picks anything.
+    @Test func aWalkCanChooseFromAToolsOwnList() throws {
+        let script = try decode("""
+        {
+          "steps": [
+            { "do": "toolFlyout", "tool": "Measure", "choose": "Gap", "ticked": "Distance" },
+            { "do": "toolFlyout", "tool": "Crop" }
+          ]
+        }
+        """)
+        guard case .toolFlyout(let tool, let choose, let ticked) = script.steps[0] else {
+            Issue.record("toolFlyout"); return
+        }
+        #expect(tool == "Measure" && choose == "Gap" && ticked == "Distance")
+        guard case .toolFlyout(let bare, let nothing, let noClaim) = script.steps[1] else {
+            Issue.record("toolFlyout"); return
+        }
+        #expect(bare == "Crop" && nothing == nil && noClaim == nil)
+    }
+
     @Test func defaultsKeepAScriptShort() throws {
         // A one-point click in document space with no modifiers is the common
         // case, so it spells nothing but the point.

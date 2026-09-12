@@ -1,0 +1,28 @@
+{
+  "feature": "A tool's own list picks that tool up",
+  "epic": "measure-redline",
+  "summary": "Press and hold Measure or Crop and choose a mode, and that tool is now the one in your hand, in the mode you chose, in one move. Before, the mode changed but you were still holding whatever you were holding.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to change: the tool lists are already on.",
+  "try": [
+    { "do": "Press V so Select is the tool in hand." },
+    { "do": "Press and hold the Measure button (the one with the arrows, right of the zoom callout) until its list opens." },
+    { "do": "Choose Gap.", "shot": "2026-09-12-tool-flyout-picks-tool-1.png" },
+    { "do": "Press V again, press and hold Measure, and choose Gap a second time, the row already ticked." },
+    { "do": "With Measure still in hand, press and hold it and choose Size." },
+    { "do": "Press V, then press and hold Crop and choose 16:9.", "shot": "2026-09-12-tool-flyout-picks-tool-2.png" },
+    { "do": "With Crop in hand, press and hold it and choose 1:1." }
+  ],
+  "evaluate": [
+    "On step 3, did the mode chip that comes up say Gap, the mode you picked, rather than flashing the old one first?",
+    "On step 4, picking the row that was already ticked picks the tool up. Does that feel right, or does a ticked row look like it should do nothing?",
+    "On step 6, the crop box arrives already 16:9 rather than snapping into shape a moment later. Does it read as one move?",
+    "With the tool already in hand (steps 5 and 7), does picking a mode still feel like only the mode changed?",
+    "Is press and hold discoverable enough, or would you reach for the small wedge in the button's corner?"
+  ],
+  "rough": [
+    "The open list itself is not in either screenshot. A tool's list is drawn by the app while the mouse is held down, so no screen capture can catch it and no walk can click it. The walk reads and fires the rows through a probe the button hands over instead, using the very closure a click on the row runs, so what the walk chose is what a pointer would have chosen.",
+    "Crop's Resize Image row is a command, not a mode, and it still only opens the resize dialog: it is passed to the button as a footer and never goes through the code that picks the tool up. That one is verified by reading and by the list reporting only Free, 1:1, 4:3 and 16:9, not by a walk, because nothing in the harness can yet press a footer row or see the resize dialog. Filed as a follow-up.",
+    "Rows are now toggles rather than a picker's rows. That is what makes the already-ticked row do something: a picker only fires when the selection changes, so choosing the live mode wrote nothing and the press looked broken. The tick still shows which mode you are in.",
+    "Both screenshots are real window captures, not offscreen renders: Screen Recording was granted for this run."
+  ]
+}

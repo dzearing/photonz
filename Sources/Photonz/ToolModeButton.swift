@@ -46,11 +46,18 @@ struct ToolModeButton<Mode: Hashable>: View {
     let isActive: Bool
     /// Every mode on offer, in cycle order. One entry means no menu.
     let modes: [ToolMode<Mode>]
-    /// The live mode. Writing it switches modes; it is never used to activate.
+    /// The live mode: the glyph the button wears, and the row wearing the tick.
+    /// Choosing a row writes it AND picks the tool up, in that order, so the
+    /// mode is already set by the time the tool arrives (Crop fits its rect to
+    /// the aspect as it comes into hand; Measure names the mode in the chip it
+    /// raises).
     @Binding var selection: Mode
     /// The namespace the tool bar's sliding accent circle lives in.
     let namespace: Namespace.ID
-    /// Picks this tool up (without touching the mode).
+    /// Picks this tool up (without touching the mode). Choosing a row from the
+    /// list calls it too: a press on a tool's own list is a person saying "this
+    /// tool, in this mode", so it must never end with a different tool still in
+    /// hand.
     let activate: () -> Void
     /// Whether pressing the tool's key again walks the modes. True for a tool
     /// whose modes only change what the NEXT click does, so a stray press costs
@@ -142,15 +149,39 @@ struct ToolModeButton<Mode: Hashable>: View {
             .buttonStyle(.tool(isActive: isActive, in: namespace))
     }
 
+    /// Choosing a mode from the list picks THIS tool up in that mode, in one
+    /// move: the list belongs to the tool, so opening it already said which
+    /// tool you mean.
+    ///
+    /// The order matters. The mode is written first and the tool comes into
+    /// hand after it, so a tool that reads its mode on the way in reads the one
+    /// just chosen: Crop fits its fresh rect to the new aspect instead of
+    /// fitting it twice, and Measure's chip names the mode you picked.
+    private func choose(_ mode: Mode) {
+        selection = mode
+        activate()
+    }
+
+    /// One row of the list. A `Toggle` rather than a `Picker`'s row, because a
+    /// picker only writes when the selection CHANGES: with Measure out of hand
+    /// and already in Distance, choosing Distance wrote nothing, so the list
+    /// shut and the press did nothing at all. A toggle's row fires whatever
+    /// state it is in, and the value it offers is thrown away — from a person's
+    /// side, pressing the ticked row said the same thing as pressing any other:
+    /// this tool, this mode.
+    private func row(_ mode: ToolMode<Mode>) -> some View {
+        Toggle(isOn: Binding(get: { selection == mode.mode },
+                             set: { _ in choose(mode.mode) })) {
+            Label(mode.title, systemImage: mode.symbol)
+        }
+    }
+
     /// Click picks the tool up; press-and-hold or the chevron opens the modes.
     private var modeMenu: some View {
         Menu {
-            Picker(toolTitle, selection: $selection) {
-                ForEach(modes) { mode in
-                    Label(mode.title, systemImage: mode.symbol).tag(mode.mode)
-                }
+            ForEach(modes) { mode in
+                row(mode)
             }
-            .pickerStyle(.inline)
             if keyCycles, let keyLabel {
                 Divider()
                 // One line for the whole list, because every mode shares the
@@ -181,6 +212,20 @@ struct ToolModeButton<Mode: Hashable>: View {
         // press-and-hold.
         .buttonStyle(.tool(isActive: isActive, in: namespace))
         .fixedSize()
+        // A walk cannot press and hold a list AppKit never draws, so the
+        // button hands its rows over instead, each carrying the closure its
+        // own row runs. Probe builds only; a no-op everywhere else.
+        .toolFlyoutProbe(
+            tool: toolTitle,
+            signature: modes.map { "\($0.title)\($0.mode == selection ? "*" : "")" }
+                .joined(separator: "|"),
+            rows: {
+                modes.map { mode in
+                    ToolFlyoutRow(title: mode.title, symbol: mode.symbol,
+                                  isLive: mode.mode == selection,
+                                  choose: { choose(mode.mode) })
+                }
+            })
     }
 
     /// The tool's key: picks the tool up, or cycles its modes when it is

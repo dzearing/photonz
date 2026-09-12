@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/tool-flyout-picks-tool",
+  "setup": { "forget": ["measure", "tools"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+
+    { "do": "describe", "stage": "1-select", "note": "Select in hand, nothing else touched" },
+    { "do": "toolFlyout", "tool": "Measure", "ticked": "Distance" },
+    { "do": "toolFlyout", "tool": "Measure", "choose": "Gap" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "measureMode", "value": "gap" },
+    { "do": "describe", "stage": "2-measure-gap", "note": "one press on Gap put Measure in hand AND set the mode" },
+    { "do": "snapshot", "name": "flyout-measure-gap" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "toolFlyout", "tool": "Measure", "ticked": "Gap", "choose": "Gap" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "measureMode", "value": "gap" },
+    { "do": "describe", "stage": "3-already-ticked", "note": "the row already ticked still picks the tool up, so a press cannot look like nothing" },
+
+    { "do": "toolFlyout", "tool": "Measure", "choose": "Size" },
+    { "do": "waitFor", "condition": "measureMode", "value": "size" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "describe", "stage": "4-in-hand", "note": "with the tool already in hand a pick only changes the mode" },
+
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "toolFlyout", "tool": "Crop", "ticked": "Free" },
+    { "do": "toolFlyout", "tool": "Crop", "choose": "16:9" },
+    { "do": "waitFor", "condition": "tool", "value": "crop" },
+    { "do": "describe", "stage": "5-crop-169", "note": "Crop in hand and its rect ALREADY 16:9, so the lock reached the rect as it was made" },
+    { "do": "snapshot", "name": "flyout-crop-169" },
+
+    { "do": "toolFlyout", "tool": "Crop", "ticked": "16:9", "choose": "1:1" },
+    { "do": "waitFor", "condition": "tool", "value": "crop" },
+    { "do": "describe", "stage": "6-crop-square", "note": "with Crop in hand the lock refits the live rect, exactly as it did before" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "describe", "stage": "7-end", "note": "back on Select with no crop pending" }
+  ]
+}

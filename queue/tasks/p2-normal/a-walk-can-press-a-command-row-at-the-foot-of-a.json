@@ -1,0 +1,27 @@
+{
+  "id": "a-walk-can-press-a-command-row-at-the-foot-of-a",
+  "title": "A walk can press a command row at the foot of a tool's list",
+  "goal": "Crop's list ends with Resize Image, which is a command rather than a mode. Nothing in the test harness can press that row or see the dialog it opens, so the one thing we can say about it is what the code says. Make it something a walk can actually do, so a change that quietly turned a command row into a mode would be caught.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2340,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T08:26:31.124Z",
+  "updated": "2026-09-12T08:26:31.127Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The footer reaches ToolModeButton as an opaque AnyView (EditorView.swift:1842, resizeMenuRow at :1013), so ToolModeFlyoutProbe cannot describe or fire it the way it does the mode rows. Giving the footer a small struct (title, symbol, action, disabled) instead of AnyView would let the same probe carry it, and would also let the button own the row's keyboardShortcut. The harness has no condition for isResizeDialogPresented either; PlaytestHarness.swift:1427 only forces it closed.",
+  "acceptance": [
+    "A walk can choose the command row at the foot of a tool's list by its own words",
+    "A walk can tell whether the resize dialog is up",
+    "A walk covers Crop's Resize Image row: it opens the dialog and leaves the tool in hand alone"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T08:26:31.126Z",
+      "note": "created (manual)"
+    }
+  ]
+}

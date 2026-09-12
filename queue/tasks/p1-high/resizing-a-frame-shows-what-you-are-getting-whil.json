@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 8,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T16:19:05.459Z",
-  "updated": "2026-09-09T16:58:09.956Z",
+  "updated": "2026-09-09T17:37:18.646Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-09: \"when i try to resize a frame, it has no live feedback\". Not reproduced by me - everything below is from reading, and the runner must reproduce FIRST.\n\nWhat I ruled IN by reading: the live path exists and does cover frames. CanvasPointerDrags.swift:787 calls onFramePreview on every mouse move, which reaches EditorState+Frames.swift:171 previewCanvasFrame and then EditorState+LayerDrag.swift:82 previewLayerFrame. AnnotationEditing.swift:197 dispatches a frame to LayerScaling.refitting (LayerScaling.swift:38). So the model is being updated live; this is not a case of the drag doing nothing until mouse-up.\n\nStrongest SUSPECT, unconfirmed: throughput, not wiring. LayerContent.scalesUniformlyOnResize (Layer.swift:896) returns false for a group, so previewLayerFrame DISCARDS the drag sprite (EditorState+LayerDrag.swift:93-96) and every single mouse move re-renders the whole document with the frame refitted and its children re-placed. On a screen-sized frame with a lot in it that is a full composite per pointer move, which would look exactly like nothing happening until release. Note the sprite is discarded deliberately and for a good reason (a scaled sprite stretches strokes and text), so the fix is not simply to keep the sprite - it is to make the live re-render cheap enough, or to find a preview that is faithful for a frame.\n\nThe cheap discriminator, do this first: CanvasDisplay.swift:830 sets the selection outline from resizeDrag.frame, so the blue box should follow the pointer even when the content does not. If the outline tracks and the contents lag, it is throughput. If the outline is stuck too, the drag is not starting and the cause is somewhere in the press path (CanvasPointerDrags.swift:387, gated on offersOwnHandles and allowsFrameResize; a frame passes both by AnnotationEditing.swift:62).\n\nSecond possibility worth ruling out before building anything: the user may mean there is no NUMERIC readout - no width by height chip following the drag. Nothing in the code draws one during a resize as far as I found. If reproduction shows the geometry does update live and smoothly, then what is missing is the readout, and the task becomes a small one: show the size while dragging. Decide which of the two it is from the reproduction, say so in the log, and do that one.\n\nAlso note CanvasDisplay.swift:913 and :932 hide the eight handles for the whole drag (!dragInFlight), so during a slow frame resize there may be nothing on screen changing at all - which would make a merely slow render read as a completely dead one.\n\nCheck Sources/Photonz/Releases/ before assuming one change reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -72,7 +72,12 @@
     {
       "t": "2026-09-09T17:35:56.000Z",
       "note": "ROUGH, filed rather than folded in: resizing a self-arranging stack still shows almost nothing, because its rows are left aligned and do not stretch and a group has no edge of its own to follow. Reproduced with a picture (kinds-2-stack-mid-sc.png in the same walk) and filed p2 as 'Resizing a self-arranging stack shows what you are getting while you drag'. It needs a design answer, not the same fix."
+    },
+    {
+      "t": "2026-09-09T17:37:18.644Z",
+      "note": "A frame's edge now follows the pointer through the whole drag. Reproduced first on the probe with a mid-drag capture, and the reported cause was wrong: the canvas was redrawing 42fps throughout, one picture per pointer move. What was frozen was the frame's chrome (edge hairline, name, column bands), drawn from the committed document while a preview drag never touches it. New CanvasNSView.liveCanvasBounds(of:) is the one door all three read through, and the panel's Frame Size row is preview-aware like Position & Size. Verified with real window captures: corner, edge and move drags all show edge, W/H and Size agreeing mid-flight, no jump on release. Perf unchanged (38.5fps either side of the change, 3 runs each). Two new walks; Scripts/test.sh green at 5497 tests; frame/screen/column/component/stack/layout walk families all pass. Audit at queue/audits/2026-09-09-frame-resize-live.json with a before and three after captures. Stacks filed p2 as a follow-up."
     }
   ],
-  "started": "2026-09-09T16:58:09.954Z"
+  "started": "2026-09-09T16:58:09.954Z",
+  "completed": "2026-09-09T17:37:18.645Z"
 }
