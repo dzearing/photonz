@@ -1,0 +1,35 @@
+{
+  "id": "a-release-cannot-fail-because-a-ci-runner-was-sl",
+  "title": "A release cannot fail because a CI runner was slow",
+  "goal": "The v0.15.0 release failed to publish twice over on performance tests that were passing everywhere except on a shared build machine, which is several times slower than any machine the app is developed on. The numbers those tests print are genuinely useful and should keep being collected, but a slow build machine must never be able to stop a release going out. Make the performance gate say something true on any machine, so a failure means the app actually got slower.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 19,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T15:56:49.904Z",
+  "updated": "2026-09-12T15:56:53.285Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed on 2026-09-12 out of the v0.15.0 release, which failed twice at the Release workflow's test gate and had to be untagged and re-cut.\n\nWhat happened, with the numbers. The Release workflow runs Scripts/test.sh --no-parallel before it packages anything (.github/workflows/release.yml, the 'Run tests' step), so a test failure stops the release. Two budgets failed on the GitHub macos-26 runner:\n- interactiveEditInsideAGroupMeetsBudget, RenderPerfTests.swift:179: styled group measured 210.6ms against a flat 200ms bound. It measured 46.1ms locally under --no-parallel. This test had NO CI allowance at all, unlike its neighbours.\n- exports12MPDocumentAtTwoWithinBudget, RenderPerfTests.swift:307: measured 842.7ms against a CI bound of 700, and 984.7ms on a main run an hour earlier. It measured 112.9ms locally.\nThe suite was identical in both places at 5705 tests in 474 suites, so this was hardware, not a regression. The machine gap is roughly 4.5x on the first and 8x on the second.\n\nWhat was done as a stopgap, and why it is not the fix: commit c9c3c45c gave the group test the CI and local bound pair the other budgets in the file already use (175/100 and 350/200) and raised the export's CI bound from 700 to 1400. That is a number bumped until it stopped hurting. The next slow runner or heavier document walks into the same wall, and every bump makes the gate worse at catching what it exists to catch.\n\nThe pattern already in the file to build on or replace: four budgets read ProcessInfo.processInfo.environment[\"CI\"] and pick one of two constants (RenderPerfTests.swift:89, :127, :306, and now :178). The file's own header already says the bound is deliberately loose because CI machines vary and that the printed numbers are the real deliverable, which is the right instinct written down and then only half applied.\n\nWorth knowing: there is a done task 'timing-budget-tests-pass-reliably-on-a-busy-machi' which addressed a related problem. Read it first and say in the audit why it did not cover this, so the same gap does not get papered over a third time.\n\nA calibration approach is the obvious candidate (measure a fixed reference workload, express every budget as a multiple of it) but it has a trap: the reference has to be something whose cost tracks the thing being measured, or a GPU-bound render gets scaled by a CPU-bound probe and the bound becomes noise. Whatever is chosen, prove it by slowing the real path and watching the gate fire.",
+  "acceptance": [
+    "Reproduce the problem before changing anything: run the performance suite with the CI environment variable set and record every budget, its bound and its margin, so the ones running close to the line are known rather than guessed",
+    "A performance test compares like with like: either it measures how fast the machine it is on actually is and scales its bound to that, or the assertion does not gate the build at all and the numbers are reported instead",
+    "Whichever is chosen, a real regression in the composite path still fails the build, demonstrated by deliberately slowing the path and showing the failure",
+    "No budget in RenderPerfTests.swift carries a bare hardcoded bound with no allowance for the machine: the two that did were found only when they blocked a release",
+    "The numbers keep being printed and keep landing in docs/progress/perf.md, because that record is the real deliverable",
+    "The release workflow cannot be stopped by a timing measurement alone: say in the audit what now happens if a budget is exceeded during a release, and why that is the right answer",
+    "Audit under queue/audits/ with the before and after margins on both a local machine and a CI run, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T15:56:49.906Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-12T15:56:53.284Z",
+      "note": "seq 270 -> 19"
+    }
+  ]
+}

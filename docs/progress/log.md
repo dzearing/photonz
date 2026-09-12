@@ -2,6 +2,41 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-12 — released v0.15.0
+
+Cut from `c9c3c45c`, three weeks and 535 completed tasks after v0.14.0 (1143
+commits). The release is the first one where Next is worth opting into on a
+second machine, which is what prompted it.
+
+What shipped, in the changelog's words: building interfaces rather than only
+marking them up (screens, nested groups), containers that arrange themselves,
+components with overrides, knobs and versions, a Library for colours, gradients,
+text and effect styles, the Appearance and Effects split, layers that change
+what is underneath them (blur, pixelate, greyscale, invert) and layers that mix
+with what is below, columns that start where a frame's padding starts, and a
+large amount of redline work (explicit measure modes, snapping, readouts that
+move out of the way, a Measurements panel, spec export, arrow captions).
+
+**Two attempts.** The first tag failed in the Release workflow's test gate on two
+performance budgets that shared GitHub runners cannot meet: the styled-group
+interactive edit at 210ms against a flat 200ms bound, and the 2x export at 843ms
+against a CI bound of 700 (985ms on an earlier run the same hour). The same
+commit measured 46ms and 113ms locally, and the suite was identical at 5705
+tests in 474 suites, so nothing had regressed. The tag was deleted from local and
+origin, the bounds given the CI and local pair that every other budget in
+`RenderPerfTests.swift` already had, and the tag re-cut. The `plain` assertion in
+the same test had the identical flat-bound hazard and was fixed with it.
+
+Verified after the second run: the DMG is attached to the release, the
+`releases/latest/download/Photonz.dmg` path resolves to v0.15.0 and returns 200,
+`version.json` on the site reports 0.15.0, and the app inside the DMG is
+Gatekeeper-accepted as a Notarized Developer ID build with its ticket stapled.
+
+**Next / open:** a release must not be able to fail on runner speed, and raising
+a number is a patch rather than a fix. Filed as
+`a-release-cannot-fail-because-a-ci-runner-was-sl`. Also worth noting:
+`queue/playtest.lock` has been present since 2026-08-23 and looks stale.
+
 ## 2026-09-12 — what a colour let go on a layer row should paint
 
 Task `a-saved-colour-dropped-on-a-layer-row-paints-the` (epic `ui-components`).
