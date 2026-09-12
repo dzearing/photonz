@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/style-picker-sits-with-swatch",
+  "seed": "Reported by the user on 2026-09-09, with a picture of the Fill row: the little palette button that opens saved colours sat miles to the right of the colour chip, so the two read as two unrelated controls rather than as one colour control. Measured off a probe capture before the fix: the chip's ink ended at x 1130-1148 and the palette mark began at 1192.5, a gap of 44.5pt, because the colour kept a 52pt column sized to the word Mixed and the chip is 18pt of it. This walk photographs the Fill row with a colour, with a saved style, and over two layers that disagree, and reads every control's position back as a number so the gap is a measurement rather than an impression.",
+  "setup": { "forget": ["shapes", "color", "panel", "tools", "grid"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 140], "to": [320, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [380, 140], "to": [580, 260], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "click", "at": [220, 200] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-one-colour", "note": "one box picked: the Fill row shows its chip and the styles button beside it. They should read as one control, a standard row gap apart." },
+    { "do": "panel", "stage": "1-one-colour" },
+    { "do": "snapshot", "name": "1-one-colour" },
+
+    { "do": "click", "at": [480, 200] },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [220, 200] },
+    { "do": "click", "at": [480, 200], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-mixed", "note": "both boxes picked and they wear different fills: the Fill row says Mixed where the chip was, while Outline still shows one chip. The styles button follows whichever readout its own row is wearing." },
+    { "do": "panel", "stage": "2-mixed" },
+    { "do": "snapshot", "name": "2-mixed" }
+  ]
+}

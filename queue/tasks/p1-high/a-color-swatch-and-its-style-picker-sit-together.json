@@ -5,11 +5,11 @@
   "epic": "app-polish",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:15:52.144Z",
-  "updated": "2026-09-09T17:54:50.902Z",
+  "updated": "2026-09-12T08:47:09.361533Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words, with a screenshot of the Fill row: \"colors that have style pickers in the various panes should have the style picker closer to the swatch. like some standard gap away. it feels far away right now which makes it feel disconnected.\"\n\nSuspected cause (found by reading, NOT reproduced in a running app): Sources/Photonz/ColorStylePanel.swift:224 ColorPartLayout reserves readoutWidth = 52 for the color column, while the swatch itself is 18x18 (ColorStylePanel.swift:804, :826, :1192). ColorStyleRow's body (ColorStylePanel.swift:~493-500) puts the readout in .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading) and then ColorStyleControl right after it with spacing ColorPartLayout.spacing (= EditorChromeLayout.panelRowGap). So there is roughly 34pt of empty reserved column plus the row gap between the chip and the palette button. That matches the screenshot.\n\nTrap a naive fix hits: readoutWidth is not arbitrary. Its comment says it is wide enough for the 18pt swatch AND for the word Mixed, and the column exists so the picker starts in the same place on every row of the section. Simply deleting the minWidth makes the picker slide left and right whenever a row flips between a chip and the word Mixed, or when a part is absent. The same constant is used by PartsInspector.swift:295, EffectsListInspector.swift:182, and LandingSwatch (PartsInspector.swift:295-296), so changing the number moves several panels at once - check all of them, and check the drag-landing swatch too.\n\nSensible shape of the fix (runner's call, but justify it in the audit): keep a shared column so rows agree, but size it to the chip plus one standard gap rather than to the word Mixed - e.g. let Mixed have its own narrower treatment or let it truncate - so the picker sits a normal gap from the chip while rows still line up. Whatever is chosen, measure the resulting gap and put the number in the audit.\n\nNot confirmed: whether the toolbar swatches (EditorView.swift:1350+) have the same gap, and whether the Next release has forked any of these files. Check Sources/Photonz/Releases/ before assuming a single shared fix reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -36,14 +36,46 @@
     },
     {
       "t": "2026-09-09T17:54:50.901Z",
-      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    },
+    {
+      "t": "2026-09-12T08:27:18.262Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T08:47:09.361533Z",
+      "note": "reproduced first: probe capture of the Fill row measured the chip's ink at x 1130-1148 and the palette mark's first lit pixel at 1192.5, a gap of 44.5pt. The Mixed chip is 42pt wide, not 52, so the 52pt column was over-sized even for the word it was sized for."
+    },
+    {
+      "t": "2026-09-12T08:47:09.361533Z",
+      "note": "adversarial review before building: the column cannot be both sized to the word Mixed AND put the button a normal gap from an 18pt chip. Rejected right-aligning the readout in the column (it fixes the gap but opens the same hole between the row's NAME and the chip) and rejected replacing the word Mixed with a compact glyph (the word in the colour column is a settled convention several walks read back, and swapping it is a product decision, not a layout one). Took the third option the task sanctioned: size the column to the chip and let a Mixed row carry its button along."
+    },
+    {
+      "t": "2026-09-12T08:47:09.361533Z",
+      "note": "built: ColorPartLayout.readoutWidth 52 -> swatchSize (18); new swatchSize constant replaces four hardcoded 18s; new styleButtonInkInset (4.5, measured) and styleGap (= panelRowGap - inkInset = 3.5) so the gap a PERSON sees is exactly one 8pt row gap. Files: Sources/Photonz/ColorStylePanel.swift, Sources/Photonz/PartsInspector.swift. Neither is forked in Releases/, so one change serves both releases; the styles button is Next-only by flag, and nothing in Current draws in that space, so Current is visually unchanged."
+    },
+    {
+      "t": "2026-09-12T08:47:09.361533Z",
+      "note": "verified by measurement, not eye: new walk Scripts/playtest/style-picker-sits-with-swatch-walk.json photographs a chip row and a Mixed row and reads every control's position back. After: chip 1130-1148, palette from 1156 -> 8.0pt, and the Mixed row reads 8.0pt too (chip 1130-1171, palette from 1179)."
+    },
+    {
+      "t": "2026-09-12T08:47:09.361533Z",
+      "note": "walks: 59 run (style, swatch, color, colour, panel, parts, mixed) - all pass. effect-style-walk failed once then passed three times on the same build; filed as p2 find-out-why-effect-style-walk-sometimes-cannot rather than as a bug. Scripts/test.sh: 5498 tests in 460 suites pass."
+    },
+    {
+      "t": "2026-09-12T08:47:09.361533Z",
+      "note": "audit queue/audits/2026-09-12-swatch-and-styles.json with two real window captures and a before/after strip (Screen Recording was granted)."
+    },
+    {
+      "t": "2026-09-12T08:47:09.361533Z",
+      "note": "rough, recorded in the audit: a row saying Mixed now puts its palette button ~24pt right of where a chip row puts its, since the column no longer holds the word's width. Deliberate; the audit asks the user whether that reads right."
     }
   ],
-  "started": "2026-09-09T17:54:48.398Z",
+  "started": "2026-09-12T08:27:18.261Z",
   "failures": 1,
   "lastError": {
     "at": "2026-09-09T17:54:50.900Z",
     "exit": 1,
-    "message": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
+    "message": "You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your weekly limit resets Sep 12 at 1am (America/Los_Angeles)"
   }
 }

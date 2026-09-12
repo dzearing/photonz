@@ -232,12 +232,41 @@ enum ColorPartLayout {
     /// open lines the names up without pushing the row itself off the panel's
     /// margin (`EditorChromeLayout.panelRowLeadingColumn`).
     static let switchWidth: CGFloat = EditorChromeLayout.panelRowLeadingColumn
-    /// Wide enough for the 18pt swatch and for the word Mixed.
-    static let readoutWidth: CGFloat = 52
+    /// The colour chip itself: every swatch in the panel, the one the drag
+    /// lands on, and the height of the Mixed chip that stands in for them.
+    static let swatchSize: CGFloat = 18
+    /// The column the colour keeps, so a row showing a chip and a row showing
+    /// nothing still put the styles button beside them in the same place.
+    ///
+    /// It is the CHIP and nothing else. It used to be 52 — wide enough for the
+    /// word Mixed as well — which left 34pt of empty reserved column between
+    /// the chip and the styles button beside it: measured off a probe capture
+    /// on 2026-09-12, the chip's ink ended at x 1148 and the palette mark began
+    /// at 1192.5, a gap of 44.5pt. The user reported it on 2026-09-09 with a
+    /// picture of the Fill row: "it feels far away right now which makes it
+    /// feel disconnected". A row wearing the word Mixed carries its own styles
+    /// button along to the right of it, which is the price: the button belongs
+    /// to the readout beside it, not to a column ruled down the section.
+    static let readoutWidth: CGFloat = swatchSize
     /// The band the label, the switch and the color all centre on, so nothing
     /// sits half a line above its neighbour.
     static let rowHeight: CGFloat = 20
     static let spacing: CGFloat = EditorChromeLayout.panelRowGap
+
+    /// How far inside the space the layout gives it the styles button starts
+    /// DRAWING.
+    ///
+    /// It is a borderless menu, so AppKit gives it a bezel of its own and the
+    /// palette mark begins this far in. Measured off a probe capture on
+    /// 2026-09-12 rather than guessed: with the layout putting the button hard
+    /// against the chip, the chip's last lit pixel was at x 1148 and the
+    /// palette's first at 1152.5.
+    static let styleButtonInkInset: CGFloat = 4.5
+
+    /// The gap to leave in the LAYOUT between the colour and the styles button,
+    /// so that what a PERSON sees between the chip and the palette mark is one
+    /// standard row gap. The button's own bezel pays for part of it.
+    static var styleGap: CGFloat { max(0, spacing - styleButtonInkInset) }
 
     /// The ink a small checkbox actually draws, which is narrower than the
     /// column it sits in and leading aligned inside it. Measured off a probe
@@ -490,10 +519,11 @@ struct ColorStyleRow<Well: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            // The color keeps a column of its own whatever it is showing — a
-            // well, a plain swatch, or the word Mixed — so the menu beside it
-            // starts in the same place in every row of the section.
-            HStack(alignment: .center, spacing: 6) {
+            // The color keeps a column the width of its CHIP, so a row showing
+            // a chip and a row showing nothing put the menu beside them in the
+            // same place, and the menu sits one standard gap from the chip
+            // rather than across the width of the word Mixed.
+            HStack(alignment: .center, spacing: ColorPartLayout.styleGap) {
                 readout(selection)
                     .frame(minWidth: ColorPartLayout.readoutWidth, alignment: .leading)
                 ColorStyleControl(target: target, part: part)
@@ -783,7 +813,7 @@ struct SelectionColorWell: View {
                 // button as well as a readout.
                 .foregroundStyle(isHovering ? AnyShapeStyle(.primary) : MixedLook.style)
                 .padding(.horizontal, 6)
-                .frame(height: 18)
+                .frame(height: ColorPartLayout.swatchSize)
                 .background(RoundedRectangle(cornerRadius: 4).fill(.quaternary))
                 .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
         }
@@ -801,7 +831,7 @@ struct SelectionColorWell: View {
             // Under a color that can be see-through, so a translucent fill
             // reads as translucent rather than as a paler one.
             .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
-            .frame(width: 18, height: 18)
+            .frame(width: ColorPartLayout.swatchSize, height: ColorPartLayout.swatchSize)
             .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(edge, lineWidth: 1))
     }
 
@@ -823,7 +853,7 @@ struct SelectionColorWell: View {
             .clipShape(RoundedRectangle(cornerRadius: 2))
             .background(CheckerBoard(square: 3).clipShape(RoundedRectangle(cornerRadius: 2)))
             .frame(width: 12, height: 12)
-            .frame(width: 18, height: 18)
+            .frame(width: ColorPartLayout.swatchSize, height: ColorPartLayout.swatchSize)
             // The holder is filled, not just outlined, the way the Mixed chip
             // in this same column is: an outline alone came out faint in the
             // light appearance, and a chip sitting in something reads as held
@@ -1189,7 +1219,7 @@ struct LibraryStyleInspector: View {
         PaintFill(paint: style.paint)
             .clipShape(RoundedRectangle(cornerRadius: 4))
             .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
-            .frame(width: 18, height: 18)
+            .frame(width: ColorPartLayout.swatchSize, height: ColorPartLayout.swatchSize)
             .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.primary.opacity(0.25), lineWidth: 1))
     }
 

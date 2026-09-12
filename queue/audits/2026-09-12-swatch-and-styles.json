@@ -1,0 +1,29 @@
+{
+  "feature": "A colour and its styles button read as one control",
+  "epic": "app-polish",
+  "summary": "The little palette button that saves a colour under a name, or picks one you already saved, now sits one standard gap from the colour chip instead of 44.5pt away across an empty column. Every colour row in the panel reads as one control rather than two unrelated ones.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to change: the styles button is already on in Next.",
+  "try": [
+    { "do": "Press R and drag out a rectangle, then press V." },
+    { "do": "Look at the Fill row in Appearance: the colour chip, then the palette button.", "shot": "2026-09-12-swatch-and-styles-1.png" },
+    { "do": "Compare it with how it looked before.", "shot": "2026-09-12-swatch-and-styles-before-after.png" },
+    { "do": "Open the palette button, choose Save as Style, type a name and press Return." },
+    { "do": "Look at the row now: held chip, palette mark, the name, side by side." },
+    { "do": "Open the Border effect under Effects and look at its Colour row: the same pairing." },
+    { "do": "Draw a second rectangle, give it a different fill, and pick both.", "shot": "2026-09-12-swatch-and-styles-2.png" }
+  ],
+  "evaluate": [
+    "On step 2, do the chip and the palette button read as one colour control now?",
+    "The gap is 8pt, the same gap the panel uses between anything else in a row. Is it right, or has it gone too tight?",
+    "On step 5, does the style's name sitting right beside the chip read as what that colour IS, or does it crowd the chip?",
+    "On step 7, the Fill row says Mixed and carries its palette button about 24pt further right than a row showing a chip. Does that read as the button following its own colour, or as the rows falling out of line?",
+    "Is there anywhere else in the app where a colour and the control that acts on it still sit apart?"
+  ],
+  "rough": [
+    "The 34pt of empty column that used to sit between them was there on purpose: it was sized to the word Mixed, so every row's palette button began at the same x whatever the row was showing. The column is now the CHIP and nothing else, which means a row wearing the word Mixed carries its button along to the right of it: measured, 24pt of stagger against a row showing a chip. That trade was deliberate. The disconnected pair is what you look at all day; the stagger only appears over a selection whose layers disagree, and even then the button is still one standard gap from the readout it belongs to.",
+    "The 8pt is what a person SEES, chip ink to palette ink. In the layout the gap is 3.5, because the button is a borderless menu and AppKit gives it 4.5pt of bezel of its own before the palette mark starts. Both numbers come off probe captures, not off a ruler held to a screenshot: before, chip 1130-1148 and palette from 1192.5, a gap of 44.5; after, palette from 1156, a gap of 8.0.",
+    "The panel's colour rows are one shared file, so the Current release gets the narrower column too. Nothing is visible there: the styles button and the revert arrow that could follow a chip are both Next-only, so in Current the chip is followed by empty space either way, and the chip itself has not moved.",
+    "Screen Recording was granted for this run, so both full shots are real window captures. The before/after strip is a 4x crop of two real captures, one taken before the change and one after, not a render.",
+    "effect-style-walk failed once during this task at a step that presses a Softness slider, then passed three times on the same build. Filed as a p2 to look into rather than as a bug, because it would not reproduce."
+  ]
+}

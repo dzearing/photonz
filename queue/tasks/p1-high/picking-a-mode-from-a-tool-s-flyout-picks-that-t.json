@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:50:12.044Z",
-  "updated": "2026-09-12T08:26:50.102Z",
+  "updated": "2026-09-12T08:27:01.271Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-09: \"if i long press on a tool to reveal menu of sub options (like ruler measure tool options), i select another sub tool and it changes the mode of the tool but doesn't select it, should have selected it.\"\n\nCause, found by reading (NOT yet reproduced in a running app - reproduce first): Sources/Photonz/ToolModeButton.swift builds its flyout as a Picker bound to $selection (the `modeMenu` property, around line 145). Picking a row writes the mode and nothing else. `activate()` is wired ONLY to the menu's `primaryAction:` (line ~188), which is the plain click on the button. So the flyout can change a tool's mode without that tool ever coming into hand. The binding's own doc comment at line 49 says it outright: \"The live mode. Writing it switches modes; it is never used to activate.\" That comment records the old intent and must be updated with the change, not left contradicting the code.\n\nToolGroupButton next door already does the right thing: each of its menu rows is a Button calling `activate(tool)` (ToolGroupButton.swift:~136). So the two flyouts in the same tool bar behave differently, which is the drift to remove.\n\nTrap a naive fix hits: adding an activate call to the Picker's binding setter does NOT fix the already-ticked case. SwiftUI only writes the binding when the selection CHANGES, so with Measure out of hand and its mode already Distance, picking Distance writes nothing and the press does nothing at all - the worst version of this bug, because the list closes and the app looks broken. The robust shape is to drop the Picker and use explicit Buttons the way ToolGroupButton does, each one activating the tool and setting its mode, with the live row marked (checkmark or a Label with a tick) so the list still says where you are.\n\nOrdering trap for Crop: EditorView.swift:1830 wires Crop's selection to editorState.setCropAspect, and the code comment there explains that switching lock REFITS the crop rect, which is why Crop deliberately does not cycle on its key. Setting the aspect while a different tool is in hand may refit against a rect that is not live yet. Decide and test the order - pick the tool up first, then set the mode - and say in the audit which one is right and why.\n\nCrop's footer (the Resize Image row, EditorView.swift:~1838, passed as `footer:`) is a command, not a mode. It must keep its current behaviour.\n\nThis is a miss in the shipped task 'tool-modes-move-into-a-flyout-on-the-tool-button' (done, p0, seq 3), which moved the modes into the button but never made the list activate its tool.\n\nBoth flyouts sit behind flags (measureModesEnabled, toolOptionsEnabled, toolGroupsEnabled in Experiments.swift), so check which release actually shows them and confirm per CLAUDE.md that the change reaches Next.",
@@ -495,7 +495,7 @@
     }
   ],
   "started": "2026-09-12T08:16:54.105Z",
-  "failures": 48,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-12T07:46:53.221Z",
     "exit": 1,

@@ -1,0 +1,27 @@
+{
+  "id": "find-out-why-effect-style-walk-sometimes-cannot",
+  "title": "Find out why effect-style-walk sometimes cannot find the Softness slider",
+  "goal": "One of the scripted walks that checks saved effect styles fails now and then on a step that presses a slider called Softness, and passes on the next run of the same build. A walk that answers differently twice in a row is worse than no walk, because a real break in the panel would look like the same flake. Find out what makes it happen and make the walk answer the same way every time.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2350,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T08:47:03.217Z",
+  "updated": "2026-09-12T08:47:03.220Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-09-12 while working on a-color-swatch-and-its-style-picker-sit-together.\n\nCommand:\n  Scripts/playtest-all.sh --no-build style swatch\n\nOutput:\n  effect-style-walk                          16s  FAILED  step 55 (press): no control called \"Slider\" in \"Softness\" is in the panel; the ones that are: none. A `panel` step lists everything.\n\n\"the ones that are: none\" says the panel had NO controls at all at that moment, which reads more like the dock had not finished rebuilding than like the Softness row being gone. Re-ran the same walk three times against the same probe build (Scripts/playtest.sh Scripts/playtest/effect-style-walk.json, twice with --no-build): ok, ok, ok. Could not reproduce, so it is filed as something to look into rather than as a bug.\n\nLikely worth a wait or waitFor before step 55 in Scripts/playtest/effect-style-walk.json, but confirm what the panel is doing first rather than papering over it.",
+  "acceptance": [
+    "The cause is named: what is on screen at that step when the press fails, and why the Softness slider is missing or unreachable then.",
+    "effect-style-walk passes five runs in a row on one build.",
+    "If the fault is in the app rather than in the walk, it is fixed rather than waited around."
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T08:47:03.219Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -347,7 +347,7 @@ struct LandingSwatch: View {
         PaintFill(paint: paint)
             .clipShape(RoundedRectangle(cornerRadius: 4))
             .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 4)))
-            .frame(width: 18, height: 18)
+            .frame(width: ColorPartLayout.swatchSize, height: ColorPartLayout.swatchSize)
             .overlay(RoundedRectangle(cornerRadius: 4)
                 .strokeBorder(Color.accentColor, lineWidth: 2))
             .frame(minWidth: ColorPartLayout.readoutWidth,
