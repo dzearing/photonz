@@ -163,6 +163,7 @@ struct CanvasView: NSViewRepresentable {
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
+    let onMeasureEndpointCancel: () -> Void
     /// A corner dot pulled on the canvas: live while it moves, one undo step
     /// on release (`next-corner-handles`).
     let onCornerRadiiPreview: (UUID, CornerRadii) -> Void
@@ -311,6 +312,7 @@ struct CanvasView: NSViewRepresentable {
         view.onCandidateLevelChange = onCandidateLevelChange
         view.onMeasureEndpointPreview = onMeasureEndpointPreview
         view.onMeasureEndpointCommit = onMeasureEndpointCommit
+        view.onMeasureEndpointCancel = onMeasureEndpointCancel
         view.onCornerRadiiPreview = onCornerRadiiPreview
         view.onCornerRadiiCommit = onCornerRadiiCommit
         view.onCaptionPlacePreview = onCaptionPlacePreview
@@ -414,6 +416,7 @@ final class CanvasNSView: NSView {
     var onCandidateLevelChange: ((Int) -> Void) = { _ in }
     var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void) = { _, _, _, _, _ in }
     var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void) = { _, _, _, _, _ in }
+    var onMeasureEndpointCancel: (() -> Void) = {}
     /// A corner dot being pulled: live (no history), then the release (one
     /// undo step).
     var onCornerRadiiPreview: ((UUID, CornerRadii) -> Void) = { _, _ in }

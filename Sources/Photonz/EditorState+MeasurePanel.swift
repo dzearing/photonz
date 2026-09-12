@@ -383,6 +383,14 @@ extension EditorState {
         submit(doc)
     }
 
+    /// A press on a caliper handle that never became a drag, or a drag
+    /// abandoned before anything was recorded: no History step at all, the
+    /// render just settles back onto what the document already says.
+    func cancelMeasureEndpointDrag() {
+        previewMoves = [:]
+        rerender()
+    }
+
     /// Mouse-up on a caliper handle: one undoable step. Committing the original
     /// values is a History no-op (the Esc-cancel path).
     func commitMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat,

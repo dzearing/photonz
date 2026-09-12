@@ -326,7 +326,7 @@ extension CanvasNSView {
                     originalStart: s, originalEnd: e, originalHeadOffset: m.headOffset,
                     originalReadout: MeasureReadoutPlacement(nudge: m.labelNudge,
                                                              pinned: m.labelPinned),
-                    current: p)
+                    pressPoint: p, current: p)
                 if best.handle == .head {
                     let head = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e,
                                                               headOffset: m.headOffset).labelAnchor
@@ -711,11 +711,21 @@ extension CanvasNSView {
                 snapGuide = (landing.guideX, landing.guideY)
                 snapHold.caught(x: landing.guideX, y: landing.guideY)
             }
-            drag.moved = true
+            // A press only becomes an edit once the hand has actually
+            // travelled: the grab has slack around the dot, so a press that
+            // has not moved is someone taking hold of the end, not moving it.
+            // Once true it stays true — a drag that comes back to where it
+            // started is still a drag.
+            drag.moved = drag.moved || MeasureHandlePress.travelled(from: drag.pressPoint, to: p,
+                                                                    zoom: viewport.zoom)
             measureHandleDrag = drag
-            // Live re-render so the measured value updates as the handle moves.
-            let (start, end, off, readout) = drag.params()
-            onMeasureEndpointPreview(drag.layerID, start, end, off, readout)
+            // Live re-render so the measured value updates as the handle moves,
+            // but nothing is previewed before the press counts as a drag: the
+            // caliper would jump a few pixels and settle back on release.
+            if drag.moved {
+                let (start, end, off, readout) = drag.params()
+                onMeasureEndpointPreview(drag.layerID, start, end, off, readout)
+            }
             refreshOverlays()
         } else if var drag = captionDrag {
             drag.current = p
@@ -1048,8 +1058,15 @@ extension CanvasNSView {
         } else if let drag = measureHandleDrag {
             measureHandleDrag = nil
             snapGuide = nil
-            let (start, end, off, readout) = drag.params()
-            onMeasureEndpointCommit(drag.layerID, start, end, off, readout)
+            // A press that never travelled is a click on the handle, not an
+            // edit: the foot or the readout stays exactly where it was placed,
+            // the reading is the same number, and no undo step is taken.
+            if drag.moved {
+                let (start, end, off, readout) = drag.params()
+                onMeasureEndpointCommit(drag.layerID, start, end, off, readout)
+            } else {
+                onMeasureEndpointCancel()
+            }
             refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()
         } else if let drag = captionDrag {

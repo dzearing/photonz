@@ -89,11 +89,16 @@ extension CanvasNSView {
         var head: CGFloat?
         var readout: MeasureReadoutPlacement?
         var originalReadout: MeasureReadoutPlacement
+        /// Where the press landed. The grab has slack around the dot, so this
+        /// is near the handle rather than on it, and it is what travel is
+        /// measured from to tell a click from a drag.
+        let pressPoint: CGPoint
         var current: CGPoint
-        /// True once the pointer has actually moved this handle, so `current`
-        /// is a landing rather than the point the press happened to land on.
-        /// The grab has a few pixels of tolerance around the dot, so before the
-        /// first move `current` is near the foot but not on it.
+        /// True once the pointer has actually travelled (`MeasureHandlePress`),
+        /// so `current` is a landing rather than the point the press happened
+        /// to land on. The grab has a few pixels of tolerance around the dot,
+        /// so before the first move `current` is near the foot but not on it,
+        /// and committing it would move a measurement nobody asked to move.
         var moved = false
         /// The line ⇧ is holding this foot on: latched the moment the key goes
         /// down, dropped the moment it comes up. Nil for a free drag and for

@@ -103,7 +103,12 @@ extension CanvasNSView {
             measurePlacementHold = nil
             measureFirstFootPress = false
             measurePressDownView = nil
-            measureHandleDrag = nil
+            if measureHandleDrag?.moved == true {
+                measureHandleDrag = nil
+                onMeasureEndpointCancel() // a previewed handle drag settles back
+            } else {
+                measureHandleDrag = nil
+            }
             if captionDrag != nil {
                 captionDrag = nil
                 onCaptionPlaceCancel()

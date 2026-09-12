@@ -1,0 +1,29 @@
+{
+  "id": "a-measurement-end-follows-your-hand-instead-of-j",
+  "title": "A measurement end follows your hand instead of jumping to it",
+  "goal": "You can take hold of a measurement's end a few pixels off its dot, because the grab has slack. But the moment you start dragging, the end teleports to exactly where the pointer is, so a short pull can move the end the opposite way from your hand and the reading changes in the wrong direction. Taking hold a little off the dot should keep that grip: the end moves by as much as your hand moved, in the direction your hand moved.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2390,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T09:30:45.335Z",
+  "updated": "2026-09-12T09:30:45.338Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-12 on the probe build, AFTER the click-does-not-move-it fix landed. Walk /tmp/foot-grip.json: caliper placed with the magnets off at (600,500) to (800,500), reading 100 px, then a command-drag from (792,500) to (798,500) — the press lands 8 points LEFT of the right foot and the hand travels 6 points RIGHT. Result: feet (600,500) to (798,500), reading 99 px. The foot went 2 points LEFT while the hand went 6 points RIGHT, and the measurement got shorter while being pulled longer.\n\nWhy: Sources/Photonz/CanvasMeasure.swift, MeasureHandleDrag.params(), the .footA/.footB cases put the foot at `current`, which is the pointer landing. The HEAD case already keeps its grip through grabCross/grabAlong, seeded in Sources/Photonz/CanvasPointerDrags.swift mouseDown; the feet have no equivalent.\n\nThe catch, and why this was left out of the click fix (task clicking-a-measurement-end-does-not-move-it, which required dragging to keep working exactly as it does): the magnets read the RAW pointer. EdgeSnapping.snap is handed `p` in the mouseDragged branch, and the span window is built from `p` too. A grip offset has to be applied BEFORE snapping so the magnets judge the point the foot is actually going to, or the foot will snap to edges near the pointer rather than edges near itself. Expect to thread the offset through that whole branch, not just params().\n\nWorth deciding how big the grip may get: the grab tolerance is 9 view points, so the offset is bounded by that already.",
+  "acceptance": [
+    "Grabbing an end a few pixels off its dot and pulling right moves that end right by the same amount the hand moved",
+    "The reading never changes in the opposite direction from the hand",
+    "The magnets still catch the same edges they catch today for the same hand position",
+    "The shift hold and the command override are unchanged",
+    "A walk proves it: grab a foot eight points off the dot, pull six right, and read the foot back six to the right of where it started"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T09:30:45.337Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/caliper-click-holds",
+  "seed": "Taking hold of one end of a measurement used to change it. A caliper's feet and its readout are grabbed with a few points of slack around the dot, and a press that never travelled was committed as if it were a drag: the end jumped under the pointer, the other end levelled onto it, and a reading lined up carefully came out a different number with nothing said about it. A click that does not travel now leaves the measurement exactly as it was, and leaves no undo step behind. This walk clicks a foot, clicks the readout, jiggles a foot by half a point, then proves a real drag still works and that ONE undo steps over all of it back to the placed caliper.",
+  "setup": { "forget": ["shapes", "measure", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1400, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [600, 500], "modifiers": ["command"] },
+    { "do": "click", "at": [800, 500], "modifiers": ["command"] },
+    { "do": "click", "at": [800, 440], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "describe", "stage": "1-placed", "note": "THE SETUP: a caliper reading 100 px, feet at (600, 500) and (800, 500), readout chip at (700, 440)" },
+
+    { "do": "click", "at": [795, 504], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-foot-clicked", "note": "THE CLAIM: one click on the right foot, five points off the dot, no drag at all. Both feet and the reading are exactly as placed: (600, 500) to (800, 500), 100 px" },
+    { "do": "snapshot", "name": "caliper-click-holds" },
+
+    { "do": "click", "at": [703, 442], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-chip-clicked", "note": "THE SECOND CLAIM: one click on the readout chip, off its centre, no drag. The number is still at (700, 440) and the feet have not moved" },
+
+    { "do": "drag", "from": [795, 504], "to": [796, 504], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-jiggled", "note": "THE THIRD CLAIM: a press that travelled one document point, which is half a point of hand movement at this zoom, is still a click. Feet unchanged, 100 px" },
+
+    { "do": "drag", "from": [800, 500], "to": [900, 500], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-dragged", "note": "DRAGGING STILL WORKS: the right foot pulled 100 right lands at (900, 500) and the caliper reads 150 px" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-one-undo", "note": "THE FOURTH CLAIM: ONE undo steps back to the placed caliper, (600, 500) to (800, 500) at 100 px. Three clicks happened in between and none of them left an undo step to step over first" },
+
+    { "do": "drag", "from": [800, 500], "to": [900, 560], "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-held", "note": "THE HOLD IS UNTOUCHED: shift still holds the caliper on its line. The dragged foot lands at (900, 500), the other foot has not moved, and only the length changed" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [600, 500], "to": [560, 500] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-magnets", "note": "THE MAGNETS ARE UNTOUCHED: the same drag WITHOUT command, so the magnets are live, still lands and commits. The left foot goes to x 560 and the caliper reads 120 px" }
+  ]
+}

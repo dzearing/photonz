@@ -208,8 +208,12 @@ extension CanvasNSView {
             if let drag = measureHandleDrag {
                 measureHandleDrag = nil
                 snapGuide = nil
-                let (start, end, off, readout) = drag.originalParams()
-                onMeasureEndpointCommit(drag.layerID, start, end, off, readout) // History no-op; restores render
+                if drag.moved {
+                    let (start, end, off, readout) = drag.originalParams()
+                    onMeasureEndpointCommit(drag.layerID, start, end, off, readout) // History no-op; restores render
+                } else {
+                    onMeasureEndpointCancel() // nothing was previewed; nothing to put back
+                }
                 refreshGrabCursor()
                 refreshOverlays()
                 return

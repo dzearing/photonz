@@ -1,0 +1,26 @@
+{
+  "feature": "Taking hold of a measurement no longer changes it",
+  "epic": "measure-redline",
+  "summary": "Clicking one end of a placed measurement, or its number, now leaves the measurement exactly as it was: same ends, same reading, no undo step. Before, a click that never travelled moved the end under the pointer and quietly changed the number.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open a screenshot and press I for the measure tool." },
+    { "do": "Click twice to lay down a measurement across something, then a third time to park its number above the line." },
+    { "do": "Press V to go back to Select, and note the number the measurement reads." },
+    { "do": "Click one end of it, a few pixels off the dot, and let go without moving.", "shot": "2026-09-12-caliper-click-holds.png" },
+    { "do": "Check the number: it should be the same one, and both ends should be where you left them." },
+    { "do": "Click the number chip itself, again without moving. It should stay where it was parked." },
+    { "do": "Now actually drag that same end somewhere, then press Command-Z once. One undo should put the measurement back exactly as you placed it." }
+  ],
+  "evaluate": [
+    "When you click an end and nothing happens, does that read as taking hold of it, or as the click having missed?",
+    "Is the pointer telling you enough that you have hold of the end, or do you want more of a cue before you commit to a drag?",
+    "A press has to travel about two points before it counts as a drag. Is that too eager, or not eager enough, for the way you nudge things?",
+    "Does one undo after a drag land where you expect it to now?"
+  ],
+  "rough": [
+    "There is still a jump when a press DOES become a drag: take hold of an end eight points off its dot, pull your hand six points right, and the end moves two points LEFT, because the end goes to where the pointer is rather than keeping the grip you took. The number can shrink while you pull it longer. Filed separately as 'A measurement end follows your hand instead of jumping to it', because fixing it means teaching the magnets to judge the point the end is going to rather than the point the pointer is on, and that is not a change to make inside a bug fix about clicks.",
+    "A deliberate but very small drag, under about two points of hand movement, now reads as a click and moves nothing. That threshold is the same one the arrow caption pill already uses, so the canvas is at least consistent about what a click is.",
+    "The screenshot is a real window capture, not an offscreen render."
+  ]
+}
