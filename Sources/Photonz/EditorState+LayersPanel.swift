@@ -328,6 +328,18 @@ extension EditorState {
 
     func commitLayerStyle(id: UUID) { commitLayerStyle(ids: [id]) }
 
+    /// Letting go of a style gesture WITHOUT keeping it: throws the previewed
+    /// look away and puts the canvas back on the document. Nothing was ever
+    /// recorded, so there is nothing to undo — which is the whole point of
+    /// being able to rest the pointer on five ways of mixing and walk away.
+    ///
+    /// A no-op when no preview is in flight, which is nearly always.
+    func cancelLayerStylePreview() {
+        guard stylePreview != nil else { return }
+        stylePreview = nil
+        rerender()
+    }
+
     /// One-shot style edit (steppers, toggles, the shadow switch): a single
     /// undo step over the whole selection, no preview.
     func setLayerStyle(ids: [UUID], _ mutate: @escaping (inout LayerStyle) -> Void) {

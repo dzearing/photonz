@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T13:31:14.610Z",
-  "updated": "2026-09-09T13:31:18.751Z",
+  "updated": "2026-09-12T09:21:41.862524Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-09: they raised Photoshop's layer mixing modes as the powerful-but-unintuitive prior art and asked whether Photonz should have them.\n\nWorth being straight about in the build: a blend mode CANNOT blur or pixelate. Those are neighbourhood operations that read surrounding pixels; a blend mode is per-pixel maths between this layer's colour and the backdrop's. Photoshop does blur-through-a-shape with a smart filter or a blurred duplicate, not with a blend mode. So this task is the tinting and burning axis only; blur, pixelate, greyscale and invert belong to the sibling task 'A layer can change what is underneath it', which is the other axis. Neither replaces the other.\n\nMost of this already exists and is not exposed. BlendMode is in Sources/PhotonzCore/Layer.swift:931 with normal, multiply and screen; LayerStyle carries it (Layer.swift:964); DocumentRenderer.swift:478 composites with it and DocumentRenderer.swift:1307 maps it to CIMultiplyBlendMode and CIScreenBlendMode. Nothing in Sources/Photonz puts it in front of a person - grep for blendMode in the app layer finds only the drag preview. So the work is mostly the model round-trip, the panel row, and deciding which modes earn a place.\n\nWhich modes: resist shipping Photoshop's full list. Start from what a redline or a screenshot markup actually needs - multiply (burn a colour in, highlighter), screen (lighten), and consider darken, lighten and overlay - and justify each addition in the audit. A list of twenty with names like 'linear burn' is precisely the unintuitive thing the user objected to.\n\nNot confirmed: whether the group buffering path composites a child's blend mode against the group's own buffer or against the canvas. DocumentRenderer.swift:430 has a pass-through fast path for a plain group that composites children straight onto the output, which likely means a multiply child inside such a group already mixes with the whole canvas. Reproduce that before deciding what correct means, and write the test for it first.\n\nCheck Sources/Photonz/Releases/ before assuming one shared change reaches both releases; per CLAUDE.md a Current change is not finished until Next has it.",
@@ -30,6 +30,75 @@
     {
       "t": "2026-09-09T13:31:18.750Z",
       "note": "seq 270 -> 13"
+    },
+    {
+      "t": "2026-09-12T09:02:56.549Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T09:04:38.399314Z",
+      "note": "Adversarial review, before building. (1) The group acceptance item is backwards and I am not building it. It asks that a multiply layer inside a group mix with the GROUP's contents rather than the canvas. The renderer deliberately does the opposite for a group with no styling of its own, and that is right: grouping must change no pixels, or every Cmd-G on a highlighter would be a surprise. Photoshop calls this Pass Through and makes it the default for the same reason. A group that HAS styling already draws as one object into its own buffer, and a child that multiplies inside one mixes with the group only. I will pixel-test both halves and say so in the audit."
+    },
+    {
+      "t": "2026-09-12T09:04:38.399314Z",
+      "note": "(2) A live preview while you move through the list cannot be had from a SwiftUI Picker: a macOS pop-up is an NSMenu and SwiftUI never sees hover on its rows. So the row is a small AppKit pop-up whose highlight drives the same preview-and-commit path the sliders use. That is the whole difference between trying five things and undoing four, and arrowing down the list watching the canvas."
+    },
+    {
+      "t": "2026-09-12T09:04:38.399314Z",
+      "note": "(3) A first-time user meets a row reading Blending: Normal and has nothing on screen telling them what else there is. So the plain words go IN the menu, a second line under each name, not behind a tooltip you have to know to wait for."
+    },
+    {
+      "t": "2026-09-12T09:04:38.399314Z",
+      "note": "(4) Five modes, not twenty. Normal, Multiply, Screen carry the cases the user named; Darken and Lighten are the only two others whose result can be said in one sentence with no maths. Overlay, soft light and the burns are left out on purpose: you cannot predict them without knowing the formula, which is the exact complaint."
+    },
+    {
+      "t": "2026-09-12T09:04:38.399314Z",
+      "note": "(5) Cut as decorative: per-mode preview thumbnails, blend-if sliders, per-channel anything."
+    },
+    {
+      "t": "2026-09-12T09:04:38.399314Z",
+      "note": "(6) Found while reading: BlendMode is a String raw enum and LayerStyle decodes it with decodeIfPresent, which THROWS on an unknown raw value instead of returning nil. A document saved by a build with one more mode would fail to open at all rather than opening with that layer normal. Fixing that as part of this."
+    },
+    {
+      "t": "2026-09-12T09:04:38.399314Z",
+      "note": "(7) Found while reading: Layer.effectiveBlendMode forces multiply for a highlight annotation, so a Blending menu over a highlight would show Normal while the canvas multiplies and picking Screen would do nothing. Rather than ship a dead control the row is left out for highlights and a one-line note says why, the way the Border row explains its own reach."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "Built. Model: BlendMode moved to Sources/PhotonzCore/BlendMode.swift and grew darken and lighten, plus title and explanation for each, and BlendMode.named so a mode a later build adds opens as Normal instead of throwing the whole document away. Layer.mixingIsFixed sits beside effectiveBlendMode and says a highlight's mixing is not a choice; LayerStyleSelection.mixable is the row's reach."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "Renderer: DocumentRenderer.composite gained CIDarkenBlendMode and CILightenBlendMode. 19 pixel tests in PhotonzRenderTests/BlendModeTests cover each mode over a known backdrop both ways round, that nothing reaches past the layer's own extent (the CI blend filters grow their frame to the union of both inputs), a plain group changing no pixels at three sample points against the same layers loose on the canvas, a styled group mixing inside its own buffer, every mode inside one, and every mode matching between the screen and a 2x export. 14 model tests in PhotonzCoreTests/BlendModeChoiceTests cover the list, the words, the save round trip, an unknown mode, duplicate, group, ungroup, undo, redo and one step over a whole selection."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "App: next-blend-mode, on by default in Next. Sources/Photonz/BlendModeInspector.swift puts a Blending row under Opacity in PartsInspector. The control opens a list rather than a macOS pop-up menu, because a pop-up can neither preview anything nor carry a sentence beside each name: resting on a row previews it through previewLayerStyle and leaving the list without clicking puts the canvas back through the new EditorState.cancelLayerStylePreview. A choice is one undo step over every picked layer. CanvasDisplay's drag sprite now maps the mode through one exhaustive switch, so a sixth mode stops that file compiling rather than quietly dragging as Normal."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "Adversarial review of the BUILT thing, in the probe, found two things and both are fixed. (a) Over a highlight the panel showed a dead Blending row reading Normal AND a note underneath saying there is no Blending to set: worse than either alone. The row is absent now and only the note is there, checked by the walk with expect present false. (b) The explanation under the closed button appeared on every layer including Normal, which is two lines of small print on every panel forever explaining the thing that needs no explaining. It appears only once somebody chooses otherwise."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "Verified: Scripts/playtest/blend-mode-walk.json, 63 steps, status ok. It draws a box over a real settings-pane capture, opens the list, takes the box through all four mixing modes claiming what the row reads after each, undoes back to Normal, then draws a highlight and claims the row is gone. Screen Recording was granted, so every picture is a real capture of the window. Also ran the 26 panel, appearance and parts walks: all green. Asked for a full sweep because the new row shifts everything below it in the shared Appearance section."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "Perf, composite path: 12MP/10-layer full render 34.6ms median, interactive edit 6.5ms, export at 2x 115.9ms, crisp tile at 400% 9.9ms. Unmoved; the path gained two switch cases that only run when a layer asks for them."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "Left undone on purpose and written into the audit: the task's group acceptance item asks that a layer mixing inside a group meet the group's contents rather than the canvas. Grouping must change no pixels, so a plain group passes through and a styled one isolates, which is Photoshop's Pass Through rule. Both halves are pixel-tested and the audit asks the user whether they want the other default."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "Filed: find-out-whether-command-z-works-after-clicking (p2). Command Z typed straight after clicking a panel control does not undo, and it is NOT from this work: the same walk fails on the Fill switch, which predates it. Both reproductions are in the task."
+    },
+    {
+      "t": "2026-09-12T09:21:41.862524Z",
+      "note": "Shared or Current code touched: none of it is Current behaviour. BlendMode, the renderer and the selection types are shared and reach both releases by themselves; the row itself is behind next-blend-mode, which exists only in Next's catalog. The drag-sprite switch is shared and was already mapping the modes, so it now covers all five in both releases, which is the same thing it did before for the modes that existed."
     }
-  ]
+  ],
+  "started": "2026-09-12T09:02:56.548Z"
 }

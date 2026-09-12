@@ -116,6 +116,8 @@ public enum FeatureCatalog {
 
     public static let lensFlag = "next-lens"
 
+    public static let blendModeFlag = "next-blend-mode"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -389,6 +391,15 @@ public enum FeatureCatalog {
                     name: lensFlag,
                     title: "A layer that changes what is under it",
                     description: "Adds the Lens tool, K, next to the Zoom Callout. Drag a box over anything and the picture underneath is drawn through it: Blur to soften an address until it cannot be read, Pixelate to break a name into blocks, Greyscale to drain the colour out of a region, Invert to flip it, or Brightness to lift it or push it down. Each one has its own setting, in the capsule over the tool bar before you draw and in the Lens section of the panel after. It is an ordinary layer otherwise: move it, resize it, turn it, round its corners, give it a border or a shadow, fade it, reorder it, undo it. What leaves the app is flattened, so a pixelated region really is pixelated in the picture you export or copy. Off means no Lens tool and no Lens section; a lens already in a document keeps drawing either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: blendModeFlag,
+                    title: "A layer can say how it mixes with what is under it",
+                    description: "Adds a Blending row to the Appearance section, right under Opacity, where Opacity says how much of what is below shows through and Blending says how the two are mixed once it does. Five choices, each with a plain sentence beside it: Normal paints straight over, Multiply darkens the way a highlighter pen does so a tint burns into a screenshot and the detail underneath still shows, Screen lightens, and Darken and Lighten keep whichever of the two is darker or lighter. Moving down the list previews each one on the canvas as you go, and the one you click is a single undo step over every layer you picked. What leaves the app carries it, so a tint really is burnt into the picture you export or copy. A highlight mark has no row, because mixing is what makes it a highlighter. Off means no Blending row; a layer already set to mix keeps drawing either way.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

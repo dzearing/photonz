@@ -1,0 +1,27 @@
+{
+  "id": "find-out-whether-command-z-works-after-clicking",
+  "title": "Find out whether Command Z works after clicking a control in the right hand panel",
+  "goal": "After you click something in the right hand panel - a switch, a menu - pressing Command Z may do nothing at all, so the change you just made cannot be taken back with the keyboard. This is about finding out whether that is real for a person or only an artefact of the scripted walks, and fixing it if it is real.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 2380,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T09:21:23.692Z",
+  "updated": "2026-09-12T09:21:23.695Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-09-12 while building the Blending row. Two walks, one on the NEW control and one on a control that predates this work, both fail the same way, so it is not a regression from the blend work.\n\nRun 1, the new control:\n  Scripts/playtest.sh /tmp/undo-probe.json --no-build\n  draw a rectangle, press Blending, press Multiply, expect Blending reads Multiply (passes), press Command Z, expect Normal\n  -> step 13 (expect): the control called \"Blending\" reads \"Blending, Multiply\", not \"Blending, Normal\"\n\nRun 2, the CONTROL experiment on an old control:\n  Scripts/playtest.sh /tmp/undo-control.json --no-build\n  draw a rectangle, press the Fill switch (turning Fill off), press Command Z, expect Fill reads on\n  -> step 10 (expect): the control called \"Switch\" reads \"Fill, off\", not \"Fill, on\"\n\nIn both the log says the key WAS delivered: [47 key] command+z taken by responder chain. So something in the chain claims it and does not undo, or the undo happens and the panel does not follow. An { \"do\": \"action\", \"action\": \"undo\" } step in the same place works every time, which is why blend-mode-walk.json uses that.\n\nFirst thing to try is by hand in the probe: draw a box, click the Fill switch, press Command Z, look. If it undoes for a person then the walk harness sends the key to the wrong responder after a panel press and the fix is in PlaytestHarness, not in the app.",
+  "acceptance": [
+    "A plain statement of whether a person pressing Command Z after clicking a panel control gets their change undone, backed by trying it in the app",
+    "If it is broken, Command Z undoes the last change after a panel control was clicked, proved by a walk",
+    "If it is not broken for a person, the walk harness is fixed or the finding is written down so nobody chases it again"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T09:21:23.694Z",
+      "note": "created (manual)"
+    }
+  ]
+}

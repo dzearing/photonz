@@ -64,15 +64,21 @@ public struct LayerStyleSelection: Hashable, Sendable {
         /// go round (`BorderFollows.swift`). Everything else has a box and
         /// nothing else, so its Border row never asks the question.
         public let hasLetters: Bool
+        /// True when how this layer mixes is not a choice anybody has: a
+        /// highlight mark always mixes with the words under it
+        /// (`Layer.mixingIsFixed`). The Blending row leaves those out.
+        public let hasFixedMixing: Bool
 
         public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double,
                     hasItsOwnThickness: Bool = false,
-                    hasLetters: Bool = false) {
+                    hasLetters: Bool = false,
+                    hasFixedMixing: Bool = false) {
             self.id = id
             self.style = style
             self.cornerRadiusLimit = cornerRadiusLimit
             self.hasItsOwnThickness = hasItsOwnThickness
             self.hasLetters = hasLetters
+            self.hasFixedMixing = hasFixedMixing
         }
     }
 
@@ -148,6 +154,15 @@ public struct LayerStyleSelection: Hashable, Sendable {
     /// somebody's shadow into a ring.
     public func borders(at index: Int) -> LayerStyleSelection {
         LayerStyleSelection(members: members.filter { $0.style.borderEffect(at: index) != nil },
+                            selectionCount: selectionCount)
+    }
+
+    /// The picked layers that can be TOLD how to mix, which is what the
+    /// Blending row speaks for. A highlight mark is left out: its mixing is
+    /// what makes it a highlighter, so a menu over one would be five choices
+    /// that all did nothing.
+    public var mixable: LayerStyleSelection {
+        LayerStyleSelection(members: members.filter { !$0.hasFixedMixing },
                             selectionCount: selectionCount)
     }
 
@@ -253,7 +268,8 @@ extension PhotonzDocument {
                 id: id, style: resolved,
                 cornerRadiusLimit: max(1, Double(min(bounds.width, bounds.height) / 2)),
                 hasItsOwnThickness: layer.hasOutlineThickness,
-                hasLetters: layer.hasLetters))
+                hasLetters: layer.hasLetters,
+                hasFixedMixing: layer.mixingIsFixed))
         }
         return LayerStyleSelection(members: members, selectionCount: layerIDs.count)
     }

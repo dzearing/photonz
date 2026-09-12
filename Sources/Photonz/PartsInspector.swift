@@ -43,6 +43,14 @@ struct PartsInspector: View {
             // heading (reported by the user, 2026-09-08).
             opacity
                 .panelStartProbe(.row, owner: "Opacity")
+            // ...and directly under it, how what shows through is MIXED with
+            // what is under it (`next-blend-mode`). The two are one question
+            // between them, so they are one pair of rows rather than an
+            // Opacity here and a mixing setting somewhere else.
+            if Experiments.shared.blendModeEnabled {
+                BlendModeRow()
+                FixedMixingNote()
+            }
             // A measurement's Role, right under it: it is a preset for every
             // colour below it, so it reads as "what this calls out, then what
             // that is painted" (`MeasurePartSettings`).

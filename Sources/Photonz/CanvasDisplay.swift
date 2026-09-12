@@ -509,11 +509,7 @@ extension CanvasNSView {
         previewSpriteLayer.bounds = CGRect(origin: .zero, size: spriteRect.size)
         previewSpriteLayer.position = CGPoint(x: spriteRect.midX, y: spriteRect.midY)
         previewSpriteLayer.setAffineTransform(spriteDeltaTransform(for: dragPreview.layerID))
-        switch dragPreview.blendMode {
-        case .normal: previewSpriteLayer.compositingFilter = nil
-        case .multiply: previewSpriteLayer.compositingFilter = "multiplyBlendMode"
-        case .screen: previewSpriteLayer.compositingFilter = "screenBlendMode"
-        }
+        previewSpriteLayer.compositingFilter = dragPreview.blendMode.compositingFilterName
         previewSpriteLayer.isHidden = false
     }
 
@@ -1106,5 +1102,24 @@ extension CanvasNSView {
             ? viewport.viewPoint(fromDocument: CGPoint(x: 0, y: span.end)).y
             : viewport.viewPoint(fromDocument: CGPoint(x: span.end, y: 0)).x
         return (min(a, b) - 6, max(a, b) + 6)
+    }
+}
+
+/// How a layer's mixing is spelled to Core Animation, which is what draws the
+/// sprite under your hand while you drag. It has to agree with the renderer's
+/// Core Image filter (`DocumentRenderer.composite`) or a layer would change
+/// appearance the moment you picked it up and change back when you let go.
+///
+/// Exhaustive on purpose: a sixth mode added to `BlendMode` stops this file
+/// compiling rather than quietly dragging as Normal.
+extension PhotonzCore.BlendMode {
+    var compositingFilterName: String? {
+        switch self {
+        case .normal: nil
+        case .multiply: "multiplyBlendMode"
+        case .screen: "screenBlendMode"
+        case .darken: "darkenBlendMode"
+        case .lighten: "lightenBlendMode"
+        }
     }
 }

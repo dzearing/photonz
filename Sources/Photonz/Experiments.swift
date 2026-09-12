@@ -194,6 +194,12 @@ extension Experiments {
     /// always reads false.
     var shapePartsEnabled: Bool { isEnabled(FeatureCatalog.shapePartsFlag) }
 
+    /// `next-blend-mode`: whether the Appearance section carries a Blending row
+    /// under Opacity, so a layer can say how it mixes with what is under it
+    /// rather than always painting straight over. Exists only in the Next
+    /// release's catalog, so Current always reads false.
+    var blendModeEnabled: Bool { isEnabled(FeatureCatalog.blendModeFlag) }
+
     /// `next-corner-handles`: whether a picked shape with corners wears a dot
     /// just inside each corner that rounds that corner when you pull it.
     /// Exists only in the Next release's catalog, so Current always reads

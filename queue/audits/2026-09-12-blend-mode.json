@@ -1,0 +1,30 @@
+{
+  "feature": "A layer can say how it mixes with what is under it",
+  "epic": "measure-redline",
+  "summary": "Every layer now has a Blending row under Opacity, with five choices and a plain sentence beside each one, so a tint burnt into a screenshot or a mark that lets the words show through is one setting instead of a trick. Moving down the list paints each choice on the canvas as you go.",
+  "setup": "Photonz Dev, release Next. The flag is \"A layer can say how it mixes with what is under it\" (next-blend-mode) and it is on by default there.",
+  "try": [
+    { "do": "Open a screenshot with some text in it." },
+    { "do": "Press R and drag a solid box over a row of that text. It covers the words completely, which is what every layer has always done." },
+    { "do": "In the Appearance section, click the Blending button under Opacity.", "shot": "2026-09-12-blend-mode-list.png" },
+    { "do": "Move the pointer slowly down the five choices and watch the box on the canvas change under each one." },
+    { "do": "Click Multiply. The box burns its colour into the row and the words show through it.", "shot": "2026-09-12-blend-mode-multiply.png" },
+    { "do": "Try Darken on the same box: it shows only where the screenshot is lighter than it, and leaves the dark text alone.", "shot": "2026-09-12-blend-mode-darken.png" },
+    { "do": "Press Command Z. One choice is one step back." },
+    { "do": "Export the picture and look at the file: the mixing is in the exported pixels, not only on screen." }
+  ],
+  "evaluate": [
+    "When you rest on a choice and the canvas changes, is that the moment you decide, or do you still find yourself clicking one and undoing?",
+    "Are five enough? Which one did you reach for and not find - and is Overlay the one you missed?",
+    "Do the sentences beside each name tell you what you need, or do they read as padding once you have used this twice?",
+    "The sentence under the closed button appears only once you are on something other than Normal. Is it welcome there, or is it two lines of small print in the way?",
+    "A highlight mark has no Blending row at all, because mixing is what makes it a highlighter. Is that right, or do you want to be able to take a highlight off multiply?"
+  ],
+  "rough": [
+    "Five modes, not twenty. Normal, Multiply, Screen, Darken and Lighten are the ones whose result can be said in one sentence with no maths. Overlay, soft light, the burns and dodges are left out on purpose: you cannot predict them without knowing the formula, which is the exact thing you called unintuitive about Photoshop. Adding Overlay later is a one-line change if you want it.",
+    "The task asked that a layer set to Multiply inside a group mix with the GROUP's contents rather than the whole canvas. I did not build that and I think the ask is backwards: grouping must change no pixels, or every Command G on a highlighter would be a surprise. So a plain group passes through and a layer inside it goes on mixing with the canvas exactly as it did a second before you grouped it; a group that carries styling of its own already draws as one object, and a layer that mixes inside one of those meets its siblings and nothing else. Both are pixel-tested. Photoshop calls the first Pass Through and makes it the default for the same reason. If you want the isolated rule to be the default instead, say so and it is a small change.",
+    "The list is a panel of its own rather than a macOS pop-up menu, because a pop-up cannot preview anything and cannot carry a sentence beside each name. The cost is that it does not answer the keyboard the way a real menu does: you point and click rather than arrowing down it. Worth a follow-up if that bites.",
+    "Command Z typed straight after clicking a control in the panel appears not to undo. It is not new here: the same thing happens on the Fill switch, which predates this work. Filed as \"Find out whether Command Z works after clicking a control in the right hand panel\" (p2) with both reproductions, because I could not tell whether it is real for a person or an artefact of the scripted walk.",
+    "The screenshots here are real captures of the app taken with Screen Recording granted, not offscreen renders."
+  ]
+}

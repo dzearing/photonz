@@ -1612,6 +1612,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         CGRect(x: rect.minX, y: canvasHeight - rect.maxY, width: rect.width, height: rect.height)
     }
 
+    /// One layer laid over what is already there, the way the layer says
+    /// (`BlendMode`). Every mode but Normal goes through a Core Image blend
+    /// filter, which grows the frame to the union of the two inputs, so each
+    /// one is cut back to `extent` before it is handed on: without that a
+    /// layer hanging off the canvas would widen every composite above it.
     private func composite(_ image: CIImage, over backdrop: CIImage, mode: BlendMode, extent: CGRect) -> CIImage {
         switch mode {
         case .normal:
@@ -1622,6 +1627,14 @@ public final class DocumentRenderer: @unchecked Sendable {
                 .cropped(to: extent)
         case .screen:
             return image.applyingFilter("CIScreenBlendMode",
+                                        parameters: [kCIInputBackgroundImageKey: backdrop])
+                .cropped(to: extent)
+        case .darken:
+            return image.applyingFilter("CIDarkenBlendMode",
+                                        parameters: [kCIInputBackgroundImageKey: backdrop])
+                .cropped(to: extent)
+        case .lighten:
+            return image.applyingFilter("CILightenBlendMode",
                                         parameters: [kCIInputBackgroundImageKey: backdrop])
                 .cropped(to: extent)
         }

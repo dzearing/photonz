@@ -935,13 +935,6 @@ public enum LayerContent: Hashable, Codable, Sendable {
     }
 }
 
-/// How a layer composites against the content below it.
-public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
-    case normal
-    case multiply
-    case screen
-}
-
 /// Non-destructive per-layer styling, applied at render time.
 public struct LayerStyle: Hashable, Codable, Sendable {
     public var opacity: Double
@@ -1163,7 +1156,10 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         // Either shape: the single number every older document holds, or four
         // corners that disagree (`CornerRadii`).
         cornerRadii = try c.decodeIfPresent(CornerRadii.self, forKey: .cornerRadius) ?? .none
-        blendMode = try c.decodeIfPresent(BlendMode.self, forKey: .blendMode) ?? .normal
+        // Read as a plain word and matched, so a mode a later build adds
+        // opens as Normal here instead of throwing and taking the whole
+        // document with it (`BlendMode.named`).
+        blendMode = BlendMode.named(try c.decodeIfPresent(String.self, forKey: .blendMode))
         if let list = try c.decodeIfPresent([LayerEffect].self, forKey: .effects) {
             effects = list
         } else {
@@ -1693,10 +1689,22 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// multiply so underlying detail shows through; everything else follows
     /// the layer's style.
     public var effectiveBlendMode: BlendMode {
-        if case .annotation(let annotation) = content, annotation.shape == .highlight {
-            return .multiply
-        }
+        if mixingIsFixed { return .multiply }
         return style.blendMode
+    }
+
+    /// True when this layer's mixing is part of what it IS, so nobody may set
+    /// it. A highlighter that painted straight over the words would not be a
+    /// highlighter, so a highlight mark always mixes, whatever its style says.
+    ///
+    /// The panel asks this rather than knowing it, and leaves the Blending row
+    /// out for one — a menu whose every choice did nothing would be worse than
+    /// no menu. It sits beside `effectiveBlendMode` so the two cannot drift.
+    public var mixingIsFixed: Bool {
+        if case .annotation(let annotation) = content, annotation.shape == .highlight {
+            return true
+        }
+        return false
     }
 
     /// Whether a frame resize can be faithfully previewed by uniformly scaling a
