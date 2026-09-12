@@ -1,0 +1,72 @@
+{
+  "id": "a-saved-colour-dropped-on-a-layer-row-paints-the-when-you-let-a-saved-colour-go-o",
+  "taskId": "a-saved-colour-dropped-on-a-layer-row-paints-the",
+  "question": "When you let a saved colour go on a row in the layers list, what should it paint?",
+  "context": "A saved text style can already be dropped straight onto a row in the layers list. A saved colour cannot: aim a colour tile at a row and nothing happens and nothing is said. The reason it was left out is that a row is not a colour well. A well is labelled with the one thing it paints; a row carries only the layer's name, and a layer can have several colours (a button has a fill, an edge and its words) or none at all (a screenshot, a plain group). So letting go on a row needs a rule for which colour it lands on, and that rule is what you are choosing here. The line under the layers list already says out loud what a drop would do before you let go, which is what keeps any of these from being silent.",
+  "options": [
+    {
+      "id": "main",
+      "label": "Its main colour, named before you let go",
+      "summary": "The colour paints the one part the layer leads with, and the line under the list names that part while the tile is still in the air: \"Paints Fill with Brand\" over a box, \"Paints Text with Brand\" over words, \"Paints Line with Brand\" over an arrow, \"Paints Border with Brand\" over a screenshot that wears a ring. A screenshot with no ring and a plain group say \"Screenshot has no colour to paint.\" and stay dark.",
+      "pros": [
+        "It is the same part the Appearance section already leads with, so the list and the inspector agree",
+        "Nothing is silent: the part is named before you let go, and a row that cannot take a colour says why",
+        "For almost every layer there is only one part anyway, so there is nothing to be surprised by",
+        "One drop, one undo step"
+      ],
+      "cons": [
+        "An arrow with a coloured head gets a recoloured shaft and keeps its old head, which can look half done",
+        "To paint a part that is not the main one you still go to the inspector"
+      ],
+      "mitigation": "The sentence says exactly which part before the pointer is let go, so the half-done arrow is visible as a choice rather than a surprise, and letting go somewhere else costs nothing."
+    },
+    {
+      "id": "everything",
+      "label": "Everything the layer paints",
+      "summary": "One drop makes the whole layer that colour. Over a button the fill, the edge and the words all go Brand at once, and the line reads \"Paints all 3 colours of Save button with Brand.\"",
+      "pros": [
+        "No guessing about which part: the answer is all of them",
+        "Fast for the case people ask for most, making one thing one colour"
+      ],
+      "cons": [
+        "Words and their background both going Brand leaves text you cannot read",
+        "It quietly throws away colour work you already did on the other parts",
+        "The more parts a layer has, the more the drop does that you did not ask for"
+      ],
+      "mitigation": "It is one undo step, so it is always one keystroke back."
+    },
+    {
+      "id": "pick",
+      "label": "The row opens so you can pick the part",
+      "summary": "Holding a colour over a row unfolds it into its parts, the way a group row opens, and you let go on the one you mean: Fill, Border, Text. A layer with only one part opens into one line.",
+      "pros": [
+        "You always say which part, so nothing is ever chosen for you",
+        "It reaches parts that are not the main one without leaving the list"
+      ],
+      "cons": [
+        "The list moves under the pointer mid drag, which is the thing a drag is worst at",
+        "Two steps for the one part case, which is nearly every layer",
+        "It is a second, smaller copy of the inspector living inside the layers list"
+      ],
+      "mitigation": "The unfold could be held back until the pointer has rested on the row for a moment, so a colour crossing the list on its way somewhere else never disturbs it."
+    },
+    {
+      "id": "skip",
+      "label": "Leave colour off the layers list",
+      "summary": "A colour tile keeps going only to the colour wells in the inspector, where the well says what it paints. Aiming one at a layer row shows the no entry sign, as it does today.",
+      "pros": [
+        "No new rule to learn, and no chance of painting a part you did not mean",
+        "The layers list stays about picking, naming and ordering layers"
+      ],
+      "cons": [
+        "Saved text styles CAN be dropped on a row, so the list takes one kind of tile and refuses the other with no visible reason",
+        "Recolouring a layer you are not currently editing still means selecting it and losing what you had picked"
+      ],
+      "mitigation": "The inspector well is one extra click away, and clicking a saved colour in a row menu still does the same job.",
+      "declines": true
+    }
+  ],
+  "recommended": "main",
+  "status": "pending",
+  "created": "2026-09-12T14:30:38.392Z"
+}

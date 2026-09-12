@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:13:00.774Z",
-  "updated": "2026-09-12T12:02:45.172Z",
+  "updated": "2026-09-12T14:31:08.779Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-saved-style-can-be-dropped-on-a-row-in-the-lay, which shipped the TEXT STYLE half on 2026-09-09. The two do not share a target resolution and the task file said to split them if they did not.\n\nWhat is already there to build on. The layers row is now a drop target for the app own pasteboard types: Sources/Photonz/LayersPanel.swift, LayerRowDropDelegate, which reads TextStyleDrag.payloadInFlight() first and falls through to the row and file paths. ColorDrag.payloadInFlight() is the colour twin and already exists. The row mark and the one line under the list are StyleRowDrop / StyleRowMarking (Sources/PhotonzCore/StyleRowMarking.swift) plus StyleRowDropNote in LayersPanel.swift, and both are written around TextStyleDrop.Answer, so a colour answer either needs the same shape or the mark needs to carry either kind.\n\nThe hard part is not the plumbing, it is WHICH part a colour lands on. ColorDrop.Target is built around a named part (Fill, Outline, Shadow) that a swatch row supplies; a layer row supplies none. Candidate rule: the first colour row the inspector would show for that layer, which is Text for text and Fill for a shape. That is a product judgment about a silent choice among several parts, so open a decision on it before building rather than guessing, and write the options in terms of what the line under the list would say.",
@@ -37,6 +37,27 @@
     {
       "t": "2026-09-12T12:02:45.171Z",
       "note": "seq 180 -> 110"
+    },
+    {
+      "t": "2026-09-12T14:29:32.383Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-12T14:30:29.162Z",
+      "note": "Adversarial review before building. (1) A colour well says what it paints by its own name; a layer ROW says only the layer name, so the whole feature rests on the line under the list naming the part before the drop. That line already exists and the text style half proved it. (2) The choice is narrower than the task feared: a box has Fill and nothing else, words have Text and nothing else, an arrow has its Line plus a Head only when it ends in one. Several parts to choose from is really just an arrow with a head or a caption, and a measurement with its chip, and in every one of those the first part is the thing the layer IS. (3) What it buys over today: recolouring a row you are NOT editing without losing your selection. Real but modest, so the shortest version wins and a hover-to-unfold parts menu is overbuilt. (4) No gesture collision: colour is already a DragCargo kind, read after the app own types and before file and layerRow. (5) The task candidate rule (Text for text, Fill for a shape) is incomplete: it says nothing about a screenshot wearing a Border, whose only colour lives in the Effects list rather than in layerPartRows, and nothing about a plain group or a bare picture, which have no colour at all and must refuse in words."
+    },
+    {
+      "t": "2026-09-12T14:30:58.621Z",
+      "note": "Opened the decision the task asked for rather than guessing: decision a-saved-colour-dropped-on-a-layer-row-paints-the-when-you-let-a-saved-colour-go-o, with the plain-language brief beside it. Four options, all written as what the line under the layers list would say: the layer main colour (recommended), every colour the layer paints, the row unfolds into its parts so you pick one, and leave colour off the list (marked as declining the task). Nothing was built, because every part of the build turns on the answer: the rule decides the sentence, the refusals and which layers can take a drop at all."
+    },
+    {
+      "t": "2026-09-12T14:30:58.621Z",
+      "note": "Shape of the build, for whoever picks this up after the answer. The row already reads what is in the air through DragCargo (Sources/Photonz/DragCargo.swift); adding colour is adding .color to LayerRowDropDelegate.takes in Sources/Photonz/LayersListView.swift and giving it a branch in dropEntered, dropUpdated, dropExited and performDrop beside the .textStyle one. The mark and the line are StyleRowDrop plus StyleRowMarking (Sources/PhotonzCore/StyleRowMarking.swift) and StyleRowDropNote (Sources/Photonz/InspectorSections.swift), all written around TextStyleDrop.Answer, so they need to carry a ColorDrop.Answer too. For the recommended option the rule is the first row of document.layerPartRows(layerIDs:) (Sources/PhotonzCore/LayerParts.swift), whose title is already the part name the sentence needs, falling through to the Border in the Effects list when the parts list is empty and the layer wears a ring (Layer.hasBorderColor in ColorStyles.swift), and refusing when neither is there. ColorDrop.Target takes that title as its part, so ColorDrop.answer writes the sentence unchanged. The drop itself is turnOnPart for a part with a switch and setPaint for one without, through History.perform so it is one undo step."
+    },
+    {
+      "t": "2026-09-12T14:31:08.778Z",
+      "note": "Waiting on the decision: when you let a saved colour go on a row in the layers list, what should it paint? Four options on the dashboard, brief beside the card. Nothing built, because the rule decides the sentence, the refusals and which rows can take a drop at all."
     }
-  ]
+  ],
+  "started": "2026-09-12T14:29:32.382Z"
 }

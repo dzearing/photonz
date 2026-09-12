@@ -2,6 +2,44 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-12 — what a colour let go on a layer row should paint
+
+Task `a-saved-colour-dropped-on-a-layer-row-paints-the` (epic `ui-components`).
+Blocked on a decision, deliberately, and nothing was built.
+
+The text style half of this shipped on 2026-09-09: carry a saved text style to
+a row in the layers list, the row lights up, and a line under the list says what
+letting go would do before you let go. A saved colour still gets the no entry
+sign, and the reason it was left out is real. A colour well is labelled with the
+one thing it paints; a layer row carries only the layer's name, and the layer
+behind it may have one colour, several, or none at all.
+
+The adversarial pass narrowed the worry rather than confirming it. Most layers
+have exactly one part — a box is its Fill, words are their Text — and the
+several-parts case is an arrow with a head or a caption and a measurement with
+its chip, where the first part is still the thing the layer IS. It also found
+two cases the task's candidate rule did not cover: a screenshot wearing a ring,
+whose only colour is the Border and lives in the Effects list rather than in
+`layerPartRows`, and a bare picture or plain group, which has no colour and must
+refuse in words.
+
+So the question went to the user as four options, every one written as the
+sentence the line under the list would say: the layer's main colour named before
+you let go (recommended), every colour the layer paints, the row unfolding into
+its parts so you pick one, and leaving colour off the list entirely. The last is
+marked as declining the task, so answering no retires it instead of handing it
+back looking approved. Brief beside the card in `queue/decisions/`.
+
+No code landed because every part of the build turns on the answer: the rule
+decides the sentence, the refusals, and which rows can take a drop at all. The
+shape of the build is written into the task's log so the next runner starts at
+the first line of it — `.color` joins `LayerRowDropDelegate.takes`, `StyleRowDrop`
+and `StyleRowDropNote` learn to carry a `ColorDrop.Answer` as well as a
+`TextStyleDrop.Answer`, and the recommended rule reads the first row of
+`layerPartRows` for the part name `ColorDrop.Target` wants.
+
+Next: the answer. Nothing else on this task can move before it.
+
 ## 2026-09-12 — a tile really does come away in your hand
 
 Task `prove-a-tile-really-does-come-away-in-your-hand` (epic `ui-components`).
