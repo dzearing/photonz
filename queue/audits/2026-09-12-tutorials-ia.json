@@ -1,0 +1,50 @@
+{
+  "feature": "Help has a Tutorials menu in tracks, and a window that shows your progress",
+  "epic": "ui-building",
+  "summary": "The guides now have a home. Help holds a Tutorials submenu with the tour on top and one submenu per track, and a Tutorials window lists every guide with how long it takes, which ones you have finished, and where you stopped in one you left part way. Both are built from the catalogue, so adding a guide adds its rows with no menu or window code edited.",
+  "setup": "Photonz Dev, Experiments window, release Next. Guided tutorials is on by default. Nothing to switch on.",
+  "try": [
+    {
+      "do": "Open a picture, then open the Help menu and look at Tutorials."
+    },
+    {
+      "do": "Pick Help > Tutorials > All Tutorials to open the window.",
+      "shot": "2026-09-12-tutorials-ia-1-fresh.png"
+    },
+    {
+      "do": "Press Start on Take the Tour. The window should get out of the way and the guide should begin."
+    },
+    {
+      "do": "Close the guide's card two or three steps in, to leave it part way."
+    },
+    {
+      "do": "Open Help > Tutorials > All Tutorials again and read the row.",
+      "shot": "2026-09-12-tutorials-ia-2-part-way.png"
+    },
+    {
+      "do": "Press Continue and finish the guide to the end.",
+      "shot": "2026-09-12-tutorials-ia-3-finished.png"
+    },
+    {
+      "do": "Open the window once more, press the More button on the row, and pick Forget My Progress."
+    },
+    {
+      "do": "Quit Photonz and start it again, then open the window to check what it remembered."
+    }
+  ],
+  "evaluate": [
+    "Take the Tour sits at the top of Tutorials AND inside Basics. Does seeing it twice read as a helpful shortcut, or as the menu repeating itself?",
+    "A menu row says only the guide's name. Would you rather it said where you would pick up, knowing the row can go stale after you finish?",
+    "The window is mostly empty with one guide on one track. Does it feel unfinished, or just early?",
+    "Start, Continue and Again: does the button say the right thing at the right time, or would you rather one word throughout?",
+    "Closing the window the moment you press Start: right, or would you rather it stayed open behind the guide?",
+    "Does the per track count (None finished yet, 1 of 3 finished, All finished) tell you anything you wanted to know?"
+  ],
+  "rough": [
+    "With only one guide shipped, Basics is the only track, so the menu shows one submenu with one row in it. It reads thin until the seven track tasks land, and that is the shape it was built for rather than a shape worth changing now.",
+    "A menu row carrying where you got to was built and then taken out. A command menu fixes its item titles when the menu is built, so after finishing the guide the row still said step 3 of 6. Measured with Scripts/playtest/tutorial-hub-walk.json. Progress now lives only in the window, which is an ordinary view and updates as you watch.",
+    "The Help menu itself could not be photographed: opening a menu bar menu needs the Accessibility grant this terminal does not have. What is in the audit instead is the exact menu tree read back by the walk, in menus-help-tutorials.txt. The three window pictures are real screen captures.",
+    "Keyboard reach in the window depends on the system Full Keyboard Access setting, like every other SwiftUI window in the app. VoiceOver reach is checked in the walk: it fails if a button says nothing or if a guide in the catalogue is never said out loud.",
+    "The window is the Experiments window's shape (a header over a grouped form), not a new kind of surface."
+  ]
+}

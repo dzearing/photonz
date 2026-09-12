@@ -52,6 +52,8 @@ extension PlaytestMemory {
             [EditorState.canvasGridKey]
         case .frames:
             [EditorState.lastFrameSizeKey]
+        case .tutorials:
+            [TutorialController.progressKey]
         }
     }
 }
@@ -107,6 +109,7 @@ struct PlaytestSetupRunner {
             // Anything the app holds in memory rather than reading fresh has to
             // be told, or it goes on drawing what was just thrown away.
             if setup.forget.contains(.grid) { CanvasGridStore.shared.reload() }
+            if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }
             said.append("forgot \(setup.forget.map(\.rawValue).joined(separator: ", "))"
                         + " (\(keys.count) settings)")
         }

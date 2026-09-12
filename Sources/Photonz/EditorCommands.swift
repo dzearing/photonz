@@ -120,10 +120,26 @@ struct EditorCommands: Commands {
         }
     }
 
-    /// Resume rather than Take the Tour when you stopped part way, so the row
-    /// says what pressing it will actually do.
-    private func tourMenuTitle(_ tour: TutorialGuide) -> String {
-        TutorialController.shared.progress.isResumable(tour) ? "Resume the Tour" : tour.title
+    /// Help ▸ Tutorials, read straight off the catalogue: the promoted guide,
+    /// one submenu per populated track, and the way into the window. Nothing
+    /// here writes a guide's name down, so a guide added to the data gets its
+    /// row with this file untouched.
+    private var tutorialMenu: TutorialMenuModel { TutorialMenuModel() }
+
+    private func startTutorial(_ guide: TutorialGuide) {
+        TutorialLauncher.start(guide, coordinator: coordinator,
+                               editor: editor ?? TutorialLauncher.frontEditor())
+    }
+
+    /// One guide's row, wherever it appears. A guide that teaches over your own
+    /// picture is dimmed with nothing open, rather than doing nothing when
+    /// pressed.
+    @ViewBuilder
+    private func tutorialRow(_ row: TutorialMenuModel.GuideRow) -> some View {
+        Button(row.title) { startTutorial(row.guide) }
+            .help(row.help)
+            .disabled(row.guide.sample == nil && editor == nil
+                      && TutorialLauncher.frontEditor() == nil)
     }
 
     var body: some Commands {
@@ -767,11 +783,35 @@ struct EditorCommands: Commands {
         // looks for them. The track submenus and the hub window are their own
         // task; this is the one row that proves the framework.
         CommandGroup(replacing: .help) {
-            if Experiments.shared.tutorialsEnabled, let tour = TutorialLauncher.tour {
-                Button(tourMenuTitle(tour)) {
-                    TutorialLauncher.start(tour, coordinator: coordinator, editor: editor)
+            if Experiments.shared.tutorialsEnabled {
+                let tutorials = tutorialMenu
+                if !tutorials.isEmpty {
+                    Menu(TutorialMenuModel.menuTitle) {
+                        // The promoted guide, first, because it is the one a
+                        // person who has never opened the app should take. It
+                        // is a shortcut and not an exception: it is still
+                        // listed under its own track below, because a track
+                        // list that leaves a guide out is a lie.
+                        if let tour = tutorials.tour {
+                            tutorialRow(tour)
+                            Divider()
+                        }
+                        // One submenu per track that has something on it. A
+                        // flat list of every guide is what this menu exists to
+                        // avoid, so there is never one, not even while only one
+                        // track is populated.
+                        ForEach(tutorials.tracks) { track in
+                            Menu(track.title) {
+                                ForEach(track.rows) { row in
+                                    tutorialRow(row)
+                                }
+                            }
+                        }
+                        Divider()
+                        Button(TutorialMenuModel.hubRowTitle) { coordinator.showTutorials() }
+                            .help(TutorialMenuModel.hubRowHelp)
+                    }
                 }
-                .help(tour.summary)
             }
         }
     }

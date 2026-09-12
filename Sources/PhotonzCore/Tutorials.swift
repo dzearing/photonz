@@ -388,6 +388,24 @@ public struct TutorialProgress: Codable, Hashable, Sendable {
     public mutating func restart(_ guide: String) {
         inFlight[guide] = nil
     }
+
+    /// True when nothing has been finished and nothing is part way: there is
+    /// nothing to reset, so the window does not offer to.
+    public var isEmpty: Bool { completed.isEmpty && inFlight.isEmpty }
+
+    /// Forget one guide completely: its tick and its saved place both go, and
+    /// it reads as something you have never run. Every other guide is left
+    /// alone.
+    public mutating func forget(_ guide: String) {
+        completed.remove(guide)
+        inFlight[guide] = nil
+    }
+
+    /// Forget the lot. What the window's Reset All does.
+    public mutating func forgetAll() {
+        completed.removeAll()
+        inFlight.removeAll()
+    }
 }
 
 // MARK: - The copy rules, as a check

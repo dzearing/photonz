@@ -214,6 +214,10 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     case grid
     /// The size a new frame is offered at, which is the last one chosen.
     case frames
+    /// Which guides have been finished and where you stopped in any left part
+    /// way. A walk that photographs the Tutorials window forgets this first, or
+    /// it photographs whatever the last run happened to leave behind.
+    case tutorials
 }
 
 /// A key the script can press, named the way a person would type it: a single
@@ -380,6 +384,15 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the walk is already driving, so the walk can press real controls with
     /// real coordinates and prove a waiting step advances on the thing itself.
     case startTour, startTourHere, tutorialNext, tutorialBack, tutorialClose
+    /// Open (or close) the Tutorials window, the hub every guide is listed in.
+    /// It is an ordinary app window, so a walk photographs it by name:
+    /// `{ "do": "snapshot", "name": "hub", "window": "Tutorials" }`.
+    case showTutorials, closeTutorials
+    /// Read the Tutorials window the way a screen reader does, and press the
+    /// first guide's own button the way a keyboard does. The window is an
+    /// ordinary SwiftUI surface with no playtest markers in it, so this is how
+    /// a walk proves its list is reachable and its buttons are wired.
+    case readTutorialWindow, pressTutorialStart
     case newCanvasDialog
     /// Answer the New Canvas sheet with the size it opens on, which is what
     /// pressing Return in it does. A sheet cannot be typed into from a walk,

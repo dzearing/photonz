@@ -19,6 +19,8 @@ Landed 2026-09-12 with one guide, Take the Tour, as proof.
 PhotonzCore (pure, Codable, tested)
   Tutorials.swift        anchors, steps, tracks, guides, the catalogue,
                          the run state machine, progress, the copy rules
+  TutorialMenu.swift     what the Help menu holds and what the window shows,
+                         both read off the catalogue, and every word they say
   TutorialGuides.swift   the guides themselves, and the sample they open
   TutorialCallout.swift  where the card goes: pure geometry, its own tests
 
@@ -27,6 +29,8 @@ Sources/Photonz/Tutorials/ (the app)
   TutorialController.swift       runs one guide: panels, following, progress
   TutorialCalloutView.swift      the ring and the card
   TutorialLauncher.swift         how a guide gets started from anywhere
+  TutorialHubView.swift          the Tutorials window's list
+  TutorialHubWindowController.swift  the window it lives in
 ```
 
 Nothing outside `Tutorials/` knows the name of any guide.
@@ -222,13 +226,95 @@ in its first step before changing anything.
   until it is showing. A family button answers to the member it is wearing.
 - **No back-porting.** Tutorials are Next only, behind `next-tutorials`.
 
+## Where the guides are found
+
+Two doors, both read off the catalogue, neither of which knows the name of any
+guide.
+
+### Help ▸ Tutorials
+
+```
+Help
+  Tutorials
+    Take the Tour            the promoted guide
+    ---
+    Basics          ▸        one submenu per track that has something on it
+    Redlining       ▸
+    ...
+    ---
+    All Tutorials...         the window
+```
+
+The promoted guide is a **shortcut, not an exception**: the same guide is still
+listed under its own track, because a track list that leaves a guide out is a
+lie. A track with nothing on it is left out entirely (`populatedTracks`), so the
+menu reads correctly today with one track holding one guide, and the six empty
+ones appear as their tasks land.
+
+**A menu row says the guide's name and nothing else.** Carrying where you got to
+("Take the Tour (step 3 of 6)") was built and then taken out: a command menu
+fixes its item titles when the menu is built, so after the guide was finished the
+row still said step 3 of 6. Measured on 2026-09-12 with
+`Scripts/playtest/tutorial-hub-walk.json`, which leaves the tour part way and
+reads the menu bar back. A row that is sometimes wrong is worse than a row that
+only says its name, so **every word a menu row says is true whatever you have
+done before**, and progress lives in the window.
+
+The one thing a row does read off live state is whether it is **dimmed**: a guide
+with no sample teaches over the picture you have open, so it is dimmed with
+nothing open. That is honest because focus changes rebuild the menu, and opening
+or closing a window is a focus change.
+
+### The Tutorials window
+
+An ordinary titled window owned by the menu-bar agent
+(`TutorialHubWindowController`), the same shape as the Experiments window: a
+header outside a grouped `Form`, one `Section` per track. Not a fourth kind of
+window.
+
+Per track: the name, its one line blurb, and how far through it you are ("1 of 3
+finished", "None finished yet", "All finished"). Per guide: the title, what it is
+for, how long it takes, a tick when you have finished it, a line saying where you
+stopped when you left one part way, and one button reading **Start**, **Continue**
+or **Again**.
+
+**Starting a guide closes the window.** A guide points at a control in the editor,
+and a window sitting in front of that control is the one thing a walkthrough
+cannot survive.
+
+**Forgetting.** A guide with something to forget carries a small More menu:
+*Start from the Beginning* and *Forget My Progress*. A guide nobody has run
+carries nothing, so a fresh list is a list of guides and not a list of menus.
+*Reset All Progress* appears along the bottom only when there is anything at all
+to reset, and asks first.
+
+Every word on this window is generated in `TutorialMenu.swift` (PhotonzCore),
+where a test runs the repo's copy rules over the lot.
+
+### Reachable without a mouse
+
+The window is a plain SwiftUI surface, so there are no playtest markers in it and
+its controls are not `NSButton`s. It is checked through the **accessibility
+tree** instead, which is the same tree VoiceOver reads and needs no grant when
+you ask your own process (`TutorialHubProbe`). The walk fails if a button says
+nothing or if a guide in the catalogue is never said out loud. It reads:
+
+```
+StaticText: Tutorials, Short walks through the real app...
+Heading:    Basics. Find your way around... None finished yet.
+StaticText: Take the Tour. A quick lap of the window... Takes 2 min.
+Button:     Start Take the Tour
+```
+
+The same probe presses the row's own button, which is how the walk proves that
+starting a guide from the window really closes the window and really starts the
+guide.
+
 ## Where the rest of it is
 
-Landed here: the framework, the anchors, the callout, Take the Tour, and one
-row on a Help menu that did not exist before. Still queued:
+Landed here: the framework, the anchors, the callout, Take the Tour, the Help
+menu, the track submenus and the hub window. Still queued:
 
-- **Help has a Tutorials menu organised in tracks, and a window that shows your
-  progress** — the track submenus and the hub.
 - **First launch offers the tour or gets out of your way.**
 - **The seven tracks**, one task each.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated

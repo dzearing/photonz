@@ -41,6 +41,45 @@ enum TutorialLauncher {
         }
     }
 
-    /// The guide the Help menu's own row runs.
+    /// The guide the Help menu's own row promotes to the top.
     static var tour: TutorialGuide? { TutorialCatalog.guide(id: TutorialCatalog.tourID) }
+
+    // MARK: - Finding the window a guide would teach in
+
+    /// Every editor window's state while it is alive, so a surface OUTSIDE the
+    /// editor (the Tutorials window) can start a guide that teaches over the
+    /// picture you have open.
+    ///
+    /// Held weakly and swept on every read: an editor is owned by its window,
+    /// and a registry that kept them alive would keep a closed document's
+    /// bitmaps in memory too. The menu rows do not need this (SwiftUI hands
+    /// them the focused window's state), but the hub is its own window and by
+    /// definition has no focused editor.
+    private static var editors: [WeakEditor] = []
+
+    private final class WeakEditor {
+        weak var value: EditorState?
+        init(_ value: EditorState) { self.value = value }
+    }
+
+    /// Called when an editor's canvas lands in a window.
+    static func register(_ editor: EditorState) {
+        editors.removeAll { $0.value == nil || $0.value === editor }
+        editors.append(WeakEditor(editor))
+    }
+
+    /// The editor a guide with no sample would run over: the frontmost editor
+    /// window, or none when there is no picture open.
+    ///
+    /// "Frontmost" is read off the window order rather than off the key window,
+    /// because the Tutorials window is the key one at the moment this is asked.
+    static func frontEditor() -> EditorState? {
+        editors.removeAll { $0.value == nil }
+        let live = editors.compactMap(\.value).filter { $0.hostWindow?.isVisible == true }
+        guard !live.isEmpty else { return nil }
+        for window in NSApp.orderedWindows where window.isVisible {
+            if let match = live.first(where: { $0.hostWindow === window }) { return match }
+        }
+        return live.last
+    }
 }

@@ -1015,6 +1015,46 @@ private final class Run {
             try? Data(reading.utf8).write(to: out.appendingPathComponent("menus-\(stage).txt"))
             note(number, step.name, reading, state: tree)
 
+        // The Tutorials window is not an editor and carries no playtest markers,
+        // so it is read and pressed through the accessibility tree: the same
+        // tree VoiceOver reads, asked of our own process, which needs no grant.
+        case .action(let action) where action == .readTutorialWindow:
+            guard let hub = TutorialHubProbe.window() else {
+                throw Failure(description: "the Tutorials window is not open")
+            }
+            let buttons = TutorialHubProbe.buttons(in: hub)
+            guard !buttons.isEmpty else {
+                throw Failure(description: "the Tutorials window has no buttons a screen reader can find")
+            }
+            let unnamed = buttons.filter { $0.label.isEmpty }
+            guard unnamed.isEmpty else {
+                throw Failure(description: "\(unnamed.count) button(s) in the Tutorials window say nothing")
+            }
+            // Every guide in the catalogue has to be readable in here, or the
+            // window is showing something a person listening cannot find.
+            let said = TutorialHubProbe.elements(in: hub).map(\.label)
+            let silent = TutorialCatalog.guides.filter { guide in
+                !said.contains { $0.contains(guide.title) }
+            }
+            guard silent.isEmpty else {
+                throw Failure(description: "the Tutorials window never says: "
+                              + silent.map(\.title).joined(separator: ", "))
+            }
+            note(number, step.name,
+                 "the Tutorials window reads:\n  " + TutorialHubProbe.reading(in: hub))
+
+        case .action(let action) where action == .pressTutorialStart:
+            guard TutorialHubProbe.window() != nil else {
+                throw Failure(description: "the Tutorials window is not open")
+            }
+            guard let pressed = TutorialHubProbe.pressFirstGuideButton() else {
+                throw Failure(description: "no guide row in the Tutorials window offers a button to press")
+            }
+            await sleep(1.2)
+            note(number, step.name,
+                 "pressed \"\(pressed)\"; the hub is \(TutorialHubProbe.window() == nil ? "closed" : "STILL OPEN") "
+                 + "and the guide is \(TutorialController.shared.isRunning ? "running" : "NOT running")")
+
         case .action(let action) where action == .closeDocument:
             let closing = try requireWindow()
             closing.close()
@@ -1430,6 +1470,11 @@ private final class Run {
                 if let tour = TutorialLauncher.tour {
                     TutorialController.shared.restart(tour, in: editor)
                 }
+            case .showTutorials: coordinator.showTutorials()
+            case .readTutorialWindow, .pressTutorialStart:
+                break // handled above: neither needs an editor
+            case .closeTutorials:
+                NSApp.windows.first { $0.title == TutorialHubModel.windowTitle }?.close()
             case .tutorialNext: TutorialController.shared.next()
             case .tutorialBack: TutorialController.shared.back()
             case .tutorialClose: TutorialController.shared.close()

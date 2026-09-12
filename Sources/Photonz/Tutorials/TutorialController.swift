@@ -63,7 +63,10 @@ final class TutorialController {
         init(_ value: EditorState) { self.value = value }
     }
 
-    private static let progressKey = "tutorials.progress"
+    /// Where progress is written. Not private: a walk that photographs the
+    /// Tutorials window forgets this key first, and it reads the name off here
+    /// rather than spelling it again.
+    static let progressKey = "tutorials.progress"
     /// Fast enough that the card reads as attached to the control while a
     /// window is being dragged, cheap enough to be free: one frame conversion.
     private static let followInterval: TimeInterval = 1.0 / 30.0
@@ -401,6 +404,24 @@ final class TutorialController {
             forName: NSWindow.willCloseNotification, object: window, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.close() }
         }
+    }
+
+    // MARK: - Forgetting
+
+    /// Forget one guide: its finished mark and its saved place both go, so it
+    /// reads as something never run. A guide running right now is closed first,
+    /// or it would write its place straight back on the next step.
+    func forgetProgress(_ guideID: String) {
+        if run?.guide.id == guideID { stop(remembering: false) }
+        progress.forget(guideID)
+        saveProgress()
+    }
+
+    /// Forget the lot. What the Tutorials window's Reset All does.
+    func forgetAllProgress() {
+        stop(remembering: false)
+        progress.forgetAll()
+        saveProgress()
     }
 
     // MARK: - Remembering

@@ -1,5 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-tour-walk",
+  "setup": { "forget": ["tutorials"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
     { "do": "wait", "seconds": 1 },

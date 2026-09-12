@@ -1373,6 +1373,10 @@ final class EditorState {
         #if PHOTONZ_PLAYTEST
         PlaytestHarness.register(self)
         #endif
+        // A guide that teaches over YOUR picture is started from the Tutorials
+        // window, which is its own window and so has no focused editor to hand.
+        // The registry is weak and compiled in for every build.
+        TutorialLauncher.register(self)
         if let window {
             hostWindow = window
             // A fresh mount during an open: hide until sized (a re-open into an

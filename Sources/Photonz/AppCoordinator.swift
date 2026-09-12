@@ -54,6 +54,10 @@ final class AppCoordinator {
     /// opens with no editor window on screen.
     @ObservationIgnored private let experimentsWindow = ExperimentsWindowController()
 
+    /// The Tutorials window: every track, its guides, and what you have
+    /// finished. App-level for the same reason Experiments is.
+    @ObservationIgnored private let tutorialsWindow = TutorialHubWindowController()
+
     /// One entry in the global focus history (`focusMRU`).
     private enum FocusToken {
         /// A non-Photonz app that came forward. Held strongly — the notification's
@@ -159,6 +163,11 @@ final class AppCoordinator {
     /// Menu "Experiments…": the release picker and per-release feature flags.
     func showExperiments() {
         experimentsWindow.present()
+    }
+
+    /// Menu Help ▸ Tutorials ▸ All Tutorials…: the hub for every guide.
+    func showTutorials() {
+        tutorialsWindow.present(coordinator: self)
     }
 
     /// Names the app menu after the running release ("Photonz Next"), since the

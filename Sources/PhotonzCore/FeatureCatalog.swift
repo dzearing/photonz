@@ -378,7 +378,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: tutorialsFlag,
                     title: "Guided tutorials",
-                    description: "Adds a Help menu with guided tutorials. A guide opens a small sample picture of its own, puts a ring around the control it is talking about, and floats a card beside it with one short thing to read and one button. Some steps wait for you to actually do the thing before moving on. Back, Skip and close work at every step, nothing is ever blocked while a guide runs, and closing part way keeps your place. Off means no Help menu row and no guides.",
+                    description: "Adds a Help menu with guided tutorials, organised in tracks, and a Tutorials window listing every guide with how long it takes and which ones you have finished. A guide opens a small sample picture of its own, puts a ring around the control it is talking about, and floats a card beside it with one short thing to read and one button. Some steps wait for you to actually do the thing before moving on. Back, Skip and close work at every step, nothing is ever blocked while a guide runs, and closing part way keeps your place. Off means no Help menu and no guides.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
