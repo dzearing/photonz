@@ -85,7 +85,30 @@ record_exit() { # $1 = task id or "-", $2 = exit code
 MANAGER_LOW_WATER="${PHOTONZ_MANAGER_LOW_WATER:-3}"
 MANAGER_COOLDOWN="${PHOTONZ_MANAGER_COOLDOWN:-1200}"
 MANAGER_STAMP="$QDIR/manager/.last-run"
+# What the objectives looked like when a pass last finished reading them. The
+# trigger is "the objectives say something the manager has not acted on yet",
+# and that is a question about CONTENT, not about mtime: the manager restages
+# epics itself, so its own edit always leaves the file newer than the stamp it
+# wrote on the way in, and an mtime test reads the pass's own work as the user
+# having spoken. On 2026-09-13 that ran two passes in half an hour with sixty
+# nine tasks ready, each one costing a runner slot and filing more tasks onto
+# an already overfull queue.
+#
+# The one case this narrows: somebody editing the objectives WHILE a pass runs
+# has their edit recorded as seen by a pass that never read it. That costs them
+# the immediate trigger, not the change, since the low water mark comes round
+# anyway and an intake edit files its own task. Telling the two writers apart
+# needs provenance the file does not carry, and a hand edit records no event to
+# read it from, so the narrow version is the honest one.
+MANAGER_SEEN="$QDIR/manager/.objectives-seen"
 mkdir -p "$QDIR/manager"
+objectives_hash() { shasum -a 256 "$QDIR/objectives.json" 2>/dev/null | cut -d" " -f1; }
+# A loop upgrading onto this fix has a stamp but no record of what it has seen.
+# Treat the objectives it already ran against as seen: the pass that wrote that
+# stamp read them. The cost if we are wrong is one missed trigger, which the
+# low water mark catches anyway; the cost the other way is exactly the spurious
+# pass this is here to stop.
+[[ -f "$MANAGER_STAMP" && ! -f "$MANAGER_SEEN" ]] && objectives_hash > "$MANAGER_SEEN"
 manager_due() { # $1 = ready task count; true when a pass should run now
   (( SANDBOX == 0 )) || return 1
   (( MANAGER_LOW_WATER > 0 )) || return 1
@@ -97,8 +120,9 @@ manager_due() { # $1 = ready task count; true when a pass should run now
   # moved the focus to building components and nothing would have noticed until
   # the queue drained days later). The cooldown still applies, so a burst of
   # edits costs one pass.
-  local objectives="$QDIR/objectives.json" changed=0
-  [[ -f "$objectives" ]] && (( $(stat -f %m "$objectives" 2>/dev/null || echo 0) > last )) && changed=1
+  local now changed=0
+  now=$(objectives_hash)
+  [[ -n "$now" && "$now" != "$(cat "$MANAGER_SEEN" 2>/dev/null)" ]] && changed=1
   (( changed )) || (( $1 < MANAGER_LOW_WATER )) || return 1
   (( $(date +%s) - last >= MANAGER_COOLDOWN ))
 }
@@ -111,6 +135,12 @@ manager_pass() { # $1 = ready task count (for the log)
   run_runner "$(cat queue/bin/manager-prompt.md)"
   local rc=$?
   record_exit - "$rc"
+  # The objectives as they stand now are what this pass acted on, its own
+  # restaging included, so the next check starts from here and the pass cannot
+  # wake itself up. Only a pass that actually ran gets to say so: a runner that
+  # died on sign-in or spend read nothing, and the edit that called it must
+  # still be waiting when the loop retries.
+  [[ "$OUTCOME" == "ok" ]] && objectives_hash > "$MANAGER_SEEN"
   echo "[go-loop] $(date +%T) manager pass exited $rc, $(Q ready) task(s) now ready" | tee -a "$LOG"
   Q event manager_pass "{\"exit\":$rc,\"ready\":$(Q ready)}"
 }
@@ -202,6 +232,12 @@ reload_if_changed() {
 banner() { printf '\033]7778;%s\007' "$1"; }   # sticky Ghoztty pane banner
 state()  { printf '\033]7777;%s\007' "$1"; }   # Ghoztty activity state
 title()  { printf '\033]2;%s\007' "$1"; }      # window title
+
+# Everything above this line is definitions; everything below starts a loop.
+# queue/bin/manager-due-drill.sh sources this file for the real manager_due and
+# manager_pass rather than a copy of them, which is how the 2026-09-13
+# self-waking manager pass survived review in the first place.
+[[ -n "${PHOTONZ_GO_LOOP_DEFS_ONLY:-}" ]] && return 0
 
 # Refuse to double-start: two loops race on task claims (seen 2026-08-22,
 # pids 56941/59762). status.json records the owning pid; if that process is

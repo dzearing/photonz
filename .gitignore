@@ -9,6 +9,7 @@ dist/
 temp/
 .tmp-shots/
 queue/manager/.last-run
+queue/manager/.objectives-seen
 
 # A playtest lock is machine-local: it says someone at THIS machine is using
 # the dev app. Committed, it followed the repo onto the build machine and made
