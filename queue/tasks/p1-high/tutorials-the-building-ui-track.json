@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 27,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.053Z",
-  "updated": "2026-09-12T15:17:33.202Z",
+  "updated": "2026-09-13T12:23:55.275389Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -38,6 +38,27 @@
     {
       "t": "2026-09-12T15:17:33.202Z",
       "note": "deps set: framework first"
+    },
+    {
+      "t": "2026-09-13T11:58:31.411Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T12:23:55.275389Z",
+      "note": "Adversarial pass BEFORE building, against what actually ships rather than against the plan. Three findings changed the guides: (1) the plan's word 'frame' is not what the product says anywhere a person can see it, so every guide says SCREEN, which is what the canvas, the Layout captions and the Columns section all say; (2) a stack, a gap and padding all live in the Layout section, which is behind next-auto-layout, so two of the four guides ask for that flag as well as next-frames, or they would point at rows that are not there; (3) the plan's fourth guide, lining things up, needs no screen at all, so it asks only for next-align-layers and survives frames being switched off."
+    },
+    {
+      "t": "2026-09-13T12:23:55.275389Z",
+      "note": "Four guides added as DATA (TutorialGuides.swift) plus four samples, with two anchor names added to the catalogue (panel.frame, panel.columns). No UI was edited: the Help submenu and the hub window both pick the track up off the catalogue, proved by tutorial-hub-walk, which reads Building UI with its four rows in both the menu bar and the window."
+    },
+    {
+      "t": "2026-09-13T12:23:55.275389Z",
+      "note": "Adversarial pass AFTER building, on the probe, four findings fixed. (1) A canvas step's card is drawn ACROSS the top middle of the picture (TutorialCalloutLayout.insideSurface), which covered the payoff of the arranging guide; every screen now starts below TutorialSampleScreen.calloutSkirt and the lining-up guide sweeps from the left. Reproduced and filed as a-tutorial-card-about-the-picture-stops-covering with the screenshot. (2) White cards on a white screen were a hairline on the probe; they are a soft grey fill now. (3) Growing the gap on a screen whose cards reach the bottom pushes the last one past the edge, so the sample is spaced too loosely and the guide tightens it. (4) Turning columns on a phone-shaped screen already gives four with a 16 gutter, so the step that asked you to type four never advanced; it sets the gutter and says the four came ready."
+    },
+    {
+      "t": "2026-09-13T12:23:55.275389Z",
+      "note": "Verified: all four walks pass end to end on the real app (tutorial-frames-are-screens, tutorial-let-a-screen-arrange-itself, tutorial-padding-and-columns, tutorial-line-things-up), each waiting on the guide's own step ids so a step that failed to advance fails the walk. Scripts/test.sh green, 6138 tests in 504 suites. Times measured by TutorialLength rather than guessed: 122s, 104s, 124s and 102s against a 2 minute claim each. Screen Recording was granted, so the audit carries real captures."
     }
-  ]
+  ],
+  "started": "2026-09-13T11:58:31.410Z"
 }

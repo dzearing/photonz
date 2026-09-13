@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-let-a-screen-arrange-itself-walk",
+  "seed": "The second guide of the Building UI track: hand the spacing to the screen and stop nudging things. It opens a screen whose three cards were dropped in at 28 and then 22 apart, which is what spacing by eye looks like. Setting Arrangement to Stack reads the average back so nothing jumps, typing a gap moves all three at once, and taking the middle card away leaves the other two closing up by themselves.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "let-a-screen-arrange-itself" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "placed-by-hand", "timeout": 10 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-placed-by-hand", "note": "three cards down a screen, not quite evenly spaced, which is the state the guide is about" },
+    { "do": "snapshot", "name": "1-placed-by-hand" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-screen", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [360, 450] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "stack-them", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-screen-picked", "note": "clicking the screen's own surface picked it and moved the card on to the Layout section" },
+    { "do": "panel", "stage": "2-screen-picked" },
+    { "do": "snapshot", "name": "2-screen-picked" },
+
+    { "do": "action", "action": "stackSelection" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "type-a-gap", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-stacked", "note": "THE TEST: the screen is arranging itself now and nothing on it jumped, because the gap was read off where the cards already were" },
+    { "do": "panel", "stage": "3-stacked" },
+    { "do": "snapshot", "name": "3-stacked" },
+
+    { "do": "focus", "field": "Gap" },
+    { "do": "type", "text": "24" },
+    { "do": "key", "key": "return" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "take-one-away", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-gap-typed", "note": "one number moved all three cards at once" },
+    { "do": "snapshot", "name": "4-gap-typed" },
+
+    { "do": "click", "at": [360, 290] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "deleteLayer" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "nothing-to-tidy", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-nothing-to-tidy", "note": "THE PAYOFF: a card gone and the two left closed up on their own, still 24 apart" },
+    { "do": "snapshot", "name": "5-nothing-to-tidy" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

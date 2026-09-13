@@ -1,0 +1,45 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-line-things-up-walk",
+  "seed": "The fourth guide of the Building UI track: two keys put loose layers on one edge and give them equal gaps. It opens three boxes at three different heights with two different gaps between them, has you sweep all three up, shows the Arrange row once so you know it is there, and then has you press the two keys.",
+  "setup": { "forget": ["tutorials", "panel", "groups", "tools", "shapes"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "line-things-up" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "three-crooked-boxes", "timeout": 10 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-crooked", "note": "three boxes, three different tops and two different gaps" },
+    { "do": "snapshot", "name": "1-crooked" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-all-three", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "drag", "from": [40, 140], "to": [676, 320] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-arrange-row", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-all-three-picked", "note": "THE TEST: a real selection box dragged from the clear page beside them caught all three and moved the card on to the Arrange row" },
+    { "do": "panel", "stage": "2-all-three-picked" },
+    { "do": "snapshot", "name": "2-all-three-picked" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "line-their-tops-up", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "alignTop" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "space-them-evenly", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-tops-lined-up", "note": "all three on the topmost box's edge" },
+    { "do": "snapshot", "name": "3-tops-lined-up" },
+
+    { "do": "action", "action": "spaceEvenlyAcross" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "and-while-you-drag", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-spaced-evenly", "note": "THE PAYOFF: equal gaps, and the boxes on the ends did not move" },
+    { "do": "snapshot", "name": "4-spaced-evenly" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-finished", "note": "Done closed the guide" }
+  ]
+}

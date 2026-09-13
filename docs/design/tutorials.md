@@ -692,14 +692,73 @@ headed Color or Appearance depending on `next-shape-parts`, so every step here
 says "the Fill row" and points, which is true under both. Same rule the Basics
 track settled about menu rows and keys.
 
+## The Building UI track
+
+How to build a screen rather than annotate one. Four guides in the order a
+screen actually gets built, and the idea underneath all four, which nothing on
+screen ever says out loud: **a screen is a group with a size**. Everything a
+group can do it can do, everything you draw inside it joins it, and the numbers
+that arrange a group arrange a screen.
+
+| Guide | Brings | What it teaches |
+| --- | --- | --- |
+| Frames are screens | a page with nothing on it | F, a screen dragged out, the Frame section, and a card drawn inside it turning up INSIDE it in the layers list |
+| Let a screen arrange its contents | a screen with three cards placed by eye | Arrangement set to Stack reading the spacing back, one typed Gap moving all three, and a card deleted with nothing left to tidy |
+| Padding and columns | the same screen, cards flush to its edges | Padding in Layout, Show columns, and the one fact that connects them: the columns start where the padding does |
+| Line things up | three boxes, none of them in line | the Arrange row shown once, then ⌥W and ⌃⌥H |
+
+Nothing in the framework had to change. Two anchor names were added
+(`panel.frame` and `panel.columns`), which is data, not machinery.
+
+**Two samples, one screen.** `handPlacedScreen` and `tightScreen` are the same
+320 by 344 screen called Home with the same three cards in it, in the two states
+the guides start from: dropped in by hand at 44 and then 36 apart, and stacked
+evenly with nothing clear at its edges. Somebody doing the track back to back
+sees one screen throughout.
+
+Four things the track settled, each measured on the probe rather than reasoned
+about:
+
+- **A canvas step draws its card ACROSS the picture, so nothing may live under
+  it.** A step pointing at the whole canvas has no side of the canvas to sit
+  beside, so the placement puts the card inside the picture, along the top and
+  centred (`TutorialCalloutLayout.insideSurface`). At the size a tutorial window
+  opens at that band reaches about 113 points down the page. The first cut put
+  the screen at the top of the page and the payoff step — two cards closing up
+  by themselves — was read out from behind the very card talking about it. Every
+  sample here now starts below `TutorialSampleScreen.calloutSkirt`, and the
+  lining-up guide asks you to sweep from the clear page to the LEFT of the boxes
+  rather than above them. Filed as a framework follow-up as well, because a
+  guide should not have to know this.
+- **A screen is a fixed box, so the demo gap has to go DOWN.** Growing the gap
+  on a screen whose cards already reach the bottom pushes the last one past the
+  edge, where the screen clips it and the panel starts reporting an overflow: the
+  guide would be teaching a number that breaks the thing it is teaching on. The
+  sample is spaced too loosely on purpose, and the guide tightens it to 24.
+- **A card has to stretch, or padding moves it sideways and cuts it off.** Type
+  24 into Padding on a screen whose cards are a fixed width and they slide right
+  and hang over the far edge. `tightScreen` sets the screen's own rule for its
+  contents to Stretch across, so the same number brings them IN on both sides,
+  which is what the step promises.
+- **The columns already come out right for the screen you have.** Switching them
+  on a phone-shaped screen gives four columns with a 16 gutter
+  (`FrameColumns.suggested(forWidth:)`), so the step that asked you to type four
+  was asking you to type the number already in the box, and the guide never
+  advanced. It sets the gutter instead, and says out loud that the four came
+  ready.
+
+**White cards were a hairline.** The first samples drew white cards on a white
+screen with a pale stroke, which on the probe read as nothing at all. Every
+guide here is about watching cards MOVE, so they are a soft grey fill now.
+
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
 menu, the track submenus, the hub window, the first launch offer, the Basics
-track, the Redlining track, the Looks track, the Components track and the
-Colours and Styles track. Still queued:
+track, the Redlining track, the Looks track, the Components track, the Colours
+and Styles track and the Building UI track. Still queued:
 
-- **The other two tracks**, Building UI and Video, one task each.
+- **The Video track**, one task.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated
   walk per guide that drives the real editor and asserts every step's anchor
   resolves. The unit check here (`TutorialCatalogCheck`) is the promise; that

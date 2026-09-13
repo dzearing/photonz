@@ -86,6 +86,13 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     public static let knownPanelSections = ["layers", "geometry", "arrange", "annotation",
                                             "text", "measurements", "library", "component",
                                             "effects", "color", "canvas", "placement",
+                                            // A picked screen's own size and surface, and
+                                            // the columns it is designed to. Both are in
+                                            // the panel only while a screen is the thing
+                                            // selected, which is why the Building UI
+                                            // guides pick the screen before they point
+                                            // here.
+                                            "frame", "columns",
                                             // The Measure tool's own settings, which are
                                             // in the panel only while the tool is in hand,
                                             // and a picked measurement's own section.
@@ -328,6 +335,22 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// override guide and the versions guide are both about what a copy owns,
     /// and neither is about placing copies, which the guide before them taught.
     case componentCopies
+    /// A page with nothing on it at all. The guide that teaches what a screen
+    /// IS has you draw one, so it must not arrive with one already drawn, and
+    /// it must not be the empty WINDOW either: that has no canvas to draw on.
+    case blankPage
+    /// A screen with three cards on it, dropped in by hand at slightly
+    /// different spacings. The guide that hands the spacing over to the screen
+    /// needs contents that were placed by eye, because the whole lesson is
+    /// that you stop doing that.
+    case handPlacedScreen
+    /// The same screen with its three cards already stacked and pressed hard
+    /// against its edges. The padding and columns guide is about the room
+    /// inside a screen, so it opens on a screen with none.
+    case tightScreen
+    /// Three boxes loose on a page, none of them in line and none of them
+    /// evenly spaced, with clear page round them to drag a selection from.
+    case crookedBoxes
 
     /// Whether this sample's drawing is baked into the picture before the
     /// window opens. A guide that measures needs this; a guide about layers
@@ -341,6 +364,10 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
         case .redlineScreen, .measuredScreen, .accountScreen, .tintedScreen: true
         case .starterScreen, .emptyWindow: false
         case .componentPieces, .componentOriginal, .componentCopies: false
+        // Every Building UI sample is live for the same reason the component
+        // ones are: a screen is made of layers, and you cannot group, stack,
+        // pad or align pixels.
+        case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: false
         // A colour you can give a name to is a colour on a LAYER. Flatten this
         // one and every guide in the styles track has nothing to pick.
         case .stylesScreen: false
@@ -460,6 +487,10 @@ public enum TutorialCatalog {
         TutorialGuides.changeItEverywhere,
         TutorialGuides.textStyles,
         TutorialGuides.theLibrary,
+        TutorialGuides.framesAreScreens,
+        TutorialGuides.letAScreenArrangeItself,
+        TutorialGuides.paddingAndColumns,
+        TutorialGuides.lineThingsUp,
     ]
 
     /// The guide the Help menu's own row runs, and the one first launch offers.

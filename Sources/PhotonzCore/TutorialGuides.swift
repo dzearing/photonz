@@ -1230,6 +1230,253 @@ public enum TutorialGuides {
                 side: .leading,
                 prepare: [.showPanel, .showLibrary, .revealTarget]),
         ])
+
+    // MARK: - Building UI
+    //
+    // How to build a screen rather than annotate one. Four guides in the order
+    // a screen actually gets built: draw the screen, hand it the spacing, give
+    // it room and the columns you design to, and line up by hand whatever is
+    // left.
+    //
+    // The one idea underneath all four, and the one nothing on screen says out
+    // loud, is that a screen is a GROUP with a size. Everything a group can do
+    // it can do, everything you draw inside it joins it, and the numbers that
+    // arrange a group arrange a screen.
+
+    /// The first rung: a screen is a thing you draw, not a document setting.
+    ///
+    /// It has you draw one rather than showing you one, because the frame tool
+    /// is at the end of the tool bar and nobody finds it by accident. The
+    /// second half is the part that pays: what you draw inside a screen joins
+    /// the screen, which is the whole reason to have drawn it.
+    public static let framesAreScreens = TutorialGuide(
+        id: "frames-are-screens",
+        track: .buildingUI,
+        title: "Frames are screens",
+        summary: "Draw the box a screen is built on, and watch what you draw inside it join it.",
+        minutes: 2,
+        sample: .blankPage,
+        requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.framesFlag],
+        steps: [
+            TutorialStep(
+                id: "a-clear-page",
+                anchor: .canvas,
+                title: "A page with nothing on it",
+                body: "A screen here is a frame: a box with a size, a name and a surface of its own. This page has none yet."),
+            TutorialStep(
+                id: "take-the-frame-tool",
+                anchor: .tool(.frame),
+                title: "Take the frame tool",
+                body: "Press F, or click this button at the end of the tool bar.",
+                advance: .waitsFor(.toolPicked(.frame))),
+            TutorialStep(
+                id: "drag-one-out",
+                anchor: .canvas,
+                title: "Drag out a screen",
+                body: "Drag a tall box in the middle of the page. It paints itself white and writes its name above its top left corner.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "what-a-screen-has",
+                anchor: .panelSection("frame"),
+                title: "What a screen has",
+                body: "A size you can type, the surface it paints, and whether it cuts off anything hanging past its edge.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "take-the-rectangle",
+                anchor: .tool(.rectangle),
+                title: "Now draw on it",
+                body: "Press R for the rectangle.",
+                advance: .waitsFor(.toolPicked(.rectangle))),
+            TutorialStep(
+                id: "draw-a-card",
+                anchor: .canvas,
+                title: "Drag a card inside the screen",
+                body: "Anything you draw inside a screen joins it, so dragging the screen later takes the card with it.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "it-belongs-to-the-screen",
+                anchor: .panelSection("layers"),
+                title: "It belongs to the screen",
+                body: "The list shows your card sitting inside the screen. That is what a screen is for, and the next guide has it do the spacing too.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+        ])
+
+    /// The rung people feel the difference on: the spacing stops being
+    /// something you maintain.
+    ///
+    /// It hands the arrangement to the SCREEN rather than stacking a loose
+    /// selection, because a screen is the container somebody already has and
+    /// stacking a selection would make a second container inside it. The last
+    /// step takes a card away instead of adding one: adding means picking up a
+    /// drawing tool, and a drawing tool picked up straight after typing in a
+    /// number field types into the field instead.
+    public static let letAScreenArrangeItself = TutorialGuide(
+        id: "let-a-screen-arrange-itself",
+        track: .buildingUI,
+        title: "Let a screen arrange its contents",
+        summary: "Hand the spacing to the screen once, and stop nudging things into place.",
+        minutes: 2,
+        sample: .handPlacedScreen,
+        requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.framesFlag,
+                   FeatureCatalog.autoLayoutFlag],
+        steps: [
+            TutorialStep(
+                id: "placed-by-hand",
+                anchor: .canvas,
+                title: "Three cards, nudged into place",
+                body: "Each one dragged until it looked about right, which is why they are not quite evenly spaced."),
+            TutorialStep(
+                id: "pick-the-screen",
+                anchor: .canvas,
+                title: "Pick the screen",
+                body: "Click its name, just above its top left corner.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "stack-them",
+                anchor: .panelSection("placement"),
+                title: "Set Arrangement to Stack",
+                body: "In Layout. Nothing jumps: the screen reads the spacing you already had and carries on with it.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "type-a-gap",
+                anchor: .panelSection("placement"),
+                title: "Now type the gap",
+                body: "Put 24 in Gap and press Return. All three move at once, and the spacing is a number you chose rather than one you eyeballed.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "take-one-away",
+                anchor: .canvas,
+                title: "Take the middle card away",
+                body: "Click it, then press Delete.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "nothing-to-tidy",
+                anchor: .canvas,
+                title: "Nothing needed tidying",
+                body: "The two left closed up on their own, still 24 apart. Add one, hide one, reorder them: the screen does the spacing every time."),
+        ])
+
+    /// The guide that exists because these two were a real source of
+    /// confusion: a screen has ONE inset from its edge, and the columns are
+    /// drawn inside it. Taught together for that reason, and in that order.
+    public static let paddingAndColumns = TutorialGuide(
+        id: "padding-and-columns",
+        track: .buildingUI,
+        title: "Padding and columns",
+        summary: "Give a screen room inside its edges, then lay it out on the columns you design to.",
+        minutes: 2,
+        sample: .tightScreen,
+        requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.framesFlag,
+                   FeatureCatalog.autoLayoutFlag],
+        steps: [
+            TutorialStep(
+                id: "flush-to-the-edges",
+                anchor: .canvas,
+                title: "Everything runs to the edges",
+                body: "This screen keeps no room inside it, so its cards touch both sides. Real screens almost never look like this."),
+            TutorialStep(
+                id: "pick-the-screen",
+                anchor: .canvas,
+                title: "Pick the screen",
+                body: "Click its name, just above its top left corner.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "give-it-room",
+                anchor: .panelSection("placement"),
+                title: "Give it room inside",
+                body: "Type 24 into Padding, in Layout. That is the room kept clear inside all four of its edges.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "show-the-columns",
+                anchor: .panelSection("columns"),
+                title: "Turn its columns on",
+                body: "Tick Show columns. The screen is drawn over with the columns a layout is designed to.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "columns-start-at-the-padding",
+                anchor: .panelSection("columns"),
+                title: "They start where the padding does",
+                body: "Not at the screen's edge. A screen has one inset, so the columns sit inside the room you just gave it, and the line here says so.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "set-the-count",
+                anchor: .panelSection("columns"),
+                title: "The numbers are yours",
+                body: "Four columns came ready for a screen this narrow. Put 24 in Gutter and watch the line underneath work out what each one comes to.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "drag-pulls-to-them",
+                anchor: .canvas,
+                title: "Now a drag pulls to them",
+                body: "Draw anything on this screen and it snaps to the column edges. Hold Command while you drag to ignore them."),
+        ])
+
+    /// The last rung, and the one that covers everything the other three do
+    /// not: two loose things that have to agree with each other.
+    ///
+    /// It teaches the keys rather than the buttons. The buttons are shown
+    /// once, because somebody has to know the row exists, but a person lining
+    /// up a screen has one hand on the mouse and the whole point is not going
+    /// to the panel for it.
+    public static let lineThingsUp = TutorialGuide(
+        id: "line-things-up",
+        track: .buildingUI,
+        title: "Line things up",
+        summary: "Put loose layers on one edge and give them equal gaps, with two keys.",
+        minutes: 2,
+        sample: .crookedBoxes,
+        requires: [FeatureCatalog.alignLayersFlag],
+        steps: [
+            TutorialStep(
+                id: "three-crooked-boxes",
+                anchor: .canvas,
+                title: "Three boxes, none of them in line",
+                body: "Three different heights and two different gaps. Two keys fix both of those."),
+            TutorialStep(
+                id: "pick-all-three",
+                anchor: .canvas,
+                title: "Pick all three",
+                body: "Start on the clear page to the left of them and drag a box round the lot.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "the-arrange-row",
+                anchor: .panelSection("arrange"),
+                title: "Every way to line things up",
+                body: "Arrange holds the six edges and the two spacings. Worth knowing it is here, though the keys are quicker.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "line-their-tops-up",
+                anchor: .canvas,
+                title: "Line their tops up",
+                body: "Press \u{2325}W. All three jump to the topmost one. \u{2325}A, \u{2325}S and \u{2325}D are the other edges.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "space-them-evenly",
+                anchor: .canvas,
+                title: "Space them evenly",
+                body: "Press \u{2303}\u{2325}H. The two gaps come out equal and the boxes on the ends stay where they are.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "and-while-you-drag",
+                anchor: .canvas,
+                title: "And while you drag",
+                body: "Drag one of them around. It sticks as it comes into line with the others, so most of the time you never reach for a key at all."),
+        ])
+
 }
 
 // MARK: - The sample a guide opens for itself
@@ -1266,6 +1513,11 @@ public enum TutorialSampleScreen {
         // what you are designing is a control, and a control on a white page
         // has no edge to it. A soft grey reads as the desk it is lying on.
         case .componentPieces, .componentOriginal, .componentCopies: "#EDF0F5"
+        // The Building UI samples are a desk you build a screen on. A screen
+        // paints its own white surface, so the page under it has to be
+        // something else or the screen has no edge, and the guide that has you
+        // draw one would look like nothing happened.
+        case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: "#EDF0F5"
         }
     }
 
@@ -1284,6 +1536,7 @@ public enum TutorialSampleScreen {
         case .starterScreen, .emptyWindow: []
         case .componentPieces, .componentOriginal, .componentCopies: []
         case .stylesScreen: []
+        case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: []
         }
     }
 
@@ -1317,6 +1570,13 @@ public enum TutorialSampleScreen {
         case .componentCopies: buttonWithCopies()
         // The one screen the whole Colours and Styles track teaches on.
         case .stylesScreen: stylesScreen()
+        // The Building UI desk: a clear page to draw a screen on, the same
+        // screen with its cards dropped in by hand, that screen with them
+        // stacked and flush to its edges, and three boxes to line up.
+        case .blankPage: []
+        case .handPlacedScreen: [handPlacedScreen()]
+        case .tightScreen: [tightScreen()]
+        case .crookedBoxes: crookedBoxes()
         }
     }
 
@@ -1586,6 +1846,107 @@ public enum TutorialSampleScreen {
     /// override guide's whole point is the copy that did NOT change.
     private static func buttonWithCopies() -> [Layer] {
         [buttonComponent(), buttonCopy(at: firstCopyOrigin), buttonCopy(at: secondCopyOrigin)]
+    }
+
+    // MARK: The Building UI desk
+
+    /// The screen every Building UI guide that brings one is built on: a phone
+    /// shaped box on a grey page, with room either side of it so the guide that
+    /// has you DRAW one has somewhere to drag.
+    ///
+    /// It sits 120 down the page on purpose, and that is not a taste decision.
+    /// A step that points at the whole canvas has no side of the canvas to sit
+    /// beside, so its callout is drawn INSIDE the picture, along the top
+    /// (`TutorialCalloutLayout.insideSurface`). At this window size that card
+    /// reaches about 113 points down, dead centre. A screen starting any higher
+    /// has its first card read out from behind the very card talking about it.
+    static let screenFrame = CGRect(x: 200, y: 120, width: 320, height: 344)
+
+    /// How far down a sample's picture the callout of a step that points at the
+    /// whole CANVAS reaches, measured on the probe at the size a tutorial
+    /// window opens at.
+    ///
+    /// A canvas fills the window bar the panel, so no side of it has room for a
+    /// card and the placement draws the card inside the picture instead, along
+    /// the top and centred (`TutorialCalloutLayout.insideSurface`). Nothing a
+    /// step is talking about may sit in that band, which is why every screen
+    /// here starts below it. Generous: the band is about 113 points at the
+    /// window size these guides open at, and a wordier step is a taller card.
+    public static let calloutSkirt: CGFloat = 120
+    /// What that screen is called. A name, not "Frame 1": the canvas draws it
+    /// above the top left corner and two guides ask you to click it.
+    static let screenName = "Home"
+    /// One of the three cards down it, inset from the screen's left and right
+    /// edges by hand. The padding guide is the one that hands those insets over
+    /// to the screen itself.
+    static let cardInset: CGFloat = 24
+    static let cardHeight: CGFloat = 72
+
+    /// The three cards, in the screen's own space, at the tops given.
+    private static func screenCards(tops: [CGFloat], inset: CGFloat) -> [Layer] {
+        let width = screenFrame.width - inset * 2
+        return zip(cardNames, tops).map { name, top in
+            // A soft grey, not white. A white card on a white screen is a
+            // hairline, and every guide here is about watching cards MOVE.
+            box(name, CGRect(x: inset, y: top, width: width, height: cardHeight),
+                radius: 12, fill: "#E4E9F2", stroke: nil)
+        }
+    }
+
+    /// Named after what a row of a screen usually is, so a step can say "the
+    /// middle card" and a person can see which one that is.
+    private static let cardNames = ["Today", "This Week", "Everything"]
+
+    private static func screen(children: [Layer], layout: GroupLayout?,
+                              stretches: Bool = false) -> Layer {
+        var content = GroupContent(children: children, isFrame: true, backgroundHex: "#FFFFFF")
+        content.layout = layout
+        // A card on a real screen is as wide as the screen lets it be, and
+        // that is the whole reason the padding guide works: type a number and
+        // the cards come IN rather than sliding sideways and being cut off at
+        // the far edge, which is what a fixed width card does inside a screen
+        // that clips.
+        if stretches { content.contentPlacement = LayerPlacement(horizontal: .stretch) }
+        return Layer(name: screenName, content: .group(content), frame: screenFrame)
+    }
+
+    /// The arranging guide's page: a screen whose three cards were dropped in
+    /// one at a time, at 44 and then 36 apart, which is exactly what spacing by
+    /// eye looks like. Handing it to the screen reads the average back, so
+    /// nothing jumps and the row tidies itself in one press.
+    ///
+    /// Too LOOSE rather than too tight, so the gap the guide then types is a
+    /// smaller number. A screen is a fixed box: growing the gap on a screen
+    /// whose cards already fill it pushes the last one past the bottom, and the
+    /// guide would be teaching a number that breaks the thing it is teaching on.
+    private static func handPlacedScreen() -> Layer {
+        screen(children: screenCards(tops: [24, 140, 248], inset: cardInset), layout: nil)
+    }
+
+    /// The padding guide's page: the same three cards, already stacked evenly
+    /// and running the full width of the screen with nothing clear at its
+    /// edges. A screen with room already at its edges has nothing to show when
+    /// you type a number into Padding.
+    private static func tightScreen() -> Layer {
+        let layout = GroupLayout(kind: .stack, direction: .column, gap: 24)
+        return screen(children: screenCards(tops: [0, 96, 192], inset: 0), layout: layout,
+                      stretches: true)
+    }
+
+    /// The lining-up guide's page: three boxes at three different heights,
+    /// spaced 32 and then 84 apart, with clear page down the left of them to
+    /// start a selection from. Down the LEFT rather than above: a step pointing
+    /// at the canvas puts its callout across the top middle of the picture, so
+    /// the room above them is room somebody cannot reach.
+    private static func crookedBoxes() -> [Layer] {
+        [
+            box("Left", CGRect(x: 96, y: 180, width: 140, height: 84),
+                radius: 12, fill: "#E4E9F2", stroke: nil),
+            box("Middle", CGRect(x: 268, y: 216, width: 140, height: 84),
+                radius: 12, fill: "#E4E9F2", stroke: nil),
+            box("Right", CGRect(x: 492, y: 164, width: 140, height: 84),
+                radius: 12, fill: "#E4E9F2", stroke: nil),
+        ]
     }
 
     /// A label sitting in the middle of a box, measured first so it really is

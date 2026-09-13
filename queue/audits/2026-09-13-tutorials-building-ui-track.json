@@ -1,0 +1,31 @@
+{
+  "feature": "Tutorials: the Building UI track",
+  "epic": "ui-building",
+  "summary": "Help now has four guides that walk you through building a screen rather than marking one up: draw the box a screen is built on, hand the spacing over to it, give it room inside and the columns you design to, and line loose things up with two keys. Each one opens a page of its own and points at real controls while you work.",
+  "setup": "Photonz Dev, Experiments window, release Next. Help > Tutorials > Building UI, or All Tutorials... for the window. Nothing to switch on: frames, auto layout and the align commands are all on by default in Next.",
+  "try": [
+    { "do": "Open Help > Tutorials > Building UI > Frames are screens." },
+    { "do": "Press F and drag a tall box down the middle of the page.", "shot": "2026-09-13-building-ui-1-what-a-screen-has.png" },
+    { "do": "Press R and drag a small box inside it, then read the last step against the layers list.", "shot": "2026-09-13-building-ui-2-it-belongs.png" },
+    { "do": "Start Let a screen arrange its contents, click the screen, set Arrangement to Stack, type 24 in Gap, then delete the middle card.", "shot": "2026-09-13-building-ui-3-nothing-to-tidy.png" },
+    { "do": "Start Padding and columns, type 24 in Padding, then tick Show columns.", "shot": "2026-09-13-building-ui-4-columns-at-the-padding.png" },
+    { "do": "Start Line things up, sweep all three boxes, press Option W, then press Control Option H.", "shot": "2026-09-13-building-ui-5-spaced-evenly.png" },
+    { "do": "Close a guide part way and reopen it from Help, to check it resumes where you left it." }
+  ],
+  "evaluate": [
+    "Frames are screens has you draw one rather than handing you one. Is that the right trade for the two extra steps it costs?",
+    "The arranging guide ends by DELETING a card to show the spacing holding. Would adding one land better, even though it means picking up a drawing tool mid guide?",
+    "Padding and columns is one guide because the two confuse people apart. Read as one idea, or as two guides stuck together?",
+    "Line things up shows the Arrange row once and then teaches keys. Is that the right emphasis for how you actually line things up?",
+    "The track calls a frame a screen throughout, because the panel and the canvas do. Does anything read oddly where you expected the word frame?",
+    "Four guides, all two minutes. Is anything missing that you would reach for on your first real screen?"
+  ],
+  "rough": [
+    "A step that talks about the whole picture draws its card ACROSS the picture. The canvas has no side with room for a card, so the placement puts it inside, along the top and centred, on top of whatever is there. The first cut of these samples put the screen at the top of the page and the payoff step was read out from behind the card talking about it. Worked around by starting every screen 120 points down and by sweeping from the LEFT in the lining-up guide, which is a guide knowing about a callout, and that is backwards. Filed as its own task with the picture.",
+    "The columns are drawn OVER the cards, so while they are showing the cards read pink. That is the app's existing column chrome, not something the guide added, but it is the one moment the sample stops looking like a screen.",
+    "A stack fills a screen from the top, so after the arranging guide deletes a card the bottom half of the screen is empty. Honest, and a little forlorn.",
+    "The flags-off half of the check is a unit test, not a walk. A walk cannot switch a feature off, so that every guide vanishes from the menu and the window when frames or the align commands are switched off is proved in TutorialBuildingUITrackTests rather than on the probe.",
+    "Screen Recording was granted, so every picture here is a real capture of the window rather than an offscreen render.",
+    "The rectangle the first guide has you draw comes out in whatever colour the tool was last left holding, which on the probe was a loud red with a thick border. Nothing the guide can say about that without teaching colour, which the Looks track already does."
+  ]
+}

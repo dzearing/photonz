@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-frames-are-screens-walk",
+  "seed": "The first guide of the Building UI track: a screen here is a frame, and it is a thing you draw. The guide opens a page of its own with nothing on it, hands you the frame tool, has you drag a screen out, and then has you draw a card inside it so you can see the card join the screen in the layers list. The frame tool sits at the end of the tool bar and nobody finds it by accident, which is why the guide hands it over rather than assuming it.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "frames-are-screens" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-clear-page", "timeout": 10 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-a-clear-page", "note": "the guide opened a page of its own with nothing on it, so there is nothing to confuse the screen you are about to draw" },
+    { "do": "snapshot", "name": "1-a-clear-page" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "take-the-frame-tool", "timeout": 5 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "describe", "stage": "2-frame-tool", "note": "the card rings the frame tool at the end of the tool bar" },
+    { "do": "snapshot", "name": "2-frame-tool" },
+
+    { "do": "key", "key": "f" },
+    { "do": "tool", "tool": "frame" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "drag-one-out", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-drag-one-out", "note": "F really picked the frame tool and the guide moved on by itself" },
+
+    { "do": "drag", "from": [200, 124], "to": [520, 464] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-a-screen-has", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-what-a-screen-has", "note": "THE TEST: drawing the screen left it selected, so the Frame section really is in the panel for the card to ring" },
+    { "do": "panel", "stage": "4-what-a-screen-has" },
+    { "do": "snapshot", "name": "4-what-a-screen-has" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "take-the-rectangle", "timeout": 5 },
+    { "do": "key", "key": "r" },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "draw-a-card", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "drag", "from": [232, 156], "to": [488, 228] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "it-belongs-to-the-screen", "timeout": 6 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-it-belongs", "note": "THE OTHER TEST: the card drawn inside the screen is listed INSIDE it, not beside it" },
+    { "do": "panel", "stage": "5-it-belongs" },
+    { "do": "snapshot", "name": "5-it-belongs" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}
