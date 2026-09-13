@@ -1,0 +1,38 @@
+{
+  "id": "a-rectangle-or-an-ellipse-you-drew-becomes-a-pat",
+  "title": "A rectangle or an ellipse you drew becomes a path you can reshape",
+  "goal": "Nobody starts an icon with the Pen. They drop a rectangle or a circle because it is quick and exact, and then they want to pull one corner out or flatten one side. Today that is a dead end: a rectangle stays a rectangle for ever. Let any shape you drew be turned into a path, so it keeps exactly the outline it had and every point on it becomes yours to move.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 64,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T14:13:07.324Z",
+  "updated": "2026-09-13T14:13:53.018Z",
+  "deps": [
+    "a-shape-can-be-any-path-straight-edges-and-curve",
+    "a-path-can-be-reshaped-after-you-draw-it"
+  ],
+  "blockedBy": [],
+  "notes": "Depends on the path model and on the reshaping slice, because a conversion with no way to edit the result is not worth trying.\n\nWhy this matters more than it looks: it is the bridge between the shape tools the app already has and the vector work it is growing. Without it the Pen is a separate world you have to commit to from the first click, which is exactly the thing that makes vector tools feel unapproachable to somebody who is not already fluent in them.\n\nWhat exists today: AnnotationShape in Sources/PhotonzCore/Layer.swift:17 is the whole shape vocabulary, arrow, rectangle, highlight, ellipse and line, and AnnotationContent is built from a start point and an end point. Corner radii live separately (Layer.swift, cornerRadii). The conversion reads all of that and writes anchors.\n\nThe one number to get right: an ellipse drawn with four cubic segments needs the magic constant 0.5523 times the radius for its handles, or the curve is visibly not a circle. Assert it against the real ellipse render rather than trusting the value.\n\nA highlight is deliberately not in the list above. It is a rectangle whose whole point is how it mixes with what is under it, and turning it into a path would quietly drop that. Check whether the mixing survives; if it does, add it and say so.\n\nQueue-driven app work targets the Next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Ships behind the flag the Pen ships behind, and that flag's description in the Experiments window is extended to say so",
+    "One command on the Layer menu and on the right click menu of a layers row, where every other command about a layer lives",
+    "It works on a rectangle, a rounded rectangle, an ellipse, a line and an arrow, and each one comes out as the shape it was, checked by comparing the render before and after rather than by eye",
+    "A rounded rectangle keeps its rounding as real curves, so the corners are still round and now have handles you can pull",
+    "An ellipse comes out as four smooth points, which is what every other vector tool produces and what somebody expects to find when they go to edit it",
+    "The new path keeps the fill, outline, effects, name, position, size and rotation the shape had, so nothing on screen changes at the moment you convert",
+    "It is one undo step, and undo puts back the original shape with its own controls, not a path pretending to be one",
+    "The panel says what happened, briefly, rather than the row silently changing kind under you",
+    "Tests in PhotonzCore for each shape kind, comparing the converted outline against the original, written before the implementation",
+    "Try it: turn the flag on in Experiments, draw a rounded rectangle, choose Layer and then the convert command, then drag one of its points and watch that corner move on its own",
+    "Audit written under queue/audits/ with each shape kind captured before and after, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T14:13:07.326Z",
+      "note": "created (manual)"
+    }
+  ]
+}

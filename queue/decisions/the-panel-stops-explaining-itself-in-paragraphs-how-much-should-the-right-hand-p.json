@@ -1,0 +1,72 @@
+{
+  "id": "the-panel-stops-explaining-itself-in-paragraphs-how-much-should-the-right-hand-p",
+  "taskId": "the-panel-stops-explaining-itself-in-paragraphs",
+  "question": "How much should the right hand panel explain itself in words?",
+  "context": "Select three layers today and the panel prints seven lines of small grey prose before you reach the controls: one paragraph under Appearance, one under Effects, one under Arrange. Each was written on purpose and each reads well. Together they push the controls down a panel that has already been measured at 1,090 points of sections trying to fit a 688 point dock, and three scripted walks fail today because the control they want has been scrolled out of reach. Cutting them is not obviously right either: one of these sentences was deliberately put BACK only days ago, so this needs an answer rather than a runner quietly reversing it.",
+  "options": [
+    {
+      "id": "trim",
+      "label": "One short line, and only when it earns it",
+      "summary": "A section may say one short sentence, and only when it is telling you something you could not work out by looking at what is on screen. Anything that describes what a control obviously does goes. On a three layer selection that turns seven grey lines into about two.",
+      "pros": [
+        "The controls move up a panel that already cannot fit its sections",
+        "The sentences that survive are the ones actually worth reading, so they get read",
+        "One rule the next section can be held to"
+      ],
+      "cons": [
+        "Somebody loses a sentence they found useful, and it is hard to know in advance which one",
+        "Deciding what earns it is a judgment call made section by section"
+      ],
+      "mitigation": "Anything cut that was the only place a limit or a scope was stated moves into the control's own tooltip rather than disappearing."
+    },
+    {
+      "id": "hint",
+      "label": "Behind a small question mark",
+      "summary": "Nothing grey under a section by default. Each section that has something to explain grows a small question mark by its heading, and clicking it shows the sentence. The explanation is still there for anyone who wants it, but the panel is all controls until you ask.",
+      "pros": [
+        "The most room back of any answer",
+        "Nothing is lost, it is one click away",
+        "One idiom every section can use, including ones that want to say more than a line"
+      ],
+      "cons": [
+        "An explanation nobody can see is an explanation nobody finds, which is how the sentences stop doing their job",
+        "Another small control on every section heading, in a panel already dense with them"
+      ],
+      "mitigation": "Show the sentence automatically the first few times a section is opened, then let it fold away."
+    },
+    {
+      "id": "decay",
+      "label": "Say it while it is new, then stop",
+      "summary": "A section explains itself the first handful of times you meet it and then goes quiet for good. The app teaches you once rather than every time. Nothing to click and nothing to find.",
+      "pros": [
+        "A new person gets the explanation exactly when it helps",
+        "An experienced person gets the room back without asking for it",
+        "No new control anywhere"
+      ],
+      "cons": [
+        "The panel is a different shape on two machines, which makes anything about it harder to talk about, screenshot or test",
+        "Somebody who comes back after a month has lost the sentence and cannot get it back"
+      ],
+      "mitigation": "A single switch in settings puts all the explanations back."
+    },
+    {
+      "id": "leave",
+      "label": "Leave them as they are",
+      "summary": "Nothing changes. The sentences stay, because they were each added on purpose and one of them was deliberately put back only days ago. The panel not fitting gets solved by the dock rather than by taking words away. Choosing this retires the task.",
+      "declines": true,
+      "pros": [
+        "No risk of taking away the one sentence that was holding somebody up",
+        "Keeps a choice that was already made deliberately",
+        "The real problem, a dock that cannot hold its sections, is addressed where it lives"
+      ],
+      "cons": [
+        "The room problem is real today and the dock work is two stages away",
+        "Every new section will keep adding its own paragraph, because nothing says it may not"
+      ],
+      "mitigation": "None; it is the cost of the choice."
+    }
+  ],
+  "recommended": "trim",
+  "status": "pending",
+  "created": "2026-09-13T14:13:39.472Z"
+}

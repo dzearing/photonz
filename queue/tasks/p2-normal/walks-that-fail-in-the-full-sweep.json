@@ -9,10 +9,10 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-13T12:34:20.320Z",
+  "updated": "2026-09-13T14:10:53.517Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Last sweep 2026-09-13T11:21:35Z: 382 of 389 walks passed in 68 minutes.\n\nFailing walks (7): border-effect-walk, contents-for-several-walk, copies-share-choice-walk, dock-picked-first-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk\n\nFull output: queue/sweep/2026-09-13-031401.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-separated-box-brings-its-shadow-with-it-as-a-r: Separate into Layers now takes the cards out of a capture, which changes the layers list every separate-* walk reads and touches the shared box cut and patch path; the five separate walks are green but the rest of the set has not seen the change",
+  "notes": "Last sweep 2026-09-13T14:10:53Z: 385 of 397 walks passed in 68 minutes.\n\nFailing walks (12): border-effect-walk, contents-for-several-walk, copies-share-choice-walk, corner-radius-rounds-walk, dock-picked-first-walk, glow-effect-walk, highlight-one-outline-walk, label-fills-a-row-walk, layers-lazy-rows-walk, parts-settings-inline-walk, readout-fields-walk, turn-into-a-picture-walk\n\nFull output: queue/sweep/2026-09-13-060249.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: tutorials-the-video-track: Video track: TutorialController now runs over a host protocol rather than an EditorState, and the walk harness's waitFor and action dispatch both changed to cope with a window that has no editor in it. Every walk touches those. The 30 tutorial walks pass; the rest of the set has not been run against this.",
   "acceptance": [
     "Every walk named in the notes either passes or is rewritten to match what the app does now",
     "Each one is run on its own and passes twice in a row",
@@ -62,6 +62,10 @@
     {
       "t": "2026-09-13T12:34:20.319Z",
       "note": "seq 340 -> 330"
+    },
+    {
+      "t": "2026-09-13T14:10:53.516Z",
+      "note": "sweep 2026-09-13T14:10:53Z: 12 failing (border-effect-walk, contents-for-several-walk, copies-share-choice-walk, corner-radius-rounds-walk, dock-picked-first-walk, glow-effect-walk, highlight-one-outline-walk, label-fills-a-row-walk, layers-lazy-rows-walk, parts-settings-inline-walk, readout-fields-walk, turn-into-a-picture-walk)"
     }
   ]
 }

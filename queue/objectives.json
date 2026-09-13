@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-13T13:07:22.613Z",
+  "updated": "2026-09-13T14:13:56.278Z",
   "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -205,8 +205,8 @@
         {
           "id": "icon-grid",
           "title": "Draw on the icon grid: keylines, snapping, live previews at every size",
-          "note": "",
-          "stage": "later",
+          "note": "Moved to now on 2026-09-13 by the manager pass. There is nowhere to draw an icon: Frames.swift preset list is Desktop, Laptop, Tablet, Phone and Square, nothing under a thousand pixels. The first slice is icon sizes in New Frame plus seeing the icon at the size it will really be used.",
+          "stage": "now",
           "children": []
         },
         {
@@ -226,8 +226,8 @@
         {
           "id": "icon-export",
           "title": "Export clean SVG, static and animated, that works everywhere",
-          "note": "",
-          "stage": "later",
+          "note": "Moved to now on 2026-09-13 by the manager pass. The user asked for the Pen so they could build SVG icons, and Export offers PNG, JPEG and HEIC only: grep finds no SVG code anywhere in Sources. Drawing a path you cannot get out of the app is half the ask, so the export travels with the Pen rather than behind it.",
+          "stage": "now",
           "children": []
         },
         {

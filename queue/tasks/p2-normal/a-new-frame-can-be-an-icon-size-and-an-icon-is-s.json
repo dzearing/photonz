@@ -1,0 +1,33 @@
+{
+  "id": "a-new-frame-can-be-an-icon-size-and-an-icon-is-s",
+  "title": "A new frame can be an icon size, and an icon is shown at the size it will be used",
+  "goal": "Somebody sitting down to draw an icon has nowhere to draw it. New Frame offers Desktop, Laptop, Tablet, Phone and Square, all of them screens, and the smallest is a thousand pixels across. Give the same list the sizes icons are actually made at, and show the icon as it will really appear, small, beside the big one you are drawing, so you find out it falls apart at 16 pixels while you can still do something about it.",
+  "epic": "icon-grid",
+  "priority": "p2-normal",
+  "seq": 62,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T14:13:19.727Z",
+  "updated": "2026-09-13T14:13:53.015Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "What exists today, checked: Sources/PhotonzCore/Frames.swift:28 is the whole preset list, Desktop 1440x1024, Laptop 1280x800, Tablet 1024x768, Phone 390x844 and Square 1000x1000, with a custom size in Sources/Photonz/NewFrameDialog.swift. There is nothing under a thousand pixels and nothing that is not a screen.\n\nThe first half is nearly free: it is rows in an existing list. The second half is the part worth doing carefully, and it is what makes icon work different from shape work. An icon is the only thing in this app that is drawn at one size and looked at at another, and the whole discipline is about what survives the shrink.\n\nWhere the previews go is the design question, and it should follow docs/design/mocks/shared/UX-PATTERNS.md rather than being invented: the mocks that cover this are docs/design/mocks/pages/icon-draw-wt.html and the iconography reference. Say in the audit where the mock was followed and where it was not.\n\nThe keylines and snapping half of this epic is deliberately not here. This task is the canvas to draw an icon on and the answer to \"does it work small\"; a grid with keylines to draw against is its own slice and should be filed as a follow-up if this one proves it is wanted.\n\nQueue-driven app work targets the Next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Ships behind one new Next flag, Draw an icon at the size it will be used, written up in the Experiments window like every other flag",
+    "New Frame's list gains the icon sizes, 16, 24, 32, 48, 64 and 512, grouped apart from the screen sizes so the list still reads at a glance rather than becoming a wall of numbers",
+    "A frame made at an icon size is an ordinary frame in every other way, so nothing else in the app has to know about it",
+    "Select an icon frame and its real sizes are shown together somewhere that does not steal room from the canvas, each one the frame drawn at that many pixels, updating as you draw",
+    "The small sizes are drawn the way the system would draw them, so what you see is what somebody would get, not a smooth shrink that hides the problem",
+    "It costs nothing when no icon frame is selected, and redrawing the previews does not slow down drawing in the frame",
+    "The previews are checked by comparing the pixels against the app's own render at that size, not judged by eye",
+    "Try it: turn the flag on in Experiments, choose Layer and then New Frame, pick 24, draw something in it, and watch the small previews change as you draw",
+    "Audit written under queue/audits/ with a real capture of an icon frame and its previews, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T14:13:19.729Z",
+      "note": "created (manual)"
+    }
+  ]
+}

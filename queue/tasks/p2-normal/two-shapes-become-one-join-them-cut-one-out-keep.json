@@ -1,0 +1,38 @@
+{
+  "id": "two-shapes-become-one-join-them-cut-one-out-keep",
+  "title": "Two shapes become one: join them, cut one out, keep the overlap",
+  "goal": "Most icons are not drawn point by point, they are built: a circle with a smaller circle cut out of it is a ring, two rounded rectangles joined are a chat bubble. Let somebody pick two or more shapes and combine them, joining their outlines, cutting the top one out of the one below, keeping only where they overlap, or keeping everything except the overlap. The result is one editable shape, not a picture of one.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 66,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T14:13:07.274Z",
+  "updated": "2026-09-13T14:13:53.018Z",
+  "deps": [
+    "a-shape-can-be-any-path-straight-edges-and-curve"
+  ],
+  "blockedBy": [],
+  "notes": "Depends on the path model, because the result of every one of these is a path.\n\nThis is named in the epic's own title (icon-vector: booleans, strokes, gradient paint) and the Pen task set says so out loud: its shared notes call booleans \"the next thing under icon-vector once a path exists\" and point at docs/design/mocks/pages/draw-boolean.html for the shape of it. Read that mock first and say in the audit where it was followed and where it was not.\n\nWhat exists today, checked: `grep -in 'union|subtract|intersect' Sources/PhotonzCore/` finds only CGRect and Set operations. There is no path arithmetic anywhere in the app.\n\nThe implementation decision that matters: do not write a bezier clipper by hand. CoreGraphics has path union, intersection, subtraction and symmetric difference on CGPath, which is exactly this and is already available to PhotonzCore, which is allowed CoreGraphics types. The real work is not the arithmetic, it is getting the result BACK into the app's own anchor model so the shape stays editable. A CGPath comes back as a flattened element list, so you have to walk it and rebuild anchors and handles, and a naive walk turns every curve into a line. Test that by comparing renders before and after a no-op join, not by eye.\n\nA result in several unconnected pieces, and a result with a hole in it, are the two cases the model has to be able to hold. If it cannot, that is a model gap to fix in the foundation rather than a special case here, and it should be said in the log.\n\nQueue-driven app work targets the Next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Ships behind the flag the Pen ships behind, so somebody who turns the Pen on gets this too, and that flag's description in the Experiments window is extended to say so",
+    "Four commands, reachable from the Layer menu and from the right click menu on a layers row, where every other command about a layer already lives: join, cut out, keep the overlap, keep everything but the overlap",
+    "They work on rectangles, ellipses and lines as well as drawn paths, by treating each as the outline it really is",
+    "The result is one path layer with real anchors you can pick up and reshape afterwards, not a flattened picture",
+    "A shape with a hole in it draws with the hole, fills correctly, and keeps the hole when you move, resize or turn it",
+    "It is one undo step whatever the shapes were, and the result survives save and load",
+    "The result takes the fill, outline and effects of the bottom shape, and the panel says which one it kept rather than leaving somebody to guess",
+    "Edge cases are answered rather than crashed: shapes that do not touch, a shape cut out of itself, a cut that leaves nothing at all, and an open path among the chosen shapes",
+    "Tests in PhotonzCore for each of the four operations, including a hole, a result in several pieces, and a case where the answer is empty, written before the implementation",
+    "A playtest walk builds a ring from two circles and checks the anchors of what comes out",
+    "Try it: turn the flag on in Experiments, draw two overlapping circles, select both, then Layer and Cut Out, and see a ring you can still reshape",
+    "Audit written under queue/audits/ with each of the four operations captured on the same pair of shapes, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T14:13:07.276Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "id": "a-drawn-line-has-round-ends-and-round-corners-or",
+  "title": "A drawn line has round ends and round corners, or square ones",
+  "goal": "Most icons people use every day are drawn as lines rather than filled shapes, and what makes them look like a set is that every line ends in the same shape and every corner turns the same way. Photonz can set how thick an outline is and whether it sits inside or outside the shape, but not what its ends and corners look like, so a line drawing comes out with hard chopped ends. Give an outline those two settings.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 68,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T14:13:19.680Z",
+  "updated": "2026-09-13T14:13:53.018Z",
+  "deps": [
+    "a-shape-can-be-any-path-straight-edges-and-curve"
+  ],
+  "blockedBy": [],
+  "notes": "Depends on the path model, because an open path is the shape that shows the difference.\n\nWhat exists today, checked: Sources/PhotonzCore/Layer.swift:122 has `strokePosition: BorderPosition = .inside` and a strokeWidth beside it. `grep -n 'lineCap|lineJoin' Sources/PhotonzCore/Layer.swift` finds nothing, so there is no answer for ends or corners anywhere in the model.\n\nThis is not competitor parity for its own sake, it is the minimum for the thing the user asked for on 2026-09-13, building elaborate SVG icons. The whole visual identity of a line icon set is its cap and join, and a set drawn with flat caps against one drawn with round caps reads as two different products. It is also the one vector setting that cannot be faked afterwards.\n\nIt is deliberately NOT a new section or a new control family: the outline already has a thickness and a position in Appearance, and these two belong beside them. If they do not fit there, that is a finding about the outline row rather than a reason to invent somewhere new, and it should be said in the audit.\n\nThese settings also have to be written out by the SVG export when that lands, so if the export is already in when this is picked up, extend it in the same sitting rather than leaving a file that does not match the canvas.\n\nQueue-driven app work targets the Next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Ships behind the flag the Pen ships behind, and that flag's description in the Experiments window is extended to say so",
+    "Two settings sit with the outline controls that already exist in Appearance, not in a new section: what the ends of an open line look like, and how its corners turn",
+    "Ends offer flat, round and square, corners offer mitre, round and bevel, each with a name a person recognises rather than a drawing-engine word",
+    "The settings show only where they can do something, following the rule the panel already uses for a control that cannot act: an open path shows both, a closed shape shows corners only",
+    "They apply to a drawn path, to a line and to every other shape with an outline, so the answer is the same everywhere an outline lives",
+    "They travel with a saved outline style, so a whole icon set can be set to round once",
+    "A very sharp corner set to mitre does not shoot off into a spike, which is what happens when nothing limits it",
+    "Every change is one undo step and survives save and load",
+    "Tests in PhotonzRender comparing the rendered result for each combination on a shape with a sharp corner, written before the implementation",
+    "Try it: turn the flag on in Experiments, draw an open path with the Pen, turn its outline up to 8, and switch its ends between flat and round",
+    "Audit written under queue/audits/ with a line drawing shown in each setting side by side, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T14:13:19.682Z",
+      "note": "created (manual)"
+    }
+  ]
+}

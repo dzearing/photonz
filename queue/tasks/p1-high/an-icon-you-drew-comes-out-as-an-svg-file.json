@@ -1,0 +1,38 @@
+{
+  "id": "an-icon-you-drew-comes-out-as-an-svg-file",
+  "title": "An icon you drew comes out as an SVG file",
+  "goal": "The reason somebody draws paths in this app is to get an icon out of it, and today there is no way to. Export offers PNG, JPEG and HEIC, which are all pictures of an icon rather than the icon. Give Export a fourth answer that writes a real SVG: the shapes you drew, as shapes, in a file any website, app or icon set can use.",
+  "epic": "icon-export",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T14:12:52.113Z",
+  "updated": "2026-09-13T14:12:52.116Z",
+  "deps": [
+    "a-shape-can-be-any-path-straight-edges-and-curve",
+    "the-pen-draws-a-path-corner-by-corner-and-curve"
+  ],
+  "blockedBy": [],
+  "notes": "Why this is p1 and not a later nicety: the user asked for the Pen on 2026-09-13 in these words, \"I want the ability to draw more complex shapes than a rect - specifically polygons that can do both hard edges and bezier curves in a natural way. This will help us build ellaborate svg icons for example.\" The three Pen tasks give you a path you can draw and reshape, and then the SVG stops at the edge of the app. Drawing an icon you cannot get out is half the ask.\n\nWhat exists today, checked rather than assumed:\n- Sources/PhotonzRender/ImageCodec.swift:10, `ImageCodec.Format`, has exactly png, jpeg and heic. Every one is a bitmap.\n- Sources/Photonz/ExportDialog.swift:43 is the three-way picker, with a 1x/2x scale row under it at :48 and a pixel size line at :54. Both of those need a different answer when the format is not a bitmap.\n- `grep -ril svg Sources/` returns nothing. There is no SVG code anywhere in the app, so this is the first of it.\n\nWhere the writer belongs: PhotonzCore. It is pure geometry and string building, it must stay free of CoreImage and AppKit, and it is the layer that can be tested without a renderer. Only the fallback-to-a-picture case needs the renderer, so hand that in rather than importing it.\n\nThe design decision worth making deliberately: how coordinates are written. The document model is top-left origin and so is SVG, which is a rare piece of luck in this codebase, so the flip DocumentRenderer owns (docs/design/overview.md) must NOT be applied here. Getting that wrong produces a file that is upside down and looks like a rendering bug.\n\nDepends on the path model, because a writer with nothing but rectangles to write is not worth reviewing, and on the Pen, because the try path above needs a drawn shape.\n\nDesign doc: extend docs/design/vector-paths.md with a section on what goes out, or start docs/design/svg-export.md and link the two. Say which elements each layer kind maps to, so the next person adding a layer kind knows they owe it an answer here.\n\nQueue-driven app work targets the Next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Ships behind one new Next flag, Export what you drew as SVG, written up in the Experiments window like every other flag, and its description says it needs the flag the Pen ships behind",
+    "Export gains SVG beside PNG, JPEG and HEIC, and choosing it swaps the 1x and 2x row for something that means something for a vector file rather than showing a scale that does nothing",
+    "A path writes as a path: straight runs as straight runs, curves as curves, closed shapes closed, with the same fill, outline colour and outline width it has on the canvas",
+    "Rectangles, ellipses, lines and text write as the right kind of SVG element rather than all being turned into outlines, and a rounded rectangle keeps its rounding",
+    "A group writes as a group, with the order and the nesting the layers list shows",
+    "Anything the app cannot say in SVG, an image layer or an effect with no vector answer, is written as an embedded picture in the right place, and the export says plainly what it had to fall back on rather than silently producing something wrong",
+    "The file is clean: no empty groups, no transforms that do nothing, no generated ids nobody reads, indented so a person can open it in an editor and recognise their own drawing",
+    "The written file is checked by rendering it back and comparing it to the app's own render of the same document, not by reading the text",
+    "Tests in PhotonzCore for the writer, covering a path with a straight edge and a curve, a rounded rectangle, a group, a fill, an outline and the fallback case, written before the implementation",
+    "Try it: turn the flag on in Experiments, draw a shape with the Pen, press Command E, pick SVG, save, then open the file in a browser and see the same shape",
+    "Audit written under queue/audits/ with the exported file's text shown beside a picture of the canvas, and anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T14:12:52.115Z",
+      "note": "created (manager)"
+    }
+  ]
+}
