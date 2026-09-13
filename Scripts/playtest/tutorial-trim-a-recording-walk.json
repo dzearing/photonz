@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-trim-a-recording-walk",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "trim-a-recording" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-you-have", "timeout": 25 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-what-you-have", "note": "the guide wrote its own recording and opened a window on it; the first card sits inside the picture and the floating controller is pinned up for the whole guide" },
+    { "do": "snapshot", "name": "1-what-you-have" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "getting-around-it", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-getting-around-it", "note": "the transport, ringed: space plays and pauses, the arrows step a frame" },
+    { "do": "snapshot", "name": "2-getting-around-it" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "open-the-trim", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-open-the-trim", "note": "the scissors, and this step waits: the button offers to skip, never to claim you pressed it" },
+    { "do": "snapshot", "name": "3-open-the-trim" },
+
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "bring-the-start-in", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-bring-the-start-in", "note": "opening the trim for real moved it on, and the ring is now round the timeline, which only exists in trim mode" },
+    { "do": "snapshot", "name": "4-bring-the-start-in" },
+
+    { "do": "action", "action": "videoTrimStart" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "bring-the-end-back", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-bring-the-end-back", "note": "the left handle moved, so the card moved on; moving the left handle again would not have satisfied this one" },
+    { "do": "snapshot", "name": "5-bring-the-end-back" },
+
+    { "do": "action", "action": "videoTrimEnd" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "keep-whats-between", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-keep-whats-between", "note": "both ends in, and the ring is on Done" },
+    { "do": "snapshot", "name": "6-keep-whats-between" },
+
+    { "do": "action", "action": "videoTrimDone" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "saving-writes-it-in", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-saving-writes-it-in", "note": "the trim applied, which is what made the save button appear, which is what the last card rings; nothing on disk has changed" },
+    { "do": "snapshot", "name": "7-saving-writes-it-in" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-finished", "note": "Done closed the guide and left the trimmed sample alone, unsaved" }
+  ]
+}

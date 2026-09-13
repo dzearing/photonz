@@ -34,7 +34,10 @@ final class TutorialController {
     /// part way. Written on every step, so quitting mid guide loses nothing.
     private(set) var progress: TutorialProgress
 
-    @ObservationIgnored private weak var editor: EditorState?
+    /// The window's own state, asked for a window, for a reveal, and for
+    /// whether a step's trigger is already true. A picture editor or a
+    /// recording's window: the controller never asks which.
+    @ObservationIgnored private weak var host: (any TutorialHost)?
     @ObservationIgnored private var cardPanel: NSPanel?
     @ObservationIgnored private var cuePanel: NSPanel?
     @ObservationIgnored private var cardHost: NSHostingView<TutorialCalloutView>?
@@ -56,11 +59,11 @@ final class TutorialController {
     @ObservationIgnored private(set) var unresolvedSteps: [String] = []
     /// The window each guide last ran in, so picking the same tutorial again
     /// comes back to the window already holding its sample.
-    @ObservationIgnored private var editorsByGuide: [String: WeakEditor] = [:]
+    @ObservationIgnored private var hostsByGuide: [String: WeakHost] = [:]
 
-    private final class WeakEditor {
-        weak var value: EditorState?
-        init(_ value: EditorState) { self.value = value }
+    private final class WeakHost {
+        weak var value: (any TutorialHost)?
+        init(_ value: any TutorialHost) { self.value = value }
     }
 
     /// Where progress is written. Not private: a walk that photographs the
@@ -107,28 +110,34 @@ final class TutorialController {
             + "\(anchor.name) at \(where_); card \(cardPanel.map { "\(Int($0.frame.minX)), \(Int($0.frame.minY)) \(Int($0.frame.width))x\(Int($0.frame.height))" } ?? "none")"
     }
 
-    /// The editor a guide last ran in, while that window is still around.
-    func lastEditor(forGuide id: String) -> EditorState? { editorsByGuide[id]?.value }
+    /// The window a guide last ran in, while it is still around.
+    func lastHost(forGuide id: String) -> (any TutorialHost)? { hostsByGuide[id]?.value }
+
+    /// The same, when the caller needs the picture editor in particular.
+    func lastEditor(forGuide id: String) -> EditorState? {
+        hostsByGuide[id]?.value as? EditorState
+    }
 
     // MARK: - Starting and stopping
 
-    /// Runs `guide` over `editor`. Picks up where the person left off if they
+    /// Runs `guide` over `host`. Picks up where the person left off if they
     /// stopped part way through this one before.
-    func start(_ guide: TutorialGuide, in editor: EditorState) {
+    func start(_ guide: TutorialGuide, in host: any TutorialHost) {
         stop(remembering: true)
-        self.editor = editor
+        self.host = host
         unresolvedSteps = []
-        editorsByGuide[guide.id] = WeakEditor(editor)
+        hostsByGuide[guide.id] = WeakHost(host)
+        host.tutorialRunning(true)
         run = TutorialRun(guide: guide, startingAt: progress.startIndex(for: guide))
         beginStep()
         startFollowing()
     }
 
     /// Starts the guide over again from the top, forgetting where you were.
-    func restart(_ guide: TutorialGuide, in editor: EditorState) {
+    func restart(_ guide: TutorialGuide, in host: any TutorialHost) {
         progress.restart(guide.id)
         saveProgress()
-        start(guide, in: editor)
+        start(guide, in: host)
     }
 
     /// Closes the guide. Keeps your place unless the guide finished.
@@ -150,7 +159,8 @@ final class TutorialController {
             saveProgress()
         }
         run = nil
-        editor = nil
+        host?.tutorialRunning(false)
+        host = nil
         lastAnchorFrame = nil
         lastWindowFrame = nil
         drawnStepID = nil
@@ -194,8 +204,8 @@ final class TutorialController {
     /// Nothing here is on a timer. A step that says "pick the Measure tool" and
     /// moves on five seconds later whether or not you did is a lie, and the
     /// person notices.
-    func note(_ trigger: TutorialTrigger, from editor: EditorState) {
-        guard let run, self.editor === editor, run.isSatisfied(by: trigger) else { return }
+    func note(_ trigger: TutorialTrigger, from host: any TutorialHost) {
+        guard let run, self.host === host, run.isSatisfied(by: trigger) else { return }
         // Let the editor finish the change that produced the event before the
         // callout jumps to a new control.
         DispatchQueue.main.async { [weak self] in
@@ -209,7 +219,7 @@ final class TutorialController {
     /// fine, picking the tool for a step that says "pick the tool" is the timer
     /// lie in another costume, which is why the list is closed.
     private func beginStep() {
-        guard let run, let editor else { return }
+        guard let run, let host else { return }
         progress.record(guide: run.guide.id, step: run.index)
         saveProgress()
         // A step can ask for something that is already so: the Measure tool is
@@ -218,22 +228,12 @@ final class TutorialController {
         // would strand somebody on a step they cannot perform, with nothing to
         // press but Skip. So the step still says its piece and the way on is a
         // plain Next.
-        if let trigger = run.step.advance.trigger, isAlreadyTrue(trigger, in: editor) {
+        if let trigger = run.step.advance.trigger, host.tutorialIsAlreadyTrue(trigger) {
             self.run?.markStepAlreadyTrue()
         }
         for prep in run.step.prepare {
-            switch prep {
-            case .showPanel: if !editor.isInspectorShown { editor.setInspectorVisible(true) }
-            case .showLibrary: if !editor.isLibraryVisible { editor.setLibraryVisible(true) }
-            case .showComponentShelf:
-                // The scope the shelf is on is remembered across launches and
-                // starts as the captures you have taken, so a step about a
-                // button would otherwise ring a shelf of screenshots. Same two
-                // lines Make Component runs for the same reason.
-                if !editor.isLibraryVisible { editor.setLibraryVisible(true) }
-                UserDefaults.standard.set(LibraryScope.components.rawValue,
-                                          forKey: LibraryPanel.scopeKey)
-            case .revealTarget:
+            host.tutorialPrepare(prep)
+            if prep == .revealTarget {
                 // Tried again on the next few passes as well: a section that
                 // arrives with the selection is not in the panel yet at this
                 // point, so one attempt here would scroll to nothing.
@@ -247,20 +247,6 @@ final class TutorialController {
         DispatchQueue.main.async { [weak self] in self?.place() }
     }
 
-    /// Whether what a step is waiting for is already the case. Only a trigger
-    /// that describes a STATE can be: nothing is already true about "the person
-    /// made an edit" or "the person copied the picture", and treating one of
-    /// those as done would be the timer lie in another costume.
-    private func isAlreadyTrue(_ trigger: TutorialTrigger, in editor: EditorState) -> Bool {
-        switch trigger {
-        case .toolPicked(let tool): editor.activeTool == tool
-        case .measureMode(let mode):
-            editor.activeTool == .measure && editor.measureToolMode == mode
-        case .panelShown: editor.isInspectorShown
-        case .layerSelected, .editMade, .undone, .pictureCopied, .specListCopied: false
-        }
-    }
-
     // MARK: - Following the control
 
     private func startFollowing() {
@@ -272,7 +258,7 @@ final class TutorialController {
         follow = timer
     }
 
-    private var hostWindow: NSWindow? { editor?.hostWindow }
+    private var hostWindow: NSWindow? { host?.tutorialWindow }
 
     private func place() {
         guard let run, let window = hostWindow else { return }

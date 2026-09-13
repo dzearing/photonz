@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-trim-a-recording-skipped-walk",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "trim-a-recording" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-you-have", "timeout": 25 },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "saving-writes-it-in", "timeout": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "skipped-to-the-end", "note": "every waiting step skipped, so no trim was ever made and the save button does not exist: the last card has to stand on its own rather than ring nothing" },
+    { "do": "snapshot", "name": "skipped-to-the-end" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "finished", "note": "Done still closed it, so skipping the lot strands nobody" }
+  ]
+}

@@ -1477,6 +1477,105 @@ public enum TutorialGuides {
                 body: "Drag one of them around. It sticks as it comes into line with the others, so most of the time you never reach for a key at all."),
         ])
 
+    // MARK: The Video track
+
+    /// The smallest track, and the only one that teaches in a window with no
+    /// canvas in it: a recording opens in the video window, which is one
+    /// picture and one floating controller over it.
+    ///
+    /// Trimming is the one edit in the app that is baked in when you save, and
+    /// the last card says so rather than leaving somebody to discover it. It
+    /// does not make anybody save: a guide that quietly rewrites a file on
+    /// its way past is not a guide.
+    public static let trimARecording = TutorialGuide(
+        id: "trim-a-recording",
+        track: .video,
+        title: "Trim a recording",
+        summary: "Cut a recording down to the part worth watching, and know what saving does to it.",
+        minutes: 2,
+        sample: .sampleRecording,
+        steps: [
+            TutorialStep(
+                id: "what-you-have",
+                anchor: .video(.preview),
+                title: "A recording, mostly waiting",
+                body: "It starts playing as soon as it opens. The first and last few seconds are nothing happening, which is what you are about to cut off."),
+            TutorialStep(
+                id: "getting-around-it",
+                anchor: .video(.transport),
+                title: "Getting around it",
+                body: "Space plays and pauses. Paused, the arrow keys step one frame at a time, which is how you land on the exact moment to cut at."),
+            TutorialStep(
+                id: "open-the-trim",
+                anchor: .video(.trim),
+                title: "Open the trim",
+                body: "Click the scissors. The playback line turns into the whole clip with a handle at each end.",
+                advance: .waitsFor(.trimModeOpened)),
+            TutorialStep(
+                id: "bring-the-start-in",
+                anchor: .video(.timeline),
+                title: "Bring the start in",
+                body: "Drag the left handle along to where something starts happening. The picture follows the handle, so you can see where you are landing.",
+                side: .above,
+                advance: .waitsFor(.trimStartMoved)),
+            TutorialStep(
+                id: "bring-the-end-back",
+                anchor: .video(.timeline),
+                title: "And the end back",
+                body: "Drag the right handle in to where it stops being worth watching. The length you are keeping reads out beside the scissors.",
+                side: .above,
+                advance: .waitsFor(.trimEndMoved)),
+            TutorialStep(
+                id: "keep-whats-between",
+                anchor: .video(.trimDone),
+                title: "Keep what is between them",
+                body: "Done throws the ends away and leaves you the middle. It plays from its new start, and you can trim it again from there.",
+                advance: .waitsFor(.trimApplied)),
+            TutorialStep(
+                id: "saving-writes-it-in",
+                anchor: .video(.save),
+                title: "Saving writes it into the file",
+                body: "Nothing on disk has changed yet. Saving puts the trim into the recording and keeps the original beside it, so Revert to Original in the Video menu brings the clip back."),
+        ])
+
+    /// The decision rather than the gesture: which of three shapes a recording
+    /// leaves the app in, and the one that skips the file entirely.
+    ///
+    /// It rings the Export button and says what is inside it. The rows are in a
+    /// menu, which is its own window and cannot be ringed, and picking one runs
+    /// a save dialog that would sit on top of the card. So the guide ends on
+    /// Copy, which is what most people want when they say send this to
+    /// somebody, and asks for no dialog at all.
+    public static let exportARecording = TutorialGuide(
+        id: "export-a-recording",
+        track: .video,
+        title: "Export MP4, GIF or HEIC",
+        summary: "Pick the shape a recording leaves in, or put it straight on the clipboard.",
+        minutes: 1,
+        sample: .sampleRecording,
+        steps: [
+            TutorialStep(
+                id: "three-ways-out",
+                anchor: .video(.export),
+                title: "Three ways out",
+                body: "MP4 keeps the picture and the sound and plays anywhere. GIF loops silently and needs no player. HEIC is a small animation for Apple devices."),
+            TutorialStep(
+                id: "how-good",
+                anchor: .video(.export),
+                title: "GIF and HEIC ask how good",
+                body: "High, Standard or Small. Standard is the one to start with, High is worth it when small text has to stay readable, and Small keeps the file down."),
+            TutorialStep(
+                id: "copy-it-instead",
+                anchor: .video(.copy),
+                title: "For a chat, copy it",
+                body: "This puts the recording straight on the clipboard with no file to find afterwards. Try Copy GIF, and paste it wherever you were going to send it.",
+                advance: .waitsFor(.recordingCopied)),
+            TutorialStep(
+                id: "what-comes-out",
+                anchor: .video(.preview),
+                title: "What you see is what comes out",
+                body: "A trim or a crop goes into everything you copy or export from here. The recording on disk stays as it was until you save."),
+        ])
 }
 
 // MARK: - The sample a guide opens for itself
@@ -1518,6 +1617,9 @@ public enum TutorialSampleScreen {
         // something else or the screen has no edge, and the guide that has you
         // draw one would look like nothing happened.
         case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: "#EDF0F5"
+        // A recording is not drawn on a page. Its window holds media, and this
+        // is never asked of it.
+        case .sampleRecording: "#FFFFFF"
         }
     }
 
@@ -1537,6 +1639,7 @@ public enum TutorialSampleScreen {
         case .componentPieces, .componentOriginal, .componentCopies: []
         case .stylesScreen: []
         case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: []
+        case .sampleRecording: []
         }
     }
 
@@ -1577,6 +1680,9 @@ public enum TutorialSampleScreen {
         case .handPlacedScreen: [handPlacedScreen()]
         case .tightScreen: [tightScreen()]
         case .crookedBoxes: crookedBoxes()
+        // A recording, which has no layers at all. What it IS lives in the
+        // app, beside the code that can write an MP4.
+        case .sampleRecording: []
         }
     }
 

@@ -96,6 +96,13 @@ final class VideoEditorState {
     /// True when effectively silent, for the speaker-icon glyph.
     var isMuted: Bool { volume <= 0.0001 }
 
+    /// True while a tutorial is running over this window. The floating
+    /// controller stays up for the whole of it: every control a video guide
+    /// points at lives on that controller, and it otherwise fades two seconds
+    /// after the pointer leaves it, which would leave a ring round nothing.
+    /// Reveal only, exactly like every other thing a guide is allowed to do.
+    var isTutorialRunning = false
+
     /// True once metadata (duration/size) has loaded, so the timeline can render.
     private(set) var isReady = false
     /// True once the metadata load finished, ready or not — the window stays
@@ -464,6 +471,7 @@ final class VideoEditorState {
         pause()
         trim.setIn(seconds, duration: duration)
         seek(to: trim.inPoint)
+        TutorialController.shared.note(.trimStartMoved, from: self)
     }
 
     /// Drag the out-handle; seeking to the out-point so the preview shows it.
@@ -471,6 +479,7 @@ final class VideoEditorState {
         pause()
         trim.setOut(seconds, duration: duration)
         seek(to: trim.outPoint)
+        TutorialController.shared.note(.trimEndMoved, from: self)
     }
 
     /// True when at least one applied edit can be undone this session.
@@ -490,6 +499,7 @@ final class VideoEditorState {
         trimBeforeSession = trim
         isTrimming = true
         pause()
+        TutorialController.shared.note(.trimModeOpened, from: self)
     }
 
     /// Clear the selection back to the whole working clip (stay in trim mode).
@@ -503,6 +513,11 @@ final class VideoEditorState {
         isTrimming = false
         trimBeforeSession = nil
         if trim.isTrimmed { applyTrim() }
+        // Raised whether or not the handles had been moved, because what the
+        // step asks for is the person pressing Done. A Done that applied
+        // nothing still ended the trim, and a guide that sat there after it
+        // would be waiting on something the person has already finished doing.
+        TutorialController.shared.note(.trimApplied, from: self)
     }
 
     /// Cancel trimming, restoring the selection from when the mode began.

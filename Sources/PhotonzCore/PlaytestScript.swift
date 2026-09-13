@@ -393,6 +393,35 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// ordinary SwiftUI surface with no playtest markers in it, so this is how
     /// a walk proves its list is reachable and its buttons are wired.
     case readTutorialWindow, pressTutorialStart
+    /// A recording's window, driven the way the buttons on its floating
+    /// controller drive it. The video guides teach in there, and it is not the
+    /// picture editor: no canvas, no tool bar, no layers, so none of the
+    /// actions above reach anything in it.
+    ///
+    /// The two handle moves take the quarter and three quarter marks of the
+    /// clip, which is a real drag's outcome without a walk having to know how
+    /// long the sample is.
+    case videoBeginTrim, videoTrimStart, videoTrimEnd, videoTrimDone, videoCopyGIF
+
+    /// Whether this action drives the GUIDE rather than a window: pressing the
+    /// callout's own button. A guide can be running over a recording's window,
+    /// where there is no editor to ask for, so a walk in one needs these
+    /// answered without one.
+    public var drivesGuide: Bool {
+        switch self {
+        case .tutorialNext, .tutorialBack, .tutorialClose: true
+        default: false
+        }
+    }
+
+    /// Whether this action belongs to a recording's window rather than to the
+    /// picture editor. What tells a walk which window to ask.
+    public var drivesRecording: Bool {
+        switch self {
+        case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoCopyGIF: true
+        default: false
+        }
+    }
     /// The first run, walked from a clean slate. `freshInstall` forgets
     /// everything the setup window remembers, so the next `launchHook` behaves
     /// like a machine that has never run Photonz; `oldInstall` instead pretends

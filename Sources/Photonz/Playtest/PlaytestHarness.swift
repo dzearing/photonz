@@ -56,6 +56,22 @@ enum PlaytestHarness {
     /// in only exists there), and `readyEditors` leaves that window out because
     /// it insists on a document and a viewport.
     static var allEditors: [EditorState] { editors }
+
+    private static var recordings: [VideoEditorState] = []
+
+    /// A recording's window announces itself the same way a picture editor
+    /// does. It is a different kind of window entirely (one picture and one
+    /// floating controller, no canvas and no layers), and the video guides
+    /// teach in it, so a walk has to be able to find one.
+    static func register(_ recording: VideoEditorState) {
+        guard AppInfo.flavor == .probe else { return }
+        if !recordings.contains(where: { $0 === recording }) { recordings.append(recording) }
+    }
+
+    /// Every recording window that is loaded and drivable, oldest first.
+    static var readyRecordings: [VideoEditorState] {
+        recordings.filter { $0.isReady && $0.hostWindow != nil }
+    }
 }
 
 /// One script, executed top to bottom. Stops at the first step that fails and
@@ -75,6 +91,10 @@ private final class Run {
 
     /// The editor the last `open` produced; every later step targets it.
     private var editor: EditorState?
+    /// The recording's window a video guide opened, when the walk is in one.
+    /// Nil in every other walk, and the two are never both set: a window holds
+    /// a picture or a recording, never both.
+    private var recording: VideoEditorState?
     private var window: NSWindow?
     private var canvas: CanvasNSView?
     /// The control the last `hover` rested on, so the next one can leave it.
@@ -631,7 +651,16 @@ private final class Run {
             note(number, step.name, detail, state: describe())
 
         case .waitFor(let condition, let timeout):
-            let editor = try requireEditor()
+            // Where a guide has got to is a fact about the guide, not about a
+            // window: the video guides teach in a recording's window, which has
+            // no editor in it at all. Everything else is asked of the editor.
+            var editorForCondition: EditorState?
+            if case .tutorialStep = condition {
+                editorForCondition = editor
+            } else {
+                editorForCondition = try requireEditor()
+            }
+            let editor = editorForCondition
             let deadline = Date().addingTimeInterval(timeout)
             while !holds(condition, editor: editor) {
                 guard Date() < deadline else {
@@ -1208,7 +1237,22 @@ private final class Run {
             }
             TutorialController.shared.forgetProgress(guide.id)
             TutorialLauncher.start(guide, coordinator: coordinator, editor: editor)
-            if guide.sample != nil {
+            if guide.sample?.isVideo == true {
+                // A recording's window, not a picture editor's. It writes a
+                // fresh sample MP4 first and opens once the clip has loaded,
+                // so the wait is longer than a drawing's.
+                var opened: VideoEditorState?
+                try await poll("the recording \(id) brought", within: 20) {
+                    opened = PlaytestHarness.readyRecordings.last {
+                        $0.url?.lastPathComponent == TutorialSampleRecording.fileName
+                    }
+                    return opened != nil
+                }
+                guard let opened else { throw Failure(description: "\(id) opened no recording") }
+                try await adoptRecording(opened, step: step.name,
+                                         subject: "\(guide.title), in the recording it brought",
+                                         number: number)
+            } else if guide.sample != nil {
                 var opened: EditorState?
                 try await poll("the window \(id) opened for itself", within: 8) {
                     opened = PlaytestHarness.allEditors.last {
@@ -1250,6 +1294,43 @@ private final class Run {
             guard let opened else { throw Failure(description: "the tour opened no window") }
             try await adopt(opened, window: nil, step: step.name,
                             subject: "Take the Tour in its own window", number: number)
+
+        // A recording's window, driven the way its own buttons drive it. Ahead
+        // of the general case because every action below it asks for a picture
+        // editor, and there is not one in here.
+        // The callout's own buttons, when the guide is running somewhere there
+        // is no picture editor to ask for. An image walk keeps these in the
+        // general branch below, where they read the editor's state back.
+        case .action(let action) where action.drivesGuide && editor == nil:
+            switch action {
+            case .tutorialNext: TutorialController.shared.next()
+            case .tutorialBack: TutorialController.shared.back()
+            case .tutorialClose: TutorialController.shared.close()
+            default: break
+            }
+            await sleep(0.3)
+            note(number, step.name,
+                 "\(action.rawValue): \(TutorialController.shared.liveDescription(in: window))",
+                 state: describe())
+
+        case .action(let action) where action.drivesRecording:
+            let video = try requireRecording()
+            switch action {
+            case .videoBeginTrim: video.beginTrim()
+            case .videoTrimStart: video.setTrimIn(video.duration * 0.25)
+            case .videoTrimEnd: video.setTrimOut(video.duration * 0.75)
+            case .videoTrimDone: video.commitTrim()
+            case .videoCopyGIF: coordinator.copyRecording(video, as: .gif)
+            default: break
+            }
+            await sleep(0.3)
+            note(number, step.name,
+                 "\(action.rawValue): \(String(format: "%.2f", video.trim.inPoint)) to "
+                 + "\(String(format: "%.2f", video.trim.outPoint)) of "
+                 + "\(String(format: "%.2f", video.duration))s"
+                 + (video.isTrimming ? ", trim open" : "")
+                 + (video.hasUnsavedChanges ? ", unsaved" : ""),
+                 state: describe())
 
         case .action(let action):
             let editor = try requireEditor()
@@ -1727,6 +1808,8 @@ private final class Run {
                 editor.isBlankCanvasDialogPresented = false
                 editor.isResizeDialogPresented = false
                 editor.isCanvasSizeDialogPresented = false
+            case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoCopyGIF:
+                break  // handled above, in the branch that asks for a recording
             }
             await sleep(0.2)
             let detail = (actionDetail.map { "\(action.rawValue) · \($0)" } ?? action.rawValue)
@@ -4387,6 +4470,53 @@ private final class Run {
              state: describe())
     }
 
+    /// Take over the window a video guide opened for itself.
+    ///
+    /// A recording's window is not a picture editor: there is no canvas, no
+    /// document and no viewport, so everything a walk usually measures in
+    /// document points is unavailable. The window is there, the clip is loaded
+    /// and the floating controller is up, and that is what the guide teaches
+    /// over, so that is what gets driven and photographed.
+    private func adoptRecording(_ opened: VideoEditorState, step: String, subject: String,
+                                number: Int) async throws {
+        try await poll("the recording's window", within: 8) { opened.hostWindow != nil }
+        guard let window = opened.hostWindow else {
+            throw Failure(description: "the recording lost its window")
+        }
+        // It opens invisible and is revealed once it has sized itself to the
+        // clip. Unlike every other walk, it is then LEFT visible.
+        //
+        // Two things in this window only exist while it is really on screen.
+        // The offscreen render draws the video as a black rectangle (the frame
+        // lives in a layer the render never sees) and draws the glass
+        // controller as very nearly nothing, so a picture taken that way shows
+        // neither the clip nor most of the controls a guide is pointing at. The
+        // screen capture shows both, and a capture of a window at zero alpha
+        // comes back blank. So the probe's own window stays up for the length
+        // of the walk, which nobody is watching anyway.
+        _ = try? await poll("reveal", within: 4) { window.alphaValue >= 1 }
+        window.alphaValue = 1
+        window.makeKey()
+        window.orderFront(nil)
+        await sleep(0.6)
+        editor = nil
+        canvas = nil
+        recording = opened
+        self.window = window
+        note(number, step,
+             "\(subject): \(opened.windowTitle), \(String(format: "%.1f", opened.duration))s of "
+             + "\(Int(opened.naturalSize.width))x\(Int(opened.naturalSize.height)); "
+             + "window \(Int(window.frame.width))x\(Int(window.frame.height)) pt",
+             state: describe())
+    }
+
+    private func requireRecording() throws -> VideoEditorState {
+        guard let recording else {
+            throw Failure(description: "no recording is open; add a \"startGuide\" step for a video guide first")
+        }
+        return recording
+    }
+
     // MARK: - Menus
 
     /// The app's own menu bar, exactly as it reads on screen.
@@ -4906,8 +5036,13 @@ private final class Run {
         }
     }
 
-    private func holds(_ condition: PlaytestCondition, editor: EditorState) -> Bool {
-        switch condition {
+    private func holds(_ condition: PlaytestCondition, editor: EditorState?) -> Bool {
+        // The one condition that is about the guide rather than about a window.
+        if case .tutorialStep(let id) = condition {
+            return TutorialController.shared.run?.step.id == id
+        }
+        guard let editor else { return false }
+        return switch condition {
         case .edgeMap: !editor.snappingEdgeMap.isEmpty
         case .captionField: window?.firstResponder is NSTextView
         case .tool(let tool): editor.activeTool == tool

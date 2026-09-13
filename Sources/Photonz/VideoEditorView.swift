@@ -40,7 +40,12 @@ struct VideoEditorView: View {
 
     /// True while an explicit edit mode is active — the controller stays pinned
     /// (never auto-hides) so the mode's chrome is always reachable.
-    private var editing: Bool { state.isTrimming || state.isCropping }
+    /// A guide counts: every control a video tutorial points at lives on the
+    /// floating controller, so a guide running over this window keeps it up the
+    /// same way an edit mode does.
+    private var editing: Bool {
+        state.isTrimming || state.isCropping || state.isTutorialRunning
+    }
 
     var body: some View {
         ZStack {
@@ -84,6 +89,9 @@ struct VideoEditorView: View {
         // auto-hides while editing). Leaving a mode re-arms the fade.
         .onChange(of: state.isTrimming) { _, _ in reveal() }
         .onChange(of: state.isCropping) { _, _ in reveal() }
+        // A guide starting is the same kind of event as a mode opening: bring
+        // the controller up, and `editing` keeps it up from there.
+        .onChange(of: state.isTutorialRunning) { _, _ in reveal() }
         .onChange(of: state.metadataDidLoad) { _, loaded in
             guard loaded else { return }
             // Next runloop tick: the timeline panel has just appeared, so let
@@ -151,7 +159,10 @@ struct VideoEditorView: View {
     /// the controller gets out of the way even with the cursor on it.
     private func forceHide() {
         hideTask?.cancel()
-        guard controlsVisible else { return }
+        // Hitting play normally clears the controller out of the way even with
+        // the pointer on it. Not while a guide is running: the card would be
+        // pointing at a button that had just faded out.
+        guard controlsVisible, !editing else { return }
         withAnimation(.easeInOut(duration: 0.35)) { controlsVisible = false }
     }
 
@@ -202,6 +213,7 @@ struct VideoEditorView: View {
     private var player: some View {
         if let player = state.player {
             VideoPreviewView(player: player, state: state)
+                .tutorialAnchor(.video(.preview))
                 .background(Color.black)
                 .overlay {
                     if state.isCropping {
@@ -305,6 +317,7 @@ struct VideoEditorView: View {
             cropRow
         } else if state.isTrimming {
             TrimTimeline(state: state)
+                .tutorialAnchor(.video(.timeline))
         } else {
             scrubberRow
         }
@@ -360,6 +373,7 @@ struct VideoEditorView: View {
             }
             .buttonStyle(IconActionButtonStyle())
             .help("Trim")
+            .tutorialAnchor(.video(.trim))
 
             Button { state.beginCrop() } label: {
                 Image(systemName: "crop")
@@ -389,6 +403,7 @@ struct VideoEditorView: View {
             }
             .buttonStyle(IconActionButtonStyle())
             .help("Save (⌘S)")
+            .tutorialAnchor(.video(.save))
         }
     }
 
@@ -404,6 +419,7 @@ struct VideoEditorView: View {
             Button("Done") { state.commitTrim() }
                 .keyboardShortcut(.defaultAction)
                 .buttonStyle(.borderedProminent)
+                .tutorialAnchor(.video(.trimDone))
         }
     }
 
@@ -432,6 +448,7 @@ struct VideoEditorView: View {
             .help(state.isPlaying ? "Forward 1 second (→)" : "Next frame (→)")
         }
         .disabled(state.isCropping)
+        .tutorialAnchor(.video(.transport))
     }
 
     /// Copy the (trimmed/cropped) recording to the clipboard as the video file
@@ -449,6 +466,7 @@ struct VideoEditorView: View {
         .fixedSize()
         .disabled(coordinator.isExportingRecording)
         .help("Copy to Clipboard…")
+        .tutorialAnchor(.video(.copy))
     }
 
     private var exportMenu: some View {
@@ -477,6 +495,7 @@ struct VideoEditorView: View {
         .fixedSize()
         .disabled(coordinator.isExportingRecording)
         .help("Export…")
+        .tutorialAnchor(.video(.export))
     }
 
     /// Crop controls replace the timeline while a region is being chosen.

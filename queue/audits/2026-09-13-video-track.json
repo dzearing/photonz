@@ -1,0 +1,31 @@
+{
+  "feature": "Tutorials: the Video track",
+  "epic": "ui-building",
+  "summary": "Help now walks you through what to do with a recording: trim it down to the part worth watching, and pick the shape it leaves the app in. Both guides bring a recording of their own, so you never need one of your own to follow along.",
+  "setup": "Photonz Dev, release Next. Help then Tutorials then Video. Nothing to switch on: neither guide needs a feature flag.",
+  "try": [
+    { "do": "Pick Help then Tutorials then Video then Trim a recording.", "shot": "2026-09-13-video-track-trim-1-what-you-have.png" },
+    { "do": "Read the first card, press Next, read the second, press Next." },
+    { "do": "Click the scissors where the card rings them.", "shot": "2026-09-13-video-track-trim-3-open-the-trim.png" },
+    { "do": "Drag the left handle in to about where the counter starts climbing.", "shot": "2026-09-13-video-track-trim-4-bring-the-start-in.png" },
+    { "do": "Drag the right handle back to about where it stops.", "shot": "2026-09-13-video-track-trim-6-keep-whats-between.png" },
+    { "do": "Press Done, read the last card, and do NOT save.", "shot": "2026-09-13-video-track-trim-7-saving-writes-it-in.png" },
+    { "do": "Now pick Help then Tutorials then Video then Export MP4, GIF or HEIC.", "shot": "2026-09-13-video-track-export-1-three-ways-out.png" },
+    { "do": "Press Next twice, then use Copy GIF where the card rings it, and paste into a message.", "shot": "2026-09-13-video-track-export-3-copy-it-instead.png" }
+  ],
+  "evaluate": [
+    "The clip is a made up file copy with dead air at each end. Is that obviously something worth trimming, or does it need to look more like a real screen recording of yours?",
+    "The last card of the trim guide tells you saving bakes the trim in and names Revert to Original, but never makes you save. Is telling enough, or should the guide have you save and then put it back?",
+    "The export guide ends on Copy GIF rather than on a real export, because picking a format opens a save dialog that would cover the card. Does ending on the clipboard feel like it taught you export, or like it dodged it?",
+    "The floating controller stays up for the whole guide instead of fading. Does that read as helpful, or as the app behaving differently while a guide is on?",
+    "Two guides is the whole track. Is there a third you would want here, and what would it be?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the window as a person sees it rather than an offscreen render.",
+    "The guide's card covers the middle of the picture, which is fixed and cannot move. The sample is drawn around that: its bar runs along the very top edge and its counter sits in the left column, both clear of every card. A real recording of yours would not be so considerate, and a guide teaching over your own clip would sometimes have its card over the thing you were looking at.",
+    "Skipping every waiting step lands you on the last card with no trim made, so there is no save button for it to ring. It centres itself in the window and still reads correctly, which is the framework's fallback rather than a plan. Walked and photographed (tutorial-trim-a-recording-skipped-walk), so it is checked rather than hoped.",
+    "Starting a guide writes a fresh sample MP4 first, which takes about a third of a second with no sign that anything is happening. Short enough not to feel broken, long enough to notice.",
+    "Both guides share one sample file and therefore one window. Starting the export guide while the trim guide's window is open teaches over the clip as you left it, trim and all. That reads fine, but it does mean the export guide sometimes opens on a four second clip and sometimes on an eight second one.",
+    "Crop is on the controller beside the scissors and no guide mentions it except in passing on the export guide's last card. If crop deserves a guide it is a third one, not a longer trim guide."
+  ]
+}

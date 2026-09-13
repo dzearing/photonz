@@ -63,6 +63,44 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
         TutorialAnchor("panel.\(id)")
     }
 
+    /// One part of a recording's window: the picture itself, or a control on
+    /// the floating controller that sits over it. Named off the part rather
+    /// than off the icon on it, so swapping a glyph cannot break a guide.
+    ///
+    /// A recording's window is not the picture editor. It has no tool bar, no
+    /// docked panel and no layers, so none of the names above reach anything in
+    /// it and these are the only ones a video guide may use.
+    public static func video(_ part: VideoPart) -> TutorialAnchor {
+        TutorialAnchor("video.\(part.rawValue)")
+    }
+
+    /// The parts of a recording's window a guide is allowed to point at.
+    ///
+    /// Deliberately short. Everything here is somewhere a guide really sends
+    /// people, and a name nothing ever points at is a promise the app has to
+    /// keep for nothing.
+    public enum VideoPart: String, CaseIterable, Codable, Hashable, Sendable {
+        /// The recording as you watch it, which is a SURFACE rather than a
+        /// control: the card goes inside it.
+        case preview
+        /// Step back, play, step forward, together.
+        case transport
+        /// The scissors that open the trim.
+        case trim
+        /// The clip with a handle at each end, which is only there while the
+        /// trim is open.
+        case timeline
+        /// The button that keeps what is between the handles. Trim mode only.
+        case trimDone
+        /// Writes the edits into the recording. Only there when there is
+        /// something to write.
+        case save
+        /// Puts the recording on the clipboard, as a video or as a GIF.
+        case copy
+        /// Writes a file: MP4, GIF or HEIC.
+        case export
+    }
+
     /// One row of the card an empty window shows: open a file, capture a
     /// rectangle, paste a picture. Named off the action it performs rather
     /// than off the words on the row, for the same reason as everything else
@@ -118,6 +156,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
             + Tool.allCases.map(tool)
             + knownPanelSections.map(panelSection)
             + knownStartActions.map(startHere)
+            + VideoPart.allCases.map(video)
     }
 }
 
@@ -161,6 +200,16 @@ public enum TutorialTrigger: Hashable, Codable, Sendable {
     case measureMode(MeasureToolMode)
     /// The person put the spec list on the clipboard.
     case specListCopied
+    /// The person opened the trim on a recording.
+    case trimModeOpened
+    /// The person moved the handle the kept part starts at.
+    case trimStartMoved
+    /// The person moved the handle it ends at.
+    case trimEndMoved
+    /// The person kept what was between the handles.
+    case trimApplied
+    /// The person put a recording on the clipboard, as a video or as a GIF.
+    case recordingCopied
 }
 
 /// How a step moves on.
@@ -276,7 +325,7 @@ public enum TutorialTrack: String, CaseIterable, Codable, Hashable, Sendable {
         case .colorsAndStyles: "Save a colour once and use it everywhere, then change it in one place."
         case .buildingUI: "Frames, grids and layout that behave like real screens."
         case .components: "Build a piece once, reuse it, and override just the bits that differ."
-        case .video: "Trim a recording, add a title, and share it."
+        case .video: "Cut a recording down to the part worth watching, and send it on."
         }
     }
 
@@ -352,6 +401,23 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// evenly spaced, with clear page round them to drag a selection from.
     case crookedBoxes
 
+    /// A short recording, written to disk before the window opens.
+    ///
+    /// The one sample that is not a drawing. The video guides teach in a
+    /// recording's window, which holds media rather than layers, so there is
+    /// nothing here for a layer list to hold and nothing for the renderer to
+    /// flatten. What it IS lives in the app, beside the code that can write an
+    /// MP4; all this says is that the guide brings one.
+    ///
+    /// It is made with dead air at each end on purpose, so trimming it has a
+    /// visible point rather than being a gesture practised on nothing.
+    case sampleRecording
+
+    /// Whether this sample is a recording rather than a picture. A recording
+    /// opens in the video window, so the two go different ways from the moment
+    /// a guide is started.
+    public var isVideo: Bool { self == .sampleRecording }
+
     /// Whether this sample's drawing is baked into the picture before the
     /// window opens. A guide that measures needs this; a guide about layers
     /// needs the opposite.
@@ -363,6 +429,10 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
         switch self {
         case .redlineScreen, .measuredScreen, .accountScreen, .tintedScreen: true
         case .starterScreen, .emptyWindow: false
+        // A recording has no layers to flatten and no canvas to flatten them
+        // into. The question does not apply, and false is the answer that keeps
+        // the picture path away from it.
+        case .sampleRecording: false
         case .componentPieces, .componentOriginal, .componentCopies: false
         // Every Building UI sample is live for the same reason the component
         // ones are: a screen is made of layers, and you cannot group, stack,
@@ -491,6 +561,8 @@ public enum TutorialCatalog {
         TutorialGuides.letAScreenArrangeItself,
         TutorialGuides.paddingAndColumns,
         TutorialGuides.lineThingsUp,
+        TutorialGuides.trimARecording,
+        TutorialGuides.exportARecording,
     ]
 
     /// The guide the Help menu's own row runs, and the one first launch offers.

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.310Z",
-  "updated": "2026-09-13T12:29:07.326Z",
+  "updated": "2026-09-13T13:02:17.089574Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -42,6 +42,63 @@
     {
       "t": "2026-09-13T12:29:07.325Z",
       "note": "seq 29 -> 10"
+    },
+    {
+      "t": "2026-09-13T12:34:42.296Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T12:37:08.081074Z",
+      "note": "adversarial review, before building. The video editor is a DIFFERENT window from everything the tutorials framework has taught in so far (VideoEditorView + VideoEditorState: an AVKit preview with one floating glass controller), and four things fall out of that."
+    },
+    {
+      "t": "2026-09-13T12:37:08.081074Z",
+      "note": "1. The framework is bolted to EditorState. TutorialController takes an EditorState, prepares with it, asks it what is already true, and follows its window. None of that exists in a video window. This is the framework machinery the task warned about: it gets a host abstraction rather than a second controller, and the audit says so."
+    },
+    {
+      "t": "2026-09-13T12:37:08.081074Z",
+      "note": "2. There is nothing to trim. Every other sample is a drawing; this one has to be a real recording written to disk before the window opens, or the guide depends on what the person happens to have recorded, which acceptance forbids."
+    },
+    {
+      "t": "2026-09-13T12:37:08.081074Z",
+      "note": "3. The controller HIDES. It fades 2.4s after the pointer leaves it, and every control the trim guide points at lives on it. A ring round a faded out button is the worst failure this framework has, so a running guide pins the controller visible. Reveal only, same rule as every other prepare."
+    },
+    {
+      "t": "2026-09-13T12:37:08.081074Z",
+      "note": "4. Nothing in a menu can be ringed, and Export runs a MODAL save panel (panel.runModal). So the export guide rings the Export button and names what is inside it rather than walking anybody into a dialog that blocks the card. It ends on Copy instead, which is what most people actually want when they say send this to somebody, and needs no dialog at all."
+    },
+    {
+      "t": "2026-09-13T12:37:08.081074Z",
+      "note": "Two more, decided here: the window AUTOPLAYS when it opens, so a first step saying press space to play would come up already true every time. The first two cards describe the clip and teach the transport instead, and nothing waits until the scissors. And trimming is destructive on save, so the last card says that plainly and does NOT make anybody save."
+    },
+    {
+      "t": "2026-09-13T12:37:08.081074Z",
+      "note": "The walk harness has no idea video windows exist (8k lines, all EditorState), so a walk per guide means teaching it to adopt one. Third piece of machinery."
+    },
+    {
+      "t": "2026-09-13T13:02:17.089574Z",
+      "note": "built. Two guides as DATA in the catalogue (trim-a-recording, export-a-recording), and the three pieces of framework the track really needed, each added where the difference is rather than special cased in the guide."
+    },
+    {
+      "t": "2026-09-13T13:02:17.089574Z",
+      "note": "Framework: TutorialHost, a protocol with three questions on it (what window am I in, reveal this, is this already so). The controller held an EditorState and asked it those directly; now both editors answer and the controller never asks which it is holding. Anchors for the recording's window (TutorialAnchor.video), and five triggers wired in VideoEditorState: trimModeOpened, trimStartMoved, trimEndMoved, trimApplied, recordingCopied. The two handles get an event each so dragging the left one twice cannot satisfy the step about the right one."
+    },
+    {
+      "t": "2026-09-13T13:02:17.089574Z",
+      "note": "A running guide pins the floating controller up (isTutorialRunning, counted by `editing`, respected by forceHide). Without it every control the trim guide points at fades out 2.4s after the pointer leaves. Reveal only, and the fade comes straight back when the guide closes."
+    },
+    {
+      "t": "2026-09-13T13:02:17.089574Z",
+      "note": "TutorialSampleRecording writes a real 8 second MP4 to the caches folder before the window opens, fresh on every start because the guide teaches that saving bakes the trim in. Two seconds of dead air at each end so trimming it has a point. It draws its filling bar along the very top edge and its counter in the left column, both clear of where a card sits: the first cut put the moving part in the centre, which is exactly where the card telling you to watch it goes."
+    },
+    {
+      "t": "2026-09-13T13:02:17.089574Z",
+      "note": "Harness: adoptRecording takes over a window with no editor in it, waitFor tutorialStep no longer insists on an editor, and the callout's own buttons work with none. A recording's window is left VISIBLE for the walk, unlike every other: the offscreen render draws the video black and the glass controller as nearly nothing, and a capture of a zero alpha window comes back blank."
+    },
+    {
+      "t": "2026-09-13T13:02:17.089574Z",
+      "note": "Verified: 6155 tests green. tutorial-trim-a-recording-walk and tutorial-export-a-recording-walk drive every step of both guides in the real app with real screen captures, no anchor unresolved in either. tutorial-trim-a-recording-skipped-walk skips every waiting step to prove the last card stands on its own with no trim made and so no save button to ring. All 30 tutorial walks pass, including the hub walk, which reads the Tutorials window aloud and finds both new guides: acceptance item one, with no UI edited. Sweep requested because the host change and the harness change are under every walk."
     }
-  ]
+  ],
+  "started": "2026-09-13T12:34:42.295Z"
 }

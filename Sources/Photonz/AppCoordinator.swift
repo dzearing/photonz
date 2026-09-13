@@ -265,6 +265,10 @@ final class AppCoordinator {
     /// original once one exists) and applies them.
     func copyRecording(_ state: VideoEditorState, as format: RecordingFormat) {
         guard let url = state.editSourceURL else { return }
+        // Raised on the ASK rather than on the toast: a GIF re-encode takes a
+        // second, and a guide's card should move on when the person did the
+        // thing, not when the encoder finished.
+        TutorialController.shared.note(.recordingCopied, from: state)
         let edits = state.exportEdits
         copyRecording(sourceURL: url, as: format, trim: edits.trim, crop: edits.crop)
     }

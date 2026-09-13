@@ -20,6 +20,10 @@ enum TutorialLauncher {
         // A guide already running is closed first: two callouts pointing at two
         // controls is nobody's idea of a walkthrough.
         TutorialController.shared.close()
+        if guide.sample?.isVideo == true {
+            startInRecording(guide, coordinator: coordinator)
+            return
+        }
         guard guide.sample != nil else {
             guard let editor else { return }
             TutorialController.shared.start(guide, in: editor)
@@ -39,6 +43,63 @@ enum TutorialLauncher {
             else { return }
             TutorialController.shared.start(guide, in: open)
         }
+    }
+
+    // MARK: - A guide that brings a recording
+
+    /// Guides waiting for the window their recording is about to open in, by
+    /// the file that window will hold.
+    private static var pendingByRecording: [URL: String] = [:]
+
+    /// Every recording window that is alive, so a guide started from the
+    /// Tutorials window can find the one already holding the sample. Held
+    /// weakly and swept on every read, exactly like the picture editors above.
+    private static var recordings: [WeakRecording] = []
+
+    private final class WeakRecording {
+        weak var value: VideoEditorState?
+        init(_ value: VideoEditorState) { self.value = value }
+    }
+
+    /// Called when a recording's window has its state.
+    static func register(_ recording: VideoEditorState) {
+        recordings.removeAll { $0.value == nil || $0.value === recording }
+        recordings.append(WeakRecording(recording))
+    }
+
+    /// The open window holding this recording, if there is one.
+    private static func recording(for url: URL) -> VideoEditorState? {
+        recordings.removeAll { $0.value == nil }
+        let wanted = url.standardizedFileURL
+        return recordings.compactMap(\.value).first {
+            $0.url?.standardizedFileURL == wanted && $0.hostWindow?.isVisible == true
+        }
+    }
+
+    /// A video guide teaches in a recording's window, which is not the picture
+    /// editor: no tool bar, no panel, no layers. So it brings a recording of
+    /// its own the way every other guide brings a drawing, and the window that
+    /// opens for it starts the guide once the clip is loaded.
+    private static func startInRecording(_ guide: TutorialGuide, coordinator: AppCoordinator) {
+        // Already open: teach in the window that is there rather than writing
+        // the file out from under a window reading it.
+        if let open = recording(for: TutorialSampleRecording.url) {
+            coordinator.openWindow(.video(standardizing: TutorialSampleRecording.url))
+            TutorialController.shared.start(guide, in: open)
+            return
+        }
+        guard let url = TutorialSampleRecording.fresh() else { return }
+        pendingByRecording[url] = guide.id
+        coordinator.openWindow(.video(standardizing: url))
+    }
+
+    /// The window a recording landed in asks this once the clip is ready. Runs
+    /// the guide that asked for it, if one did.
+    static func startPendingGuide(in recording: VideoEditorState) {
+        guard let url = recording.url?.standardizedFileURL,
+              let id = pendingByRecording.removeValue(forKey: url),
+              let guide = TutorialCatalog.guide(id: id) else { return }
+        TutorialController.shared.start(guide, in: recording)
     }
 
     /// The guide the Help menu's own row promotes to the top.

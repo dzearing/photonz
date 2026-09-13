@@ -66,6 +66,25 @@ struct VideoEditorRootView: View {
             .onChange(of: state.hasUnsavedChanges) { _, dirty in
                 state.hostWindow?.isDocumentEdited = dirty
             }
-            .task { state.seed(url: url, capture: coordinator.capture) }
+            .task {
+                state.seed(url: url, capture: coordinator.capture)
+                // From here on a guide can find this window: one that brought
+                // its own recording starts as soon as the clip is loaded, and
+                // one picked off the Tutorials window later finds it standing.
+                TutorialLauncher.register(state)
+                #if PHOTONZ_PLAYTEST
+                PlaytestHarness.register(state)
+                #endif
+                // Reusing a window that already holds the sample means the
+                // clip is loaded before anybody is watching for it.
+                if state.isReady { TutorialLauncher.startPendingGuide(in: state) }
+            }
+            // Loaded, sized and revealed: only now does a callout have controls
+            // to point at, because nothing on the floating controller exists
+            // until the clip is ready.
+            .onChange(of: state.isReady) { _, ready in
+                guard ready else { return }
+                TutorialLauncher.startPendingGuide(in: state)
+            }
     }
 }

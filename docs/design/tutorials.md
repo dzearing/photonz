@@ -26,6 +26,9 @@ PhotonzCore (pure, Codable, tested)
 
 Sources/Photonz/Tutorials/ (the app)
   TutorialAnchorRegistry.swift   what a name points at, right now
+  TutorialHost.swift             what a guide runs OVER: the picture editor
+                                 or a recording's window, three questions each
+  TutorialSampleRecording.swift  the one sample that is a real file
   TutorialController.swift       runs one guide: panels, following, progress
   TutorialCalloutView.swift      the ring and the card
   TutorialLauncher.swift         how a guide gets started from anywhere
@@ -751,14 +754,102 @@ about:
 screen with a pale stroke, which on the probe read as nothing at all. Every
 guide here is about watching cards MOVE, so they are a soft grey fill now.
 
+## The Video track
+
+The smallest track, and the only one that does not teach in the picture editor
+at all. A recording opens in a window of its own: one picture, and one floating
+glass controller over it. No tool bar, no docked panel, no layers.
+
+| Guide | Brings | What it teaches |
+| --- | --- | --- |
+| Trim a recording | a recording it wrote itself | the transport, the scissors, a handle at each end, Done, and what saving does |
+| Export MP4, GIF or HEIC | the same recording | which of the three to pick, what the quality levels are for, and Copy GIF as the way to skip the file |
+
+**This is the track that made the framework grow**, and the shape of the growth
+is the point: three things were added, each of them where the difference really
+is, and nothing was special cased in the catalogue.
+
+- **`TutorialHost`**, a protocol with three questions on it: what window am I
+  in, reveal this, and is this already so. The controller used to hold an
+  `EditorState` and ask it those directly. Both editors answer them now, the
+  controller never asks which it is holding, and a third kind of window becomes
+  a third conformance rather than a branch.
+- **Anchors for the recording's window** (`TutorialAnchor.video(_:)`): the
+  picture, the transport, the scissors, the trim timeline, Done, save, copy and
+  export. Named off the part rather than off the glyph on it, the same rule as
+  everywhere else. Deliberately short: every one of them is somewhere a guide
+  really sends people.
+- **Five triggers**, wired where they happen in `VideoEditorState`:
+  `.trimModeOpened` at `beginTrim`, `.trimStartMoved` and `.trimEndMoved` at the
+  two handle setters, `.trimApplied` at `commitTrim`, and `.recordingCopied` at
+  `copyRecording`. The two handles get an event EACH rather than one between
+  them, so dragging the left one twice cannot satisfy the step about the right
+  one.
+
+Five things the track settled, each measured on the probe:
+
+- **The controller hides, and every control a video guide points at lives on
+  it.** It fades 2.4 seconds after the pointer leaves, and hitting play clears
+  it out of the way immediately. A ring round a faded out button is the worst
+  failure this framework has, so a guide running over the window pins it up for
+  the whole guide (`isTutorialRunning`, which `editing` counts and `forceHide`
+  respects). Reveal only, like every other thing a guide may do, and the fade
+  comes straight back when the guide closes.
+- **A sample that is a real file.** Every other sample is a few layers put into
+  a window; this one is an MP4 written to the caches folder before the window
+  opens (`TutorialSampleRecording`), and rewritten every time a guide is started
+  because the guide teaches that saving bakes the trim in. It is eight seconds
+  with two seconds of nothing happening at each end, so trimming it has a point
+  rather than being a gesture practised on nothing. Writing it costs about a
+  third of a second.
+- **Where the clip draws matters.** A card is a fixed width in the middle of
+  the window, and in a window this shape the cards cover the middle column from
+  top to bottom: a clip whose only moving part was in the centre would be a clip
+  you could not watch while the card told you to watch it. So the sample puts
+  its filling bar along the very top edge, above the highest a card reaches, and
+  its counter in the left column, clear of the widest one. Same lesson the
+  Building UI track learned as `calloutSkirt`, in a window with less room.
+- **Nothing in a menu can be pointed at, and Export runs a MODAL save dialog.**
+  The three formats are rows in a popup, which is its own window, and picking
+  one runs `NSSavePanel.runModal`, which would sit on top of the card with
+  nothing to press. So the export guide rings the Export button and says what is
+  inside it, and the one thing it asks anybody to do is Copy GIF, which needs no
+  dialog and is what most people want anyway.
+- **The window autoplays as it opens.** A first step saying "press space to play
+  it" would come up already finished every single time. So the first two cards
+  describe the clip and teach the transport, and nothing waits until the
+  scissors.
+
+And the one it says out loud rather than hiding: **trimming is the only edit in
+the app that is baked in when you save.** The last card says so, names Revert to
+Original as the way back, and does not make anybody save. A guide that quietly
+rewrote a file on its way past would not be a guide.
+
+**Walked three ways.** `tutorial-trim-a-recording-walk` and
+`tutorial-export-a-recording-walk` drive the real window through every step, and
+`tutorial-trim-a-recording-skipped-walk` skips every waiting step to prove the
+last card stands on its own when there is no trim, so no save button, and
+nothing to ring. That is the framework's centred fallback doing its job, checked
+rather than assumed.
+
+Two things the walk harness had to learn, because it had never seen a recording:
+
+- **It can adopt a window with no editor in it** (`adoptRecording`), and
+  `waitFor tutorialStep` no longer insists on one: where a guide has got to is a
+  fact about the guide, not about a window.
+- **A recording's window is left VISIBLE for the walk.** Every other walk hides
+  the window it drives. Here the offscreen render draws the video as a black
+  rectangle and the glass controller as very nearly nothing, and a screen
+  capture of a window at zero alpha comes back blank, so a picture taken either
+  of those ways shows neither the clip nor the controls. Visible, the capture
+  shows both.
+
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
-menu, the track submenus, the hub window, the first launch offer, the Basics
-track, the Redlining track, the Looks track, the Components track, the Colours
-and Styles track and the Building UI track. Still queued:
+menu, the track submenus, the hub window, the first launch offer, and all seven
+tracks. Still queued:
 
-- **The Video track**, one task.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated
   walk per guide that drives the real editor and asserts every step's anchor
   resolves. The unit check here (`TutorialCatalogCheck`) is the promise; that
