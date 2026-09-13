@@ -732,6 +732,263 @@ public enum TutorialGuides {
                 side: .leading,
                 prepare: [.showPanel, .revealTarget]),
         ])
+
+    // MARK: - Components
+    //
+    // Build a piece of UI once, fetch it as often as you like, and change one
+    // copy without cutting it loose. Four guides in the order the job is done
+    // in: make one, use it, override one, and hold two looks under one name.
+    //
+    // The hard idea, and the reason the last two guides exist at all, is what a
+    // copy OWNS. A copy's contents are not its own: they are refilled from the
+    // original after every edit, and the few things somebody set on the copy
+    // are written back over the top. Everything the track teaches falls out of
+    // that one sentence, and nothing on screen ever says it, so the guides do.
+
+    /// The first rung: something you drew becomes something you can fetch.
+    ///
+    /// It teaches the order, because the order is the part that stops people:
+    /// Make Component is dead until the pieces are one group, so a person who
+    /// reaches for it on two selected shapes finds a row that does nothing and
+    /// no reason why.
+    public static let makeAComponent = TutorialGuide(
+        id: "make-a-component",
+        track: .components,
+        title: "Make a component",
+        summary: "Turn something you drew into something you can fetch again and again.",
+        minutes: 2,
+        sample: .componentPieces,
+        requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.libraryFlag,
+                   FeatureCatalog.componentsFlag],
+        steps: [
+            TutorialStep(
+                id: "two-loose-layers",
+                anchor: .canvas,
+                title: "A button, drawn as two layers",
+                body: "A box and the words on it. Right now it is a drawing. A component is a drawing you can fetch off a shelf whenever you want another one."),
+            TutorialStep(
+                id: "pick-both",
+                anchor: .canvas,
+                title: "Pick them both",
+                body: "Start on the clear page beside the button and drag a box round it. Both layers get picked.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "group-them",
+                anchor: .canvas,
+                title: "Make them one thing",
+                body: "Press \u{2318}G. The box and its words have to travel together before they can be reused together.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "promote",
+                anchor: .canvas,
+                title: "Now make it a component",
+                body: "Press \u{2325}\u{2318}K. Nothing moves. The group picks up four violet diamonds, which is how the original is marked from here on.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "name-it",
+                anchor: .panelSection("component"),
+                title: "Name it",
+                body: "The Name box is waiting with the name selected, so just type. Call it Save Button and press Return.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "on-the-shelf",
+                anchor: .panelSection("library"),
+                title: "There it is on the shelf",
+                body: "The Library opened itself on Components, where your button now sits beside the ones the app came with. Fetching one is the next guide.",
+                side: .leading,
+                prepare: [.showPanel, .showComponentShelf, .revealTarget]),
+        ])
+
+    /// The other half of the bargain: the shelf hands things back, and one edit
+    /// to the original reaches every copy of it.
+    ///
+    /// It reaches inside the original through the LAYERS LIST rather than by
+    /// double clicking the canvas. A double click's first click already selects
+    /// the group, which raises the event a waiting step is listening for, so
+    /// the card moves on before the person has got inside anything.
+    public static let useItAgainAndAgain = TutorialGuide(
+        id: "use-it-again-and-again",
+        track: .components,
+        title: "Use it again and again",
+        summary: "Fetch copies off the shelf, then change every one of them from one place.",
+        minutes: 2,
+        sample: .componentOriginal,
+        requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.libraryFlag,
+                   FeatureCatalog.componentsFlag],
+        steps: [
+            TutorialStep(
+                id: "the-shelf",
+                anchor: .panelSection("library"),
+                title: "Your button is on the shelf",
+                body: "Save Button sits on Components beside the ones the app came with. The drawing on the page wearing four diamonds is the original.",
+                side: .leading,
+                prepare: [.showPanel, .showComponentShelf, .revealTarget]),
+            TutorialStep(
+                id: "place-one",
+                anchor: .panelSection("library"),
+                title: "Put a copy on the page",
+                body: "Double click the Save Button tile. A copy lands wearing one diamond instead of four, which is how a copy is marked.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .showComponentShelf, .revealTarget]),
+            TutorialStep(
+                id: "place-another",
+                anchor: .panelSection("library"),
+                title: "And another",
+                body: "Double click it again, or drag the tile onto the page to choose where it lands.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .showComponentShelf, .revealTarget]),
+            TutorialStep(
+                id: "pick-the-original",
+                anchor: .canvas,
+                title: "Now go to the original",
+                body: "Click the drawing wearing four diamonds. It is an ordinary group, sitting where you left it.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "change-it-once",
+                anchor: .panelSection("color"),
+                title: "Change it once",
+                body: "Double click its box, clear of the words, to reach the shape itself. Then give it another colour here. Every copy repaints with it.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "one-place",
+                anchor: .canvas,
+                title: "That is the whole point",
+                body: "Copies stay in step with the original wherever they are. Twenty buttons on twenty screens, changed in one place."),
+        ])
+
+    /// The part everybody gets wrong: a copy cannot simply be edited, and the
+    /// way in is a knob the ORIGINAL offers.
+    ///
+    /// The order of the steps is the model. The original decides what is
+    /// adjustable, because the decision applies to every copy at once; the copy
+    /// answers, and its answer survives the next edit to the original because
+    /// it is written back over the top after the refill.
+    public static let overrideOneCopy = TutorialGuide(
+        id: "override-one-copy",
+        track: .components,
+        title: "Override one copy",
+        summary: "Let one copy say something of its own without cutting it loose.",
+        minutes: 2,
+        sample: .componentCopies,
+        requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.libraryFlag,
+                   FeatureCatalog.componentsFlag],
+        steps: [
+            TutorialStep(
+                id: "pick-the-original",
+                anchor: .canvas,
+                title: "The original decides",
+                body: "What is inside a copy belongs to the original, so the original says which parts a copy may set. Click the drawing wearing four diamonds.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "add-a-knob",
+                anchor: .panelSection("component"),
+                title: "Make its words adjustable",
+                body: "Under Adjustable, open Add and pick the Label's Wording. Every copy gets that one knob and nothing else.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "pick-a-copy",
+                anchor: .canvas,
+                title: "Now pick one copy",
+                body: "Click the copy just under it, the one wearing a single diamond.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "give-it-its-own-words",
+                anchor: .panelSection("component"),
+                title: "Give it its own words",
+                body: "Type new words into the Label box. This copy alone changes, and the one below it carries on following the original.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "still-a-copy",
+                anchor: .canvas,
+                title: "It is still a copy",
+                body: "Only the words it was given are its own. Everything else about it is still refilled from the original every time you edit one."),
+            TutorialStep(
+                id: "the-way-back",
+                anchor: .panelSection("component"),
+                title: "There is always a way back",
+                body: "The arrow beside the knob puts this copy back on the original's words. Nothing is ever stuck.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+        ])
+
+    /// A component holds more than one drawing of itself, and a copy picks
+    /// which one it shows.
+    ///
+    /// It is called Versions because that is what the panel calls it. The task
+    /// that asked for this track said "Variants", and a guide teaches what
+    /// shipped rather than what the plan called it.
+    public static let componentVersions = TutorialGuide(
+        id: "component-versions",
+        track: .components,
+        title: "One name, two looks",
+        summary: "A button needs a disabled look too. Both live under one component.",
+        minutes: 3,
+        sample: .componentCopies,
+        requires: [FeatureCatalog.layerGroupsFlag, FeatureCatalog.libraryFlag,
+                   FeatureCatalog.componentsFlag],
+        steps: [
+            TutorialStep(
+                id: "pick-the-original",
+                anchor: .canvas,
+                title: "One button, two looks",
+                body: "A button needs a switched off look as well. Keeping both under one name stops the two drifting apart. Click the original to start.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "add-a-version",
+                anchor: .panelSection("component"),
+                title: "Add a second drawing",
+                body: "Under Versions, press Add. A copy of this drawing lands beside it on clear page, and it is an ordinary drawing you can edit.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "name-it",
+                anchor: .panelSection("component"),
+                title: "Name it",
+                body: "Its name is waiting to be typed over. Call it Disabled and press Return.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "grey-it-out",
+                anchor: .panelSection("color"),
+                title: "Make it look switched off",
+                body: "Double click the new drawing's box, clear of the words. Give it a grey here. The drawing you started with is untouched.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "pick-a-copy",
+                anchor: .canvas,
+                title: "Now pick a copy",
+                body: "Click one of the copies on the page.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "switch-it",
+                anchor: .panelSection("component"),
+                title: "Switch it to Disabled",
+                body: "Version is the top row of a copy's settings. Choose Disabled and this copy redraws. The other one carries on as it was.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "under-one-name",
+                anchor: .panelSection("library"),
+                title: "One tile, two looks",
+                body: "The shelf still holds one component. Every copy of it says which drawing it is showing, and you can change that any time.",
+                side: .leading,
+                prepare: [.showPanel, .showComponentShelf, .revealTarget]),
+        ])
 }
 
 // MARK: - The sample a guide opens for itself
@@ -760,6 +1017,10 @@ public enum TutorialSampleScreen {
         // edges being findable.
         case .redlineScreen, .measuredScreen, .accountScreen, .tintedScreen: "#EDF0F5"
         case .starterScreen, .emptyWindow: "#FFFFFF"
+        // The component samples are a work surface rather than a screenshot:
+        // what you are designing is a control, and a control on a white page
+        // has no edge to it. A soft grey reads as the desk it is lying on.
+        case .componentPieces, .componentOriginal, .componentCopies: "#EDF0F5"
         }
     }
 
@@ -776,6 +1037,7 @@ public enum TutorialSampleScreen {
         case .redlineScreen, .measuredScreen: settingsScreen()
         case .accountScreen, .tintedScreen: accountScreen()
         case .starterScreen, .emptyWindow: []
+        case .componentPieces, .componentOriginal, .componentCopies: []
         }
     }
 
@@ -802,6 +1064,11 @@ public enum TutorialSampleScreen {
         // The same screenshot with one solid box lying over the address, which
         // is the layer the mixing guide is about.
         case .tintedScreen: [tintBox()]
+        // The three stages of the components track, each one the state the
+        // guide that brings it starts from.
+        case .componentPieces: loosePieces()
+        case .componentOriginal: [buttonComponent()]
+        case .componentCopies: buttonWithCopies()
         }
     }
 
@@ -927,6 +1194,107 @@ public enum TutorialSampleScreen {
 
     private static func tintBox() -> Layer {
         box("Marker", tintFrame, radius: 4, fill: "#FFD25E", stroke: nil)
+    }
+
+    // MARK: The components desk
+
+    /// The button every guide on the Components track is about: a box with a
+    /// word on it, which is the smallest thing anybody actually builds twice.
+    ///
+    /// It is drawn as two layers on purpose. A component that was one shape
+    /// would make grouping look like a formality, and the whole first lesson is
+    /// that a component is made out of a group of things that travel together.
+    /// Wide enough that the box has clear room on both sides of its word. The
+    /// first cut was 176 across and the label filled the middle of it, so a
+    /// double click aimed at "the box" landed on the words and picked the text
+    /// layer instead: the same trap the Looks track hit in August. Measured on
+    /// the probe on 2026-09-13.
+    static let buttonSize = CGSize(width: 240, height: 52)
+
+    /// Where the original sits on every component sample, with the page to the
+    /// right of it left clear: a second version lands beside the drawing it
+    /// came from, and it has to land somewhere the person is looking.
+    static let componentOrigin = CGPoint(x: 88, y: 88)
+    /// Where the two copies sit under it on the samples that bring copies.
+    static let firstCopyOrigin = CGPoint(x: 88, y: 192)
+    static let secondCopyOrigin = CGPoint(x: 88, y: 296)
+
+    /// The identity the sample's component is known by. Fixed rather than
+    /// minted, so the same sample opened twice is the same sample.
+    static let buttonComponentID = UUID(uuidString: "5B5D3A28-1C0E-4E3E-9B1E-9E7C1C7A0001")
+        ?? UUID()
+
+    /// What the sample's component is called, and what the guide that makes one
+    /// asks you to call it.
+    ///
+    /// Not "Button". The shelf arrives stocked with the app's five starters and
+    /// one of them is called Button, so a sample component of that name puts
+    /// two tiles reading Button side by side and every step that says "your
+    /// button's tile" points at either of them. Measured on the probe on
+    /// 2026-09-13, where the shelf came up reading Button, Button, Text Field,
+    /// Card, Nav Bar, Badge.
+    ///
+    /// The pieces inside it are called Box and Label for the same reason: a
+    /// document's own picture is a layer called Background, so a piece of that
+    /// name would put two Background rows in the list.
+    public static let componentName = "Save Button"
+
+    /// The two pieces of the button, in the space of whatever holds them.
+    private static func buttonPieces(in frame: CGRect) -> [Layer] {
+        [
+            box("Box", frame, radius: 10, fill: accent, stroke: nil),
+            centered("Label", "Save changes", in: frame, size: 16,
+                     color: "#FFFFFF", weight: .semibold),
+        ]
+    }
+
+    /// The first guide's page: the button drawn, and nothing done to it yet.
+    /// Two loose layers sitting on clear space, so a selection box dragged
+    /// round them catches both and catches nothing else.
+    private static func loosePieces() -> [Layer] {
+        buttonPieces(in: CGRect(origin: CGPoint(x: 112, y: 208), size: buttonSize))
+    }
+
+    /// The same button, already promoted: one group carrying a component id,
+    /// which is all a main component is.
+    private static func buttonComponent() -> Layer {
+        let box = CGRect(origin: .zero, size: buttonSize)
+        let content = GroupContent(children: buttonPieces(in: box),
+                                   componentID: buttonComponentID)
+        return Layer(name: componentName, content: .group(content),
+                     frame: CGRect(origin: componentOrigin, size: buttonSize))
+    }
+
+    /// One copy of it. Its contents are not its own, so they are exactly the
+    /// original's: the first edit in the window puts them formally in step, and
+    /// a copy that arrived drawing something else would be a lie on screen
+    /// before the guide had said a word.
+    private static func buttonCopy(at origin: CGPoint) -> Layer {
+        let box = CGRect(origin: .zero, size: buttonSize)
+        var content = GroupContent(children: buttonPieces(in: box))
+        content.instanceOf = buttonComponentID
+        return Layer(name: componentName, content: .group(content),
+                     frame: CGRect(origin: origin, size: buttonSize))
+    }
+
+    /// The original with two copies under it. Two rather than one: a single
+    /// copy following its original shows nothing a duplicate would not, and the
+    /// override guide's whole point is the copy that did NOT change.
+    private static func buttonWithCopies() -> [Layer] {
+        [buttonComponent(), buttonCopy(at: firstCopyOrigin), buttonCopy(at: secondCopyOrigin)]
+    }
+
+    /// A label sitting in the middle of a box, measured first so it really is
+    /// in the middle. A button whose words are off to one side reads as a
+    /// mistake in the sample rather than as a button.
+    private static func centered(_ name: String, _ string: String, in frame: CGRect,
+                                 size: CGFloat, color: String, weight: TextWeight) -> Layer {
+        let content = TextContent(string: string, fontSize: size, colorHex: color, weight: weight)
+        let measured = TextMeasurement.size(of: content, wrappingAt: frame.width)
+        let origin = CGPoint(x: frame.midX - measured.width / 2,
+                             y: frame.midY - measured.height / 2)
+        return Layer(name: name, content: .text(content),
+                     frame: CGRect(origin: origin, size: measured))
     }
 
     private static func measurement(from start: CGPoint, to end: CGPoint,

@@ -239,7 +239,11 @@ struct TutorialsTests {
     @Test func preparingAStepCanOnlyBringSomethingOnScreen() {
         // The closed list is the guard rail: nothing here can pick a tool,
         // select a layer, or otherwise do the thing a step is asking for.
-        #expect(TutorialPrep.allCases == [.showPanel, .showLibrary, .revealTarget])
+        // Turning the shelf to Components is a reveal too: a shelf showing the
+        // wrong scope is a step pointing at something that is not there, and
+        // turning to a shelf is not fetching anything off it.
+        #expect(TutorialPrep.allCases == [.showPanel, .showLibrary,
+                                          .showComponentShelf, .revealTarget])
         for step in TutorialGuides.takeTheTour.steps {
             for prep in step.prepare {
                 #expect(TutorialPrep.allCases.contains(prep))

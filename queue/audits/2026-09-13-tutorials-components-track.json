@@ -1,0 +1,29 @@
+{
+  "feature": "Tutorials: the Components track",
+  "epic": "ui-building",
+  "summary": "Help now has four guides that walk you through building a component: make one out of something you drew, fetch copies off the shelf, let one copy say something of its own, and hold a second look under the same name. Each one opens a page of its own and points at real controls while you work.",
+  "setup": "Photonz Dev, Experiments window, release Next. Help > Tutorials > Components, or All Tutorials... for the window. Nothing to switch on: components, the Library and groups are on by default in Next.",
+  "try": [
+    { "do": "Open Help > Tutorials > Components > Make a component." },
+    { "do": "Drag a box round the button, press Command G, then press Option Command K.", "shot": "2026-09-13-components-track-1-name-it.png" },
+    { "do": "Type Save Button, press Return, and read the last step against the shelf.", "shot": "2026-09-13-components-track-2-on-the-shelf.png" },
+    { "do": "Start Use it again and again, double click the tile twice, then change the original's colour.", "shot": "2026-09-13-components-track-3-all-followed.png" },
+    { "do": "Start Override one copy and give the top copy the word Cancel.", "shot": "2026-09-13-components-track-4-overridden.png" },
+    { "do": "Start One name, two looks, add a version, call it Disabled, grey it, and switch a copy to it.", "shot": "2026-09-13-components-track-5-two-looks.png" },
+    { "do": "Close a guide part way and reopen it from Help, to check it resumes where you left it." }
+  ],
+  "evaluate": [
+    "Does the order in Make a component feel like the order you would have tried, or does grouping before promoting read as a hoop?",
+    "In Use it again and again, is one colour change reaching both copies the moment it lands, or would you rather the guide showed you moving something?",
+    "Override one copy sends you to the original first and to the copy second. Does the reason land, or does it read as an extra trip?",
+    "Is One name, two looks the right title, or would you rather the app called these Variants everywhere?",
+    "Is Save Button a good thing to be building, or would a card or a nav bar teach more?"
+  ],
+  "rough": [
+    "Three rows reading Save Button. Once copies are on the page the layers list shows the original and both copies under one name, told apart only by the mark on each row. No step sends you in there, but it is the first thing you see if you open the list yourself.",
+    "The guide never greys the whole button, only its words. The shortest honest instruction for reaching a piece inside a drawing is a double click on the canvas, and a double click aimed at a small target is a coin toss, so the guides aim at the box or the words rather than at a named row in a list.",
+    "The Add menu under Adjustable reads Label, Wording with a dot between. The guide says pick the Label's Wording, which is close but not word for word what the menu says.",
+    "Screen Recording was granted, so every picture here is a real capture of the window rather than an offscreen render.",
+    "One walk outside this track, tutorial-add-a-shadow-a-border-a-glow, failed once in a sweep run under load and passed twice on its own straight afterwards. It looked for the Effects plus while the panel was still settling. Filed rather than fixed here."
+  ]
+}

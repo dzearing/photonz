@@ -545,13 +545,96 @@ wants a lens; and the **same screen with one solid box already lying over the
 address** (`.tintedScreen`), so the mixing guide is about the one setting rather
 than about drawing a box first.
 
+## The Components track
+
+Build a piece of UI once, fetch it as often as you like, and change one copy
+without cutting it loose. Four guides, in the order the job is done in: the
+first two are the whole bargain, and the last two are the part everybody gets
+wrong.
+
+| Guide | Brings | What it teaches |
+| --- | --- | --- |
+| Make a component | a button drawn as two loose layers | pick both, ⌘G, ⌥⌘K, name it, and where it lands on the shelf |
+| Use it again and again | the same button, already a component | the Components shelf, two copies placed, and one colour change reaching both |
+| Override one copy | the original with two copies on it | the original's Adjustable list, the knob a copy answers, and the way back |
+| One name, two looks | the same desk | Versions, a second drawing, and the Version row on a copy |
+
+**The hard idea is what a copy OWNS**, and nothing on screen says it, so the
+guides do. A copy's contents are not its own: they are refilled from the
+original after every edit, and the few facts somebody set on the copy are
+written back over the top. Every rule in the track falls out of that one
+sentence.
+
+Three things the track settled about the CATALOGUE, each of them measured on the
+probe rather than reasoned about:
+
+- **A guide names nothing the sample did not bring, and the sample avoids every
+  name already in the window.** The shelf arrives stocked with five starters and
+  one of them is called Button, so the sample's component is **Save Button** or
+  the shelf shows two identical tiles and "your button's tile" points at either.
+  A document's own picture is a layer called Background, so the pieces inside
+  are **Box** and **Label** rather than Background and Label.
+- **No step sends anybody into the layers list on a page that holds copies.**
+  Every copy carries its original's name, so an original with two copies puts
+  three rows reading Save Button in the list, told apart only by the mark on
+  each row. Reaching the original is a click on the drawing, where there is one
+  of it. A test enforces this for every guide that brings copies.
+- **A step never both says "double click" and waits on a selection.** The first
+  click of a double click already selects, which raises the very event the step
+  is listening for, so the card moves on halfway through the gesture and the
+  next thing the person does lands on the wrong layer. Picking is always its own
+  single click, and the double click lives in the step that waits on the EDIT it
+  leads to. A test enforces it.
+
+And one about the SAMPLE: **a target with words on it has to be big enough to
+click clear of them.** The button was 176 across at first, its label filled the
+middle, and a double click aimed at "the box" picked the text layer every time.
+At 240 there is room either side. This is the Looks track's "pick a target with
+no words on top of it" again, one level down: sometimes the answer is not a
+different target, it is a bigger one.
+
+Three things the framework did not have, each added where it happens rather than
+worked around in the guide:
+
+- **A rubber band round two layers now raises `.layerSelected`.** It lands in
+  `multiSelectedLayerIDs` and leaves the single selection alone, so the trigger,
+  wired only at `selectedLayerID`, never fired: the first guide watched somebody
+  drag a box round both layers and did not move. The doc already claimed this
+  trigger meant "the person selected a layer, on the canvas or in the list", so
+  this is the claim being made true.
+- **A reveal now holds out for the WHOLE target** (`isWhollyShown`), not for the
+  first sliver of it. Make Component sends the dock to the shelf to show you the
+  new tile, a beat after the step asked for the Component section; the section
+  was left hanging off the top of the panel with its Name box out of sight, and
+  a sliver counted as arrived, so the guide stopped asking and rang the two rows
+  that were left. The step said "the Name box is waiting" over a rectangle with
+  no Name box in it.
+- **A third prepare, `showComponentShelf`.** The shelf remembers the scope you
+  left it on and that is your captures until somebody changes it, so ringing the
+  Library for a step about a button rings a shelf of screenshots. It is still
+  reveal only: turning to a shelf is not fetching anything off it, and it is the
+  same two lines Make Component already runs for the same reason.
+
+It also turned up one ordinary bug, fixed with it: **Add Version handed the
+keyboard to the new version's name field one pass too early.** Adding a version
+changes the selection, so the section is rebuilt around that row in the pass it
+first appears in, and a focus asked for before the field is in the responder
+chain is dropped. Typing went to the canvas. The component's own Name field
+survives the same trick because its section is already standing.
+
+**It is called One name, two looks, not Variants.** The task that asked for the
+track named that guide Variants; the app has never used the word. A component
+holds VERSIONS, the panel says Versions, and a guide teaches what shipped. Same
+rule the Looks track settled over Outline, and a test enforces it.
+
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
 menu, the track submenus, the hub window, the first launch offer, the Basics
-track, the Redlining track and the Looks track. Still queued:
+track, the Redlining track, the Looks track and the Components track. Still
+queued:
 
-- **The other four tracks**, one task each.
+- **The other three tracks**, one task each.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated
   walk per guide that drives the real editor and asserts every step's anchor
   resolves. The unit check here (`TutorialCatalogCheck`) is the promise; that

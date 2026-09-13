@@ -1,0 +1,27 @@
+{
+  "id": "a-copy-and-its-original-should-be-tellable-apart",
+  "title": "A copy and its original should be tellable apart in the layers list",
+  "goal": "Place two copies of a component and the layers list shows three rows with the same name on them, because every copy carries its original name. The violet mark on each row is the only difference and it is nine points wide. Somebody scanning the list for the thing they can edit has to squint at three identical rows.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 2650,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T03:36:30.090Z",
+  "updated": "2026-09-13T03:36:30.093Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the Components tutorial track on 2026-09-13. Reproduce: Help > Tutorials > Components > Override one copy, then open the Layers list. Three rows reading Save Button. Captured in queue/audits/2026-09-13-components-track-4-overridden.png, top right.\n\nThe track works round it: no guide in it sends anybody into the layers list, and a test enforces that (TutorialComponentsTrackTests.noStepAsksYouToTellApartThreeRowsWithTheSameNameOnThem). That workaround costs the guides the one single-click way to reach a piece inside an original, so they use a canvas double click instead, which is why the sample button had to be widened to 240 so a double click can land clear of its label.\n\nOptions worth weighing rather than picking here: a quiet suffix on a copy row, the version name already printed beside the mark being extended to plain copies, or a stronger mark. This is a UX call.",
+  "acceptance": [
+    "With an original and two copies on the page, the layers list says which row is the original without anybody having to read a nine point mark",
+    "A copy still says what component it follows, so the family is still obvious",
+    "Nothing is renamed in the document: this is what the list SAYS, not what anything is called"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T03:36:30.092Z",
+      "note": "created (manual)"
+    }
+  ]
+}

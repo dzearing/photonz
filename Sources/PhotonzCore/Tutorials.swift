@@ -183,6 +183,16 @@ public enum TutorialPrep: String, Hashable, Codable, Sendable, CaseIterable {
     case showPanel
     /// Bring the Library shelf on screen if it is hidden.
     case showLibrary
+    /// Bring the Library shelf on screen AND put it on Components.
+    ///
+    /// The shelf remembers the scope you left it on, and that is the captures
+    /// you have taken until somebody changes it. So `showLibrary` alone rings a
+    /// shelf of screenshots for a step that is talking about a button, which is
+    /// the "pointing at something that is not there" failure wearing a shelf.
+    /// Still reveal only: turning to a shelf is not fetching anything off it,
+    /// and the Make Component command already does exactly this for the same
+    /// reason.
+    case showComponentShelf
     /// Scroll this step's own target into view. The docked panel is routinely
     /// taller than the window, so a step pointing at a section near the top can
     /// find it scrolled away by whatever the person did last. Still reveal
@@ -296,14 +306,32 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// guide about how a layer MIXES with what is below has something to mix
     /// without a drawing lesson first.
     case tintedScreen
+    /// A button drawn as two loose layers, a box and the words on it, and
+    /// nothing else on the page. The guide that makes a component out of it
+    /// needs it NOT to be one yet, and needs clear page beside it to drag a
+    /// selection box from.
+    case componentPieces
+    /// The same button, already a component, with the page to the right of it
+    /// empty. The guide that places copies needs an original to fetch and
+    /// somewhere to put what it fetches.
+    case componentOriginal
+    /// The same original with two copies of it already on the page. The
+    /// override guide and the versions guide are both about what a copy owns,
+    /// and neither is about placing copies, which the guide before them taught.
+    case componentCopies
 
     /// Whether this sample's drawing is baked into the picture before the
     /// window opens. A guide that measures needs this; a guide about layers
     /// needs the opposite.
+    ///
+    /// Every component sample is live. A component is made out of layers, and
+    /// pixels are not layers: flatten one of these and the guide has nothing to
+    /// group, promote or place.
     public var isFlattened: Bool {
         switch self {
         case .redlineScreen, .measuredScreen, .accountScreen, .tintedScreen: true
         case .starterScreen, .emptyWindow: false
+        case .componentPieces, .componentOriginal, .componentCopies: false
         }
     }
 }
@@ -412,6 +440,10 @@ public enum TutorialCatalog {
         TutorialGuides.addAShadowABorderAGlow,
         TutorialGuides.blurWhatIsUnderneath,
         TutorialGuides.mixWithWhatIsBelow,
+        TutorialGuides.makeAComponent,
+        TutorialGuides.useItAgainAndAgain,
+        TutorialGuides.overrideOneCopy,
+        TutorialGuides.componentVersions,
     ]
 
     /// The guide the Help menu's own row runs, and the one first launch offers.

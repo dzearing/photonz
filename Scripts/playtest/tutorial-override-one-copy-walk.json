@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-override-one-copy-walk",
+  "seed": "The third guide of the Components track, and the part everybody gets wrong: a copy cannot simply be edited. What is inside it belongs to the original, so the way in is a knob the ORIGINAL offers. The order of the steps is the model: the original decides what is adjustable, the copy answers, and the answer survives the next edit to the original because it is written back over the top after the refill.",
+  "setup": { "forget": ["tutorials", "panel", "color", "groups"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "override-one-copy" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-original", "timeout": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-pick-the-original", "note": "the sample arrives with the original at the top wearing four diamonds and two copies under it wearing one each" },
+    { "do": "snapshot", "name": "1-pick-the-original" },
+
+    { "do": "click", "at": [176, 112] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "add-a-knob", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-add-a-knob", "note": "the original's own section, with the Adjustable list empty and saying what it is for" },
+    { "do": "panel", "stage": "2-add-a-knob" },
+    { "do": "snapshot", "name": "2-add-a-knob" },
+
+    { "do": "panelMenu", "menu": "Add", "shot": "3-add-menu" },
+    { "do": "panelMenu", "menu": "Add", "choose": "Label · Wording" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-copy", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-knob-added", "note": "one knob on the original, named for the layer it exposes, and every copy now carries it" },
+    { "do": "panel", "stage": "4-knob-added" },
+    { "do": "snapshot", "name": "4-knob-added" },
+
+    { "do": "click", "at": [176, 216] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "give-it-its-own-words", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-copy-picked", "note": "the copy's section: it says what it is, and it carries the one knob the original offered and nothing else" },
+    { "do": "panel", "stage": "5-copy-picked" },
+    { "do": "snapshot", "name": "5-copy-picked" },
+
+    { "do": "focus", "field": "Label" },
+    { "do": "type", "text": "Cancel" },
+    { "do": "key", "key": "return" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "still-a-copy", "timeout": 6 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "6-overridden", "note": "THE TEST: the first copy alone says Cancel. The original and the second copy still say Save changes" },
+    { "do": "snapshot", "name": "6-overridden" },
+    { "do": "render", "name": "6-overridden-doc" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-way-back", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "7-the-way-back", "note": "the closing step rings the copy's section, where the revert arrow sits beside the knob" },
+    { "do": "panel", "stage": "7-the-way-back" },
+    { "do": "snapshot", "name": "7-the-way-back" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-finished", "note": "Done closed the guide" }
+  ]
+}

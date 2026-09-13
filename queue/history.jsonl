@@ -2802,3 +2802,7 @@
 {"t":"2026-09-13T02:59:40.379Z","ev":"task_started","id":"tutorials-the-colours-and-styles-track","title":"Tutorials: the Colours and Styles track","priority":"p1-high"}
 {"t":"2026-09-13T03:00:05.049Z","ev":"task_reset","id":"tutorials-the-colours-and-styles-track","attempt":1}
 {"t":"2026-09-13T03:04:11.628Z","ev":"task_resequenced","id":"tutorials-the-components-track","from":28,"to":5}
+{"t":"2026-09-13T03:04:32.966Z","ev":"loop_started","pid":80518}
+{"t":"2026-09-13T03:04:33.164Z","ev":"task_started","id":"tutorials-the-components-track","title":"Tutorials: the Components track","priority":"p1-high"}
+{"t":"2026-09-13T03:36:24.619Z","ev":"task_created","id":"find-out-why-the-effects-plus-goes-nameless-whil","priority":"p2-normal","title":"Find out why the Effects plus goes nameless while the panel is settling"}
+{"t":"2026-09-13T03:36:30.094Z","ev":"task_created","id":"a-copy-and-its-original-should-be-tellable-apart","priority":"p2-normal","title":"A copy and its original should be tellable apart in the layers list"}

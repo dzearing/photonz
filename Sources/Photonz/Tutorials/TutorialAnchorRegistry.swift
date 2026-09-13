@@ -58,6 +58,20 @@ final class TutorialAnchorView: NSView {
         return window.convertToScreen(shown)
     }
 
+    /// Whether the WHOLE control is inside the window, rather than a sliver of
+    /// it hanging on at an edge.
+    ///
+    /// What the reveal is held to. A section scrolled so that only its last two
+    /// rows show still answers `screenFrame`, and a reveal that stopped there
+    /// would leave a ring round the bottom of a section while the row the step
+    /// is talking about sits above the top of the panel. Measured on the probe
+    /// on 2026-09-13: the step saying "the Name box is waiting" rang a rectangle
+    /// with no Name box in it.
+    var isWhollyShown: Bool {
+        guard let window, let content = window.contentView, !bounds.isEmpty else { return false }
+        return content.bounds.contains(convert(bounds, to: nil))
+    }
+
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override func viewDidMoveToWindow() {
@@ -118,6 +132,12 @@ final class TutorialAnchorRegistry {
     /// prepare step is checked against, and what a live check walks.
     func resolves(_ anchor: TutorialAnchor, in window: NSWindow?) -> Bool {
         screenFrame(of: anchor, in: window) != nil
+    }
+
+    /// Whether this anchor is on screen WHOLE in that window. What tells a
+    /// reveal it has finished, rather than that it has made a start.
+    func isWhollyShown(_ anchor: TutorialAnchor, in window: NSWindow?) -> Bool {
+        candidates(for: anchor, in: window).contains(where: \.isWhollyShown)
     }
 
     /// Scrolls whatever is holding this anchor until the anchor is on screen.

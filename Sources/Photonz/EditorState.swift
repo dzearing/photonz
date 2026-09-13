@@ -566,6 +566,16 @@ final class EditorState {
                 namingEffectStyleRow = nil
                 forgetEffectFolds()
                 history?.syncSelection(selectionSnapshot)
+                // A guide step waiting on "pick a layer" moves on here as well
+                // as at `selectedLayerID`. A rubber band round two layers puts
+                // them HERE and leaves the single selection alone, so a step
+                // that says "drag a box round both of them" would have watched
+                // somebody do exactly that and not moved (measured on the probe
+                // on 2026-09-13, where the panel read "2 layers" and the card
+                // still said 2 of 6).
+                if !multiSelectedLayerIDs.isEmpty {
+                    TutorialController.shared.note(.layerSelected, from: self)
+                }
             }
         }
     }

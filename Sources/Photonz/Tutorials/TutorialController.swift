@@ -225,6 +225,14 @@ final class TutorialController {
             switch prep {
             case .showPanel: if !editor.isInspectorShown { editor.setInspectorVisible(true) }
             case .showLibrary: if !editor.isLibraryVisible { editor.setLibraryVisible(true) }
+            case .showComponentShelf:
+                // The scope the shelf is on is remembered across launches and
+                // starts as the captures you have taken, so a step about a
+                // button would otherwise ring a shelf of screenshots. Same two
+                // lines Make Component runs for the same reason.
+                if !editor.isLibraryVisible { editor.setLibraryVisible(true) }
+                UserDefaults.standard.set(LibraryScope.components.rawValue,
+                                          forKey: LibraryPanel.scopeKey)
             case .revealTarget:
                 // Tried again on the next few passes as well: a section that
                 // arrives with the selection is not in the panel yet at this
@@ -281,9 +289,19 @@ final class TutorialController {
             }
         }
         let anchor = TutorialAnchorRegistry.shared.screenFrame(of: run.step.anchor, in: window)
-        // On screen: stop asking, so a person who scrolls somewhere else is not
-        // fought by a guide that got what it wanted a moment ago.
-        if anchor != nil { revealTries = 0 }
+        // On screen WHOLE: stop asking, so a person who scrolls somewhere else
+        // is not fought by a guide that got what it wanted a moment ago.
+        //
+        // Whole rather than merely visible, because something else in the app
+        // scrolls the panel a beat after a command lands: Make Component sends
+        // the dock to the shelf to show you the new tile, which leaves the
+        // Component section hanging off the top with its Name box out of sight.
+        // A sliver used to count as arrived, so the guide stopped asking and
+        // rang the two rows that were left.
+        if anchor != nil, TutorialAnchorRegistry.shared.isWhollyShown(run.step.anchor,
+                                                                     in: window) {
+            revealTries = 0
+        }
         let container = window.frame
         // Nothing moved: do not touch the panels, so a still window is a still
         // callout rather than a frame being reset thirty times a second.

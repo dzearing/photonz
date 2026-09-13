@@ -1127,8 +1127,18 @@ private struct ComponentVersionRow: View {
         guard isShown, editorState.componentVersionAwaitingName == version.id else { return }
         editorState.componentVersionAwaitingName = nil
         draft = version.name
-        focused = true
-        DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+        // One pass later, unlike the component's own Name field above. Adding a
+        // version CHANGES the selection, so the whole section is rebuilt around
+        // this row in the same pass it first appears in, and a focus asked for
+        // before the field is in the responder chain is dropped: the keyboard
+        // stayed on the canvas and typing went nowhere (measured on the probe
+        // on 2026-09-13, where the walk reported "no text field has the
+        // keyboard"). The component's field survives because its section is
+        // already standing.
+        DispatchQueue.main.async {
+            focused = true
+            DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+        }
     }
 
     private func commit() {
