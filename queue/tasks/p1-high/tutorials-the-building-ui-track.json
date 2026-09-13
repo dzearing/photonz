@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 27,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.053Z",
-  "updated": "2026-09-13T12:23:55.275389Z",
+  "updated": "2026-09-13T12:24:15.665Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-13T12:23:55.275389Z",
       "note": "Verified: all four walks pass end to end on the real app (tutorial-frames-are-screens, tutorial-let-a-screen-arrange-itself, tutorial-padding-and-columns, tutorial-line-things-up), each waiting on the guide's own step ids so a step that failed to advance fails the walk. Scripts/test.sh green, 6138 tests in 504 suites. Times measured by TutorialLength rather than guessed: 122s, 104s, 124s and 102s against a 2 minute claim each. Screen Recording was granted, so the audit carries real captures."
+    },
+    {
+      "t": "2026-09-13T12:24:15.663Z",
+      "note": "Four guides landed as catalogue data in the Building UI track (Frames are screens, Let a screen arrange its contents, Padding and columns, Line things up), plus four samples and two anchor names. No UI edited: the Help submenu and the hub window both read the track off the catalogue, proved by tutorial-hub-walk. Verified by four new playtest walks driving the real editor end to end (each waits on the guide's own step ids) and 28 new unit tests; Scripts/test.sh green at 6138 tests. Times measured rather than guessed: 122s/104s/124s/102s against a 2 min claim each. Audit at queue/audits/2026-09-13-tutorials-building-ui-track.json with five real window captures. One framework finding filed with its reproduction: a-tutorial-card-about-the-picture-stops-covering."
     }
   ],
-  "started": "2026-09-13T11:58:31.410Z"
+  "started": "2026-09-13T11:58:31.410Z",
+  "completed": "2026-09-13T12:24:15.664Z"
 }
