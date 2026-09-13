@@ -1,0 +1,45 @@
+{
+  "id": "turn-a-rectangle-into-a-path-and-pull-its-points",
+  "title": "Turn a rectangle into a path and pull its points around",
+  "goal": "A rectangle, an ellipse or a line is a fixed thing: you can resize it but you cannot move one corner. Let any of them become a path in one step, keeping exactly the look it had, so from then on every point is yours to move, curve or delete. Rounding the corners first and then converting should give you real curves you can pull on, which is how most icons actually get made.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T15:25:59.762Z",
+  "updated": "2026-09-13T15:25:59.968Z",
+  "deps": [
+    "a-shape-can-be-any-path-straight-edges-and-curve",
+    "a-path-can-be-reshaped-after-you-draw-it"
+  ],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-13, in the same breath as the pen: \"i want the ability to convert a rect to a shape and adjust its vectors easily\".\n\nDepends on the path model and on the reshaping work, because converting a shape you then cannot edit is a command with no payoff.\n\nNaming and placement are already settled by a sibling that does the same kind of thing. The app has \"Turn Into Picture\\u{2026}\" (PhotonzCore/RasterizePrompt.swift:51), offered in the layer row menu (Sources/Photonz/LayersRow.swift:369) and the Layer menu (EditorCommands.swift:428), disabled when the layer cannot take it. There is also \"Turn into Text\" right beside it (LayersRow.swift:379). So this is \"Turn Into Path\", in the same two places, following the same enabled-or-disabled rule. RasterizePrompt also carries the ask-once-then-remember pattern (SilencedQuestions), which is the existing machinery for telling somebody a conversion is one way; use it rather than writing a new dialog.\n\nThe part that is real maths and not plumbing: a quarter circle cannot be drawn exactly with a cubic bezier, and the standard approximation puts the handles at 0.5523 of the radius. Get that constant wrong, or apply it to the wrong axis on a non-square ellipse, and every rounded corner in the app comes out visibly wrong after conversion. The acceptance list asks for this to be proved by sampling pixels before and after, not by looking at it.\n\nWhat each shape becomes: a rectangle is four corner anchors, or eight with curves when it is rounded; an ellipse is four smooth anchors with handles; a line is an open path of two anchors. An arrow is the one to think hardest about, because its head is part of how it is drawn rather than part of its outline: decide whether an arrow converts at all, and if it does, say in the audit what happened to the head.",
+  "acceptance": [
+    "A rectangle, a rounded rectangle, an ellipse and a line can each be turned into a path from the layer's right click menu and from the Layer menu",
+    "The shape looks IDENTICAL before and after, compared by sampling the rendered pixels rather than by eye, including its fill, its outline and any effects it carries",
+    "A rounded corner becomes real curves that can be pulled on, and a circle stays a circle rather than becoming a lumpy approximation, checked by sampling rather than by eye",
+    "Every point is editable immediately afterwards with the tools from the reshaping work: move, convert, break, insert, delete",
+    "It is one undo step, and undo brings back a real rectangle with its corner radius control, not a path pretending to be one",
+    "The command is offered only where it means something, and is unavailable rather than silently doing nothing on a layer that cannot convert",
+    "A person is told once, plainly, that the shape stops being a rectangle and loses its corner radius control, using the app's existing way of asking that question rather than a new dialog",
+    "Tests in PhotonzCore for each conversion and pixel tests in PhotonzRender proving the before and after match, written before the implementation",
+    "A playtest walk rounds a rectangle, converts it and moves one point",
+    "Audit under queue/audits/ with before and after for each shape and a magnified corner, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T15:25:59.764Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-13T15:25:59.830Z",
+      "note": "seq 270 -> 15"
+    },
+    {
+      "t": "2026-09-13T15:25:59.968Z",
+      "note": "deps set: the path model comes first"
+    }
+  ]
+}

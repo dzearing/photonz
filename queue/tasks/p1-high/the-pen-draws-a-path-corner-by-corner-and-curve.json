@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 13,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T13:08:31.831Z",
-  "updated": "2026-09-13T15:02:57.260Z",
+  "updated": "2026-09-13T15:03:09.554Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -68,7 +68,12 @@
     {
       "t": "2026-09-13T15:02:57.260Z",
       "note": "Asked for a full sweep: the Pen adds a slot to the end of the drawing family, so any walk that clicks the tool bar by coordinate could have shifted. The 15 tool-* walks and both pen walks pass; Scripts/test.sh is green at 6242 tests."
+    },
+    {
+      "t": "2026-09-13T15:03:09.552Z",
+      "note": "The Pen ships in Next behind next-pen: P picks it up, a click drops a corner, a press and drag pulls a curve out of the point being placed, the run to the pointer is previewed continuously, and clicking the first point closes and fills the shape. Return keeps an open path, Escape discards it, Command Z steps back one anchor, Shift constrains, and Option places the half-smooth anchors a rounded corner needs. PenSession in PhotonzCore holds every decision (33 tests); the canvas only draws and converts. Verified on the real app through the probe with Screen Recording granted: two walks (pen-draws-a-path, pen-three-drawings) pass, the 15 tool-* walks pass, Scripts/test.sh green at 6242. Audit at queue/audits/2026-09-13-pen-draws-a-path.json with three real captures and the Figma press counts. Committed cf75e68c and pushed."
     }
   ],
-  "started": "2026-09-13T14:40:31.969Z"
+  "started": "2026-09-13T14:40:31.969Z",
+  "completed": "2026-09-13T15:03:09.553Z"
 }

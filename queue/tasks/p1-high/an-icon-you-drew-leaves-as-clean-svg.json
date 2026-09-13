@@ -1,0 +1,44 @@
+{
+  "id": "an-icon-you-drew-leaves-as-clean-svg",
+  "title": "An icon you drew leaves as clean SVG",
+  "goal": "An icon built in the app is stuck there: everything leaves as pixels. Let a drawing leave as SVG, written the way a person would write it by hand, so it scales, stays small, and can be dropped into a website or an icon set without being cleaned up first. Where something in the document cannot be said in SVG, say so plainly rather than quietly flattening it.",
+  "epic": "icon-export",
+  "priority": "p1-high",
+  "seq": 16,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T15:25:59.898Z",
+  "updated": "2026-09-13T15:25:59.969Z",
+  "deps": [
+    "a-shape-can-be-any-path-straight-edges-and-curve"
+  ],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-13, following the pen work: they want to build elaborate SVG icons, and without this an icon cannot leave the app as an icon.\n\nDepends on the path model. There is no point exporting SVG before there is a path worth exporting.\n\nTHE TRAP, and it is the first thing a runner will walk into. Export today goes through ImageCodec.Format (Sources/PhotonzRender/ImageCodec.swift:10), which is png, jpeg and heic, and every format has a utType and gets encoded from a CGImage. SVG is not a raster and must NOT be added as a fourth case there: it would flow straight into code that encodes a bitmap. It is a different kind of export that happens to share a dialog. The dialog is Sources/Photonz/ExportDialog.swift (format plus scale, reached from Export\\u{2026} at EditorCommands.swift:215); note that a scale means nothing for SVG, so the dialog has to stop offering it when SVG is picked.\n\nWhat \"clean\" means here, since it is the whole point and is otherwise unfalsifiable: an icon exported from this app should look like something a person wrote. That means one path element per shape with readable path data, no group wrapping a single child, no transform attribute where the coordinates could simply be correct, no generator comment, and no style attribute repeating the default. Judge it by opening the file, and put the file in the audit so the judgement can be checked.\n\nThe honest-refusal requirement matters more than any single feature. A document can hold things SVG cannot say: a lens layer that blurs what is under it, a screenshot, a blend mode with no CSS equivalent. Flattening those to a raster and embedding it silently produces a file that is technically SVG and useless as an icon. Name what was left out, once, in plain words.\n\nOut of scope and worth saying so: animated SVG, which is its own epic child (icon-animate), and importing SVG. This is export of a static drawing.",
+  "acceptance": [
+    "Export offers SVG alongside the picture formats, and exporting a drawing of paths produces a file that opens correctly in a browser and in a vector editor",
+    "The file is clean by inspection: real path data, no wrapper elements that do nothing, no stacked transforms where one would do, and no embedded raster unless the document genuinely contains one",
+    "Groups in the document become groups in the file, and layer names become ids, so the result is navigable rather than a flat pile of paths",
+    "Fills, outlines, outline widths, opacity and gradients all survive, checked by rendering the exported file and comparing it against the app's own render rather than by eye",
+    "A rounded rectangle and a circle come out as the shapes they are, not as many-sided approximations",
+    "Text is handled by a stated rule that works on a machine without the font, and the audit says which rule was chosen and why",
+    "Anything that cannot be expressed is named in one plain sentence when you export, listing what was left out, rather than being dropped silently",
+    "Exporting a document that is mostly a screenshot does something sensible and says what it did, rather than producing a huge useless file",
+    "Tests over a fixture document covering paths, a group, a gradient and an unrepresentable layer, written before the implementation",
+    "Audit under queue/audits/ with the exported file itself, its size, and the app render beside the browser render, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T15:25:59.900Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-13T15:25:59.963Z",
+      "note": "seq 270 -> 16"
+    },
+    {
+      "t": "2026-09-13T15:25:59.969Z",
+      "note": "deps set: the path model comes first"
+    }
+  ]
+}
