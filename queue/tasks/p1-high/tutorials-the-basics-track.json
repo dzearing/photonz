@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 23,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.534Z",
-  "updated": "2026-09-13T01:41:28.202Z",
+  "updated": "2026-09-13T01:41:46.678Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -94,8 +94,13 @@
     {
       "t": "2026-09-13T01:41:28.202Z",
       "note": "audit: queue/audits/2026-09-12-tutorials-basics-track.json with six pictures, five of them real screen captures. The capture guide s picture is an offscreen render because a screen capture of an EMPTY editor window comes back blank; reproduced, and filed as find-out-why-a-screen-capture-of-an-empty-editor (p2)."
+    },
+    {
+      "t": "2026-09-13T01:41:46.676Z",
+      "note": "Four guides shipped as catalogue data (first-capture, mark-it-up, layers-and-undo, save-export-copy); Help > Tutorials > Basics and the Tutorials window picked them all up with no UI edited. Verified by four new walks plus the three existing tutorial walks, run with next-shape-parts / next-copy-picks-your-layer / next-blank-canvas / next-measure-panel off as well as on: 7 pass both ways, every anchor resolved in every step. Framework grew .editMade / .undone / .pictureCopied, a start.<action> anchor, an empty-window sample and a startGuide walk step; the callout now parks inside a surface anchor instead of hanging off the window edge. Audit: queue/audits/2026-09-12-tutorials-basics-track.json. Commit 4b8a29ef, pushed."
     }
   ],
   "started": "2026-09-13T01:13:57.518Z",
-  "acceptance_verified": true
+  "acceptance_verified": true,
+  "completed": "2026-09-13T01:41:46.677Z"
 }
