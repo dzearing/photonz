@@ -368,6 +368,12 @@ struct LayersRow: View, Equatable {
         if display.isRasterizable {
             Button(RasterizePrompt.menuItem) { editorState.rasterizeLayer(id: id) }
         }
+        // On a PICTURE, including the locked Background, which is the row a
+        // person actually right clicks when they want a screenshot taken apart
+        // (Next, `next-separate-into-layers`).
+        if editorState.canSeparateIntoLayers(id: id) {
+            Button("Separate into Layers") { editorState.separateIntoLayers(id: id) }
+        }
         Divider()
         Button("Bring to Front") { editorState.bringLayerToFront(id: id) }
             .keyboardShortcut("]", modifiers: [.command, .shift])

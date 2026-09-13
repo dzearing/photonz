@@ -32,6 +32,11 @@ final class EditorState {
     var readyEdgeMaps: [UUID: EdgeMapAnalyzer.Analysis] = [:]
     /// Refs whose analysis is in flight (don't kick it twice).
     @ObservationIgnored var edgeMapAnalysisPending: Set<UUID> = []
+    /// Layers that Separate into Layers is reading right now. The command shows
+    /// nothing while it works, so without this a second press before the first
+    /// lands would separate the same picture twice and stack two sets of the
+    /// same words (`EditorState+Separate`).
+    @ObservationIgnored var separationsInFlight: Set<UUID> = []
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 

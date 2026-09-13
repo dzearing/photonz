@@ -513,6 +513,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the one that decides whether the marquee takes the layer you picked or
     /// every layer flattened together.
     case newLayerViaCopy
+    /// Layer ▸ Separate into Layers on the SELECTED layer (Next,
+    /// `next-separate-into-layers`). A menu row on a picture, so a walk asks
+    /// for it here rather than hunting a right click in the layers list. The
+    /// sweep runs off the main thread, so a walk waits a beat after it.
+    case separateIntoLayers
     /// Layer ▸ New Layer (⌘N): a fresh empty layer on top, with the marquee
     /// left up so the select → new layer → fill flow can be walked. A menu
     /// chord like the rest of the Layer menu, so this is a walk's way in.

@@ -284,6 +284,11 @@ extension Experiments {
     /// Help ▸ guided tutorials (Next, `next-tutorials`).
     var tutorialsEnabled: Bool { isEnabled(FeatureCatalog.tutorialsFlag) }
 
+    /// Separate into Layers, on a picture's row menu and in the Layer menu
+    /// (Next, `next-separate-into-layers`). Exists only in the Next release's
+    /// catalog, so Current never offers the command.
+    var separateIntoLayersEnabled: Bool { isEnabled(FeatureCatalog.separateIntoLayersFlag) }
+
     /// `next-blank-canvas`: whether an empty window offers Blank canvas
     /// alongside open, capture and paste. Exists only in the Next release's
     /// catalog, so Current always reads false and its empty window is

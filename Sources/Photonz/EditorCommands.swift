@@ -435,6 +435,16 @@ struct EditorCommands: Commands {
             // the other name for this command starts with.
             .keyboardShortcut("r", modifiers: [.command, .shift])
             .disabled(!(selectedID.map { editor?.canRasterizeLayer(id: $0) ?? false } ?? false))
+            // The same command the picture's own row menu carries, under the
+            // same name, so it is reachable without hunting for a right click
+            // (Next, `next-separate-into-layers`). Absent rather than greyed
+            // when the flag is off, like every other flagged row.
+            if Experiments.shared.separateIntoLayersEnabled {
+                Button("Separate into Layers") {
+                    if let selectedID { editor?.separateIntoLayers(id: selectedID) }
+                }
+                .disabled(!(selectedID.map { editor?.canSeparateIntoLayers(id: $0) ?? false } ?? false))
+            }
             Button("Arrange in Collage") { editor?.arrangeSelectionAsCollage() }
                 .disabled(!(editor?.canArrangeCollage ?? false))
             Button("New Collage Layer") { editor?.newEmptyCollageLayer() }

@@ -84,6 +84,14 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// to answer this by lying: cut took the whole layer, and delete did
         /// nothing at all. This is the line that says which it was.
         case regionSliceRefused(RegionSliceRefusal)
+        /// A picture was taken apart by Separate into Layers. The canvas looks
+        /// IDENTICAL the instant after — nothing moves, the words are simply on
+        /// their own layers now — so without a word on screen the command reads
+        /// as having done nothing at all. `skipped` is how many runs were left
+        /// in the picture because the app could not read them confidently,
+        /// which is the other half of what just happened and the half nobody
+        /// would otherwise find out about.
+        case separatedIntoLayers(runs: Int, skipped: Int)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -139,7 +147,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         // decide what to do about it.
         case .linksBroken, .componentPieceRefused, .toolColorStyle,
              .componentVersionGone, .componentVersionsMatched,
-             .componentVersionAdded, .regionSliceRefused: return Self.breakLifetime
+             .componentVersionAdded, .regionSliceRefused,
+             .separatedIntoLayers: return Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -175,6 +184,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .linksBroken(let report): return report.title
         case .toolColorStyle(let notice): return notice.title
         case .regionSliceRefused(let refusal): return refusal.title
+        case .separatedIntoLayers(let runs, _): return runs == 0 ? "Nothing to separate" : "Separated"
         }
     }
 
@@ -226,6 +236,19 @@ public struct CopyConfirmation: Hashable, Sendable {
             // two ways out in one sentence is one too many to read, and the
             // button IS the way out.
             return refusal.detail(offeringItsOwnWayOut: action != nil)
+        case .separatedIntoLayers(let runs, let skipped):
+            guard runs > 0 else {
+                // Two different nothings, and saying the wrong one is a lie.
+                // Running the command twice finds no text at all, because the
+                // first run took it; a photograph with a caption on it finds
+                // text and cannot read it.
+                guard skipped > 0 else { return "Nothing here reads as a run of text" }
+                let left = skipped == 1 ? "1 run of text" : "\(skipped) runs of text"
+                return "\(left) left in the picture, too unclear to read"
+            }
+            let made = runs == 1 ? "1 run of text" : "\(runs) runs of text"
+            guard skipped > 0 else { return made }
+            return "\(made). \(skipped) left in the picture, too unclear to read"
         }
     }
 

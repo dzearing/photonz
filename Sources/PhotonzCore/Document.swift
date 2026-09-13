@@ -745,6 +745,49 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         return layer
     }
 
+    /// One piece Separate into Layers took out of a picture: the bitmap that
+    /// came out, where it sits in the SOURCE LAYER'S OWN sibling space (so a
+    /// picture inside a group separates into that group), and what to call it.
+    public struct SeparatedPiece: Equatable, Sendable {
+        public let frame: CGRect
+        public let ref: ImageRef
+        public let name: String
+
+        public init(frame: CGRect, ref: ImageRef, name: String) {
+            self.frame = frame
+            self.ref = ref
+            self.name = name
+        }
+    }
+
+    /// Separate into Layers, as ONE mutation: the picture's own bitmap becomes
+    /// `patched` — the same picture with the space each piece came from filled
+    /// in — and the pieces are stacked directly above it, bottom-most first.
+    ///
+    /// Two things come out of it and not three. There is no repair layer over
+    /// an untouched original: the picture is repaired, which is a BAKE, and
+    /// which is what was asked for. It stays fully undoable because undo is a
+    /// whole-document snapshot and the original bitmap is still in the image
+    /// store under its own ref, so one press puts the screenshot back along
+    /// with every layer this made. The same reason Rasterize Layer is allowed
+    /// to bake. See `docs/design/separate-into-layers.md`.
+    ///
+    /// Does nothing to a layer that is not a picture. Returns the new layers'
+    /// ids in stacking order, bottom-most first.
+    @discardableResult
+    public mutating func separateIntoLayers(id: UUID, patched: ImageRef,
+                                            pieces: [SeparatedPiece]) -> [UUID] {
+        guard let source = layer(id: id), source.imageRef != nil else { return [] }
+        let made = pieces.map { piece in
+            Layer(name: piece.name, content: .image(piece.ref), frame: piece.frame)
+        }
+        withSiblings(of: id) { siblings, index in
+            siblings[index].content = .image(patched)
+            siblings.insert(contentsOf: made, at: index + 1)
+        }
+        return made.map(\.id)
+    }
+
     /// The one-click blur-behind recipe: stacks a blurred full-canvas copy of
     /// the composite, then a sharp copy cropped to `selection` on top — the
     /// selection stays crisp while everything around it blurs. Both layers

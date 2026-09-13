@@ -1,0 +1,35 @@
+{
+  "feature": "Separate into Layers: text runs",
+  "epic": "ui-building",
+  "summary": "Right click a screenshot in the layers list and choose Separate into Layers, and every run of text in it becomes its own layer you can pick up and move. The picture underneath is filled in where each word was, so dragging a label off a dark button leaves the button looking untouched. It is one undo step however many layers come out.",
+  "setup": "Photonz Dev, release Next. The flag next-separate-into-layers is on by default. Open any screenshot; Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png is the one every picture here was taken on.",
+  "try": [
+    { "do": "Open a screenshot with text in it. Right click the Background row in the layers list.", "shot": "2026-09-13-separate-1-row-menu.png" },
+    { "do": "Choose Separate into Layers. Read the pill at the bottom of the canvas before it fades.", "shot": "2026-09-13-separate-2-pill.png" },
+    { "do": "Look at the layers list: one layer per run of text, Text 1 down to Text 9, with the words legible in each thumbnail.", "shot": "2026-09-13-separate-3-layers.png" },
+    { "do": "Click the word Reset in the layers list and drag it off its button, out onto the empty page.", "shot": "2026-09-13-separate-4-dragged.png" },
+    { "do": "Look at the button it came off. It should be a whole rounded grey button with no hole and no ghost of the word.", "shot": "2026-09-13-separate-6-patch-after.png" },
+    { "do": "Press Command Z once. The whole thing goes back: nine layers and the repaired picture, in one press." },
+    { "do": "Press Command Shift Z, then run Separate into Layers on the Background again. It should say there is nothing left to take." },
+    { "do": "Try it on a photograph with a caption burnt into it. Nothing should come out, and the pill should say the run was left in the picture." }
+  ],
+  "evaluate": [
+    "The names are Text 1 to Text 9 in reading order, because nothing here reads the actual characters yet. The thumbnails show the words. Is that enough to find a run in the list, or do you want the real words badly enough to add text recognition to the next slice?",
+    "The command is called Separate into Layers in both menus. You suggested Auto separate. Which do you want?",
+    "Only the first run is left picked after the command, so one outline shows on the canvas and a stray drag cannot carry the whole page off the picture. Would you rather all of them were picked, or none?",
+    "Buttons, switches and text fields are deliberately left in the picture: only text comes out in this slice. Does stopping there feel like a half feature, or like the right first bite?",
+    "The picture's own pixels are repaired, so there are two layers and not three, exactly as you asked. Undo puts the original back in one press, but until you undo, the untouched screenshot is not in the layer tree anywhere. Is that the trade you wanted?",
+    "Nothing is shown while it works. On a 12 megapixel capture the whole thing is under a fifth of a second. Did it ever feel like it had not happened?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every window picture here is the real app. The two magnified button crops are renders of the document, which is the honest way to show a patch at four times size.",
+    "MEASURED, not judged by eye. On the settings pane capture: nine runs found, nine separated, none skipped. The space where the white Save Changes label was reads exactly ONE colour, and it is the button's own blue, with a worst channel difference of 0 out of 255. Every one of the nine runs reads 0 out of 255 against the pixel four across from it. Running the sweep on the repaired picture finds 0 runs.",
+    "PERF, release build. A 12.2 megapixel capture with 81 runs of text in it: reading the brightness 120 ms (shared with the measure tool and paid once per picture), the sweep 51 ms, the sweep and the cut together 61 ms. The 1.4 megapixel fixture is 6 ms.",
+    "The names are the weakest part. Text 1 to Text 9 is the most an app that cannot read the characters can honestly say. The thumbnails carry it, but a list of nine identical-looking names is not what a person would have written.",
+    "Text on a photograph is SKIPPED, not attempted. That is rule three working, but it means the feature does nothing at all on a marketing screenshot with a hero image behind the headline, and the only thing that tells you is a pill that fades.",
+    "A switch, a button and a text field all read as boxes and are left alone. Getting there needed one new rule that is not in the mock or the task: a box has ink all the way round its own outline and a line of text does not. Without it the blue button came out instead of the words inside it.",
+    "One rule had to be invented for bold display text too. A single threshold on how far a pixel sits from its surroundings makes the GAPS between the letters of a heading read as ink, which threw the heading away as a rule; ink is now read as two masks, darker and lighter, and a run is one or the other.",
+    "The command shows nothing while it works. That is right at 61 ms and would be wrong at 2 seconds. Nobody has run it on a 6K capture of a dense IDE.",
+    "Hierarchy and boxes are the sibling tasks and are not here. What this slice owes them is built: the sweep hands back rects, the patch decision knows nothing about text, and the builder takes a list and lands it in one undo step."
+  ]
+}

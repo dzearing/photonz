@@ -124,6 +124,8 @@ public enum FeatureCatalog {
 
     public static let tutorialsFlag = "next-tutorials"
 
+    public static let separateIntoLayersFlag = "next-separate-into-layers"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -397,6 +399,15 @@ public enum FeatureCatalog {
                     name: layerGroupsFlag,
                     title: "Group what you selected",
                     description: "Select two or more layers and press Command G to make them one thing you can move, hide, lock and delete together; Shift Command G takes it apart again and leaves the pieces exactly where they were. On the canvas a click picks the whole group, and a double click goes inside it so you can pick one piece; Escape comes back out. Off means the Layer menu has no Group or Ungroup rows and a click always picks a single layer. Groups already in a document keep drawing either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: separateIntoLayersFlag,
+                    title: "Separate a screenshot into layers",
+                    description: "Right click the picture in the layers list, or use Layer then Separate into Layers, and every run of text in the screenshot becomes its own layer you can pick up and move. Where a word came from, the picture is filled in with what was around it, so dragging a label off a dark button leaves the button looking untouched rather than punching a hole in it. You get two things and not three: the words on their own layers and the picture with the gaps filled. Anything the app cannot read confidently is left in the picture and not mentioned. It is one undo step however many layers come out. Off means the command is absent from both menus.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
