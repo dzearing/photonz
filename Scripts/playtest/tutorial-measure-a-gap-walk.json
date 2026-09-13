@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-measure-a-gap-walk",
+  "setup": { "forget": ["tutorials", "measure"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "measure-a-gap" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-measure", "timeout": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-pick-measure", "note": "the guide brought a flattened settings screen of its own, and waits on the Measure tool" },
+    { "do": "snapshot", "name": "1-pick-measure" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "switch-to-gap", "timeout": 5 },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-switch-to-gap", "note": "picking the tool moved it on; now it waits for Gap mode" },
+    { "do": "snapshot", "name": "2-switch-to-gap" },
+
+    { "do": "key", "key": "i" },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "measureMode", "value": "gap", "timeout": 5 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "rest-on-the-space", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-rest-on-the-space", "note": "cycling the key into Gap really moved it on" },
+
+    { "do": "move", "at": [220, 363] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-hover", "note": "the gap between Cancel and Save under the pointer, previewed" },
+    { "do": "snapshot", "name": "3-hover-the-gap" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "click-the-gap", "timeout": 5 },
+    { "do": "click", "at": [220, 363] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "it-is-a-layer", "timeout": 6 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-clicked", "note": "one click left a real measurement behind, and the guide moved on by itself" },
+    { "do": "expectMeasures", "count": 1, "stage": "4-measures" },
+    { "do": "snapshot", "name": "4-the-gap-is-measured" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-finished", "note": "Done closed the guide and left the measured sample alone" }
+  ]
+}

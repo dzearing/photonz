@@ -435,13 +435,79 @@ Three things the track had to settle, and every later track inherits them:
   "Mark it up" said Escape, and the walk caught it: the words were typed and
   then lost, and the guide never moved on because nothing was ever edited.
 
+## The Redlining track
+
+The app's real daily job, in five guides that run in the order the job is done
+in. Somebody who does only this track can measure a screen and hand a builder a
+spec.
+
+| Guide | Brings | What it teaches |
+| --- | --- | --- |
+| Measure a gap | the settings screen | I to pick Measure up, I again for Gap mode, one click for the space between two things |
+| Measure something's size | the settings screen | Size mode, `[` and `]` for what is picked, one click for both calipers |
+| Let it snap, or drag it free | the settings screen | the three click caliper, ⌘ to free the magnets, ⇧ to hold the direction, and where the tool's settings live |
+| The Measurements panel | the same screen, already measured | the list, picking a row, renaming, the row's eye |
+| Export a spec list | the same screen, already measured | ⌃⌘C for the list, ⇧⌘C for the picture and the list together, ⌘C for one line |
+
+Four things this track needed that the framework did not have, each added as
+DATA or as one more event rather than as a special case:
+
+- **A sample that is a PICTURE.** Measure finds elements and gaps by reading
+  pixels (`ElementBounds`, off the `EdgeMap`), and the Basics track's starter
+  screen is live shapes over a plain white canvas: there is nothing in those
+  pixels to find, so Size and Gap would draw nothing at all. A sample now says
+  whether it is flattened (`TutorialSample.isFlattened`), and a flattened one is
+  drawn once (`TutorialSampleScreen.pictureLayers`), rendered, and installed as
+  the window's single picture. What stays live on top is whatever the guide is
+  about: nothing, or the three measurements the panel guide arrives with.
+- **A guide says which features it needs** (`TutorialGuide.requires`, flag names
+  from `FeatureCatalog`). A guide teaching a mode somebody switched off in
+  Experiments would ring a button that is not there, so it is left out
+  altogether: `TutorialCatalog.guides(enabled:)` narrows the list, the app asks
+  once (`TutorialLauncher.offered`), and the menu and the window both read that.
+  A track whose every guide is switched off loses its shelf as well
+  (`populatedTracks(in:)`), which is the same rule an empty track already
+  followed. Nothing is dimmed and nothing explains a feature flag to anybody.
+- **Two more triggers**, wired where they happen: `.measureMode(mode)` at
+  `EditorState.measureToolMode`'s setter, which every way of switching lands in,
+  and `.specListCopied` at `copyMeasureSpecList`. The mode event is raised
+  whether or not the mode CHANGED, because the thing a step waits on is the
+  person asking for it.
+- **A step can ask for something already true.** The Measure tool keeps the mode
+  you left it in, so "press I until it reads Distance" comes up with the button
+  already reading Distance, and a waiting step there strands you: nothing fires
+  and the only way on is Skip This Step. Caught on 2026-09-13 by the snapping
+  walk, which hung for its whole timeout on exactly that. A step whose trigger
+  describes a STATE that already holds now offers a plain **Next**
+  (`TutorialRun.stepWasAlreadyTrue`, decided in the controller where the editor
+  can be asked). Only a state can be already true: nothing is already true about
+  "the person made an edit", and treating an event that way would be the timer
+  lie in another costume.
+
+Two rules the track adds to the ones Basics settled:
+
+- **No guide ends on a waiting step.** A guide whose last step waits simply
+  vanishes the moment you do the thing, with no closing word. The size guide did
+  exactly that until 2026-09-13. Every guide ends on a step you press Done on.
+- **A step's copy must be true under the flags the guide asks for, and no
+  others.** The snapping guide ends on the Measure Tool section's Snap setting,
+  which is the centers flag's, so the guide requires that flag too rather than
+  saying something that is only sometimes true.
+
+Reading the Tutorials window back needed a change as well: ten guides made it
+scroll, and a row that has scrolled away is in the accessibility tree with no
+words worked out for it yet, so four perfectly good Start buttons read as
+silent. `WindowReadProbe.fullReading` scrolls the window through and reads at
+each stop, and the check is stronger than the one it replaced: every guide must
+have a button that says its own name, not merely a button with some words on it.
+
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
-menu, the track submenus, the hub window, the first launch offer and the Basics
-track. Still queued:
+menu, the track submenus, the hub window, the first launch offer, the Basics
+track and the Redlining track. Still queued:
 
-- **The other six tracks**, one task each.
+- **The other five tracks**, one task each.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated
   walk per guide that drives the real editor and asserts every step's anchor
   resolves. The unit check here (`TutorialCatalogCheck`) is the promise; that

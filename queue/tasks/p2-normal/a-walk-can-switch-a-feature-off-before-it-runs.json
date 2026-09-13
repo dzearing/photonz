@@ -1,0 +1,28 @@
+{
+  "id": "a-walk-can-switch-a-feature-off-before-it-runs",
+  "title": "A walk can switch a feature off before it runs",
+  "goal": "A tutorial guide, and plenty of other features, behave differently depending on what somebody has switched on in the Experiments window. Today a scripted playtest can only run the app as it comes, so nobody can show what a feature looks like switched off without editing settings by hand and remembering to put them back.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T02:11:54.576Z",
+  "updated": "2026-09-13T02:11:54.579Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while finishing the Redlining tutorials track (2026-09-13). The acceptance item there asked for every guide to be checked with its feature flagged off as well as on, and there was no way to do it in a walk: the flags live in UserDefaults as a JSON blob under experiments.next.flags (ExperimentsStore.settingsKey), so the check was done by hand with defaults write against com.dzearing.photonz.probe and then undone. A walk written for it passed either way, which is worse than no walk, so it was deleted rather than left in the sweep.\n\nShape: PlaytestSetup already takes forget/captures/scratch (Sources/PhotonzCore/PlaytestScript.swift, knownKeys); add flags, applied and restored by PlaytestSetupRunner the way forget already is. Every later tutorials track task wants this for the same acceptance item.",
+  "acceptance": [
+    "A walk can name feature flags to switch on or off for its run, alongside the settings it already forgets",
+    "The flags it changed are put back when the walk ends, whether it passed or failed",
+    "The log says which flags were changed, so a reader of the walk knows what configuration it proved",
+    "One walk proves it end to end: the Redlining tutorials shelf is gone from Help and from the Tutorials window with the measure features off, and back with them on"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T02:11:54.578Z",
+      "note": "created (manual)"
+    }
+  ]
+}

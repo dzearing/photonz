@@ -1,0 +1,33 @@
+{
+  "feature": "Tutorials: the Redlining track",
+  "epic": "ui-building",
+  "summary": "Help now holds five short guides for the app's real daily job: measure a gap, measure a size, draw a measurement by hand and control where its ends land, work the Measurements list, and hand the whole thing over as a spec list. Each one opens a made up settings screen of its own and rings the real controls while you drive.",
+  "setup": "Photonz Dev, release Next. Help > Tutorials > Redlining, or Help > Tutorials > All Tutorials... for the window. Flags are on by default.",
+  "try": [
+    { "do": "Open Help > Tutorials > Redlining > Measure a gap. A window called Tutorial Sample opens with a made up settings screen in it." },
+    { "do": "Press I to pick Measure up, then press I again until the button reads Gap. The guide moves on by itself each time you really do it." },
+    { "do": "Rest the pointer in the space between the Cancel and Save buttons, then click once to keep the measurement.", "shot": "2026-09-13-redlining-track-gap.png" },
+    { "do": "Run Measure something's size next, and try ] and [ on the Save button before you click.", "shot": "2026-09-13-redlining-track-size.png" },
+    { "do": "Run Let it snap, or drag it free. Draw a caliper across the card, then drag one end with Command held and again with Shift held.", "shot": "2026-09-13-redlining-track-snapping.png" },
+    { "do": "Run The Measurements panel. Its sample arrives with three measurements already on it, so there is a list to work.", "shot": "2026-09-13-redlining-track-panel.png" },
+    { "do": "Run Export a spec list, press Control Command C, and paste into a message.", "shot": "2026-09-13-redlining-track-export.png" }
+  ],
+  "evaluate": [
+    "Does the made up settings screen feel like something worth measuring, or does it read as a toy?",
+    "Is two minutes the right size for one of these, or would you rather have one longer guide for the whole job?",
+    "The gap guide spends two of its five steps getting the tool into Gap mode. Is that the right amount of fuss, or should a guide put the tool in the mode for you?",
+    "Reading a gap of 24 as 25 is what the tool does on any real screenshot, because it measures the whitespace. Does meeting that inside a tutorial undermine it?",
+    "Running the track back to back leaves five Tutorial Sample windows open. Is that annoying enough to fix?",
+    "Should the track also carry a guide for alignment checking? Your own words for this task named it, and nothing here teaches it yet."
+  ],
+  "rough": [
+    "A step about the whole picture rings the entire canvas in blue. It says nothing useful for a step like rest on the space between the buttons, and it is the loudest thing on screen. That is the framework's behaviour for a surface anchor rather than this track's, so it was left alone.",
+    "The snapping guide's last step used to point at the Measure Tool settings, and pointed at nothing: placing a caliper hands you the pointer back, and that section is only in the panel while the tool is in hand, so the card fell to the middle of the window. The step moved to before the drawing, where the tool is definitely in hand. Every step of every guide now resolves to a real rectangle on screen, which the walk logs show.",
+    "The size guide used to end on its own click, so the guide evaporated the moment you measured, with no closing word. Every guide now ends on a step you press Done on.",
+    "Pressing I on a tool already in the mode a step names used to strand you: nothing fired and the only way on was Skip This Step. A step whose state is already true now offers a plain Next instead.",
+    "A walk cannot click a row in the Measurements panel: the harness knows those rows for a right click and not for a plain one. The panel guide's walk picks the same measurement out of the Layers list instead, which is the same selection and the same event. Filed as a follow-up.",
+    "A walk cannot switch a feature off either, so flagged-off behaviour was proved two ways instead: unit tests over the catalogue, and one probe run with the three measure flags written off by hand. With them off the Redlining submenu is gone from Help and the shelf is gone from the window, with nothing dimmed and no half guide left behind.",
+    "Five new guides made the Tutorials window long enough to scroll, and four Start buttons that had scrolled away came back saying nothing to the accessibility check, failing the hub walk. The probe now reads the window all the way down, and the check is stronger than before: every guide must have a button that says its own name.",
+    "The size guide's ] step says it grows the pick to the box around it. On this sample it grows to the region below the divider rather than to the card, which is true to what the tool does but looser than the words suggest."
+  ]
+}

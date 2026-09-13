@@ -27,7 +27,7 @@ struct TutorialHubView: View {
     @State private var confirmingResetAll = false
 
     private var model: TutorialHubModel {
-        TutorialHubModel(progress: controller.progress)
+        TutorialHubModel(guides: TutorialLauncher.offered, progress: controller.progress)
     }
 
     var body: some View {

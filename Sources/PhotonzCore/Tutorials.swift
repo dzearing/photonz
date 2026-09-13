@@ -85,7 +85,11 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// pointing at a section nobody promised fails before anybody sees it.
     public static let knownPanelSections = ["layers", "geometry", "arrange", "annotation",
                                             "text", "measurements", "library", "component",
-                                            "effects", "color", "canvas", "placement"]
+                                            "effects", "color", "canvas", "placement",
+                                            // The Measure tool's own settings, which are
+                                            // in the panel only while the tool is in hand,
+                                            // and a picked measurement's own section.
+                                            "measureTool", "measure"]
 
     /// The rows of the empty window's card a guide is allowed to name. The
     /// blank canvas row is deliberately absent: it comes and goes with a
@@ -140,6 +144,13 @@ public enum TutorialTrigger: Hashable, Codable, Sendable {
     case undone
     /// The person put the whole picture on the clipboard.
     case pictureCopied
+    /// The person asked the Measure tool for this mode, by key, by the button's
+    /// flyout or from the panel. Raised whether or not the mode CHANGED: the
+    /// event is the person asking, and a tool already in the mode a step names
+    /// would otherwise leave them pressing the key a full lap round.
+    case measureMode(MeasureToolMode)
+    /// The person put the spec list on the clipboard.
+    case specListCopied
 }
 
 /// How a step moves on.
@@ -265,6 +276,24 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// state that shows the card offering the ways to get a picture in, and a
     /// guide about getting a picture in has to be able to point at them.
     case emptyWindow
+    /// A made-up settings screen, FLATTENED into the picture itself the way a
+    /// screenshot is. The redlining guides need this: the Measure tool finds
+    /// elements and gaps by reading the pixels, and a screen drawn as live
+    /// shapes has nothing in its pixels to find.
+    case redlineScreen
+    /// The same screen with two measurements already on it, so a guide about
+    /// the list of them does not open on an empty list.
+    case measuredScreen
+
+    /// Whether this sample's drawing is baked into the picture before the
+    /// window opens. A guide that measures needs this; a guide about layers
+    /// needs the opposite.
+    public var isFlattened: Bool {
+        switch self {
+        case .redlineScreen, .measuredScreen: true
+        case .starterScreen, .emptyWindow: false
+        }
+    }
 }
 
 public struct TutorialGuide: Identifiable, Hashable, Codable, Sendable {
@@ -281,20 +310,74 @@ public struct TutorialGuide: Identifiable, Hashable, Codable, Sendable {
     /// something about whatever you already have open. A guide with no sample
     /// must not change the document without saying so in a step first.
     public let sample: TutorialSample?
+    /// The features this guide needs switched on, by flag name. A guide for
+    /// something somebody has switched off in Experiments is a guide pointing
+    /// at a control that is not there, so the app leaves it out of the menu and
+    /// out of the window entirely. Empty means it teaches something everybody
+    /// has.
+    public let requires: [String]
     public let steps: [TutorialStep]
 
     public init(id: String, track: TutorialTrack, title: String, summary: String,
-                minutes: Int, sample: TutorialSample?, steps: [TutorialStep]) {
+                minutes: Int, sample: TutorialSample?, requires: [String] = [],
+                steps: [TutorialStep]) {
         self.id = id
         self.track = track
         self.title = title
         self.summary = summary
         self.minutes = minutes
         self.sample = sample
+        self.requires = requires
         self.steps = steps
     }
 
     public func step(id: String) -> TutorialStep? { steps.first { $0.id == id } }
+}
+
+// MARK: - How long one really takes
+
+/// How long a guide takes, worked out from what is in it rather than guessed.
+///
+/// The number on the card is a promise, and a guide that says two minutes and
+/// takes five is one nobody starts again. So the claim is checked against the
+/// work: the words to read, a beat per step to find the ringed control and
+/// press the button, and longer again for a step that waits on you really doing
+/// something.
+///
+/// The rates are deliberately plain and a little generous. They are not a
+/// stopwatch, they are a floor under the claim, and what they catch is a guide
+/// that grew three steps and kept saying two minutes.
+public enum TutorialLength {
+    /// Careful reading of short UI copy, in words per second.
+    public static let wordsPerSecond: Double = 3.3
+    /// Finding the ring, reading what it points at, pressing the button.
+    public static let secondsPerStep: Double = 6
+    /// Extra for a step that waits: picking a tool, drawing something, copying.
+    public static let secondsPerAction: Double = 8
+
+    public static func estimatedSeconds(for guide: TutorialGuide) -> Double {
+        let words = guide.steps.reduce(0) { total, step in
+            total + step.title.split(separator: " ").count + step.body.split(separator: " ").count
+        }
+        let waits = guide.steps.filter(\.waits).count
+        return Double(words) / wordsPerSecond
+            + Double(guide.steps.count) * secondsPerStep
+            + Double(waits) * secondsPerAction
+    }
+
+    /// How far the claim on the card is from the work in the guide, in seconds.
+    /// Positive means the card is promising more time than the guide needs.
+    public static func claimError(for guide: TutorialGuide) -> Double {
+        Double(guide.minutes) * 60 - estimatedSeconds(for: guide)
+    }
+
+    /// Whether the card's claim is honest: within a minute of the work, either
+    /// way. A whole minute of slack, because the claim is in whole minutes and
+    /// people read at different speeds. What this catches is the claim that is
+    /// out by a factor: two minutes of steps under a one minute promise.
+    public static func claimIsHonest(for guide: TutorialGuide) -> Bool {
+        abs(claimError(for: guide)) <= 60
+    }
 }
 
 // MARK: - The catalogue
@@ -308,6 +391,11 @@ public enum TutorialCatalog {
         TutorialGuides.markItUp,
         TutorialGuides.layersAndUndo,
         TutorialGuides.saveExportCopy,
+        TutorialGuides.measureAGap,
+        TutorialGuides.measureASize,
+        TutorialGuides.snapOrFree,
+        TutorialGuides.measurementsPanel,
+        TutorialGuides.exportASpecList,
     ]
 
     /// The guide the Help menu's own row runs, and the one first launch offers.
@@ -322,11 +410,30 @@ public enum TutorialCatalog {
         guides.filter { $0.track == track }
     }
 
+    /// The guides worth offering to somebody whose app is switched on the way
+    /// `isEnabled` says. A guide teaching a feature that is off would point at
+    /// a control that is not there, so it is not offered at all: no dimmed row
+    /// explaining a setting, no guide that stops halfway.
+    ///
+    /// The app passes its own feature flags in. Everything else about the
+    /// catalogue is release independent, which is why this is the only place
+    /// that has to ask.
+    public static func guides(enabled isEnabled: (String) -> Bool) -> [TutorialGuide] {
+        guides.filter { $0.requires.allSatisfy(isEnabled) }
+    }
+
     /// The tracks that actually have something on them, in track order. What
     /// the menu builds its submenus from, so an empty track shows no empty
     /// submenu.
     public static var populatedTracks: [TutorialTrack] {
-        TutorialTrack.allCases.filter { !guides(in: $0).isEmpty }
+        populatedTracks(in: guides)
+    }
+
+    /// The same question asked of a narrowed list: a track whose every guide
+    /// needs a feature somebody switched off is not a shelf, it is an empty
+    /// submenu, so it goes too.
+    public static func populatedTracks(in guides: [TutorialGuide]) -> [TutorialTrack] {
+        TutorialTrack.allCases.filter { track in guides.contains { $0.track == track } }
     }
 }
 
@@ -337,11 +444,23 @@ public enum TutorialCatalog {
 public struct TutorialRun: Hashable, Sendable {
     public let guide: TutorialGuide
     public private(set) var index: Int
+    /// True when this step asks for something that was ALREADY so when it came
+    /// up: the tool is already in the mode the step names, say. The step still
+    /// says what it says, but the way on is a plain Next, because there is
+    /// nothing left to do and "Skip This Step" would be asking somebody to
+    /// skip a step they have already finished.
+    ///
+    /// Only ever set for a trigger that describes a STATE. Nothing can be
+    /// already true about "the person made an edit".
+    public private(set) var stepWasAlreadyTrue = false
 
     public init(guide: TutorialGuide, startingAt index: Int = 0) {
         self.guide = guide
         self.index = min(max(0, index), max(0, guide.steps.count - 1))
     }
+
+    /// Said once, as the step comes up.
+    public mutating func markStepAlreadyTrue() { stepWasAlreadyTrue = true }
 
     public var step: TutorialStep { guide.steps[index] }
     public var number: Int { index + 1 }
@@ -353,7 +472,7 @@ public struct TutorialRun: Hashable, Sendable {
     /// Next, because Next would be a way to claim you did something you did
     /// not; it offers to skip the step instead, so nobody is ever stuck.
     public var buttonTitle: String {
-        if step.waits { return "Skip This Step" }
+        if step.waits && !stepWasAlreadyTrue { return "Skip This Step" }
         return isLastStep ? "Done" : "Next"
     }
 
@@ -363,6 +482,7 @@ public struct TutorialRun: Hashable, Sendable {
     public mutating func advance() -> Bool {
         guard !isLastStep else { return false }
         index += 1
+        stepWasAlreadyTrue = false
         return true
     }
 
@@ -370,6 +490,7 @@ public struct TutorialRun: Hashable, Sendable {
     public mutating func back() -> Bool {
         guard canGoBack else { return false }
         index -= 1
+        stepWasAlreadyTrue = false
         return true
     }
 

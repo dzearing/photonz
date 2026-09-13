@@ -124,7 +124,12 @@ struct EditorCommands: Commands {
     /// one submenu per populated track, and the way into the window. Nothing
     /// here writes a guide's name down, so a guide added to the data gets its
     /// row with this file untouched.
-    private var tutorialMenu: TutorialMenuModel { TutorialMenuModel() }
+    /// Less anything teaching a feature this app has switched off
+    /// (`TutorialLauncher.offered`): a row for a mode that is not there rings
+    /// a button nobody can press.
+    private var tutorialMenu: TutorialMenuModel {
+        TutorialMenuModel(guides: TutorialLauncher.offered)
+    }
 
     private func startTutorial(_ guide: TutorialGuide) {
         TutorialLauncher.start(guide, coordinator: coordinator,

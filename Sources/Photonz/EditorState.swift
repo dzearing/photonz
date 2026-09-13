@@ -860,9 +860,21 @@ final class EditorState {
         // card offering the ways in only exists while the window is empty.
         guard sample != .emptyWindow else { return }
         let size = TutorialSampleScreen.canvasSize
-        guard let white = SolidImage.make(size: size, hex: Self.blankCanvasBackgroundHex) else { return }
-        let ref = store.register(white)
-        var document = PhotonzDocument.withBaseImage(ref)
+        let page = TutorialSampleScreen.backgroundHex(for: sample)
+        guard let blank = SolidImage.make(size: size, hex: page) else { return }
+        var document = PhotonzDocument.withBaseImage(store.register(blank))
+        // A redlining sample is a PICTURE, not a drawing. Measure reads the
+        // pixels to find elements and gaps, so the screen is drawn once and
+        // baked in; what is left live on top is only what the guide is about
+        // (nothing, or the measurements it arrives with).
+        let picture = TutorialSampleScreen.pictureLayers(for: sample)
+        if !picture.isEmpty {
+            var drawing = document
+            drawing.layers.append(contentsOf: picture)
+            if let flat = previewRenderer.render(drawing, store: store) {
+                document = PhotonzDocument.withBaseImage(store.register(flat))
+            }
+        }
         document.layers.append(contentsOf: TutorialSampleScreen.layers(for: sample))
         installDocument(document, url: nil)
     }

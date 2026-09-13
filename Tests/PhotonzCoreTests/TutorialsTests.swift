@@ -137,6 +137,22 @@ struct TutorialsTests {
         #expect(run.buttonTitle == "Skip This Step")
     }
 
+    @Test func aStepAskingForSomethingAlreadyTrueOffersNextInstead() {
+        // The Measure tool keeps the mode you left it in, so "press I until it
+        // reads Distance" can come up with the button already reading
+        // Distance. Waiting on that strands somebody on a step they cannot
+        // perform, with nothing to press but Skip. Caught on 2026-09-13 by the
+        // snapping walk, which hung for its full timeout on exactly this.
+        var run = TutorialRun(guide: TutorialGuides.takeTheTour)
+        while !run.step.waits && !run.isLastStep { run.advance() }
+        #expect(run.buttonTitle == "Skip This Step")
+        run.markStepAlreadyTrue()
+        #expect(run.buttonTitle == "Next")
+        // And it is about THIS step: moving on is a clean slate again.
+        run.advance()
+        #expect(!run.stepWasAlreadyTrue)
+    }
+
     @Test func aWaitingStepMovesOnWhenThePersonDoesTheThing() {
         var run = TutorialRun(guide: TutorialGuides.takeTheTour)
         run.advance() // the Measure step

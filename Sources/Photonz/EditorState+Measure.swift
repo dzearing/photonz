@@ -182,6 +182,12 @@ extension EditorState {
     var measureToolMode: MeasureToolMode {
         get { Experiments.shared.measureModesEnabled ? storedMeasureToolMode : .distance }
         set {
+            // A guide waiting on a mode is waiting on the person ASKING for
+            // it, which they have done whether or not the tool was already
+            // there. Before the guard for exactly that reason: a step saying
+            // "press I until it reads Gap" must be satisfiable by somebody who
+            // picked Gap out of the flyout while it was already in Gap.
+            TutorialController.shared.note(.measureMode(newValue), from: self)
             guard newValue != storedMeasureToolMode else { return }
             storedMeasureToolMode = newValue
             measureCandidateLevel = 0

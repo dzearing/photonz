@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-measure-a-size-walk",
+  "setup": { "forget": ["tutorials", "measure"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "measure-a-size" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-measure", "timeout": 10 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "1-pick-measure" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "switch-to-size", "timeout": 5 },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-switch-to-size", "note": "the tool is in hand and the guide waits for Size mode" },
+
+    { "do": "measureMode", "mode": "size" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "rest-on-the-button", "timeout": 5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-rest-on-the-button", "note": "asking for Size really moved it on" },
+
+    { "do": "move", "at": [284, 363] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-hover", "note": "the Save button under the pointer, outlined with the width and height a click would leave" },
+    { "do": "snapshot", "name": "3-hover-the-save-button" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "take-in-more", "timeout": 5 },
+    { "do": "key", "key": "]" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-grown", "note": "] took in the box around the button" },
+    { "do": "snapshot", "name": "4-take-in-more" },
+    { "do": "key", "key": "[" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-shrunk", "note": "[ came back in to the button itself" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "click-to-keep", "timeout": 5 },
+    { "do": "click", "at": [284, 363] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "both-are-yours", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-clicked", "note": "one click left both calipers behind, and the guide moved on to its closing word" },
+    { "do": "expectMeasures", "count": 2, "stage": "5-measures" },
+    { "do": "snapshot", "name": "5-width-and-height" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

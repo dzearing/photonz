@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-snap-or-free-walk",
+  "setup": { "forget": ["tutorials", "measure", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "snap-or-free" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-measure", "timeout": 10 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "1-pick-measure" },
+
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "back-to-distance", "timeout": 5 },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 20 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-already-distance", "note": "THE STEP ASKS FOR SOMETHING ALREADY TRUE: the tool keeps the mode you left it in, and it was already Distance. The card says its piece and offers Next rather than stranding you on Skip This Step" },
+    { "do": "snapshot", "name": "2-already-distance" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-it-snaps-to", "timeout": 5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-settings", "note": "the tool's own settings, pointed at while the tool is still in HAND. This step used to come last, and by then placing a caliper had handed the pointer back, the Measure Tool section was gone from the panel and the card fell to the middle of the window" },
+    { "do": "snapshot", "name": "3-what-it-snaps-to" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "draw-one", "timeout": 5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [78, 300] },
+    { "do": "click", "at": [642, 300] },
+    { "do": "click", "at": [642, 268] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "free-it", "timeout": 6 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-snapped", "note": "the two ends caught the card's own edges, so the number is the card's real width rather than where the clicks landed" },
+    { "do": "expectMeasures", "count": 1, "stage": "4-measures" },
+    { "do": "snapshot", "name": "4-it-snapped" },
+
+    { "do": "drag", "from": [648, 300], "to": [600, 300], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-free", "note": "WHAT THE STEP CLAIMS: holding command while dragging an end ignores the magnets, so it lands exactly where the pointer stopped, x 600" },
+    { "do": "snapshot", "name": "5-dragged-free" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "hold-the-line", "timeout": 5 },
+    { "do": "drag", "from": [73, 300], "to": [140, 360], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-held", "note": "WHAT THE STEP CLAIMS: the pointer wandered 60 down while pulling the LEFT end 67 right, and with shift held the measurement stayed on the row it was measuring along. The left foot lands near x 140 with y still 300" },
+    { "do": "snapshot", "name": "6-held-straight" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-finished", "note": "Done closed the guide" }
+  ]
+}

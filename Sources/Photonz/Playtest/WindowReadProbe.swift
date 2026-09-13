@@ -78,6 +78,50 @@ enum WindowReadProbe {
         elements(in: window).filter { $0.role == NSAccessibility.Role.button.rawValue }
     }
 
+    /// Everything the window says from top to bottom, gathered by scrolling
+    /// through it a screenful at a time and reading at each stop.
+    ///
+    /// One reading of a scrolling list is NOT the whole list. A row that has
+    /// scrolled away is still in the tree, but SwiftUI has not worked out its
+    /// words yet, so it comes back silent. Measured on 2026-09-13, when the
+    /// Tutorials window grew from five guides to ten and four perfectly good
+    /// Start buttons read as saying nothing. A person listening scrolls as
+    /// they go, so this does too, and puts the list back where it found it.
+    static func fullReading(in window: NSWindow) -> [Element] {
+        guard let scroller = firstScrollView(in: window.contentView) else {
+            return elements(in: window)
+        }
+        let clip = scroller.contentView
+        let was = clip.bounds.origin
+        let height = clip.bounds.height
+        let total = scroller.documentView?.frame.height ?? height
+        var found = elements(in: window)
+        var y: CGFloat = 0
+        // A screenful at a time with a little overlap, so nothing falls between
+        // two stops.
+        while y + height < total + height {
+            scroller.contentView.scroll(to: CGPoint(x: was.x, y: y))
+            scroller.reflectScrolledClipView(clip)
+            window.displayIfNeeded()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+            found += elements(in: window)
+            y += height * 0.8
+            if y >= total { break }
+        }
+        scroller.contentView.scroll(to: was)
+        scroller.reflectScrolledClipView(clip)
+        return found
+    }
+
+    private static func firstScrollView(in view: NSView?) -> NSScrollView? {
+        guard let view else { return nil }
+        if let scroller = view as? NSScrollView { return scroller }
+        for child in view.subviews {
+            if let found = firstScrollView(in: child) { return found }
+        }
+        return nil
+    }
+
     /// What the window says, in one line per thing said, for the walk's log.
     static func reading(in window: NSWindow) -> String {
         let said = elements(in: window)

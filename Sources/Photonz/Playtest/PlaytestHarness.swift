@@ -1028,22 +1028,26 @@ private final class Run {
             guard let hub = TutorialHubProbe.window() else {
                 throw Failure(description: "the Tutorials window is not open")
             }
-            let buttons = WindowReadProbe.buttons(in: hub)
+            // Read all the way down rather than once: the list scrolls, and a
+            // row that has scrolled away has no words worked out for it yet.
+            let read = WindowReadProbe.fullReading(in: hub)
+            let buttons = read.filter { $0.role == NSAccessibility.Role.button.rawValue }
             guard !buttons.isEmpty else {
                 throw Failure(description: "the Tutorials window has no buttons a screen reader can find")
             }
-            let unnamed = buttons.filter { $0.label.isEmpty }
-            guard unnamed.isEmpty else {
-                throw Failure(description: "\(unnamed.count) button(s) in the Tutorials window say nothing")
-            }
-            // Every guide in the catalogue has to be readable in here, or the
-            // window is showing something a person listening cannot find.
-            let said = WindowReadProbe.elements(in: hub).map(\.label)
-            let silent = TutorialCatalog.guides.filter { guide in
+            // Every guide in the catalogue has to be readable in here, and its
+            // own button has to say which guide it belongs to. "Start" on its
+            // own is four identical buttons to somebody listening.
+            let said = read.map(\.label)
+            let spoken = Set(buttons.map(\.label))
+            let ways = [TutorialHubModel.startTitle, TutorialHubModel.continueTitle,
+                        TutorialHubModel.againTitle]
+            let silent = TutorialLauncher.offered.filter { guide in
                 !said.contains { $0.contains(guide.title) }
+                    || !ways.contains { spoken.contains("\($0) \(guide.title)") }
             }
             guard silent.isEmpty else {
-                throw Failure(description: "the Tutorials window never says: "
+                throw Failure(description: "the Tutorials window never says, or offers no button naming: "
                               + silent.map(\.title).joined(separator: ", "))
             }
             note(number, step.name,

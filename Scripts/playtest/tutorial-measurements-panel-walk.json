@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-measurements-panel-walk",
+  "setup": { "forget": ["tutorials", "measure", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "measurements-panel" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-list", "timeout": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-the-list", "note": "the guide brought a screen that was already measured, so the list it is about has three rows in it" },
+    { "do": "expectMeasures", "count": 3, "stage": "1-measures" },
+    { "do": "snapshot", "name": "1-the-list" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-row", "timeout": 5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "selectRow", "row": "Measure" },
+    { "do": "describe", "stage": "2-row-note", "note": "a walk cannot click a Measurements row itself (the harness knows those rows for a right click and not for a plain one), so this picks the same measurement out of the Layers list. Same selection, same event" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "name-it", "timeout": 6 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-picked", "note": "clicking a row really moved it on, and the caliper on the picture lit up with it" },
+    { "do": "snapshot", "name": "2-picked-a-row" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "hide-one", "timeout": 5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "rightClick", "on": "Gap", "choose": "Visible" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "tidy-list-tidy-spec", "timeout": 6 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-hidden", "note": "taking a measurement off the picture is an edit, so the step moved on by itself" },
+    { "do": "snapshot", "name": "3-hidden" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-finished", "note": "Done closed the guide" }
+  ]
+}

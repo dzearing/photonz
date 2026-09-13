@@ -148,6 +148,12 @@ public struct TutorialHubModel: Hashable, Sendable {
     public static let resetAllTitle = "Reset All Progress"
     public static let forgetOneTitle = "Forget My Progress"
     public static let startOverTitle = "Start from the Beginning"
+    /// The three things a guide's own button can say. Public because a check
+    /// outside this module reads the window back and has to know what a row's
+    /// button is supposed to call itself.
+    public static let startTitle = "Start"
+    public static let continueTitle = "Continue"
+    public static let againTitle = "Again"
 
     public init(guides: [TutorialGuide] = TutorialCatalog.guides,
                 progress: TutorialProgress = TutorialProgress()) {
@@ -198,9 +204,9 @@ enum TutorialCopy {
 
     static func actionTitle(for state: TutorialHubModel.GuideState) -> String {
         switch state {
-        case .notStarted: "Start"
-        case .inProgress: "Continue"
-        case .finished: "Again"
+        case .notStarted: TutorialHubModel.startTitle
+        case .inProgress: TutorialHubModel.continueTitle
+        case .finished: TutorialHubModel.againTitle
         }
     }
 

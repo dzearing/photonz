@@ -79,6 +79,9 @@ extension EditorState {
         let listed = CompositeCopy.visibleMeasurementCount(in: document)
         guard listed > 0 else { return }
         copyText(MeasureSpecList.render(document: document, name: specListName))
+        // The list is on the clipboard: a guide waiting for the handoff has had
+        // it. Before the notice, like the picture's own copy.
+        TutorialController.shared.note(.specListCopied, from: self)
         showCopyConfirmation(.specList(measurements: listed))
     }
 

@@ -44,6 +44,16 @@ enum TutorialLauncher {
     /// The guide the Help menu's own row promotes to the top.
     static var tour: TutorialGuide? { TutorialCatalog.guide(id: TutorialCatalog.tourID) }
 
+    /// The guides THIS app offers: the catalogue, less anything teaching a
+    /// feature that is switched off. A guide for a mode somebody turned off in
+    /// Experiments would ring a button that is not there, so it is left out of
+    /// the menu and the window rather than dimmed with an explanation.
+    ///
+    /// The one place the app asks, so the menu and the hub can never disagree.
+    static var offered: [TutorialGuide] {
+        TutorialCatalog.guides(enabled: { Experiments.shared.isEnabled($0) })
+    }
+
     // MARK: - Finding the window a guide would teach in
 
     /// Every editor window's state while it is alive, so a surface OUTSIDE the

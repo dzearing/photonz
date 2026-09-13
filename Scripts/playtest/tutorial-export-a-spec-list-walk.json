@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-export-a-spec-list-walk",
+  "setup": { "forget": ["tutorials", "measure", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "export-a-spec-list" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-it-is", "timeout": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectMeasures", "count": 3, "stage": "1-measures" },
+    { "do": "describe", "stage": "1-what-it-is", "note": "the guide brought a measured screen, so there is something to hand over" },
+    { "do": "snapshot", "name": "1-what-it-is" },
+
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "copy-the-list", "timeout": 5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "c", "modifiers": ["command", "control"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "paste-it", "timeout": 6 },
+    { "do": "readClipboard", "stage": "2-the-spec-list" },
+    { "do": "describe", "stage": "2-copied", "note": "the chord the step names really put the list on the clipboard, and the guide moved on by itself" },
+    { "do": "snapshot", "name": "2-copied-the-list" },
+
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "both-at-once", "timeout": 5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "c", "modifiers": ["command", "shift"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "just-one", "timeout": 6 },
+    { "do": "readClipboard", "stage": "3-picture-and-list" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-both", "note": "one copy carried the picture and the same list as text, and the last step reads Done" },
+    { "do": "snapshot", "name": "3-both-at-once" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-finished", "note": "Done closed the guide" }
+  ]
+}

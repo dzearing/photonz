@@ -212,6 +212,15 @@ final class TutorialController {
         guard let run, let editor else { return }
         progress.record(guide: run.guide.id, step: run.index)
         saveProgress()
+        // A step can ask for something that is already so: the Measure tool is
+        // kept in the mode you left it in, so "press I until it reads Distance"
+        // comes up with the button already reading Distance. Waiting on that
+        // would strand somebody on a step they cannot perform, with nothing to
+        // press but Skip. So the step still says its piece and the way on is a
+        // plain Next.
+        if let trigger = run.step.advance.trigger, isAlreadyTrue(trigger, in: editor) {
+            self.run?.markStepAlreadyTrue()
+        }
         for prep in run.step.prepare {
             switch prep {
             case .showPanel: if !editor.isInspectorShown { editor.setInspectorVisible(true) }
@@ -228,6 +237,20 @@ final class TutorialController {
         lastAnchorFrame = nil
         drawnStepID = nil
         DispatchQueue.main.async { [weak self] in self?.place() }
+    }
+
+    /// Whether what a step is waiting for is already the case. Only a trigger
+    /// that describes a STATE can be: nothing is already true about "the person
+    /// made an edit" or "the person copied the picture", and treating one of
+    /// those as done would be the timer lie in another costume.
+    private func isAlreadyTrue(_ trigger: TutorialTrigger, in editor: EditorState) -> Bool {
+        switch trigger {
+        case .toolPicked(let tool): editor.activeTool == tool
+        case .measureMode(let mode):
+            editor.activeTool == .measure && editor.measureToolMode == mode
+        case .panelShown: editor.isInspectorShown
+        case .layerSelected, .editMade, .undone, .pictureCopied, .specListCopied: false
+        }
     }
 
     // MARK: - Following the control

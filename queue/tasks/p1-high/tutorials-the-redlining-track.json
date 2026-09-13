@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 24,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.661Z",
-  "updated": "2026-09-12T15:17:33.202Z",
+  "updated": "2026-09-13T02:21:27.037912Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -38,6 +38,55 @@
     {
       "t": "2026-09-12T15:17:33.202Z",
       "note": "deps set: framework first"
+    },
+    {
+      "t": "2026-09-13T01:42:09.877Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T02:12:09.758966Z",
+      "note": "adversarial review before building: the mock-ish plan of five guides holds up, but three things it assumes are not true of the app. (1) The modes live behind the Measure button's own flyout and the I key, so a first-timer cannot find Gap at all: the two measuring guides spend their first two steps there on purpose. (2) The tutorial sample is live shapes over a white canvas, and the measure detector reads PIXELS, so Size and Gap would have found nothing: the redlining samples are flattened into the picture first. (3) A guide about a LIST needs a list with something in it: the panel and export guides bring a screen that arrives already measured. Also cut: a role colours step (it needs a third flag to be true) and a panel menu step (the track says keys, not menus)."
+    },
+    {
+      "t": "2026-09-13T02:12:09.758966Z",
+      "note": "framework grew four ways rather than being special cased, all declarative: TutorialSample.isFlattened plus pictureLayers (a sample can be a picture), TutorialGuide.requires plus TutorialCatalog.guides(enabled:) (a guide says which features it needs and is left out when they are off), triggers .measureMode and .specListCopied wired where they happen, and TutorialRun.stepWasAlreadyTrue."
+    },
+    {
+      "t": "2026-09-13T02:12:09.758966Z",
+      "note": "the already-true rule came out of a real failure, not a theory: the snapping walk hung for its whole timeout on 'press I until it reads Distance' because the tool was already in Distance, so nothing fired and the only way on was Skip This Step. A waiting step whose STATE already holds now offers a plain Next. Only a state qualifies; an event like editMade never does."
+    },
+    {
+      "t": "2026-09-13T02:12:09.758966Z",
+      "note": "the size guide used to end on its own click, so the guide evaporated the moment you measured, with no closing word. Every guide now ends on a step you press Done on, and a track test pins it."
+    },
+    {
+      "t": "2026-09-13T02:12:09.758966Z",
+      "note": "five walks, all green, each one driving the guide the way a person would: tutorial-measure-a-gap, tutorial-measure-a-size, tutorial-snap-or-free, tutorial-measurements-panel, tutorial-export-a-spec-list. Measured numbers from the runs: the Save button reads 104 x 38, which is exactly its size; the gap between the buttons reads 25 for a real 24 (gap measures whitespace to the probe-side landings); command frees a dragged foot to land exactly where the pointer stopped; shift holds the row while the pointer wanders 60 down; control-command-C put the three line spec list on the clipboard and shift-command-C put the picture and the same list."
+    },
+    {
+      "t": "2026-09-13T02:12:09.758966Z",
+      "note": "flags off was proved two ways: a unit test over the catalogue, and one probe run with the three measure flags written off by hand (defaults write com.dzearing.photonz.probe experiments.next.flags). With them off the Redlining submenu is gone from Help and the shelf is gone from the Tutorials window, with nothing dimmed. A walk for it passed either way, since a walk cannot set flags, so it was deleted rather than left in the sweep as noise, and the gap is filed as a-walk-can-switch-a-feature-off-before-it-runs."
+    },
+    {
+      "t": "2026-09-13T02:12:09.758966Z",
+      "note": "ten guides made the Tutorials window scroll, and four Start buttons that had scrolled away read as saying nothing, which failed tutorial-hub-walk. WindowReadProbe.fullReading now reads the window all the way down, and the check is stronger than before: every guide must have a button that says its own name."
+    },
+    {
+      "t": "2026-09-13T02:12:09.758966Z",
+      "note": "follow-ups filed: a-walk-can-switch-a-feature-off-before-it-runs, a-walk-can-click-a-row-in-the-measurements-panel, running-a-whole-tutorials-track-should-not-leave. The alignment guide the goal's prose mentions is left as a question on the audit rather than filed, since the track's own guide list does not include it."
+    },
+    {
+      "t": "2026-09-13T02:21:27.037912Z",
+      "note": "second adversarial pass, on the built thing, found two real faults and both are fixed. The snapping guide's last step pointed at the Measure Tool settings and pointed at NOTHING: placing a caliper hands the pointer back, and that section is only in the panel while the tool is in hand, so the card fell to the middle of the window. The step moved to before the drawing. Every step of every guide now resolves to a real on-screen rectangle, which the walk logs record step by step."
+    },
+    {
+      "t": "2026-09-13T02:21:27.037912Z",
+      "note": "the time claim is measured rather than guessed now, and for the whole catalogue rather than this track: TutorialLength works a guide's length out from its own words, a beat per step and longer again per waiting step, and a test fails any guide whose claim is more than a minute from that. Today's ten guides read 50s to 111s against claims of 1 and 2 minutes."
+    },
+    {
+      "t": "2026-09-13T02:21:27.037912Z",
+      "note": "acceptance walked one by one: (1) five guides in the catalogue as data, and the Help submenu and the hub window both list them with no menu or window code naming any of them; (2) all five run start to finish in the probe, each with its own walk, and the walk logs carry every step's anchor; (3) claims measured, see above; (4) no step points at anything off screen, proved by the anchor line in each walk log; (5) every guide brings its own sample; (6) copy rules enforced by test; (7) flags off proved by test and by one probe run; (8) audit at queue/audits/2026-09-13-tutorials-redlining-track.json with a shot per guide."
     }
-  ]
+  ],
+  "started": "2026-09-13T01:42:09.876Z"
 }
