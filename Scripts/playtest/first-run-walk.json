@@ -1,0 +1,145 @@
+{
+  "out": "/tmp/photonz-playtest/first-run-walk",
+  "seed": "A new person is asked once whether they want showing round, and never again. The question lives in the setup window that already owns first launch, it waits until the macOS permissions actually work, and whichever of the two buttons is pressed is remembered for good. This walk drives all three endings: take the tour, start working, and an install that finished its setup long before any of this existed. The launch hook here is the real one the app runs at startup, so 'the window came back' and 'nothing came up' are measured rather than argued.",
+  "setup": {
+    "forget": [
+      "tutorials"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "freshInstall"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectWelcome"
+    },
+    {
+      "do": "describe",
+      "stage": "1-offer",
+      "note": "a machine that has never run Photonz, one launch after the permission was sorted: the setup window is up with both required steps green, and the footer now offers the two ways on. No second welcome surface, and no editor window behind it, so the empty editor onboarding card is nowhere in sight."
+    },
+    {
+      "do": "snapshot",
+      "name": "1-first-run-offer",
+      "window": "Welcome"
+    },
+    {
+      "do": "action",
+      "action": "readWelcome"
+    },
+    {
+      "do": "action",
+      "action": "takeTheTour"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "tool-bar",
+      "timeout": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-tour",
+      "note": "Take the Tour closed the setup window and opened a window of the guide's own with a sample screen in it, then started the guide. Not an empty canvas, and not the person's own work."
+    },
+    {
+      "do": "snapshot",
+      "name": "2-tour-running"
+    },
+    {
+      "do": "action",
+      "action": "tutorialClose"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectNoWelcome"
+    },
+    {
+      "do": "describe",
+      "stage": "3-taking-it-is-an-answer",
+      "note": "taking the tour answered the question: the next launch asks nothing"
+    },
+    {
+      "do": "action",
+      "action": "freshInstall"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectWelcome"
+    },
+    {
+      "do": "action",
+      "action": "startWorking"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectNoWelcome"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectNoWelcome"
+    },
+    {
+      "do": "describe",
+      "stage": "4-skipping-is-an-answer",
+      "note": "skipping is a real answer, not a postponement: two more launches and nothing comes up, and no guide was started behind the person's back"
+    },
+    {
+      "do": "action",
+      "action": "oldInstall"
+    },
+    {
+      "do": "action",
+      "action": "launchHook"
+    },
+    {
+      "do": "action",
+      "action": "expectNoWelcome"
+    },
+    {
+      "do": "describe",
+      "stage": "5-upgrade",
+      "note": "an install that finished its setup before tutorials existed: upgrading shows it nothing at all. The tour is still one row away under Help."
+    },
+    {
+      "do": "action",
+      "action": "showWelcomeAgain"
+    },
+    {
+      "do": "describe",
+      "stage": "6-reopened",
+      "note": "Welcome & Permissions... in the menu-bar menu still opens the plain setup window it always did. The question is over, so it is not asked again here."
+    },
+    {
+      "do": "menus",
+      "stage": "help-after-first-run",
+      "menu": "Help"
+    }
+  ]
+}

@@ -1,19 +1,21 @@
-// Reading the Tutorials window the way a screen reader does, and pressing its
-// buttons the way a keyboard does.
+// Reading one of the app's plain SwiftUI windows the way a screen reader does,
+// and pressing its buttons the way a keyboard does.
 //
-// The window is an ordinary SwiftUI surface in an `NSHostingController`, so
-// there are no `PanelTargetView` markers in it to press and its controls are
-// not `NSButton`s to find. What IS there is the accessibility tree, which is
-// the same tree VoiceOver reads, and asking our OWN process for it needs no
-// grant from anybody. So one probe answers two questions at once: whether every
-// row and button carries words a person listening would understand, and whether
-// pressing the row's button really starts the guide.
+// The Tutorials window and the setup window are ordinary SwiftUI surfaces in a
+// hosting view, so there are no `PanelTargetView` markers in them to press and
+// their controls are not `NSButton`s to find. What IS there is the
+// accessibility tree, which is the same tree VoiceOver reads, and asking our
+// OWN process for it needs no grant from anybody. So one probe answers two
+// questions at once: whether everything on show carries words a person
+// listening would understand, and whether pressing a button really does the
+// thing.
 #if PHOTONZ_PLAYTEST
 import AppKit
 import PhotonzCore
 
+/// The generic half: any window, read and pressed.
 @MainActor
-enum TutorialHubProbe {
+enum WindowReadProbe {
 
     /// One element as the tree reads it.
     struct Element {
@@ -23,10 +25,6 @@ enum TutorialHubProbe {
         let label: String
         let depth: Int
         let element: Any
-    }
-
-    static func window() -> NSWindow? {
-        NSApp.windows.first { $0.title == TutorialHubModel.windowTitle && $0.isVisible }
     }
 
     /// Everything under the window's CONTENT, depth kept sane: a hosting view
@@ -89,17 +87,43 @@ enum TutorialHubProbe {
             : said.joined(separator: "\n  ")
     }
 
-    /// Presses the first guide row's own button, whatever it currently says.
-    /// Returns what it said, so the walk's log records which one was pressed.
-    static func pressFirstGuideButton() -> String? {
-        guard let window = window() else { return nil }
-        let wanted = ["Start", "Continue", "Again"]
+    /// Presses the first button whose words start with any of `titles`.
+    /// Returns what it said, so a walk's log records which one was pressed.
+    static func press(startingWith titles: [String], in window: NSWindow) -> String? {
         guard let button = buttons(in: window).first(where: { element in
-            wanted.contains { element.label.hasPrefix($0 + " ") }
+            titles.contains { element.label == $0 || element.label.hasPrefix($0 + " ") }
         }) else { return nil }
         let object = button.element as AnyObject
         _ = object.accessibilityPerformPress?()
         return button.label
+    }
+}
+
+/// The Tutorials window.
+@MainActor
+enum TutorialHubProbe {
+    static func window() -> NSWindow? {
+        NSApp.windows.first { $0.title == TutorialHubModel.windowTitle && $0.isVisible }
+    }
+
+    /// Presses the first guide row's own button, whatever it currently says.
+    static func pressFirstGuideButton() -> String? {
+        guard let window = window() else { return nil }
+        return WindowReadProbe.press(startingWith: ["Start", "Continue", "Again"], in: window)
+    }
+}
+
+/// The setup window, which also carries the one first run tour offer.
+@MainActor
+enum WelcomeProbe {
+    static func window() -> NSWindow? {
+        NSApp.windows.first { $0.title == FirstRunOffer.windowTitle && $0.isVisible }
+    }
+
+    /// Presses one of the two ways on. Returns what the button said.
+    static func press(_ title: String) -> String? {
+        guard let window = window() else { return nil }
+        return WindowReadProbe.press(startingWith: [title], in: window)
     }
 }
 #endif

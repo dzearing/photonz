@@ -1,0 +1,28 @@
+{
+  "id": "the-tour-leaves-you-sitting-in-its-sample-pictur",
+  "title": "The tour leaves you sitting in its sample picture",
+  "goal": "When a guided tutorial finishes, the little made up picture it opened to teach in is the only thing left on screen, and there is nothing saying what to do next. Somebody who has just been shown round should end up ready to start their own work, not parked in a sample they did not ask for.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2570,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T00:04:44.042Z",
+  "updated": "2026-09-13T00:04:44.045Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-12 with Scripts/playtest/tutorial-tour-walk.json (last step, stage 7-finished): pressing Done on the last step closes the callout and leaves the Tutorial Sample window up, untouched. Confirmed again from the first run path in Scripts/playtest/first-run-walk.json, where the sample window is the FIRST window a new person ever sees, so there is nothing behind it to fall back to.\n\nThis is the end of the guide rather than the start of it, so it belongs to the framework (Sources/Photonz/Tutorials/TutorialController.swift, the finish path) rather than to the first run offer. Options worth weighing: closing the sample window on finish, offering the empty editor onboarding card inside it, or ending on a last step that points at how to open your own picture. Whichever it is, it must behave the same whether the guide was started from Help, from the Tutorials window, or from the first run offer.",
+  "acceptance": [
+    "Finishing a guide leaves the person somewhere they can start working, and it is obvious what to do next",
+    "The sample window is not silently thrown away with unsaved changes in it",
+    "Starting the same guide again still works and still teaches in a sample",
+    "A walk captures what is on screen the moment a guide finishes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T00:04:44.044Z",
+      "note": "created (manual)"
+    }
+  ]
+}

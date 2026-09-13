@@ -1,0 +1,27 @@
+{
+  "id": "find-out-whether-somebody-who-never-turns-on-scr",
+  "title": "Find out whether somebody who never turns on Screen Recording should still be offered the tour",
+  "goal": "The one offer of the guided tour waits until the macOS permissions are sorted, because the app cannot capture anything until then. But Photonz is now also a place to build UI, and somebody who never intends to take a screenshot never reaches that moment, so they are never offered a look round at all. Work out whether that is the right trade and change it if it is not.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2580,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T00:04:48.521Z",
+  "updated": "2026-09-13T00:04:48.524Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen while building the first run offer on 2026-09-12. FirstRunOffer.showsChoice (Sources/PhotonzCore/FirstRunOffer.swift) requires screenRecordingGranted and no pending restart. Both guards are there for good reasons, written down in that file: the grant only takes effect in a fresh process, so a tour offered before the restart is a tour the restart kills.\n\nThe gap is real but so is the reason. Note that this person is already in a loop today, independently of tutorials: WelcomeController presents the setup window at every launch while welcome.setupCompleted is false, which it stays until the window is closed with the grant in place. So the honest version of this question is probably the bigger one, what the app should do for somebody who wants Photonz without giving it the screen, and the tour offer is one line of that answer.\n\nSeen, not reproduced as a failure: it is a deliberate rule, not a bug.",
+  "acceptance": [
+    "A decision is recorded either way, in the tutorials design doc, saying who gets offered the tour and why",
+    "If the answer is that they should be offered it, the offer appears for somebody who has not granted Screen Recording, and still only once",
+    "Nobody ends up asked about the tour twice, and nobody is nagged on every launch"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T00:04:48.523Z",
+      "note": "created (manual)"
+    }
+  ]
+}

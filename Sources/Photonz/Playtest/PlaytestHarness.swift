@@ -1022,7 +1022,7 @@ private final class Run {
             guard let hub = TutorialHubProbe.window() else {
                 throw Failure(description: "the Tutorials window is not open")
             }
-            let buttons = TutorialHubProbe.buttons(in: hub)
+            let buttons = WindowReadProbe.buttons(in: hub)
             guard !buttons.isEmpty else {
                 throw Failure(description: "the Tutorials window has no buttons a screen reader can find")
             }
@@ -1032,7 +1032,7 @@ private final class Run {
             }
             // Every guide in the catalogue has to be readable in here, or the
             // window is showing something a person listening cannot find.
-            let said = TutorialHubProbe.elements(in: hub).map(\.label)
+            let said = WindowReadProbe.elements(in: hub).map(\.label)
             let silent = TutorialCatalog.guides.filter { guide in
                 !said.contains { $0.contains(guide.title) }
             }
@@ -1041,7 +1041,7 @@ private final class Run {
                               + silent.map(\.title).joined(separator: ", "))
             }
             note(number, step.name,
-                 "the Tutorials window reads:\n  " + TutorialHubProbe.reading(in: hub))
+                 "the Tutorials window reads:\n  " + WindowReadProbe.reading(in: hub))
 
         case .action(let action) where action == .pressTutorialStart:
             guard TutorialHubProbe.window() != nil else {
@@ -1065,6 +1065,124 @@ private final class Run {
             await sleep(0.5)
             note(number, step.name, "closeDocument; \(PlaytestHarness.readyEditors.count) editor(s) still open",
                  state: describe())
+
+        // The first run, walked from a clean slate. None of these need an
+        // editor: the setup window belongs to the menu-bar agent and comes up
+        // before there is any document at all.
+        case .action(let action) where action == .freshInstall:
+            for key in Self.firstRunKeys { UserDefaults.standard.removeObject(forKey: key) }
+            UserDefaults.standard.removeObject(forKey: TutorialController.progressKey)
+            TutorialController.shared.forgetAllProgress()
+            note(number, step.name,
+                 "forgot \(Self.firstRunKeys.count) first run settings and any tutorial progress: "
+                 + "the next launch is this machine's first")
+
+        case .action(let action) where action == .oldInstall:
+            // An install that finished its setup months ago, before any of this
+            // existed. Nothing has ever been asked, and nothing ever should be.
+            for key in Self.firstRunKeys { UserDefaults.standard.removeObject(forKey: key) }
+            UserDefaults.standard.set(true, forKey: WelcomeController.completedDefaultsKey)
+            note(number, step.name,
+                 "pretended an install that finished setup before tutorials existed")
+
+        case .action(let action) where action == .launchHook:
+            coordinator.runWelcomeLaunchHook()
+            // The hook waits out the beat the menu-bar agent needs to settle
+            // before taking focus, so the walk waits with it.
+            await sleep(1.4)
+            note(number, step.name, "ran the launch hook; \(Self.firstRunReading)")
+
+        case .action(let action) where action == .expectWelcome:
+            guard WelcomeProbe.window() != nil else {
+                throw Failure(description: "the setup window did not come up; \(Self.firstRunReading)")
+            }
+            note(number, step.name, "the setup window is up; \(Self.firstRunReading)")
+
+        case .action(let action) where action == .expectNoWelcome:
+            guard WelcomeProbe.window() == nil else {
+                throw Failure(description: "the setup window came back after it had been answered; "
+                              + "\(Self.firstRunReading)")
+            }
+            note(number, step.name, "nothing came up; \(Self.firstRunReading)")
+
+        case .action(let action) where action == .readWelcome:
+            guard let welcome = WelcomeProbe.window() else {
+                throw Failure(description: "the setup window is not open")
+            }
+            let said = WindowReadProbe.elements(in: welcome).map(\.label)
+            let missing = [FirstRunOffer.tourButtonTitle, FirstRunOffer.skipButtonTitle]
+                .filter { title in !said.contains { $0 == title } }
+            guard missing.isEmpty else {
+                throw Failure(description: "the setup window never offers: "
+                              + missing.joined(separator: ", "))
+            }
+            let unnamed = WindowReadProbe.buttons(in: welcome).filter { $0.label.isEmpty }
+            guard unnamed.isEmpty else {
+                throw Failure(description: "\(unnamed.count) button(s) in the setup window say nothing")
+            }
+            note(number, step.name,
+                 "the setup window reads:\n  " + WindowReadProbe.reading(in: welcome))
+
+        // Pressing "Take the Tour" closes the setup window and opens the
+        // guide's own sample window, so the walk moves over to it: everything
+        // after this step is aimed at the window the person is looking at.
+        case .action(let action) where action == .takeTheTour:
+            guard WelcomeProbe.window() != nil else {
+                throw Failure(description: "the setup window is not open")
+            }
+            guard let pressed = WelcomeProbe.press(FirstRunOffer.tourButtonTitle) else {
+                throw Failure(description: "the setup window offers no \(FirstRunOffer.tourButtonTitle) button")
+            }
+            var opened: EditorState?
+            try await poll("the tutorial window", within: 8) {
+                opened = PlaytestHarness.readyEditors.last {
+                    $0.untitledName == TutorialSampleScreen.documentName
+                }
+                return opened != nil
+            }
+            guard let opened else {
+                throw Failure(description: "\(pressed) opened no window for the guide to run in")
+            }
+            guard WelcomeProbe.window() == nil else {
+                throw Failure(description: "the setup window is still up over the guide it started")
+            }
+            try await adopt(opened, window: nil, step: step.name,
+                            subject: "the tour, started from the first run offer", number: number)
+
+        case .action(let action) where action == .startWorking:
+            guard WelcomeProbe.window() != nil else {
+                throw Failure(description: "the setup window is not open")
+            }
+            guard let pressed = WelcomeProbe.press(FirstRunOffer.skipButtonTitle) else {
+                throw Failure(description: "the setup window offers no \(FirstRunOffer.skipButtonTitle) button")
+            }
+            await sleep(0.8)
+            guard WelcomeProbe.window() == nil else {
+                throw Failure(description: "\(pressed) left the setup window up")
+            }
+            guard !TutorialController.shared.isRunning else {
+                throw Failure(description: "\(pressed) started a guide anyway")
+            }
+            note(number, step.name, "pressed \"\(pressed)\"; \(Self.firstRunReading)")
+
+        case .action(let action) where action == .showWelcomeAgain:
+            coordinator.runWelcomeMenuEntry()
+            await sleep(0.8)
+            guard let welcome = WelcomeProbe.window() else {
+                throw Failure(description: "Welcome & Permissions... opened nothing")
+            }
+            let says = WindowReadProbe.elements(in: welcome).map(\.label)
+            let offered = [FirstRunOffer.tourButtonTitle, FirstRunOffer.skipButtonTitle]
+                .filter { title in says.contains { $0 == title } }
+            guard offered.isEmpty else {
+                throw Failure(description: "reopening the setup window asks again: "
+                              + offered.joined(separator: ", "))
+            }
+            note(number, step.name,
+                 "Welcome & Permissions... reopened the plain setup window, no tour offer in it:\n  "
+                 + WindowReadProbe.reading(in: welcome))
+            welcome.close()
+            await sleep(0.4)
 
         // Take the Tour opens a window of its own holding the guide's sample
         // picture, so the walk moves over to that window: everything after this
@@ -1473,6 +1591,10 @@ private final class Run {
             case .showTutorials: coordinator.showTutorials()
             case .readTutorialWindow, .pressTutorialStart:
                 break // handled above: neither needs an editor
+            case .freshInstall, .oldInstall, .launchHook, .expectWelcome,
+                 .expectNoWelcome, .readWelcome, .takeTheTour, .startWorking,
+                 .showWelcomeAgain:
+                break // handled above: the first run happens before any document
             case .closeTutorials:
                 NSApp.windows.first { $0.title == TutorialHubModel.windowTitle }?.close()
             case .tutorialNext: TutorialController.shared.next()
@@ -4896,6 +5018,21 @@ private final class Run {
 
     /// The window's content drawn offscreen at 2x, so the picture matches
     /// what a person would see on a Retina display.
+    /// Everything the setup window remembers about whether it has run, so a
+    /// walk can forget the lot by name rather than spelling keys again.
+    static let firstRunKeys = [WelcomeController.completedDefaultsKey,
+                               WelcomeController.firstRunOfferKey,
+                               WelcomeController.firstRunMigratedKey]
+
+    /// What is on file about the first run, for the log: this is the thing the
+    /// whole feature is about, so every step that touches it says it out loud.
+    static var firstRunReading: String {
+        let defaults = UserDefaults.standard
+        let answer = WelcomeController.firstRunAnswer.map(\.rawValue) ?? "never asked"
+        return "setup \(defaults.bool(forKey: WelcomeController.completedDefaultsKey) ? "finished" : "unfinished"), "
+            + "tour offer \(answer)"
+    }
+
     private func snapshot(_ view: NSView, name: String) throws {
         guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
             throw Failure(description: "could not make a bitmap for \(name)")

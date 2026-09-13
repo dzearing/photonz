@@ -1,0 +1,30 @@
+{
+  "feature": "First launch offers the tour or gets out of your way",
+  "epic": "ui-building",
+  "summary": "A new person is asked once, in the setup window that already owns first launch, whether they want showing round or would rather get going. Whichever button is pressed is remembered for good, and the tour stays one row away under Help.",
+  "setup": "Photonz Dev, Experiments window, release Next, the Guided tutorials flag on (it is on by default). Your own install will see nothing new: it finished its setup long ago, so it is marked as already asked. To see the offer, quit Photonz and run: defaults delete com.dzearing.photonz.dev welcome.setupCompleted; defaults delete com.dzearing.photonz.dev tutorials.firstRunOffer; defaults delete com.dzearing.photonz.dev tutorials.firstRunOffer.migrated",
+  "try": [
+    { "do": "Launch Photonz with those three settings deleted. The setup window comes up about a second later.", "shot": "2026-09-12-first-run-offer-1.png" },
+    { "do": "Read the line under the title, then look at the two buttons at the bottom right." },
+    { "do": "Press Take the Tour.", "shot": "2026-09-12-first-run-offer-2.png" },
+    { "do": "Notice that the setup window is gone and a window called Tutorial Sample opened with a little screen already drawn in it, with the tour running on top." },
+    { "do": "Close the tour with the x on the card, quit Photonz, and launch it again. Nothing comes up." },
+    { "do": "Delete the three settings again, relaunch, and this time press Start Working." },
+    { "do": "Quit and launch twice more. Nothing comes up either time, and no guide starts." },
+    { "do": "Open Help, Tutorials, Take the Tour. It is still there." }
+  ],
+  "evaluate": [
+    "Reading only the line under the title and the two buttons, is it obvious what each one will do?",
+    "Is Take the Tour the right thing to make the blue default button, or should a new person's finger land on Start Working?",
+    "Take the Tour drops you into a made up sample screen rather than anything of yours. Does that feel like a safe place to be shown round, or like being sent somewhere else?",
+    "Start Working closes the window and leaves you with just the menu bar icon. Is that the right ending, or should something open?",
+    "The finished permission steps still fill most of the window while the question is one line at the top. Does your eye find the question, or the green ticks?"
+  ],
+  "rough": [
+    "The tour leaves you sitting in its sample picture when it ends, which on a genuine first run is the only window you have. Filed p2 as its own task: it belongs to the end of a guide, not to the offer, and it happens the same way when the tour is started from Help.",
+    "Somebody who never turns on Screen Recording is never offered the tour at all, because the offer waits for the permissions to actually work. That guard is there because a Screen Recording grant only takes effect after a restart, so a tour offered before it is a tour the restart kills. Filed p2 as a question rather than a bug, since the bigger version of it is what the app should do for somebody who wants Photonz without giving it the screen.",
+    "I changed the header line in this state away from You are all set, because the finished Screen Recording step eight lines below already says You're all set here and reading it twice made the window feel like it was stalling.",
+    "I considered collapsing the two finished permission steps into one green line while the question is up, and decided against it: hiding what somebody has just done, at the moment they have just done it, reads as the app throwing their work away. If your eye goes to the ticks rather than the question, say so on the line above and I will do it.",
+    "The probe already has Screen Recording, so the screenshot here is the offer as it appears one launch after the permission was sorted, which is the moment it really appears. The earlier not yet granted state of the same window is unchanged from today and is not photographed. The launch by launch sequence, including the restart, is driven in tests instead (Tests/PhotonzCoreTests/FirstRunOfferTests.swift, 19 tests) and walked in Scripts/playtest/first-run-walk.json."
+  ]
+}

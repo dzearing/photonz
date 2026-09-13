@@ -8,6 +8,7 @@ import SwiftUI
 /// (microphone) or lands them on the exact Settings pane (everything else).
 struct WelcomeView: View {
     let state: WelcomeState
+    let onTakeTour: () -> Void
     let onGrantScreenRecording: () -> Void
     let onGrantMicrophone: () -> Void
     let onOpenKeyboardSettings: () -> Void
@@ -36,7 +37,12 @@ struct WelcomeView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Welcome to \(AppInfo.name)")
                     .font(.title2.weight(.semibold))
-                Text("Photonz lives in your menu bar. Two quick macOS settings and you're ready to capture anything.")
+                // Once setup works and the tour has never been offered, the
+                // last thing read before choosing is what the two buttons in
+                // the footer are for.
+                Text(state.showsTourChoice
+                     ? FirstRunOffer.headline
+                     : "Photonz lives in your menu bar. Two quick macOS settings and you're ready to capture anything.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -126,25 +132,49 @@ struct WelcomeView: View {
         }
     }
 
+    /// The one and only tour offer, and the ordinary way out otherwise.
+    ///
+    /// Two buttons need the whole width: side by side with the shortcut lines
+    /// they squeezed those onto three wrapped lines and made the moment of
+    /// choosing look busy. So when the choice is up the shortcuts sit above it
+    /// with room to breathe, and the two ways on get a line of their own.
     private var footer: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("⇧⌘4 captures a region · ⇧⌘3 the full screen · ⇧⌘5 records")
-                Text("⇧⌘6 opens the last capture for editing")
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            Spacer()
-            if state.everythingReady {
-                Button("Start Capturing") { onFinish() }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
+        VStack(alignment: .leading, spacing: 10) {
+            if state.showsTourChoice {
+                shortcutLines
+                HStack(spacing: 10) {
+                    Spacer()
+                    Button(FirstRunOffer.skipButtonTitle) { onFinish() }
+                        .keyboardShortcut(.cancelAction)
+                    Button(FirstRunOffer.tourButtonTitle) { onTakeTour() }
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.defaultAction)
+                }
             } else {
-                Button("Not Now") { onFinish() }
-                    .keyboardShortcut(.cancelAction)
+                HStack {
+                    shortcutLines
+                    Spacer()
+                    if state.everythingReady {
+                        Button("Start Capturing") { onFinish() }
+                            .buttonStyle(.borderedProminent)
+                            .keyboardShortcut(.defaultAction)
+                    } else {
+                        Button("Not Now") { onFinish() }
+                            .keyboardShortcut(.cancelAction)
+                    }
+                }
             }
         }
         .padding(.top, 4)
+    }
+
+    private var shortcutLines: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("⇧⌘4 captures a region · ⇧⌘3 the full screen · ⇧⌘5 records")
+            Text("⇧⌘6 opens the last capture for editing")
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 }
 

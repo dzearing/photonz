@@ -393,6 +393,29 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// ordinary SwiftUI surface with no playtest markers in it, so this is how
     /// a walk proves its list is reachable and its buttons are wired.
     case readTutorialWindow, pressTutorialStart
+    /// The first run, walked from a clean slate. `freshInstall` forgets
+    /// everything the setup window remembers, so the next `launchHook` behaves
+    /// like a machine that has never run Photonz; `oldInstall` instead pretends
+    /// an install that finished its setup before tutorials existed, which is
+    /// the upgrade that must not be shown first run setup again. `launchHook`
+    /// is the launch itself: it runs exactly what the app runs at startup.
+    case freshInstall, oldInstall, launchHook
+    /// What the launch did. `expectWelcome` fails the walk when the setup
+    /// window did not come up, `expectNoWelcome` when it did, which is how a
+    /// walk proves an answer is remembered rather than asserting it in prose.
+    case expectWelcome, expectNoWelcome
+    /// Read the setup window the way a screen reader does, so a walk proves the
+    /// two ways on say what they are.
+    case readWelcome
+    /// The two ways on, pressed for real. `takeTheTour` also moves the walk
+    /// over to the window the guide opens for itself, the same way `startTour`
+    /// does, because that is the window the person is now looking at.
+    case takeTheTour, startWorking
+    /// Reopen the setup window the way the menu-bar menu's "Welcome &
+    /// Permissions..." does, once the first run is over. It must come back as
+    /// the plain setup window it always was, with no tour offer in it, which is
+    /// what this checks before closing it again.
+    case showWelcomeAgain
     case newCanvasDialog
     /// Answer the New Canvas sheet with the size it opens on, which is what
     /// pressing Return in it does. A sheet cannot be typed into from a walk,

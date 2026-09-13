@@ -148,7 +148,10 @@ final class AppCoordinator {
         capture.start()
         // First-run walkthrough: guide the user through the one-time macOS
         // permissions before their first capture fails scarily. No-op once
-        // completed (window closed with Screen Recording granted).
+        // completed (window closed with Screen Recording granted), except for
+        // the one launch where setup is done and nobody has been offered the
+        // tour yet.
+        welcome.startTour = { [weak self] in self?.startFirstRunTour() }
         welcome.presentIfNeeded(capture: capture)
         // Background update discovery (badge on the menu-bar icon).
         startUpdateChecks()
@@ -164,6 +167,28 @@ final class AppCoordinator {
     func showExperiments() {
         experimentsWindow.present()
     }
+
+    /// "Take the Tour" on the first run offer. The tour brings a sample
+    /// picture, so `TutorialLauncher` opens a window of its own for it: the
+    /// guide never starts on an empty canvas with nothing to point at, and it
+    /// never touches anything the person already had open.
+    private func startFirstRunTour() {
+        guard let tour = TutorialLauncher.tour else { return }
+        TutorialLauncher.start(tour, coordinator: self, editor: nil)
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// Exactly what launch does about the setup window, so a walk can walk a
+    /// first run without relaunching the app. Probe only.
+    func runWelcomeLaunchHook() {
+        welcome.presentIfNeeded(capture: capture)
+    }
+
+    /// Exactly what the menu-bar menu's "Welcome & Permissions..." does.
+    func runWelcomeMenuEntry() {
+        showWelcome()
+    }
+    #endif
 
     /// Menu Help ▸ Tutorials ▸ All Tutorials…: the hub for every guide.
     func showTutorials() {

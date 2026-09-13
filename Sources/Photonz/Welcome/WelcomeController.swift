@@ -14,9 +14,23 @@ import SwiftUI
 /// the user clicked the primary button in that state). Closing it earlier
 /// re-presents it on the next launch — that unfinished state is exactly the
 /// scary first-capture failure this flow exists to prevent.
+///
+/// Once setup works, this window also carries the one and only offer of the
+/// guided tour (`FirstRunOffer`, PhotonzCore, where the rules and their traps
+/// are written down). It lives here rather than in a second welcome surface
+/// because this window already owns first launch, and a new person should be
+/// asked once, by one thing.
 @MainActor
 final class WelcomeController: NSObject, NSWindowDelegate {
     static let completedDefaultsKey = "welcome.setupCompleted"
+    /// The one remembered answer to "shall I show you around": `tour`, `skip`,
+    /// or absent for somebody who has never been asked.
+    static let firstRunOfferKey = "tutorials.firstRunOffer"
+    /// Set the first time a build that knows about tutorials launches. Its only
+    /// job is to make the migration below happen exactly once: run every
+    /// launch, it would stamp the new person as answered the moment they
+    /// restart for the Screen Recording grant, and eat the offer they were owed.
+    static let firstRunMigratedKey = "tutorials.firstRunOffer.migrated"
 
     private var panel: NSPanel?
     private var poll: Timer?
@@ -27,9 +41,23 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     /// during `AppCoordinator.init`, i.e. at launch).
     private let hadScreenPermissionAtLaunch = ScreenCapturer.hasPermission
 
-    /// Launch hook: present only while setup is unfinished.
+    /// Starts the guided tour, set by `AppCoordinator`. The tour opens a
+    /// window of its own holding a sample picture, so it never begins on an
+    /// empty canvas with nothing to point at.
+    var startTour: (() -> Void)?
+
+    /// What was answered during THIS presentation, so closing the window does
+    /// not overwrite a button that was just pressed.
+    private var answeredThisRun: FirstRunAnswer?
+
+    /// Launch hook: present while setup is unfinished, or once more when setup
+    /// is done but nobody has ever been offered the tour.
     func presentIfNeeded(capture: CaptureCenter) {
-        guard !UserDefaults.standard.bool(forKey: Self.completedDefaultsKey) else { return }
+        Self.migrateFirstRunOfferOnce()
+        guard FirstRunOffer.presentsAtLaunch(
+            setupCompleted: UserDefaults.standard.bool(forKey: Self.completedDefaultsKey),
+            answer: Self.firstRunAnswer,
+            tutorialsEnabled: Experiments.shared.tutorialsEnabled) else { return }
         // Give the menu-bar agent a beat to settle before taking focus.
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(600))
@@ -45,11 +73,14 @@ final class WelcomeController: NSObject, NSWindowDelegate {
             return
         }
         self.capture = capture
-        let state = WelcomeState(screenGrantedAtLaunch: hadScreenPermissionAtLaunch)
+        answeredThisRun = nil
+        let state = WelcomeState(screenGrantedAtLaunch: hadScreenPermissionAtLaunch,
+                                 tourAlreadyAnswered: Self.firstRunAnswer != nil)
         self.state = state
 
         let view = WelcomeView(
             state: state,
+            onTakeTour: { [weak self] in self?.takeTheTour() },
             onGrantScreenRecording: { [weak self] in
                 self?.state?.noteScreenRecordingGrantAttempt()
                 self?.capture?.requestScreenRecordingAccess()
@@ -63,6 +94,9 @@ final class WelcomeController: NSObject, NSWindowDelegate {
             contentRect: CGRect(origin: .zero, size: CGSize(width: 480, height: 560)),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered, defer: false)
+        // Named so anything that finds a window by its name can find this one.
+        // Nothing draws it: the title bar text is hidden.
+        panel.title = FirstRunOffer.windowTitle
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.isFloatingPanel = true
@@ -102,10 +136,59 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         if state?.screenRecordingGranted == true {
             UserDefaults.standard.set(true, forKey: Self.completedDefaultsKey)
         }
+        // Closing the window while everything works IS an answer, and the
+        // answer is skip. Without this, somebody who reaches for the red button
+        // instead of either offered button gets asked again on every launch.
+        if let recorded = FirstRunOffer.answerOnDismiss(
+            screenRecordingGranted: state?.screenRecordingGranted ?? false,
+            needsRelaunch: state?.needsRelaunch ?? false,
+            answer: answeredThisRun ?? Self.firstRunAnswer) {
+            Self.recordFirstRunAnswer(recorded)
+        }
         // Reflect the possibly-changed status in the capture UI's hint.
         capture?.needsScreenRecordingPermission = !ScreenCapturer.hasPermission
         state = nil
         panel = nil
+    }
+
+    /// "Take the Tour": remember it, get this window out of the way, and only
+    /// then start the guide.
+    ///
+    /// The order matters. This is a floating panel that sits above every editor
+    /// window, so a guide started underneath it would be putting a ring round
+    /// controls hidden behind it, which is the one thing a walkthrough cannot
+    /// survive. Same rule the Tutorials window follows.
+    private func takeTheTour() {
+        answeredThisRun = .tour
+        Self.recordFirstRunAnswer(.tour)
+        panel?.close()
+        DispatchQueue.main.async { [weak self] in self?.startTour?() }
+    }
+
+    // MARK: - The remembered answer
+
+    static var firstRunAnswer: FirstRunAnswer? {
+        UserDefaults.standard.string(forKey: firstRunOfferKey)
+            .flatMap(FirstRunAnswer.init(rawValue:))
+    }
+
+    private static func recordFirstRunAnswer(_ answer: FirstRunAnswer) {
+        UserDefaults.standard.set(answer.rawValue, forKey: firstRunOfferKey)
+    }
+
+    /// An install that finished its setup before any of this existed has had
+    /// its first run, so it is marked answered and never sees this window
+    /// again. Once ever, whatever the tutorials flag says: the fact being
+    /// recorded is about the install, not about the release it is running.
+    private static func migrateFirstRunOfferOnce() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: firstRunMigratedKey) else { return }
+        if let stamp = FirstRunOffer.migratedAnswer(
+            setupCompleted: defaults.bool(forKey: completedDefaultsKey),
+            answer: firstRunAnswer) {
+            recordFirstRunAnswer(stamp)
+        }
+        defaults.set(true, forKey: firstRunMigratedKey)
     }
 
     /// Microphone is the one permission macOS lets us request entirely in-app.
@@ -176,13 +259,29 @@ final class WelcomeState {
     /// The card escalates to remove-and-re-add guidance in that state.
     private(set) var screenRecordingGrantAttempted = false
 
+    /// Whether this presentation is the one that carries the tour offer: the
+    /// tutorials are switched on and nobody has ever answered. Fixed when the
+    /// window opens, because the answer can only change by being given here.
+    let tourOfferPending: Bool
+
+    /// Whether the two ways on are showing right now. It waits for Screen
+    /// Recording and for any pending restart, because a tour the restart kills
+    /// is worse than no tour (`FirstRunOffer`).
+    var showsTourChoice: Bool {
+        FirstRunOffer.showsChoice(tutorialsEnabled: tourOfferPending,
+                                  screenRecordingGranted: screenRecordingGranted,
+                                  needsRelaunch: needsRelaunch,
+                                  answer: nil)
+    }
+
     private let screenGrantedAtLaunch: Bool
     /// Keep the shortcuts card visible (as a green success row) once the user
     /// has seen it, instead of vanishing mid-glance when they fix it.
     let hadShortcutConflictsAtOpen: Bool
 
-    init(screenGrantedAtLaunch: Bool) {
+    init(screenGrantedAtLaunch: Bool, tourAlreadyAnswered: Bool = true) {
         self.screenGrantedAtLaunch = screenGrantedAtLaunch
+        tourOfferPending = Experiments.shared.tutorialsEnabled && !tourAlreadyAnswered
         screenRecordingGranted = ScreenCapturer.hasPermission
         microphone = AVCaptureDevice.authorizationStatus(for: .audio)
         let conflicts = Self.currentShortcutConflicts()

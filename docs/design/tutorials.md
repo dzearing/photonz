@@ -226,6 +226,71 @@ in its first step before changing anything.
   until it is showing. A family button answers to the member it is wearing.
 - **No back-porting.** Tutorials are Next only, behind `next-tutorials`.
 
+## The first launch
+
+A new person is asked **once** whether they want showing round, and never
+again. The question lives in the setup window that already owns first launch
+(`WelcomeController`), because a second welcome surface asking a second welcome
+question is exactly the thing this is trying not to be.
+
+```
+Welcome to Photonz
+Everything is ready. Take a quick lap of the window, or jump
+straight in. The tour is under Help whenever you want it.
+
+  ✓ Screen Recording   Required
+  ✓ Microphone         Optional
+
+⇧⌘4 captures a region · ⇧⌘3 the full screen · ⇧⌘5 records
+⇧⌘6 opens the last capture for editing
+                              [ Start Working ]  [ Take the Tour ]
+```
+
+The rules live in `FirstRunOffer` (PhotonzCore), which is pure, so the whole
+sequence is driven in tests rather than guessed at. They exist because the real
+first run is not the happy one:
+
+- **The question waits until the app actually works.** A Screen Recording grant
+  only takes effect in a fresh process, so on a brand new Mac the setup window's
+  last act is "Relaunch Photonz". A tour offered there is a tour the restart
+  kills twenty seconds later. So the choice appears only with Screen Recording
+  granted and no restart pending, which lands it on the first launch where
+  Photonz can do anything. It does NOT wait on the recommended step (the
+  screenshot key conflicts), because somebody who never frees those keys would
+  then be asked on every launch for ever.
+- **Closing the window is an answer**, and the answer is skip. Without that,
+  reaching for the red button instead of either offered button means being asked
+  again on every launch, which is the nagging this exists to prevent.
+- **Skipping is final.** Both buttons write `tutorials.firstRunOffer`, and the
+  window never asks again. There is no second "would you like a tour" anywhere
+  in the app. Help ▸ Tutorials is the way back.
+- **An upgrade is left alone.** The launch condition widened, so without care
+  every existing install would be shown first run setup again. A one time stamp
+  (`tutorials.firstRunOffer.migrated`) marks anyone who had already finished
+  setup as answered, before the condition is ever read.
+- **The stamp happens once, not every launch.** This is the quiet bug in the
+  obvious version: run every launch, the migration fires on the NEW person the
+  moment they restart for the grant, because by then their setup is complete
+  too, and it eats the offer they were owed.
+
+**Take the Tour closes the window first, then starts the guide.** The setup
+window is a floating panel above every editor window, so a guide started
+underneath it would be ringing controls hidden behind it. Same rule the
+Tutorials window follows. The tour brings a sample, so it opens a window of its
+own with a picture already in it: nobody is ever pointed at an empty canvas.
+
+**The empty editor onboarding card and this offer never collide.** They are
+sequential, not simultaneous. `PhotonzApp` uses a `WindowGroup`, so no window is
+forced open at launch and there is no editor behind the offer; the card only
+exists inside an editor window with nothing in it. The offer asks "shall I show
+you around", and the card, later, answers "how do I get a picture in". Take the
+Tour opens a window with a sample in it, so the card is not there either.
+
+Walked end to end from a clean slate by
+`Scripts/playtest/first-run-walk.json`, which forgets every first run setting,
+runs the real launch hook, and drives all three endings: take the tour, start
+working, and an install that finished its setup before any of this existed.
+
 ## Where the guides are found
 
 Two doors, both read off the catalogue, neither of which knows the name of any
@@ -313,9 +378,9 @@ guide.
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
-menu, the track submenus and the hub window. Still queued:
+menu, the track submenus, the hub window and the first launch offer. Still
+queued:
 
-- **First launch offers the tour or gets out of your way.**
 - **The seven tracks**, one task each.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated
   walk per guide that drives the real editor and asserts every step's anchor
