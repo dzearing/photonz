@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.436Z",
-  "updated": "2026-09-13T21:24:40.108463Z",
+  "updated": "2026-09-13T21:24:55.493Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -73,7 +73,12 @@
     {
       "t": "2026-09-13T21:24:40.108463Z",
       "note": "verified: Scripts/test.sh 6376 tests green; all 31 tutorial walks run in three batches, all ok; docs/design/tutorials.md and docs/design/playtest-harness.md updated; audit at queue/audits/2026-09-13-tutorial-anchor-check.json with a real screen capture."
+    },
+    {
+      "t": "2026-09-13T21:24:55.491Z",
+      "note": "Every guide is driven automatically and every step must find its control. TutorialWalkCoverage in Scripts/test.sh holds the catalogue to the walks (a guide with no walk, a walk that stops part way, a walk driving a guide that is gone all fail); the harness fails any walk whose guide points at nothing, naming guide, step, missing anchor and the names on screen. Live half runs in the sweep and adds no walks to it. Proved by breaking .tutorialAnchor(.tool(.measure)) and running tutorial-tour-walk. Found and fixed two real breaks: frames-are-screens rang tool.rectangle when the shapes slot wears the line on a fresh machine (new TutorialAnchor.toolGroup), and the skipped trim walk can now declare expectNoControl. 6376 tests green, all 31 tutorial walks ok. Audit: queue/audits/2026-09-13-tutorial-anchor-check.json"
     }
   ],
-  "started": "2026-09-13T20:53:05.735Z"
+  "started": "2026-09-13T20:53:05.735Z",
+  "completed": "2026-09-13T21:24:55.492Z"
 }
