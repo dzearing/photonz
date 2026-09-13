@@ -70,6 +70,14 @@
     {
       "t": "2026-09-13T05:13:33.359Z",
       "note": "One ordinary bug found and fixed with it: a style name field asked for the keyboard one pass too early, so with a guide running over the window the name somebody typed went into the picture instead. Measured: four runs of tutorial-text-styles-walk, two failed; with the focus deferred one pass, eight of eight green. Fixed in all four fields that share the shape (TextStylePanel, ColorStylePanel, EffectStylePanel, LibraryColorDrop). Same bug the Components track found in Add Version."
+    },
+    {
+      "t": "2026-09-13T05:22:07.531Z",
+      "note": "Verified: full suite green at 5931 tests, all 24 tutorial walks green, all 14 style walks green, and colour-off-the-shelf and colour-onto-the-library re-run clean after the name field change. Audit at queue/audits/2026-09-13-tutorials-colours-and-styles-track.json with four real screen captures (Screen Recording was granted). Asked for a full sweep because four panels now focus their name field one pass later and every walk that types into one is worth a pass."
+    },
+    {
+      "t": "2026-09-13T05:22:07.531Z",
+      "note": "Filed one follow-up: a guide pointing at the Library rings a shelf whose bottom row of tiles is cut off by the window edge, because the reveal holds out for the whole section and the Library is taller than the room under the sections above it. p2-normal, with the walk and the screenshot that shows it."
     }
   ],
   "started": "2026-09-13T04:44:12.793Z",
