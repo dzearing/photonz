@@ -578,6 +578,18 @@ struct EditorView: View {
             .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
+    /// What the card an empty window shows can do for you.
+    ///
+    /// An enum rather than four loose closures so a tutorial step can point at
+    /// a row by the action it performs. These are the only places in a window
+    /// where getting a picture IN is a control rather than a key, which is why
+    /// the first guide in Basics is built on them.
+    enum EmptyEditorStart: String {
+        case open, capture, paste, blank
+
+        var anchor: TutorialAnchor { .startHere(rawValue) }
+    }
+
     private var emptyState: some View {
         VStack(spacing: 28) {
             VStack(spacing: 12) {
@@ -590,20 +602,20 @@ struct EditorView: View {
             }
             GlassEffectContainer {
                 VStack(alignment: .leading, spacing: 2) {
-                    onboardingRow("folder", "Open a file", "⌘O") {
+                    onboardingRow(.open, "folder", "Open a file", "⌘O") {
                         editorState.isImporterPresented = true
                     }
-                    onboardingRow("rectangle.dashed", "Capture a rectangle", "⇧⌘4") {
+                    onboardingRow(.capture, "rectangle.dashed", "Capture a rectangle", "⇧⌘4") {
                         coordinator.capture.beginRectCapture()
                     }
-                    onboardingRow("doc.on.clipboard", "Paste an image", "⌘V") {
+                    onboardingRow(.paste, "doc.on.clipboard", "Paste an image", "⌘V") {
                         editorState.paste()
                     }
                     // Last on purpose: capture-and-redline is the daily use, so
                     // starting from nothing joins the card without moving the
                     // rows already under the pointer.
                     if Experiments.shared.blankCanvasEnabled {
-                        onboardingRow("rectangle.badge.plus", "Blank canvas", "") {
+                        onboardingRow(.blank, "rectangle.badge.plus", "Blank canvas", "") {
                             editorState.isBlankCanvasDialogPresented = true
                         }
                     }
@@ -615,7 +627,12 @@ struct EditorView: View {
     }
 
     /// One actionable hint in the onboarding card: icon, label, shortcut.
-    private func onboardingRow(_ symbol: String, _ title: String, _ shortcut: String,
+    ///
+    /// The row carries a tutorial anchor named after WHAT IT DOES, not after
+    /// the words on it, so the guide that teaches the ways in keeps pointing
+    /// at the right row after any rewording (`EmptyEditorStart`).
+    private func onboardingRow(_ start: EmptyEditorStart, _ symbol: String,
+                               _ title: String, _ shortcut: String,
                                action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 10) {
@@ -640,6 +657,7 @@ struct EditorView: View {
             .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.borderless)
+        .tutorialAnchor(start.anchor)
     }
 
     /// Three glass bars: tools, fill colors, zoom — grouped in one

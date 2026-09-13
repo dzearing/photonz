@@ -63,6 +63,15 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
         TutorialAnchor("panel.\(id)")
     }
 
+    /// One row of the card an empty window shows: open a file, capture a
+    /// rectangle, paste a picture. Named off the action it performs rather
+    /// than off the words on the row, for the same reason as everything else
+    /// here. These are the only places in a window where getting a picture IN
+    /// is a control rather than a key, which is why a guide can point at them.
+    public static func startHere(_ action: String) -> TutorialAnchor {
+        TutorialAnchor("start.\(action)")
+    }
+
     /// The panel section this anchor names, or nil when it names something
     /// else. What the app reads to scroll a step's target into view.
     public var panelSectionID: String? {
@@ -78,6 +87,12 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
                                             "text", "measurements", "library", "component",
                                             "effects", "color", "canvas", "placement"]
 
+    /// The rows of the empty window's card a guide is allowed to name. The
+    /// blank canvas row is deliberately absent: it comes and goes with a
+    /// feature flag, and a step pointing at a row that is not always there is
+    /// a step that sometimes points at nothing.
+    public static let knownStartActions = ["open", "capture", "paste"]
+
     /// Every anchor the app promises to provide. The catalogue check walks each
     /// guide against this, so a typo or a name nothing hangs on is a test
     /// failure rather than a callout pointing at nothing.
@@ -88,6 +103,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
         [canvas, toolBar, panel, titleBar]
             + Tool.allCases.map(tool)
             + knownPanelSections.map(panelSection)
+            + knownStartActions.map(startHere)
     }
 }
 
@@ -115,6 +131,15 @@ public enum TutorialTrigger: Hashable, Codable, Sendable {
     case layerSelected
     /// The docked panel came on screen.
     case panelShown
+    /// The person changed the picture: drew something, moved something, took
+    /// something off. One event for the lot, raised where every edit already
+    /// funnels through, so a step can wait for "do something" without the
+    /// framework growing an event per command.
+    case editMade
+    /// The person pressed undo, and something came back.
+    case undone
+    /// The person put the whole picture on the clipboard.
+    case pictureCopied
 }
 
 /// How a step moves on.
@@ -236,6 +261,10 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// A small made-up screen: a card, a heading and a button on a white
     /// canvas. Enough to have layers to select and properties to show.
     case starterScreen
+    /// A window with nothing in it, which is a sample too: it is the only
+    /// state that shows the card offering the ways to get a picture in, and a
+    /// guide about getting a picture in has to be able to point at them.
+    case emptyWindow
 }
 
 public struct TutorialGuide: Identifiable, Hashable, Codable, Sendable {
@@ -273,7 +302,13 @@ public struct TutorialGuide: Identifiable, Hashable, Codable, Sendable {
 /// Every guide the app ships. The menu, the hub window and the progress list
 /// read this and nothing else, so a new tutorial is a new value here.
 public enum TutorialCatalog {
-    public static let guides: [TutorialGuide] = [TutorialGuides.takeTheTour]
+    public static let guides: [TutorialGuide] = [
+        TutorialGuides.takeTheTour,
+        TutorialGuides.firstCapture,
+        TutorialGuides.markItUp,
+        TutorialGuides.layersAndUndo,
+        TutorialGuides.saveExportCopy,
+    ]
 
     /// The guide the Help menu's own row runs, and the one first launch offers.
     public static let tourID = TutorialGuides.takeTheTour.id

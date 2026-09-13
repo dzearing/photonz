@@ -50,6 +50,12 @@ enum PlaytestHarness {
     static var readyEditors: [EditorState] {
         editors.filter { $0.document != nil && $0.hostWindow != nil && $0.viewport != nil }
     }
+
+    /// Every editor a window has made, picture or no picture. A guide can open
+    /// an EMPTY window on purpose (the card offering the ways to get a picture
+    /// in only exists there), and `readyEditors` leaves that window out because
+    /// it insists on a document and a viewport.
+    static var allEditors: [EditorState] { editors }
 }
 
 /// One script, executed top to bottom. Stops at the first step that fails and
@@ -1183,6 +1189,40 @@ private final class Run {
                  + WindowReadProbe.reading(in: welcome))
             welcome.close()
             await sleep(0.4)
+
+        // Any guide in the catalogue, started by id the way picking it off the
+        // Help menu does, and followed into the window it teaches in. Always
+        // from step one: a guide picks up where it was left, and a walk always
+        // means the beginning.
+        case .startGuide(let id):
+            guard let guide = TutorialCatalog.guide(id: id) else {
+                throw Failure(description: "there is no guide called \"\(id)\" in the catalogue")
+            }
+            TutorialController.shared.forgetProgress(guide.id)
+            TutorialLauncher.start(guide, coordinator: coordinator, editor: editor)
+            if guide.sample != nil {
+                var opened: EditorState?
+                try await poll("the window \(id) opened for itself", within: 8) {
+                    opened = PlaytestHarness.allEditors.last {
+                        $0.untitledName == TutorialSampleScreen.documentName
+                            && $0.hostWindow != nil
+                    }
+                    return opened != nil
+                }
+                guard let opened else { throw Failure(description: "\(id) opened no window") }
+                if opened.document == nil {
+                    try await adoptEmpty(opened, step: step.name,
+                                         subject: "\(guide.title), in the empty window it brought",
+                                         number: number)
+                } else {
+                    try await adopt(opened, window: nil, step: step.name,
+                                    subject: "\(guide.title), in the window it brought",
+                                    number: number)
+                }
+            }
+            try await poll("\(id) to start", within: 5) {
+                TutorialController.shared.runningGuideID == id
+            }
 
         // Take the Tour opens a window of its own holding the guide's sample
         // picture, so the walk moves over to that window: everything after this
@@ -4274,6 +4314,39 @@ private final class Run {
         self.window = window
         let documentSize = opened.document?.canvasSize ?? .zero
         note(number, step, "\(subject): document \(Int(documentSize.width))x\(Int(documentSize.height)) at pixelScale \(opened.document?.pixelScale ?? 0) (points are in these units); window \(Int(window.frame.width))x\(Int(window.frame.height)) pt; canvas \(Int(canvas?.bounds.width ?? 0))x\(Int(canvas?.bounds.height ?? 0)) pt; zoom \(String(format: "%.3f", opened.viewport?.zoom ?? 0))", state: describe())
+    }
+
+    /// Take over a window a guide opened that has NOTHING in it.
+    ///
+    /// The empty sample is a sample: it is the only state that shows the card
+    /// offering the ways to get a picture in, which is the one thing in a
+    /// window a guide about capturing can point at. There is no canvas to find
+    /// and no document to measure, so everything a canvas gives a walk (points
+    /// in document space, zoom, the viewport) is unavailable here. The window
+    /// is not, and that is enough to photograph it and to drive the guide.
+    private func adoptEmpty(_ opened: EditorState, step: String, subject: String,
+                            number: Int) async throws {
+        try await poll("the editor's window", within: 5) { opened.hostWindow != nil }
+        guard let window = opened.hostWindow else {
+            throw Failure(description: "the editor lost its window")
+        }
+        _ = try? await poll("reveal", within: 2) { window.alphaValue >= 1 }
+        // Hidden for the rest of the walk, like any other window a walk drives.
+        // One thing does not survive it: a SCREEN capture of this window comes
+        // back holding only the guide's own panels on a blank rectangle, where
+        // a window with a document in it photographs properly. Letting it
+        // composite first does not fix it, so the offscreen render is the
+        // picture for an empty window, and an audit says so.
+        window.alphaValue = 0
+        window.makeKey()
+        await sleep(0.5)
+        editor = opened
+        self.window = window
+        canvas = nil
+        note(number, step,
+             "\(subject): nothing open, so the onboarding card is what is on screen; "
+             + "window \(Int(window.frame.width))x\(Int(window.frame.height)) pt",
+             state: describe())
     }
 
     // MARK: - Menus

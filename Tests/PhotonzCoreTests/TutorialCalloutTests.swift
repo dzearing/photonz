@@ -19,7 +19,12 @@ struct TutorialCalloutTests {
 
     @Test func theCalloutNeverCoversTheControlItIsPointingAt() {
         // A control in every part of the window, including all four corners and
-        // dead centre, and one the size of the whole canvas.
+        // dead centre.
+        //
+        // A SURFACE is the one thing not in this list. An anchor that fills the
+        // window has no side with room, and the answer there is the card inside
+        // it rather than the card off the screen: see
+        // `aStepAboutTheWholePictureKeepsItsCardInsideTheWindow`.
         let anchors = [
             CGRect(x: 560, y: 380, width: 80, height: 40),   // middle
             CGRect(x: 0, y: 0, width: 80, height: 40),       // top left corner
@@ -27,7 +32,6 @@ struct TutorialCalloutTests {
             CGRect(x: 0, y: 760, width: 80, height: 40),     // bottom left
             CGRect(x: 1120, y: 760, width: 80, height: 40),  // bottom right
             CGRect(x: 400, y: 770, width: 400, height: 30),  // the tool bar
-            CGRect(x: 20, y: 20, width: 1000, height: 760),  // nearly the window
         ]
         for anchor in anchors {
             for side in TutorialSide.allCases {
@@ -131,6 +135,41 @@ struct TutorialCalloutTests {
                                                    size: CGSize(width: 320, height: 140),
                                                    container: tiny, preferred: .above)
         #expect(!squeezed.frame.intersects(CGRect(x: 150, y: 300, width: 40, height: 40)))
+    }
+
+    // MARK: An anchor that is a surface rather than a control
+
+    @Test func aStepAboutTheWholePictureKeepsItsCardInsideTheWindow() {
+        // The canvas fills the window bar the panel. There is no room on any
+        // side of it, and the old answer was to shove the card off the window
+        // edge, where half of it (and one of its buttons) was unreadable.
+        let window = CGRect(x: 0, y: 0, width: 1280, height: 840)
+        let canvas = CGRect(x: 0, y: 28, width: 960, height: 800)
+        let placed = TutorialCalloutLayout.place(anchor: canvas,
+                                                 size: CGSize(width: 320, height: 130),
+                                                 container: window)
+        #expect(placed.frame.maxX <= window.maxX - TutorialCalloutLayout.edge + 0.5)
+        #expect(placed.frame.minX >= window.minX + TutorialCalloutLayout.edge - 0.5)
+        #expect(placed.frame.maxY <= window.maxY - TutorialCalloutLayout.edge + 0.5)
+        #expect(placed.frame.minY >= window.minY + TutorialCalloutLayout.edge - 0.5)
+        // Inside the surface it is talking about, and near the top of it,
+        // clear of the floating tool bar along the bottom.
+        #expect(canvas.contains(placed.frame))
+        #expect(placed.frame.minY < canvas.midY)
+        // Nothing for a beak to point at: the step is about the whole surface,
+        // not about an edge of it.
+        #expect(placed.beakOffset == nil)
+    }
+
+    @Test func aSurfaceTooSmallToHoldTheCardIsStillTreatedLikeAControl() {
+        // The rule is about a surface with room INSIDE it. A panel section
+        // barely bigger than the card is still something the card sits beside.
+        let window = CGRect(x: 0, y: 0, width: 1280, height: 840)
+        let section = CGRect(x: 980, y: 100, width: 300, height: 150)
+        let placed = TutorialCalloutLayout.place(anchor: section,
+                                                 size: CGSize(width: 320, height: 130),
+                                                 container: window, preferred: .leading)
+        #expect(!placed.frame.intersects(section))
     }
 
     // MARK: The one flip between AppKit and this space

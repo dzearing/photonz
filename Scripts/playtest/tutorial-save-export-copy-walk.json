@@ -1,0 +1,37 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-save-export-copy-walk",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "save-export-copy" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "three-ways-out", "timeout": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-three-ways-out", "note": "step one is about the picture as a whole, so the card sits inside the canvas rather than off the window edge" },
+    { "do": "snapshot", "name": "1-three-ways-out" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "copy-it", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-copy-it", "note": "a waiting step: the picture has to really reach the clipboard" },
+    { "do": "snapshot", "name": "2-copy-it" },
+
+    { "do": "key", "key": "c", "modifiers": ["command", "shift"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "export-it", "timeout": 6 },
+    { "do": "readClipboard", "stage": "copied" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-export-it", "note": "the copy really landed on the clipboard and moved the guide on" },
+    { "do": "snapshot", "name": "3-export-it" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "save-it", "timeout": 5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-save-it", "note": "the last step ends on the layers list, because keeping that list is what saving claims" },
+    { "do": "snapshot", "name": "4-save-it" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-finished", "note": "Done closed the guide" }
+  ]
+}

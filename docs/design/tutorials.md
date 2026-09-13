@@ -89,7 +89,10 @@ It is inert: an invisible `NSView` behind the control that never draws, never
 takes a click (`hitTest` returns nil) and never changes layout. That is why it
 is safe to hang one on shared code that both releases use.
 
-**Where the names live today.** The canvas, the floating tool bar, every tool
+**Where the names live today.** The rows of the card an empty window shows
+(`start.open`, `start.capture`, `start.paste` — the only places in a window
+where getting a picture IN is a control rather than a key), the canvas, the
+floating tool bar, every tool
 button (through the one `toolButton` funnel, plus the two mode buttons and the
 family buttons, which do not go through it), the docked panel, and every panel
 section.
@@ -126,6 +129,15 @@ Triggers are wired at the one place the thing actually happens:
 | `.toolPicked(tool)` | `EditorState.setTool` — button, key or menu, all land here |
 | `.layerSelected` | `EditorState.selectedLayerID` — list or canvas, both land here |
 | `.panelShown` | `EditorState.setInspectorVisible` |
+| `.editMade` | `EditorState.perform` — every command in the app funnels here, and only a change that really changed the document counts |
+| `.undone` | `EditorState.undo`, and only when something came back |
+| `.pictureCopied` | `EditorState.copyCompositeToClipboard`, before the notice, which only exists with the measurements panel on |
+
+`.editMade` is deliberately one event for "the person did something to the
+picture" rather than one per command. It is raised at the single funnel every
+mutation already goes through, so a step can say "drag one out" or "take it off"
+without the framework growing an event per verb, and a guide that asks for a
+drag cannot be satisfied by picking a tool.
 
 When a guide needs to wait for something with no event yet, **add the event
 here and wire it where it happens**. Do not fake it.
@@ -179,6 +191,15 @@ There is no one notification for "the panel scrolled, the window resized, a
 section collapsed, the tool bar shed a button"; reading the frame a few dozen
 times a second covers all of them and costs one coordinate conversion.
 
+**An anchor that is a SURFACE rather than a control** gets the card INSIDE it,
+near the top and with no beak. The canvas fills the window bar the panel, so no
+side of it has room, and the old answer (shove the card clear of the anchor,
+whatever that costs at the window's edge) hung it half out of the window with
+one of its buttons unreadable. A step about the whole picture is not pointing at
+an edge of the picture, so there is nothing for a beak to point at either. The
+rule is "the anchor can hold the card with a gap all round it", which is true of
+the canvas and false of every control and every panel section.
+
 **When the target is not on screen at all**, nobody is stranded: the card goes
 to the middle of the window with no beak and no ring, the copy is unchanged, and
 the way on still works. That is the last line of defence, not the plan. The plan
@@ -195,10 +216,11 @@ is the checks below.
    for punctuation, nothing about how the app was built. A test enforces this
    (`TutorialCopyRules`) and it also fails copy too long to read off a card.
 4. Give a waiting step a real trigger, or use `.next` and say what to look at.
-5. Run the guide. `Scripts/playtest.sh Scripts/playtest/tutorial-tour-walk.json`
-   is the pattern: `startTour` opens the guide's own window and moves the walk
-   over to it, `waitFor tutorialStep` fails the walk when a step does not
-   advance, and the log carries where every anchor resolved to.
+5. Run the guide. One walk per guide, and the pattern is
+   `Scripts/playtest/tutorial-mark-it-up-walk.json`: `startGuide` takes the
+   guide's id, starts it the way the Help menu does and moves the walk into
+   whatever window it teaches in, `waitFor tutorialStep` fails the walk when a
+   step does not advance, and the log carries where every anchor resolved to.
 
 ## What a guide brings with it
 
@@ -210,6 +232,13 @@ window is called "Tutorial Sample" so it is obvious it is not your work.
 
 A guide with no sample runs over the window you are already in, and must say so
 in its first step before changing anything.
+
+**An empty window is a sample too** (`TutorialSample.emptyWindow`). The card
+offering the ways to get a picture in only exists while a window has nothing in
+it, so the guide that teaches those ways brings a window with nothing in it.
+`openTutorialSample` installs no document for that case, and the walk that
+drives it takes the window over without a canvas (`adoptEmpty`), because there
+is none.
 
 ## What this framework deliberately does not do
 
@@ -375,13 +404,44 @@ The same probe presses the row's own button, which is how the walk proves that
 starting a guide from the window really closes the window and really starts the
 guide.
 
+## The Basics track
+
+The four guides a brand new person needs, in the order they need them. Somebody
+who does only this track can do the app's whole job end to end.
+
+| Guide | Brings | What it teaches |
+| --- | --- | --- |
+| Your first capture | an empty window | ⇧⌘4, ⌘O and ⌘V, pointed at the three rows of the card |
+| Mark it up and hand it over | the starter screen | the arrow, the text tool, and ⇧⌘C as the handoff |
+| Everything is a layer, and undo always works | the starter screen | the stack, that a look is added rather than painted on, and ⌘⌫ then ⌘Z |
+| Save it, export it, copy it | the starter screen | ⇧⌘C, ⇧⌘E and ⌘S, and which one keeps the layers |
+
+Three things the track had to settle, and every later track inherits them:
+
+- **A guide names keys, never menu rows.** ⇧⌘C is Copy Image with
+  `next-copy-picks-your-layer` off and Copy Merged with it on, and both put the
+  whole picture on the clipboard when nothing is selected: the key is true under
+  both, the menu row is true under one. `next-shape-parts` moves the shadow out
+  of Effects and into Appearance, so a step may point at a section whose
+  contents move under a flag but must not ask for a named control inside it. A
+  test over the Basics track enforces the rule.
+- **Capture cannot be walked, so it is taught.** Capture is a menu-bar agent
+  flow: a global key, a fullscreen selection overlay, and a new window for the
+  result. A guide cannot ring any of that, and a step that waited for a real
+  capture would be left behind in the old window the moment the capture landed.
+  So the capture guide points at the three ways in that DO live in a window and
+  names the keys.
+- **⌘Return commits a text draft, Escape throws it away.** The first draft of
+  "Mark it up" said Escape, and the walk caught it: the words were typed and
+  then lost, and the guide never moved on because nothing was ever edited.
+
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
-menu, the track submenus, the hub window and the first launch offer. Still
-queued:
+menu, the track submenus, the hub window, the first launch offer and the Basics
+track. Still queued:
 
-- **The seven tracks**, one task each.
+- **The other six tracks**, one task each.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated
   walk per guide that drives the real editor and asserts every step's anchor
   resolves. The unit check here (`TutorialCatalogCheck`) is the promise; that

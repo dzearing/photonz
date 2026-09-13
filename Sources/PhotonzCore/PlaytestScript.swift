@@ -1439,6 +1439,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// machine's setting, so nothing outside the probe notices.
     case appearance(PlaytestAppearance)
     case action(PlaytestAction)
+    /// Start one guide by id, the way picking it off the Help menu does. The
+    /// walk then follows it into whatever window it teaches in, so a guide
+    /// that brings a sample is driven in the window a person would be looking
+    /// at: `{ "do": "startGuide", "guide": "mark-it-up" }`. `startTour` is the
+    /// same thing for the one promoted guide, kept because the first run
+    /// offers that one by name.
+    case startGuide(String)
 
     public static let defaultTimeout: Double = 10
     public static let defaultDragSteps = 8
@@ -1453,13 +1460,14 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "expect", "expectCaption", "expectInView", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor",
     ]
 
     /// The `do` name this step answers to.
     public var name: String {
         switch self {
         case .open: "open"
+        case .startGuide: "startGuide"
         case .appearance: "appearance"
         case .blank: "blank"
         case .wait: "wait"
@@ -1612,6 +1620,8 @@ public enum PlaytestStep: Sendable, Equatable {
             default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView or tutorialStep")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
+        case "startGuide":
+            self = .startGuide(try f.string("guide"))
         case "snapshot":
             self = .snapshot(name: try f.string("name"), window: try f.optionalString("window"))
         case "dropComponent":

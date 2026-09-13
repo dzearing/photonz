@@ -856,6 +856,9 @@ final class EditorState {
     /// that happens here is a white canvas under it.
     private func openTutorialSample(for guideID: String) {
         let sample = TutorialCatalog.guide(id: guideID)?.sample ?? .starterScreen
+        // A guide about getting a picture IN has to start from nothing: the
+        // card offering the ways in only exists while the window is empty.
+        guard sample != .emptyWindow else { return }
         let size = TutorialSampleScreen.canvasSize
         guard let white = SolidImage.make(size: size, hex: Self.blankCanvasBackgroundHex) else { return }
         let ref = store.register(white)
@@ -1582,6 +1585,10 @@ final class EditorState {
                 pasteboard.setString(text, forType: .string)
             }
         }
+        // The picture is on the clipboard: a guide waiting for the handoff has
+        // had it. Before the notice, which only exists with the measurements
+        // panel on, so the guide moves on either way.
+        TutorialController.shared.note(.pictureCopied, from: self)
         guard carriesSpecList else { return }
         let listed = specList == nil ? 0 : CompositeCopy.visibleMeasurementCount(in: document)
         showCopyConfirmation(.image(measurements: listed))
@@ -2271,6 +2278,11 @@ final class EditorState {
         // Last, so a break wins the one canvas slot: an edit that reached ten
         // copies is expected, and one that quietly severed something is not.
         if reportingLinkBreaks { announceLinkBreaks(report.linkBreaks) }
+        // A guide waiting for the person to DO something waits here, because
+        // this is where every command in the app lands. Only when the document
+        // really changed: `History.perform` records nothing for an edit that
+        // changed nothing, and a guide must not move on for one either.
+        if document != before { TutorialController.shared.note(.editMade, from: self) }
     }
 
     /// Says how many copies followed the edit that just landed
@@ -2365,6 +2377,9 @@ final class EditorState {
             returning.markReturned()
             pasteToolReturn = returning // setTool cleared it; redo still needs it
         }
+        // Only when something actually came back. ⌘Z on an empty stack does
+        // nothing, and a guide teaching undo must not claim it did.
+        if document != before { TutorialController.shared.note(.undone, from: self) }
     }
 
     func redo() {

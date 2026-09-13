@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-mark-it-up-walk",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "mark-it-up" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-arrow", "timeout": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-pick-arrow", "note": "the guide brought its own sample screen, and step one waits on the arrow tool: the button offers to skip, never to claim you picked it" },
+    { "do": "snapshot", "name": "1-pick-arrow" },
+
+    { "do": "key", "key": "a" },
+    { "do": "waitFor", "condition": "tool", "value": "arrow" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "draw-arrow", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-draw-arrow", "note": "picking the tool for real moved it on, and the next step asks for a drag" },
+    { "do": "snapshot", "name": "2-draw-arrow" },
+
+    { "do": "drag", "from": [520, 380], "to": [300, 330], "steps": 10 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-text", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-pick-text", "note": "the arrow really landed, so the guide moved on by itself and now waits on the text tool" },
+    { "do": "snapshot", "name": "3-pick-text" },
+
+    { "do": "key", "key": "t" },
+    { "do": "waitFor", "condition": "tool", "value": "text" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "type-something", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "4-type-something" },
+
+    { "do": "click", "at": [540, 400] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "too tight" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "copy-it", "timeout": 6 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-copy-it", "note": "the words landed and the guide moved on to the handoff" },
+    { "do": "snapshot", "name": "5-copy-it" },
+
+    { "do": "key", "key": "c", "modifiers": ["command", "shift"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "back-to-pointer", "timeout": 6 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-back-to-pointer", "note": "a real copy moved it on; the last step reads Done" },
+    { "do": "snapshot", "name": "6-back-to-pointer" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-finished", "note": "Done closed the guide and left the marked up sample alone" }
+  ]
+}

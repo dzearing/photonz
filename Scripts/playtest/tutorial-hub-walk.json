@@ -6,7 +6,7 @@
     {"do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840},
     {"do": "wait", "seconds": 1},
 
-    {"do": "describe", "stage": "0-menu", "note": "the menu: Take the Tour promoted at the top, then Basics as a submenu holding the same guide, then All Tutorials. No flat list of every guide anywhere in it, and no empty submenu for the six tracks with nothing on them yet."},
+    {"do": "describe", "stage": "0-menu", "note": "the menu: Take the Tour promoted at the top, then Basics as a submenu holding the whole track, the promoted guide included, then All Tutorials. No flat list of every guide anywhere in it, and no empty submenu for the six tracks with nothing on them yet."},
     {"do": "menus", "stage": "help-tutorials", "menu": "Help"},
 
     {"do": "action", "action": "showTutorials"},

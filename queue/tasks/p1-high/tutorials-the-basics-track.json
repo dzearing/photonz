@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 23,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.534Z",
-  "updated": "2026-09-12T15:17:33.201Z",
+  "updated": "2026-09-13T01:41:28.202Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -38,6 +38,64 @@
     {
       "t": "2026-09-12T15:17:33.201Z",
       "note": "deps set: framework first"
+    },
+    {
+      "t": "2026-09-13T01:13:57.519Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T01:17:03.746Z",
+      "note": "adversarial review, before building. 1) \"Your first capture\" cannot point at the thing it teaches: capture is a menu-bar agent flow (⇧⌘4, the status item, a fullscreen selection overlay) and the framework can only ring controls inside one editor window. Shortest honest version points at the three ways in that DO live in a window, the empty window onboarding card rows, and names the keys. It does not make you capture: a real capture opens a window of its own and leaves the guide behind in the old one."
+    },
+    {
+      "t": "2026-09-13T01:17:03.746Z",
+      "note": "adversarial review 2) that guide has to bring an EMPTY window, because the card it points at only exists with nothing open. New sample case."
+    },
+    {
+      "t": "2026-09-13T01:17:03.746Z",
+      "note": "adversarial review 3) name keys, never menu items. ⇧⌘C is Copy Image with next-copy-picks-your-layer off and Copy Merged with it on, and both put the whole picture on the clipboard with nothing selected, so the key is true under both and the menu row is not. Same trap in Effects: next-shape-parts (default on) moves the shadow into Appearance and turns Effects into a list you add to, so no step may ask for a named control in a section whose contents move under a flag."
+    },
+    {
+      "t": "2026-09-13T01:17:03.746Z",
+      "note": "adversarial review 4) cut the title bar step: the editor window is hiddenTitleBar, so there is no document name and no edited dot to ring. 5) three steps ringing the same canvas is decoration; the save step rings the layers list, because keeping that list is what saving actually claims. 6) a waiting step must wait for something the person can cause: undo cannot be step N when step N-1 asked for nothing, so the doing step waits for a real edit first."
+    },
+    {
+      "t": "2026-09-13T01:17:03.746Z",
+      "note": "plan: 4 guides, 4 to 6 steps each. first-capture (empty sample), mark-it-up, layers-and-undo, save-export-copy. New: anchor start.<action> on the onboarding card rows, sample .emptyWindow, triggers .editMade / .undone / .pictureCopied wired at EditorState.perform, undo and copyCompositeToClipboard, and a startGuide playtest step so a walk can drive any guide by id."
+    },
+    {
+      "t": "2026-09-13T01:41:28.202Z",
+      "note": "built: four guides as catalogue data in TutorialGuides.swift (first-capture, mark-it-up, layers-and-undo, save-export-copy), listed in TutorialCatalog. No UI edited: the Help menu, the Basics submenu and the Tutorials window all picked them up, proved by tutorial-hub-walk which reads the menu bar and the window accessibility tree (all five Basics rows appear in both)."
+    },
+    {
+      "t": "2026-09-13T01:41:28.202Z",
+      "note": "framework additions this track needed, all of them the sanctioned kind rather than special cases: anchor start.<action> on the empty window card rows (EmptyEditorStart in EditorView, knownStartActions in core); TutorialSample.emptyWindow, because the card only exists with nothing open; triggers .editMade (EditorState.perform, only when the document really changed), .undone (EditorState.undo, only when something came back) and .pictureCopied (copyCompositeToClipboard, before the notice); a startGuide playtest step so a walk can drive any guide by id, with adoptEmpty for the window that has no canvas."
+    },
+    {
+      "t": "2026-09-13T01:41:28.202Z",
+      "note": "framework FIX forced by the track: a step pointing at the canvas had no side with room, so the card was shoved off the window edge with Skip This Step half cut off (seen in the first mark-it-up run). TutorialCalloutLayout now puts the card INSIDE an anchor big enough to hold it, near the top, with no beak. Pure geometry, two new tests, and the D14 test was narrowed to controls with a comment saying why."
+    },
+    {
+      "t": "2026-09-13T01:41:28.202Z",
+      "note": "caught by the walk, not by reading: the first draft of mark-it-up said Escape commits your typed words. It abandons them (CanvasTextEditing.doCommandBy). The words were typed, thrown away, and the guide sat there because nothing was ever edited. It says ⌘Return now."
+    },
+    {
+      "t": "2026-09-13T01:41:28.202Z",
+      "note": "flags off as well as on: ran all seven tutorial walks with next-shape-parts, next-copy-picks-your-layer, next-blank-canvas and next-measure-panel forced off in the probe (experiments.next.flags), then again with the defaults. 7 passed both times. Verified in the pictures that the flags really took: the Blank canvas row is gone from the card, and Effects is four sliders instead of a list. The copy was tightened as a result: the effects step no longer names the shadow, which moves to Appearance when next-shape-parts is on."
+    },
+    {
+      "t": "2026-09-13T01:41:28.202Z",
+      "note": "minutes measured rather than guessed: words of copy at 200 wpm, plus 5s a step and 12s a waiting action. first-capture 46s (claims 1), mark-it-up 125s (claims 2), layers-and-undo 107s (claims 2), save-export-copy 60s (claims 1)."
+    },
+    {
+      "t": "2026-09-13T01:41:28.202Z",
+      "note": "every anchor resolved to a real rectangle in every step of every guide, read off the walk logs (no NOT ON SCREEN anywhere). Walks: tutorial-first-capture-walk, tutorial-mark-it-up-walk, tutorial-layers-and-undo-walk, tutorial-save-export-copy-walk, all new, all passing, plus the three existing tutorial walks still passing."
+    },
+    {
+      "t": "2026-09-13T01:41:28.202Z",
+      "note": "audit: queue/audits/2026-09-12-tutorials-basics-track.json with six pictures, five of them real screen captures. The capture guide s picture is an offscreen render because a screen capture of an EMPTY editor window comes back blank; reproduced, and filed as find-out-why-a-screen-capture-of-an-empty-editor (p2)."
     }
-  ]
+  ],
+  "started": "2026-09-13T01:13:57.518Z",
+  "acceptance_verified": true
 }

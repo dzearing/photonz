@@ -1,0 +1,31 @@
+{
+  "feature": "Tutorials: the Basics track",
+  "epic": "ui-building",
+  "summary": "Help now holds four more guides on the Basics shelf: how to get a picture in, how to mark one up and hand it over, what a layer is and why nothing is permanent, and the three ways a picture leaves. Each one brings its own window, points at real controls, and waits for you to really do the thing rather than moving on by itself.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-tutorials on (it is on by default). Help ▸ Tutorials ▸ Basics, or Help ▸ Tutorials ▸ All Tutorials... for the window.",
+  "try": [
+    { "do": "Open Help ▸ Tutorials ▸ Basics and start Your first capture.", "shot": "2026-09-12-basics-1-first-capture.png" },
+    { "do": "Press Next three times and read where each ring lands." },
+    { "do": "Start Mark it up and hand it over, then press A and drag an arrow across the sample.", "shot": "2026-09-12-basics-2-draw-an-arrow.png" },
+    { "do": "Press T, click beside the arrow, type a word, and press ⌘Return." },
+    { "do": "Press ⇧⌘C when the guide asks for the handoff.", "shot": "2026-09-12-basics-3-hand-it-over.png" },
+    { "do": "Start Everything is a layer, click the Heading row, then press ⌘⌫ and ⌘Z.", "shot": "2026-09-12-basics-5-put-it-back.png" },
+    { "do": "Start Save it, export it, copy it and take it to the end.", "shot": "2026-09-12-basics-6-save-keeps-the-list.png" }
+  ],
+  "evaluate": [
+    "Does Your first capture leave you knowing which key to press next time, even though it never makes you capture anything?",
+    "When a step waits for you, is it obvious that it is waiting, and that Skip This Step is there if you cannot do it?",
+    "Does deleting the heading and pressing ⌘Z land the point that nothing here is permanent, or does it feel like a trick?",
+    "Is a card sitting inside the top of the picture the right place for a step that is about the whole picture?",
+    "Four guides plus the tour on one shelf: is Basics still a shelf you would read, or is it already a list?"
+  ],
+  "rough": [
+    "Your first capture never makes you capture. A real capture opens a window of its own and would leave the guide behind in the empty one it brought, so the guide teaches the three keys and stops. If that reads as a cop-out, the fix is the guide finishing itself when a capture lands, and it needs the framework to notice a capture at all.",
+    "Its picture here is an OFFSCREEN RENDER, not a screen capture. Screen Recording is granted and every other shot in this audit is the real window, but a screen capture of an empty editor window comes back holding only the guide's own panels on a blank rectangle. Filed as something to look into.",
+    "A card above a row still covers the row above it. Step 3 of the capture guide sits over Capture a rectangle while it talks about Paste an image. Nothing it is talking about is covered, so the rule holds, but it is untidy.",
+    "Changed from the plan: the guides name keys, never menu rows. ⇧⌘C is Copy Image with next-copy-picks-your-layer off and Copy Merged with it on, and both put the whole picture on the clipboard, so the key is true under both and the menu row is true under one.",
+    "Framework fix this track forced: a step pointing at the canvas had no side with room, so the card was shoved off the window edge with Skip This Step half cut off. An anchor big enough to hold the card now gets the card inside it, near the top, with no beak.",
+    "Caught by the walk, not by reading: the first draft of Mark it up said Escape commits your words. Escape throws them away. It says ⌘Return now.",
+    "With next-measure-panel off, ⇧⌘C shows no Copied notice at all, so the guide advancing is the only sign it worked. That is the app's gap, not the guide's."
+  ]
+}

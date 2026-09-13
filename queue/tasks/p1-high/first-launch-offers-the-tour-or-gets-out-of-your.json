@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 22,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.409Z",
-  "updated": "2026-09-13T00:09:10.674Z",
+  "updated": "2026-09-13T00:09:22.872Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they"
   ],
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-13T00:09:10.674Z",
       "note": "Adversarial review of the BUILT thing, on the real app (Scripts/playtest/first-run-walk.json, 31 steps, two real screen captures with the Screen Recording grant).\n\nWhat is good: the question is one line and two buttons, the two buttons are the only things in the footer so the eye lands on them, Take the Tour really does close the setup window before the guide starts (checked, not assumed: the walk fails if the panel is still up over the window it opened), and all three endings are silent on every launch after.\n\nWhat is clumsy, and is filed or said out loud rather than hidden:\n- The tour leaves you sitting in its sample picture when it ends, which on a genuine first run is the only window you have. Filed p2 (the-tour-leaves-you-sitting-in-its-sample-pictur): it is the end of a guide, not the start, and it happens the same way from Help.\n- Somebody who never turns on Screen Recording is never offered the tour, because the offer waits for the permissions to work. Filed p2 as a question rather than a bug (find-out-whether-somebody-who-never-turns-on-scr): the guard is deliberate and written down, and the bigger version of the question is what the app should do for somebody who will not give it the screen.\n- The finished permission steps still fill most of the window while the question is one line at the top. I considered collapsing them and decided against it: hiding what somebody has just done, at the moment they have just done it, reads as the app throwing their work away. Put in the audit as a question for the user instead of decided quietly.\n\nAcceptance, item by item, all verified rather than assumed:\n1. Offered once after permissions are sorted: FirstRunOffer.showsChoice waits on granted and no pending restart; walk steps 2 to 5 and capture 1.\n2. Skipping is a real answer: the walk presses Start Working then runs the real launch hook twice more, and expectNoWelcome fails the walk if anything comes up. It did not.\n3. The tour starts in a real window with something in it: capture 2, the Tutorial Sample window with the starter screen and the guide on step 1 of 6. The walk fails if no such window opens.\n4. It lives in the existing Welcome window, and reopening from the menu is unchanged: new walk action showWelcomeAgain reads the reopened window back and fails if either offered button is in it. The log reads \"Button: Start Capturing\", which is exactly today.\n5. The card and the offer cannot both appear: PhotonzApp uses a WindowGroup so no window is forced open at launch, and the tour opens a window with a picture already in it. Said in the audit and written into docs/design/tutorials.md.\n6. Clean slate: freshInstall forgets all three settings and the walk runs the real launch hook, so the whole first run is walked rather than simulated.\n7. An upgrade is not re-presented: oldInstall plus launchHook plus expectNoWelcome in the walk, and checked against the real machine, where com.dzearing.photonz.dev and com.dzearing.photonz both already have welcome.setupCompleted = 1, so the stamp marks them answered on their first launch of this build.\n8. Audit at queue/audits/2026-09-12-first-run-offer.json with both captures beside it.\n\nScripts/test.sh green at 5824. The tutorial walks (3) and the new first run walk all pass. Asked for a sweep, because the setup window now presents on a wider condition and the harness probe was renamed."
+    },
+    {
+      "t": "2026-09-13T00:09:22.870Z",
+      "note": "A new person is asked once, in the setup window that already owns first launch: one line under the title, Take the Tour or Start Working in the footer, and whichever is pressed is remembered for good. The question waits until the macOS permissions actually work, closing the window counts as skip so nobody is nagged, and a one time stamp keeps an upgrade from ever seeing first run setup again. Take the Tour closes the window then opens the guide's own sample window, so the tour never starts on an empty canvas. Rules are pure in PhotonzCore/FirstRunOffer.swift with 19 tests; Scripts/test.sh green at 5824; walked from a clean slate end to end by Scripts/playtest/first-run-walk.json (31 steps, all three endings, two real screen captures). Docs in docs/design/tutorials.md, audit at queue/audits/2026-09-12-first-run-offer.json, two rough edges filed p2."
     }
   ],
-  "started": "2026-09-12T23:53:56.683Z"
+  "started": "2026-09-12T23:53:56.683Z",
+  "completed": "2026-09-13T00:09:22.871Z"
 }

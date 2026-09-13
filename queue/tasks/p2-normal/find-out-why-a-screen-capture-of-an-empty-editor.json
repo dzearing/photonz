@@ -1,0 +1,27 @@
+{
+  "id": "find-out-why-a-screen-capture-of-an-empty-editor",
+  "title": "Find out why a screen capture of an empty editor window comes back blank",
+  "goal": "When the loop photographs the app, a window with nothing in it comes out as a blank rectangle with only the floating callout on it, while a window holding a picture photographs properly. It means any tutorial or feature about the empty window can only be shown to a person as an offscreen render, which resolves some colours wrong.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 2590,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T01:40:05.359Z",
+  "updated": "2026-09-13T01:40:05.362Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-12 while building the Basics tutorials track.\n\nWhat I ran:\n  Scripts/playtest.sh Scripts/playtest/tutorial-first-capture-walk.json\nWhat it wrote: /tmp/photonz-playtest/tutorial-first-capture-walk/1-capture-row-sc.png is a white rectangle holding only the guide's own card and cue ring; the offscreen 1-capture-row.png from the same step holds the whole window (Drop a photo or screenshot here, the four onboarding rows, the tool bar). The same walk, same grant, same run.\n\nFor contrast, /tmp/photonz-playtest/tutorial-mark-it-up-walk/5-copy-it-sc.png (a window WITH a document) is a correct capture: shadow, glass tool bar, the drawn arrow, everything.\n\nWhat I tried and it did not help: letting the window composite for 0.5s before hiding it (alphaValue = 0 moved after the sleep in PlaytestHarness.adoptEmpty). Still blank. So it is not simply that the window was hidden before it ever drew.\n\nWhere to look: PlaytestHarness.screenCapture uses SCContentFilter(desktopIndependentWindow:). An empty editor window is a SwiftUI window with no CanvasNSView in it, so the theory worth testing first is that its content is in a layer tree that filter does not reach, the same shape of problem as drawScrollingPanels in the offscreen path.",
+  "acceptance": [
+    "A screen capture of an empty editor window shows the window contents, the onboarding card included",
+    "Scripts/playtest/tutorial-first-capture-walk.json writes a -sc.png holding the card and its rows, not a blank rectangle",
+    "Every other walk still photographs the way it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T01:40:05.361Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -63,6 +63,16 @@ public enum TutorialCalloutLayout {
             return TutorialCalloutPlacement(frame: rect, side: side,
                                             beakOffset: beak(for: rect, anchor: anchor, side: side))
         }
+        // Nothing fits beside it. Before giving up on the window's edge, ask
+        // whether this anchor is a SURFACE rather than a control: the canvas
+        // fills the window bar the panel, so no side of it has room, and a
+        // card shoved off its edge hangs half out of the window with one of
+        // its buttons unreadable. A step about the whole picture is not
+        // pointing at an edge of the picture, so the card goes inside it.
+        if let inside = insideSurface(anchor: anchor, size: size, container: container,
+                                      gap: gap, edge: edge) {
+            return TutorialCalloutPlacement(frame: inside, side: .above, beakOffset: nil)
+        }
         // Nothing fits cleanly. Take the roomiest side and shove the card off
         // the anchor even if that means hanging past the window's inset: a
         // callout half off the edge is readable, a callout on top of the button
@@ -137,6 +147,23 @@ public enum TutorialCalloutLayout {
             && rect.maxX <= container.maxX - edge + 0.5
             && rect.minY >= container.minY + edge - 0.5
             && rect.maxY <= container.maxY - edge + 0.5
+    }
+
+    /// A card parked INSIDE an anchor that is really a surface.
+    ///
+    /// Centred across it and near the top: the bottom of the canvas belongs to
+    /// the floating tool bar, and the middle is where the person is being asked
+    /// to draw. Nil when the anchor has no room to spare, which is every
+    /// ordinary control and every panel section.
+    private static func insideSurface(anchor: CGRect, size: CGSize, container: CGRect,
+                                      gap: CGFloat, edge: CGFloat) -> CGRect? {
+        let spare = gap * 2
+        guard anchor.width >= size.width + spare, anchor.height >= size.height + spare else {
+            return nil
+        }
+        let rect = CGRect(x: anchor.midX - size.width / 2, y: anchor.minY + gap,
+                          width: size.width, height: size.height)
+        return clamped(rect, in: container, edge: edge)
     }
 
     /// Last resort: move the card entirely off the anchor along the side's own

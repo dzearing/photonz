@@ -1,0 +1,36 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-first-capture-walk",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "first-capture" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "grab-the-screen", "timeout": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-capture", "note": "the guide brought an EMPTY window, because the card offering the ways in only exists there, and step one rings the Capture a rectangle row" },
+    { "do": "snapshot", "name": "1-capture-row" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "open-a-file", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-open", "note": "the ring moved to the Open a file row" },
+    { "do": "snapshot", "name": "2-open-row" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "paste-one-in", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-paste", "note": "and to the Paste an image row" },
+    { "do": "snapshot", "name": "3-paste-row" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "where-it-lands", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-where-it-lands", "note": "the last step reads Done rather than Next" },
+    { "do": "snapshot", "name": "4-where-it-lands" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-finished", "note": "Done closed the guide and left the window alone" }
+  ]
+}

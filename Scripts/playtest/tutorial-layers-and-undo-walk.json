@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-layers-and-undo-walk",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "layers-and-undo" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-stack", "timeout": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-the-stack", "note": "step one opened the panel for itself and rings the Layers list" },
+    { "do": "snapshot", "name": "1-the-stack" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-one", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "2-pick-one" },
+
+    { "do": "selectRow", "row": "Heading" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-look-is-added", "timeout": 5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-a-look-is-added", "note": "picking a real row moved it on, and the Effects section the selection brought in is scrolled to and ringed" },
+    { "do": "snapshot", "name": "3-a-look-is-added" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "take-it-off", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-take-it-off", "note": "a waiting step: the heading has to really go before this moves on" },
+    { "do": "snapshot", "name": "4-take-it-off" },
+
+    { "do": "key", "key": "backspace", "modifiers": ["command"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "put-it-back", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-put-it-back", "note": "the heading is gone from the picture and from the list, and the guide now waits on undo" },
+    { "do": "snapshot", "name": "5-put-it-back" },
+
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "nothing-is-stuck", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-nothing-is-stuck", "note": "undo really brought it back, and the last step reads Done" },
+    { "do": "snapshot", "name": "6-nothing-is-stuck" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-finished", "note": "Done closed the guide and left the sample as it found it" }
+  ]
+}

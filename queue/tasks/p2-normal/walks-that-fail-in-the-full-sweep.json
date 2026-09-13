@@ -9,10 +9,10 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-12T23:53:56.531Z",
+  "updated": "2026-09-13T01:13:57.366Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Last sweep 2026-09-12T23:53:56Z: 355 of 362 walks passed in 64 minutes.\n\nFailing walks (7): border-effect-walk, contents-for-several-walk, dock-picked-first-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk, width-reads-back-walk\n\nFull output: queue/sweep/2026-09-12-155007.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: help-has-a-tutorials-menu-organised-in-tracks-an: Tutorials IA touched code every walk runs through: an editor registers itself on canvas mount (EditorState.canvasDidMoveToWindow), the Help menu group was rebuilt, and the playtest action enum and forget list grew. The three tutorial walks and the twelve menu walks pass; the rest of the set has not been run against it.",
+  "notes": "Last sweep 2026-09-13T01:13:57Z: 356 of 363 walks passed in 64 minutes.\n\nFailing walks (7): border-effect-walk, contents-for-several-walk, dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk\n\nFull output: queue/sweep/2026-09-12-170938.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: first-launch-offers-the-tour-or-gets-out-of-your: The setup window presents on a wider condition now and every walk launches through the same hook, so the whole set should confirm nothing else started seeing a welcome panel. Also renames TutorialHubProbe to WindowReadProbe in the harness.",
   "acceptance": [
     "Every walk named in the notes either passes or is rewritten to match what the app does now",
     "Each one is run on its own and passes twice in a row",
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-12T23:53:56.530Z",
       "note": "sweep 2026-09-12T23:53:56Z: 7 failing (border-effect-walk, contents-for-several-walk, dock-picked-first-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk, width-reads-back-walk)"
+    },
+    {
+      "t": "2026-09-13T01:13:57.365Z",
+      "note": "sweep 2026-09-13T01:13:57Z: 7 failing (border-effect-walk, contents-for-several-walk, dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk)"
     }
   ]
 }
