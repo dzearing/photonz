@@ -14597,3 +14597,36 @@ byte-identical, and `Scripts/test.sh` passes 5933 tests. Audit:
 **Next:** the queue's own p1 work. Worth knowing for whoever picks up a release:
 the release workflow has now been read closely and its Build app step fixed, but
 it has not been exercised end to end since.
+
+## 2026-09-13 — Separate into Layers: text runs
+
+Shipped the foundation slice of Separate into Layers (Next,
+`next-separate-into-layers`, on by default). Right click a picture in the layers
+list, including the locked Background, or use Layer ▸ Separate into Layers, and
+every run of text in the screenshot becomes its own layer while the picture's own
+pixels are repaired where each word was. Two things and not three, and one
+Command Z takes the lot back.
+
+New: `PhotonzCore/TextRunSweep` (a linear sweep for every run at once, ink read
+as two masks so a bold heading is not thrown away as a rule, and a box-vs-text
+rule on how much of a component's own outline is ink),
+`PhotonzCore/PatchFill` (flat, then a fitted linear gradient, then refuse — no
+inpainting, no edge extend), `PhotonzRender/LayerSeparator` (ring sampling that
+skips ink, an unmix that cuts the letters out with real antialiasing so a piece
+is words rather than a tile of button, and the repair),
+`PhotonzDocument.separateIntoLayers` (one mutation, one undo step).
+
+Measured on `Fixtures/settings-pane-2x.png`: 9 of 9 runs out, 0 skipped, no
+switch or button taken. The space the white Save Changes label came from reads
+exactly one colour and it is the button's own blue (0/255). Release perf on a
+12.2 megapixel capture with 81 runs: sweep 51 ms, sweep and cut 61 ms.
+
+Design `docs/design/separate-into-layers.md`; audit
+`queue/audits/2026-09-13-separate-into-layers.json`; walk
+`Scripts/playtest/separate-into-layers-walk.json`.
+
+Next: the sibling tasks extend the three seams — boxes as well as text, text
+inside a box coming out inside it, shadows as a real effect, and reading the
+actual characters so the layers can be named the words instead of Text 1 to
+Text 9. Open for the user in the audit: that naming, and whether the command
+should be called Auto separate instead.
