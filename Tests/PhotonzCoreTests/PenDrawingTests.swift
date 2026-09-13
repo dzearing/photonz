@@ -453,4 +453,29 @@ struct PenDrawingTests {
         #expect(hint.contains("Esc"))
         #expect(hint.contains("close"))
     }
+
+    /// The Pen stays in hand after a shape lands, so the opening line is also
+    /// the line you read BETWEEN shapes — and it is the only place that says
+    /// how to put the tool down. Without that, a person who has finished their
+    /// icon has to hunt for the way out of a tool that no longer hands itself
+    /// back.
+    @Test func theOpeningLineSaysHowToPutThePenDown() {
+        let opening = PenSession.hint(for: PenSession())
+        #expect(opening.contains("Esc"))
+        #expect(opening.contains("puts the Pen down"))
+
+        // A closed shape empties the session, so that same opening line is
+        // what the chip says while you are between the shapes of an icon.
+        var session = PenSession()
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 0)
+        _ = click(&session, 50, 80)
+        session.press(at: CGPoint(x: 0, y: 0), constrained: false, zoom: 1)
+        guard case .closed = session.release() else {
+            Issue.record("the click back on the first anchor should have closed the path")
+            return
+        }
+        #expect(!session.isDrawing)
+        #expect(PenSession.hint(for: session) == opening)
+    }
 }

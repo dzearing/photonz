@@ -61,7 +61,8 @@ typo comes back in a second rather than as a timeout on an empty folder:
   the window alone.
 - `log.json`: one entry per step with the elapsed time, what the step did,
   and, after anything that changes the editor, its state: tool, Measure mode,
-  hint text, copy confirmation, layer count, whether Undo and Redo have
+  the chip under the canvas (`hint`: the Measure hint, or the Pen's line about
+  what a click does and how to put the tool down), copy confirmation, layer count, whether Undo and Redo have
   anything to do (`canUndo`, `canRedo`), whether this process has focus at all
   (`appActive`, always false in a walk), every measurement (name, value,
   role, feet, frame), every annotation (shape, caption, frame), legend

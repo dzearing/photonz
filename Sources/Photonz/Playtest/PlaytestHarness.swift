@@ -5581,6 +5581,16 @@ private final class Run {
         guard let editor else { return [:] }
         let document = editor.document
         let layers = document?.layers ?? []
+        // The chip under the canvas, in the order the editor stacks the two
+        // that exist: the Measure hint wins, the Pen's is next.
+        let hintReport: String
+        if editor.showsMeasureHint {
+            hintReport = "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)"
+        } else if editor.showsPenHint {
+            hintReport = "\(PenSession.hintTitle) · \(editor.penHintText)"
+        } else {
+            hintReport = "none"
+        }
         let measures = layers.compactMap { layer -> String? in
             guard let measure = layer.measure, let document else { return nil }
             let flags = "\(measure.role.rawValue)\(measure.alignment != nil ? ", alignment" : "")"
@@ -5771,7 +5781,13 @@ private final class Run {
             // points. Read beside `captionField` it says whether the outline
             // is following the bubble being typed in or standing still.
             "outline": canvas?.playtestOutlineReport ?? "no canvas",
-            "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
+            // The chip under the canvas, whichever tool has put one up, read
+            // in the order the editor stacks them: the Measure hint, then the
+            // Pen's. The Pen's is the only place its two endings are told
+            // apart AND, now that the tool stays in hand, the only thing on
+            // screen that says how to put it down, so a walk can claim its
+            // words rather than squinting at a capture.
+            "hint": hintReport,
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",
             "layers": layers.count,
             // Composites that have reached the canvas since the window opened.

@@ -1,0 +1,29 @@
+{
+  "feature": "The Pen stays in your hand",
+  "epic": "icon-vector",
+  "summary": "One press of P now draws a whole icon. The Pen no longer puts itself down after each shape: a finished path is added and picked, and the Pen is still in hand for the next one. Escape puts it down.",
+  "setup": "Photonz Dev, release Next. The Pen is on by default (Experiments, \"Draw any shape with the Pen\"). Start from a blank canvas: File, New Canvas.",
+  "try": [
+    { "do": "Press P, click three points, then click back on the first one. The triangle fills, and the Pen is still lit in the tool bar.", "shot": "2026-09-13-pen-stays-in-hand.png" },
+    { "do": "Without touching the keyboard, click four more points the same way. A second shape, for the same one press of P." },
+    { "do": "Read the chip under the canvas between the two shapes. It says what a click does and that Esc puts the Pen down." },
+    { "do": "Draw a third shape and, halfway through it, press Backspace twice. It takes back one corner per press and leaves the finished shapes alone." },
+    { "do": "Press Escape with nothing half-drawn. The Pen goes down, Select comes back, and the shape you drew last is still picked." },
+    { "do": "Press P again, click two points, then press V. The Pen goes down mid-path and the half-drawn line is discarded, exactly as before." },
+    { "do": "Press P and draw a shape with one very short edge, clicking the two ends quickly. Both corners land." }
+  ],
+  "evaluate": [
+    "Drawing several shapes in a row: does the Pen staying in hand feel like the app getting out of the way, or like a tool you cannot put down?",
+    "When you wanted to stop, did you reach for Escape, for V, or for the tool bar?",
+    "The shape you just drew stays picked until you start the next one, so its colour is editable in Appearance without putting the Pen down. Did you notice, and did you use it?",
+    "Backspace mid-path takes back one corner. Is that what your hand expected, or did you expect it to throw the whole line away?",
+    "After the last shape of an icon, does one press of Escape land you where you want to be, with that shape picked?"
+  ],
+  "rough": [
+    "Every path still arrives in the same redline red, so an icon comes out monochrome until you repaint each piece. The Pen has no colour capsule on the tool bar, which is the other half of that.",
+    "There is still no anchor editing: a point cannot be moved or deleted once the path is down. That is the next slice.",
+    "The shape you just drew is let go the moment you place the first corner of the next one. That is on purpose (Backspace was deleting a finished shape behind the line under your hand, reproduced on 2026-09-13), but it means the Layers row and the Appearance panel go quiet while you draw.",
+    "Two fast clicks on bare canvas used to be read as a double click and zoomed the window instead of placing the corner, which a short edge on an icon produces easily. That is fixed for the Pen only; every other tool still zooms the window on a double click of bare canvas.",
+    "Screen Recording was granted, so the picture here is the real window."
+  ]
+}

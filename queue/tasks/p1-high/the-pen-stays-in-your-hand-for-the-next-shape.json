@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:15:08.418Z",
-  "updated": "2026-09-13T16:15:57.808Z",
+  "updated": "2026-09-13T16:34:31.676526Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-13-pen-draws-a-path.json, first item: 'Handing back to Select after one path is the thing most likely to be wrong for icon work.'\n\nThe Pen lives in Sources/Photonz/CanvasPen.swift and Sources/Photonz/EditorState+Pen.swift, behind FeatureCatalog.penFlag (\"next-pen\").\n\nThe hand-back is deliberate today and matches every other drawing tool, so this is a real fork: the alternative is leaving it alone for consistency. Going with keeping the Pen because the ask it was built for (2026-09-13, the user, elaborate SVG icons) is several shapes in a row, and because Illustrator, Figma and Sketch all keep the pen until you leave it. If a runner finds that keeping it breaks something structural in how tools hand back, stop and file a decision card rather than half-doing it.\n\nDo not change the other drawing tools. The Pen is the one that draws more than one thing per errand.",
@@ -31,6 +31,39 @@
     {
       "t": "2026-09-13T16:15:57.807Z",
       "note": "seq 270 -> 12"
+    },
+    {
+      "t": "2026-09-13T16:16:34.183Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T16:34:31.676526Z",
+      "note": "adversarial review, before building: the mock is not the question here, the habit is. Every other drawing tool in the app hands back to Select because it draws ONE thing per errand; the Pen draws an icon, which is five or six shapes in a row, and Illustrator, Figma and Sketch all keep the pen until you leave it. Kept the pick on the finished path (so it can be repainted in Appearance without putting the tool down), because the cost of the old ending was the tool switch, not the pick. Shortest version that delivers it: one argument on finishCreating, one line of chip copy, and Escape as the way out. No new chrome."
+    },
+    {
+      "t": "2026-09-13T16:34:31.676526Z",
+      "note": "built: EditorState.addPath now calls finishCreating(layer.id, tool: .pen); CanvasNSView.penKeyDown answers Escape with nothing being drawn by putting the Pen down (onToolChange(.select)), ahead of the canvas's own Escape chain so the way out costs ONE press and does not silently drop the pick first; PenSession.hint case 0 now reads \"Click to place a corner, or press and drag for a curve. Esc puts the Pen down.\", which is the line on screen between one shape and the next."
+    },
+    {
+      "t": "2026-09-13T16:34:31.676526Z",
+      "note": "adversarial review, on the real app, found two things the change made reachable and both are fixed. (1) Backspace mid-path deleted the FINISHED shape behind the line under your hand: reproduced with a probe walk, two layers went to one while the chip carried on saying \"keep clicking points\". Fixed both ways round - the first anchor of a new path lets the last shape go (Figma does the same), and Backspace while drawing now steps back one anchor the way Command Z already did. (2) Two quick clicks a couple of points apart were read as a double click on bare canvas and ZOOMED THE WINDOW instead of placing the corner: reproduced, the window went 1280x900 to 1728x1028 and the anchor never landed. A short edge on an icon is exactly that pair of clicks. The window-zoom double click now skips the Pen; no other tool is changed."
+    },
+    {
+      "t": "2026-09-13T16:34:31.676526Z",
+      "note": "walks: Scripts/playtest/pen-stays-in-hand-walk.json is the new one and covers all of it (two shapes for one press of P, the pick let go when the next path starts, Backspace stepping back one anchor, Escape putting the Pen down with the last shape still picked, one Undo per shape, V still putting it down mid-path, and a short edge that must not be read as a double click). pen-draws-a-path-walk's stage 5 claimed the hand-back to Select and now claims the Pen stays. pen-three-drawings-walk is unchanged and still passes (pressing P when the Pen is already in hand is a no-op)."
+    },
+    {
+      "t": "2026-09-13T16:34:31.676526Z",
+      "note": "harness: the walk log's `hint` field used to report the Measure chip only, so nothing could read the Pen's line. It now reports whichever chip is up, in the order the editor stacks them. Log only - no step asserts on it - so no sweep was requested for this."
+    },
+    {
+      "t": "2026-09-13T16:34:31.676526Z",
+      "note": "docs: docs/design/vector-paths.md gained \"The Pen stays in your hand\" under The rest of it and lost the stale rough edge that said it hands back; docs/design/playtest-harness.md describes the wider `hint` field."
+    },
+    {
+      "t": "2026-09-13T16:34:31.676526Z",
+      "note": "verified: Scripts/test.sh green (6243 tests), pen walks green, the new walk passed on its own more than twice."
     }
-  ]
+  ],
+  "started": "2026-09-13T16:16:34.182Z"
 }

@@ -229,6 +229,17 @@ Command Z while drawing steps back ONE anchor. It is taken in the canvas's
 there is nothing left to step back through the pen stops answering and Command Z
 means what it always means.
 
+**The Pen stays in your hand.** Every other drawing tool hands back to Select
+the moment it has drawn its one thing, which is right for a tool that draws one
+thing per errand. An icon is five or six shapes in a row, so the Pen keeps
+itself: a finished path is added, and picked, and the Pen is still the tool in
+hand for the next shape. Escape with nothing being drawn is the way out — it
+puts the Pen down and hands back to Select with the shape just drawn still
+picked, so the old ending is one press away — and V, or any other tool button,
+puts it down as it always did. The chip's opening line carries that way out,
+because it is the line on screen between one shape and the next.
+`Scripts/playtest/pen-stays-in-hand-walk.json` is the walk that holds all of it.
+
 A path arrives wearing what a new box wears — the redline red, 4pt of line,
 filled when it closed and no fill at all when it did not, because an open path
 is a line. The Pen carries no colour capsule on the tool bar: the Appearance
@@ -260,9 +271,6 @@ to drag a node are decoration.
   nobody has to add one, but the row is there and it will draw a rectangle.
 * **Line cap and line join are not settable.** Icons want butt caps and a miter
   limit sooner or later.
-* **The Pen hands back to Select after one path**, the way every other drawing
-  tool does. An icon is several shapes in a row, so this is the first thing to
-  reconsider if drawing an icon feels like work.
 * **There is no way to place a half-smooth anchor without Option**, and the
   chip does not mention Option. A pen user will try it; a newcomer will not need
   it. Whether it deserves a line on screen is a question for the audit.

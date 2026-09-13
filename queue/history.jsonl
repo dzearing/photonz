@@ -2996,3 +2996,5 @@
 {"t":"2026-09-13T16:15:57.984Z","ev":"task_resequenced","id":"a-manager-pass-does-not-wake-itself-up-again","from":72,"to":7}
 {"t":"2026-09-13T16:15:58.027Z","ev":"task_resequenced","id":"the-pen-arms-its-colour-from-the-tool-bar-like-e","from":2540,"to":63}
 {"t":"2026-09-13T16:16:20.758Z","ev":"manager","filed":4,"readyBefore":73,"readyAfter":73,"report":"queue/manager/2026-09-13-0920.md"}
+{"t":"2026-09-13T16:16:34.139Z","ev":"manager_pass","exit":0,"ready":73}
+{"t":"2026-09-13T16:16:34.185Z","ev":"task_started","id":"the-pen-stays-in-your-hand-for-the-next-shape","title":"The Pen stays in your hand for the next shape","priority":"p1-high"}

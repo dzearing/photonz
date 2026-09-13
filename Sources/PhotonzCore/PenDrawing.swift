@@ -365,10 +365,16 @@ public struct PenSession: Equatable, Sendable {
     /// The last line is the one that matters: Return and Escape both end a
     /// path and they do OPPOSITE things with it, so the difference is written
     /// down rather than left to be discovered by losing a drawing.
+    ///
+    /// The FIRST line carries the way out. The Pen stays in hand after a shape
+    /// lands — an icon is several shapes in a row — so this is the line on
+    /// screen between one shape and the next, and nothing else on screen says
+    /// how to stop drawing.
     public static func hint(for session: PenSession) -> String {
         switch session.anchors.count {
         case 0:
-            return "Click to place a corner. Press and drag to pull a curve out of it."
+            return "Click to place a corner, or press and drag for a curve. "
+                + "Esc puts the Pen down."
         case 1:
             return "Click the next point, or press and drag for a curve. Esc starts over."
         case 2:

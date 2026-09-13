@@ -169,11 +169,24 @@ extension CanvasNSView {
     // MARK: - The gesture
 
     /// A press with the Pen in hand. True when the pen took it.
+    ///
+    /// The first anchor of a NEW path lets go of whatever was picked, which,
+    /// now that the Pen stays in hand, is normally the shape it drew a moment
+    /// ago. Drawing is not editing: leaving it picked means a ⌫ aimed at the
+    /// line under your hand takes a finished shape off the canvas behind it
+    /// instead — two clicks into a second triangle, ⌫ deleted the first one
+    /// and the chip carried on saying "keep clicking points" (2026-09-13).
+    /// Every pen that stays in hand lets go at this same moment.
     func penMouseDown(at p: CGPoint, event: NSEvent) -> Bool {
         guard tool == .pen, let viewport else { return false }
+        let startingAPath = !penSession.isDrawing
         penSession.press(at: p, constrained: event.modifierFlags.contains(.shift),
                          breaking: event.modifierFlags.contains(.option),
                          zoom: viewport.zoom)
+        if startingAPath, selectedLayerFrame != nil {
+            selectedLayerFrame = nil
+            onSelectLayer(nil)
+        }
         refreshPenChrome()
         return true
     }
@@ -208,11 +221,26 @@ extension CanvasNSView {
         refreshPenChrome()
     }
 
-    /// Return and Escape while a path is being laid down. True when the pen
-    /// answered the key, so the canvas stops looking.
+    /// Return and Escape with the Pen in hand. True when the pen answered the
+    /// key, so the canvas stops looking.
+    ///
+    /// Escape means the same thing twice over, one step at a time: it throws
+    /// away the path being drawn, and then, with nothing being drawn, it puts
+    /// the Pen down. The Pen no longer hands itself back after every shape
+    /// (`EditorState.addPath`), so this is the way out that is not the tool
+    /// bar, and it lands on Select with the shape just drawn still picked.
+    ///
+    /// It is answered HERE rather than at the end of the canvas's own Escape
+    /// chain because that chain drops the selection first: from a shape the
+    /// Pen just drew, the way out would otherwise cost two presses, and the
+    /// first one would silently throw the pick away.
     func penKeyDown(_ event: NSEvent) -> Bool {
-        guard tool == .pen, penSession.isDrawing,
-              !event.modifierFlags.contains(.command) else { return false }
+        guard tool == .pen, !event.modifierFlags.contains(.command) else { return false }
+        guard penSession.isDrawing else {
+            guard event.keyCode == 53 else { return false }  // Escape
+            onToolChange(.select)
+            return true
+        }
         switch event.keyCode {
         case 36, 76:  // Return, Enter
             if let content = penSession.finish() {
@@ -225,13 +253,21 @@ extension CanvasNSView {
             penSession.discard()
             endPenSession()
             return true
+        case 51, 117:  // ⌫ and forward delete
+            // The same step back one anchor that ⌘Z takes, on the key a pen
+            // user reaches for first. It also means ⌫ cannot fall through to
+            // the canvas's own delete while a path is being drawn.
+            guard penSession.undoLastAnchor() else { return true }
+            refreshPenChrome()
+            onPenHintChange(PenSession.hint(for: penSession))
+            return true
         default:
             return false
         }
     }
 
-    /// Whether the pen owns the keyboard right now, so Escape does not also
-    /// drop the layer selection behind it.
+    /// Whether a path is being laid down right now, which is what decides
+    /// whether ⌘Z steps back an anchor or reaches the document's own undo.
     var penIsDrawing: Bool { tool == .pen && penSession.isDrawing }
 
     /// Command Z while a path is being laid down steps back ONE anchor rather
