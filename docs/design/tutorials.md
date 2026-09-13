@@ -627,14 +627,79 @@ track named that guide Variants; the app has never used the word. A component
 holds VERSIONS, the panel says Versions, and a guide teaches what shipped. Same
 rule the Looks track settled over Outline, and a test enforces it.
 
+## The Colours and Styles track
+
+Name a colour or a piece of type once, use the name wherever you like, and
+change it in one place. Four guides, and the payoff is the second one's last
+step.
+
+| Guide | Brings | What it teaches |
+| --- | --- | --- |
+| Save a colour as a style | the settings card | the small button at the end of the Fill row, Save as Style, and the tile that lands on the shelf |
+| Change it everywhere | the same card | one name on two layers at once, one edit to the tile, and the third layer that did not move |
+| Text styles | the same card | the Style row at the top of Text, the name put on a second heading, and the tile dragged onto a third |
+| The Library | the same card | the four scopes, a colour let go of ON the shelf, and what a tile's own settings do |
+
+Nothing in the framework had to change. No new trigger, no new prepare, no new
+anchor name: saving a colour or a text style already turns the Library to Styles
+by itself (`showStylesShelf`), so every step that points at the shelf finds the
+right one standing there.
+
+**One sample for the whole track** (`TutorialSample.stylesScreen`): a settings
+card with three rows, each a heading, a line under it and a blue switch.
+Somebody doing the track back to back sees the same card every time, so the
+second guide starts on ground the first one covered.
+
+Four things the track settled, each measured on the probe rather than reasoned
+about:
+
+- **Three of each, because two only shows that something happened.** Two
+  switches repainting together says an edit reached two layers. The third
+  switch, which never had the name and so stands still, is the only thing on
+  screen that says WHY, and it is the closing step of the second guide.
+- **A guide has to CHANGE something you can see.** The card's three headings
+  were set identically at first, which made every step of the text guide
+  invisible: save the type, put the name on the second heading, drop it on the
+  third, and the picture never moved. Only the first heading is set like a
+  heading now. The other two are the same words typed in a hurry, so setting one
+  by the name grows it into place in front of you.
+- **A drag needs both its ends on screen.** The step that drops a colour on the
+  Library rang the whole dock at first, which left the shelf scrolled off the
+  bottom of the very ring that was meant to contain it: the card said "let go
+  anywhere on the Library" over a panel with no Library in it. It rings the
+  SHELF instead, which scrolls it up and leaves the Fill row the drag starts on
+  above it.
+- **A step may not name a control that only exists after an optional click.**
+  The Library guide ended on two cards, the first saying "click the tile and its
+  settings open" and the second naming the Remove button in those settings.
+  Pressing Next rather than clicking took you straight to a card about a button
+  that was not there. They are one card now.
+
+And one ordinary bug, found by the track and fixed with it: **a style's name
+field asked for the keyboard one pass too early.** The field is installed by the
+very change that asks for focus, and a focus asked for before the field is in
+the responder chain is dropped without a word. It got away with it until a guide
+was running over the window, where the following timer put the race the other
+way about half the time and the name somebody typed went into the picture
+instead. Measured on the probe on 2026-09-13: four runs of the text styles walk,
+two failed. Fixed in all four naming fields that share the shape (the Style row,
+a colour row, an effect's Style row, and the field the Library raises when a
+colour is let go of on it), each one now asking one pass later. It is the same
+bug the Components track found in Add Version, in a different costume.
+
+**The copy names no section.** The colour a shape is painted lives in a section
+headed Color or Appearance depending on `next-shape-parts`, so every step here
+says "the Fill row" and points, which is true under both. Same rule the Basics
+track settled about menu rows and keys.
+
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
 menu, the track submenus, the hub window, the first launch offer, the Basics
-track, the Redlining track, the Looks track and the Components track. Still
-queued:
+track, the Redlining track, the Looks track, the Components track and the
+Colours and Styles track. Still queued:
 
-- **The other three tracks**, one task each.
+- **The other two tracks**, Building UI and Video, one task each.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated
   walk per guide that drives the real editor and asserts every step's anchor
   resolves. The unit check here (`TutorialCatalogCheck`) is the promise; that

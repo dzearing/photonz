@@ -1,0 +1,27 @@
+{
+  "id": "a-guide-pointing-at-the-library-rings-a-shelf-wi",
+  "title": "A guide pointing at the Library rings a shelf with its tiles cut off",
+  "goal": "When a tutorial points at the Library, the shelf is usually the last thing in a tall panel, so the ring lands half off the bottom of the window and the tile the guide is talking about is cut in two. Somebody following the guide has to scroll to see the thing they were just shown.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2660,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T05:12:44.706Z",
+  "updated": "2026-09-13T05:12:44.709Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on the probe on 2026-09-13 while building the Colours and Styles track.\n\n  Scripts/playtest.sh Scripts/playtest/tutorial-save-a-colour-as-a-style-walk.json --no-build\n\nThen look at /tmp/photonz-playtest/tutorial-save-a-colour-as-a-style-walk/3-on-the-shelf-sc.png: the ring is round the Library section, the Styles shelf is showing, and the Brand tile that just landed is cut in half by the bottom edge of the window. Same in tutorial-the-library-walk 3-a-tile-is-a-handle-sc.png.\n\nWhy it happens: TutorialController asks for .revealTarget, which scrolls until TutorialAnchorView.isWhollyShown, and the Library section is taller than the room left under the sections above it, so the reveal can never be satisfied and stops after its fixed number of tries wherever it got to. Options worth weighing: reveal to the section HEADER plus one tile row rather than the whole section; or let a step name how much of its target it needs.",
+  "acceptance": [
+    "A guide step that points at the Library shows the whole shelf, or as much of it as the window can hold, without the person scrolling",
+    "The three tutorial walks that ring the shelf show a whole row of tiles in their screenshots",
+    "Nothing else in the panel is scrolled somewhere unhelpful to achieve it: the row a drag starts from stays on screen too"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T05:12:44.708Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -306,6 +306,15 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// guide about how a layer MIXES with what is below has something to mix
     /// without a drawing lesson first.
     case tintedScreen
+    /// A made up settings card: three rows, each one a heading, a line under
+    /// it and a blue switch. Three headings set exactly alike and three
+    /// switches painted exactly alike, and nothing linking any of them.
+    ///
+    /// The whole Colours and Styles track teaches on this one screen. Three of
+    /// each is the smallest number that can show what a name DOES: two wearing
+    /// it change together and the third, which never had it, stands still. Two
+    /// would only show that an edit happened.
+    case stylesScreen
     /// A button drawn as two loose layers, a box and the words on it, and
     /// nothing else on the page. The guide that makes a component out of it
     /// needs it NOT to be one yet, and needs clear page beside it to drag a
@@ -332,6 +341,9 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
         case .redlineScreen, .measuredScreen, .accountScreen, .tintedScreen: true
         case .starterScreen, .emptyWindow: false
         case .componentPieces, .componentOriginal, .componentCopies: false
+        // A colour you can give a name to is a colour on a LAYER. Flatten this
+        // one and every guide in the styles track has nothing to pick.
+        case .stylesScreen: false
         }
     }
 }
@@ -444,6 +456,10 @@ public enum TutorialCatalog {
         TutorialGuides.useItAgainAndAgain,
         TutorialGuides.overrideOneCopy,
         TutorialGuides.componentVersions,
+        TutorialGuides.saveAColourAsAStyle,
+        TutorialGuides.changeItEverywhere,
+        TutorialGuides.textStyles,
+        TutorialGuides.theLibrary,
     ]
 
     /// The guide the Help menu's own row runs, and the one first launch offers.

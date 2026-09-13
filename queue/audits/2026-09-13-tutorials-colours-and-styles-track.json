@@ -1,0 +1,30 @@
+{
+  "feature": "Tutorials: the Colours and Styles track",
+  "epic": "ui-building",
+  "summary": "Help now holds four short guides for naming things: save a colour under a name, put that name on several layers and change all of them from one place, do the same for type, and learn what the Library shelf is for. All four teach on one made up settings card, so the second guide starts on ground the first one covered.",
+  "setup": "Photonz Dev, release Next. Help > Tutorials > Colours and Styles, or Help > Tutorials > All Tutorials... for the window. Flags are on by default.",
+  "try": [
+    { "do": "Open Help > Tutorials > Colours and Styles > Save a colour as a style. A window called Tutorial Sample opens on a settings card with three blue switches." },
+    { "do": "Click the switch beside Notifications, then open the small button at the end of the Fill row and choose Save as Style. Type Brand and press Return.", "shot": "2026-09-13-colours-and-styles-1-saved.png" },
+    { "do": "Run Change it everywhere. Click Notifications Switch in the layers list, Shift click Privacy Switch, and save what they share as Brand." },
+    { "do": "Click the Brand tile on the Styles shelf and give it another colour. Watch which switches move and which one does not.", "shot": "2026-09-13-colours-and-styles-2-two-moved.png" },
+    { "do": "Run Text styles. Save how the Notifications heading is set, put the name on Privacy from the menu, then drag the tile onto the word Storage.", "shot": "2026-09-13-colours-and-styles-3-all-three.png" },
+    { "do": "Run The Library. Pick the switch beside Privacy and drag the Fill swatch down onto the shelf to keep the colour under a name.", "shot": "2026-09-13-colours-and-styles-4-drop-on-the-shelf.png" },
+    { "do": "Turn next-styles off in Experiments and open Help > Tutorials. The whole Colours and Styles submenu should be gone rather than dimmed." }
+  ],
+  "evaluate": [
+    "The second guide ends on the switch that did NOT move. Is that the moment the idea lands for you, or does it need saying more plainly?",
+    "Two of the card's three headings are deliberately set smaller than the first, so the text guide has something you can watch change. Does the card read as a sloppy design or as a real unfinished file?",
+    "Every guide teaches on the same card. Is that steadying, or does it get dull by the fourth?",
+    "Dragging a colour from the Fill row down to the Library is a long reach in a tall dock. Would you ever find that gesture without a guide?",
+    "The Library guide is four steps. Is that enough to make the shelf feel like somewhere you would go, or does it need a scope you can actually browse?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every picture here is the real window, not an offscreen render.",
+    "The task notes say a colour can be dropped on a layer row. It cannot: a layer row and the picture take a TEXT style, and a colour is only taken by a swatch or by the Library shelf. So the two drag routes are taught where they are real, the colour one in the Library guide and the text one in the text guide.",
+    "The Library section is usually the last thing in a tall dock, so the guide's ring around it often has the bottom row of tiles cut off by the window edge. The step still reads, but a shelf you have to scroll to is a weak place to end a guide.",
+    "The card the guide floats sits over the canvas and sometimes lands on the very switch you just picked. It is ringing a panel row at that moment, not the switch, so nothing is hidden that the step is talking about, but it looks careless.",
+    "The switches are plain pills with no knob on them. A real switch has one, but a knob would be a second layer and a click aimed at the switch would sometimes pick it, which is the trap this track was built to avoid.",
+    "The first guide's third step asks for three things on one card: open the button, choose Save as Style, type the name. It is one continuous action but it is the longest sentence in the track."
+  ]
+}

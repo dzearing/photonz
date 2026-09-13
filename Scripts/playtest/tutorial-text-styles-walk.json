@@ -1,0 +1,231 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-text-styles-walk",
+  "seed": "The type half of the Colours and Styles track, on the same settings card: save how one heading is set, put the name on a second one through the Style row, and put it on a third by dragging the tile off the shelf onto the words. The drag is the route people actually use once they know it is there, which is why the guide teaches it rather than only the menu.",
+  "setup": {
+    "forget": [
+      "tutorials",
+      "panel",
+      "color",
+      "text",
+      "shapes",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "startGuide",
+      "guide": "text-styles"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "three-headings",
+      "timeout": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "snapshot",
+      "name": "1-three-headings"
+    },
+    {
+      "do": "action",
+      "action": "tutorialNext"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "pick-a-heading",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        130,
+        154
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "save-the-type",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-save-the-type",
+      "note": "clicking the word Notifications picked the text layer and the ring moved to the Text section, where Style is the top row"
+    },
+    {
+      "do": "panel",
+      "stage": "2-save-the-type"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-save-the-type"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Style",
+      "choose": "Save as Style"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 1.6
+    },
+    {
+      "do": "describe",
+      "stage": "2b-naming",
+      "note": "the Style row's menu really holds Save as Style, and choosing it opened the name field under the row with the keyboard in it"
+    },
+    {
+      "do": "panel",
+      "stage": "2b-naming"
+    },
+    {
+      "do": "snapshot",
+      "name": "2b-naming"
+    },
+    {
+      "do": "type",
+      "text": "Section Heading"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "pick-another",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-saved",
+      "note": "the Style row's own menu really holds Save as Style, and saving moved the guide on"
+    },
+    {
+      "do": "panel",
+      "stage": "3-saved"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-saved"
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        234
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "use-the-name",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Style",
+      "choose": "Section Heading"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "drag-it-on",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-drag-it-on",
+      "note": "the saved name really is offered in the same menu, and the ring is now on the Library shelf the tile is dragged off"
+    },
+    {
+      "do": "panel",
+      "stage": "4-drag-it-on"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-drag-it-on"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Section Heading",
+      "to": [
+        120,
+        314
+      ],
+      "expect": "takes"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "all-three-one-name",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "5-all-three",
+      "note": "THE TEST: the tile let go of on the third heading really landed, so all three headings are set by one name"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-all-three"
+    },
+    {
+      "do": "action",
+      "action": "tutorialNext"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-finished",
+      "note": "Done closed the guide"
+    }
+  ]
+}

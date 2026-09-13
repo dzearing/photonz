@@ -71,8 +71,16 @@ struct EffectStyleRow: View {
             .onChange(of: isNaming, initial: true) { _, naming in
                 guard naming else { return }
                 draft = editorState.suggestedEffectStyleName(kind: row.kind)
-                nameFocused = true
-                DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+                // One pass later, not this one: the field is being installed
+                // by the very change being reacted to, and a focus asked for
+                // before it is in the responder chain is dropped without a
+                // word. Same fix, and same reason, as the Style row's
+                // (`TextStylePanel.swift`), where a guide running over the
+                // window made the race go the wrong way half the time.
+                DispatchQueue.main.async {
+                    nameFocused = true
+                    DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+                }
             }
         }
     }

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 26,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.920Z",
-  "updated": "2026-09-13T03:00:05.048Z",
+  "updated": "2026-09-13T04:44:12.795Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -46,8 +46,32 @@
     {
       "t": "2026-09-13T03:00:05.047Z",
       "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-09-13T04:44:12.794Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T04:47:24.869Z",
+      "note": "Adversarial review before building. (1) The task names four guides and two of them are the same flow: saving a colour and reusing it. Kept both, but split at the payoff: guide one is make a name and see where it lands, guide two is put one name on SEVERAL layers and change it once. Guide two ends on the third switch that never had the name and so did not move, which is the only way to show what following a name means. (2) The notes say a colour can be dropped on a layer row. It cannot: the canvas and the layers rows take a TEXT style, and a colour is only taken by a swatch or by the Library shelf (CanvasDrop.takes, StyleRowDrop). So the drag routes are taught where they are real: colour onto the shelf in the Library guide, text style onto the picture in the text guide. (3) The Library guide risked being a tour of an empty shelf. It fills the shelf itself, by the drag route, which is also the fast route the notes asked for. (4) No framework machinery needed: no new trigger, no new prepare, no new anchor name. Saving already opens the Library on Styles by itself, so every step that points at the shelf finds the right one."
+    },
+    {
+      "t": "2026-09-13T04:47:24.870Z",
+      "note": "One sample for the whole track rather than four: a settings card with three identical headings and three identical blue switches. Guide one names one switch colour, guide two names two of them, guide three names the heading type, guide four drops a colour on the shelf. A switch carries no words on it, which is the Looks and Components rule about click targets."
+    },
+    {
+      "t": "2026-09-13T05:13:33.359Z",
+      "note": "Four guides landed as catalogue data: save-a-colour-as-a-style, change-it-everywhere, text-styles, the-library. One new sample (stylesScreen), one new track test suite of 24, and no framework machinery: no new trigger, no new prepare, no new anchor name. Saving already turns the Library to Styles by itself, so every step that points at the shelf finds the right one."
+    },
+    {
+      "t": "2026-09-13T05:13:33.359Z",
+      "note": "Three things the probe changed about the design. (1) The card had three identical headings, which made every step of the text guide invisible: only the first is set like a heading now and the other two are the same words typed in a hurry, so putting the name on one grows it in front of you. (2) The Library guide rang the whole dock for the drag-onto-the-shelf step, which left the shelf scrolled off the bottom of the ring; it rings the shelf instead, which scrolls it up and leaves the Fill row above it. (3) The Library guide ended on a card naming the Remove button, which only exists after an optional click, so pressing Next took you to a card about a button that was not there. Those two steps are one."
+    },
+    {
+      "t": "2026-09-13T05:13:33.359Z",
+      "note": "One ordinary bug found and fixed with it: a style name field asked for the keyboard one pass too early, so with a guide running over the window the name somebody typed went into the picture instead. Measured: four runs of tutorial-text-styles-walk, two failed; with the focus deferred one pass, eight of eight green. Fixed in all four fields that share the shape (TextStylePanel, ColorStylePanel, EffectStylePanel, LibraryColorDrop). Same bug the Components track found in Add Version."
     }
   ],
-  "started": "2026-09-13T02:59:40.376Z",
+  "started": "2026-09-13T04:44:12.793Z",
   "failures": 1
 }

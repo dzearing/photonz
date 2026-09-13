@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-change-it-everywhere-walk",
+  "seed": "The payoff guide of the Colours and Styles track: one name on two of the three switches, then one edit to the name. The last step is the whole guide, and it needs the switch that never had the name: two switches repainting together only says an edit reached two layers, and the third one standing still is what says why.",
+  "setup": { "forget": ["tutorials", "panel", "color", "shapes", "tools"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "change-it-everywhere" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "one-name-two-switches", "timeout": 10 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "snapshot", "name": "1-three-switches" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-two", "timeout": 5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-pick-two", "note": "the ring is on the Layers list, where the step asks for two rows" },
+    { "do": "panel", "stage": "2-pick-two" },
+    { "do": "snapshot", "name": "2-pick-two" },
+
+    { "do": "selectRow", "row": "Notifications Switch" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "selectRow", "row": "Privacy Switch", "modifiers": ["shift"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "save-for-both", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-save-for-both", "note": "THE TEST: shift clicking a second row really moved the guide on, which it only does because a rubber band selection raises the same event a single pick does" },
+    { "do": "panel", "stage": "3-save-for-both" },
+    { "do": "snapshot", "name": "3-save-for-both" },
+
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Brand" },
+    { "do": "key", "key": "return" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "both-wear-it", "timeout": 6 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "4-both-wear-it", "note": "one save landed on both picked layers, and the Styles shelf has the Brand tile on it" },
+    { "do": "panel", "stage": "4-both-wear-it" },
+    { "do": "snapshot", "name": "4-both-wear-it" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "change-the-name", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "pickFirstColorStyle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "recolorPickedColorStyle" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "two-moved-one-did-not", "timeout": 6 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-two-moved-one-did-not", "note": "THE TEST: the top two switches are green and the third is still blue, from one edit to one tile" },
+    { "do": "panel", "stage": "5-two-moved-one-did-not" },
+    { "do": "snapshot", "name": "5-two-moved-one-did-not" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

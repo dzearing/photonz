@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-save-a-colour-as-a-style-walk",
+  "seed": "The first guide of the Colours and Styles track: a colour stops being a colour and becomes a name. It brings a settings card whose three switches are painted the same blue, has you save the first switch's fill under the name Brand, and ends on the row rather than on the picture, because what changed is not what the switch looks like, it is what the switch is following.",
+  "setup": { "forget": ["tutorials", "panel", "color", "shapes", "tools"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "save-a-colour-as-a-style" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-same-blue-three-times", "timeout": 10 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-three-switches", "note": "the guide opened a page of its own: a settings card with three headings set alike and three switches painted alike, and nothing linking any of them" },
+    { "do": "snapshot", "name": "1-three-switches" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-switch", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [596, 160] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "save-it", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-save-it", "note": "THE TEST: a click on the switch itself picked the switch and not a label, and the ring moved to the Color section where the Fill row is" },
+    { "do": "panel", "stage": "2-save-it" },
+    { "do": "snapshot", "name": "2-save-it" },
+
+    { "do": "action", "action": "saveColorStyle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Brand" },
+    { "do": "key", "key": "return" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "on-the-shelf", "timeout": 6 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-on-the-shelf", "note": "saving really moved the guide on, and the Library turned to Styles by itself with the Brand tile on it" },
+    { "do": "panel", "stage": "3-on-the-shelf" },
+    { "do": "snapshot", "name": "3-on-the-shelf" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-row-says-so", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-the-row-says-brand", "note": "the ring is back on the Color section and the Fill row reads Brand with its colour drawn inside a frame" },
+    { "do": "panel", "stage": "4-the-row-says-brand" },
+    { "do": "snapshot", "name": "4-the-row-says-brand" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "that-is-a-style", "timeout": 6 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "snapshot", "name": "5-that-is-a-style" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

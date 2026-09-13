@@ -989,6 +989,247 @@ public enum TutorialGuides {
                 side: .leading,
                 prepare: [.showPanel, .showComponentShelf, .revealTarget]),
         ])
+
+    // MARK: - Colours and Styles
+    //
+    // Name a colour or a piece of type once, use the name wherever you like,
+    // and change it in one place. Four guides: make a name, change the name
+    // and watch everything wearing it move, the same bargain for type, and the
+    // shelf all of it lands on.
+    //
+    // The payoff is the second guide's last step, and it needs the switch that
+    // never had the name. Two switches repainting together says an edit reached
+    // two layers; only the third one standing still says why.
+
+    /// The first rung: a colour stops being a colour and becomes a name.
+    ///
+    /// It ends on the row rather than on the picture, because the thing that
+    /// changed is not what the switch looks like, it is what the switch is
+    /// FOLLOWING, and the only place that shows is the row.
+    public static let saveAColourAsAStyle = TutorialGuide(
+        id: "save-a-colour-as-a-style",
+        track: .colorsAndStyles,
+        title: "Save a colour as a style",
+        summary: "Give a colour a name, so everything painted with it can be changed at once.",
+        minutes: 2,
+        sample: .stylesScreen,
+        requires: [FeatureCatalog.libraryFlag, FeatureCatalog.stylesFlag],
+        steps: [
+            TutorialStep(
+                id: "the-same-blue-three-times",
+                anchor: .canvas,
+                title: "The same blue, three times",
+                body: "The three switches on this card are painted the same blue, and nothing links them. Changing that blue today means changing three layers."),
+            TutorialStep(
+                id: "pick-a-switch",
+                anchor: .canvas,
+                title: "Pick the first switch",
+                body: "Click the blue switch beside Notifications.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "save-it",
+                anchor: .panelSection("color"),
+                title: "Give the colour a name",
+                body: "The Fill row ends in a small button. Open it, choose Save as Style, type Brand and press Return.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "on-the-shelf",
+                anchor: .panelSection("library"),
+                title: "There it is",
+                body: "The Library turned to Styles by itself, and Brand is the tile that just landed. Every colour you save under a name turns up here.",
+                side: .leading,
+                prepare: [.showPanel, .showLibrary, .revealTarget]),
+            TutorialStep(
+                id: "the-row-says-so",
+                anchor: .panelSection("color"),
+                title: "The row says its name now",
+                body: "The end of the Fill row reads Brand now, beside a small palette mark. That is how a row that follows a name is told from one with a colour of its own.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "that-is-a-style",
+                anchor: .canvas,
+                title: "That is a style",
+                body: "A colour with a name on it. Next you put that name on more than one thing and change all of them at once."),
+        ])
+
+    /// The payoff, and the reason anybody bothers naming a colour.
+    ///
+    /// The last step is the whole guide: two switches move together and the
+    /// third does not. Without the one that stays put, a person sees an edit
+    /// that happened to reach two layers rather than two layers that follow a
+    /// name.
+    public static let changeItEverywhere = TutorialGuide(
+        id: "change-it-everywhere",
+        track: .colorsAndStyles,
+        title: "Change it everywhere",
+        summary: "Put one name on several layers, then change the name once and watch them all move.",
+        minutes: 2,
+        sample: .stylesScreen,
+        requires: [FeatureCatalog.libraryFlag, FeatureCatalog.stylesFlag],
+        steps: [
+            TutorialStep(
+                id: "one-name-two-switches",
+                anchor: .canvas,
+                title: "One name on two of them",
+                body: "Three switches again. You are going to put one name on two of them, leave the third alone, and then change the name."),
+            TutorialStep(
+                id: "pick-two",
+                anchor: .panelSection("layers"),
+                title: "Pick two of them",
+                body: "In this list click Notifications Switch, then hold Shift and click Privacy Switch. Two layers are picked.",
+                side: .leading,
+                advance: .waitsFor(.layerSelected),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "save-for-both",
+                anchor: .panelSection("color"),
+                title: "Save what they share",
+                body: "Open the button at the end of the Fill row. It offers to save for both. Choose it, type Brand and press Return.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "both-wear-it",
+                anchor: .panelSection("library"),
+                title: "Both wear it now",
+                body: "Brand is on the Styles shelf and both switches follow it. The third switch is still its own colour, which is the point of leaving it.",
+                side: .leading,
+                prepare: [.showPanel, .showLibrary, .revealTarget]),
+            TutorialStep(
+                id: "change-the-name",
+                anchor: .panelSection("library"),
+                title: "Change the colour once",
+                body: "Click the Brand tile. Its settings open under the shelf. Press the swatch there and pick a different colour.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .showLibrary, .revealTarget]),
+            TutorialStep(
+                id: "two-moved-one-did-not",
+                anchor: .canvas,
+                title: "Two moved, one did not",
+                body: "Both switches on Brand repainted together. The third never had the name, so it stayed as it was. That is the whole of what a style does."),
+        ])
+
+    /// The same bargain for type, and the guide that teaches the fast way to
+    /// put a style on something.
+    ///
+    /// A saved text style can be carried out of the Library and let go on the
+    /// words themselves, which is the route people actually use once they know
+    /// it is there. It needs the dragging switch, so the guide asks for it.
+    public static let textStyles = TutorialGuide(
+        id: "text-styles",
+        track: .colorsAndStyles,
+        title: "Text styles",
+        summary: "Keep a font, a size and a weight under one name, and set any words to it.",
+        minutes: 2,
+        sample: .stylesScreen,
+        requires: [FeatureCatalog.libraryFlag, FeatureCatalog.stylesFlag,
+                   FeatureCatalog.colorDragFlag],
+        steps: [
+            TutorialStep(
+                id: "three-headings",
+                anchor: .canvas,
+                title: "Three headings, set by hand",
+                body: "Notifications is set the way a heading should be. Privacy and Storage were typed in a hurry and never matched it."),
+            TutorialStep(
+                id: "pick-a-heading",
+                anchor: .canvas,
+                title: "Pick the first one",
+                body: "Click the word Notifications on the picture.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "save-the-type",
+                anchor: .panelSection("text"),
+                title: "Save how it is set",
+                body: "Style is the top row here. Open its button, choose Save as Style, type Section Heading and press Return.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "pick-another",
+                anchor: .canvas,
+                title: "Now pick Privacy",
+                body: "Click the word Privacy.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "use-the-name",
+                anchor: .panelSection("text"),
+                title: "Set it by the name",
+                body: "Open the same button and choose Section Heading. It grows into place: the font, the size, the weight and the colour all come from the name now.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "drag-it-on",
+                anchor: .panelSection("library"),
+                title: "Or just drag it on",
+                body: "Quicker: drag the Section Heading tile off the shelf and let go on the word Storage. It matches the other two, and no menus were opened.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .showLibrary, .revealTarget]),
+            TutorialStep(
+                id: "all-three-one-name",
+                anchor: .canvas,
+                title: "All three, one name",
+                body: "Change Section Heading on the shelf now and all three headings change with it, the way everything wearing a saved colour does."),
+        ])
+
+    /// What the shelf is, and the two things people never find on their own:
+    /// that a colour can be put down ON it, and that removing a style repaints
+    /// nothing.
+    public static let theLibrary = TutorialGuide(
+        id: "the-library",
+        track: .colorsAndStyles,
+        title: "The Library",
+        summary: "One shelf for everything you save, and the quickest way to put something on it.",
+        minutes: 2,
+        sample: .stylesScreen,
+        requires: [FeatureCatalog.libraryFlag, FeatureCatalog.stylesFlag,
+                   FeatureCatalog.colorDragFlag],
+        steps: [
+            TutorialStep(
+                id: "one-shelf",
+                anchor: .panelSection("library"),
+                title: "One shelf for everything",
+                body: "Four scopes. Media holds every capture you have taken, Comps your components, Styles your saved colours and type, Systems your design systems.",
+                side: .leading,
+                prepare: [.showPanel, .showLibrary, .revealTarget]),
+            TutorialStep(
+                id: "pick-a-switch",
+                anchor: .canvas,
+                title: "Pick something with a colour on it",
+                body: "Click the blue switch beside Privacy.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                // It rings the SHELF rather than the whole dock, even though
+                // the drag starts on the Fill row above. Ringing the dock left
+                // the shelf scrolled off the bottom of it, so the step said
+                // "let go anywhere on the Library" over a panel with no
+                // Library in it (measured on the probe on 2026-09-13). Asking
+                // for the shelf scrolls it up and leaves the Fill row above it
+                // on screen, which is what the drag needs.
+                id: "drop-it-on-the-shelf",
+                anchor: .panelSection("library"),
+                title: "Drop a colour straight on it",
+                body: "Drag the swatch off the Fill row above and let go anywhere on the Library. It turns to Styles and asks for a name. Call it Brand.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .showLibrary, .revealTarget]),
+            TutorialStep(
+                // One step rather than two. The second one used to name the
+                // Remove button, which only exists once a tile has been
+                // clicked, and nothing makes somebody click one: pressing Next
+                // took them to a card naming a button that was not on screen.
+                id: "a-tile-is-a-handle",
+                anchor: .panelSection("library"),
+                title: "A tile is a handle",
+                body: "Click Brand and its settings open below: rename it, change its colour, or pick out every layer using it. Remove takes it off the shelf and every layer keeps the colour it has.",
+                side: .leading,
+                prepare: [.showPanel, .showLibrary, .revealTarget]),
+        ])
 }
 
 // MARK: - The sample a guide opens for itself
@@ -1017,6 +1258,10 @@ public enum TutorialSampleScreen {
         // edges being findable.
         case .redlineScreen, .measuredScreen, .accountScreen, .tintedScreen: "#EDF0F5"
         case .starterScreen, .emptyWindow: "#FFFFFF"
+        // The styles track's card is a screen too, and for the same reason:
+        // a white card on a white page has no edge, and the whole track is
+        // about looking at one card.
+        case .stylesScreen: "#EDF0F5"
         // The component samples are a work surface rather than a screenshot:
         // what you are designing is a control, and a control on a white page
         // has no edge to it. A soft grey reads as the desk it is lying on.
@@ -1038,6 +1283,7 @@ public enum TutorialSampleScreen {
         case .accountScreen, .tintedScreen: accountScreen()
         case .starterScreen, .emptyWindow: []
         case .componentPieces, .componentOriginal, .componentCopies: []
+        case .stylesScreen: []
         }
     }
 
@@ -1069,6 +1315,8 @@ public enum TutorialSampleScreen {
         case .componentPieces: loosePieces()
         case .componentOriginal: [buttonComponent()]
         case .componentCopies: buttonWithCopies()
+        // The one screen the whole Colours and Styles track teaches on.
+        case .stylesScreen: stylesScreen()
         }
     }
 
@@ -1195,6 +1443,62 @@ public enum TutorialSampleScreen {
     private static func tintBox() -> Layer {
         box("Marker", tintFrame, radius: 4, fill: "#FFD25E", stroke: nil)
     }
+
+    // MARK: The styles card
+
+    /// The screen the whole Colours and Styles track teaches on: a settings
+    /// card with three rows, each a heading, a line under it and a blue switch.
+    ///
+    /// THREE of each, and that is the point of it. Two switches on one name
+    /// would show a change reaching two layers; the third, which never had the
+    /// name and so does not move, is the only thing on screen that says WHY.
+    /// The headings are set identically for the same reason one rung up.
+    ///
+    /// The switches carry no words. A click aimed at a box with a label on it
+    /// lands on the label and picks the text layer, which the Looks track found
+    /// in August and the Components track found again in September, so every
+    /// target this track asks for by click is a switch.
+    private static func stylesScreen() -> [Layer] {
+        var layers: [Layer] = [
+            box("Card", CGRect(x: 56, y: 56, width: 608, height: 320),
+                radius: 16, fill: "#FFFFFF", stroke: line),
+            label("Title", "Team settings", at: CGPoint(x: 88, y: 84),
+                  size: 24, color: ink, weight: .bold),
+        ]
+        for row in settingsRows {
+            // Only the first heading is set the way a heading should be. The
+            // other two were "typed in a hurry", which is what gives the text
+            // guide something to SEE: set the second one by the name and it
+            // visibly grows into place. Three headings already identical would
+            // have made every step of that guide invisible, which is how it
+            // read on the probe on 2026-09-13 before this.
+            let heading = row.top == settingsRows[0].top
+            layers.append(label(row.heading, row.heading, at: CGPoint(x: 88, y: row.top),
+                                size: heading ? 17 : 15, color: ink,
+                                weight: heading ? .semibold : .regular))
+            layers.append(label("\(row.heading) Note", row.note,
+                                at: CGPoint(x: 88, y: row.top + 26),
+                                size: 13, color: quiet, weight: .regular))
+            layers.append(box("\(row.heading) Switch",
+                              CGRect(x: 572, y: row.top + 2, width: 48, height: 28),
+                              radius: 14, fill: accent, stroke: nil))
+        }
+        return layers
+    }
+
+    /// The three rows of the card, in the order they are drawn down it. Named
+    /// after ordinary settings so the screen reads as something somebody would
+    /// really have open, and so a step can say "the switch beside Privacy"
+    /// and be pointing at one thing.
+    ///
+    /// The first row's heading is the one that is set properly. The other two
+    /// are the same words set smaller and lighter, which is the ordinary mess
+    /// a real file is in and the thing the text guide fixes on screen.
+    private static let settingsRows: [(heading: String, note: String, top: CGFloat)] = [
+        ("Notifications", "Choose what you hear about.", 144),
+        ("Privacy", "Decide what other people can see.", 224),
+        ("Storage", "Photos and videos on this Mac.", 304),
+    ]
 
     // MARK: The components desk
 

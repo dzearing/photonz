@@ -142,8 +142,16 @@ struct LibraryColorNamingField: View {
         // one by mistake.
         .onChange(of: paint, initial: true) { _, incoming in
             draft = editorState.suggestedColorStyleName(paint: incoming)
-            focused = true
-            DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+            // One pass later, not this one: the field is being installed
+            // by the very change being reacted to, and a focus asked for
+            // before it is in the responder chain is dropped without a
+            // word. Same fix, and same reason, as the Style row's
+            // (`TextStylePanel.swift`), where a guide running over the
+            // window made the race go the wrong way half the time.
+            DispatchQueue.main.async {
+                focused = true
+                DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+            }
         }
     }
 

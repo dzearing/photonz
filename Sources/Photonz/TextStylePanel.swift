@@ -178,8 +178,19 @@ struct TextStyleRow: View {
             .onChange(of: isNaming, initial: true) { _, naming in
                 guard naming else { return }
                 draft = editorState.suggestedTextStyleName
-                nameFocused = true
-                DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+                // One pass later, not this one. The field is being installed
+                // by the very change that is being reacted to, and a focus
+                // asked for before it is in the responder chain is dropped
+                // without a word. It got away with it until a tutorial was
+                // running over the window: with the guide's 30Hz following
+                // timer in the loop the race went the other way about half the
+                // time, and the name somebody typed went to the picture
+                // instead (measured on the probe on 2026-09-13, the text
+                // styles walk, four runs in a row, two of them failed).
+                DispatchQueue.main.async {
+                    nameFocused = true
+                    DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+                }
             }
         }
     }

@@ -1,0 +1,150 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-the-library-walk",
+  "seed": "The last guide of the Colours and Styles track: what the shelf is, and the two things nobody finds on their own. A colour can be put DOWN on the Library, which is the fast way to keep one, and taking a style off the shelf repaints nothing. It fills the shelf itself by the drag route rather than opening on an empty one.",
+  "setup": {
+    "forget": [
+      "tutorials",
+      "panel",
+      "color",
+      "shapes",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "startGuide",
+      "guide": "the-library"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "one-shelf",
+      "timeout": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-shelf",
+      "note": "the guide opened the Library for itself and rang it, so the four scopes the card names are on screen beside the card"
+    },
+    {
+      "do": "panel",
+      "stage": "1-one-shelf"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-one-shelf"
+    },
+    {
+      "do": "action",
+      "action": "tutorialNext"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "pick-a-switch",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        596,
+        240
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "drop-it-on-the-shelf",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-drop-it-on-the-shelf",
+      "note": "THE TEST: the ring is on the shelf and the shelf has been scrolled up to meet it, with the Fill row the drag starts on still on screen above"
+    },
+    {
+      "do": "panel",
+      "stage": "2-drop-it-on-the-shelf"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-drop-it-on-the-shelf"
+    },
+    {
+      "do": "dragColor",
+      "from": "@fill",
+      "onto": "Library",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "type",
+      "text": "Brand"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "a-tile-is-a-handle",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-a-tile-is-a-handle",
+      "note": "THE TEST: a colour let go of on the shelf was kept under a name, and that really moved the guide on"
+    },
+    {
+      "do": "panel",
+      "stage": "3-a-tile-is-a-handle"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-tile-is-a-handle"
+    },
+    {
+      "do": "action",
+      "action": "tutorialNext"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-finished",
+      "note": "Done closed the guide"
+    }
+  ]
+}
