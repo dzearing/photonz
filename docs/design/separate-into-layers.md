@@ -1,23 +1,29 @@
 # Separate into Layers
 
 Take a screenshot, right click the picture, choose **Separate into Layers**, and
-every run of text in it becomes its own layer you can pick up and move. Where a
-word came from, the background is filled with what was around it, so dragging a
-label off a dark button leaves the button looking untouched rather than punching
-a hole in it. Anything the app cannot read confidently is left in the picture and
-not mentioned.
+every run of text and every box in it becomes its own layer you can pick up and
+move. Where a piece came from, the background is filled with what was around it,
+so dragging a label off a dark button leaves the button looking untouched rather
+than punching a hole in it. A box that is really one flat colour comes out as a
+real rounded rectangle you can resize and repaint, not a picture that stretches.
+Anything the app cannot read confidently is left in the picture and not
+mentioned.
 
-This document is the source of truth for the whole Separate set. This first slice
-does text runs only. The later slices (boxes, hierarchy, shadows, real words)
-extend the three seams described at the end.
+This document is the source of truth for the whole Separate set. It covers the
+first two slices: text runs, and boxes. The later slices (hierarchy, shadows,
+real words) extend the three seams described at the end.
 
 ## What you get
 
 Exactly **two things**, never three:
 
-1. Each run of text on its own layer, in reading order, stacked directly above
-   the picture it came from.
-2. The picture itself, with the space each run came from filled in.
+1. Each piece on its own layer — the boxes down the page first, then the runs of
+   text in reading order — stacked directly above the picture it came from.
+2. The picture itself, with the space each piece came from filled in.
+
+The stacking order is not a preference. A label sits ON the button it came off,
+so the boxes go underneath: a button laid over its own label would hide it the
+instant the command finished.
 
 There is no separate "repair" layer stacked over an untouched original. The
 picture's own pixels are repaired. That is a bake, and it is deliberate: see
@@ -38,8 +44,10 @@ It is behind `next-separate-into-layers`, on by default in Next.
 ## The three rules the user set
 
 1. **No holes.** Taking a piece out and moving it must never reveal a gap.
-2. **Hierarchy.** Text inside a box comes out as a child of that box. *(Not this
-   slice. The seam for it is below.)*
+2. **Hierarchy.** Text inside a box comes out as a child of that box. *(Not yet.
+   The box and its label come out as two layers side by side, so dragging a card
+   leaves its labels where they were. The seam for fixing it is below, and it is
+   the next task in the set.)*
 3. **Ignore what you cannot read.** A part the app cannot interpret is left in
    the background picture, untouched and unmentioned in the layer tree. Guessing
    badly is worse than skipping.
@@ -85,6 +93,104 @@ Runs come back in **reading order** — banded by row, then left to right.
 Cost is linear in pixels. Measured on the fixture and on a 12 megapixel capture
 in the commit note.
 
+## The boxes
+
+`PhotonzCore/BoxSweep.swift`, on `PixelField` (colour, not brightness: a red
+button and a blue one of the same weight are not the same box).
+
+The rule, in one sentence: **a box is something sitting on the picture's own
+background.** A screenshot is painted the way UI is painted — one flat colour
+behind everything — and whatever interrupts that colour is a thing.
+
+1. **Patches of one colour.** Neighbouring pixels within 3 levels of each other
+   are the same region, union-found in one pass. Chaining down a slow ramp is
+   deliberate: a page with a gentle gradient is still one page. The step across
+   an antialiased edge is tens of levels, so a box never leaks into its page.
+2. **The page** is the region holding most of the picture's outer border. If no
+   one region holds half of it there is no page to read anything against — a
+   photograph, a collage — and nothing is claimed at all.
+3. **The islands** are the connected pieces of everything that is not the page.
+   One touching the edge of the picture is dropped: the frame cut it in half, so
+   its real shape is not in the picture and the app does not guess it.
+4. **One level.** What sits on a box travels with it. That is the whole answer to
+   the question this feature lives or dies on — WHICH of the nested rungs are
+   worth becoming layers. A settings pane has a rung for the window, one for the
+   pane, one for every group and one for every row; taking all of them produces
+   a tree nobody wants. Taking one level produces the cards and the buttons,
+   which is what a person points at.
+5. **Something that fills the picture IS the picture.** A screenshot of one
+   window offers one island the size of the frame. Rather than hand back the
+   whole window, whatever that island is mostly painted becomes background too
+   and the sweep looks at what sits on THAT. Three steps at most.
+6. An island is offered when it is at least `minElement` on both sides, covers
+   no more than 60% of the picture, and fills at least 75% of its own bounding
+   box. That last one is what keeps a letter the text sweep could not read from
+   coming back round as a box.
+
+### Two things that were tried first, and measured
+
+Both are written down so nobody spends the afternoon again.
+
+- **`ElementBounds.candidates`**, the measure tool's ladder, looks like the
+  answer and is named as such in the task. Probed on a 16 px grid over the
+  1440x960 fixture it costs 7.0 ms a probe, **37.6 seconds** for the picture, and
+  returns **320 distinct overlapping rungs** — every pair of agreeing horizontal
+  boundaries, so two rows, three rows, a card, a card group. It is built to
+  answer "what is under the pointer", where being generous is right. Sweeping a
+  whole picture is the opposite job.
+- **`TextRunSweep`'s own ink components** already know a box when they see one
+  (`isBox`). But ink is measured against a 33 px box mean, so a box's edges read
+  several pixels inside where they really are, and only boxes with more than 15%
+  contrast are found at all — on the fixture, 4 of them, all mis-sized. Good
+  enough to keep a switch out of the text layers, nowhere near good enough to
+  cut one out.
+
+## A box that is really a shape
+
+A flat rectangle with a known rounding and a known fill can stop being a picture
+and become a real one: it resizes without going to mush, and it takes a colour.
+Anything less certain stays a picture, because a shape that is nearly right is
+worse than pixels that are exactly right.
+
+**Reading the edge to better than a pixel.** A pixel the box's edge only clips is
+still a pixel of the box, and near a rounded corner those reach a long way
+diagonally — read the mask as it is and a corner rounded by 12 px comes back as
+7. So each pixel's coverage is worked out from how far its colour sits from the
+page, measured against the paint RIGHT BESIDE it rather than against one reading
+for the whole box. (One reading fails on the case that matters: a white field
+inside a grey edge reads as uncovered, because white is nearer the page than grey
+is.)
+
+**The rounding** is then the radius that disagrees with the fewest pixels, tried
+one at a time out to 64 image px, per corner — so a card rounded only at the top
+reads that way.
+
+**The shape** is offered only when all of this holds:
+
+- the box agrees with that rounded rectangle over 97% of its own bounding box
+  (an oval, a blob or a chart does not);
+- everything inside it, three pixels clear of the edge, is one colour to within
+  2 levels out of 255;
+- everything between that clean reading and the edge is the same paint part way
+  through a blend, so nothing is hiding in the ring.
+
+**The edge** is read the same way, one width at a time from 1 to 4 image px:
+a flat band round the outside whose colour differs from the fill. It is read
+along the box's straight runs only — a band that hugs a curve is read against a
+rounding that is right to about a pixel, so at the corners it strays outside the
+paint it is trying to read and comes back with the page in it.
+
+The bands are tight on purpose. Read loosely, a box with a two pixel edge answers
+"one pixel", because a band that starts deep enough to clear the edge's own
+antialiasing also clears the edge.
+
+**The order matters more than any of it.** The text comes out FIRST and its holes
+are filled before a single box is looked at. That is why the blue Save Changes
+button on the fixture comes out as a real `#0A84FF` rounded rectangle: by the
+time the box pass reads it, its white label has been lifted off and the space
+filled with the button's own blue. Read the other way round it is a picture of a
+button with words baked into it, forever.
+
 ## The patch
 
 `PhotonzCore/PatchFill.swift` decides, `PhotonzRender/LayerSeparator.swift`
@@ -116,6 +222,18 @@ UI neither is needed. On a photograph, inpainting invents detail that is not
 there and an edge extend smears it sideways, and the user was explicit that a
 visible guess is worse than leaving the thing alone. A run whose surroundings are
 a photograph is a run we cannot read confidently, and rule 3 says skip it.
+
+## Cutting a box out
+
+A box is not unmixed the way a run of text is. The sweep already said which
+pixels are the box, so there is nothing to guess about the inside: it comes out
+whole, switch knobs and dividers and all, cut to its own rounded outline with the
+page it was sitting on left behind. Only the rim the renderer antialiased is
+worked out, and each of those pixels is measured against the paint right beside
+it — so a card that is barely lighter than its page keeps its edge instead of
+dissolving into it.
+
+A box that came out as a shape needs no bitmap at all.
 
 ## Cutting the text out
 
@@ -158,12 +276,23 @@ and Turn a Shape into a Picture — so this follows a precedent rather than
 breaking the non-destructive rule in `CLAUDE.md`, which is about layer *styling*
 (blur, shadow, border, radius, opacity) staying a render-time effect.
 
+## Nothing is separated twice, and no space is filled twice
+
+A box may HOLD something already spoken for: a card holds the labels the same
+command just took out of it, and the hole each one left has already been filled.
+What it may not do is BE one, or clip one, because then the same pixels would
+come out twice. So a run of text is either clear of every box or wholly inside
+one, and a box that swallows the holes its own labels left carries them: those
+pixels are painted once, by the box, not twice. `Result.patched` is the list of
+spaces filled in, and no two of them overlap — which is a thing a test can check
+rather than a thing a comment can claim.
+
 ## Running it twice
 
 The second run finds nothing: after the first, the picture's text pixels are the
-patch. Nothing is separated again and no second repair is stacked. The command
-still answers — the notice pill says nothing was found — rather than looking
-broken.
+patch and its boxes are gone. Nothing is separated again and no second repair is
+stacked. The command still answers — the notice pill says nothing was found —
+rather than looking broken.
 
 ## What it says
 
@@ -174,10 +303,12 @@ when there were any, how many were left in the picture because they could not be
 read confidently.
 
 There are two different nothings and the pill says the right one. Running the
-command a second time finds no text at all, because the first run took it:
-"Nothing here reads as a run of text". A photograph with a caption on it finds
-text and cannot read it: "1 run of text left in the picture, too unclear to
-read".
+command a second time finds nothing at all, because the first run took it:
+"Nothing here reads as text or a box". A photograph with a caption on it finds
+something and cannot read it: "1 piece left in the picture, too unclear to read".
+
+With boxes it counts both: "9 runs of text and 2 boxes. 2 left in the picture,
+too unclear to read".
 
 The FIRST run is left picked — one outline on the canvas, at the top of the page
 where reading starts, and the layers list scrolled to the new rows. Deliberately
@@ -186,10 +317,12 @@ with every piece picked would carry the whole page off the picture in one go.
 
 ## Names
 
-`Text 1`, `Text 2`, … in reading order. Without OCR the app does not know the
-words, and numbering down the page at least matches the order an eye scans the
-picture. When the later slice reads the actual characters, the name becomes the
-words, and nothing else about this changes.
+`Text 1`, `Text 2`, … in reading order, and `Box 1`, `Box 2`, … down the page.
+Without OCR the app does not know the words, and numbering down the page at
+least matches the order an eye scans the picture; it knows a box is a box and
+does not know it is a button, so it says the thing it knows. When the later
+slice reads the actual characters, the name becomes the words, and nothing else
+about this changes.
 
 ## The seams the later slices use
 
@@ -208,6 +341,12 @@ a nesting pass can be added without reopening any of it:
   hierarchy slice changes what that list looks like (a piece gains children); it
   does not change when the mutation happens or how undo sees it.
 
-Shadows are not modelled at all yet. A shadow around a box reads as ink, so it is
-part of what the box detector will have to decide about; nothing here assumes it
-is absent.
+Shadows are not modelled at all yet, and on the fixture that is exactly what
+stops the two cards coming out. Both are found — they are two of the four things
+sitting on that page — and both are put back, because what is around them is not
+one colour and not a straight ramp: it is a soft shadow, darkest against the card
+(223 out of 255 against a 242 page) and gone six pixels out. Filling that space
+with any one colour would leave the shadow behind as a grey halo of a card that
+is no longer there, so rule three applies and the card stays in the picture. The
+shadow slice is what changes that: a shadow read as a shadow comes off WITH its
+box, as a real shadow effect, and then the space under it is plain page again.

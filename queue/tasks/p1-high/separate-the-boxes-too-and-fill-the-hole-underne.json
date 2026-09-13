@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 7,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.346Z",
-  "updated": "2026-09-13T05:24:49.901Z",
+  "updated": "2026-09-13T08:05:10.485Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can"
   ],
@@ -46,6 +46,23 @@
     {
       "t": "2026-09-13T05:24:49.900Z",
       "note": "seq 41 -> 7"
+    },
+    {
+      "t": "2026-09-13T07:34:39.550Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T07:40:07.625Z",
+      "note": "Adversarial review before building. (1) The task notes point at ElementBounds.candidates as the detector. Measured on the fixture: 7.0 ms per probe, 37.6 s for a 16 px grid over a 1440x960 capture, and 320 distinct overlapping rungs — every pair of agreeing horizontal boundaries, so two rows, three rows, a card, a card group. That is exactly the tree nobody wants, and it is 700x too slow. Rejected. (2) TextRunSweep already rejects box-shaped ink components (isBox), but on the fixture that finds only 4 boxes (3 switches and the blue button) and their rects are inset several px from the real edges, because ink is measured against a 33 px box mean. Rejected as the geometry source. (3) Building: islands on a backdrop — colour-connected components, then the things enclosed by each big flat one. That gives exact edges, the fill colour for free, and a one-sentence rule for which rungs."
+    },
+    {
+      "t": "2026-09-13T08:05:10.485Z",
+      "note": "Built. PhotonzCore/BoxSweep finds boxes as ISLANDS on the picture own background: colour-connected regions, the page is whichever region holds most of the picture border, and the things that interrupt it are the boxes. One level only, which is the rule for which rungs are worth taking: what sits ON a box travels with it. A box that fills the picture is treated as the picture and the sweep looks inside it. PhotonzRender/LayerSeparator gained separate(), which runs the TEXT pass first and fills its holes BEFORE reading boxes, which is what turns the blue Save Changes button into a real #0A84FF rounded rectangle instead of a picture of a button with words on it."
+    },
+    {
+      "t": "2026-09-13T08:05:10.485Z",
+      "note": "Measured in release: the 1.4 MP fixture is 39 ms end to end (text 7 ms, boxes 32 ms); a 12.2 MP capture with 81 runs and 18 boxes is 297 ms, plus the 107 ms brightness read it shares with the measure tool. Nothing touches the composite path."
     }
-  ]
+  ],
+  "started": "2026-09-13T07:34:39.549Z"
 }

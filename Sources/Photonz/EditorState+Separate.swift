@@ -4,14 +4,15 @@ import PhotonzCore
 import PhotonzRender
 
 /// Separate into Layers (Next, `next-separate-into-layers`): every run of text
-/// in a picture comes out as its own layer, and the picture comes back with the
-/// space each run came from filled in.
+/// and every box in a picture comes out as its own layer, and the picture comes
+/// back with the space each one came from filled in.
 ///
 /// The reading and the pixel work live under it — `TextRunSweep` finds the runs,
-/// `PatchDecision` says what goes in the hole, `LayerSeparator` does both to a
-/// bitmap. This file is only the command: what it is offered on, getting the
-/// work off the main thread, turning image pixels into document coordinates,
-/// and landing the lot in ONE undo step.
+/// `BoxSweep` finds the boxes and says which of them is really a shape,
+/// `PatchDecision` says what goes in the hole, `LayerSeparator` does all of it
+/// to a bitmap. This file is only the command: what it is offered on, getting
+/// the work off the main thread, turning image pixels into document
+/// coordinates, and landing the lot in ONE undo step.
 ///
 /// Full design: `docs/design/separate-into-layers.md`.
 @MainActor
@@ -22,6 +23,10 @@ extension EditorState {
     /// and the order at least matches the order an eye scans the picture. When
     /// a later slice reads the words, this is the one line that changes.
     static let separatedRunName = "Text"
+
+    /// And what a separated box is called. The app knows it is a box and does
+    /// not know it is a button, so it says the thing it knows.
+    static let separatedBoxName = "Box"
 
     /// Whether Separate into Layers applies to this layer (menu enablement).
     ///
@@ -63,8 +68,8 @@ extension EditorState {
         let store = store
         Task.detached(priority: .userInitiated) { [weak self] in
             let luma = cache.lumaField(for: ref, store: store)
-            let result = LayerSeparator.separateText(image, luma: luma, gap: gap,
-                                                     minElement: minElement)
+            let result = LayerSeparator.separate(image, luma: luma, gap: gap,
+                                                 minElement: minElement)
             await MainActor.run {
                 self?.separationsInFlight.remove(id)
                 self?.applySeparation(id: id, result: result)
@@ -79,7 +84,8 @@ extension EditorState {
         guard let document, let layer = document.layer(id: id),
               let ref = layer.imageRef else { return }
         guard let result, !result.pieces.isEmpty else {
-            raiseCanvasNotice(.separatedIntoLayers(runs: 0, skipped: result?.skipped ?? 0))
+            raiseCanvasNotice(.separatedIntoLayers(runs: 0, boxes: 0,
+                                                   skipped: result?.skipped ?? 0))
             return
         }
 
@@ -93,30 +99,67 @@ extension EditorState {
         let sy = pixels.height > 0 ? frame.height / pixels.height : 1
 
         let patched = store.register(result.background)
-        let pieces = result.pieces.enumerated().map { index, piece in
-            PhotonzDocument.SeparatedPiece(
-                frame: CGRect(x: frame.minX + piece.rect.minX * sx,
-                              y: frame.minY + piece.rect.minY * sy,
-                              width: piece.rect.width * sx,
-                              height: piece.rect.height * sy),
-                ref: store.register(piece.image),
-                name: "\(Self.separatedRunName) \(index + 1)")
+        var runs = 0, boxes = 0
+        let pieces = result.pieces.map { piece -> PhotonzDocument.SeparatedPiece in
+            let placed = CGRect(x: frame.minX + piece.rect.minX * sx,
+                                y: frame.minY + piece.rect.minY * sy,
+                                width: piece.rect.width * sx,
+                                height: piece.rect.height * sy)
+            let name: String
+            switch piece.kind {
+            case .text:
+                runs += 1
+                name = "\(Self.separatedRunName) \(runs)"
+            case .box:
+                boxes += 1
+                name = "\(Self.separatedBoxName) \(boxes)"
+            }
+            switch piece.body {
+            case .picture(let image):
+                return PhotonzDocument.SeparatedPiece(frame: placed,
+                                                      ref: store.register(image), name: name)
+            case .shape(let shape):
+                // The shape was read in image pixels; the layer lives in the
+                // picture's own space, so its rounding and its edge travel with
+                // it. A picture shown at half size gets half the radius, which
+                // is the only way a separated button keeps looking like the one
+                // in the screenshot.
+                let scale = (sx + sy) / 2
+                return PhotonzDocument.SeparatedPiece(
+                    frame: placed,
+                    content: .shape(fill: shape.fill,
+                                    radii: CornerRadii(
+                                        topLeft: shape.radii.topLeft * scale,
+                                        topRight: shape.radii.topRight * scale,
+                                        bottomRight: shape.radii.bottomRight * scale,
+                                        bottomLeft: shape.radii.bottomLeft * scale),
+                                    borderWidth: shape.borderWidth * scale,
+                                    borderColor: shape.borderColor),
+                    name: name)
+            }
         }
 
         discardDragPreview()
         var made: [UUID] = []
         perform { made = $0.separateIntoLayers(id: id, patched: patched, pieces: pieces) }
         guard !made.isEmpty else { return }
-        // The FIRST run is left picked: one outline on the canvas, at the top
-        // of the page where reading starts, so something visible says a run is
+        // The FIRST piece down the page is left picked: one outline on the
+        // canvas, where reading starts, so something visible says a piece is
         // now a thing of its own — and the layers list scrolls to the new rows.
+        // Down the page rather than first in the list, because the list is
+        // stacked boxes-then-words and the eye is not.
         //
-        // Deliberately not all nine. The canvas is identical the instant after,
-        // so a person's first move is to grab a run and drag it, and a drag
-        // with every piece picked would carry the whole page off the picture in
-        // one go. One outline cannot do that.
+        // Deliberately not all eleven. The canvas is identical the instant
+        // after, so a person's first move is to grab a piece and drag it, and a
+        // drag with everything picked would carry the whole page off the
+        // picture in one go. One outline cannot do that.
+        let first = pieces.indices.min {
+            (pieces[$0].frame.minY, pieces[$0].frame.minX)
+                < (pieces[$1].frame.minY, pieces[$1].frame.minX)
+        }
         multiSelectedLayerIDs = []
-        selectedLayerID = made.first
-        raiseCanvasNotice(.separatedIntoLayers(runs: made.count, skipped: result.skipped))
+        selectedLayerID = first.map { made[$0] } ?? made.first
+        raiseCanvasNotice(.separatedIntoLayers(runs: runs, boxes: boxes,
+                                               skipped: result.skipped))
     }
 }

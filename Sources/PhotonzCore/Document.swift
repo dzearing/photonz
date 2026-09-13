@@ -745,18 +745,36 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         return layer
     }
 
-    /// One piece Separate into Layers took out of a picture: the bitmap that
-    /// came out, where it sits in the SOURCE LAYER'S OWN sibling space (so a
-    /// picture inside a group separates into that group), and what to call it.
+    /// One piece Separate into Layers took out of a picture: what came out,
+    /// where it sits in the SOURCE LAYER'S OWN sibling space (so a picture
+    /// inside a group separates into that group), and what to call it.
     public struct SeparatedPiece: Equatable, Sendable {
+        /// What the piece turned out to be.
+        public enum Content: Equatable, Sendable {
+            /// Pixels, with everything behind them transparent: a run of text,
+            /// or a box the app could not read as anything simpler.
+            case picture(ImageRef)
+            /// A real rounded rectangle, in the layer's own space, that resizes
+            /// and repaints like one you drew. A box only ever arrives this way
+            /// when the picture SAID so: one flat colour, an edge that is
+            /// either plainly there or plainly not, corners rounded the way
+            /// they were in the screenshot.
+            case shape(fill: RGBA, radii: CornerRadii, borderWidth: CGFloat,
+                       borderColor: RGBA?)
+        }
+
         public let frame: CGRect
-        public let ref: ImageRef
+        public let content: Content
         public let name: String
 
-        public init(frame: CGRect, ref: ImageRef, name: String) {
+        public init(frame: CGRect, content: Content, name: String) {
             self.frame = frame
-            self.ref = ref
+            self.content = content
             self.name = name
+        }
+
+        public init(frame: CGRect, ref: ImageRef, name: String) {
+            self.init(frame: frame, content: .picture(ref), name: name)
         }
     }
 
@@ -778,8 +796,24 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     public mutating func separateIntoLayers(id: UUID, patched: ImageRef,
                                             pieces: [SeparatedPiece]) -> [UUID] {
         guard let source = layer(id: id), source.imageRef != nil else { return [] }
-        let made = pieces.map { piece in
-            Layer(name: piece.name, content: .image(piece.ref), frame: piece.frame)
+        let made = pieces.map { piece -> Layer in
+            switch piece.content {
+            case .picture(let ref):
+                return Layer(name: piece.name, content: .image(ref), frame: piece.frame)
+            case .shape(let fill, let radii, let borderWidth, let borderColor):
+                var annotation = AnnotationContent(
+                    shape: .rectangle, start: .zero,
+                    end: CGPoint(x: piece.frame.width, y: piece.frame.height))
+                annotation.strokeWidth = borderColor == nil ? 0 : max(borderWidth, 1)
+                annotation.cornerRadii = radii
+                annotation.fillColorHex = fill.hexString
+                // A box with no edge still carries an ink colour it does not
+                // draw, so the inspector has something honest to show if
+                // somebody turns one on: its own fill.
+                annotation.colorHex = (borderColor ?? fill).hexString
+                return Layer(name: piece.name, content: .annotation(annotation),
+                             frame: piece.frame)
+            }
         }
         withSiblings(of: id) { siblings, index in
             siblings[index].content = .image(patched)

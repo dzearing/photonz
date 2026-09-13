@@ -91,7 +91,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// in the picture because the app could not read them confidently,
         /// which is the other half of what just happened and the half nobody
         /// would otherwise find out about.
-        case separatedIntoLayers(runs: Int, skipped: Int)
+        case separatedIntoLayers(runs: Int, boxes: Int, skipped: Int)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -184,7 +184,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .linksBroken(let report): return report.title
         case .toolColorStyle(let notice): return notice.title
         case .regionSliceRefused(let refusal): return refusal.title
-        case .separatedIntoLayers(let runs, _): return runs == 0 ? "Nothing to separate" : "Separated"
+        case .separatedIntoLayers(let runs, let boxes, _):
+            return runs + boxes == 0 ? "Nothing to separate" : "Separated"
         }
     }
 
@@ -236,17 +237,20 @@ public struct CopyConfirmation: Hashable, Sendable {
             // two ways out in one sentence is one too many to read, and the
             // button IS the way out.
             return refusal.detail(offeringItsOwnWayOut: action != nil)
-        case .separatedIntoLayers(let runs, let skipped):
-            guard runs > 0 else {
+        case .separatedIntoLayers(let runs, let boxes, let skipped):
+            var parts: [String] = []
+            if runs > 0 { parts.append(runs == 1 ? "1 run of text" : "\(runs) runs of text") }
+            if boxes > 0 { parts.append(boxes == 1 ? "1 box" : "\(boxes) boxes") }
+            guard !parts.isEmpty else {
                 // Two different nothings, and saying the wrong one is a lie.
-                // Running the command twice finds no text at all, because the
+                // Running the command twice finds nothing at all, because the
                 // first run took it; a photograph with a caption on it finds
-                // text and cannot read it.
-                guard skipped > 0 else { return "Nothing here reads as a run of text" }
-                let left = skipped == 1 ? "1 run of text" : "\(skipped) runs of text"
+                // something and cannot read it.
+                guard skipped > 0 else { return "Nothing here reads as text or a box" }
+                let left = skipped == 1 ? "1 piece" : "\(skipped) pieces"
                 return "\(left) left in the picture, too unclear to read"
             }
-            let made = runs == 1 ? "1 run of text" : "\(runs) runs of text"
+            let made = parts.joined(separator: " and ")
             guard skipped > 0 else { return made }
             return "\(made). \(skipped) left in the picture, too unclear to read"
         }

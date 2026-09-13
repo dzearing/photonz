@@ -1,0 +1,205 @@
+{
+  "out": "/tmp/photonz-playtest/separate-boxes",
+  "seed": "Separating the BOXES out of a real screenshot. The walk opens a settings pane capture, runs Separate into Layers on the Background picture, checks the two buttons arrived as their own layers under their labels, drags one of them right off the page to prove the space it came from was filled in rather than holed, resizes it to prove it is a real shape rather than a picture that stretches, and takes the whole thing back with one Command Z.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-before",
+      "note": "the capture as it opens: one locked Background picture and nothing else. The two buttons at the bottom, Reset and Save Changes, are what this walk is about"
+    },
+    {
+      "do": "snapshot",
+      "name": "boxes-1-before"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-pill-counts-the-boxes-too",
+      "note": "THE FIRST TEST: the pill says what came out, and it now counts boxes beside the runs of text. Two boxes came out of this capture, the two buttons; the two cards were left in the picture because of the soft shadow under them"
+    },
+    {
+      "do": "snapshot",
+      "name": "boxes-2-pill"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text 9",
+      "by": -300
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-separated",
+      "note": "THE SECOND TEST: Box 1 and Box 2 are the Reset and Save Changes buttons, stacked UNDER the words that were sitting on them, so the canvas looks exactly as it did. There is no Box 3"
+    },
+    {
+      "do": "expect",
+      "row": "Box 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Box 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Box 3",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "row": "Text 1",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "boxes-3-layers"
+    },
+    {
+      "do": "render",
+      "name": "boxes-3-layers-doc"
+    },
+    {
+      "do": "selectRow",
+      "row": "Box 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-picked",
+      "note": "THE THIRD TEST: picking Box 2 selects a real rounded rectangle the size of the blue button, and the panel offers it a fill colour and a corner radius, because it is a shape and not a picture of one"
+    },
+    {
+      "do": "snapshot",
+      "name": "boxes-4-picked"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        357,
+        765
+      ],
+      "to": [
+        760,
+        890
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-dragged",
+      "note": "THE FOURTH TEST, and the one the whole task turns on: the blue button has been dragged clear of where it was, grabbed by the strip above its words so the pointer is on the button itself. Where it came from there must be plain page, the same grey as everything around it, with no hole and no blue rim left behind. The words Save Changes stay where they were, because a label is not yet a child of the box it sits on"
+    },
+    {
+      "do": "snapshot",
+      "name": "boxes-5-dragged"
+    },
+    {
+      "do": "render",
+      "name": "boxes-5-dragged-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "5-undone",
+      "note": "THE FIFTH TEST: one press takes back the drag and one more takes back the whole separation, every layer and the repaired picture together, leaving the screenshot exactly as it opened"
+    },
+    {
+      "do": "expect",
+      "row": "Box 1",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "row": "Text 1",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "row": "Background",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "boxes-6-undone"
+    },
+    {
+      "do": "render",
+      "name": "boxes-6-undone-doc"
+    }
+  ]
+}

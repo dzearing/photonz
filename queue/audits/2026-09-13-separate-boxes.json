@@ -1,0 +1,31 @@
+{
+  "feature": "Separate the boxes too",
+  "epic": "ui-building",
+  "summary": "Separate into Layers now lifts the boxes out of a screenshot as well as the words, and fills in the space each one came from so moving it never shows a hole. A box that is really one flat colour arrives as a real rounded rectangle you can resize and repaint, with the rounding it had in the picture.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-separate-into-layers is on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, or any screenshot of a UI.",
+  "try": [
+    { "do": "Open a screenshot of some UI. A settings pane or a dialog with buttons on it works best." },
+    { "do": "Right click the Background row in the layers list and choose Separate into Layers.", "shot": "2026-09-13-boxes-1-pill.png" },
+    { "do": "Read the pill: it now counts boxes beside runs of text, and says how many it left in the picture." },
+    { "do": "Scroll the layers list to the bottom and click Box 2.", "shot": "2026-09-13-boxes-2-picked.png" },
+    { "do": "Look at Appearance: it offers a Fill colour and a Corner Radius, because the button is a shape and not a picture of one." },
+    { "do": "Drag Box 2 off the page by grabbing a part of the button the words are not sitting on.", "shot": "2026-09-13-boxes-3-dragged.png" },
+    { "do": "Look at where it came from: plain page, no hole, no coloured rim.", "shot": "2026-09-13-boxes-patch-after.png" },
+    { "do": "Press Command Z twice to put the drag and the whole separation back." }
+  ],
+  "evaluate": [
+    "Are the boxes it takes the ones you would have reached for, or does it take too few?",
+    "One level only: what sits on a box travels with it, so a card comes out whole with its rows still on it. Is that the level you wanted, or did you want the rows?",
+    "A separated button is a real rectangle you can recolour and re-round. Is that more useful than pixels, or would you rather it stayed exactly the pixels it was?",
+    "Box 1 and Box 2 are honest names but empty ones. Is that worse than no name, and what would you rather they said?",
+    "Dragging a box leaves its label behind. Does that read as broken, or as obviously half-done?"
+  ],
+  "rough": [
+    "A box and the words on it are still two layers side by side, not a box with its words inside it, so dragging the Save Changes button leaves Save Changes floating where it was. That is the next task in this set (Text inside a box comes out inside that box) and it is the one thing here that looks wrong rather than unfinished.",
+    "The two cards in the fixture are found and then put back, because the soft shadow around them means nothing the app can honestly paint would fill the space they came from: under the first card the grey runs 223, 227, 232, 236, 239, 241, 242 down the page. So on this capture only the two buttons come out. Reading a shadow as a shadow is the slice after next.",
+    "The label left behind after dragging the blue button is white on a light page, so it is almost invisible in the screenshot. Nothing is lost, but it looks like the words vanished. Same root cause as the first note.",
+    "The task asked for ElementBounds.candidates to be the detector. Measured, it costs 7 ms a probe, 37.6 seconds to sweep the 1440x960 fixture, and offers 320 overlapping rungs. It was dropped and a different detector built; the reasoning is in docs/design/separate-into-layers.md so nobody spends the afternoon again.",
+    "Everything above was run on Photonz Probe with Screen Recording granted, so the pictures are the window as a person would see it, not offscreen renders.",
+    "The magnified before and after are the real pixels at 3x with no smoothing: 2026-09-13-boxes-patch-before.png is the button in the capture, 2026-09-13-boxes-patch-after.png is the same 320 by 110 patch of the repaired picture, and it is one flat colour."
+  ]
+}

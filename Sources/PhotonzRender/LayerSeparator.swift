@@ -2,40 +2,83 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 
-/// Takes a picture apart: every run of text in it comes out as its own bitmap,
-/// and the picture comes back with the space each run came from filled in.
+/// Takes a picture apart: every run of text and every box in it comes out as
+/// its own layer, and the picture comes back with the space each one came from
+/// filled in.
 ///
 /// The pure decisions live in `PhotonzCore` — `TextRunSweep` says where the
-/// runs are, `PatchDecision` says what goes in the hole. This is the part that
-/// has to touch pixels: reading the ring around a run, painting the fill, and
-/// cutting the letters out of their background so a piece is the WORDS and not
-/// a rectangle of button with words on it.
+/// runs are, `BoxSweep` says where the boxes are and which of them is really a
+/// shape, `PatchDecision` says what goes in the hole. This is the part that has
+/// to touch pixels: reading the ring around a piece, painting the fill, and
+/// cutting a piece out of its background so what comes out is the WORDS, or the
+/// BOX, and not a rectangle of whatever they were sitting on.
 ///
 /// Full design: `docs/design/separate-into-layers.md`.
 public enum LayerSeparator {
 
-    /// One run of text, cut out.
+    /// One piece, cut out.
     public struct Piece: Sendable {
+        /// What kind of thing it is, which is all the naming needs to know.
+        public enum Kind: Sendable {
+            case text
+            case box
+        }
+
+        /// What it turned out to be made of.
+        public enum Body: Sendable {
+            /// Pixels, with everything that was behind them transparent.
+            case picture(CGImage)
+            /// A real rounded rectangle, in image pixels, that can be resized
+            /// and repainted rather than stretched.
+            case shape(BoxSweep.Shape)
+        }
+
         /// Where it sat in the source picture, in image pixels, top-left
-        /// origin. Includes the halo (see `haloRatio`).
+        /// origin.
         public let rect: CGRect
-        /// The letters, with everything that was behind them transparent.
-        public let image: CGImage
+        public let kind: Kind
+        public let body: Body
+
+        /// The bitmap, when it is one.
+        public var image: CGImage? {
+            if case .picture(let image) = body { return image }
+            return nil
+        }
     }
 
     public struct Result: Sendable {
-        /// The picture with every accepted run's space filled in.
+        /// The picture with every accepted piece's space filled in.
         public let background: CGImage
-        /// The runs that came out, in reading order.
+        /// The pieces that came out, BOTTOM-MOST FIRST: the boxes down the
+        /// page, then the runs of text in reading order. That order is the
+        /// stacking order, and it is the only one that works — a label sits ON
+        /// the button it came off, so a button laid over its own label would
+        /// hide it the instant the command finished.
         public let pieces: [Piece]
-        /// How many runs were found but left in the picture, because their
-        /// surroundings did not justify a fill or their ink was too faint to
-        /// separate from it.
+        /// How many things were found but left in the picture, because their
+        /// surroundings did not justify a fill or the app could not read them
+        /// confidently enough to cut them.
         public let skipped: Int
+        /// The spaces filled in behind the pieces. They never overlap, which is
+        /// what "no region is patched twice" means and what a test can check.
+        public let patched: [CGRect]
+
+        public init(background: CGImage, pieces: [Piece], skipped: Int,
+                    patched: [CGRect] = []) {
+            self.background = background
+            self.pieces = pieces
+            self.skipped = skipped
+            self.patched = patched
+        }
+
+        /// Just the runs of text.
+        public var runs: [Piece] { pieces.filter { $0.kind == .text } }
+        /// Just the boxes.
+        public var boxes: [Piece] { pieces.filter { $0.kind == .box } }
     }
 
-    /// How much of the visible gap a run is grown by before anything is sampled
-    /// or painted, as a fraction of it: two pixels on a 2x capture.
+    /// How much of the visible gap a run of text is grown by before anything is
+    /// sampled or painted, as a fraction of it: two pixels on a 2x capture.
     ///
     /// Without it the antialiased rim of the glyphs sits just OUTSIDE the box.
     /// It would poison the ring reading — a pixel a tenth of the way into a
@@ -54,62 +97,126 @@ public enum LayerSeparator {
     public static let minimumContrast = 0.1
 
     /// Every run of text in `image`, cut out, with `image` repaired behind
-    /// them. Nil when the picture cannot be read at all.
-    ///
-    /// `luma` is the brightness field for this exact image — the one already
-    /// cached beside its edge map, so a screenshot that has been measured pays
-    /// nothing to be separated.
+    /// them, and no boxes. What the first slice of this feature did, kept as
+    /// its own entry point because it is the half that has nothing to do with
+    /// colour.
     public static func separateText(_ image: CGImage, luma: LumaField,
                                     gap: Double = TextLineBounds.defaultGap,
                                     minElement: Double = ElementBounds.defaultMinElement)
         -> Result? {
+        separate(image, luma: luma, gap: gap, minElement: minElement, boxes: false)
+    }
+
+    /// Every run of text and every box in `image`, cut out, with `image`
+    /// repaired behind them. Nil when the picture cannot be read at all.
+    ///
+    /// `luma` is the brightness field for this exact image — the one already
+    /// cached beside its edge map, so a screenshot that has been measured pays
+    /// nothing to be separated.
+    ///
+    /// The order is not an accident. The text comes out FIRST and its holes are
+    /// filled before a single box is looked at, so a button whose label has
+    /// just been lifted off it is one flat colour by the time it is read — and
+    /// comes out as a real blue rounded rectangle you can resize, rather than
+    /// as a picture of a button with words baked into it.
+    public static func separate(_ image: CGImage, luma: LumaField,
+                                gap: Double = TextLineBounds.defaultGap,
+                                minElement: Double = ElementBounds.defaultMinElement,
+                                boxes: Bool = true) -> Result? {
         let w = image.width, h = image.height
         guard w > 0, h > 0, luma.width == w, luma.height == h else { return nil }
         guard var pixels = read(image) else { return nil }
-
-        let sweep = TextRunSweep.sweep(in: luma, gap: gap, minElement: minElement)
-        guard !sweep.runs.isEmpty else {
-            return Result(background: image, pieces: [], skipped: 0)
-        }
-
-        let halo = max(1, Int((haloRatio * gap).rounded()))
         let bounds = CGRect(x: 0, y: 0, width: w, height: h)
-        var pieces: [Piece] = []
-        var fills: [(rect: CGRect, fill: PatchFill)] = []
-        var skipped = 0
 
+        var runs: [Piece] = []
+        var boxPieces: [Piece] = []
+        var patched: [CGRect] = []
+        var skipped = 0
+        // What the text sweep found and could NOT take. A word left in the
+        // picture must not come back round as a box, so the box pass is told
+        // about it along with the words that did come out.
+        var spokenFor: [CGRect] = []
+
+        // MARK: The runs of text
+        let sweep = TextRunSweep.sweep(in: luma, gap: gap, minElement: minElement)
+        let halo = max(1, Int((haloRatio * gap).rounded()))
+        var fills: [(rect: CGRect, fill: PatchFill)] = []
         // Every reading comes off the ORIGINAL pixels: a run is cut and its
         // ring is sampled before a single hole is filled, so one patch can
         // never become another run's idea of what the background was.
         for run in sweep.runs {
+            spokenFor.append(run)
             let box = run.insetBy(dx: CGFloat(-halo), dy: CGFloat(-halo))
                 .integral.intersection(bounds)
             guard !box.isNull, box.width >= 1, box.height >= 1 else { skipped += 1; continue }
-            guard let ring = ring(around: box, in: pixels, width: w, height: h, ink: sweep.ink),
+            guard let ring = ring(around: box, in: pixels, width: w, height: h,
+                                  keeping: { !sweep.ink.isInk($0, $1) }),
                   let fill = PatchDecision.decide(ring) else { skipped += 1; continue }
             guard let cut = cut(box, from: pixels, width: w, over: fill) else {
                 skipped += 1
                 continue
             }
-            pieces.append(Piece(rect: box, image: cut))
+            runs.append(Piece(rect: box, kind: .text, body: .picture(cut)))
             fills.append((box, fill))
         }
+        for (rect, fill) in fills {
+            paint(fill, into: &pixels, width: w, rect: rect)
+            patched.append(rect)
+        }
 
-        guard !fills.isEmpty else {
+        // MARK: The boxes
+        if boxes {
+            let field = PixelField(width: w, height: h, samples: pixels)
+            let found = BoxSweep.sweep(in: field, avoiding: spokenFor, minElement: minElement)
+            var boxFills: [(rect: CGRect, fill: PatchFill)] = []
+            for box in found.boxes {
+                let grown = box.rect.insetBy(dx: -1, dy: -1).integral.intersection(bounds)
+                guard !grown.isNull,
+                      !patched.contains(where: { $0.intersects(grown) && !grown.contains($0) }),
+                      !boxFills.contains(where: { $0.rect.intersects(grown) })
+                else { skipped += 1; continue }
+                guard let ring = ring(around: grown, in: pixels, width: w, height: h,
+                                      keeping: { found.isBackdrop($0, $1) }),
+                      let fill = PatchDecision.decide(ring) else { skipped += 1; continue }
+                let body: Piece.Body
+                if let shape = box.shape {
+                    body = .shape(shape)
+                } else if let cut = cutBox(box, from: pixels, width: w, height: h,
+                                           islands: found, over: fill) {
+                    body = .picture(cut)
+                } else {
+                    skipped += 1
+                    continue
+                }
+                boxPieces.append(Piece(rect: box.rect, kind: .box, body: body))
+                boxFills.append((grown, fill))
+            }
+            for (rect, fill) in boxFills {
+                paint(fill, into: &pixels, width: w, rect: rect)
+                // A box swallows the holes its own labels left: those pixels
+                // are painted once, by the box, not twice.
+                patched.removeAll { rect.contains($0) }
+                patched.append(rect)
+            }
+        }
+
+        guard !patched.isEmpty else {
             return Result(background: image, pieces: [], skipped: skipped)
         }
-        for (rect, fill) in fills { paint(fill, into: &pixels, width: w, rect: rect) }
         guard let background = makeImage(pixels, width: w, height: h) else { return nil }
-        return Result(background: background, pieces: pieces, skipped: skipped)
+        return Result(background: background, pieces: boxPieces + runs, skipped: skipped,
+                      patched: patched)
     }
 
     // MARK: - The ring
 
     /// The background just outside `box`: a band `ringWidth` wide on all four
-    /// sides, keeping only pixels the sweep did not call ink, so a button's
-    /// border or a neighbouring word never votes on what is behind this one.
+    /// sides, keeping only the pixels `keeping` allows — the ones the text
+    /// sweep did not call ink, or the ones the box sweep called background — so
+    /// a button's border or a neighbouring word never votes on what is behind
+    /// this one.
     static func ring(around box: CGRect, in pixels: [UInt8], width w: Int, height h: Int,
-                     ink: InkMask) -> PatchRing? {
+                     keeping allowed: (Int, Int) -> Bool) -> PatchRing? {
         let x0 = Int(box.minX), y0 = Int(box.minY)
         let bw = Int(box.width), bh = Int(box.height)
         guard bw > 0, bh > 0 else { return nil }
@@ -117,7 +224,7 @@ public enum LayerSeparator {
         samples.reserveCapacity(2 * (bw + bh) * ringWidth)
 
         func take(_ x: Int, _ y: Int) {
-            guard x >= 0, y >= 0, x < w, y < h, !ink.isInk(x, y) else { return }
+            guard x >= 0, y >= 0, x < w, y < h, allowed(x, y) else { return }
             let i = (y * w + x) * 4
             let a = Double(pixels[i + 3]) / 255
             // Premultiplied on the way in, so a translucent pixel has to be
@@ -171,18 +278,11 @@ public enum LayerSeparator {
         var background = [RGBA](repeating: RGBA(r: 0, g: 0, b: 0, a: 0), count: bw * bh)
         for y in 0..<bh {
             for x in 0..<bw {
-                let i = ((y0 + y) * w + x0 + x) * 4
-                let a = Double(pixels[i + 3]) / 255
-                let scale = a > 0 ? 1 / a : 0
-                let pixel = RGBA(r: Double(pixels[i]) / 255 * scale,
-                                 g: Double(pixels[i + 1]) / 255 * scale,
-                                 b: Double(pixels[i + 2]) / 255 * scale,
-                                 a: a)
+                let pixel = color(pixels, w, x0 + x, y0 + y)
                 let under = fill.color(u: (Double(x) + 0.5) / Double(bw),
                                        v: (Double(y) + 0.5) / Double(bh))
                 background[y * bw + x] = under
-                distance[y * bw + x] = max(max(abs(pixel.r - under.r), abs(pixel.g - under.g)),
-                                           max(abs(pixel.b - under.b), abs(pixel.a - under.a)))
+                distance[y * bw + x] = apart(pixel, under)
             }
         }
         // The top fiftieth rather than the very top: a stroke's interior is
@@ -198,25 +298,101 @@ public enum LayerSeparator {
                 let index = y * bw + x
                 let alpha = min(distance[index] / contrast, 1)
                 guard alpha > 0.004 else { continue }
-                let i = ((y0 + y) * w + x0 + x) * 4
-                let a = Double(pixels[i + 3]) / 255
-                let scale = a > 0 ? 1 / a : 0
-                let under = background[index]
-                func ink(_ pixel: Double, _ behind: Double) -> Double {
-                    min(max((pixel - (1 - alpha) * behind) / alpha, 0), 1)
-                }
-                // Premultiplied out, matching the context this is drawn into.
-                let r = ink(Double(pixels[i]) / 255 * scale, under.r)
-                let g = ink(Double(pixels[i + 1]) / 255 * scale, under.g)
-                let b = ink(Double(pixels[i + 2]) / 255 * scale, under.b)
-                let o = index * 4
-                out[o] = UInt8((r * alpha * 255).rounded())
-                out[o + 1] = UInt8((g * alpha * 255).rounded())
-                out[o + 2] = UInt8((b * alpha * 255).rounded())
-                out[o + 3] = UInt8((alpha * 255).rounded())
+                write(unmix(color(pixels, w, x0 + x, y0 + y), over: background[index],
+                            alpha: alpha),
+                      alpha: alpha, into: &out, at: index)
             }
         }
         return makeImage(out, width: bw, height: bh)
+    }
+
+    // MARK: - Cutting a box out
+
+    /// A box's pixels, keeping EXACTLY the pixels that are the box — rounded
+    /// corners and all — and nothing of the page it was sitting on.
+    ///
+    /// A box is not unmixed the way a run of text is. The sweep already said
+    /// which pixels are the box, so there is nothing to guess about the inside:
+    /// it comes out whole, switch knobs and dividers and all. Only the rim the
+    /// renderer antialiased is worked out, and each of those pixels is measured
+    /// against the paint right beside it, so a card that is barely lighter than
+    /// its page keeps its edge instead of dissolving into it.
+    static func cutBox(_ box: BoxSweep.Box, from pixels: [UInt8], width w: Int, height h: Int,
+                       islands: BoxSweep.Sweep, over fill: PatchFill) -> CGImage? {
+        let x0 = Int(box.rect.minX), y0 = Int(box.rect.minY)
+        let bw = Int(box.rect.width), bh = Int(box.rect.height)
+        guard bw > 0, bh > 0 else { return nil }
+        func mine(_ x: Int, _ y: Int) -> Bool { islands.isIsland(x0 + x, y0 + y, box.island) }
+        func rim(_ x: Int, _ y: Int) -> Bool {
+            mine(x, y) && (!mine(x - 1, y) || !mine(x + 1, y)
+                || !mine(x, y - 1) || !mine(x, y + 1))
+        }
+
+        var out = [UInt8](repeating: 0, count: bw * bh * 4)
+        var drawn = 0
+        for y in 0..<bh {
+            for x in 0..<bw where mine(x, y) {
+                let index = y * bw + x
+                let pixel = color(pixels, w, x0 + x, y0 + y)
+                let under = fill.color(u: (Double(x) + 0.5) / Double(bw),
+                                       v: (Double(y) + 0.5) / Double(bh))
+                var alpha = 1.0
+                if rim(x, y) {
+                    // The paint beside it, which is what a fully covered pixel
+                    // of this edge looks like.
+                    var beside = 0.0
+                    for dy in -1...1 {
+                        for dx in -1...1 where mine(x + dx, y + dy) && !rim(x + dx, y + dy) {
+                            beside = max(beside, apart(color(pixels, w, x0 + x + dx,
+                                                             y0 + y + dy), under))
+                        }
+                    }
+                    if beside > 0 { alpha = min(apart(pixel, under) / beside, 1) }
+                }
+                guard alpha > 0.004 else { continue }
+                write(unmix(pixel, over: under, alpha: alpha), alpha: alpha,
+                      into: &out, at: index)
+                drawn += 1
+            }
+        }
+        guard drawn > 0 else { return nil }
+        return makeImage(out, width: bw, height: bh)
+    }
+
+    // MARK: - Reading and writing one pixel
+
+    /// One pixel of a premultiplied buffer, with the alpha divided back out.
+    private static func color(_ pixels: [UInt8], _ w: Int, _ x: Int, _ y: Int) -> RGBA {
+        let i = (y * w + x) * 4
+        let a = Double(pixels[i + 3]) / 255
+        let scale = a > 0 ? 1 / a : 0
+        return RGBA(r: Double(pixels[i]) / 255 * scale, g: Double(pixels[i + 1]) / 255 * scale,
+                    b: Double(pixels[i + 2]) / 255 * scale, a: a)
+    }
+
+    /// The largest single-channel difference between two colours.
+    private static func apart(_ a: RGBA, _ b: RGBA) -> Double {
+        max(max(abs(a.r - b.r), abs(a.g - b.g)), max(abs(a.b - b.b), abs(a.a - b.a)))
+    }
+
+    /// The paint that, laid at `alpha` over `background`, gives this pixel.
+    private static func unmix(_ pixel: RGBA, over background: RGBA, alpha: Double) -> RGBA {
+        func ink(_ value: Double, _ behind: Double) -> Double {
+            min(max((value - (1 - alpha) * behind) / alpha, 0), 1)
+        }
+        return RGBA(r: ink(pixel.r, background.r), g: ink(pixel.g, background.g),
+                    b: ink(pixel.b, background.b), a: 1)
+    }
+
+    /// One pixel into a premultiplied buffer, matching the context it is drawn
+    /// into.
+    private static func write(_ color: RGBA, alpha: Double, into out: inout [UInt8],
+                              at index: Int) {
+        let o = index * 4
+        out[o] = UInt8((color.r * alpha * 255).rounded())
+        out[o + 1] = UInt8((color.g * alpha * 255).rounded())
+        out[o + 2] = UInt8((color.b * alpha * 255).rounded())
+        out[o + 3] = UInt8((alpha * 255).rounded())
     }
 
     // MARK: - Painting the repair

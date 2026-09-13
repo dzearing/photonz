@@ -91,6 +91,82 @@ struct SeparateIntoLayersTests {
         #expect(document.layers[0].imageRef == patched)
     }
 
+    // MARK: - A box that came out as a real shape
+
+    @Test func aBoxReadAsAShapeArrivesAsOneYouCanResizeAndRepaint() throws {
+        var (document, id, _) = capture()
+        let blue = RGBA(r: 10.0 / 255, g: 132.0 / 255, b: 1)
+        document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [PhotonzDocument.SeparatedPiece(
+                frame: CGRect(x: 30, y: 40, width: 124, height: 30),
+                content: .shape(fill: blue, radii: CornerRadii(7), borderWidth: 0,
+                                borderColor: nil),
+                name: "Box 1")])
+        let box = try #require(document.layers.last)
+        #expect(box.name == "Box 1")
+        // A real rectangle, not a picture of one: it has a fill you can change
+        // and a rounding you can type a number into, and resizing it redraws
+        // rather than stretching pixels.
+        guard case .annotation(let shape) = box.content else {
+            Issue.record("a box read as a shape did not arrive as one")
+            return
+        }
+        #expect(shape.shape == .rectangle)
+        #expect(shape.fillColorHex == "#0A84FF")
+        #expect(shape.cornerRadii == CornerRadii(7))
+        #expect(box.imageRef == nil)
+        #expect(box.frame == CGRect(x: 30, y: 40, width: 124, height: 30))
+    }
+
+    @Test func aBoxWithAPlainEdgeArrivesWearingIt() throws {
+        var (document, id, _) = capture()
+        document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [PhotonzDocument.SeparatedPiece(
+                frame: CGRect(x: 10, y: 10, width: 100, height: 40),
+                content: .shape(fill: RGBA(r: 1, g: 1, b: 1), radii: CornerRadii(5),
+                                borderWidth: 1,
+                                borderColor: RGBA(r: 0.8, g: 0.8, b: 0.85)),
+                name: "Box 1")])
+        let box = try #require(document.layers.last)
+        // The edge is an effect, the way every other edge in the app is
+        // (`OutlineRetirement.swift`), and it is painted what it was painted.
+        #expect(box.style.borderEffectIndex != nil)
+        #expect(box.style.borderColorHex == "#CCCCD9")
+        #expect(box.style.borderWidth == 1)
+    }
+
+    @Test func theCornerRadiusRowReadsTheRoundingABoxCameWith() throws {
+        var (document, id, _) = capture()
+        document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [PhotonzDocument.SeparatedPiece(
+                frame: CGRect(x: 20, y: 20, width: 248, height: 60),
+                content: .shape(fill: RGBA(r: 0, g: 0.5, b: 1), radii: CornerRadii(14),
+                                borderWidth: 0, borderColor: nil),
+                name: "Box 1")])
+        let box = try #require(document.layers.last)
+        let reading = document.cornerRadiusSelection(layerIDs: [box.id],
+                                                     readingWhatShows: true).reading
+        print("RADIUS ROW reads \(String(describing: reading.value)), mixed \(reading.isMixed)")
+        #expect(reading.value == 14)
+        #expect(!reading.isMixed)
+    }
+
+    @Test func aBoxWithNoEdgeArrivesWithoutOne() throws {
+        var (document, id, _) = capture()
+        document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [PhotonzDocument.SeparatedPiece(
+                frame: CGRect(x: 10, y: 10, width: 100, height: 40),
+                content: .shape(fill: RGBA(r: 1, g: 0, b: 0), radii: .none,
+                                borderWidth: 0, borderColor: nil),
+                name: "Box 1")])
+        let box = try #require(document.layers.last)
+        #expect(box.style.borderEffectIndex == nil)
+    }
+
     @Test func aPictureInsideAGroupSeparatesIntoThatGroup() {
         var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300))
         let shot = Layer(name: "Shot", content: .image(ImageRef(pixelSize: CGSize(width: 200, height: 100))),

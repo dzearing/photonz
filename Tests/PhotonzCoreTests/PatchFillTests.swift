@@ -121,8 +121,9 @@ struct PatchFillTests {
 @Suite("What the separate pill says")
 struct SeparateNoticeTests {
 
-    private func pill(runs: Int, skipped: Int) -> CopyConfirmation {
-        CopyConfirmation(subject: .separatedIntoLayers(runs: runs, skipped: skipped),
+    private func pill(runs: Int, boxes: Int = 0, skipped: Int) -> CopyConfirmation {
+        CopyConfirmation(subject: .separatedIntoLayers(runs: runs, boxes: boxes,
+                                                       skipped: skipped),
                          shownAt: Date())
     }
 
@@ -132,23 +133,33 @@ struct SeparateNoticeTests {
         #expect(pill(runs: 1, skipped: 0).detail == "1 run of text")
     }
 
+    @Test func itCountsTheBoxesBesideTheWords() {
+        #expect(pill(runs: 9, boxes: 4, skipped: 0).detail == "9 runs of text and 4 boxes")
+        #expect(pill(runs: 1, boxes: 1, skipped: 0).detail == "1 run of text and 1 box")
+        // A picture with boxes in it and no text says only what it found.
+        #expect(pill(runs: 0, boxes: 2, skipped: 0).detail == "2 boxes")
+        #expect(pill(runs: 0, boxes: 2, skipped: 0).title == "Separated")
+    }
+
     @Test func itAlsoSaysWhatWasLeftBehind() {
         #expect(pill(runs: 4, skipped: 2).detail
             == "4 runs of text. 2 left in the picture, too unclear to read")
+        #expect(pill(runs: 4, boxes: 1, skipped: 2).detail
+            == "4 runs of text and 1 box. 2 left in the picture, too unclear to read")
     }
 
     @Test func aSecondRunOnTheSamePictureSaysThereIsNothingThere() {
         // The first run took the text, so there is none to find: NOT "could not
         // be read", which would be a different and untrue thing to say.
         #expect(pill(runs: 0, skipped: 0).title == "Nothing to separate")
-        #expect(pill(runs: 0, skipped: 0).detail == "Nothing here reads as a run of text")
+        #expect(pill(runs: 0, skipped: 0).detail == "Nothing here reads as text or a box")
     }
 
     @Test func aPictureItCannotReadSaysSoInstead() {
         #expect(pill(runs: 0, skipped: 3).detail
-            == "3 runs of text left in the picture, too unclear to read")
+            == "3 pieces left in the picture, too unclear to read")
         #expect(pill(runs: 0, skipped: 1).detail
-            == "1 run of text left in the picture, too unclear to read")
+            == "1 piece left in the picture, too unclear to read")
     }
 
     @Test func itStaysUpLongEnoughToRead() {
