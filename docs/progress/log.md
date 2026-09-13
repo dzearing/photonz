@@ -14666,3 +14666,45 @@ the rule — `BoxSweep` takes one level, so a card's rows and switches are still
 baked into the card. Filed as "Separate the rows inside a card, not just the
 card" (p2). Open for the user in the audit: whether groups should arrive closed,
 and whether dragging a piece clear of its parent should take it out of the group.
+
+## 2026-09-13 — A separated run of text becomes text you can retype
+
+Last slice of the Separate into Layers set. **Turn into Text**, in the layers
+row menu and the Layer menu directly under Separate into Layers: a picture of a
+run of text becomes the words, in the face, size and colour the screenshot was
+set in, sitting exactly where the old ones sat. A separate step you choose, not
+part of separating — it costs a recognition pass per run and it is the one step
+that can come back and say no.
+
+The first and only use of Vision in the app (`VNRecognizeTextRequest`), handed
+the run's coverage drawn black on white so colour never enters into reading the
+characters. `PhotonzCore/TextReading.swift` is the pure half: the ink mask, the
+soft-Jaccard agreement score, the ink colour, the bar, the fallback rule and the
+refusal sentences. `PhotonzRender/TextReader.swift` reads and sets the words
+again in each of five candidate families, keeping the best.
+
+**The measurement that changed the design.** There is no font identification
+API, so the face is found by re-setting the words and comparing — but the size
+you set them at decides the answer. The system font tracks its letters further
+apart at label size than at heading size, and a 2x capture's document is in
+device pixels, so asking "is this SF Pro?" by setting SF Pro at twice the
+capture's point size answers a different question: four of the fixture's six row
+labels come back Helvetica Neue and "Reset" scores 0.76. Identified at the
+capture's own point size, every run comes back SF Pro and "Reset" scores 0.92.
+So the face is identified at the capture's size, the size is matched again at
+the layer's scale, and what actually lands has to clear a second, lower bar.
+
+On `Fixtures/settings-pane-2x.png`: all nine runs read exactly, all nine in one
+family, the heading Bold, the white-on-blue button label `#FFFFFF` and the eight
+dark runs `#111111`, each landing within half a pixel of where its ink was and
+within two pixels of its width. 40 ms per run in a release build, off the main
+thread. Walk `Scripts/playtest/separate-turn-into-text-walk.json`, audit
+`queue/audits/2026-09-13-turn-into-text.json`.
+
+Next: still rough and in the audit for the user — the weight wobbles on small
+labels (two of six fixture row labels read Medium, four Regular), retyping a
+label does not rename its row (how every text layer already behaves), and a
+Retina capture cannot be reproduced byte for byte because the document is in its
+device pixels. Filed "Find out whether a label inside a group can be double
+clicked into typing" (p2) after the walk could never open a group's child for
+typing while a top-level label opens on the first double click.

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.866Z",
-  "updated": "2026-09-13T05:24:50.121Z",
+  "updated": "2026-09-13T11:21:36.193Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can"
   ],
@@ -44,6 +44,39 @@
     {
       "t": "2026-09-13T05:24:50.120Z",
       "note": "seq 45 -> 11"
+    },
+    {
+      "t": "2026-09-13T11:21:36.192Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T11:23:11.745Z",
+      "note": "Adversarial review BEFORE building. (1) Discoverability: after Separate you get picture layers called Text 3, and nothing says the words can be read. Answer: the command sits in the SAME right-click menu right under Separate into Layers, and the reward is visible - the layer takes the words as its name. Deliberately NOT run automatically on every separation, which the acceptance forbids and which would cost a Vision pass on every command. (2) The footgun: the command will be offered on a whole screenshot too. Rather than hide it, the refusal is a signpost - more than one run reads as 'Separate into Layers first, then turn one run into words'. (3) Cut as decorative: italics, multi-line paragraphs, per-character colour, letter spacing. One line, one face, one colour. (4) The thing that decides delight vs uncanny is the FACE, and there is no font identification API. The honest design is a re-render check: set the recognised words in each candidate face at the measured ink height, lay the two masks on top of each other, and take the best agreement - then DECLINE when even the best is under the bar. That makes declining a measured outcome rather than a hedge. (5) Shortest version that delivers the value: recognise, measure height and colour from the pixels, score a small candidate list by re-render, place so the ink lands exactly where the old ink did. No font metric database, no per-glyph work."
+    },
+    {
+      "t": "2026-09-13T11:23:11.745Z",
+      "note": "Vision spike before designing anything: VNRecognizeTextRequest on the settings-pane fixture reads all nine runs at confidence 1.00 in 0.24s in a plain headless CLI binary, and its boxes agree with what TextRunSweep found. So reading the words is not the risk; matching the face is, exactly as the task said."
+    },
+    {
+      "t": "2026-09-13T11:56:00.964Z",
+      "note": "Built. PhotonzCore/TextReading.swift is the pure half (the ink mask, the agreement score, the colour, the bar, the fallback rule, the refusal sentences); PhotonzRender/TextReader.swift is the reading half (VNRecognizeTextRequest, measuring the size and colour off the picture, setting the words again in each candidate face, placing the box so the ink lands where the old ink did). PhotonzDocument.makeTextEditable swaps a picture layer to text in one mutation, so one Command Z puts the picture back. The command is Sources/Photonz/EditorState+ReadText.swift, offered as Turn into Text in the layers row menu and in the Layer menu, right under Separate into Layers."
+    },
+    {
+      "t": "2026-09-13T11:56:00.964Z",
+      "note": "The measurement that changed the design. Identifying the face by setting the words at the DOCUMENT's point size is wrong on a Retina capture, because the system font tracks its letters further apart at label size than at heading size and a 2x capture's document is in device pixels. Asked that way, four of the six row labels on the fixture come back Helvetica Neue and 'Reset' scores 0.76. Asked at the capture's own point size, every run comes back SF Pro and 'Reset' scores 0.92. So the face is identified at the capture's size and the SIZE is matched again at the layer's scale, with a second, lower bar on what actually lands."
+    },
+    {
+      "t": "2026-09-13T11:56:00.964Z",
+      "note": "Measured on the settings-pane fixture, all nine runs: words read exactly, all nine in one family (SF Pro), heading Bold, the white-on-blue button label #FFFFFF and the eight dark runs #111111, every one landing within half a pixel of where its ink was and within two pixels of its width. Serif and monospace candidates lose by more than the tie margin everywhere. 40 ms per run in a release build."
+    },
+    {
+      "t": "2026-09-13T11:56:00.964Z",
+      "note": "Adversarial review of the BUILT thing, on the real app through Scripts/playtest/separate-turn-into-text-walk.json. (1) Retyping the heading works and looks right: 'General' became 'Appearance' in the same bold face, size and colour, in the same place. (2) Asking for the words on the whole screenshot says to separate it first, which is the signpost the design wanted. (3) One Command Z takes the retyping back and the next takes the reading back. (4) What is still rough: the weight wobbles on small labels (two of six row labels read Medium, four Regular, each by a clear margin); retyping a label does not rename its row, which is how every text layer in the app already behaves; and a Retina capture cannot be reproduced byte for byte because of the coordinate space. All three are in the audit's rough list rather than hidden."
+    },
+    {
+      "t": "2026-09-13T11:56:00.964Z",
+      "note": "Filed find-out-whether-a-label-inside-a-group-can-be-d (p2-normal): in the walk, repeated double clicks on a text layer INSIDE a group never open it for typing, while a top-level one opens on the first. Reproduced in the walk only, so it is filed as something to look into rather than as a bug."
     }
-  ]
+  ],
+  "started": "2026-09-13T11:21:36.191Z"
 }

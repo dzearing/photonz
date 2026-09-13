@@ -444,6 +444,13 @@ struct EditorCommands: Commands {
                     if let selectedID { editor?.separateIntoLayers(id: selectedID) }
                 }
                 .disabled(!(selectedID.map { editor?.canSeparateIntoLayers(id: $0) ?? false } ?? false))
+                // The step after it, in the same two places, under the same
+                // name: a picture of a run of text becomes words you can
+                // retype.
+                Button("Turn into Text") {
+                    if let selectedID { editor?.turnIntoText(id: selectedID) }
+                }
+                .disabled(!(selectedID.map { editor?.canTurnIntoText(id: $0) ?? false } ?? false))
             }
             Button("Arrange in Collage") { editor?.arrangeSelectionAsCollage() }
                 .disabled(!(editor?.canArrangeCollage ?? false))

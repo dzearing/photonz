@@ -909,6 +909,41 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         return (blur, focus)
     }
 
+    /// Turns a picture of a run of text into WORDS ("Turn into Text").
+    ///
+    /// The other direction from Rasterize Layer, and the same shape of
+    /// mutation: the layer keeps its identity, its name's place in the list,
+    /// its stacking slot, its visibility and its lock, and swaps what it is
+    /// MADE of. A separated run stops being a bitmap of a label and becomes a
+    /// label you can retype.
+    ///
+    /// The frame comes from the caller because it is not the picture's frame: a
+    /// text layer's box holds the ascent above the letters and the descent
+    /// below, so the box that puts the words exactly where the picture's ink
+    /// was is worked out by setting them once and measuring
+    /// (`TextReader.frame(for:placingInkAt:)`).
+    ///
+    /// The NAME becomes the words, which is the whole visible reward for having
+    /// asked: a layers list reading `Save Changes` instead of `Text 9`. A
+    /// layer somebody has already renamed keeps their name — it is theirs, and
+    /// a command that quietly threw it away would be worse than one that never
+    /// offered the words at all.
+    ///
+    /// Does nothing to a layer that is not a picture. Undo puts the picture
+    /// back, because undo is a whole-document snapshot and the bitmap is still
+    /// in the image store under its own ref.
+    public mutating func makeTextEditable(id: UUID, text: TextContent, frame: CGRect,
+                                          name: String?) {
+        guard layer(id: id)?.imageRef != nil else { return }
+        updateLayer(id: id) { layer in
+            layer.content = .text(text)
+            layer.frame = frame
+            layer.crop = nil
+            layer.transform = .identity
+            if let name { layer.name = name }
+        }
+    }
+
     /// Bakes a vector layer into pixels ("Rasterize Layer"). The caller renders
     /// the layer WITH all its style effects (blur, shadow, border, corner radius,
     /// opacity) and geometry (crop, transform) into `ref`, covering the padded

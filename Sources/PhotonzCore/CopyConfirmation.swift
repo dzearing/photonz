@@ -97,6 +97,15 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// (`SeparateBudget`) — and the thing to do about those is run the
         /// command again.
         case separatedIntoLayers(runs: Int, boxes: Int, skipped: Int, crowded: Int = 0)
+        /// A separated run of text was turned back into WORDS, or was not
+        /// (`TextReading`). Both halves need saying. On the way in, the canvas
+        /// looks identical the instant after and the only visible change is in
+        /// the layers list, so the pill is what tells you the words are yours
+        /// now and what face they came out in. On the way out, a refusal a
+        /// person cannot account for reads as the app being broken: a run that
+        /// stays a picture has to say WHY, and every reason here is a sentence
+        /// they can do something about.
+        case turnedIntoText(TextReading.Outcome)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -153,7 +162,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .linksBroken, .componentPieceRefused, .toolColorStyle,
              .componentVersionGone, .componentVersionsMatched,
              .componentVersionAdded, .regionSliceRefused,
-             .separatedIntoLayers: return Self.breakLifetime
+             .separatedIntoLayers, .turnedIntoText: return Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -191,6 +200,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .regionSliceRefused(let refusal): return refusal.title
         case .separatedIntoLayers(let runs, let boxes, _, _):
             return runs + boxes == 0 ? "Nothing to separate" : "Separated"
+        case .turnedIntoText(let outcome):
+            return outcome.reading == nil ? "Still a picture" : "Turned into text"
         }
     }
 
@@ -271,6 +282,21 @@ public struct CopyConfirmation: Hashable, Sendable {
                 return "\(made). \(skipped) left in the picture, too unclear to read"
             }
             return "\(made). \(skipped + crowded) left in the picture, run it again for more"
+        case .turnedIntoText(let outcome):
+            switch outcome {
+            case .read(let reading):
+                // The face is named because it is the thing that might be
+                // wrong, and naming it is what lets somebody look at the label
+                // and disagree. A fallback says so in the same breath: the app
+                // did not identify this face, it picked the closest one it can
+                // set, and that is a different promise.
+                let face = reading.provenance == .matched
+                    ? "set in \(reading.face.displayName)"
+                    : "set in \(reading.face.displayName), the closest face to the picture"
+                return "\(TextReading.layerName(for: reading.string)), \(face)"
+            case .refused(let why):
+                return why.sentence
+            }
         }
     }
 

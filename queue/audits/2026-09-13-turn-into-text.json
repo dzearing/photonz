@@ -1,0 +1,32 @@
+{
+  "feature": "A separated run of text becomes text you can retype",
+  "epic": "ui-building",
+  "summary": "Right click a separated run of text and choose Turn into Text, and the picture of the label becomes the label: the words, in the face, size and colour the screenshot was set in, sitting exactly where the old ones sat. Where no face the app can set is close enough, the run stays a picture and says why.",
+  "setup": "Photonz Dev, Experiments window, release Next. Behind next-separate-into-layers, on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, or any screenshot of your own.",
+  "try": [
+    { "do": "Right click the Background row in the layers list and choose Turn into Text.", "shot": "2026-09-13-turn-into-text-3.png" },
+    { "do": "Right click Background again and choose Separate into Layers. Wait for the pill." },
+    { "do": "Click the row called Text 9 (the words Save Changes, white on the blue button), then Layer menu, Turn into Text.", "shot": "2026-09-13-turn-into-text-1.png" },
+    { "do": "Click the row called Text 1 (the heading General) and do the same." },
+    { "do": "Double click the heading on the canvas and type a different word, then press Command Return.", "shot": "2026-09-13-turn-into-text-2.png" },
+    { "do": "Press Command Z twice: the retyping comes back, then the heading is a picture again." },
+    { "do": "Try it on a run in a screenshot of your own, ideally one that is not a Mac app: a web page in a serif, a terminal, a phone screenshot." }
+  ],
+  "evaluate": [
+    "Put the retyped label next to the untouched one beside it. Does it read as the same type, or can you see that one of them was set again?",
+    "The words go back exactly where they were, so the canvas looks identical the instant after. Is the pill enough to tell you it worked, or do you want something on the canvas to say so?",
+    "Turn into Text sits directly under Separate into Layers in the same menu. Would you have found it there, or does it want to be offered on the row itself somehow?",
+    "Two of the six row labels come back at Medium and four at Regular. Convert two neighbouring rows and look at them together: does the difference show?",
+    "When the app is not sure which family it is, it says so in the pill: set in SF Pro, the closest face to the picture. Is that a useful thing to be told, or is it noise?",
+    "Try it on something it should refuse. Is the sentence it gives you one you can act on?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is a real capture of the running app, not an offscreen render.",
+    "The weight wobbles on small labels. On the fixture the six row labels are all one style on the page, and the app reads two of them as Medium and four as Regular, each by a clear margin. At 13 points the difference between those weights is a few percent of stroke and the measurement is honest about what it sees; it is still the least consistent part of the answer.",
+    "A Retina capture cannot be reproduced exactly, and this is a real limit rather than a bug. The document is in the capture's own device pixels, so a label set at 13 points in the screenshot has to be set at 26 in the document, and the system font tracks its letters closer together at the bigger size. What lands is within two pixels of the original width on every run of the fixture, which is a fraction of a pixel per letter, but it is not byte for byte.",
+    "Retyping a label does not rename its layer. The row still says General after you have typed Appearance into it. That is how every text layer in the app already behaves, so it was left alone rather than changed here, but it looks wrong on a row this command just named after its words.",
+    "Only one line. A paragraph, a two line label or a run the recogniser splits comes back as more than one run and is refused with a signpost rather than joined up.",
+    "Italics are not read. A slanted face is refused like any other face that does not match, so the run stays a picture rather than coming back upright.",
+    "The candidate list is five families. A screenshot of an app in a face that is not one of them will be refused, correctly, and there is no way for a person to add one."
+  ]
+}

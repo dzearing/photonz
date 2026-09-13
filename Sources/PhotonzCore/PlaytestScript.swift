@@ -518,6 +518,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// for it here rather than hunting a right click in the layers list. The
     /// sweep runs off the main thread, so a walk waits a beat after it.
     case separateIntoLayers
+    /// Layer ▸ Turn into Text on the SELECTED layer (Next,
+    /// `next-separate-into-layers`): the picture of a run of text becomes
+    /// words. Reads off the main thread like the sweep, so a walk waits a beat
+    /// after it.
+    case turnIntoText
     /// Layer ▸ New Layer (⌘N): a fresh empty layer on top, with the marquee
     /// left up so the select → new layer → fill flow can be walked. A menu
     /// chord like the rest of the Layer menu, so this is a walk's way in.

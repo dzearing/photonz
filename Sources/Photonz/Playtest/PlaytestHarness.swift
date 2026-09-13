@@ -1659,6 +1659,8 @@ private final class Run {
             case .newLayer: editor.newEmptyLayer()
             case .separateIntoLayers:
                 if let id = editor.selectedLayerID { editor.separateIntoLayers(id: id) }
+            case .turnIntoText:
+                if let id = editor.selectedLayerID { editor.turnIntoText(id: id) }
             case .fillWithForeground: editor.fillSelectedLayer(useBackground: false)
             case .fillWithBackground: editor.fillSelectedLayer(useBackground: true)
             case .renameSelectedLayer:

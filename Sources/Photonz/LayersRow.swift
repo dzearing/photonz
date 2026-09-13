@@ -373,6 +373,10 @@ struct LayersRow: View, Equatable {
         // (Next, `next-separate-into-layers`).
         if editorState.canSeparateIntoLayers(id: id) {
             Button("Separate into Layers") { editorState.separateIntoLayers(id: id) }
+            // Directly under it, because it is the next thing you want on the
+            // rows Separate just made: the run is on its own layer, and now the
+            // words in it become words you can retype.
+            Button("Turn into Text") { editorState.turnIntoText(id: id) }
         }
         Divider()
         Button("Bring to Front") { editorState.bringLayerToFront(id: id) }

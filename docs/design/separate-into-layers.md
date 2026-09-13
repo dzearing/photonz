@@ -426,6 +426,151 @@ does not know it is a button, so it says the thing it knows. When the later
 slice reads the actual characters, the name becomes the words, and nothing else
 about this changes.
 
+
+## A run of text becomes words you can retype
+
+`PhotonzCore/TextReading.swift` decides, `PhotonzRender/TextReader.swift` reads.
+
+A separated run is a picture of a label. Right click it and choose **Turn into
+Text** and it becomes the label: the words, in the face, size and colour the
+screenshot was set in, sitting exactly where the old ones sat. Retyping it
+changes the words on the button instead of covering them up.
+
+It is a SEPARATE step you choose, not part of Separate into Layers. Separating a
+screenshot is one thing a person asked for; reading the words is another, it
+costs a recognition pass per run, and it is the one step here that can come back
+and say no. Made automatic it would slow the command everybody uses in order to
+sometimes surprise them. Offered as its own row in the same menu — right under
+Separate into Layers, and in **Layer ▸ Turn into Text** — it is there the moment
+they want it, on the row Separate just made.
+
+It is offered on any picture Separate is offered on, INCLUDING the whole
+screenshot, where it refuses with a signpost: *more than one run of text here,
+separate it first*. A menu row that is not there teaches nothing.
+
+### The words
+
+`VNRecognizeTextRequest`, on device. This is the only place in the app that uses
+Vision and the only place that needs to: every other part of this feature finds
+things geometrically, and no geometric detector can hand back characters. On the
+settings-pane fixture it reads all nine runs at confidence 1.00.
+
+It is handed the run's COVERAGE, drawn black on white, rather than the picture.
+The shape of the ink is the only thing that carries the characters, so handing
+over a clean high-contrast version of it takes the colour question away: white
+words on a blue button read exactly as well as black words on grey. Small ink is
+scaled up first (a row label on a 1x capture is thirteen pixels tall, near the
+floor of what recognition reads reliably) and given a white margin, because a
+picture whose letters run into all four edges reads the edges as strokes.
+
+More than one line is refused rather than joined: a run of text is one line, and
+that is what makes this the step AFTER separating.
+
+### The size and the colour, measured
+
+The colour is the median of the pixels that are solidly inside a stroke — median
+rather than mean so a cursor or a coloured bullet caught inside the run cannot
+drag the whole label off its colour. On the fixture the eight dark runs come
+back `#111111` and the white one on the blue button comes back `#FFFFFF`.
+
+The size is not derived from the face's metrics, because the ink of a real
+string is whatever that string happens to contain: a row label with no ascender
+is x-height tall and a heading with a cap and a descender is far more. The words
+are set once at a known size, measured, and scaled.
+
+### The face, which has no API
+
+There is no font identification API on any platform. So the app does the only
+honest thing available: it SETS THE WORDS AGAIN in each of the few faces a Mac
+screenshot actually contains — the system font at four weights, a monospace, and
+the three the rest of the web still uses — lays each result over the original
+ink, and keeps the best. `TextReading.agreement` is that number: the soft
+Jaccard, the ink two masks share over the ink either of them has, laid ink box on
+ink box and nudged two pixels either way to absorb a rounded point size.
+
+A face whose word comes out the wrong LENGTH is dropped from the probe render
+alone, before the nine sizes and the overlap search it would otherwise cost.
+
+**And it is asked at the right size, which is not a detail.** The system font is
+not one shape: it tracks its letters further apart at label size than at heading
+size. A 2x capture's document is in the capture's own device pixels, so the same
+label has to be SET at twice the point size it was captured at — and asking
+whether a 13 point label is SF Pro by setting SF Pro at 27 points answers a
+different question. Measured on the fixture: "Reset" agrees 0.92 with SF Pro read
+at the size it was set and 0.76 read at twice it, and four of the six row labels
+come back Helvetica Neue when the question is asked the wrong way round. So the
+face is identified at the capture's own point size, and the SIZE is then matched
+again in that face at the scale the layer will actually be drawn at.
+
+That second pass is also the last check: whatever is about to land has to agree
+with the picture too (`TextReading.landedBar`), or the run stays a picture. The
+bar there is lower on purpose, because the coordinate space costs about a tenth
+of a point of agreement for a reason no eye can find — a fraction of a pixel per
+letter — and an overlap score punishes that hard.
+
+### Where the words go
+
+A text layer's box is not its letters: it holds the ascent above them, the
+descent below, and the slack the rasterizer leaves so nothing clips. So the
+words are set once, measured, and the box is placed by how far its own ink sits
+inside it (`TextReader.frame(for:placingInkAt:)`). On the fixture every run
+lands within half a pixel of where its ink was and comes out within two pixels
+of the width it was.
+
+### What it refuses, and why that is the point
+
+A retyped label in the wrong face is the kind of thing that makes a person
+distrust the whole feature, so refusing has to be a real, common, unembarrassing
+outcome. Every refusal is a sentence the pill says out loud, because a refusal
+nobody can account for reads as the app being broken:
+
+| what happened | what it says |
+| --- | --- |
+| more than one run | More than one run of text here. Separate into Layers first, then turn one run into words |
+| no words read | No words could be read here |
+| the ink barely differs from what it sits on | Too faint to tell the words from what they sit on |
+| nothing agrees closely enough | No face here is close enough to the one in the picture, so it stays a picture |
+
+### Matched, or a stated fallback
+
+When one family beats every other by a clear margin the app says it IDENTIFIED
+the face. When two are within a hair of each other — which happens at label size,
+where two grotesques are genuinely hard to tell apart — it takes the SYSTEM FONT
+among them and the pill says so: *set in SF Pro, the closest face to the
+picture*. That keeps a page consistent as well as honest: six row labels that
+each scored a hair differently all come back in one face rather than three in one
+and three in another, which is the thing a person would actually notice.
+
+### The name becomes the words
+
+`Text 9` becomes `Save Changes`, which is the whole visible reward for having
+asked and what turns a list of Text 1…Text 9 into a list you can read. A name a
+PERSON typed is theirs and is kept (`LayerNaming.isAutoName`).
+
+Deliberately no auto-contrast shadow, which is what typing fresh text on a
+picture gets. These words were already legible where they came from and they are
+going back exactly where they were.
+
+### How long it takes
+
+Forty milliseconds for one run in a release build, reading and face matching
+together, off the main thread. Nothing is shown while it works: a spinner that
+flashes for a twentieth of a second is worse than no spinner.
+
+### What it measures on the fixture
+
+All nine runs, in one family:
+
+| run | words | face | landed |
+| --- | --- | --- | --- |
+| General | General | SF Pro Bold | 0.88 |
+| six row labels | all read exactly | SF Pro, two at Medium | 0.60 – 0.70 |
+| Reset | Reset | SF Pro | 0.76 |
+| Save Changes | Save Changes | SF Pro | 0.77 |
+
+The serif and monospace candidates lose by more than the tie margin on every run
+that was checked, which is what makes the bar mean something.
+
 ## Which piece sits in which
 
 A pile is not what the screen looked like. A label that sits in a button is part

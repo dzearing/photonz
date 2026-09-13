@@ -1,0 +1,245 @@
+{
+  "out": "/tmp/photonz-playtest/separate-turn-into-text",
+  "seed": "Turn into Text: a separated run of text becomes words you can retype. The walk opens a settings pane capture, asks for the words on the WHOLE picture first to prove it says to separate it first, separates it, turns the white label on the blue button into real text, turns the heading into real text, retypes the button's label, and takes both back with undo.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-before",
+      "note": "the capture as it opens: one locked Background picture and nothing else"
+    },
+    {
+      "do": "rightClick",
+      "on": "Background",
+      "shot": "text-1-row-menu",
+      "choose": "Turn into Text"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "describe",
+      "stage": "1-a-whole-page-is-not-one-run",
+      "note": "THE FIRST TEST: asking for the words on a whole screenshot is a signpost rather than a dead end. The pill says there is more than one run of text here and to separate it first, and the picture is untouched"
+    },
+    {
+      "do": "expect",
+      "row": "Background",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "text-1-separate-first"
+    },
+    {
+      "do": "rightClick",
+      "on": "Background",
+      "choose": "Separate into Layers"
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "expect",
+      "row": "Text 9",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-separated",
+      "note": "the nine runs are their own layers, named Text 1 to Text 9 because nothing has read the words yet"
+    },
+    {
+      "do": "snapshot",
+      "name": "text-2-separated"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "selectRow",
+      "row": "Text 9"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "menus",
+      "stage": "layer-menu",
+      "menu": "Layer"
+    },
+    {
+      "do": "action",
+      "action": "turnIntoText"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-white-on-blue-becomes-words",
+      "note": "THE SECOND TEST: Text 9 was WHITE words on a solid blue button. The row is now called Save Changes, the pill names the face the words were set in, and the canvas is identical because the words went back exactly where they were"
+    },
+    {
+      "do": "expect",
+      "row": "Save Changes",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Text 9",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "text-3-save-changes"
+    },
+    {
+      "do": "render",
+      "name": "text-3-save-changes-doc"
+    },
+    {
+      "do": "selectRow",
+      "row": "Text 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "turnIntoText"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-the-heading-too",
+      "note": "THE THIRD TEST: the heading is the other end of the range, bold and large. It comes back as the word General at its own weight, not at the row labels'"
+    },
+    {
+      "do": "expect",
+      "row": "General",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "text-4-heading"
+    },
+    {
+      "do": "render",
+      "name": "text-4-heading-doc"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        146,
+        85
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "snapshot",
+      "name": "text-5a-editor"
+    },
+    {
+      "do": "type",
+      "text": "Appearance"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "5-retyped",
+      "note": "THE FOURTH TEST, and the whole point of the feature: the heading has been RETYPED. It reads Appearance in the same bold face, the same size and the same colour the screenshot's own heading was in, sitting exactly where that heading sat. That is changing a label rather than covering it up."
+    },
+    {
+      "do": "snapshot",
+      "name": "text-5-retyped"
+    },
+    {
+      "do": "render",
+      "name": "text-5-retyped-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "6-undone",
+      "note": "THE FIFTH TEST: one press takes the retyping back and the next takes the reading back, so the heading is a picture called Text 1 again"
+    },
+    {
+      "do": "expect",
+      "row": "Text 1",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "text-6-undone"
+    }
+  ],
+  "setup": {
+    "forget": [
+      "groups"
+    ]
+  }
+}
