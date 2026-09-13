@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.734Z",
-  "updated": "2026-09-13T09:29:36.580Z",
+  "updated": "2026-09-13T10:13:01.272Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can",
     "separate-the-boxes-too-and-fill-the-hole-underne"
@@ -72,7 +72,12 @@
     {
       "t": "2026-09-13T10:12:53.110887Z",
       "note": "Measured, release build: the settings pane went from 42 ms to 146 ms and the 12.2 megapixel tiled fixture from 292 ms to 905 ms, because the two 1312x264 cards are now actually cut and repaired instead of skipped. Design doc's timing table updated; the other two rows are marked as not re-measured."
+    },
+    {
+      "t": "2026-09-13T10:13:01.270Z",
+      "note": "A card's shadow is now read off the picture and comes off WITH the card as a real shadow effect. PhotonzCore/ShadowRead.swift fits one black shadow (opacity, blur, offset) against all four edges at once, in linear light so the renderer reproduces it, and refuses anything it cannot explain to within 1.5 levels out of 255. On the settings pane fixture both cards now come out wearing #000000 at 22.5%, blur 2.05 px, offset (0,2); the space they came from reads ONE colour with zero difference from the page. Verified by 14 ShadowRead tests written first (half of them underline, border, gradient page, reflection, linear falloff, too faint, too near the frame), a round trip that rebuilds the capture through the app's own renderer and matches the screenshot to 2/255 in the shadow bands, 6069 tests green, and five separate-* playtest walks green in the probe app. Audit: queue/audits/2026-09-13-separate-shadow.json"
     }
   ],
-  "started": "2026-09-13T09:29:36.578Z"
+  "started": "2026-09-13T09:29:36.578Z",
+  "completed": "2026-09-13T10:13:01.271Z"
 }
