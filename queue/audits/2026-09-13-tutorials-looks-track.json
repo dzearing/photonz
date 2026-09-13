@@ -1,0 +1,34 @@
+{
+  "feature": "Tutorials: the Looks track",
+  "epic": "ui-building",
+  "summary": "Help now holds four short guides about how a layer is painted: what a shape simply is versus what you have added to it, adding a shadow, a border and a glow for real, hiding an address with a lens, and mixing a layer with what is under it. Each one opens a made up screen of its own and rings the real controls while you drive.",
+  "setup": "Photonz Dev, release Next. Help > Tutorials > Looks, or Help > Tutorials > All Tutorials... for the window. Flags are on by default.",
+  "try": [
+    { "do": "Open Help > Tutorials > Looks > What a shape is made of. Click the white card, anywhere clear of the words." },
+    { "do": "Change the fill colour when it asks, then read the two sections it rings: Appearance, then Effects.", "shot": "2026-09-13-looks-track-split.png" },
+    { "do": "Run Add a shadow, a border, a glow. Click the blue button, then use the plus on the Effects heading three times.", "shot": "2026-09-13-looks-track-effects.png" },
+    { "do": "Run Blur or pixelate what is underneath. Press K and drag a box across the address on the card." },
+    { "do": "Pull Strength up, then set Does to Pixelate.", "shot": "2026-09-13-looks-track-lens.png" },
+    { "do": "Run Mix a layer with what is below it. Click the yellow box, open Blending and choose Multiply.", "shot": "2026-09-13-looks-track-mixing.png" },
+    { "do": "Try Screen on the same box, and read the sentence under each choice." }
+  ],
+  "evaluate": [
+    "Does the first guide land the split, so that after it you know which of the two sections to look in without being told again?",
+    "The first guide teaches on the sample's card rather than on a shape you draw. Does starting from something already on the picture feel like a shortcut or like a missing lesson?",
+    "Blur or pixelate is the guide most people will want. Is an account screen with a made up address the right picture to teach it on?",
+    "The mixing guide's box arrives already lying over the address. Would you rather draw it yourself, even though that means a drawing lesson first?",
+    "Adding a shadow, a glow and a border in one guide is three presses of the same plus. Is that repetitive, or is the repetition the point?",
+    "Should the track also teach opacity and corner radius, or are those obvious enough to leave alone?"
+  ],
+  "rough": [
+    "The step that says pull Strength up until the address cannot be read moves on at the first nudge of the slider, because the event the framework has is the person made an edit and not the person made it strong enough. Everything in the app that waits on a value works this way; a guide cannot yet wait on a number reaching a threshold.",
+    "A step about the whole picture rings the entire canvas and puts its card at the top of it, which in the lens guide is a long way from the address the step is talking about. That is the framework's behaviour for a surface anchor rather than this track's, and it was left alone.",
+    "The task that asked for this track named its first guide Fill and outline: what a shape has. Outline stopped being a row on 2026-09-08 and a layer's edge is a Border in the Effects list now, so the guide teaches the split instead and the edge is named where it actually lives. A test over the track now fails on the word Outline.",
+    "The first guide said click the blue button until the probe showed the click landing on the button's words, picking the text layer, and the panel coming up with a Color row where the step had promised a Fill. It picks the card instead. Any guide that asks for a click on the picture has to name something with no words on top of it.",
+    "No guide in this track asks anybody to draw a shape, and that is not laziness: the rectangle, the ellipse and the line share one slot in the tool bar and the slot wears whichever you used last, so a step pointing at the rectangle points at nothing on somebody whose slot is wearing the line.",
+    "The last guide of the effects guide tells you a row drags to reorder but does not make you do it, so the one fact you have to take on trust is the one about order.",
+    "Running the track back to back leaves four Tutorial Sample windows open, which the Redlining track's audit already raised and is not fixed.",
+    "A walk cannot switch a feature off, so flagged off behaviour was proved two ways: unit tests over the catalogue, and probe runs with the flags written off by hand. With the split, the lens and the mixing all off the Looks submenu is gone from Help and the shelf is gone from the window; with only the lens off the shelf keeps the other three.",
+    "Screen Recording was granted, so every picture here is a real capture of the window rather than an offscreen render."
+  ]
+}

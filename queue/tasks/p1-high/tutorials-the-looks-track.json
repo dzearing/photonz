@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 25,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.792Z",
-  "updated": "2026-09-12T15:17:33.202Z",
+  "updated": "2026-09-13T02:39:01.367Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -38,6 +38,27 @@
     {
       "t": "2026-09-12T15:17:33.202Z",
       "note": "deps set: framework first"
+    },
+    {
+      "t": "2026-09-13T02:22:14.512Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T02:24:28.584Z",
+      "note": "Adversarial review before building. (1) The track's first guide as filed teaches 'fill and outline: what a shape has', and that is no longer what the app does: Outline was retired on 2026-09-08 (OutlineRetirement.swift) and a shape's edge is now a Border in the Effects list. Building the filed guide would teach a row that is not there. So guide one teaches the SPLIT itself (Appearance is what it is, Effects is what you added) and the edge is taught in guide two where a border is actually added. (2) No guide in this track asks anybody to draw a shape. Rectangle lives in the Shapes family button, which wears whichever member you used last, so a step pointing at tool.rectangle points at nothing on an app whose shapes slot is wearing Line. Every Looks guide teaches on a shape its own sample brings. (3) Cut: a step pointing at the Lens Tool section before drawing. The same settings are in the panel after the lens is down, with the layer picked, so it is one step instead of two. (4) Two new samples, both data: an account screen with a name and an address on it (flattened, so it is a screenshot like the one somebody is about to send) and the same screen with one solid box lying over a row, so the mixing guide has something to mix without drawing it. Same pattern the Redlining track's flattened samples set. (5) Redaction is taught out loud in the blur guide, including the honest bit: what leaves the app is flattened, the saved document keeps the original."
+    },
+    {
+      "t": "2026-09-13T02:27:20.856Z",
+      "note": "Built as data: four guides in TutorialGuides.swift plus two samples (accountScreen, tintedScreen), registered in TutorialCatalog.guides, anchor promise widened by one ('lens'). No framework change was needed: every step is an existing anchor, an existing trigger and an existing prepare, which is what the track task asked to be checked. Tests: Tests/PhotonzCoreTests/TutorialLooksTrackTests.swift, 19 checks, all green. Measured lengths against the 2 minute claims: 86s, 112s, 111s, 89s."
+    },
+    {
+      "t": "2026-09-13T02:36:57.828Z",
+      "note": "Checked with the features off as well as on, on the probe rather than only in tests. With next-shape-parts, next-lens and next-blend-mode all written off by hand, the Looks submenu is gone from Help altogether and the shelf is gone from the Tutorials window, with nothing dimmed and no half guide left behind. With only next-lens off the shelf keeps the other three and reads: What a shape is made of, Add a shadow a border a glow, Mix a layer with what is below it. Menu readings are in /tmp/photonz-playtest/looks-flags-off and looks-lens-off. Probe defaults put back afterwards."
+    },
+    {
+      "t": "2026-09-13T02:39:01.366Z",
+      "note": "Shipped. Four guides, four walks (all green, plus the other twelve tutorial walks), 19 track tests, the design doc's Looks section, the progress log, and the audit with four real window captures. Filed one framework follow-up: a step cannot wait on a setting reaching a value. Asked for a sweep because the Help menu and the Tutorials window grew again."
     }
-  ]
+  ],
+  "started": "2026-09-13T02:22:14.511Z"
 }

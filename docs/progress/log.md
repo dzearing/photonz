@@ -14490,3 +14490,38 @@ control the dock has scrolled out of reach. Filed as
 `three-walks-stop-on-a-panel-control-the-dock-has`. The other three hundred walks
 were left naming rows by their words; whether to convert them in one pass or as
 they are next touched is a question in the audit.
+
+## 2026-09-13 — the Looks track teaches how a layer is painted
+
+Four guides under Help ▸ Tutorials ▸ Looks, all of them data in
+`TutorialGuides.swift`: **What a shape is made of** (Appearance is what it IS,
+Effects is what you added), **Add a shadow, a border, a glow** (the plus, three
+things added for real, the order, the tool's memory), **Blur or pixelate what is
+underneath** (the lens, on an address in a screenshot), and **Mix a layer with
+what is below it** (the Blending row, Multiply as a highlighter).
+
+Nothing in the framework had to grow: every step is an anchor, a trigger and a
+prepare that already existed. The track added two samples and one anchor name
+(`panel.lens`).
+
+Three things it settled, all about the catalogue rather than the machinery. A
+guide teaches what SHIPPED: the task named its first guide "Fill and outline",
+and Outline stopped being a row on 2026-09-08, so the guide teaches the split
+and names the edge where it actually lives, with a test that fails on the word.
+A guide points at a shape its sample brought, never at one you draw, because the
+shapes share a tool bar slot that wears whichever you used last. And a step that
+asks for a click on the picture must name something with no words on top of it:
+"click the blue button" landed on the button's label on the probe and brought up
+a Color row where the step had promised a Fill.
+
+Four new walks, all green, and the other twelve tutorial walks with them. Checked
+with the features off as well as on: with the split, the lens and the mixing all
+switched off the Looks submenu is gone from Help and the shelf is gone from the
+window; with only the lens off the shelf keeps the other three. Audit:
+`queue/audits/2026-09-13-tutorials-looks-track.json`.
+
+**Next / open:** a step cannot wait on a setting reaching a VALUE, only on an
+edit happening at all, so "pull Strength up until the address cannot be read"
+moves on at the first nudge. Filed as
+`a-tutorial-step-can-wait-for-a-setting-to-reach`. Four tracks left: Colours and
+Styles, Building UI, Components, Video.

@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-mix-with-what-is-below-walk",
+  "seed": "The fourth guide of the Looks track teaches the Blending row: the other way a layer reaches what is below it. Not changing what is under it the way a lens does, mixing with it. The guide brings the account screen with one solid box already lying over the address, so the whole lesson is the one setting changing.",
+  "setup": { "forget": ["tutorials", "panel", "color"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "mix-with-what-is-below" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-box", "timeout": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-pick-the-box", "note": "the sample arrives with one solid box lying across the address, hiding it completely, which is what a layer does until you say otherwise" },
+    { "do": "snapshot", "name": "1-pick-the-box" },
+
+    { "do": "click", "at": [254, 305] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "where-it-lives", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expect", "control": "Blending", "reads": "Blending, Normal" },
+    { "do": "describe", "stage": "2-where-it-lives", "note": "the panel opened itself and rings Appearance, where Blending sits directly under Opacity" },
+    { "do": "panel", "stage": "2-where-it-lives" },
+    { "do": "snapshot", "name": "2-where-it-lives" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "multiply", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Blending" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-list-open", "note": "every choice carries a plain sentence beside its name, which is the last step's claim" },
+    { "do": "snapshot", "name": "3-list-open" },
+    { "do": "press", "control": "Multiply", "in": "Blending" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "screen", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expect", "control": "Blending", "reads": "Blending, Multiply" },
+    { "do": "describe", "stage": "4-multiply", "note": "THE TEST: the box burns into the row and the address comes back through it, the way a highlighter pen works" },
+    { "do": "snapshot", "name": "4-multiply" },
+    { "do": "render", "name": "4-canvas" },
+
+    { "do": "press", "control": "Blending" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Screen", "in": "Blending" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "each-one-says-what-it-does", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expect", "control": "Blending", "reads": "Blending, Screen" },
+    { "do": "describe", "stage": "5-screen", "note": "the same box lightening instead, and the last step reads Done" },
+    { "do": "snapshot", "name": "5-screen" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

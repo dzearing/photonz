@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-add-a-shadow-a-border-a-glow-walk",
+  "seed": "The second guide of the Looks track uses the Effects list for real: a shadow, a glow and a border added to one button, and the two facts about the list that are not obvious (the top of it paints nearest you, and the next shape you draw remembers what you left this one in).",
+  "setup": { "forget": ["tutorials", "panel", "shapes", "color"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "add-a-shadow-a-border-a-glow" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-button", "timeout": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-pick-the-button", "note": "step one waits on a real selection: what you add lands on what you picked" },
+    { "do": "snapshot", "name": "1-pick-the-button" },
+
+    { "do": "click", "at": [265, 345] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-plus", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-the-plus", "note": "the panel opened itself and the ring is round Effects, which is empty on this button: nothing has been added to it yet" },
+    { "do": "panel", "stage": "2-the-plus" },
+    { "do": "snapshot", "name": "2-the-plus" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "add-a-shadow", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "@shadow" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "add-a-glow", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-shadow-added", "note": "a real shadow moved it on, and it arrived already looking like one with its settings under it" },
+    { "do": "panel", "stage": "3-shadow-added" },
+    { "do": "snapshot", "name": "3-shadow-added" },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "@glow" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "add-a-border", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-glow-added", "note": "two effects in the list now, each keeping its own colour and settings" },
+    { "do": "panel", "stage": "4-glow-added" },
+    { "do": "snapshot", "name": "4-glow-added" },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "@border" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "order-and-memory", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-border-added", "note": "three in the list, and the last step reads Done" },
+    { "do": "panel", "stage": "5-border-added" },
+    { "do": "snapshot", "name": "5-border-added" },
+    { "do": "render", "name": "5-canvas" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide and left the button wearing what was added" }
+  ]
+}

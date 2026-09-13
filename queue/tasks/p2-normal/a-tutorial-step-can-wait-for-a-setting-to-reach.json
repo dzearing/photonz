@@ -1,0 +1,27 @@
+{
+  "id": "a-tutorial-step-can-wait-for-a-setting-to-reach",
+  "title": "A tutorial step can wait for a setting to reach a value",
+  "goal": "A guide can ask you to pull a slider up until something is hidden, but it moves on the moment you touch the slider at all, however far you pulled it. Let a step wait for the setting to really reach the value it is asking for, so a guide can teach how strong is strong enough rather than just how to find the control.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2630,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T02:38:46.256Z",
+  "updated": "2026-09-13T02:38:46.259Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the Looks track (2026-09-13). The lens guide step blur-what-is-underneath/how-hard says \"Pull Strength up until the address cannot be read at all\" and waits on TutorialTrigger.editMade, which is raised at EditorState.perform for ANY change to the document. Reproduced in Scripts/playtest/tutorial-blur-what-is-underneath-walk.json: the walk pulls the slider with the pullLensAmount action and the step advances, but so would a one point nudge.\n\nEvery waiting trigger today is an event (a tool picked, an edit made, a copy taken). This is the first want for a trigger about a VALUE. The framework rule to keep is the one in docs/design/tutorials.md: nothing advances on a timer and nothing may claim you did something you did not, so a value trigger has to read the real document rather than a guess. TutorialRun.stepWasAlreadyTrue already has the shape of the answer for a state that holds when the step comes up (TutorialController.isAlreadyTrue), so a value trigger is the same question asked continuously.\n\nWorth deciding whether it is worth it at all: the alternative is that a guide never asks for a threshold and simply says what the control does.",
+  "acceptance": [
+    "A guide step can name a setting and a value it must reach, and does not advance until the setting really reaches it",
+    "The step still offers Skip This Step, so nobody is stuck on a slider they cannot find",
+    "A guide that uses it runs start to finish in a walk, with the walk proving the step does NOT advance on a small change"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T02:38:46.258Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -501,13 +501,57 @@ silent. `WindowReadProbe.fullReading` scrolls the window through and reads at
 each stop, and the check is stronger than the one it replaced: every guide must
 have a button that says its own name, not merely a button with some words on it.
 
+## The Looks track
+
+How a layer is painted, and what can be added to it. Four guides: the first two
+teach the split the panel turns on, and the last two teach the two ways a layer
+reaches what is UNDER it.
+
+| Guide | Brings | What it teaches |
+| --- | --- | --- |
+| What a shape is made of | the starter screen | Appearance is what it IS, Effects is what you added, and the line round the card is in the second one |
+| Add a shadow, a border, a glow | the starter screen | the plus on the Effects heading, three things added for real, the order, and that the tool remembers |
+| Blur or pixelate what is underneath | an account screen, flattened | K, one drag over an address, Strength, Pixelate, and what really leaves the app |
+| Mix a layer with what is below it | the same screen with a box on it | the Blending row under Opacity, Multiply as a highlighter, Screen the other way |
+
+Nothing in the framework had to change: every step is an anchor that already
+existed, a trigger that already existed and a prepare that already existed. The
+track added two samples and one anchor name (`panel.lens`), which is data.
+
+Three things this track settled, and they are about the CATALOGUE rather than
+the machinery:
+
+- **A guide teaches what shipped, not what the task asked for.** The task that
+  asked for this track named its first guide "Fill and outline: what a shape
+  has". Outline stopped being a row on 2026-09-08 (`OutlineRetirement.swift`):
+  a layer's edge is a Border in the Effects list now. So the first guide teaches
+  the SPLIT instead, and the edge is named in the list it actually lives in. A
+  test over the track fails on the word Outline in any of its copy.
+- **A guide points at a shape its sample brought, never at a shape you draw.**
+  The rectangle, the ellipse and the line share ONE slot in the tool bar and the
+  slot wears whichever you used last, so a step pointing at the rectangle points
+  at nothing on an app whose slot is wearing the line. A test enforces it for the
+  whole track.
+- **Pick a target with no words on top of it.** The first guide said "click the
+  blue button", and the button wears a label: on the probe the click landed on
+  the words, picked the TEXT layer, and the panel came up with a Color row where
+  the step had promised a Fill. It picks the card instead, which is large and
+  carries nothing on the part you would click.
+
+Two samples, both flattened, both made up: an **account screen**
+(`TutorialSample.accountScreen`) with a name and an address at example.com on
+it, which is the picture somebody is about to send on and the reason anybody
+wants a lens; and the **same screen with one solid box already lying over the
+address** (`.tintedScreen`), so the mixing guide is about the one setting rather
+than about drawing a box first.
+
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
 menu, the track submenus, the hub window, the first launch offer, the Basics
-track and the Redlining track. Still queued:
+track, the Redlining track and the Looks track. Still queued:
 
-- **The other five tracks**, one task each.
+- **The other four tracks**, one task each.
 - **A renamed control breaks the build, not somebody's tutorial** — a generated
   walk per guide that drives the real editor and asserts every step's anchor
   resolves. The unit check here (`TutorialCatalogCheck`) is the promise; that

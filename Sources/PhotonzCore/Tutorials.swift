@@ -89,7 +89,10 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
                                             // The Measure tool's own settings, which are
                                             // in the panel only while the tool is in hand,
                                             // and a picked measurement's own section.
-                                            "measureTool", "measure"]
+                                            "measureTool", "measure",
+                                            // A lens's own settings, which are in
+                                            // the panel while a lens is picked.
+                                            "lens"]
 
     /// The rows of the empty window's card a guide is allowed to name. The
     /// blank canvas row is deliberately absent: it comes and goes with a
@@ -284,13 +287,22 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// The same screen with two measurements already on it, so a guide about
     /// the list of them does not open on an empty list.
     case measuredScreen
+    /// A made-up account screen with somebody's name and address on it,
+    /// FLATTENED the way a screenshot is. The lens guide needs a picture worth
+    /// hiding part of, because hiding a name before sending a screenshot on is
+    /// why most people reach for a lens at all.
+    case accountScreen
+    /// The same screen with one solid box already lying over a row of it, so a
+    /// guide about how a layer MIXES with what is below has something to mix
+    /// without a drawing lesson first.
+    case tintedScreen
 
     /// Whether this sample's drawing is baked into the picture before the
     /// window opens. A guide that measures needs this; a guide about layers
     /// needs the opposite.
     public var isFlattened: Bool {
         switch self {
-        case .redlineScreen, .measuredScreen: true
+        case .redlineScreen, .measuredScreen, .accountScreen, .tintedScreen: true
         case .starterScreen, .emptyWindow: false
         }
     }
@@ -396,6 +408,10 @@ public enum TutorialCatalog {
         TutorialGuides.snapOrFree,
         TutorialGuides.measurementsPanel,
         TutorialGuides.exportASpecList,
+        TutorialGuides.whatAShapeIsMadeOf,
+        TutorialGuides.addAShadowABorderAGlow,
+        TutorialGuides.blurWhatIsUnderneath,
+        TutorialGuides.mixWithWhatIsBelow,
     ]
 
     /// The guide the Help menu's own row runs, and the one first launch offers.

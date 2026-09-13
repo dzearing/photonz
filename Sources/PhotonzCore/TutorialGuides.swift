@@ -515,6 +515,223 @@ public enum TutorialGuides {
                 side: .leading,
                 prepare: [.showPanel, .revealTarget]),
         ])
+
+    // MARK: - Looks
+
+    /// The split the whole panel turns on, taught on one shape: Appearance is
+    /// what a layer simply IS, Effects is the list you added to. Get this
+    /// across and the rest of the panel explains itself.
+    ///
+    /// It teaches on a shape the sample brought, rather than asking anybody to
+    /// draw one: the shapes share one slot in the tool bar and the slot wears
+    /// whichever member you used last, so a step pointing at the rectangle
+    /// points at nothing on an app whose slot is wearing the line.
+    public static let whatAShapeIsMadeOf = TutorialGuide(
+        id: "what-a-shape-is-made-of",
+        track: .looks,
+        title: "What a shape is made of",
+        summary: "Appearance is what a shape is. Effects is the list you add to.",
+        minutes: 2,
+        sample: .starterScreen,
+        requires: [FeatureCatalog.shapePartsFlag],
+        steps: [
+            TutorialStep(
+                id: "pick-the-card",
+                anchor: .canvas,
+                title: "Pick the white card",
+                body: "Click it on the picture, anywhere clear of the words. The panel on the right fills up with what that one layer is made of.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "appearance",
+                anchor: .panelSection("color"),
+                title: "Appearance is what it is",
+                body: "How solid it is, how it mixes with what is under it, and the colour it is filled with. Every shape has these, so they are always here.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "paint-it",
+                anchor: .panelSection("color"),
+                title: "Change its fill",
+                body: "Click the colour beside Fill and pick another one. The card changes while you choose.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "effects",
+                anchor: .panelSection("effects"),
+                title: "Effects is what you add",
+                body: "The line round this card is a border, and a border is something you added. The plus on the heading adds more.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "which-is-which",
+                anchor: .panel,
+                title: "That is the whole split",
+                body: "If the shape simply has it, it is in Appearance. If you added it, it is in Effects and you can take it off again.",
+                side: .leading,
+                prepare: [.showPanel]),
+        ])
+
+    /// The list you add to, used for real: two things added, the edge named
+    /// where it actually lives now, and the two facts about the list that are
+    /// not obvious (the top paints nearest you, and the tool remembers).
+    public static let addAShadowABorderAGlow = TutorialGuide(
+        id: "add-a-shadow-a-border-a-glow",
+        track: .looks,
+        title: "Add a shadow, a border, a glow",
+        summary: "Effects is a list. Add what you want, in the order you want it.",
+        minutes: 2,
+        sample: .starterScreen,
+        requires: [FeatureCatalog.shapePartsFlag],
+        steps: [
+            TutorialStep(
+                id: "pick-the-button",
+                anchor: .canvas,
+                title: "Pick the blue button",
+                body: "Click it on the picture. Whatever you add lands on the layer you have picked.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "the-plus",
+                anchor: .panelSection("effects"),
+                title: "The plus adds one",
+                body: "It rides the Effects heading, and it offers a shadow, a glow, a border and a blur.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "add-a-shadow",
+                anchor: .panelSection("effects"),
+                title: "Add a shadow",
+                body: "It arrives looking like one already, with its own settings on the lines under it.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "add-a-glow",
+                anchor: .panelSection("effects"),
+                title: "Now add a glow",
+                body: "The same plus, one row lower. Both sit in the list together, each keeping its own colour and settings.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "add-a-border",
+                anchor: .panelSection("effects"),
+                title: "And a border",
+                body: "The line a shape is drawn with is one of these as well, so this row is how you change that line or take it off.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "order-and-memory",
+                anchor: .panelSection("effects"),
+                title: "Order counts, and it sticks",
+                body: "The top of the list paints nearest you, and a row drags. The next shape you draw comes out wearing what you left this one in.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+        ])
+
+    /// The reason most people will ever want a lens: an address in a screenshot
+    /// they are about to send on. It brings a screen with one in it, and it is
+    /// straight about what really leaves the app.
+    public static let blurWhatIsUnderneath = TutorialGuide(
+        id: "blur-what-is-underneath",
+        track: .looks,
+        title: "Blur or pixelate what is underneath",
+        summary: "Hide an address or a name before you send a screenshot on.",
+        minutes: 2,
+        sample: .accountScreen,
+        requires: [FeatureCatalog.lensFlag],
+        steps: [
+            TutorialStep(
+                id: "the-picture",
+                anchor: .canvas,
+                title: "Somebody's address, in a screenshot",
+                body: "A lens is a layer that changes what is under it. Nothing beneath it is touched, so you can move it or take it off later."),
+            TutorialStep(
+                id: "pick-the-lens",
+                anchor: .tool(.lens),
+                title: "Pick up the lens",
+                body: "Press K, or click it in the tool bar.",
+                side: .above,
+                advance: .waitsFor(.toolPicked(.lens))),
+            TutorialStep(
+                id: "drag-over-it",
+                anchor: .canvas,
+                title: "Drag a box across the address",
+                body: "Start at one end of it and let go at the other. Everything under the box goes soft.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "how-hard",
+                anchor: .panelSection("lens"),
+                title: "How hard it does it",
+                body: "Lens in the panel says what it does and how much. Pull Strength up until the address cannot be read at all.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "pixelate",
+                anchor: .panelSection("lens"),
+                title: "Or blocks instead",
+                body: "Set Does to Pixelate. Blocks read as hidden on purpose, which is why people reach for them over a name.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "what-leaves-the-app",
+                anchor: .canvas,
+                title: "What leaves the app",
+                body: "Exporting and copying flatten the picture, so the hidden part really is gone from what you send. Your saved document keeps the original."),
+        ])
+
+    /// The other way a layer reaches what is below it: not changing it, mixing
+    /// with it. One setting, five choices, and a sample that arrives with a
+    /// solid box already lying over a row so the whole lesson is the change.
+    public static let mixWithWhatIsBelow = TutorialGuide(
+        id: "mix-with-what-is-below",
+        track: .looks,
+        title: "Mix a layer with what is below it",
+        summary: "One setting turns a solid box into a highlighter.",
+        minutes: 2,
+        sample: .tintedScreen,
+        requires: [FeatureCatalog.shapePartsFlag, FeatureCatalog.blendModeFlag],
+        steps: [
+            TutorialStep(
+                id: "pick-the-box",
+                anchor: .canvas,
+                title: "Pick the yellow box",
+                body: "It lies across the address and hides it. That is what a layer does until you tell it otherwise.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "where-it-lives",
+                anchor: .panelSection("color"),
+                title: "Blending, under Opacity",
+                body: "Opacity says how much of what is below shows through. Blending says how the two colours meet.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "multiply",
+                anchor: .panelSection("color"),
+                title: "Choose Multiply",
+                body: "Open Blending and choose Multiply. The colour burns into the row and the words come back through it, the way a highlighter pen works.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "screen",
+                anchor: .panelSection("color"),
+                title: "Now try Screen",
+                body: "Open it again and choose Screen. The same box lightens what is under it instead of darkening it.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "each-one-says-what-it-does",
+                anchor: .panelSection("color"),
+                title: "Every choice says what it does",
+                body: "There is a plain sentence beside each one, so you can pick the one you want without trying all five.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+        ])
 }
 
 // MARK: - The sample a guide opens for itself
@@ -541,7 +758,7 @@ public enum TutorialSampleScreen {
         // A screen sits on something. A white card on a white page has no
         // outer edge to find, and the redlining guides are entirely about
         // edges being findable.
-        case .redlineScreen, .measuredScreen: "#EDF0F5"
+        case .redlineScreen, .measuredScreen, .accountScreen, .tintedScreen: "#EDF0F5"
         case .starterScreen, .emptyWindow: "#FFFFFF"
         }
     }
@@ -557,6 +774,7 @@ public enum TutorialSampleScreen {
     public static func pictureLayers(for sample: TutorialSample) -> [Layer] {
         switch sample {
         case .redlineScreen, .measuredScreen: settingsScreen()
+        case .accountScreen, .tintedScreen: accountScreen()
         case .starterScreen, .emptyWindow: []
         }
     }
@@ -578,6 +796,12 @@ public enum TutorialSampleScreen {
         // into the picture.
         case .redlineScreen: []
         case .measuredScreen: sampleMeasurements()
+        // A screenshot with somebody's address on it, and nothing on top of it
+        // yet: the lens the guide teaches is the thing you add.
+        case .accountScreen: []
+        // The same screenshot with one solid box lying over the address, which
+        // is the layer the mixing guide is about.
+        case .tintedScreen: [tintBox()]
         }
     }
 
@@ -658,6 +882,51 @@ public enum TutorialSampleScreen {
                         to: CGPoint(x: saveFrame.minX, y: cancelFrame.midY),
                         mode: .horizontal, role: .spacing, colors: spacing, headOffset: -46),
         ]
+    }
+
+    // MARK: The account screen
+
+    /// A made up account pane with a person's name and address on it, drawn the
+    /// way a real one is and then flattened into the picture. This is the
+    /// screenshot somebody is about to send on, which is the moment they want a
+    /// lens: the address is the thing they mean to hide.
+    ///
+    /// Made up on purpose. Nothing here belongs to anybody, and the address is
+    /// at example.com, which exists to be written down and never delivers mail.
+    private static func accountScreen() -> [Layer] {
+        [
+            box("Card", accountCardFrame, radius: 14, fill: "#FFFFFF", stroke: "#D7DDE8"),
+            label("Title", "Account", at: CGPoint(x: 104, y: 96),
+                  size: 22, color: ink, weight: .bold),
+            label("Subtitle", "Signed in on this Mac.", at: CGPoint(x: 104, y: 134),
+                  size: 14, color: quiet, weight: .regular),
+            box("Divider", CGRect(x: 104, y: 172, width: 512, height: 1),
+                radius: 0, fill: "#E4E8F0", stroke: nil),
+            label("Name Label", "Name", at: CGPoint(x: 104, y: 200),
+                  size: 13, color: quiet, weight: .regular),
+            label("Name", "Jordan Avery", at: CGPoint(x: 104, y: 222),
+                  size: 17, color: ink, weight: .medium),
+            label("Email Label", "Email", at: CGPoint(x: 104, y: 272),
+                  size: 13, color: quiet, weight: .regular),
+            label("Email", "jordan.avery@example.com", at: CGPoint(x: 104, y: 294),
+                  size: 17, color: ink, weight: .medium),
+            box("Sign Out Button", CGRect(x: 104, y: 348, width: 120, height: 38),
+                radius: 8, fill: "#FFFFFF", stroke: "#C2C9D6"),
+            label("Sign Out Label", "Sign out", at: CGPoint(x: 128, y: 358),
+                  size: 14, color: ink, weight: .medium),
+        ]
+    }
+
+    /// The card the account screen is built on.
+    static let accountCardFrame = CGRect(x: 72, y: 64, width: 576, height: 352)
+    /// The one live layer the mixing sample brings: a solid box lying across
+    /// the address row. Solid on purpose, because the lesson is what changes
+    /// when the mixing setting does, and a box you can already see through has
+    /// given half the answer away before the guide starts.
+    static let tintFrame = CGRect(x: 96, y: 288, width: 316, height: 34)
+
+    private static func tintBox() -> Layer {
+        box("Marker", tintFrame, radius: 4, fill: "#FFD25E", stroke: nil)
     }
 
     private static func measurement(from start: CGPoint, to end: CGPoint,

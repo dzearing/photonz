@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-what-a-shape-is-made-of-walk",
+  "seed": "The first guide of the Looks track teaches the split the panel turns on: Appearance is what a shape simply IS, Effects is the list you ADD to. It brings the starter screen and teaches on the button already drawn on it, because the shapes share one slot in the tool bar and a guide about styling should not start with a drawing lesson.",
+  "setup": { "forget": ["tutorials", "panel", "color"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "what-a-shape-is-made-of" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-card", "timeout": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-pick-the-card", "note": "the guide brought the starter screen and waits on a real selection: nothing is styled until you have picked something" },
+    { "do": "snapshot", "name": "1-pick-the-card" },
+
+    { "do": "click", "at": [500, 250] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "appearance", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-appearance", "note": "clicking the button on the picture moved it on, and the panel opened itself and scrolled to Appearance" },
+    { "do": "panel", "stage": "2-appearance" },
+    { "do": "snapshot", "name": "2-appearance" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "paint-it", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "3-paint-it" },
+
+    { "do": "press", "control": "Color", "in": "@fill" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Shades 2" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "key", "key": "escape" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "effects", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-effects", "note": "a real colour change moved it on, and the step about Effects rings a list that already holds the border the card came with, which is the point being made: the line round a shape is something you added, not something it simply has" },
+    { "do": "panel", "stage": "4-effects" },
+    { "do": "snapshot", "name": "4-effects" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "which-is-which", "timeout": 5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-which-is-which", "note": "the closing step rings the whole panel and reads Done" },
+    { "do": "snapshot", "name": "5-which-is-which" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide and left the sample alone" }
+  ]
+}

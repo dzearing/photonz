@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-blur-what-is-underneath-walk",
+  "seed": "The third guide of the Looks track teaches the lens on the case people actually have: an address in a screenshot they are about to send on. The guide brings an account screen of its own, flattened the way a capture is, and the walk drives the whole thing: K, one drag over the address, the strength pulled up, and the same lens switched to blocks.",
+  "setup": { "forget": ["tutorials", "panel", "tools"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "blur-what-is-underneath" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-picture", "timeout": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-the-picture", "note": "the guide brought an account screen with a name and an address on it, flattened into the picture the way a real capture is" },
+    { "do": "snapshot", "name": "1-the-picture" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-lens", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-pick-the-lens", "note": "a waiting step aimed at the lens button in the tool bar, which has a slot of its own so it is always on screen" },
+    { "do": "snapshot", "name": "2-pick-the-lens" },
+
+    { "do": "key", "key": "k" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "drag-over-it", "timeout": 5 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "3-drag-over-it" },
+
+    { "do": "drag", "from": [96, 286], "to": [416, 322], "steps": 10 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "how-hard", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "4-blurred", "note": "THE TEST: one drag hid the address and the guide moved on by itself. The panel opened and scrolled to the lens's own settings" },
+    { "do": "panel", "stage": "4-blurred" },
+    { "do": "snapshot", "name": "4-blurred" },
+
+    { "do": "action", "action": "pullLensAmount" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pixelate", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-stronger", "note": "pulling Strength up moved it on, and the address is gone rather than merely soft" },
+    { "do": "snapshot", "name": "5-stronger" },
+
+    { "do": "action", "action": "lensPixelate" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-leaves-the-app", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "6-blocks", "note": "the same lens switched to blocks, which is what most people want over a name: it reads as hidden on purpose" },
+    { "do": "panel", "stage": "6-blocks" },
+    { "do": "snapshot", "name": "6-blocks" },
+    { "do": "render", "name": "6-canvas" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-finished", "note": "Done closed the guide and left the lens on the picture" }
+  ]
+}
