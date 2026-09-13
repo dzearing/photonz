@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 25,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.792Z",
-  "updated": "2026-09-13T02:39:01.367Z",
+  "updated": "2026-09-13T02:39:03.693Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -58,7 +58,12 @@
     {
       "t": "2026-09-13T02:39:01.366Z",
       "note": "Shipped. Four guides, four walks (all green, plus the other twelve tutorial walks), 19 track tests, the design doc's Looks section, the progress log, and the audit with four real window captures. Filed one framework follow-up: a step cannot wait on a setting reaching a value. Asked for a sweep because the Help menu and the Tutorials window grew again."
+    },
+    {
+      "t": "2026-09-13T02:39:03.691Z",
+      "note": "Four guides under Help > Tutorials > Looks, all data in TutorialGuides.swift plus two new samples: What a shape is made of, Add a shadow a border a glow, Blur or pixelate what is underneath, Mix a layer with what is below it. 19 track tests and the full suite (5880) green; four new walks plus the twelve existing tutorial walks all pass; checked on the probe with the flags off as well as on. Audit queue/audits/2026-09-13-tutorials-looks-track.json with four real window captures. Commit 457f8d49."
     }
   ],
-  "started": "2026-09-13T02:22:14.511Z"
+  "started": "2026-09-13T02:22:14.511Z",
+  "completed": "2026-09-13T02:39:03.692Z"
 }

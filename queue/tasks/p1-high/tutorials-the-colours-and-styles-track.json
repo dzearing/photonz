@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.920Z",
-  "updated": "2026-09-12T15:17:33.202Z",
+  "updated": "2026-09-13T03:00:05.048Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -38,6 +38,16 @@
     {
       "t": "2026-09-12T15:17:33.202Z",
       "note": "deps set: framework first"
+    },
+    {
+      "t": "2026-09-13T02:59:40.377Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T03:00:05.047Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
     }
-  ]
+  ],
+  "started": "2026-09-13T02:59:40.376Z",
+  "failures": 1
 }
