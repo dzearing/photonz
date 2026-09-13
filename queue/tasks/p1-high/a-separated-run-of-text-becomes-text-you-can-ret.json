@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 11,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.866Z",
-  "updated": "2026-09-13T11:21:36.193Z",
+  "updated": "2026-09-13T11:57:33.732Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can"
   ],
@@ -76,7 +76,12 @@
     {
       "t": "2026-09-13T11:56:00.964Z",
       "note": "Filed find-out-whether-a-label-inside-a-group-can-be-d (p2-normal): in the walk, repeated double clicks on a text layer INSIDE a group never open it for typing, while a top-level one opens on the first. Reproduced in the walk only, so it is filed as something to look into rather than as a bug."
+    },
+    {
+      "t": "2026-09-13T11:57:33.730Z",
+      "note": "Turn into Text shipped in Next, in the layers row menu and the Layer menu under Separate into Layers. A picture of a run of text becomes the words in the face, size and colour the screenshot was set in, placed so the ink lands where the old ink did; where no face is close enough the run stays a picture and the pill says why. Vision reads the characters, the face is identified by re-setting the words in five candidate families and keeping the best overlap. Verified on Fixtures/settings-pane-2x.png (all nine runs read exactly, one family, heading bold, white-on-blue #FFFFFF, within half a pixel of place and two pixels of width), by the full suite (6110 tests green), and in the running probe app through Scripts/playtest/separate-turn-into-text-walk.json, where the heading was retyped from General to Appearance in the same type. Audit queue/audits/2026-09-13-turn-into-text.json with three real screen captures. Commit 2575e1ca, pushed."
     }
   ],
-  "started": "2026-09-13T11:21:36.191Z"
+  "started": "2026-09-13T11:21:36.191Z",
+  "completed": "2026-09-13T11:57:33.731Z"
 }
