@@ -31,16 +31,26 @@ public struct SilenceableQuestion: Hashable, Sendable, Identifiable {
         self.storageKey = storageKey
     }
 
-    /// The first, and so far only, silenceable question the app ships.
+    /// The first silenceable question the app shipped.
     public static let turnIntoPicture = SilenceableQuestion(
         id: "turnIntoPicture",
         command: "Turn Into Picture",
         warns: "Warns you that a shape or a piece of text is about to stop being editable.",
         storageKey: "photonz.turnIntoPicture.dontAsk")
 
+    /// The other conversion that is one way, and cleared the same bar: the
+    /// instant after a box becomes a path the picture is identical, and what is
+    /// gone is that it was a rectangle at all, so the Corner Radius control has
+    /// nothing left to act on (`TurnIntoPathPrompt`).
+    public static let turnIntoPath = SilenceableQuestion(
+        id: "turnIntoPath",
+        command: "Turn Into Path",
+        warns: "Warns you that a shape is about to stop being a rectangle, an ellipse or a line.",
+        storageKey: "photonz.turnIntoPath.dontAsk")
+
     /// Every question the app can ask, in the order a list should show them.
     /// Grow this one at a time, each with its reason written down.
-    public static let all: [SilenceableQuestion] = [.turnIntoPicture]
+    public static let all: [SilenceableQuestion] = [.turnIntoPicture, .turnIntoPath]
 }
 
 /// The tiny slice of key-value storage the silence store needs. Injecting it

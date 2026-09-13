@@ -55,6 +55,26 @@ public final class DocumentRenderer: @unchecked Sendable {
         let originX: CGFloat
         let originY: CGFloat
         let radii: CornerRadii
+        /// The outline a silhouette follows when it is a ring round a PATH,
+        /// and how far out of it (negative for in). Nil on the rounded
+        /// rectangle every other layer's ring hugs, so the two kinds share one
+        /// cache and one budget without being able to collide.
+        var outline: PathContent?
+        var reach: CGFloat
+        var scale: CGFloat
+
+        init(pixelWidth: Int, pixelHeight: Int, originX: CGFloat, originY: CGFloat,
+             radii: CornerRadii, outline: PathContent? = nil, reach: CGFloat = 0,
+             scale: CGFloat = 1) {
+            self.pixelWidth = pixelWidth
+            self.pixelHeight = pixelHeight
+            self.originX = originX
+            self.originY = originY
+            self.radii = radii
+            self.outline = outline
+            self.reach = reach
+            self.scale = scale
+        }
     }
     private var ringCache: [RingKey: CIImage] = [:]
     private var ringOrder: [RingKey] = []
@@ -932,6 +952,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         // words above, and drawing those again as a box would put a frame round
         // a label nobody asked for (`BorderFollows.swift`).
         image = borderEffects(image, box: box, radii: ringRadii, shape: ringShape,
+                              outline: layer.path, scale: contentScale,
                               borders: layer.boxBorders)
 
         // Style: blur, after the paint rather than before it, so the softness
@@ -1053,11 +1074,13 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// ends up nearest the eye — the same rule the shadows follow, and the
     /// whole meaning of the grip on the row.
     private func borderEffects(_ image: CIImage, box: CGRect, radii: CornerRadii,
-                               shape: RingShape = .box, borders: [BorderEffect]) -> CIImage {
+                               shape: RingShape = .box, outline: PathContent? = nil,
+                               scale: CGFloat = 1, borders: [BorderEffect]) -> CIImage {
         guard !borders.isEmpty else { return image }
         var result = image
         for border in borders.reversed() {
-            result = ringed(result, box: box, radii: radii, shape: shape, width: border.width,
+            result = ringed(result, box: box, radii: radii, shape: shape, outline: outline,
+                            scale: scale, width: border.width,
                             outset: border.ringOutset, paint: border.paint)
         }
         return result
@@ -1080,11 +1103,35 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// pushing it out grows it, so an offset ring stays parallel to a rounded
     /// shape either way.
     private func ringed(_ image: CIImage, box: CGRect, radii: CornerRadii, shape: RingShape,
+                        outline: PathContent? = nil, scale: CGFloat = 1,
                         width: CGFloat, outset: CGFloat, paint: Paint) -> CIImage {
         let outerRect = outset == 0 ? box : box.insetBy(dx: -outset, dy: -outset)
         // A ring offset so far in that there is no box left to hug is nothing
         // to draw rather than a null rect handed to a filter.
         guard !outerRect.isNull, outerRect.width > 0, outerRect.height > 0 else { return image }
+        // An OUTLINE has a silhouette of its own, and a ring round it follows
+        // that outline rather than the box it happens to fit in. Without this a
+        // border added to anything curved came out as a hard rectangular frame
+        // round it, which is what a rounded box turns into the moment it
+        // becomes a path (`ShapeToPath.swift`).
+        // An outline too big to bake falls through to the box below rather than
+        // being skipped: a ring that quietly vanished on a big shape would be
+        // worse than one drawn round its box.
+        if let outline, outline.anchors.count >= 2,
+           let outer = pathSilhouette(outline, reaching: outset, box: box,
+                                      scale: scale, in: outerRect) {
+            let inner = pathSilhouette(outline, reaching: outset - width, box: box,
+                                       scale: scale, in: outerRect)
+            var band = outer
+            if let inner {
+                band = outer.applyingFilter("CISourceOutCompositing",
+                                            parameters: [kCIInputBackgroundImageKey: inner])
+            }
+            band = paint.isGradient ? poured(paint, through: band, in: outerRect)
+                                    : tinted(band, ciColor(hex: paint.hex))
+            return laid(band, outerMask: outer, innerMask: inner,
+                        opacity: paintOpacity(paint), over: image, outerRect: outerRect)
+        }
         // An oval has no corners to round, so it is drawn as an oval rather
         // than as a rounded rect that would have to be a capsule to come close
         // and a square everywhere else (`RingShape.swift`).
@@ -1173,38 +1220,43 @@ public final class DocumentRenderer: @unchecked Sendable {
         let key = MaskKey(pixelWidth: pixelWidth, pixelHeight: pixelHeight,
                           originX: local.minX, originY: local.minY,
                           radii: radii.fitted(in: rect.size))
-        cacheLock.lock()
-        let hit = maskCache[key]
-        cacheLock.unlock()
-        let baked: CIImage
-        if let hit {
-            baked = hit
-        } else {
-            guard let drawn = drawRoundedRect(pixelWidth: pixelWidth, pixelHeight: pixelHeight,
-                                              in: local, radii: key.radii) else {
-                return roundedRectImage(rect: rect, radii: radii, color: .white)
-            }
-            baked = drawn
-            cacheLock.lock()
-            if maskCache[key] == nil {
-                maskCache[key] = drawn
-                maskOrder.append(key)
-                maskPixels += pixelWidth * pixelHeight
-                // Kept to a budget in PIXELS rather than in entries: a
-                // hundred button-sized silhouettes cost less than one the
-                // size of a photograph, and it is the megabytes that matter.
-                while maskPixels > Self.maskCachePixelCap, let oldest = maskOrder.first {
-                    maskOrder.removeFirst()
-                    if let gone = maskCache.removeValue(forKey: oldest) {
-                        maskPixels -= Int(gone.extent.width * gone.extent.height)
-                    }
-                }
-            }
-            cacheLock.unlock()
+        guard let baked = bakedMask(key, pixels: pixelWidth * pixelHeight, draw: {
+            drawRoundedRect(pixelWidth: pixelWidth, pixelHeight: pixelHeight,
+                            in: local, radii: key.radii)
+        }) else {
+            return roundedRectImage(rect: rect, radii: radii, color: .white)
         }
         return baked.transformed(by: CGAffineTransform(translationX: bounds.minX,
                                                        y: bounds.minY))
             .cropped(to: bounds)
+    }
+
+    /// One silhouette, drawn once and kept.
+    ///
+    /// The budget is in PIXELS rather than in entries: a hundred button-sized
+    /// silhouettes cost less than one the size of a photograph, and it is the
+    /// megabytes that matter.
+    private func bakedMask(_ key: MaskKey, pixels: Int,
+                           draw: () -> CIImage?) -> CIImage? {
+        cacheLock.lock()
+        let hit = maskCache[key]
+        cacheLock.unlock()
+        if let hit { return hit }
+        guard let drawn = draw() else { return nil }
+        cacheLock.lock()
+        if maskCache[key] == nil {
+            maskCache[key] = drawn
+            maskOrder.append(key)
+            maskPixels += pixels
+            while maskPixels > Self.maskCachePixelCap, let oldest = maskOrder.first {
+                maskOrder.removeFirst()
+                if let gone = maskCache.removeValue(forKey: oldest) {
+                    maskPixels -= Int(gone.extent.width * gone.extent.height)
+                }
+            }
+        }
+        cacheLock.unlock()
+        return drawn
     }
 
     private func drawRoundedRect(pixelWidth: Int, pixelHeight: Int,
@@ -1220,6 +1272,88 @@ public final class DocumentRenderer: @unchecked Sendable {
         // `roundedRectImage` makes.
         context.addPath(radii.flippedVertically.path(in: local))
         context.fillPath()
+        guard let bitmap = context.makeImage() else { return nil }
+        return CIImage(cgImage: bitmap)
+    }
+
+    /// A path's silhouette, pushed `reaching` points OUT from its outline (or
+    /// pulled that far in when the number is negative), as a white mask on
+    /// Core Image's Y-up canvas.
+    ///
+    /// This is what lets a ring follow a curve. Growing a shape by `d` is its
+    /// outline swept by a disc of radius `d`, and a stroke twice that wide IS
+    /// that sweep, so the offset curve comes out exact rather than guessed:
+    /// a rounded corner of radius r pushed out by d becomes one of r + d, a
+    /// circle of radius r becomes one of r + d, and every curve in between
+    /// follows. Shrinking is the same sweep taken back OFF the shape.
+    ///
+    /// The joins are MITRED on purpose. A square corner pushed outwards stays
+    /// square, which is the rule a rectangular ring has always followed; round
+    /// joins would quietly curve every sharp corner in an icon the moment a
+    /// border was added to it.
+    ///
+    /// An OPEN path has no inside, so its silhouette is the sweep alone: a
+    /// ring round a line is a band running along it, and pulled inwards there
+    /// is nothing left at all.
+    ///
+    /// Drawn through Core Graphics rather than generated, for the reason
+    /// `roundedRectMask` gives: `laid` shares a pixel out by area, and that
+    /// only works when both sides measure the same edge.
+    private func pathSilhouette(_ content: PathContent, reaching: CGFloat, box: CGRect,
+                                scale: CGFloat, in rect: CGRect) -> CIImage? {
+        let bounds = rect.integral
+        let pixelWidth = Int(bounds.width), pixelHeight = Int(bounds.height)
+        guard pixelWidth > 0, pixelHeight > 0,
+              pixelWidth * pixelHeight <= Self.maskBakeCap else { return nil }
+        // An OPEN path pulled inwards has nothing left: no inside to keep and
+        // no sweep to add.
+        guard content.isClosed || abs(reaching) > 0 else { return nil }
+        // Kept, like every other silhouette: a ring is redrawn on every frame
+        // of a drag, and a shape being MOVED is the same outline in the same
+        // box each time. Reshaping one is a fresh outline each frame and so a
+        // fresh bake, which is the same bargain the shape's own raster makes.
+        let key = MaskKey(pixelWidth: pixelWidth, pixelHeight: pixelHeight,
+                          originX: box.minX - bounds.minX, originY: box.maxY - bounds.minY,
+                          radii: .none, outline: content, reach: reaching, scale: scale)
+        guard let baked = bakedMask(key, pixels: pixelWidth * pixelHeight, draw: {
+            drawPathSilhouette(content, reaching: reaching, scale: scale,
+                               pixelWidth: pixelWidth, pixelHeight: pixelHeight,
+                               originX: key.originX, originY: key.originY)
+        }) else { return nil }
+        return baked.transformed(by: CGAffineTransform(translationX: bounds.minX,
+                                                       y: bounds.minY))
+            .cropped(to: bounds)
+    }
+
+    private func drawPathSilhouette(_ content: PathContent, reaching: CGFloat, scale: CGFloat,
+                                    pixelWidth: Int, pixelHeight: Int,
+                                    originX: CGFloat, originY: CGFloat) -> CIImage? {
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: pixelWidth, height: pixelHeight,
+                                      bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        // The outline is stated in the layer's own TOP-LEFT points and this
+        // bitmap is a piece of a Y-UP canvas in output pixels, so it is scaled
+        // and turned over on the way in — the same turn `drawRoundedRect`
+        // makes with `flippedVertically`.
+        var turn = CGAffineTransform(translationX: originX, y: originY)
+            .scaledBy(x: scale, y: -scale)
+        guard let shape = PathRasterizer.cgPath(content).copy(using: &turn) else { return nil }
+        context.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1))
+        if content.isClosed {
+            context.addPath(shape)
+            context.fillPath(using: content.fillRule == .evenOdd ? .evenOdd : .winding)
+        }
+        let sweep = abs(reaching) * scale
+        if sweep > 0 {
+            let swept = shape.copy(strokingWithWidth: sweep * 2, lineCap: .round,
+                                   lineJoin: .miter, miterLimit: 10)
+            if reaching < 0 { context.setBlendMode(.clear) }
+            context.addPath(swept)
+            context.fillPath(using: .winding)
+            context.setBlendMode(.normal)
+        }
         guard let bitmap = context.makeImage() else { return nil }
         return CIImage(cgImage: bitmap)
     }

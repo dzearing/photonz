@@ -94,3 +94,23 @@ dirty-rect patching) took the interactive edit from 6.9ms to 37.3ms and the
 edit inside a plain group from 6.3ms to 39.2ms — both comfortably inside the
 old 100ms bound, both failing the new one. That is the gate now saying
 something true.
+
+## 2026-09-13 — a ring that follows a path
+
+Turn Into Path made every converted shape's Border a ring hugging an outline
+rather than a rounded rectangle, which is a new bake on the composite path
+(`DocumentRenderer.pathSilhouette`). Measured on the same machine, a 12MP
+canvas holding ten bordered shapes:
+
+| Document | Median render |
+| --- | --- |
+| Ten bordered rectangles (what they were) | 13.2ms |
+| Ten bordered paths, outlines unchanged | 13.5ms |
+| Ten bordered paths, a fresh outline every frame | 15.4ms |
+
+So a shape that has been turned costs about a third of a millisecond more to
+draw once its silhouette is baked, and the worst case — reshaping ten of them
+at once, so the silhouette cache misses on every layer on every frame — is
+15.4ms, still inside the 16ms target. The silhouettes share the same cache and
+the same pixel budget as every other mask, so moving a path is a cache hit and
+only reshaping one pays.

@@ -124,6 +124,8 @@ public enum FeatureCatalog {
 
     public static let reshapePathFlag = "next-reshape-a-path"
 
+    public static let turnIntoPathFlag = "next-turn-into-path"
+
     public static let svgExportFlag = "next-export-svg"
 
     public static let blendModeFlag = "next-blend-mode"
@@ -423,6 +425,15 @@ public enum FeatureCatalog {
                     name: penFlag,
                     title: "Draw any shape with the Pen",
                     description: "Adds the Pen, P, at the end of the drawing tools. Click to drop a corner, or press and drag to pull a curve out of the point you are placing, so one outline can have hard edges and curves in it: a triangle, a teardrop, a rounded box, the sort of shape an icon is made of. The run between the last point and the pointer is drawn while you move, so you see the curve before you commit it. Click the first point to close the shape and it fills; Return finishes it as an open line; Escape throws the drawing away. Holding Shift puts the next point on one of the usual angles. Holding Option means the two sides of a point are not tied together, which is what lets a straight edge run into a curve: drag a point out with Option held and the edge arriving at it stays straight, and press Option on the point you just placed to pull its handle back in so the next edge leaves straight. That is how a rounded corner gets drawn. Command Z steps back one point at a time while you draw instead of losing the whole path. What you get is an ordinary layer: move it, resize it, turn it, repaint its inside and its edge, give it a shadow, undo it. Off means no Pen tool and P does nothing; a path already in a document draws either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: turnIntoPathFlag,
+                    title: "Turn a rectangle into a path",
+                    description: "A rectangle, an ellipse or a line is a fixed thing: you can resize it, but you cannot take one corner and pull it somewhere else. Turn Into Path, in the layer's right click menu and in the Layer menu, stops it being a rectangle and makes it an outline, keeping exactly the look it had. Round the corners first and the curves you get are real ones you can pull on, which is how most icons actually get made. The shape keeps its fill, its edge, its shadow and everything else it was wearing, and it is one undo step, so if it was not what you wanted the rectangle comes straight back with its Corner Radius control. You are told once, plainly, that the shape stops being a rectangle, and there is a Don't ask again on that question. Off means the command is not offered and the shapes stay shapes.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

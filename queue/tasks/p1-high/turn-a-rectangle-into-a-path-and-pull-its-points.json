@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 16,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T15:25:59.762Z",
-  "updated": "2026-09-13T15:27:01.858Z",
+  "updated": "2026-09-13T18:46:22.821Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve",
     "a-path-can-be-reshaped-after-you-draw-it"
@@ -44,6 +44,19 @@
     {
       "t": "2026-09-13T15:27:01.857Z",
       "note": "seq 15 -> 16"
+    },
+    {
+      "t": "2026-09-13T18:46:22.820Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T18:50:09.587659Z",
+      "note": "Adversarial review before building. (1) The shapes worth converting are rectangle, rounded rectangle, ellipse and line. An ARROW does not convert: its head is part of how it is drawn, not part of its outline, so a path of it would either lose the head or bake the whole arrow into one closed silhouette whose points mean nothing. A HIGHLIGHT does not convert either: its colour IS the wash and its mixing is part of what it is. Both stay on Turn Into Picture, and the command is unavailable on them rather than doing something surprising. (2) The real trap, found by reading rather than assumed: since OutlineRetirement (2026-09-08) a rectangle or ellipse has NO stroke of its own. Layer.init moves it into the Effects list as a Border, so every box in the app is a fill plus a border effect, and the renderer draws that ring as a rounded RECTANGLE round the layer box. Convert a rounded box to a path today and the fill keeps its curve while the ring round it snaps to a hard square. So this task is not done by geometry alone: a ring round a path has to follow the path. That also fixes a defect that is already there, since a pen-drawn path given a border gets a square frame round its bounding box. (3) Measured rather than guessed: CGPath(roundedRect:), CGPath(ellipseIn:) and CGPath addArc all agree with the 0.5523 cubic approximation BIT FOR BIT at radius 8, 20 and 60 and on a 180x120 ellipse (0 differing bytes of 112000), so pixel identity is reachable exactly rather than within a tolerance."
+    },
+    {
+      "t": "2026-09-13T18:59:13.257396Z",
+      "note": "Core and renderer done, 24 core tests and 16 render tests, all written before the code. Three things had to be fixed for the picture to survive the turn, each reproduced on rendered pixels first. (1) A ring round a path followed the layer's BOX, so a rounded box converted to a path kept its curved fill inside a hard square frame: the naive conversion differed by 3044 bytes on a rounded box and 11998 on a circle. DocumentRenderer.pathSilhouette now grows or shrinks the outline itself by sweeping it with a disc (a stroke of twice the reach IS that sweep), mitred so a square corner pushed out stays square. That also fixes a defect already in the app: a pen-drawn path given a Border got a rectangular frame round its bounding box. (2) A path's stroke reach was half a point on an odd width, which put its whole bitmap on a half pixel and let the compositor resample a hard edge soft. PathContent.strokeOutset now rounds up, the same way a line's own overhang already does. (3) GradientPainter.stroke never set the line cap for a FLAT paint, only for a gradient, so every open path in the app ended in square butts while asking for round ones. Result: a plain box, a filled box, a line at three weights and a wide oval with no edge are byte for byte identical; a rounded box, a circle and everything wearing shadows, extra borders or a gradient edge differ by at most 1 or 2 parts in 255 on a few dozen edge samples out of 288000. The one real difference left is a NON-CIRCULAR oval with a border: the app draws that ring as a second oval inset in its box, which only equals a fixed distance inside the curve on a circle, so the path's ring (the true offset) sits under a pixel away along the flanks. The path's is the correct one; filed separately."
     }
-  ]
+  ],
+  "started": "2026-09-13T18:46:22.819Z"
 }

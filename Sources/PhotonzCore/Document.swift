@@ -965,6 +965,17 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         }
     }
 
+    /// Turns a box, an oval or a line into a path in one step, keeping every
+    /// paint, every effect and the layer's own place in the stack
+    /// (`ShapeToPath.swift`). Nothing happens on a layer that has no outline to
+    /// find, so the command is safe to call twice and safe to call on anything.
+    public mutating func turnLayerIntoPath(id: UUID) {
+        updateLayer(id: id) { layer in
+            guard let turned = layer.turnedIntoPath() else { return }
+            layer = turned
+        }
+    }
+
     // MARK: - Canvas operations
 
     /// Crops the whole document. Layer frames are re-expressed relative to the

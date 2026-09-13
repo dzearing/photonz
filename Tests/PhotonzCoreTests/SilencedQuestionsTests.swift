@@ -23,12 +23,17 @@ struct SilencedQuestionsTests {
         #expect(Set(SilenceableQuestion.all.map(\.id)).count == SilenceableQuestion.all.count)
     }
 
-    @Test func theOneQuestionThatShipsIsTurnIntoPicture() {
-        #expect(SilenceableQuestion.all.map(\.id) == [SilenceableQuestion.turnIntoPicture.id])
+    @Test func theTwoQuestionsThatShipAreTheTwoOneWayConversions() {
+        // Both take away something invisible the instant after, which is the
+        // only bar this list admits anything over.
+        #expect(SilenceableQuestion.all.map(\.id) == [SilenceableQuestion.turnIntoPicture.id,
+                                                     SilenceableQuestion.turnIntoPath.id])
         #expect(SilenceableQuestion.turnIntoPicture.command == "Turn Into Picture")
-        // The key that already holds people's answers, unchanged: somebody who
-        // silenced this last week is still silenced today.
+        #expect(SilenceableQuestion.turnIntoPath.command == "Turn Into Path")
+        // The keys that already hold people's answers, unchanged: somebody who
+        // silenced one last week is still silenced today.
         #expect(SilenceableQuestion.turnIntoPicture.storageKey == "photonz.turnIntoPicture.dontAsk")
+        #expect(SilenceableQuestion.turnIntoPath.storageKey == "photonz.turnIntoPath.dontAsk")
     }
 
     @Test func nothingIsSilencedUntilSomebodySilencesIt() {

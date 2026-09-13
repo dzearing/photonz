@@ -1,0 +1,28 @@
+{
+  "id": "a-layer-that-stopped-being-a-rectangle-stops-bei",
+  "title": "A layer that stopped being a rectangle stops being called Rectangle",
+  "goal": "Turn a rectangle into a path and the layers panel still calls it Rectangle, so the list says one thing and the shape is another. A layer nobody has named by hand should take the name of what it is now; a layer somebody DID name keeps the name they gave it.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T19:11:11.716Z",
+  "updated": "2026-09-13T19:11:11.719Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on the probe on 2026-09-13 in Scripts/playtest/turn-into-a-path-walk.json: after the turn the row still reads Rectangle while the canvas chip reads Path, and the row menu no longer offers Turn Into Path because there is nothing left to turn. Screenshot: queue/audits/2026-09-13-turn-into-a-path-turned-sc.png.\n\nNot fixed in the task that found it because it is a judgment call with two defensible answers: Photoshop and Figma both KEEP the name, on the grounds that a layer is the thing you named rather than the thing it is made of, and renaming behind somebody is its own surprise. The distinguishing question is whether the app can tell a name somebody typed from a name it made up. LayerNaming.swift is where that would live, and PathBuilder.defaultName is Path.\n\nLayer.turnedIntoPath() in Sources/PhotonzCore/ShapeToPath.swift deliberately keeps name, id, slot, style, effects and transform; only the name is in question.",
+  "acceptance": [
+    "Turning an unnamed Rectangle into a path leaves a row called Path",
+    "Turning a layer somebody renamed to Card leaves it called Card",
+    "The rename is part of the same single undo step, so one undo puts both the shape and the name back",
+    "The same rule reads the same way for an Ellipse and a Line"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T19:11:11.718Z",
+      "note": "created (manual)"
+    }
+  ]
+}

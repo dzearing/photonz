@@ -338,9 +338,18 @@ public struct PathContent: Hashable, Codable, Sendable {
     ///
     /// An OPEN path has no inside, so an inside line has nowhere to be: it is
     /// read as centred, which is what it is drawn as.
+    ///
+    /// Rounded UP to a whole point, the same way a line's own overhang is
+    /// (`AnnotationContent.renderPadding`). This is what keeps the shape on the
+    /// pixel grid: the bitmap it is drawn into is this much bigger on every
+    /// side and is then laid on the canvas that much back from the frame, so a
+    /// reach of half a point would put every path with an odd stroke width on
+    /// half a pixel and let the compositor resample a hard edge into a soft
+    /// one. A rounded-up reach costs half a point of clear margin and nothing
+    /// else: the ink lands in exactly the same place either way.
     public var strokeOutset: CGFloat {
         guard strokeWidth > 0 else { return 0 }
-        return effectiveStrokePosition.outset(width: strokeWidth)
+        return effectiveStrokePosition.outset(width: strokeWidth).rounded(.up)
     }
 
     /// The position the line is actually drawn in, once an open path's missing

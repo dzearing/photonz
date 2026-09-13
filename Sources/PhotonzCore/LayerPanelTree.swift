@@ -405,6 +405,10 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     public let versionName: String?
     /// Whether the row's menu offers "Rasterize Layer".
     public let isRasterizable: Bool
+    /// Whether the row's menu offers "Turn Into Path": this layer is a box, an
+    /// oval or a line, so it has an outline a path could be
+    /// (`ShapeToPath.swift`).
+    public let canTurnIntoPath: Bool
     /// Why this row is out of view, when it is: the container cutting this
     /// layer off, or how many layers a shut group is hiding out of view. Nil
     /// on a row with nothing to say, which is nearly every row.
@@ -415,6 +419,7 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     public init(row: LayerPanelRow, name: String, isVisible: Bool, isLocked: Bool,
                 isSelected: Bool, isMainComponent: Bool, isComponentInstance: Bool,
                 versionName: String? = nil, isRasterizable: Bool,
+                canTurnIntoPath: Bool = false,
                 outOfView: RowOutOfView? = nil) {
         self.outOfView = outOfView
         self.versionName = versionName
@@ -426,6 +431,7 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
         self.isMainComponent = isMainComponent
         self.isComponentInstance = isComponentInstance
         self.isRasterizable = isRasterizable
+        self.canTurnIntoPath = canTurnIntoPath
     }
 }
 
@@ -509,6 +515,7 @@ extension PhotonzDocument {
                     isComponentInstance: layer.isComponentInstance,
                     versionName: Self.versionName(of: layer, in: versions),
                     isRasterizable: layer.isRasterizable,
+                    canTurnIntoPath: layer.canTurnIntoPath,
                     outOfView: outOfView))
                 if open { walk(layer.children, depth: depth + 1, parent: layer.id, clips: inner) }
             }

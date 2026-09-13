@@ -1,0 +1,52 @@
+{
+  "feature": "Turn Into Path",
+  "epic": "icon-vector",
+  "summary": "A rectangle, an ellipse or a line can become a path in one step, keeping exactly the look it had, so from then on every point on it is yours to move, curve or delete. Round the corners first and the curves you get are real ones you can pull on.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-turn-into-path is on by default and needs next-pen and next-reshape-a-path, which are too.",
+  "try": [
+    {
+      "do": "Press R and drag out a rectangle.",
+      "shot": "2026-09-13-turn-into-a-path-rounded-sc.png"
+    },
+    {
+      "do": "Pull the Corner Radius slider about halfway up, so the corners are plainly round."
+    },
+    {
+      "do": "Right click the Rectangle row in the Layers panel and read the menu.",
+      "shot": "2026-09-13-turn-into-a-path-row-menu-sc.png"
+    },
+    {
+      "do": "Pick Turn Into Path and read what it asks before it does anything.",
+      "shot": "2026-09-13-turn-into-a-path-question-sc.png"
+    },
+    {
+      "do": "Press Return. Look hard at the shape: nothing about it should have moved.",
+      "shot": "2026-09-13-turn-into-a-path-turned-sc.png"
+    },
+    {
+      "do": "Drag the point where the left edge meets the top left curve out to the left, and watch the curve come with it.",
+      "shot": "2026-09-13-turn-into-a-path-point-pulled-sc.png"
+    },
+    {
+      "do": "Press Command Z twice: once for the point, once for the turn, and the Corner Radius row comes back."
+    },
+    {
+      "do": "Press O, drag out a circle, and turn that into a path too.",
+      "shot": "2026-09-13-turn-into-a-path-circle-sc.png"
+    }
+  ],
+  "evaluate": [
+    "The shape really is identical after the turn, to the pixel. Can you tell from looking at it that anything happened at all, other than the points appearing?",
+    "Turn Into Path sits directly above Turn Into Picture in both menus, on the grounds that it is the gentler of the two one-way turns. Is that where your hand goes looking for it?",
+    "The question warns that the Corner Radius control goes. Is that the loss you would actually mind, or is there something else you expected to be warned about?",
+    "An arrow and a highlight are not offered the command at all, because an arrow's head is part of how it is drawn rather than part of its outline. Is that the right call, or would you rather an arrow converted and lost its head?",
+    "The eight points a rounded box turns into are the right ones for icon work: four straight edges and four quarter circles. Is that what you wanted to be handed, or would you rather have had four points and reached for the curves yourself?"
+  ],
+  "rough": [
+    "The layers panel still calls it Rectangle after it has stopped being one, while the chip on the canvas says Path. Filed as 'A layer that stopped being a rectangle stops being called Rectangle', p2, because whether a layer should be renamed behind you is a judgment call: Photoshop and Figma both keep the name.",
+    "A wide oval with a border is the ONE shape that is not identical after the turn: its ring moves by a fraction of a pixel along the flanks. It is not the conversion that is wrong, it is the oval: the app draws a border on an ellipse as a second oval inset inside the first, which is only the same thing as a line a fixed distance inside the curve when the oval is a circle. A border on a path follows the real curve now. Filed as 'An oval's own border hugs the oval, not the box round it', p2.",
+    "Three things had to be fixed under this before the picture could survive the turn, each reproduced on rendered pixels first rather than argued from the code. A ring round a path followed the layer's BOX, so a rounded box came out with a curved fill inside a hard square frame; that was not an edge case, because since the Outline row left Appearance every box in the app wears its edge as a Border effect. A path's stroke reach was half a point on an odd line width, which put the whole shape on a half pixel and let the compositor blur a hard edge. And a flat stroke never got the line cap it asked for, only a gradient one did, so every open path in the app ended in square butts.",
+    "The magnified picture (2026-09-13-turn-into-a-path-corner-8x.png, the same corner at 8x, before on the left and after on the right) is a render of the document rather than a screenshot of the window, because the point of it is the ink and not the chrome. Every other picture here is a real screen capture.",
+    "A path still has no way to set its own line width or its cap and join. It does not bite here, because a converted shape keeps its edge as a Border effect with a full set of rows, but a path drawn with the Pen carries a 4pt stroke nobody can change."
+  ]
+}

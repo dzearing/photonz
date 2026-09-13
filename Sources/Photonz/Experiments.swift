@@ -340,6 +340,15 @@ extension Experiments {
         penEnabled && isEnabled(FeatureCatalog.svgExportFlag)
     }
 
+    /// `next-turn-into-path`: whether a box, an oval or a line can be turned
+    /// into a path from the two menus. It needs the reshaping work, because
+    /// converting a shape you then cannot edit is a command with no payoff: the
+    /// whole point is the points. A layer already turned draws either way, so
+    /// the flag takes away a way IN, never a document's contents.
+    var turnIntoPathEnabled: Bool {
+        reshapePathEnabled && isEnabled(FeatureCatalog.turnIntoPathFlag)
+    }
+
     /// `next-frames`: whether the frame tool, the two Layer rows and the
     /// export scope exist. A frame is a group with a size, so this needs
     /// groups: with them off there is no way in to a frame and the switch

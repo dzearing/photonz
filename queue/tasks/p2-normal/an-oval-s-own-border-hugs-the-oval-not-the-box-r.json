@@ -1,0 +1,28 @@
+{
+  "id": "an-oval-s-own-border-hugs-the-oval-not-the-box-r",
+  "title": "An oval's own border hugs the oval, not the box round it",
+  "goal": "A border added to an ellipse is drawn as a second oval inset inside the first one, which only looks right on a circle. On a wide oval the line drifts by a fraction of a pixel along the flanks, so the ring is not quite parallel to the shape it is going round. Make it follow the curve the way a border on a path already does.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2590,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T19:11:07.423Z",
+  "updated": "2026-09-13T19:11:07.426Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-13 while building Turn Into Path. Tests/PhotonzRenderTests/TurnIntoPathRenderTests.swift wideOvalRing composites a 200x100 ellipse with a 4pt inside border twice, once as an ellipse and once as the path it turns into, and 3471 of 288000 bytes differ with a worst channel difference of 51 of 255. Every other shape in that suite is identical or differs by 1 or 2 on a few dozen samples.\n\nWhere it is: DocumentRenderer.ringed, the shape == .ellipse branch. The BAND is drawn by drawEllipseRing, which strokes the ellipse inscribed in bounds.insetBy(width/2) — a bounding-box inset rather than the true offset curve. The masks laid handles are worse: filledEllipse(in: outerRect) and filledEllipse(in: outerRect.insetBy(width)). All three are exact on a circle and approximate on anything else.\n\nThe machinery to fix it already exists and is tested: DocumentRenderer.pathSilhouette takes a PathContent and a signed reach and hands back the true offset silhouette, by sweeping the outline with a disc (a stroke of twice the reach IS that sweep). PathContent.ellipse(in:) in ShapeToPath.swift builds the oval as four smooth anchors. So the ellipse branch could go through the same pair the path branch does and the approximation disappears. Watch the ring cache: the path route bakes per ring rather than reusing ringCache, so check RenderPerfTests before and after.",
+  "acceptance": [
+    "A border on a 2:1 oval sits the same distance from the curve all the way round, checked by sampling the rendered pixels rather than by eye",
+    "A circle is unchanged, byte for byte, because it was already right",
+    "Turning an oval into a path leaves the picture identical, which it does not quite do today",
+    "ellipse-border-walk still passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T19:11:07.425Z",
+      "note": "created (manual)"
+    }
+  ]
+}

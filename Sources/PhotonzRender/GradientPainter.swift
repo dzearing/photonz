@@ -41,10 +41,21 @@ public enum GradientPainter {
         guard width > 0 else { return }
         guard paint.isGradient else {
             guard let rgba = RGBA(hex: paint.hex) else { return }
+            context.saveGState()
             context.setStrokeColor(cgColor(rgba))
             context.setLineWidth(width)
+            // The ends and the turns are set HERE rather than left to whatever
+            // the context was last told, so a flat line and a gradient one
+            // through this same call come out the same shape. They did not:
+            // the gradient branch below has always set them and this one never
+            // did, so a path drawn in one colour ended in square butts while
+            // the same path with a ramp on it ended in the round caps that
+            // were asked for.
+            context.setLineJoin(lineJoin)
+            context.setLineCap(lineCap)
             context.addPath(path)
             context.strokePath()
+            context.restoreGState()
             return
         }
         context.saveGState()

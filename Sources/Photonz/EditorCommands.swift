@@ -421,6 +421,18 @@ struct EditorCommands: Commands {
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))
+            // The one command that makes a rectangle into an outline you can
+            // pull the points of (`ShapeToPath.swift`). Right above Turn Into
+            // Picture, because the two are the same kind of one-way turn and
+            // this is the gentler one: it keeps the shape editable. Disabled
+            // rather than absent on a layer that has no outline to find, so the
+            // row is somewhere you can learn it exists.
+            if Experiments.shared.turnIntoPathEnabled {
+                Button(TurnIntoPathPrompt.menuItem) {
+                    if let selectedID { editor?.turnLayerIntoPath(id: selectedID) }
+                }
+                .disabled(!(selectedID.map { editor?.canTurnLayerIntoPath(id: $0) ?? false } ?? false))
+            }
             // The one command that makes a shape or a piece of text into pixels,
             // which is what a marquee needs before it can cut a piece out of it
             // (`RasterizePrompt`, `RegionSliceRefusal`). Named the way the

@@ -152,6 +152,12 @@ extension Layer {
     /// teaches you the panel is lying. Everything that is not a shape at all —
     /// a picture, a label, a frame, a group — is a box, so it has four.
     public var hasCorners: Bool {
+        // A PATH has points, not corners. Rounding it through the style would
+        // lay a rounded rectangle over it and chop its outline off at the box,
+        // which is the very thing this one row exists to stop a rectangle
+        // suffering (`CornerRadiusRow`). The way to round a path is to pull its
+        // points, which is what it turned into a path for (`ShapeToPath.swift`).
+        if path != nil { return false }
         guard let shape = annotation?.shape else { return true }
         switch shape {
         case .rectangle, .highlight: return true

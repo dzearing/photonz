@@ -365,6 +365,13 @@ struct LayersRow: View, Equatable {
         Button("Select Pixels") { editorState.selectLayerPixels(id: id) }
         Button("Merge Down") { editorState.mergeDown(id: id) }
             .keyboardShortcut("e", modifiers: .command)
+        // Before "Turn Into Picture", because it is the gentler of the two:
+        // one keeps the shape editable and takes away only its being a
+        // rectangle, the other makes it pixels. A row that cannot take it does
+        // not show it (`ShapeToPath.swift`).
+        if display.canTurnIntoPath, editorState.canTurnLayerIntoPath(id: id) {
+            Button(TurnIntoPathPrompt.menuItem) { editorState.turnLayerIntoPath(id: id) }
+        }
         if display.isRasterizable {
             Button(RasterizePrompt.menuItem) { editorState.rasterizeLayer(id: id) }
         }

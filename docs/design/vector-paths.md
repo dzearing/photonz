@@ -330,6 +330,89 @@ uses. Every commit refits the layer's box round the new shape
 (`PathBuilder.refit`), so a point dragged past the old edge moves the corner as
 well as the point.
 
+## Turning a shape into one
+
+A rectangle is a fixed thing: you can resize it, but you cannot take one corner
+and pull it somewhere else. **Turn Into Path** is the one step that stops it
+being a rectangle and makes it an outline, keeping exactly the look it had. It
+is in the layer's own row menu and in the Layer menu, beside "Turn Into
+Picture", which is the other one-way turn the app offers, and it goes ABOVE it,
+because it is the gentler of the two: this one keeps the shape editable.
+
+`PhotonzCore/ShapeToPath.swift` is all of it, and it is pure geometry.
+
+### What each shape becomes
+
+| Shape | Path |
+| --- | --- |
+| Rectangle | four corner anchors, no handles |
+| Rounded rectangle | eight, the four arcs half smooth — a straight edge arrives, a curve leaves |
+| Per-corner rounded | one anchor per square corner, two per round one |
+| Ellipse | four smooth anchors on its compass points |
+| Line | an open path of two anchors |
+
+An **arrow** does not convert, and it is the one worth saying out loud. Its head
+is part of how it is DRAWN rather than part of its outline: the shaft is a
+stroke and the tip is a solid triangle sized off that stroke, so a path of it
+would either arrive with no head at all or be one closed silhouette of the whole
+arrow whose points sit on the outside of a shape nobody thinks of as an outline.
+A **highlight** is a wash rather than a shape: its colour IS the fill and it
+always mixes with what is under it. Both keep "Turn Into Picture", which is the
+honest answer for a mark whose look is how it is painted.
+
+### The constant, and why it is exact rather than close
+
+A quarter circle cannot be written exactly as a cubic. Every drawing program
+uses the same approximation: put each handle `4/3 × (√2 − 1)` ≈ 0.5523 of the
+radius along the tangent. `ShapeToPath.circleHandle` is that number, and on an
+ellipse it is applied to EACH AXIS separately — half the width across the top
+and the foot, half the height at the two sides. Taking one number for both is
+what turns a wide oval into a lozenge.
+
+The number is not merely standard, it is what Core Graphics itself draws with:
+`CGPath(roundedRect:)`, `CGPath(ellipseIn:)` and `addArc(tangent1End:…)` all
+agree with it to the BIT, measured on rendered pixels at radius 8, 20 and 60 and
+on a 180 × 120 oval. That is why a shape survives this turn pixel for pixel
+rather than almost.
+
+### What survives
+
+The layer keeps its id, its name, its slot, its style, every effect and its own
+transform. The only thing that changes is what it is MADE of, and it is one
+`History.perform`, so one undo brings back a real rectangle with its Corner
+Radius row.
+
+The one thing it LOSES is that row, and that is the whole reason the command
+stops and asks first (`TurnIntoPathPrompt`, and `SilencedQuestions` for the
+"Don't ask again"). The instant after, the picture is identical, so nothing on
+screen says the Corner Radius control has gone. A path has points rather than
+corners: rounding it through the style would lay a rounded rectangle over it and
+chop its outline off at the box, which is the very thing the one Corner Radius
+row exists to stop a rectangle suffering, so `Layer.hasCorners` is false for a
+path and the row is not offered.
+
+### Three things that had to be fixed for the picture to survive
+
+Each was reproduced on rendered pixels before it was fixed, and
+`PhotonzRenderTests/TurnIntoPathRenderTests.swift` composites every shape twice
+and compares the two bitmaps byte for byte.
+
+1. **A ring round a path followed the layer's BOX**, so a rounded box turned
+   into a path kept its curved fill inside a hard square frame. Since the
+   Outline row left Appearance a box has no stroke of its own at all — its edge
+   IS a Border effect (`OutlineRetirement.swift`) — so this was not an edge
+   case, it was every shape in the app. `DocumentRenderer.pathSilhouette` now
+   grows or shrinks the outline itself by sweeping it with a disc (a stroke of
+   twice the reach IS that sweep), mitred so a square corner pushed outwards
+   stays square.
+2. **A path's stroke reach was half a point on an odd width**, which put its
+   whole bitmap on a half pixel and let the compositor resample a hard edge
+   soft. `PathContent.strokeOutset` rounds up now, the way a line's own overhang
+   already did.
+3. **`GradientPainter.stroke` never set the line cap for a FLAT paint**, only
+   for a gradient, so every open path in the app ended in square butts while
+   asking for round ones.
+
 ## What the next slices add
 
 * **Booleans** (`docs/design/mocks/pages/draw-boolean.html`) — union, subtract,
@@ -341,10 +424,12 @@ well as the point.
 
 ## Known rough edges
 
-* **A Border added to a path from the Effects list still follows its BOX.** It
-  is the ellipse bug in a new place, and the fix is the same one: the ring has
-  to ask the layer for its silhouette. A path arrives with its own edge, so
-  nobody has to add one, but the row is there and it will draw a rectangle.
+* **An ellipse's OWN ring is still a bounding-box approximation.** A Border on a
+  path follows the true outline now, and a Border on an ellipse annotation is
+  still drawn as a second oval inset in its box, which is only the same thing as
+  a line a fixed distance inside the curve when the oval is a circle. So turning
+  a 2:1 oval into a path moves its ring by a fraction of a pixel along the
+  flanks. The path's is the correct one; the oval's is the one to fix.
 * **Line cap and line join are not settable.** Icons want butt caps and a miter
   limit sooner or later.
 * **There is no way to place a half-smooth anchor without Option**, and the
