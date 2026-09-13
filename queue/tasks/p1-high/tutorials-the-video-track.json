@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.310Z",
-  "updated": "2026-09-13T13:02:17.089574Z",
+  "updated": "2026-09-13T13:02:24.466Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -98,7 +98,12 @@
     {
       "t": "2026-09-13T13:02:17.089574Z",
       "note": "Verified: 6155 tests green. tutorial-trim-a-recording-walk and tutorial-export-a-recording-walk drive every step of both guides in the real app with real screen captures, no anchor unresolved in either. tutorial-trim-a-recording-skipped-walk skips every waiting step to prove the last card stands on its own with no trim made and so no save button to ring. All 30 tutorial walks pass, including the hub walk, which reads the Tutorials window aloud and finds both new guides: acceptance item one, with no UI edited. Sweep requested because the host change and the harness change are under every walk."
+    },
+    {
+      "t": "2026-09-13T13:02:24.464Z",
+      "note": "Two guides shipped as data (Trim a recording, Export MP4 GIF or HEIC) plus the framework they needed: TutorialHost so a guide can run over a recording's window, video anchors and five triggers, and a real sample MP4 written before the window opens. Verified: 6155 tests green, both guides walked end to end in the real app with real screen captures and no unresolved anchor, a third walk proves the skipped path strands nobody, all 30 tutorial walks pass including the hub walk that reads both new guides out with no UI edited. Audit: queue/audits/2026-09-13-video-track.json"
     }
   ],
-  "started": "2026-09-13T12:34:42.295Z"
+  "started": "2026-09-13T12:34:42.295Z",
+  "completed": "2026-09-13T13:02:24.465Z"
 }
