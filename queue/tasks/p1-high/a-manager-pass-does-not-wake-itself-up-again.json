@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:39:48.543Z",
-  "updated": "2026-09-13T16:46:51.836Z",
+  "updated": "2026-09-13T16:47:06.467Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-13 07:40, in zsh, against the recorded timestamps.\n\nThe fault is in manager_due() at queue/bin/go-loop.sh:89. It compares the mtime of queue/objectives.json against the mtime of queue/manager/.last-run, and manager_pass() (line 105) touches that stamp BEFORE running the agent, at line 111. The manager has staging authority over objectives.json, so any pass that promotes or demotes an epic leaves objectives.json newer than its own stamp. From then on changed=1 and the ready count is ignored; the only gate left is the 1200s cooldown.\n\nWhat happened today:\n  06:08  the user's intake edits objectives.json (promotes icon-svg)   -> correct trigger\n  07:10  manager pass runs, 65 ready; touches .last-run at 07:10\n  07:13  that pass edits objectives.json (promotes icon-export, icon-grid)\n  07:37  manager pass runs again, 69 ready                              -> SPURIOUS\nqueue/loop.log lines 127723 and 127936 have both, with their ready counts.\n\nThe reproduction, run as /tmp/mgrtest/t.zsh with manager_due() copied verbatim:\n  touch -t 202609130710.00 .last-run; touch -t 202609130713.56 objectives.json\n  manager_due 69 -> TRUE   (a pass runs with 69 ready)\nand with the stamp touched after the pass instead:\n  touch -t 202609130714.34 .last-run\n  manager_due 69 -> false  (correct)\n\nSo touching the stamp again when the pass finishes is enough, and it keeps the real trigger working: an edit by anybody other than the pass itself still lands outside the pass's own window. Worth a second look at whether a crashed pass leaves the stamp unwritten, in which case touch both before and after.\n\nFIXED 2026-09-13. queue/bin/go-loop.sh: MANAGER_SEEN=$QDIR/manager/.objectives-seen holds the sha256 of objectives.json as of the last pass that actually ran; manager_due compares hashes instead of mtimes; manager_pass writes the hash after the pass, and only when OUTCOME==ok so a refused runner does not swallow the edit that called it; a loop upgrading onto this seeds .objectives-seen from the current file (one missed trigger beats one spurious pass). The file is gitignored beside .last-run. New PHOTONZ_GO_LOOP_DEFS_ONLY guard lets a drill source the loop for its definitions. Test: queue/bin/manager-due-drill.sh (zsh, 14 checks). README documents both.",
@@ -60,7 +60,12 @@
     {
       "t": "2026-09-13T16:46:51.836Z",
       "note": "No audit written: this is loop plumbing with no surface a person can play with, and the precedent in the queue is the drill standing in for it. The live loop adopts the fix by itself, since it re-execs onto a changed go-loop.sh between tasks."
+    },
+    {
+      "t": "2026-09-13T16:47:06.465Z",
+      "note": "manager_due now compares the content hash of objectives.json against queue/manager/.objectives-seen, written by each pass that actually ran, so a pass restaging an epic cannot wake the next one. New queue/bin/manager-due-drill.sh (zsh, 14 checks) drives the real manager_due/manager_pass out of go-loop.sh and replays all four passes of 2026-09-13: the two right ones fire, the two spurious ones do not, and it fails 6 of 14 on the old code. failure-drill 61/61, Scripts/test.sh 6243 tests. Shipped in b792e9b6."
     }
   ],
-  "started": "2026-09-13T16:42:35.699Z"
+  "started": "2026-09-13T16:42:35.699Z",
+  "completed": "2026-09-13T16:47:06.466Z"
 }
