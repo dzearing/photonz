@@ -1284,7 +1284,9 @@ public enum TutorialGuides {
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
                 id: "take-the-rectangle",
-                anchor: .tool(.rectangle),
+                // The shapes SLOT, not the rectangle: the slot wears whichever
+                // shape was last used, and on a fresh machine that is the line.
+                anchor: .toolGroup(.shapes),
                 title: "Now draw on it",
                 body: "Press R for the rectangle.",
                 advance: .waitsFor(.toolPicked(.rectangle))),

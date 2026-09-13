@@ -1,0 +1,26 @@
+{
+  "feature": "A guide that points at nothing fails the build",
+  "epic": "ui-building",
+  "summary": "Every tutorial is now driven automatically and every step has to find the control it points at, so renaming or moving a control fails a check instead of leaving somebody mid tour with a card pointing at nothing. The first thing it found was real: the Building UI guide's step about the rectangle rang a button that is not on the tool bar for anyone who has not drawn a rectangle before.",
+  "setup": "Nothing to switch on. The test half runs in Scripts/test.sh; the live half runs in the walk sweep, which adds no walks to it. The guide fix is in Photonz Dev, Help > Tutorials > Building UI > Frames are screens.",
+  "try": [
+    { "do": "Run Scripts/test.sh --filter \"A renamed control\" and read the nine checks." },
+    { "do": "Open Photonz Dev and pick Help > Tutorials > Building UI > Frames are screens." },
+    { "do": "Press Next twice, press F, and drag out a screen on the page." },
+    { "do": "Press Next once more to reach step 5, \"Now draw on it\".", "shot": "2026-09-13-tutorial-anchors-shapes-slot.png" },
+    { "do": "Look at which tool bar button is ringed: it is the shapes slot, wearing the line, because nobody has drawn a rectangle on this machine yet." },
+    { "do": "Press R and watch the guide move on by itself." }
+  ],
+  "evaluate": [
+    "The card says \"Press R for the rectangle\" while the ring sits on a button showing a line. Does that read as helpful or as a mismatch?",
+    "Would you rather the guide handed you the rectangle, the way it hands you the frame tool, than ring a slot and ask for a key?",
+    "When a guide does point at nothing, is the failure line enough to fix it from without opening the framework?",
+    "Is it right that a guide teaching a switched off feature is left out of the menu entirely rather than shown dimmed?"
+  ],
+  "rough": [
+    "The live half runs in the sweep, not in Scripts/test.sh, because it needs the real app. It costs the sweep nothing extra: the thirty tutorial walks were already in it and now assert instead of only photographing.",
+    "A step that was never on screen long enough to find anything is reported in the walk log rather than failed. The probe's windows are invisible and often covered, and a covered window draws no callout at all, so failing there would cry wolf.",
+    "One walk declares an exception in its setup: skip every step of the trim guide and nothing is trimmed, so there is no Save button to ring. The check turns around for that step rather than switching off, so a stale exception fails too.",
+    "The guide fix rings the shapes SLOT rather than the rectangle. It is honest and always there, but the ring can sit on a line glyph while the words say rectangle. Picking the tool for the person is the alternative, and that is a UX call rather than a bug."
+  ]
+}

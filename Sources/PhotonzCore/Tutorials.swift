@@ -57,6 +57,20 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
         TutorialAnchor("tool.\(tool.rawValue)")
     }
 
+    /// The tool bar slot a whole FAMILY of tools shares: the shapes, the
+    /// region selectors. The slot wears whichever member you reached for last,
+    /// and a guide cannot know which that is, so a step that means "the shapes
+    /// button" names the family rather than one member of it.
+    ///
+    /// This is not a nicety. On a machine nobody has drawn on yet the shapes
+    /// slot wears the LINE, so the Building UI guide's step about the rectangle
+    /// was pointing at a button that is not on the bar, for exactly the person
+    /// a tutorial is written for. Found on 2026-09-13 by the walk that drives
+    /// that guide, once a missing control started failing the walk.
+    public static func toolGroup(_ group: ToolGroup) -> TutorialAnchor {
+        TutorialAnchor("toolGroup.\(group.rawValue)")
+    }
+
     /// One section of the docked panel: Layers, Effects, Colour. Named off the
     /// section's id rather than its heading, for the same reason.
     public static func panelSection(_ id: String) -> TutorialAnchor {
@@ -154,6 +168,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     public static var all: [TutorialAnchor] {
         [canvas, toolBar, panel, titleBar]
             + Tool.allCases.map(tool)
+            + ToolGroup.allCases.map(toolGroup)
             + knownPanelSections.map(panelSection)
             + knownStartActions.map(startHere)
             + VideoPart.allCases.map(video)
@@ -585,8 +600,12 @@ public enum TutorialCatalog {
     /// The app passes its own feature flags in. Everything else about the
     /// catalogue is release independent, which is why this is the only place
     /// that has to ask.
-    public static func guides(enabled isEnabled: (String) -> Bool) -> [TutorialGuide] {
-        guides.filter { $0.requires.allSatisfy(isEnabled) }
+    ///
+    /// `from` is the list to narrow, which is the shipping catalogue unless a
+    /// test hands it a made up one.
+    public static func guides(enabled isEnabled: (String) -> Bool,
+                              from list: [TutorialGuide] = TutorialCatalog.guides) -> [TutorialGuide] {
+        list.filter { $0.requires.allSatisfy(isEnabled) }
     }
 
     /// The tracks that actually have something on them, in track order. What

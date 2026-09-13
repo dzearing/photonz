@@ -92,6 +92,12 @@ It is inert: an invisible `NSView` behind the control that never draws, never
 takes a click (`hitTest` returns nil) and never changes layout. That is why it
 is safe to hang one on shared code that both releases use.
 
+**A family slot has a name of its own.** The shapes slot and the selection slot
+each wear whichever member was reached for last, so `TutorialAnchor.tool(.rectangle)`
+is on the bar only for somebody who has drawn a rectangle before.
+`TutorialAnchor.toolGroup(.shapes)` is there whatever the slot is wearing, and it
+is what a step meaning "the shapes button" points at.
+
 **Where the names live today.** The rows of the card an empty window shows
 (`start.open`, `start.capture`, `start.paste` — the only places in a window
 where getting a picture IN is a control rather than a key), the canvas, the
@@ -110,6 +116,56 @@ pointed at confidently from above the title bar.
 > answers for the hosting view around it, not for the marker: reading it put a
 > ring round the whole panel instead of round one section. Measured wrong, so
 > not used.
+
+## A renamed control breaks the build, not somebody's tour
+
+The day a control is renamed, moved, or put behind a flag, a guide pointing at
+it starts pointing at nothing. Three checks stand between that and a person, and
+each catches something the others cannot.
+
+**1. The name is one the app promises.** `TutorialCatalogCheck` walks every
+guide and holds each step's anchor against `TutorialAnchor.all`. A typo, or a
+name nothing ever hangs, fails `Scripts/test.sh`. Cheap, and it cannot tell
+whether the app really hangs the name anywhere.
+
+**2. Every guide is really driven.** `TutorialWalkCoverage` reads the walks in
+`Scripts/playtest` and holds the catalogue to them: every guide has a walk, that
+walk waits on every one of its steps, and no walk is still driving a guide that
+has been renamed or taken out. Also `Scripts/test.sh`, and also only JSON, so it
+costs nothing. A guide written without a walk fails here.
+
+**3. Every step finds its control, in a real window.** While a walk drives a
+guide, each step records whether its control was ever found on screen. A step
+that found nothing fails the walk, naming the guide, the step, the missing name
+and the names that were there:
+
+```
+frames-are-screens step take-the-rectangle points at tool.rectangle, and nothing
+in the window carries that name (the step was up for 1.7s). The names on screen
+were: canvas, panel, panel.frame, tool.arrow, tool.crop, tool.frame, tool.line, …
+```
+
+This one runs in the sweep rather than in the test run, and it adds NO walks to
+it: the thirty odd tutorial walks were already there, and they now assert
+instead of only photographing. The full sweep is 322 walks and about 52 minutes,
+so a walk per guide on top of the walk per guide we already had would have been
+pure cost.
+
+Two things the third check will not do. A step that was never on screen long
+enough to find anything is reported, not failed: a probe window covered by
+another app draws no callout at all, and a covered window is not a missing
+control. And a walk can declare, in its `setup` block, that a step is SUPPOSED
+to find nothing (`"expectNoControl": ["trim-a-recording/saving-writes-it-in"]`),
+which turns the check around rather than switching it off: skip every step of
+the trim guide and nothing is trimmed, so there is no Save button, and the last
+card has to stand on its own.
+
+> What it caught the day it was written: the Building UI guide's step about the
+> rectangle pointed at `tool.rectangle`, and the shapes slot wears whichever
+> shape you used last, which on a machine nobody has drawn on yet is the LINE.
+> For the exact person a tutorial is for, that step rang nothing. The fix is the
+> `toolGroup` anchor below: a family slot answers to its family's name whatever
+> member it is wearing.
 
 ## How a step advances
 

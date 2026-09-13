@@ -55,8 +55,37 @@ final class TutorialController {
     /// a beat late.
     @ObservationIgnored private var revealTries = 0
     @ObservationIgnored private var closeObserver: NSObjectProtocol?
-    /// Steps whose anchor never turned up, for the log and the audit.
-    @ObservationIgnored private(set) var unresolvedSteps: [String] = []
+    /// What each step of each guide run this launch saw when it pointed at its
+    /// control: whether the control was ever found on screen, and how long the
+    /// step was up. A walk reads this back and FAILS on a step that pointed at
+    /// nothing, which is how a renamed control breaks the build instead of
+    /// somebody's tour (`TutorialAnchorAudit`).
+    @ObservationIgnored private(set) var anchorVerdicts: [TutorialAnchorVerdict] = []
+    /// The step that is up right now, still being judged.
+    @ObservationIgnored private var openStep: OpenStep?
+
+    private struct OpenStep {
+        let guide: String
+        let step: String
+        let anchor: TutorialAnchor
+        var resolved = false
+        /// Seconds this step was really ON SCREEN: the window up, in front of
+        /// the person, with the callout being placed. Not the same as how long
+        /// the step was current. A guide whose window is covered draws nothing
+        /// and can find nothing, and counting that time would turn a covered
+        /// window into a missing control.
+        var shown: CFTimeInterval = 0
+        /// The last pass that counted, for the running total.
+        var lastTick: CFTimeInterval?
+
+        mutating func tick() {
+            let now = CACurrentMediaTime()
+            // Capped, so a gap while the window was covered is not billed to
+            // the step as time on screen.
+            if let last = lastTick { shown += min(now - last, 0.2) }
+            lastTick = now
+        }
+    }
     /// The window each guide last ran in, so picking the same tutorial again
     /// comes back to the window already holding its sample.
     @ObservationIgnored private var hostsByGuide: [String: WeakHost] = [:]
@@ -106,8 +135,54 @@ final class TutorialController {
         let where_ = TutorialAnchorRegistry.shared.screenFrame(of: anchor, in: window)
             .map { "(\(Int($0.minX)), \(Int($0.minY))) \(Int($0.width))x\(Int($0.height))" }
             ?? "NOT ON SCREEN"
+        let host = hostWindow.map {
+            "; host window \($0.isMiniaturized ? "miniaturized" : "up"), "
+                + "occlusion \($0.occlusionState.contains(.visible) ? "visible" : "HIDDEN")"
+        } ?? "; NO HOST WINDOW"
+        let verdict = openStep.map {
+            "; \($0.resolved ? "found" : "NOT FOUND YET") after "
+                + String(format: "%.1fs on screen", $0.shown)
+        } ?? ""
         return "\(run.guide.id)/\(run.step.id) \(run.number) of \(run.count); "
             + "\(anchor.name) at \(where_); card \(cardPanel.map { "\(Int($0.frame.minX)), \(Int($0.frame.minY)) \(Int($0.frame.width))x\(Int($0.frame.height))" } ?? "none")"
+            + host + verdict
+    }
+
+    /// The window the running guide is teaching in. What a walk asks the anchor
+    /// registry about, because the guide's own window is not always the one the
+    /// walk opened: a guide with a sample brings its own.
+    var guideWindow: NSWindow? { host?.tutorialWindow }
+
+    /// Whether the step that is up has found its control on screen yet. Read by
+    /// a walk that is giving a step its moment before calling the control
+    /// missing.
+    var currentStepFoundItsControl: Bool { openStep?.resolved ?? false }
+
+    /// Every verdict including the step that is up, so a walk can ask at the
+    /// end without closing the guide first.
+    var anchorVerdictsSoFar: [TutorialAnchorVerdict] {
+        guard let open = openStep else { return anchorVerdicts }
+        return anchorVerdicts + [verdict(for: open)]
+    }
+
+    private func verdict(for open: OpenStep) -> TutorialAnchorVerdict {
+        TutorialAnchorVerdict(guide: open.guide, step: open.step, anchor: open.anchor,
+                              resolved: open.resolved, shownSeconds: open.shown)
+    }
+
+    /// Closes the book on the step that was up. Called wherever a step is left:
+    /// moving on, going back, finishing, and closing part way.
+    private func closeStepVerdict() {
+        guard let open = openStep else { return }
+        anchorVerdicts.append(verdict(for: open))
+        openStep = nil
+    }
+
+    /// Forget what earlier guides saw. A walk that drives several guides in one
+    /// run has no reason to, and does not.
+    func clearAnchorVerdicts() {
+        openStep = nil
+        anchorVerdicts = []
     }
 
     /// The window a guide last ran in, while it is still around.
@@ -125,7 +200,6 @@ final class TutorialController {
     func start(_ guide: TutorialGuide, in host: any TutorialHost) {
         stop(remembering: true)
         self.host = host
-        unresolvedSteps = []
         hostsByGuide[guide.id] = WeakHost(host)
         host.tutorialRunning(true)
         run = TutorialRun(guide: guide, startingAt: progress.startIndex(for: guide))
@@ -154,6 +228,7 @@ final class TutorialController {
     }
 
     private func stop(remembering: Bool) {
+        closeStepVerdict()
         if remembering, let run {
             progress.record(guide: run.guide.id, step: run.index)
             saveProgress()
@@ -220,6 +295,8 @@ final class TutorialController {
     /// lie in another costume, which is why the list is closed.
     private func beginStep() {
         guard let run, let host else { return }
+        closeStepVerdict()
+        openStep = OpenStep(guide: run.guide.id, step: run.step.id, anchor: run.step.anchor)
         progress.record(guide: run.guide.id, step: run.index)
         saveProgress()
         // A step can ask for something that is already so: the Measure tool is
@@ -274,7 +351,14 @@ final class TutorialController {
                 TutorialAnchorRegistry.shared.reveal(run.step.anchor, in: window)
             }
         }
+        // From here the guide is really up in front of somebody, so this pass
+        // counts as time the step had to find its control.
+        openStep?.tick()
         let anchor = TutorialAnchorRegistry.shared.screenFrame(of: run.step.anchor, in: window)
+        // Found once is found: the step's verdict is settled here, before any
+        // of the shortcuts below can return early on a frame where nothing
+        // moved.
+        if anchor != nil { openStep?.resolved = true }
         // On screen WHOLE: stop asking, so a person who scrolls somewhere else
         // is not fought by a guide that got what it wanted a moment ago.
         //
@@ -300,22 +384,14 @@ final class TutorialController {
         guard let anchor else {
             // The control is not on screen. Nobody gets stranded: the card goes
             // to the middle of the window with no beak and no ring, and the way
-            // on still works. A test is what should have caught this, and a
-            // live walk is what catches the rest (queue task: a renamed control
-            // breaks the build).
-            noteUnresolved(run.step)
+            // on still works. The step's verdict stays unresolved, and a walk
+            // driving this guide fails on it.
             placeCentred(in: container, window: window)
             cuePanel?.orderOut(nil)
             return
         }
         placeCallout(anchor: anchor, container: container, window: window, run: run)
         placeCue(anchor: anchor, window: window)
-    }
-
-    private func noteUnresolved(_ step: TutorialStep) {
-        let name = "\(run?.guide.id ?? "?")/\(step.id) -> \(step.anchor.name)"
-        guard !unresolvedSteps.contains(name) else { return }
-        unresolvedSteps.append(name)
     }
 
     private func placeCallout(anchor: CGRect, container: CGRect, window: NSWindow,

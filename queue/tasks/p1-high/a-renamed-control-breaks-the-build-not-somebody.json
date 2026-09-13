@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.436Z",
-  "updated": "2026-09-13T12:29:07.342Z",
+  "updated": "2026-09-13T21:24:40.108463Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -41,6 +41,39 @@
     {
       "t": "2026-09-13T12:29:07.341Z",
       "note": "seq 30 -> 20"
+    },
+    {
+      "t": "2026-09-13T20:53:05.736Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T21:24:40.108463Z",
+      "note": "adversarial review before building: the app already TRACKED unresolved steps (TutorialController.unresolvedSteps) and nothing read them, so a callout pointing at nothing was silently centred and no check failed. Also rejected the obvious design: a generated walk per guide that starts a guide and skips through it would false-fail every state dependent anchor (panel.component needs a selection, panel.measure needs a measurement), and would add about 30 walks to a sweep that is already 52 minutes. Built the cheap version instead: the 30 tutorial walks already in the sweep now ASSERT, and a fast JSON test makes sure every guide has one."
+    },
+    {
+      "t": "2026-09-13T21:24:40.108463Z",
+      "note": "built three layers. 1) promise check (already existed): every step anchor is in TutorialAnchor.all. 2) NEW TutorialWalkCoverage (PhotonzCore, in Scripts/test.sh): reads Scripts/playtest/*.json, fails if a guide has no walk, if a walk stops part way through one, or if a walk drives a guide that has been renamed away. 3) NEW live check in the harness: every waitFor tutorialStep gives the step a grace period to find its control and fails naming guide, step, missing anchor and the names that ARE on screen; an end of walk sweep backstops steps the walk never waited on."
+    },
+    {
+      "t": "2026-09-13T21:24:40.108463Z",
+      "note": "deliberate break demonstrated: commented out .tutorialAnchor(.tool(.measure)) in EditorView.swift and ran tutorial-tour-walk. Output: 'step 11 (waitFor): take-the-tour step pick-measure points at tool.measure, and nothing in the window carries that name (the step was up for 1.7s). The names on screen were: canvas, panel, panel.layers, ... tool.select, tool.text, toolBar'. Restored and re-ran: ok."
+    },
+    {
+      "t": "2026-09-13T21:24:40.108463Z",
+      "note": "two REAL breaks found by turning it on. (a) frames-are-screens step take-the-rectangle pointed at tool.rectangle, and the shapes slot wears whichever shape you used last, which on a fresh machine is the LINE, so that step rang nothing for exactly the person a tutorial is for. Fixed with a new TutorialAnchor.toolGroup(_:) hung on the family slot, which is there whatever member it wears. (b) tutorial-trim-a-recording-skipped-walk skips every step so nothing is trimmed and there is no Save button; that walk is ABOUT the fallback, so walks can now declare it in setup ('expectNoControl': ['trim-a-recording/saving-writes-it-in']) and the check turns around rather than switching off."
+    },
+    {
+      "t": "2026-09-13T21:24:40.108463Z",
+      "note": "probe gotcha worth knowing: a guide over a window that is covered by another app draws nothing at all (TutorialController.place bails on occlusion), and the probe's windows are invisible and never active. The harness now raises the guide's window before checking, and a step that was never on screen long enough is reported in the log rather than failed."
+    },
+    {
+      "t": "2026-09-13T21:24:40.108463Z",
+      "note": "flags: TutorialFlagRules holds every flagged guide to both states, with all flags on it is offered, with each of its own flags off it is gone from the catalogue, the Help menu and the Tutorials window. Runs over the shipping catalogue in Scripts/test.sh."
+    },
+    {
+      "t": "2026-09-13T21:24:40.108463Z",
+      "note": "verified: Scripts/test.sh 6376 tests green; all 31 tutorial walks run in three batches, all ok; docs/design/tutorials.md and docs/design/playtest-harness.md updated; audit at queue/audits/2026-09-13-tutorial-anchor-check.json with a real screen capture."
     }
-  ]
+  ],
+  "started": "2026-09-13T20:53:05.735Z"
 }

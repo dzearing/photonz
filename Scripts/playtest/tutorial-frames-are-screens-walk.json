@@ -34,6 +34,10 @@
 
     { "do": "action", "action": "tutorialNext" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "take-the-rectangle", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4b-take-the-rectangle", "note": "the card rings the SHAPES SLOT, which is on the bar whichever shape it is wearing; on a machine nobody has drawn on it is wearing the line" },
+    { "do": "snapshot", "name": "4b-take-the-rectangle" },
+
     { "do": "key", "key": "r" },
     { "do": "tool", "tool": "rectangle" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "draw-a-card", "timeout": 6 },

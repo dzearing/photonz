@@ -14708,3 +14708,35 @@ Retina capture cannot be reproduced byte for byte because the document is in its
 device pixels. Filed "Find out whether a label inside a group can be double
 clicked into typing" (p2) after the walk could never open a group's child for
 typing while a top-level label opens on the first double click.
+
+## 2026-09-13 — A guide that points at nothing fails the build
+
+Tutorials now break the build when a control moves out from under them. Three
+checks, each catching what the others cannot. `TutorialCatalogCheck` (already
+there) holds every step's anchor against the names the app promises.
+`TutorialWalkCoverage` (new, `Scripts/test.sh`, reads JSON only) holds the
+catalogue to the walks: every guide has one, it waits on every step, and no walk
+is still driving a guide that has been renamed away. And the harness itself now
+holds each step to its promise while a walk drives it: landing on a step waits
+out a grace period for its control to be found on screen and fails naming the
+guide, the step, the missing name and the names that ARE there, with an end of
+walk sweep behind it for steps nobody waited on.
+
+That live half runs in the sweep rather than the test run because it needs the
+real app, and it costs the sweep nothing: the thirty tutorial walks were already
+in it and now assert instead of only photographing. Proved by breaking one on
+purpose (`.tutorialAnchor(.tool(.measure))` commented out), running
+`tutorial-tour-walk`, and reading the failure.
+
+Turning it on found two real ones. The Building UI guide's step about the
+rectangle pointed at `tool.rectangle`, and the shapes slot wears whichever shape
+you used last, which on a machine nobody has drawn on is the LINE: that step
+rang nothing for exactly the person a tutorial is written for. Fixed with
+`TutorialAnchor.toolGroup(_:)`, a name the family slot carries whatever member
+it is wearing. And the walk that skips every step of the trim guide is ABOUT the
+case where there is nothing to ring, so a walk can now say so in its setup
+(`expectNoControl`), which turns the check around rather than switching it off.
+
+Next: the audit asks whether ringing a slot wearing a line while the card says
+"Press R for the rectangle" reads as helpful or as a mismatch, and whether the
+guide should hand over the rectangle the way it hands over the frame tool.

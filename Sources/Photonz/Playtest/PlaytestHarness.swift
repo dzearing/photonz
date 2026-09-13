@@ -107,6 +107,9 @@ private final class Run {
     /// The walk's `setup` block, carried out before step one and undone when
     /// the run ends however it ends.
     private var setupRunner = PlaytestSetupRunner()
+    /// Guide steps this walk says have nothing to ring, as "<guide>/<step>".
+    /// Named in the walk's setup block, and turned into the opposite check.
+    private var expectNoControl: Set<String> = []
 
     /// How a `wait` step spends its seconds: watching for the editor to go
     /// quiet, or sleeping the whole number the way walks used to.
@@ -151,6 +154,9 @@ private final class Run {
             finish(status: "failed", steps: 0, error: "setup: \(error)")
             return
         }
+        // Nothing an earlier walk in this probe saw counts against this one.
+        TutorialController.shared.clearAnchorVerdicts()
+        expectNoControl = Set(script.setup.expectNoControl)
         var completed = 0
         for (index, step) in script.steps.enumerated() {
             let number = index + 1
@@ -163,7 +169,92 @@ private final class Run {
                 return
             }
         }
+        // Every step of every guide this walk drove had to point at a control
+        // that was really on screen. A step that pointed at nothing fails the
+        // walk here even when the walk itself never looked, which is the
+        // backstop under the check made at each step as the walk lands on it.
+        if let said = guideAnchorReading() { note(completed, "done", said) }
+        if let missing = guidePointedAtNothing() {
+            note(completed, "done", "FAILED: \(missing)")
+            finish(status: "failed", steps: completed, error: missing)
+            return
+        }
         finish(status: "ok", steps: completed, error: nil)
+    }
+
+    /// How many of the steps this walk drove were really judged, for the log.
+    /// A guide whose window stayed covered draws nothing and finds nothing, and
+    /// a walk that checked no steps at all should say so rather than read as a
+    /// clean run.
+    private func guideAnchorReading() -> String? {
+        let verdicts = TutorialController.shared.anchorVerdictsSoFar
+        guard !verdicts.isEmpty else { return nil }
+        let found = verdicts.filter(\.resolved).count
+        let unjudged = verdicts.filter { !$0.resolved && $0.shownSeconds < TutorialAnchorAudit.grace }
+        return "guide steps that found their control: \(found) of \(verdicts.count)"
+            + (unjudged.isEmpty ? "" : "; \(unjudged.count) never on screen long enough to judge ("
+               + unjudged.map { "\($0.guide)/\($0.step)" }.joined(separator: ", ") + ")")
+    }
+
+    /// What a guide this walk drove pointed at and could not find, or nil when
+    /// every step found its control.
+    private func guidePointedAtNothing() -> String? {
+        let judged = TutorialController.shared.anchorVerdictsSoFar
+            .filter { !expectNoControl.contains("\($0.guide)/\($0.step)") }
+        let problems = TutorialAnchorAudit.problems(
+            in: judged, namesOnScreen: TutorialAnchorRegistry.shared.liveNames)
+        guard !problems.isEmpty else { return nil }
+        return "a guide points at a control that is not there: "
+            + problems.joined(separator: "; ")
+    }
+
+    /// How long a step gets to produce its control once the walk has landed on
+    /// it. The rule's own grace, and a second on top for a panel section that
+    /// arrives with a selection or has to be scrolled to.
+    private static let anchorGrace = TutorialAnchorAudit.grace + 1.0
+
+    /// The step a walk has just landed on has to be pointing at something real.
+    /// Waits out the grace, then fails naming the guide, the step and the name
+    /// nothing carries, so the fix needs no reading of the framework.
+    private func requireStepFoundItsControl() async throws {
+        let controller = TutorialController.shared
+        guard let run = controller.run else { return }
+        // The probe's windows are invisible and never active, so the window a
+        // guide is teaching in can be sitting behind whatever else is on the
+        // machine. A guide over a covered window draws nothing on purpose, the
+        // same as it would for a person who buried the window, so it is put in
+        // front first: the check is about the control, not about what else is
+        // open.
+        controller.guideWindow?.orderFrontRegardless()
+        // A step the walk SAID has nothing to ring: the check turns around.
+        if expectNoControl.contains("\(run.guide.id)/\(run.step.id)") {
+            await sleep(Self.anchorGrace)
+            guard !controller.currentStepFoundItsControl else {
+                throw Failure(description: "this walk says \(run.guide.id) step \(run.step.id) "
+                    + "has nothing to ring, and it rings \(run.step.anchor.name); "
+                    + "take it out of the walk's expectNoControl")
+            }
+            note(0, "expectNoControl",
+                 "\(run.guide.id)/\(run.step.id) points at \(run.step.anchor.name), "
+                 + "which is not there, as the walk said")
+            return
+        }
+        let deadline = Date().addingTimeInterval(Self.anchorGrace)
+        while !controller.currentStepFoundItsControl {
+            guard Date() < deadline else {
+                let live = controller.anchorVerdictsSoFar.last {
+                    $0.guide == run.guide.id && $0.step == run.step.id
+                }
+                let verdict = TutorialAnchorVerdict(
+                    guide: run.guide.id, step: run.step.id, anchor: run.step.anchor,
+                    resolved: false,
+                    shownSeconds: max(live?.shownSeconds ?? 0, TutorialAnchorAudit.grace))
+                let said = TutorialAnchorAudit.problems(
+                    in: [verdict], namesOnScreen: TutorialAnchorRegistry.shared.liveNames)
+                throw Failure(description: said.joined(separator: "; "))
+            }
+            await sleep(0.05)
+        }
     }
 
     // MARK: - Output
@@ -668,6 +759,9 @@ private final class Run {
                 }
                 await sleep(0.1)
             }
+            // Landing on a step is the moment to hold it to its own promise:
+            // the control it points at has to be on screen.
+            if case .tutorialStep = condition { try await requireStepFoundItsControl() }
             note(number, step.name, "\(condition) holds", state: describe())
 
         case .dragComponent(let at):

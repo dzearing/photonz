@@ -1,6 +1,9 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-trim-a-recording-skipped-walk",
-  "setup": { "forget": ["tutorials"] },
+  "setup": {
+    "forget": ["tutorials"],
+    "expectNoControl": ["trim-a-recording/saving-writes-it-in"]
+  },
   "steps": [
     { "do": "startGuide", "guide": "trim-a-recording" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "what-you-have", "timeout": 25 },

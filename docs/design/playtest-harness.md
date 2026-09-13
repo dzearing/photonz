@@ -135,6 +135,7 @@ or fail. The `setup` line is logged as step 0, so the log says what was done.
 | --- | --- | --- |
 | `forget` | a list of memories (below) | Those settings go back to the values a machine that had never run Photonz would have, before the first step. |
 | `captures` | picture files, relative to the script or absolute | Each is copied into the capture folder (`~/Pictures/Screenshots`) so the Library's Media shelf has it, and taken away again at the end. A name already taken there fails the walk rather than writing over someone's screenshot. |
+| `expectNoControl` | guide steps, named `"<guide>/<step>"` | Those steps are expected to point at a control that is NOT there, and the usual check turns around for them: the step has to find nothing, or the walk fails saying the declaration is out of date. For the rare walk that exercises the fallback on purpose, like skipping every step of the trim guide so nothing is trimmed and there is no Save button to ring. |
 | `scratch` | files, relative to the script or absolute | Each is copied into an EMPTY FOLDER OF THE WALK'S OWN, made fresh for the run and thrown away at the end. The walk names one as `"scratch/<file name>"` wherever a step takes a file. This is for a walk that WRITES beside the picture it opened — `saveLayers` keeps the layers next to it — so it starts from the same nothing every time and leaves nothing behind. |
 
 The memories a walk can forget, by the word it uses:
@@ -155,6 +156,27 @@ A walk that reads a setting it never set is the one to think about here. Drawing
 a rectangle and then opening its Fill colour needs `"forget": ["shapes"]`,
 because the shape tool remembers the look it was last left holding, and a
 rectangle left with no fill at all has no Fill colour to open.
+
+### A guide that points at nothing fails the walk
+
+Any walk that drives a tutorial is holding that tutorial to its own promise. The
+harness checks it in two places, and neither needs a line in the walk:
+
+* **As the walk lands on a step.** Every `{ "do": "waitFor", "condition":
+  "tutorialStep" }` waits out a grace period for the step's control to be found
+  on screen, and fails naming the guide, the step, the name nothing carries and
+  every name that IS on screen. The walk's window is put in front first: the
+  probe's windows are invisible and never active, and a guide over a covered
+  window draws nothing on purpose.
+* **At the end of the walk.** Every step the guide displayed is swept again, so
+  a step the walk never waited on is still judged. A step that was never on
+  screen long enough to find anything is reported in the log rather than failed,
+  because a covered window is not a missing control.
+
+`Scripts/test.sh` holds the other half: every guide in the catalogue has to have
+a walk that waits on every one of its steps
+(`TutorialWalkCoverageTests`). Together that is the whole claim: every guide is
+driven, and every step of it pointed at something real.
 
 ### A walk hands the next one the machine it started with
 

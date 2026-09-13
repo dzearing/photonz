@@ -1349,6 +1349,10 @@ struct EditorView: View {
         // the only tool a guide could honestly point a person at: the others
         // are behind a press and hold (`TutorialAnchorRegistry`).
         .tutorialAnchor(.tool(editorState.lastTool(in: group)))
+        // And the SLOT itself, under the family's own name, which is there
+        // whichever member it happens to be wearing. A guide about a shape a
+        // person has not reached for yet has nothing else to point at.
+        .tutorialAnchor(.toolGroup(group))
     }
 
     /// A plain family letter: whichever member that letter hands over now.

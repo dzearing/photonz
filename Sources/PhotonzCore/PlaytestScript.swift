@@ -134,17 +134,32 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// to it, say — so it starts from the same nothing every time and leaves no
     /// trace. Paths are relative to the script, or absolute.
     public var scratch: [String]
+    /// Guide steps this walk EXPECTS to find nothing to ring, named
+    /// "<guide>/<step>".
+    ///
+    /// A guide step normally has to point at a control that is really on
+    /// screen, and a walk fails when one does not. A few steps are about the
+    /// other case on purpose: skip every step of the trim guide and nothing was
+    /// ever trimmed, so there is no Save button to ring and the last card has
+    /// to stand on its own. A walk exercising that says so here, and the check
+    /// turns around: the step has to point at nothing, or the declaration is
+    /// out of date and the walk fails for that instead.
+    public var expectNoControl: [String]
 
-    public init(forget: [PlaytestMemory] = [], captures: [String] = [], scratch: [String] = []) {
+    public init(forget: [PlaytestMemory] = [], captures: [String] = [],
+                scratch: [String] = [], expectNoControl: [String] = []) {
         self.forget = forget
         self.captures = captures
         self.scratch = scratch
+        self.expectNoControl = expectNoControl
     }
 
-    public var isEmpty: Bool { forget.isEmpty && captures.isEmpty && scratch.isEmpty }
+    public var isEmpty: Bool {
+        forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
+    }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["forget", "captures", "scratch"]
+    static let knownKeys = ["forget", "captures", "expectNoControl", "scratch"]
 
     init(fields raw: Any?) throws {
         guard let raw, !(raw is NSNull) else {
@@ -170,7 +185,9 @@ public struct PlaytestSetup: Sendable, Equatable {
         }
         self.init(forget: forget,
                   captures: try Self.words(fields["captures"], field: "captures"),
-                  scratch: try Self.words(fields["scratch"], field: "scratch"))
+                  scratch: try Self.words(fields["scratch"], field: "scratch"),
+                  expectNoControl: try Self.words(fields["expectNoControl"],
+                                                  field: "expectNoControl"))
     }
 
     private static func words(_ raw: Any?, field: String) throws -> [String] {
