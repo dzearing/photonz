@@ -3,13 +3,13 @@
   "title": "A manager pass does not wake itself up again",
   "goal": "The loop's manager pass is meant to run when the queue is nearly empty, or when somebody changes what the app is for, whichever comes first. It is also running when neither is true. Today it ran twice inside half an hour with sixty nine tasks ready to claim, because a pass that restages an epic counts as the objectives having changed, and so wakes the next pass up. Every spurious pass costs a runner slot that would otherwise have built something, and files more tasks onto a queue that is already six times the size it is meant to be.",
   "epic": "unmanned-loop",
-  "priority": "p2-normal",
-  "seq": 7,
+  "priority": "p1-high",
+  "seq": 1,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:39:48.543Z",
-  "updated": "2026-09-13T16:15:57.983Z",
+  "updated": "2026-09-13T16:40:35.979Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-13 07:40, in zsh, against the recorded timestamps.\n\nThe fault is in manager_due() at queue/bin/go-loop.sh:89. It compares the mtime of queue/objectives.json against the mtime of queue/manager/.last-run, and manager_pass() (line 105) touches that stamp BEFORE running the agent, at line 111. The manager has staging authority over objectives.json, so any pass that promotes or demotes an epic leaves objectives.json newer than its own stamp. From then on changed=1 and the ready count is ignored; the only gate left is the 1200s cooldown.\n\nWhat happened today:\n  06:08  the user's intake edits objectives.json (promotes icon-svg)   -> correct trigger\n  07:10  manager pass runs, 65 ready; touches .last-run at 07:10\n  07:13  that pass edits objectives.json (promotes icon-export, icon-grid)\n  07:37  manager pass runs again, 69 ready                              -> SPURIOUS\nqueue/loop.log lines 127723 and 127936 have both, with their ready counts.\n\nThe reproduction, run as /tmp/mgrtest/t.zsh with manager_due() copied verbatim:\n  touch -t 202609130710.00 .last-run; touch -t 202609130713.56 objectives.json\n  manager_due 69 -> TRUE   (a pass runs with 69 ready)\nand with the stamp touched after the pass instead:\n  touch -t 202609130714.34 .last-run\n  manager_due 69 -> false  (correct)\n\nSo touching the stamp again when the pass finishes is enough, and it keeps the real trigger working: an edit by anybody other than the pass itself still lands outside the pass's own window. Worth a second look at whether a crashed pass leaves the stamp unwritten, in which case touch both before and after.",
@@ -28,6 +28,14 @@
     {
       "t": "2026-09-13T16:15:57.982Z",
       "note": "seq 72 -> 7"
+    },
+    {
+      "t": "2026-09-13T16:40:35.934Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-13T16:40:35.978Z",
+      "note": "seq 7 -> 1"
     }
   ]
 }

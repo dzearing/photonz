@@ -1,0 +1,33 @@
+{
+  "id": "a-runner-that-talks-about-the-spend-limit-is-not",
+  "title": "A runner that talks about the spend limit is not a runner that hit it",
+  "goal": "The loop decides whether it has stalled by reading the words its own runner printed. So a runner that finishes a piece of work about the spend limit, or a digest that reports last week stall, gets recorded as having hit the limit itself: the loop marks itself unhealthy, backs off, and the dashboard says the build has stopped when it has not. Make the loop tell a real refusal from a runner talking about one, so the health it reports is the health it has.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T16:41:32.444Z",
+  "updated": "2026-09-13T16:41:32.490Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-13 09:50, node against the shipped module:\n\n  $ cat > /tmp/spendtest.mjs\n  import { pickRunnerError, isSpendLimitFailure } from \"queue/bin/queue-lib.mjs\";\n  const stdout = [\n    \"> Bash node queue/bin/queue.mjs addjson A loop stalled on the spend limit reaches the person\",\n    \"a-loop-stalled-on-the-spend-limit-reaches-the-pe\",\n    \"done\",\n  ].join(\"\\n\");\n  const picked = pickRunnerError(\"\", stdout);\n  console.log(\"picked:\", picked);\n  console.log(\"classified as spend?\", isSpendLimitFailure(picked));\n\n  $ node /tmp/spendtest.mjs\n  picked: > Bash node queue/bin/queue.mjs addjson A loop stalled on the spend limit reaches the person\n  classified as spend? true\n\nIt has already happened once for real. queue/history.jsonl at 2026-09-12T12:04:17.518Z: kind digest, exit 0, outcome spend, and the error kept is one of the digest own Bash lines quoting the title of the spend-limit task. The digest succeeded and the loop recorded an environment failure.\n\nWhere it is: SPEND_LIMIT_PATTERN and pickRunnerError at queue/bin/queue-lib.mjs:470 and :500. The comment above pickRunnerError already names this risk and mitigates it by only searching stdout when stderr is empty, which is not enough, because a clean run leaves stderr empty. The damage is done at recordRunnerExit line 553, where a run with no task fails on the signature alone whatever the exit code was, and at line 576, where spend with no task is blamed on the environment, so a successful digest sets health unhealthy and a backoff.\n\nThe shape of a fix worth considering, not a prescription: the CLI own refusal arrives as its whole output, or close to it, not as one line among a hundred, and it is not prefixed by a tool call marker. Match on where the line sits and what it looks like, not only on the phrase. Whatever the runner picks, the check belongs in a test so the next phrase that reads like a refusal cannot do this again.\n\nRelated: a-loop-stalled-on-the-spend-limit-reaches-the-pe adds a macOS notification for a real stall. That task gets worse if this one is not done first, because the false positive would tell the person to go and raise a limit that is fine. Whichever runs second should check the other landed.",
+  "acceptance": [
+    "A runner whose own output mentions the spend limit, or a sign-in, while finishing its work normally is recorded as ok, not as an environment failure",
+    "A real refusal from the CLI is still caught exactly as it is today, for both a task run and a digest run",
+    "The 2026-09-12 digest run in queue/history.jsonl is replayed against the fixed check and comes out ok",
+    "The reproduction in the notes becomes a test that fails on today code and passes after the fix",
+    "anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T16:41:32.446Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-13T16:41:32.489Z",
+      "note": "seq 2550 -> 4"
+    }
+  ]
+}

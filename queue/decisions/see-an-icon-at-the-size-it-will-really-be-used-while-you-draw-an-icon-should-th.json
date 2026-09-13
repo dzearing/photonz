@@ -1,0 +1,52 @@
+{
+  "id": "see-an-icon-at-the-size-it-will-really-be-used-while-you-draw-an-icon-should-th",
+  "taskId": "see-an-icon-at-the-size-it-will-really-be-used",
+  "question": "While you draw an icon, should the app show it small beside you?",
+  "context": "You asked for a Pen that draws polygons and bezier curves so you can build elaborate SVG icons, and for a way to get them out as clean SVG. Both are queued. This is a separate idea the loop came up with on its own while planning the icon work, so it is asked before it is built rather than after. The sizes themselves are settled and not part of this question: New Frame is getting 16, 24, 32, 48, 64 and 512 either way, because right now the smallest canvas you can make is a thousand pixels across and there is nowhere to draw an icon at all.",
+  "options": [
+    {
+      "id": "strip",
+      "label": "A row of small previews",
+      "summary": "Pick an icon frame and a small row appears at the edge of the canvas showing the same drawing at 16, 24, 32, 48 and 64 pixels, redrawn as you draw. You watch a hairline disappear at 16 while you can still thicken it.",
+      "pros": [
+        "You find out an icon fails small at the moment you can still fix it, not after export",
+        "It is the one thing icon work needs that shape work does not"
+      ],
+      "cons": [
+        "Another readout on a canvas that already carries a tool bar, a tool options capsule and a panel"
+      ],
+      "mitigation": "It only appears when an icon frame is picked, and it goes away the moment you pick anything else."
+    },
+    {
+      "id": "panel",
+      "label": "A preview section in the right hand panel",
+      "summary": "The same previews, but as a section in the panel you already open for a picked layer, so the canvas stays clear. You see them when the panel is open and not when it is hidden.",
+      "pros": [
+        "Nothing new floats over the picture",
+        "It sits with the rest of what a selection tells you"
+      ],
+      "cons": [
+        "Hidden when the panel is hidden, which is when people draw",
+        "Further from your eye than the thing you are drawing"
+      ],
+      "mitigation": "The section opens itself the first time you pick an icon frame."
+    },
+    {
+      "id": "no",
+      "label": "Do not build this",
+      "summary": "Icon frames at the right sizes, and nothing else. You judge the small sizes by zooming out or by exporting and looking.",
+      "pros": [
+        "No new chrome at all",
+        "The queue spends the slot on the Pen and on SVG export, which you did ask for"
+      ],
+      "cons": [
+        "You find out an icon falls apart small only after you have finished it"
+      ],
+      "mitigation": "Zoom to a hundred percent on a 24 pixel frame is already a fair approximation.",
+      "declines": true
+    }
+  ],
+  "recommended": "strip",
+  "status": "pending",
+  "created": "2026-09-13T16:40:50.049Z"
+}
