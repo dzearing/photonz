@@ -2840,3 +2840,95 @@
 {"t":"2026-09-13T11:58:31.413Z","ev":"task_started","id":"tutorials-the-building-ui-track","title":"Tutorials: the Building UI track","priority":"p1-high"}
 {"t":"2026-09-13T12:18:03.550Z","ev":"task_created","id":"a-tutorial-card-about-the-picture-stops-covering","priority":"p2-normal","title":"A tutorial card about the picture stops covering the picture"}
 {"t":"2026-09-13T12:24:15.666Z","ev":"task_done","id":"tutorials-the-building-ui-track","from":"in_progress","note":"Four guides landed as catalogue data in the Building UI track (Frames are screens, Let a screen arrange its contents, Padding and columns, Line things up), plus four samples and two anchor names. No UI edited: the Help submenu and the hub window both read the track off the catalogue, proved by tutorial-hub-walk. Verified by four new playtest walks driving the real editor end to end (each waits on the guide's own step ids) and 28 new unit tests; Scripts/test.sh green at 6138 tests. Times measured rather than guessed: 122s/104s/124s/102s against a 2 min claim each. Audit at queue/audits/2026-09-13-tutorials-building-ui-track.json with five real window captures. One framework finding filed with its reproduction: a-tutorial-card-about-the-picture-stops-covering."}
+{"t":"2026-09-13T12:27:19.356Z","ev":"task_done","id":"effects-remembered-walk-fails-at-step-24","from":"pending","note":"Closed without building: the walk passes now. Triage ran it twice on the probe built from main at 2026-09-13: Scripts/playtest.sh Scripts/playtest/effects-remembered-walk.json --no-build -> status ok, 93 steps, both runs. It also passed in the 2026-09-13 full sweep (queue/sweep/2026-09-13-031401.log line 110, effects-remembered-walk 25s ok), and effects-open-into-view-walk passed there too (line 109). Something between 2026-09-12 and now fixed step 24; the walk is watching the Effects list again. The batch-versus-standalone half of the old notes lives on in find-out-why-a-walk-passes-on-its-own-and-fails."}
+{"t":"2026-09-13T12:27:23.323Z","ev":"task_dropped","id":"three-walks-stop-on-a-panel-control-the-dock-has","from":"pending","note":"duplicate of walks-that-fail-in-the-full-sweep, the standing sweep task; all three walks (border-effect, glow-effect, label-fills-a-row) are named in its current failing list of seven, and the reveal-step diagnosis has been folded into its log"}
+{"t":"2026-09-13T12:27:27.845Z","ev":"task_reprioritized","id":"a-walk-can-click-a-row-in-the-measurements-panel","from":"p2-normal","to":"p3-low"}
+{"t":"2026-09-13T12:27:27.900Z","ev":"task_reprioritized","id":"find-out-why-a-screen-capture-of-an-empty-editor","from":"p2-normal","to":"p3-low"}
+{"t":"2026-09-13T12:27:27.963Z","ev":"task_reprioritized","id":"find-out-why-the-effects-plus-goes-nameless-whil","from":"p2-normal","to":"p3-low"}
+{"t":"2026-09-13T12:27:28.013Z","ev":"task_reprioritized","id":"a-walk-can-press-a-command-row-at-the-foot-of-a","from":"p2-normal","to":"p3-low"}
+{"t":"2026-09-13T12:27:42.730Z","ev":"task_created","id":"what-separate-left-behind-is-still-there-after-t","priority":"p2-normal","title":"What Separate left behind is still there after the pill fades"}
+{"t":"2026-09-13T12:27:46.730Z","ev":"task_created","id":"a-text-layer-s-row-says-the-words-that-are-in-it","priority":"p2-normal","title":"A text layer's row says the words that are in it"}
+{"t":"2026-09-13T12:27:50.906Z","ev":"task_created","id":"find-out-how-a-hundred-and-forty-new-rows-should","priority":"p2-normal","title":"Find out how a hundred and forty new rows should arrive in the layers list"}
+{"t":"2026-09-13T12:27:55.776Z","ev":"task_created","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout","priority":"p3-low","title":"Two rules in UX-PATTERNS get scrubbed: a callout with nowhere to go, and a notice you have to act on"}
+{"t":"2026-09-13T12:28:15.401Z","ev":"task_created","id":"find-out-whether-separating-should-hand-you-text","priority":"p2-normal","title":"Find out whether separating should hand you text, not a picture of text"}
+{"t":"2026-09-13T12:29:07.327Z","ev":"task_resequenced","id":"tutorials-the-video-track","from":29,"to":10}
+{"t":"2026-09-13T12:29:07.343Z","ev":"task_resequenced","id":"a-renamed-control-breaks-the-build-not-somebody","from":30,"to":20}
+{"t":"2026-09-13T12:29:07.357Z","ev":"task_resequenced","id":"a-saved-colour-dropped-on-a-layer-row-paints-the","from":110,"to":60}
+{"t":"2026-09-13T12:29:07.370Z","ev":"task_resequenced","id":"two-effect-walks-fail-now-and-then-because-a-pre","from":140,"to":70}
+{"t":"2026-09-13T12:29:07.383Z","ev":"task_resequenced","id":"a-loop-stalled-on-the-spend-limit-reaches-the-pe","from":150,"to":80}
+{"t":"2026-09-13T12:29:07.395Z","ev":"task_resequenced","id":"the-drop-rules-say-what-a-surface-says-while-som","from":160,"to":90}
+{"t":"2026-09-13T12:29:07.406Z","ev":"task_resequenced","id":"dropping-a-colour-on-a-swatch-says-nothing-back","from":170,"to":100}
+{"t":"2026-09-13T12:29:07.416Z","ev":"task_resequenced","id":"a-slider-says-where-its-track-starts-when-someth","from":180,"to":110}
+{"t":"2026-09-13T12:29:07.427Z","ev":"task_resequenced","id":"a-measurement-offers-a-corner-radius-it-has-noth","from":190,"to":120}
+{"t":"2026-09-13T12:29:07.439Z","ev":"task_resequenced","id":"type-a-number-into-any-effects-slider-not-just-d","from":200,"to":130}
+{"t":"2026-09-13T12:29:07.449Z","ev":"task_resequenced","id":"an-oval-s-outside-border-meets-the-oval-cleanly","from":210,"to":140}
+{"t":"2026-09-13T12:29:07.460Z","ev":"task_resequenced","id":"drawing-a-border-costs-only-the-band-it-covers","from":220,"to":150}
+{"t":"2026-09-13T12:29:07.472Z","ev":"task_resequenced","id":"resizing-a-self-arranging-stack-shows-what-you-a","from":230,"to":160}
+{"t":"2026-09-13T12:29:07.483Z","ev":"task_resequenced","id":"a-zoom-callout-becomes-a-magnify-lens","from":250,"to":170}
+{"t":"2026-09-13T12:29:07.494Z","ev":"task_resequenced","id":"a-lens-turned-on-its-side-still-shows-the-pictur","from":260,"to":180}
+{"t":"2026-09-13T12:29:07.507Z","ev":"task_resequenced","id":"find-out-whether-command-z-works-after-clicking","from":270,"to":190}
+{"t":"2026-09-13T12:29:07.520Z","ev":"task_resequenced","id":"a-measurement-end-follows-your-hand-instead-of-j","from":280,"to":200}
+{"t":"2026-09-13T12:29:07.532Z","ev":"task_resequenced","id":"the-rest-of-the-panel-still-counts-at-two","from":290,"to":210}
+{"t":"2026-09-13T12:29:07.543Z","ev":"task_resequenced","id":"a-shelf-tile-says-where-the-component-came-from","from":310,"to":220}
+{"t":"2026-09-13T12:29:07.555Z","ev":"task_resequenced","id":"a-shared-component-arrives-the-size-it-should-be","from":320,"to":230}
+{"t":"2026-09-13T12:29:07.567Z","ev":"task_resequenced","id":"adding-an-effect-leaves-every-one-of-its-setting","from":330,"to":240}
+{"t":"2026-09-13T12:29:07.579Z","ev":"task_resequenced","id":"the-colour-popover-never-opens-in-the-corner-rad","from":340,"to":250}
+{"t":"2026-09-13T12:29:07.591Z","ev":"task_resequenced","id":"undo-in-a-walk-cannot-use-the-command-z-chord","from":350,"to":260}
+{"t":"2026-09-13T12:29:07.603Z","ev":"task_resequenced","id":"a-piece-inside-a-turned-card-moves-on-its-own","from":360,"to":270}
+{"t":"2026-09-13T12:29:07.615Z","ev":"task_resequenced","id":"find-out-whether-the-layers-list-should-show-the","from":2460,"to":280}
+{"t":"2026-09-13T12:29:07.627Z","ev":"task_resequenced","id":"find-out-why-a-walk-passes-on-its-own-and-fails","from":2470,"to":290}
+{"t":"2026-09-13T12:29:07.639Z","ev":"task_resequenced","id":"saving-a-text-style-leaves-the-text-section-with","from":2480,"to":300}
+{"t":"2026-09-13T12:29:07.650Z","ev":"task_resequenced","id":"a-style-tile-clicked-with-nothing-selected-shoul","from":2490,"to":310}
+{"t":"2026-09-13T12:29:07.662Z","ev":"task_resequenced","id":"find-out-whether-a-text-style-can-be-dragged-ont","from":2500,"to":320}
+{"t":"2026-09-13T12:29:07.674Z","ev":"task_resequenced","id":"picking-a-plain-shape-leaves-the-panel-parked-on","from":2510,"to":330}
+{"t":"2026-09-13T12:29:07.688Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep","from":2530,"to":340}
+{"t":"2026-09-13T12:29:07.702Z","ev":"task_resequenced","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn","from":2540,"to":350}
+{"t":"2026-09-13T12:29:07.715Z","ev":"task_resequenced","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d","from":2550,"to":360}
+{"t":"2026-09-13T12:29:07.728Z","ev":"task_resequenced","id":"a-guide-can-point-at-a-tool-that-shares-a-slot-w","from":2560,"to":370}
+{"t":"2026-09-13T12:29:07.739Z","ev":"task_resequenced","id":"the-tour-leaves-you-sitting-in-its-sample-pictur","from":2570,"to":380}
+{"t":"2026-09-13T12:29:07.751Z","ev":"task_resequenced","id":"find-out-whether-somebody-who-never-turns-on-scr","from":2580,"to":390}
+{"t":"2026-09-13T12:29:07.764Z","ev":"task_resequenced","id":"a-walk-can-switch-a-feature-off-before-it-runs","from":2600,"to":400}
+{"t":"2026-09-13T12:29:07.775Z","ev":"task_resequenced","id":"running-a-whole-tutorials-track-should-not-leave","from":2620,"to":410}
+{"t":"2026-09-13T12:29:07.786Z","ev":"task_resequenced","id":"a-tutorial-step-can-wait-for-a-setting-to-reach","from":2630,"to":420}
+{"t":"2026-09-13T12:29:07.797Z","ev":"task_resequenced","id":"a-copy-and-its-original-should-be-tellable-apart","from":2650,"to":430}
+{"t":"2026-09-13T12:29:07.809Z","ev":"task_resequenced","id":"a-guide-pointing-at-the-library-rings-a-shelf-wi","from":2660,"to":440}
+{"t":"2026-09-13T12:29:07.821Z","ev":"task_resequenced","id":"separate-the-rows-inside-a-card-not-just-the-car","from":2670,"to":450}
+{"t":"2026-09-13T12:29:07.832Z","ev":"task_resequenced","id":"separate-finds-the-boxes-in-a-dark-window-too-no","from":2680,"to":460}
+{"t":"2026-09-13T12:29:07.843Z","ev":"task_resequenced","id":"find-out-whether-a-label-inside-a-group-can-be-d","from":2690,"to":470}
+{"t":"2026-09-13T12:29:07.855Z","ev":"task_resequenced","id":"a-tutorial-card-about-the-picture-stops-covering","from":2700,"to":480}
+{"t":"2026-09-13T12:29:07.868Z","ev":"task_resequenced","id":"what-separate-left-behind-is-still-there-after-t","from":2710,"to":490}
+{"t":"2026-09-13T12:29:07.879Z","ev":"task_resequenced","id":"a-text-layer-s-row-says-the-words-that-are-in-it","from":2720,"to":500}
+{"t":"2026-09-13T12:29:07.891Z","ev":"task_resequenced","id":"find-out-how-a-hundred-and-forty-new-rows-should","from":2730,"to":510}
+{"t":"2026-09-13T12:29:07.903Z","ev":"task_resequenced","id":"find-out-whether-separating-should-hand-you-text","from":2740,"to":520}
+{"t":"2026-09-13T12:29:07.916Z","ev":"task_resequenced","id":"a-walk-can-press-a-command-row-at-the-foot-of-a","from":240,"to":70}
+{"t":"2026-09-13T12:29:07.928Z","ev":"task_resequenced","id":"find-out-why-a-screen-capture-of-an-empty-editor","from":2590,"to":80}
+{"t":"2026-09-13T12:29:07.940Z","ev":"task_resequenced","id":"a-walk-can-click-a-row-in-the-measurements-panel","from":2610,"to":90}
+{"t":"2026-09-13T12:29:07.952Z","ev":"task_resequenced","id":"find-out-why-the-effects-plus-goes-nameless-whil","from":2640,"to":100}
+{"t":"2026-09-13T12:29:07.966Z","ev":"task_resequenced","id":"two-rules-in-ux-patterns-get-scrubbed-a-callout","from":2650,"to":110}
+{"t":"2026-09-13T12:34:18.424Z","ev":"task_reprioritized","id":"find-out-why-a-walk-passes-on-its-own-and-fails","from":"p2-normal","to":"p3-low"}
+{"t":"2026-09-13T12:34:20.270Z","ev":"task_resequenced","id":"saving-a-text-style-leaves-the-text-section-with","from":300,"to":290}
+{"t":"2026-09-13T12:34:20.283Z","ev":"task_resequenced","id":"a-style-tile-clicked-with-nothing-selected-shoul","from":310,"to":300}
+{"t":"2026-09-13T12:34:20.296Z","ev":"task_resequenced","id":"find-out-whether-a-text-style-can-be-dragged-ont","from":320,"to":310}
+{"t":"2026-09-13T12:34:20.309Z","ev":"task_resequenced","id":"picking-a-plain-shape-leaves-the-panel-parked-on","from":330,"to":320}
+{"t":"2026-09-13T12:34:20.321Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep","from":340,"to":330}
+{"t":"2026-09-13T12:34:20.332Z","ev":"task_resequenced","id":"the-caret-on-a-caption-s-empty-new-line-is-drawn","from":350,"to":340}
+{"t":"2026-09-13T12:34:20.342Z","ev":"task_resequenced","id":"the-ring-a-guide-draws-matches-the-shape-it-is-d","from":360,"to":350}
+{"t":"2026-09-13T12:34:20.353Z","ev":"task_resequenced","id":"a-guide-can-point-at-a-tool-that-shares-a-slot-w","from":370,"to":360}
+{"t":"2026-09-13T12:34:20.364Z","ev":"task_resequenced","id":"the-tour-leaves-you-sitting-in-its-sample-pictur","from":380,"to":370}
+{"t":"2026-09-13T12:34:20.375Z","ev":"task_resequenced","id":"find-out-whether-somebody-who-never-turns-on-scr","from":390,"to":380}
+{"t":"2026-09-13T12:34:20.386Z","ev":"task_resequenced","id":"a-walk-can-switch-a-feature-off-before-it-runs","from":400,"to":390}
+{"t":"2026-09-13T12:34:20.397Z","ev":"task_resequenced","id":"running-a-whole-tutorials-track-should-not-leave","from":410,"to":400}
+{"t":"2026-09-13T12:34:20.408Z","ev":"task_resequenced","id":"a-tutorial-step-can-wait-for-a-setting-to-reach","from":420,"to":410}
+{"t":"2026-09-13T12:34:20.419Z","ev":"task_resequenced","id":"a-copy-and-its-original-should-be-tellable-apart","from":430,"to":420}
+{"t":"2026-09-13T12:34:20.429Z","ev":"task_resequenced","id":"a-guide-pointing-at-the-library-rings-a-shelf-wi","from":440,"to":430}
+{"t":"2026-09-13T12:34:20.440Z","ev":"task_resequenced","id":"separate-the-rows-inside-a-card-not-just-the-car","from":450,"to":440}
+{"t":"2026-09-13T12:34:20.451Z","ev":"task_resequenced","id":"separate-finds-the-boxes-in-a-dark-window-too-no","from":460,"to":450}
+{"t":"2026-09-13T12:34:20.462Z","ev":"task_resequenced","id":"find-out-whether-a-label-inside-a-group-can-be-d","from":470,"to":460}
+{"t":"2026-09-13T12:34:20.473Z","ev":"task_resequenced","id":"a-tutorial-card-about-the-picture-stops-covering","from":480,"to":470}
+{"t":"2026-09-13T12:34:20.483Z","ev":"task_resequenced","id":"what-separate-left-behind-is-still-there-after-t","from":490,"to":480}
+{"t":"2026-09-13T12:34:20.494Z","ev":"task_resequenced","id":"a-text-layer-s-row-says-the-words-that-are-in-it","from":500,"to":490}
+{"t":"2026-09-13T12:34:20.505Z","ev":"task_resequenced","id":"find-out-how-a-hundred-and-forty-new-rows-should","from":510,"to":500}
+{"t":"2026-09-13T12:34:20.516Z","ev":"task_resequenced","id":"find-out-whether-separating-should-hand-you-text","from":520,"to":510}
+{"t":"2026-09-13T12:34:20.527Z","ev":"task_resequenced","id":"find-out-why-a-walk-passes-on-its-own-and-fails","from":290,"to":120}
+{"t":"2026-09-13T12:34:28.279Z","ev":"triage","summary":"merged 1 (three-walks-stop-on-a-panel-control folded into the standing sweep task), closed 1 by re-running its reproduction (effects-remembered-walk now passes twice standalone and in the sweep), demoted 1 stale reproduction to p3 after two clean runs (batch-versus-standalone flake), moved 4 unmanned-loop tasks to p3 as next-epic work with no focus unblock, retagged 1 epic, wrote the focus-unblock clause into 2 goals plus sweep-report.mjs, filed 5 tasks from the design review, renumbered every priority to steps of 10. Open 62 -> 65 (p1 2, p2 51, p3 12). Nothing to groom: every open task already had an epic, a goal and acceptance items."}
+{"t":"2026-09-13T12:34:28.306Z","ev":"digest","file":"2026-09-13.md"}

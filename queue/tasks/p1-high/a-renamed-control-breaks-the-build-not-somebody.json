@@ -4,12 +4,12 @@
   "goal": "Tutorials point at real controls, so the day a control is renamed, moved or put behind a flag, a guide starts pointing at nothing. Make that a test failure instead of something a person discovers mid-tour: every guide in the catalogue gets walked automatically, every step's target checked, and a guide whose target has gone fails the build.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 30,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.436Z",
-  "updated": "2026-09-12T15:17:33.203Z",
+  "updated": "2026-09-13T12:29:07.342Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -37,6 +37,10 @@
     {
       "t": "2026-09-12T15:17:33.203Z",
       "note": "deps set: framework first"
+    },
+    {
+      "t": "2026-09-13T12:29:07.341Z",
+      "note": "seq 30 -> 20"
     }
   ]
 }

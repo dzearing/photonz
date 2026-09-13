@@ -4,12 +4,12 @@
   "goal": "What to do with a recording: trim it to the part that matters and get it out in a form you can send.\n\nThe guides in this track: Trim a recording; Export MP4, GIF or HEIC.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 29,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.310Z",
-  "updated": "2026-09-12T15:17:33.202Z",
+  "updated": "2026-09-13T12:29:07.326Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-12T15:17:33.202Z",
       "note": "deps set: framework first"
+    },
+    {
+      "t": "2026-09-13T12:29:07.325Z",
+      "note": "seq 29 -> 10"
     }
   ]
 }

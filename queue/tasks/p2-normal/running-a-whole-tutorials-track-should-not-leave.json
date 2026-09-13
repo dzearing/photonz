@@ -4,12 +4,12 @@
   "goal": "Each guide opens a sample window of its own, so somebody who does the five Redlining guides back to back ends up with five windows all called Tutorial Sample. Doing a whole track is the thing we want people to do, and it should not leave the desk covered in identical windows.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 2620,
+  "seq": 400,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T02:12:00.478Z",
-  "updated": "2026-09-13T02:12:00.481Z",
+  "updated": "2026-09-13T12:34:20.396Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the Redlining tutorials track (2026-09-13). TutorialLauncher.windows keys the window by GUIDE id; keying it by the sample the guide brings (TutorialSample) would give the three redlineScreen guides one window between them and the two measuredScreen guides another. Open question worth deciding first: arriving at guide two on a picture that already carries guide one measurements might be continuity or might be clutter, and a measuredScreen window that has been edited is not the list the panel guide was written for. Decide the behaviour before building it.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-13T02:12:00.480Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-13T12:29:07.773Z",
+      "note": "seq 2620 -> 410"
+    },
+    {
+      "t": "2026-09-13T12:34:20.395Z",
+      "note": "seq 410 -> 400"
     }
   ]
 }

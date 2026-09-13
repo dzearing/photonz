@@ -3,13 +3,13 @@
   "title": "Find out why the Effects plus goes nameless while the panel is settling",
   "goal": "A tutorial walk looked for the plus on the Effects heading and could not find it by name, once, while the panel was still moving. It found the control but with no name on it. If that can happen to a walk it can happen to a screen reader, so it is worth knowing whether the name really goes away or whether the walk simply looked too early.",
   "epic": "unmanned-loop",
-  "priority": "p2-normal",
-  "seq": 2640,
+  "priority": "p3-low",
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T03:36:24.615Z",
-  "updated": "2026-09-13T03:36:24.618Z",
+  "updated": "2026-09-13T12:29:07.951Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-13 in Scripts/playtest-all.sh --no-build tutorial- , which was running while other probe work was going on, so the machine was loaded.\n\nThe failure: step 17 (panelMenu): no menu called \"Add Effect\" is in the window; the ones that are: 100% 58.0pt wide at x 801.5 says \"Choose a zoom level...\", Fill 42.0pt wide at x 1051.5 says \"Save this fill as a named style...\",  25.0pt wide at x 1123.0 says \"Add an effect: a shadow, a glow, a border or a blur\".\n\nNote the third entry: the Add Effect menu IS there, at the right size, with the right help text, and with an EMPTY name. Sources/Photonz/EffectsListInspector.swift:917 sets .accessibilityLabel(\"Add Effect\") on it.\n\nRan twice again immediately afterwards on an idle machine: ok both times. The log line before the failure says the wait never went quiet (14 of 16 slices busy), so the panel was still laying out.\n\nNot reproduced on demand, which is why this is p2 and phrased as a question.",
@@ -21,6 +21,14 @@
     {
       "t": "2026-09-13T03:36:24.617Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-13T12:27:27.959Z",
+      "note": "priority p2-normal -> p3-low"
+    },
+    {
+      "t": "2026-09-13T12:29:07.950Z",
+      "note": "seq 2640 -> 100"
     }
   ]
 }

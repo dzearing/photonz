@@ -1,15 +1,15 @@
 {
   "id": "walks-that-fail-in-the-full-sweep",
   "title": "Walks that fail in the full sweep",
-  "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 2530,
+  "seq": 330,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-13T11:21:36.034Z",
+  "updated": "2026-09-13T12:34:20.320Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Last sweep 2026-09-13T11:21:35Z: 382 of 389 walks passed in 68 minutes.\n\nFailing walks (7): border-effect-walk, contents-for-several-walk, copies-share-choice-walk, dock-picked-first-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk\n\nFull output: queue/sweep/2026-09-13-031401.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-separated-box-brings-its-shadow-with-it-as-a-r: Separate into Layers now takes the cards out of a capture, which changes the layers list every separate-* walk reads and touches the shared box cut and patch path; the five separate walks are green but the rest of the set has not seen the change",
@@ -54,6 +54,14 @@
     {
       "t": "2026-09-13T11:21:36.033Z",
       "note": "sweep 2026-09-13T11:21:35Z: 7 failing (border-effect-walk, contents-for-several-walk, copies-share-choice-walk, dock-picked-first-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk)"
+    },
+    {
+      "t": "2026-09-13T12:29:07.686Z",
+      "note": "seq 2530 -> 340"
+    },
+    {
+      "t": "2026-09-13T12:34:20.319Z",
+      "note": "seq 340 -> 330"
     }
   ]
 }

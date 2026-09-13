@@ -1,0 +1,33 @@
+{
+  "id": "two-rules-in-ux-patterns-get-scrubbed-a-callout",
+  "title": "Two rules in UX-PATTERNS get scrubbed: a callout with nowhere to go, and a notice you have to act on",
+  "goal": "Two written rules were bent this week, both because reality asked them a question they do not answer. Rewrite them so the next feature does not have to reason it out from scratch, and say in each what the app should do in the case that broke it.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T12:27:55.772Z",
+  "updated": "2026-09-13T12:29:07.965Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the 2026-09-13 design review, two pieces of evidence.\n\nD14 (a callout never covers what it is talking about) and D16 (a guide draws over your work): audit 2026-09-13-tutorials-building-ui-track, rough note one. \"A step that talks about the whole picture draws its card ACROSS the picture. The canvas has no side with room for a card... Worked around by starting every screen 120 points down and by sweeping from the LEFT in the lining-up guide, which is a guide knowing about a callout, and that is backwards.\" D14 rule 2 says prefer the empty side; the failing case is that there is no empty side. The behaviour fix is filed as a-tutorial-card-about-the-picture-stops-covering; this is the rule half.\n\nSection 3, Modal and toast: it files a pill under transient confirmations (\"Saved\", \"42 instances updated\"). Separate into Layers uses that same pill to say 580 pieces are still in the picture and that running the command again takes the next batch, which is not a confirmation. Four audits on 2026-09-13 each asked whether the pill was enough. The behaviour fix is filed as what-separate-left-behind-is-still-there-after-t; this is the rule half.",
+  "acceptance": [
+    "D14 says what a callout does when its subject is the whole picture and there is no empty side to move to, and the answer is something the callout does rather than something the content has to be authored around",
+    "D14 and D16 say plainly which of the two a tutorial guide card is, since a guide card explains the picture and is therefore an annotation by D16 own test",
+    "The Modal and toast part of section 3 says when a result may live only in a notice that fades, and what a command does instead when the result is something you are expected to act on later",
+    "Each rewritten rule cites the case that forced it, the way every other rule in the document does",
+    "No rule is rewritten to describe what the app happens to do today where that is the thing that was wrong"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T12:27:55.774Z",
+      "note": "created (design-review)"
+    },
+    {
+      "t": "2026-09-13T12:29:07.964Z",
+      "note": "seq 2650 -> 110"
+    }
+  ]
+}

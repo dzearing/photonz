@@ -4,12 +4,12 @@
   "goal": "On the Library shelf of a new document, a component you made in another file, one of the app's five starters and a component in this document all look exactly the same: same picture, same violet mark, same caption. You cannot tell what is already in your file from what a drop would bring in. Give a tile one plain word under it that says which it is.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 310,
+  "seq": 220,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T10:06:37.792Z",
-  "updated": "2026-09-12T12:02:45.938Z",
+  "updated": "2026-09-13T12:29:07.542Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The detail line is already on every LibraryEntry and already correct (\"shared\", \"starter\", \"2 copies\"); LibraryComponentTile just never draws it. See Sources/Photonz/ComponentPanel.swift, LibraryComponentTile, and LibraryShelfLayout for the room a caption has. Raised by the audit queue/audits/2026-09-12-shared-components.json.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-12T12:02:45.937Z",
       "note": "seq 2430 -> 310"
+    },
+    {
+      "t": "2026-09-13T12:29:07.541Z",
+      "note": "seq 310 -> 220"
     }
   ]
 }

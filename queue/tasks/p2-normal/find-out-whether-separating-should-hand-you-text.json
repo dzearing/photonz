@@ -1,0 +1,38 @@
+{
+  "id": "find-out-whether-separating-should-hand-you-text",
+  "title": "Find out whether separating should hand you text, not a picture of text",
+  "goal": "Taking a screenshot apart is two commands today. Separate into Layers gives you a picture of each label, and then Turn into Text on each one gives you the words. Somebody who wanted to change a label has to know that the second command exists, find it in the same menu, and run it once per label. Work out whether the first command should simply hand over real text wherever the app is sure enough, and come back with a recommendation rather than a guess.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 510,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T12:28:15.397Z",
+  "updated": "2026-09-13T12:34:20.515Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the 2026-09-13 design review, judging the focus feature as a user rather than as a builder.\n\nAudit 2026-09-13-turn-into-text asks it directly: \"Turn into Text sits directly under Separate into Layers in the same menu. Would you have found it there, or does it want to be offered on the row itself somehow?\" The app already teaches the two-step ceremony in its own refusal copy: PhotonzCore/TextReading.swift line 318 returns \"More than one run of text here. Separate into Layers first, \".\n\nWhat the recommendation has to weigh, from the same audit: the reader refuses anything it is not sure of (five font families, one line only, no italics), and it gets the weight wrong on small labels two times in six. So reading everything up front would be wrong; reading the confident ones might not be. The numbers are in the audit.\n\nSeparate reads its own budget from PhotonzCore/SeparateBudget.swift and lands in one mutation (PhotonzCore/Document.swift line 812), so folding the read into it does not break the one-undo promise.",
+  "acceptance": [
+    "The two shapes are both tried on the same three real captures: separating as it works today, and separating that reads the text it is confident about straight away",
+    "The audit says how many runs per capture the app is confident enough to read, so the recommendation rests on a number rather than a feeling",
+    "The case where reading is wrong is looked at honestly: what a person sees and what it costs them to get back",
+    "Whatever is recommended, one undo press still takes the whole thing back",
+    "A recommendation is written down with the reasoning, including what was rejected and why",
+    "Audit under queue/audits/ with real captures of each shape"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T12:28:15.399Z",
+      "note": "created (design-review)"
+    },
+    {
+      "t": "2026-09-13T12:29:07.901Z",
+      "note": "seq 2740 -> 520"
+    },
+    {
+      "t": "2026-09-13T12:34:20.514Z",
+      "note": "seq 520 -> 510"
+    }
+  ]
+}

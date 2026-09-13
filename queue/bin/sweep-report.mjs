@@ -50,7 +50,9 @@ if (open) {
     title: TITLE,
     goal:
       'The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. ' +
-      'Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.',
+      'Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. ' +
+      'This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: ' +
+      'a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.',
     epic: 'unmanned-loop',
     priority: 'p2-normal',
     area: 'queue',

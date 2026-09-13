@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 300,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T09:43:42.058Z",
-  "updated": "2026-09-12T12:03:05.739Z",
+  "updated": "2026-09-13T12:27:19.355Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-12, and it is NOT caused by the CrowdWords change that landed the same day: it fails identically on a clean checkout of main with that work stashed.\n\nWith the change:\n  $ Scripts/playtest-all.sh effects-open-into-view effects-remembered\n  effects-open-into-view-walk                10s  ok\n  effects-remembered-walk                     6s  FAILED  step 24 (expect): the control called \"Remove\" in \"Blur\" is in the panel, and this step says it should not be\n\nOn clean main (git stash push -u, same command):\n  effects-open-into-view-walk                11s  ok\n  effects-remembered-walk                     5s  FAILED  step 24 (expect): the control called \"Remove\" in \"Blur\" is in the panel, and this step says it should not be\n\nSeparately, effects-open-into-view-walk failed once inside a seven walk batch (Scripts/playtest-all.sh --no-build effects) at step 12 expecting \"Border, shut\" and reading \"Border, open\", then passed alone both with and without the change. That looks like state leaking between walks sharing one probe launch, and may be worth its own look.",
@@ -25,6 +25,11 @@
     {
       "t": "2026-09-12T12:02:45.893Z",
       "note": "seq 2420 -> 300"
+    },
+    {
+      "t": "2026-09-13T12:27:19.353Z",
+      "note": "Closed without building: the walk passes now. Triage ran it twice on the probe built from main at 2026-09-13: Scripts/playtest.sh Scripts/playtest/effects-remembered-walk.json --no-build -> status ok, 93 steps, both runs. It also passed in the 2026-09-13 full sweep (queue/sweep/2026-09-13-031401.log line 110, effects-remembered-walk 25s ok), and effects-open-into-view-walk passed there too (line 109). Something between 2026-09-12 and now fixed step 24; the walk is watching the Effects list again. The batch-versus-standalone half of the old notes lives on in find-out-why-a-walk-passes-on-its-own-and-fails."
     }
-  ]
+  ],
+  "completed": "2026-09-13T12:27:19.354Z"
 }
