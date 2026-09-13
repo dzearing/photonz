@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 15,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:12:52.113Z",
-  "updated": "2026-09-13T18:20:09.853Z",
+  "updated": "2026-09-13T18:44:30.451Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve",
     "the-pen-draws-a-path-corner-by-corner-and-curve"
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-13T18:44:17.467220Z",
       "note": "Walk: Scripts/playtest/svg-export-walk.json draws a shape with the Pen, draws a box, writes the SVG through the app's own export path (new probe-only writeSVG step), photographs the Export sheet on PNG and on SVG, then puts a shadow on the shape and photographs the sheet naming it. Screen Recording is granted, so the audit carries real captures. Ran the walks I touched (export, frames): 6 passed, 0 failed."
+    },
+    {
+      "t": "2026-09-13T18:44:30.449Z",
+      "note": "Export writes a real SVG behind the Next flag next-export-svg: paths, boxes with their rounding, ovals, lines, groups, gradients and outlined text all go out as shapes, anything with no vector answer is embedded as a picture and named on the sheet before you save. Writer is pure in PhotonzCore/SVGExport.swift, bridged by PhotonzRender/SVGExporter.swift. Verified by rendering the written file back through the system SVG reader and comparing it to the app's own render (12 cases, within one part in 255) plus 30 writer tests; full suite green, 6314 tests. Walk: Scripts/playtest/svg-export-walk.json. Audit: queue/audits/2026-09-13-svg-export.json. Three rough edges filed as p2 follow-ups."
     }
   ],
-  "started": "2026-09-13T18:20:09.851Z"
+  "started": "2026-09-13T18:20:09.851Z",
+  "completed": "2026-09-13T18:44:30.450Z"
 }
