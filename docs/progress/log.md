@@ -14630,3 +14630,39 @@ inside a box coming out inside it, shadows as a real effect, and reading the
 actual characters so the layers can be named the words instead of Text 1 to
 Text 9. Open for the user in the audit: that naming, and whether the command
 should be called Auto separate instead.
+
+## 2026-09-13 — Text inside a box comes out inside that box
+
+Separating a screenshot hands back a TREE instead of a pile. A label that sat in
+a button comes out inside that button, so one click on the canvas picks the whole
+button and dragging it carries its words; a piece that belongs to nothing stays a
+row of its own.
+
+The rule is `PhotonzCore/LayerNesting.swift` and it is one sentence: a piece
+belongs to the smallest thing that HOLDS it, where holding means nine tenths of
+the piece's own area (the cut is deliberately generous, so a label that filled its
+button edge to edge comes back a pixel or two proud of it). Smallest settles a
+piece that could go in two places; nine tenths is far enough from a half that a
+piece straddling two cards is refused by both, so a piece is in exactly one place
+or in none. It is depth-unlimited and tested three deep. Same judgement
+`ElementBounds.captionHeightRatio` already makes from the other end.
+
+`PhotonzDocument.SeparatedPiece` gained `children`, and a piece that has any
+becomes a group in the SAME single mutation, so the whole tree is still one
+Command Z. The group keeps the box's name and the box's own body goes inside it
+as `Fill` (a real shape) or `Picture` (pixels), so the list never says Box 2
+twice. Groups the command makes are left open. Gated on `next-layer-groups` as
+well: with groups off the panel draws no twist, so the flat pile is handed back
+instead.
+
+On `Fixtures/settings-pane-2x.png`: 11 pieces, 9 top-level rows, the two buttons
+each holding their label. Walk `Scripts/playtest/separate-hierarchy-walk.json`
+(the existing two walks were updated: dragging a button now carries its label,
+and getting at the label alone means a double click to go inside). Audit
+`queue/audits/2026-09-13-separate-hierarchy.json`.
+
+Next: nothing goes three deep on a real capture yet and that is DETECTION, not
+the rule — `BoxSweep` takes one level, so a card's rows and switches are still
+baked into the card. Filed as "Separate the rows inside a card, not just the
+card" (p2). Open for the user in the audit: whether groups should arrive closed,
+and whether dragging a piece clear of its parent should take it out of the group.

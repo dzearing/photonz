@@ -1,0 +1,29 @@
+{
+  "feature": "Text inside a box comes out inside that box",
+  "epic": "ui-building",
+  "summary": "Separating a screenshot now hands back a tree instead of a pile: a label that sat in a button comes out inside that button, so one click picks the whole button and dragging it carries its words. Everything that belongs to nothing stays a row of its own.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags on by default: Separate a screenshot into layers, Group what you selected.",
+  "try": [
+    { "do": "Open a screenshot of some UI (Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png is the one these shots use)." },
+    { "do": "Right click the Background row in the layers list and choose Separate into Layers." },
+    { "do": "Read the layers list: Box 1 and Box 2 are the two buttons and each one opens onto its own words.", "shot": "2026-09-13-separate-hierarchy-list.png" },
+    { "do": "Click the blue Save Changes button once on the canvas. The outline goes round the whole button, not the strip of blue you landed on." },
+    { "do": "Drag it down onto the empty page. The words travel with it and no hole is left behind.", "shot": "2026-09-13-separate-hierarchy-dragged.png" },
+    { "do": "Press Command Z once. The whole tree goes back and the screenshot is as it opened." },
+    { "do": "Separate again, then double click the word Reset to go inside its button, and drag just the word out.", "shot": "2026-09-13-separate-hierarchy-inside.png" }
+  ],
+  "evaluate": [
+    "Does one click on a button picking the whole button feel right, or did you want the piece you actually pointed at?",
+    "Are the groups being left open the right default, or would you rather they arrived closed so the list is four rows instead of fourteen?",
+    "Is Box 2 holding Text 9 and Fill readable, or should the group say something about what is in it rather than repeating the box number?",
+    "Seven of the nine runs on this capture belong to nothing and stayed at the top level. Does that read as correct, or did you expect the six row labels to end up under their cards?",
+    "When you drag a label out of its button, it stays a child of that button and the group's dashed box stretches across the canvas to reach it. Should dragging a piece clear of its parent take it out of the group?"
+  ],
+  "rough": [
+    "Nothing goes three deep on a real capture yet, and that is a detection limit rather than a rule limit. The nesting rule is depth-unlimited and tested three deep; BoxSweep only ever finds ONE level of boxes, so a card's rows and switches are still baked into the card's picture. Filed as Separate the rows inside a card, not just the card.",
+    "The two cards on this fixture are still left in the picture entirely, because of the soft shadow under them, so the six row labels on those cards have no parent to go into. That is the shadow slice, not this one.",
+    "Dragging a child out of its group leaves it in the group and stretches the group's dashed bounds across the canvas. That is how groups already behave everywhere in the app, so it was left alone rather than made special here.",
+    "A separated box's body is called Fill or Picture. It reads fine indented under Box 1, but it is the app naming a thing it has no word for; the day the words are read, the group takes the words and this goes away.",
+    "Screen Recording was granted, so every shot above is the real window, not an offscreen render."
+  ]
+}

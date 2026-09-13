@@ -139,7 +139,7 @@
     {
       "do": "describe",
       "stage": "4-dragged",
-      "note": "THE FOURTH TEST, and the one the whole task turns on: the blue button has been dragged clear of where it was, grabbed by the strip above its words so the pointer is on the button itself. Where it came from there must be plain page, the same grey as everything around it, with no hole and no blue rim left behind. The words Save Changes stay where they were, because a label is not yet a child of the box it sits on"
+      "note": "THE FOURTH TEST, and the one this walk turns on: the blue button has been dragged clear of where it was, grabbed by the strip above its words so the pointer is on the button itself. Where it came from there must be plain page, the same grey as everything around it, with no hole and no blue rim left behind. The words Save Changes travel with it, because a label is a child of the box it sits on; the separate-hierarchy walk is the one that tests that"
     },
     {
       "do": "snapshot",
@@ -201,5 +201,10 @@
       "do": "render",
       "name": "boxes-6-undone-doc"
     }
-  ]
+  ],
+  "setup": {
+    "forget": [
+      "groups"
+    ]
+  }
 }

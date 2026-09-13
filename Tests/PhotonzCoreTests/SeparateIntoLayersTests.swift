@@ -183,4 +183,120 @@ struct SeparateIntoLayersTests {
         // beside it inside the group rather than 50 points off it.
         #expect(document.layers[0].children[1].frame == CGRect(x: 10, y: 10, width: 60, height: 18))
     }
+
+    // MARK: - Text inside a box comes out inside that box
+
+    /// A box that holds pieces arrives as a GROUP: its own body at the bottom,
+    /// what sat on it above. That is what makes moving the button carry its
+    /// label. See `docs/design/separate-into-layers.md`, "Which piece sits in
+    /// which".
+    private func box(_ rect: CGRect, _ name: String, body: String = "Picture",
+                     children: [PhotonzDocument.SeparatedPiece] = [])
+        -> PhotonzDocument.SeparatedPiece {
+        PhotonzDocument.SeparatedPiece(frame: rect, ref: ImageRef(pixelSize: rect.size),
+                                       name: name, bodyName: body, children: children)
+    }
+
+    @Test func aLabelInsideAButtonComesOutInsideThatButton() throws {
+        var (document, id, _) = capture()
+        let button = CGRect(x: 100, y: 200, width: 248, height: 60)
+        let label = CGRect(x: 140, y: 220, width: 170, height: 25)
+        document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [box(button, "Box 1", children: [piece(label, "Text 1")])])
+        #expect(document.layers.map(\.name) == ["Background", "Box 1"])
+        let group = try #require(document.layers.last)
+        #expect(group.isGroup)
+        #expect(group.children.map(\.name) == ["Picture", "Text 1"])
+        // The box's own body first, so the words stay ON it rather than under it.
+        #expect(group.children[0].frame == CGRect(x: 0, y: 0, width: 248, height: 60))
+        #expect(group.children[1].frame == CGRect(x: 40, y: 20, width: 170, height: 25))
+        #expect(group.localBounds == button)
+    }
+
+    @Test func movingTheBoxTakesItsContentsWithIt() throws {
+        var (document, id, _) = capture()
+        let button = CGRect(x: 100, y: 200, width: 248, height: 60)
+        let made = document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [box(button, "Box 1",
+                         children: [piece(CGRect(x: 140, y: 220, width: 170, height: 25), "Text 1")])])
+        let groupID = try #require(made.first)
+        document.updateLayer(id: groupID) { $0.frame.origin.x += 50 }
+        let group = try #require(document.layer(id: groupID))
+        // One move, both pieces: the label is stored against the group, so it
+        // never has to be moved separately and can never be left behind.
+        #expect(group.localBounds == button.offsetBy(dx: 50, dy: 0))
+        #expect(group.children[1].frame == CGRect(x: 40, y: 20, width: 170, height: 25))
+    }
+
+    @Test func aBoxReadAsAShapeStillHoldsWhatSatOnIt() throws {
+        var (document, id, _) = capture()
+        let button = CGRect(x: 10, y: 10, width: 200, height: 50)
+        document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [PhotonzDocument.SeparatedPiece(
+                frame: button,
+                content: .shape(fill: RGBA(r: 0, g: 0.5, b: 1), radii: CornerRadii(8),
+                                borderWidth: 0, borderColor: nil),
+                name: "Box 1", bodyName: "Fill",
+                children: [piece(CGRect(x: 40, y: 25, width: 100, height: 20), "Text 1")])])
+        let group = try #require(document.layers.last)
+        #expect(group.children.map(\.name) == ["Fill", "Text 1"])
+        guard case .annotation(let shape) = group.children[0].content else {
+            Issue.record("the shape inside the group is not a shape any more")
+            return
+        }
+        #expect(shape.cornerRadii == CornerRadii(8))
+    }
+
+    @Test func nestingGoesAsDeepAsTheScreenDoes() throws {
+        var (document, id, _) = capture()
+        let card = CGRect(x: 20, y: 20, width: 300, height: 200)
+        let row = CGRect(x: 40, y: 60, width: 260, height: 50)
+        let label = CGRect(x: 60, y: 75, width: 120, height: 20)
+        document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [box(card, "Box 1",
+                         children: [box(row, "Box 2", children: [piece(label, "Text 1")])])])
+        let group = try #require(document.layers.last)
+        let inner = try #require(group.children.last)
+        #expect(inner.name == "Box 2")
+        #expect(inner.children.map(\.name) == ["Picture", "Text 1"])
+        // Three deep, and every frame is against the thing that holds it.
+        #expect(inner.frame == CGRect(x: 20, y: 40, width: 0, height: 0))
+        #expect(inner.children[1].frame == CGRect(x: 20, y: 15, width: 120, height: 20))
+        #expect(group.localBounds == card)
+    }
+
+    @Test func aPieceWithNoParentStaysAtTheTop() {
+        var (document, id, _) = capture()
+        document.separateIntoLayers(
+            id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+            pieces: [piece(CGRect(x: 10, y: 10, width: 80, height: 20), "Text 1"),
+                     box(CGRect(x: 100, y: 200, width: 200, height: 50), "Box 1",
+                         children: [piece(CGRect(x: 120, y: 215, width: 100, height: 20), "Text 2")])])
+        // The heading is nobody's child, so it is a row of its own rather than
+        // being pushed into a group that does not fit it.
+        #expect(document.layers.map(\.name) == ["Background", "Text 1", "Box 1"])
+        #expect(document.layers[1].isGroup == false)
+    }
+
+    @Test func aWholeTreeIsStillOneUndoStep() {
+        let (document, id, _) = capture()
+        var history = History(document: document)
+        history.perform {
+            $0.separateIntoLayers(
+                id: id, patched: ImageRef(pixelSize: CGSize(width: 400, height: 300)),
+                pieces: (1...4).map { n in
+                    self.box(CGRect(x: 10, y: 60 * n, width: 200, height: 50), "Box \(n)",
+                             children: [self.piece(CGRect(x: 20, y: 60 * n + 15, width: 100, height: 20),
+                                                   "Text \(n)")])
+                })
+        }
+        #expect(history.current.layers.count == 5)
+        history.undo()
+        #expect(history.current.layers.count == 1)
+        #expect(history.current.layers[0].name == "Background")
+    }
 }

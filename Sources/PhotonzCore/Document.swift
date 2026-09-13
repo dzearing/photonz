@@ -766,15 +766,37 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         public let frame: CGRect
         public let content: Content
         public let name: String
+        /// What the piece's OWN body is called once it has had to become a
+        /// group to hold what sat on it — "Fill" under a box that came out as
+        /// a real rectangle, "Picture" under one that came out as pixels. The
+        /// number stays on the group, so the list reads `Box 1 ▸ Fill, Text 9`
+        /// rather than saying Box 1 twice. Unused by a piece that holds
+        /// nothing.
+        public let bodyName: String
+        /// What sat ON this piece: the label on a button, the row on a card.
+        /// Each one's frame is in the SAME space as this piece's, and is
+        /// rewritten against it when the group is built, so a caller never has
+        /// to think in two coordinate spaces at once.
+        public let children: [SeparatedPiece]
 
-        public init(frame: CGRect, content: Content, name: String) {
+        public init(frame: CGRect, content: Content, name: String,
+                    bodyName: String = "Picture", children: [SeparatedPiece] = []) {
             self.frame = frame
             self.content = content
             self.name = name
+            self.bodyName = bodyName
+            self.children = children
         }
 
-        public init(frame: CGRect, ref: ImageRef, name: String) {
-            self.init(frame: frame, content: .picture(ref), name: name)
+        public init(frame: CGRect, ref: ImageRef, name: String,
+                    bodyName: String = "Picture", children: [SeparatedPiece] = []) {
+            self.init(frame: frame, content: .picture(ref), name: name,
+                      bodyName: bodyName, children: children)
+        }
+
+        /// This piece and everything inside it.
+        public var selfAndDescendants: [SeparatedPiece] {
+            [self] + children.flatMap(\.selfAndDescendants)
         }
     }
 
@@ -790,16 +812,23 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// with every layer this made. The same reason Rasterize Layer is allowed
     /// to bake. See `docs/design/separate-into-layers.md`.
     ///
-    /// Does nothing to a layer that is not a picture. Returns the new layers'
-    /// ids in stacking order, bottom-most first.
+    /// A piece that HOLDS something — a button with its label on it, a card
+    /// with a row on it — comes out as a group: its own body at the bottom of
+    /// it, what sat on it stacked above, and the group's name on the group. So
+    /// picking the button up picks its label up too, which is the whole reason
+    /// for taking the screenshot apart. A piece that holds nothing is one
+    /// layer, exactly as before.
+    ///
+    /// Does nothing to a layer that is not a picture. Returns the TOP LEVEL
+    /// layers' ids in stacking order, bottom-most first.
     @discardableResult
     public mutating func separateIntoLayers(id: UUID, patched: ImageRef,
                                             pieces: [SeparatedPiece]) -> [UUID] {
         guard let source = layer(id: id), source.imageRef != nil else { return [] }
-        let made = pieces.map { piece -> Layer in
+        func body(_ piece: SeparatedPiece, named name: String) -> Layer {
             switch piece.content {
             case .picture(let ref):
-                return Layer(name: piece.name, content: .image(ref), frame: piece.frame)
+                return Layer(name: name, content: .image(ref), frame: piece.frame)
             case .shape(let fill, let radii, let borderWidth, let borderColor):
                 var annotation = AnnotationContent(
                     shape: .rectangle, start: .zero,
@@ -811,10 +840,28 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                 // draw, so the inspector has something honest to show if
                 // somebody turns one on: its own fill.
                 annotation.colorHex = (borderColor ?? fill).hexString
-                return Layer(name: piece.name, content: .annotation(annotation),
+                return Layer(name: name, content: .annotation(annotation),
                              frame: piece.frame)
             }
         }
+        /// One piece as a layer, in the space its own frame was given in.
+        func build(_ piece: SeparatedPiece) -> Layer {
+            guard !piece.children.isEmpty else { return body(piece, named: piece.name) }
+            // Everything inside a group is stored against the group's corner,
+            // so one move carries the lot and nothing has to be kept in step.
+            let origin = piece.frame.origin
+            func against(_ layer: Layer) -> Layer {
+                var moved = layer
+                moved.frame = layer.frame.offsetBy(dx: -origin.x, dy: -origin.y)
+                return moved
+            }
+            let inside = [against(body(piece, named: piece.bodyName))]
+                + piece.children.map { against(build($0)) }
+            return Layer(name: piece.name,
+                         content: .group(GroupContent(children: inside)),
+                         frame: CGRect(origin: origin, size: .zero))
+        }
+        let made = pieces.map(build)
         withSiblings(of: id) { siblings, index in
             siblings[index].content = .image(patched)
             siblings.insert(contentsOf: made, at: index + 1)

@@ -147,13 +147,30 @@
       "seconds": 1
     },
     {
+      "do": "scrollPanel",
+      "row": "Text 1",
+      "by": -400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
       "do": "expect",
       "row": "Text 8",
       "present": true
     },
     {
-      "do": "selectRow",
-      "row": "Text 8"
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        137,
+        786
+      ],
+      "count": 2
     },
     {
       "do": "wait",
@@ -181,7 +198,7 @@
     {
       "do": "describe",
       "stage": "3-dragged",
-      "note": "THE THIRD TEST: Text 8 is the word Reset, dragged off its button and down onto the empty page. Its button must still read as a solid rounded grey button with nothing missing out of it, and what moved must be the letters rather than a grey tile of button"
+      "note": "THE THIRD TEST: Text 8 is the word Reset. A double click goes INSIDE the button to pick the word rather than the whole thing, and it has been dragged off its button and down onto the empty page. Its button must still read as a solid rounded grey button with nothing missing where the word was"
     },
     {
       "do": "snapshot",
@@ -226,5 +243,10 @@
       "do": "snapshot",
       "name": "separate-5-twice"
     }
-  ]
+  ],
+  "setup": {
+    "forget": [
+      "groups"
+    ]
+  }
 }

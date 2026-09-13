@@ -18,7 +18,9 @@ real words) extend the three seams described at the end.
 Exactly **two things**, never three:
 
 1. Each piece on its own layer — the boxes down the page first, then the runs of
-   text in reading order — stacked directly above the picture it came from.
+   text in reading order — stacked directly above the picture it came from, and
+   ARRANGED the way the screen was: a label that sat in a button comes out
+   inside that button.
 2. The picture itself, with the space each piece came from filled in.
 
 The stacking order is not a preference. A label sits ON the button it came off,
@@ -44,10 +46,8 @@ It is behind `next-separate-into-layers`, on by default in Next.
 ## The three rules the user set
 
 1. **No holes.** Taking a piece out and moving it must never reveal a gap.
-2. **Hierarchy.** Text inside a box comes out as a child of that box. *(Not yet.
-   The box and its label come out as two layers side by side, so dragging a card
-   leaves its labels where they were. The seam for fixing it is below, and it is
-   the next task in the set.)*
+2. **Hierarchy.** Text inside a box comes out as a child of that box. Dragging
+   the button carries its label. See *Which piece sits in which* below.
 3. **Ignore what you cannot read.** A part the app cannot interpret is left in
    the background picture, untouched and unmentioned in the layer tree. Guessing
    badly is worse than skipping.
@@ -324,6 +324,75 @@ does not know it is a button, so it says the thing it knows. When the later
 slice reads the actual characters, the name becomes the words, and nothing else
 about this changes.
 
+## Which piece sits in which
+
+A pile is not what the screen looked like. A label that sits in a button is part
+of that button, and the whole point of taking a screenshot apart is to be able to
+pick the button up and have its label come with it.
+
+`PhotonzCore/LayerNesting.swift`, and the rule is one sentence: **a piece belongs
+to the smallest thing that holds it.**
+
+- **Holds** means nine tenths of the piece's own area is inside the candidate,
+  not all of it. The cut is deliberately generous — a run of text is grown by a
+  halo before it is taken — so a label that filled its button edge to edge comes
+  back a pixel or two proud of it, and a rule that demanded every pixel would
+  orphan it by arithmetic rather than by anything a person can see.
+- **Smallest** settles the piece that could go in two places: a label inside a
+  row inside a card goes in the row. Nine tenths is far enough from a half that a
+  piece straddling the seam between two cards is refused by both, so a piece is
+  in exactly one place or in none — never in two.
+- A candidate has to be strictly bigger than the piece, so two readings of the
+  same rectangle can never swallow each other and the tree can never loop.
+- **A piece that belongs to nothing stays at the top.** The heading on a settings
+  pane is nobody's child and is not pushed into a group that does not fit it.
+- Nothing in it stops at two levels. Where the screen is three deep the tree is
+  three deep, and the rule takes rectangles rather than pieces, so whatever a
+  later slice finds nests the same way.
+
+This is the same judgement the measure tool already makes from the other end.
+`ElementBounds.captionHeightRatio` says words centred in a rung not much taller
+than they are belong to that rung rather than being an element of their own,
+which is how pointing at a button's label means the button. Both questions get
+the same answer: the label is the button's.
+
+### What it looks like in the list
+
+A box that holds something becomes a group, because only a group holds layers.
+The group keeps the box's name and the box's own body goes inside it, named for
+what it is:
+
+```
+▾ Box 2        the whole button: one click on the canvas picks this
+    Text 9     the words that were sitting on it
+    Fill       the button itself, a real rounded rectangle
+```
+
+`Fill` for a box that came out as a real shape, `Picture` for one that came out
+as pixels. The number stays on the group so the list never says Box 2 twice and
+leaves you to work out which one is the button. When the later slice reads the
+actual characters the group's name becomes the words, and nothing else here
+changes.
+
+Every group the command makes is left OPEN. It has just invented these layers
+and the pill says how many came out, so a list that hides most of them behind a
+twist reads as having lost them; one click closes any of them.
+
+Nesting happens where groups exist — that is, when `next-layer-groups` is on,
+which it is by default in Next. With it off the layers panel draws no twist at
+all, so a group's children would be in the document and out of every reach a
+person has, and the command hands back the flat pile instead.
+
+### What is NOT nested yet
+
+`BoxSweep` takes ONE level of boxes: the things sitting on the picture's own
+background. A box can therefore never contain another box today, so the deepest
+tree a real capture produces is a box holding its words. Card ▸ row ▸ label needs
+the sweep to descend INSIDE an accepted box — its own fill becomes the local
+background and what interrupts THAT becomes its children — and needs a child's
+space patched out of its parent's pixels rather than the page's. That is its own
+slice. The rule above already carries it the day the detector does.
+
 ## The seams the later slices use
 
 The three pieces this slice owes the rest of the set, designed so a detector and
@@ -338,8 +407,10 @@ a nesting pass can be added without reopening any of it:
 - **The builder takes a list.** `PhotonzDocument.separateIntoLayers(id:patched:
   pieces:)` swaps the source layer's bitmap and inserts N pieces above it in one
   mutation, therefore in one undo step, however many pieces there are. The
-  hierarchy slice changes what that list looks like (a piece gains children); it
-  does not change when the mutation happens or how undo sees it.
+  hierarchy slice took that seam: a piece now carries `children`, and a piece
+  that has any becomes a group in the same single mutation. When the mutation
+  happens and how undo sees it did not change, and the whole tree is still one
+  press of Command Z.
 
 Shadows are not modelled at all yet, and on the fixture that is exactly what
 stops the two cards coming out. Both are found — they are two of the four things

@@ -1,0 +1,215 @@
+{
+  "out": "/tmp/photonz-playtest/separate-hierarchy",
+  "seed": "Text inside a box comes out INSIDE that box. The walk opens a settings pane capture, runs Separate into Layers on the Background picture, shows that the two buttons arrived as openable rows with their own labels inside them and that the seven pieces belonging to nothing stayed at the top, then drags one button clear of the page to prove its words travel with it, and takes the whole tree back with one Command Z.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-before",
+      "note": "the capture as it opens: one locked Background picture and nothing else. The two buttons at the bottom, Reset and Save Changes, each wear a label, and this walk is about where those labels end up"
+    },
+    {
+      "do": "snapshot",
+      "name": "hierarchy-1-before"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-list-reads-like-the-screen",
+      "note": "THE FIRST TEST: the layers list is a tree and not a pile. Box 1 and Box 2 are the two buttons and each one OPENS: inside is the button itself and the words that were sitting on it. The heading and the six row labels belong to nothing, so they stayed at the top level rather than being pushed into a group that does not fit them"
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text 1",
+      "by": -400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "row": "Box 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Box 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Text 9",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Text 1",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "hierarchy-2-layers"
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Fill",
+      "by": 120
+    },
+    {
+      "do": "describe",
+      "stage": "1b-inside-the-box",
+      "note": "The same list scrolled to the two buttons: Box 1 and Box 2 each open onto the button itself and the words that were sitting on it, indented under it. Everything that belongs to nothing is a row of its own above them"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "hierarchy-3-inside-the-box"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        357,
+        765
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-click-picks-the-whole-button",
+      "note": "THE SECOND TEST: clicking the blue button on the canvas picks the WHOLE button, label and all, not the strip of blue the pointer happened to land on. The outline goes round the button, and the layers list highlights Box 2"
+    },
+    {
+      "do": "snapshot",
+      "name": "hierarchy-4-picked"
+    },
+    {
+      "do": "drag",
+      "from": [
+        357,
+        765
+      ],
+      "to": [
+        760,
+        880
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-words-travel-with-it",
+      "note": "THE THIRD TEST, and the one the whole task turns on: the blue button has been dragged clear of where it was, grabbed by the strip above its words, and the words Save Changes came WITH it. Where it came from there is plain page with no hole and no words left stranded on it"
+    },
+    {
+      "do": "snapshot",
+      "name": "hierarchy-5-dragged"
+    },
+    {
+      "do": "render",
+      "name": "hierarchy-5-dragged-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-press-takes-the-whole-tree-back",
+      "note": "THE FOURTH TEST: one press takes back the drag and one more takes back the whole separation, every group and every layer inside it together, leaving the screenshot exactly as it opened"
+    },
+    {
+      "do": "expect",
+      "row": "Box 1",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "row": "Text 9",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "row": "Background",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "hierarchy-6-undone"
+    },
+    {
+      "do": "render",
+      "name": "hierarchy-6-undone-doc"
+    }
+  ],
+  "setup": {
+    "forget": [
+      "groups",
+      "panel"
+    ]
+  }
+}

@@ -267,6 +267,51 @@ struct SeparateIntoLayersFixtureTests {
         #expect(boxes.contains { $0.rect == CGRect(x: 64, y: 756, width: 145, height: 60) })
     }
 
+    // MARK: - Text inside a box comes out inside that box
+
+    @Test func eachButtonsLabelComesOutInsideThatButton() throws {
+        let result = try #require(Self.whole)
+        let tree = result.nested
+        func describe(_ nodes: [LayerNesting.Node], _ indent: String) -> [String] {
+            nodes.flatMap { node -> [String] in
+                let piece = result.pieces[node.index]
+                let kind = piece.kind == .text ? "text" : "box"
+                return ["\(indent)\(kind) \(Int(piece.rect.width))x\(Int(piece.rect.height))"
+                    + " at (\(Int(piece.rect.minX)),\(Int(piece.rect.minY)))"]
+                    + describe(node.children, indent + "  ")
+            }
+        }
+        print("TREE\n" + describe(tree, "").joined(separator: "\n"))
+
+        // Eleven pieces came out of this capture and nine of them are nobody's
+        // child: the heading and the six row labels, plus the two buttons. The
+        // two buttons' labels are inside their buttons.
+        #expect(tree.count == 9)
+        let holders = tree.filter { !$0.children.isEmpty }
+        #expect(holders.count == 2)
+        for holder in holders {
+            #expect(result.pieces[holder.index].kind == .box)
+            #expect(holder.children.count == 1)
+            let label = result.pieces[holder.children[0].index]
+            #expect(label.kind == .text)
+            // The label really does sit in the button it was put in.
+            #expect(result.pieces[holder.index].rect.intersects(label.rect))
+        }
+        // The Save Changes label under the blue button, not beside it.
+        let blue = try #require(tree.first { result.pieces[$0.index].rect.minX == 233 })
+        #expect(Int(result.pieces[blue.children[0].index].rect.minX) == 270)
+    }
+
+    @Test func everyPieceIsInExactlyOnePlace() throws {
+        let result = try #require(Self.whole)
+        func indices(_ nodes: [LayerNesting.Node]) -> [Int] {
+            nodes.flatMap { [$0.index] + indices($0.children) }
+        }
+        let all = indices(result.nested)
+        #expect(all.sorted() == Array(result.pieces.indices))
+        #expect(Set(all).count == all.count)
+    }
+
     @Test func aCardWithAShadowUnderItIsLeftInThePicture() throws {
         let result = try #require(Self.whole)
         // Rule three, on the capture. Both cards are found — they are two of

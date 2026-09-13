@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.481Z",
-  "updated": "2026-09-13T05:24:49.948Z",
+  "updated": "2026-09-13T08:16:07.044Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can",
     "separate-the-boxes-too-and-fill-the-hole-underne"
@@ -47,6 +47,27 @@
     {
       "t": "2026-09-13T05:24:49.947Z",
       "note": "seq 42 -> 8"
+    },
+    {
+      "t": "2026-09-13T08:16:07.043Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T08:18:35.690535Z",
+      "note": "ADVERSARIAL REVIEW, before building. (1) Wrapping a box in a group ADDS a row per box, but the list gets SHORTER because a group collapses: the fixture's 11 flat rows become 9, two of them openable. Keep. (2) Canvas selection already does the right thing: CanvasGroups picks the outermost thing you are not inside, so clicking the blue button picks the group and dragging carries the label. That is acceptance 1 and it needs no new gesture - but it is gated on next-layer-groups, and with that flag OFF the layers panel draws no twist and a group's children are unreachable. So nesting is gated on the same flag: groups off means the flat pile you had before, which is at least coherent. (3) The mock/notes assume the ladder is already there. It is not: BoxSweep returns ONE level of non-overlapping islands, so a box can never contain a box today and the deepest real tree is box > text. The nesting rule itself is depth-unlimited and tested three deep; getting three deep on a REAL capture needs nested-box detection, which is its own slice (descend inside an accepted box, cut a child out of its parent's pixels, patch the parent's own hole). Filed rather than smuggled in here. (4) Cut as decorative: no group is made for a box that holds nothing, and no 'Group' wrapper appears anywhere a person did not separate something."
+    },
+    {
+      "t": "2026-09-13T08:29:01.470932Z",
+      "note": "SHIPPED. LayerNesting (PhotonzCore, pure, 13 tests written first) is the rule: a piece belongs to the smallest thing that holds nine tenths of it, depth-unlimited. SeparatedPiece gained children and separateIntoLayers builds groups in the SAME mutation, so the whole tree is one undo step. The group keeps the box name, its body goes inside as Fill or Picture. Gated on next-layer-groups too. On the settings-pane fixture: 11 pieces, 9 top level rows, both buttons holding their labels, verified in the real app by Scripts/playtest/separate-hierarchy-walk.json with Screen Recording granted. 6028 tests green."
+    },
+    {
+      "t": "2026-09-13T08:29:01.470932Z",
+      "note": "ADVERSARIAL REVIEW, on the built thing. One click on the canvas picks the whole button and the drag carries the words: confirmed in the capture, no hole and nothing stranded. Getting at the label alone now needs a double click to go inside, which is the app-wide group gesture, so the text walk was rewritten to do that rather than pretending it still works the old way. Clumsy and NOT fixed: dragging a child clear of its parent leaves it a child and stretches the group's dashed box across the canvas. That is how every group in the app already behaves, so it was left alone and put in the audit as a question rather than changed here for one feature."
+    },
+    {
+      "t": "2026-09-13T08:29:01.470932Z",
+      "note": "ACCEPTANCE ITEM 2 IS HALF MET AND SAID SO. The rule goes as deep as the screen and is tested three deep, but no REAL capture produces three deep: BoxSweep takes one level, so a box can never hold a box and the deepest real tree is box > text. Cutting a child out of its parent's pixels and patching the parent's own hole is a slice of its own, filed as separate-the-rows-inside-a-card-not-just-the-car (p2) with the reproduction and the reasoning. Not smuggled in here: it also changes what a settings pane separates into (three switches and two fields appear), which is the user's call and is asked in the audit."
     }
-  ]
+  ],
+  "started": "2026-09-13T08:16:07.042Z"
 }

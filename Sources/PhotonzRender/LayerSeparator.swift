@@ -71,6 +71,16 @@ public enum LayerSeparator {
             self.patched = patched
         }
 
+        /// The pieces arranged the way the screen was: a label that sits in a
+        /// button is a child of that button, a row inside a card sits under the
+        /// card, and a piece that belongs to nothing stays at the top. Indices
+        /// into `pieces`, outermost first, in the same order.
+        ///
+        /// The rule is `LayerNesting` and it is pure: this is only where the
+        /// pieces meet it, so the tree a test reads off a real capture is the
+        /// same tree the app builds layers from.
+        public var nested: [LayerNesting.Node] { LayerNesting.nest(pieces.map(\.rect)) }
+
         /// Just the runs of text.
         public var runs: [Piece] { pieces.filter { $0.kind == .text } }
         /// Just the boxes.

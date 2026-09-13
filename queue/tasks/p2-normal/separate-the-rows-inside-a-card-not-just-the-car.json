@@ -1,0 +1,29 @@
+{
+  "id": "separate-the-rows-inside-a-card-not-just-the-car",
+  "title": "Separate the rows inside a card, not just the card",
+  "goal": "When you separate a screenshot, something that sits inside a card gets a layer of its own too, tucked under the card. Today a card comes out as one flat picture with its rows and switches baked into it, so you can move the card but you cannot move a row inside it. After this, a row inside a card inside a screen comes out three deep and each part can be picked up on its own.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2670,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T08:27:18.923Z",
+  "updated": "2026-09-13T08:27:18.926Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from the hierarchy slice (text-inside-a-box-comes-out-inside-that-box, landed 2026-09-13). The nesting RULE is done and depth-unlimited: PhotonzCore/LayerNesting.swift nests by containment, tested three deep. What is missing is detection. BoxSweep.sweep takes ONE level: islands are connected components of everything that is not the page backdrop, so a button sitting on a card is part of the card island and can never be a box of its own. The design doc says so deliberately (BoxSweep.swift:13, docs/design/separate-into-layers.md, The boxes, rule 4) because without hierarchy a deep tree was a pile nobody wanted. With hierarchy that reason is gone: a card that collapses to one row in the layers list is SHORTER than the flat list, not longer.\n\nThe machinery to descend already exists in the file. BoxSweep already grows the backdrop by an island dominant colour when the island fills the picture (maxDescents, dominantRegion); doing the same INSIDE an accepted box gives its children. Two things are genuinely new: (1) a child box must be cut out of its PARENT pixels and the parent own hole patched, not the page one, since LayerSeparator.cutBox today keeps every island pixel including the child; (2) a child whose parent was skipped must be skipped too, or the fixture switches would come out of cards that stayed in the picture. Keeping that rule is what should keep the fixture at 2 boxes and 9 runs.\n\nThis is a scope question as much as a code one: on a settings pane it turns 2 boxes into 2 boxes plus three switches and two fields nested under two cards. Worth asking the user in the audit before going wide.",
+  "acceptance": [
+    "A drawn capture of a card with a row on it and a label on the row comes out three layers deep, with each piece nested under the one that holds it",
+    "Moving the card still carries everything inside it, and moving a row inside it carries only that row and what is on it",
+    "Taking a row out of a card fills the space it left with the card own colour, so the card has no hole in it",
+    "Nothing that stays in the picture gets a layer: if a card is left behind, what was sitting on it is left behind too",
+    "The settings pane fixture still comes out with the same two buttons and nine runs of text it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T08:27:18.925Z",
+      "note": "created (manual)"
+    }
+  ]
+}

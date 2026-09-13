@@ -28,6 +28,13 @@ extension EditorState {
     /// not know it is a button, so it says the thing it knows.
     static let separatedBoxName = "Box"
 
+    /// What a box's own body is called once it has had to become a group to
+    /// hold the words that were sitting on it. The number stays on the group,
+    /// so the list reads `Box 2 \u{25B8} Fill, Text 9` rather than saying Box 2
+    /// twice and leaving you to work out which one is the button.
+    static let separatedShapeBodyName = "Fill"
+    static let separatedPictureBodyName = "Picture"
+
     /// Whether Separate into Layers applies to this layer (menu enablement).
     ///
     /// A picture, drawn the way its box says it is. A cropped or turned picture
@@ -100,7 +107,8 @@ extension EditorState {
 
         let patched = store.register(result.background)
         var runs = 0, boxes = 0
-        let pieces = result.pieces.map { piece -> PhotonzDocument.SeparatedPiece in
+        var bodyNames: [String] = []
+        let flat = result.pieces.map { piece -> PhotonzDocument.SeparatedPiece in
             let placed = CGRect(x: frame.minX + piece.rect.minX * sx,
                                 y: frame.minY + piece.rect.minY * sy,
                                 width: piece.rect.width * sx,
@@ -116,9 +124,11 @@ extension EditorState {
             }
             switch piece.body {
             case .picture(let image):
+                bodyNames.append(Self.separatedPictureBodyName)
                 return PhotonzDocument.SeparatedPiece(frame: placed,
                                                       ref: store.register(image), name: name)
             case .shape(let shape):
+                bodyNames.append(Self.separatedShapeBodyName)
                 // The shape was read in image pixels; the layer lives in the
                 // picture's own space, so its rounding and its edge travel with
                 // it. A picture shown at half size gets half the radius, which
@@ -139,10 +149,45 @@ extension EditorState {
             }
         }
 
+        // Arranged the way the screen was. A label that sits in a button is a
+        // CHILD of that button, so picking the button up picks the label up
+        // too, and the layers list reads like the screen rather than like a
+        // pile. `LayerNesting` is the whole rule and it knows nothing about
+        // what a piece is: it takes rectangles and hands back a tree.
+        //
+        // Only where groups exist. With `next-layer-groups` off the layers
+        // panel draws no twist at all, so a group's children would be in the
+        // document and out of every reach a person has; the flat pile is at
+        // least a pile they can use.
+        let pieces: [PhotonzDocument.SeparatedPiece]
+        if Experiments.shared.layerGroupsEnabled {
+            func assemble(_ node: LayerNesting.Node) -> PhotonzDocument.SeparatedPiece {
+                let piece = flat[node.index]
+                guard !node.children.isEmpty else { return piece }
+                return PhotonzDocument.SeparatedPiece(
+                    frame: piece.frame, content: piece.content, name: piece.name,
+                    bodyName: bodyNames[node.index],
+                    children: node.children.map(assemble))
+            }
+            pieces = result.nested.map(assemble)
+        } else {
+            pieces = flat
+        }
+
         discardDragPreview()
         var made: [UUID] = []
         perform { made = $0.separateIntoLayers(id: id, patched: patched, pieces: pieces) }
         guard !made.isEmpty else { return }
+        // Every group this made is left OPEN. The command has just invented
+        // these layers and the pill says how many came out, so a list that
+        // hides most of them behind a twist reads as having lost them. One
+        // click closes any of them, and closing the box you are done with is
+        // how the list gets short.
+        if let document = self.document {
+            let groups = made.compactMap { document.layer(id: $0) }
+                .flatMap(\.selfAndDescendants).filter(\.isGroup).map(\.id)
+            if !groups.isEmpty { expandedGroupIDs.formUnion(groups) }
+        }
         // The FIRST piece down the page is left picked: one outline on the
         // canvas, where reading starts, so something visible says a piece is
         // now a thing of its own — and the layers list scrolls to the new rows.
