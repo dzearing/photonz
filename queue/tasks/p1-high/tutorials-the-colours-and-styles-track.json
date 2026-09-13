@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 26,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:24.920Z",
-  "updated": "2026-09-13T04:44:12.795Z",
+  "updated": "2026-09-13T05:22:18.577Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -78,8 +78,13 @@
     {
       "t": "2026-09-13T05:22:07.531Z",
       "note": "Filed one follow-up: a guide pointing at the Library rings a shelf whose bottom row of tiles is cut off by the window edge, because the reveal holds out for the whole section and the Library is taller than the room under the sections above it. p2-normal, with the walk and the screenshot that shows it."
+    },
+    {
+      "t": "2026-09-13T05:22:18.575Z",
+      "note": "Four guides under Help > Tutorials > Colours and Styles, all data in the catalogue: save a colour as a style, change it everywhere, text styles, and the Library. One new sample carries the whole track. Walked on the probe, one walk per guide, all four green; 24 tutorial walks, 14 style walks and both naming colour walks pass, full suite green at 5931. Audit at queue/audits/2026-09-13-tutorials-colours-and-styles-track.json with four real captures. Also fixed the style name field asking for the keyboard one pass too early, in all four panels that share the shape."
     }
   ],
   "started": "2026-09-13T04:44:12.793Z",
-  "failures": 1
+  "failures": 1,
+  "completed": "2026-09-13T05:22:18.576Z"
 }
