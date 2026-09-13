@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p3-low",
   "seq": 10,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-06T13:01:53.423Z",
-  "updated": "2026-09-12T12:02:46.168Z",
+  "updated": "2026-09-13T13:03:49.493Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Rewritten 2026-09-08 after the original premise expired. The old notes said the padding slot returns nil when the sides disagree; that has not been true since 19b75988 (2026-09-06), which gave ComponentPropertyValue a .room(GroupPadding) case so the knob carries all four sides. Four separate side knobs are explicitly NOT wanted (Add menu bloat, 264pt panel). What is left is partial following: ComponentPropertyValue.room holds a whole GroupPadding, so setInstanceRoom reads the original's four sides, writes one and stores all four as the copy's answer. Doing this means the stored answer has to record WHICH sides were answered (an optional per side, or an answered-side set beside the room) and the resolve path in ComponentProperties has to merge answered sides over the original's rather than replacing. Panel work is in ComponentPanel.sides(of:): per-side ink and a per-side revert. Blocked on the decision room-on-one-side-can-be-a-knob-when-a-copy-of-a-component-is-gi. Was titled 'Room on one side can be a knob'.",
@@ -67,6 +67,10 @@
     {
       "t": "2026-09-12T12:02:46.167Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-13T13:03:49.492Z",
+      "note": "decision \"When a copy of a component is given more room on one side, should the other three sides keep following the original?\" resolved: Untouched sides keep following"
     }
   ],
   "started": "2026-09-08T18:36:36.855Z"

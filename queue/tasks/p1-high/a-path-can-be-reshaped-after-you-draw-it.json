@@ -1,0 +1,46 @@
+{
+  "id": "a-path-can-be-reshaped-after-you-draw-it",
+  "title": "A path can be reshaped after you draw it",
+  "goal": "A drawn path is rarely right first time. Let a finished path be reshaped: pick up a point and move it, pull its handles to change the curve, turn a corner into a smooth bend or back again, add a point in the middle of a segment, and take one out. Make one side of a point curved and the other straight, which is what most real icons need at least once.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 14,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T13:08:31.964Z",
+  "updated": "2026-09-13T13:08:43.552Z",
+  "deps": [
+    "a-shape-can-be-any-path-straight-edges-and-curve",
+    "the-pen-draws-a-path-corner-by-corner-and-curve"
+  ],
+  "blockedBy": [],
+  "notes": "Depends on the path model and the Pen.\n\nThe acceptance item that is real work rather than a checkbox: inserting a point on a CURVED segment must not change the shape of that curve. Splitting a bezier at a parameter has an exact answer (de Casteljau), and doing it approximately is immediately visible as the outline twitching when you add a point. Test it by comparing the rendered path before and after an insert, not by eye.\n\nThe half-smooth point (one side curved, one side straight) is the case that decides whether the model from the foundation slice was right. If it cannot express that, stop and fix the model rather than special casing it here, and say so in the log.\n\nWatch the handle-hit problem at high zoom: anchors, handles and the shape itself all compete for the same pixels, and this app already has a family of canvas handles with a settled look (Handles.swift, CornerRadiusHandles.swift). Use that family rather than inventing a fourth kind of dot.\n\n---\nSHARED CONTEXT for the pen and path set (asked for by the user on 2026-09-13).\n\nThe user's words: \"I want the ability to draw more complex shapes than a rect - specifically polygons that can do both hard edges and bezier curves in a natural way. This will help us build ellaborate svg icons for example.\"\n\nRead \"in a natural way\" as the hard requirement, because it is the part everyone gets wrong. A pen tool is easy to implement and easy to make horrible. The test is that somebody who has used the pen in Figma, Illustrator or Sketch can draw a shape with a straight edge and a curved edge without being taught anything, on their first try, and that somebody who has not used one can still get a triangle out of it. Drag distance, what the handles do while you are still placing a point, and how you finish a path are where that is won or lost.\n\nWHAT EXISTS TODAY. Very little, which is the honest starting position:\n- AnnotationShape (Sources/PhotonzCore/Layer.swift:17) is the whole shape vocabulary: arrow, rectangle, highlight, ellipse, line. There is no polygon, no path, and no bezier anything in PhotonzCore or PhotonzRender.\n- There is no SVG code anywhere in Sources. Getting paths OUT as SVG is a separate piece of work under the icon-export epic and is deliberately not in this set.\n- The key P is already reserved for this. The task 'the-redline-arrow-tool-takes-p-the-key-the-pen-t' is done, and its goal says out loud: \"In every other screen of the app, P selects the vector Pen.\" So the Pen gets P, and the Arrow already moved off it.\n\nTHE MOCKS ALREADY SPEC THIS. Read them before designing anything, and treat them as proposals rather than gospel (CLAUDE.md):\n- docs/design/mocks/pages/vector-wt.html is the vector walkthrough. Its vocabulary is anchor, path, handle, bezier, and the tasks below use those words on purpose so the app, the mocks and the code agree.\n- docs/design/mocks/pages/icon-draw-wt.html is drawing an icon.\n- docs/design/mocks/pages/draw-boolean.html covers boolean operations, which are NOT in this set; they are the next thing under icon-vector once a path exists.\n- docs/design/mocks/shared/UX-PATTERNS.md:1276 onwards fixes where the Pen sits in each tool strip, and :1081 says a page showing vector drawing must show the Pen selected.\n\nHOW IT HAS TO FIT THE APP, so a path is a first-class layer and not a special case:\n- A path is CONTENT, a new case alongside image, text, annotation and group, not a sixth AnnotationShape. Annotations are two-point marks built from a start and an end (see AnnotationContent); a path has an arbitrary number of anchors and cannot be squeezed into that without breaking everything that assumes two endpoints.\n- It paints through the model the whole app already uses: Appearance holds what it HAS (its fill, its outline, its opacity) and Effects is the list you add to (docs/design/shape-parts.md). A path arrives with a fill and an outline like any other shape, takes a saved colour or a gradient like any other shape, and needs no new colour machinery.\n- PhotonzCore stays pure: CoreGraphics types only, no CoreImage, no AppKit, everything Sendable, value-typed, Codable, no force unwraps. The path model and every geometry decision belong there and get tested there; only the rasterizer touches CoreGraphics drawing.\n- All mutation goes through History.perform, so every anchor added, moved or deleted is undoable.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it. Design doc: docs/design/vector-paths.md is the source of truth, written by the foundation task.",
+  "acceptance": [
+    "Selecting a path shows its anchors, and dragging one moves it with the curves either side following",
+    "A smooth point shows its handles and dragging one changes the curve; the far handle follows to keep the bend smooth",
+    "A point can be converted from corner to smooth and back, by a gesture that is discoverable without reading anything",
+    "The two sides of a point can be broken apart so one side is curved and the other straight, and joined again",
+    "A point can be added on a segment where you click it, and removed with the curve closing sensibly over the gap",
+    "Several anchors can be selected at once and moved together, with the arrow keys nudging them like any other selection",
+    "Every one of these is a single undo step and every one survives save and load",
+    "Anchors and handles are easy to hit at every zoom, and they never cover the shape so completely that you cannot see what you are editing",
+    "Tests in PhotonzCore for convert, break, join, insert and delete, including inserting on a curved segment without changing its shape, written before the implementation",
+    "A playtest walk reshapes a drawn path and checks the anchors afterwards",
+    "Audit under queue/audits/ with each operation captured before and after, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T13:08:31.966Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-13T13:08:32.026Z",
+      "note": "seq 270 -> 14"
+    },
+    {
+      "t": "2026-09-13T13:08:43.552Z",
+      "note": "deps set: the path model comes first"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "the-pen-draws-a-path-corner-by-corner-and-curve",
+  "title": "The Pen draws a path, corner by corner and curve by curve",
+  "goal": "Pick up the Pen and draw. Click to drop a corner, or press and drag to pull a curve out of the point you are placing, the way every vector tool works. Keep going and you see the shape as it will be before you commit each point. Close it by clicking where you started, or finish an open path and get on with the next thing. Someone who has drawn with a pen elsewhere should not have to be told any of this.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 13,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T13:08:31.831Z",
+  "updated": "2026-09-13T13:08:43.550Z",
+  "deps": [
+    "a-shape-can-be-any-path-straight-edges-and-curve"
+  ],
+  "blockedBy": [],
+  "notes": "Depends on the path model.\n\nThis slice is where \"in a natural way\" is actually decided, so spend the time on the feel rather than on the feature list. The three things that make a pen feel right or wrong: how far the pointer must travel before a click becomes a drag (too small and every click makes an accidental curve), whether the preview segment tracks the pointer continuously or only updates on press, and whether finishing is obvious. Get those three wrong and every other box on this list can be ticked while the tool is unusable.\n\nDo not add point editing here. Moving, converting and deleting anchors is the next slice; this one is about laying a path down. The exception is undo while drawing, which is in the list because a pen without it is punishing.\n\nRead docs/design/mocks/pages/vector-wt.html and icon-draw-wt.html first, and say in the audit where the mock was followed and where it was not.\n\n---\nSHARED CONTEXT for the pen and path set (asked for by the user on 2026-09-13).\n\nThe user's words: \"I want the ability to draw more complex shapes than a rect - specifically polygons that can do both hard edges and bezier curves in a natural way. This will help us build ellaborate svg icons for example.\"\n\nRead \"in a natural way\" as the hard requirement, because it is the part everyone gets wrong. A pen tool is easy to implement and easy to make horrible. The test is that somebody who has used the pen in Figma, Illustrator or Sketch can draw a shape with a straight edge and a curved edge without being taught anything, on their first try, and that somebody who has not used one can still get a triangle out of it. Drag distance, what the handles do while you are still placing a point, and how you finish a path are where that is won or lost.\n\nWHAT EXISTS TODAY. Very little, which is the honest starting position:\n- AnnotationShape (Sources/PhotonzCore/Layer.swift:17) is the whole shape vocabulary: arrow, rectangle, highlight, ellipse, line. There is no polygon, no path, and no bezier anything in PhotonzCore or PhotonzRender.\n- There is no SVG code anywhere in Sources. Getting paths OUT as SVG is a separate piece of work under the icon-export epic and is deliberately not in this set.\n- The key P is already reserved for this. The task 'the-redline-arrow-tool-takes-p-the-key-the-pen-t' is done, and its goal says out loud: \"In every other screen of the app, P selects the vector Pen.\" So the Pen gets P, and the Arrow already moved off it.\n\nTHE MOCKS ALREADY SPEC THIS. Read them before designing anything, and treat them as proposals rather than gospel (CLAUDE.md):\n- docs/design/mocks/pages/vector-wt.html is the vector walkthrough. Its vocabulary is anchor, path, handle, bezier, and the tasks below use those words on purpose so the app, the mocks and the code agree.\n- docs/design/mocks/pages/icon-draw-wt.html is drawing an icon.\n- docs/design/mocks/pages/draw-boolean.html covers boolean operations, which are NOT in this set; they are the next thing under icon-vector once a path exists.\n- docs/design/mocks/shared/UX-PATTERNS.md:1276 onwards fixes where the Pen sits in each tool strip, and :1081 says a page showing vector drawing must show the Pen selected.\n\nHOW IT HAS TO FIT THE APP, so a path is a first-class layer and not a special case:\n- A path is CONTENT, a new case alongside image, text, annotation and group, not a sixth AnnotationShape. Annotations are two-point marks built from a start and an end (see AnnotationContent); a path has an arbitrary number of anchors and cannot be squeezed into that without breaking everything that assumes two endpoints.\n- It paints through the model the whole app already uses: Appearance holds what it HAS (its fill, its outline, its opacity) and Effects is the list you add to (docs/design/shape-parts.md). A path arrives with a fill and an outline like any other shape, takes a saved colour or a gradient like any other shape, and needs no new colour machinery.\n- PhotonzCore stays pure: CoreGraphics types only, no CoreImage, no AppKit, everything Sendable, value-typed, Codable, no force unwraps. The path model and every geometry decision belong there and get tested there; only the rasterizer touches CoreGraphics drawing.\n- All mutation goes through History.perform, so every anchor added, moved or deleted is undoable.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it. Design doc: docs/design/vector-paths.md is the source of truth, written by the foundation task.",
+  "acceptance": [
+    "The Pen is on the tool bar and answers to P, the key already reserved for it",
+    "A click drops a corner point; a press and drag pulls handles out of the point being placed, and the curve follows the pointer while the button is down",
+    "The segment between the last placed point and the pointer is previewed continuously, so you see the curve you are about to commit before you commit it",
+    "Clicking the first point closes the path and the shape fills; Return or Escape finishes an open path, and the two are told apart clearly",
+    "The tool hands back the way every other tool does when the path is finished, with the new path selected",
+    "Holding Shift constrains the next point to the usual angles",
+    "Undo steps back one point at a time while drawing, rather than throwing the whole path away",
+    "Drawing a rounded rectangle, a triangle and a shape with one straight edge and one curve each takes no more presses than it would in Figma, counted and recorded in the audit",
+    "A first-time check with someone who has never used this pen: they get a closed triangle out without instruction, and what confused them is written down",
+    "A playtest walk draws a closed path with a corner and a curve and checks the resulting anchors",
+    "Audit under queue/audits/ with each drawing captured step by step, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T13:08:31.833Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-13T13:08:31.898Z",
+      "note": "seq 270 -> 13"
+    },
+    {
+      "t": "2026-09-13T13:08:43.550Z",
+      "note": "deps set: the path model comes first"
+    }
+  ]
+}

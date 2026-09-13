@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-04T22:08:56.188Z",
+  "updated": "2026-09-13T13:07:22.613Z",
   "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -199,8 +199,8 @@
     {
       "id": "icon-svg",
       "title": "Make Photonz the best platform for building icons and animated SVGs",
-      "note": "Icon work as a first-class discipline: drawn on a real grid with keylines, previewed at size, exported as clean SVG, and animated on the same timeline every other layer uses. The icon clickthroughs (Draw an icon on the grid, Paint an icon with a gradient) and the iconography reference define the bar.",
-      "stage": "later",
+      "note": "Icon work as a first-class discipline: drawn on a real grid with keylines, previewed at size, exported as clean SVG, and animated on the same timeline every other layer uses. The icon clickthroughs (Draw an icon on the grid, Paint an icon with a gradient) and the iconography reference define the bar. Moved to now on 2026-09-13: the user asked for a pen that draws polygons with hard edges and bezier curves, for building elaborate SVG icons.",
+      "stage": "now",
       "children": [
         {
           "id": "icon-grid",
@@ -213,7 +213,7 @@
           "id": "icon-vector",
           "title": "Vector tools tuned for icons: booleans, strokes, gradient paint",
           "note": "",
-          "stage": "later",
+          "stage": "now",
           "children": []
         },
         {

@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:45:27.408Z",
-  "updated": "2026-09-12T12:02:44.909Z",
+  "updated": "2026-09-13T13:03:40.969Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED on its decision card: this adds an answer to a visible control, driven by parity rather than by an ask, and the 2026-09-02 loupe rule says those get a card first.\n\nThe evidence, read on 2026-09-09: Sources/PhotonzCore/LayerPlacement.swift:232 stepsOutOfTheFlow returns true for the surface and for a piece told to stretch along the flow, and nothing else. isSurface is horizontal == .stretch && vertical == .stretch (line 156), and the surface is placed once at the end and drawn behind everything (Sources/PhotonzCore/GroupFlow.swift:356). So the machinery for a piece that is not in the line already exists and has exactly one member.\n\nIf the answer is yes, the build is most likely a second role next to the surface rather than a new system: Sources/PhotonzCore/SurfaceCommand.swift is the command shape to copy, Sources/Photonz/PlacementInspector.swift is where the control lives, and queue/audits/2026-09-08-surface-role.json records how the surface answer was landed and what it costs.\n\nThe workaround that exists today (wrap the card in a group that arranges nothing) is why this is p2 and not p1.",
@@ -41,6 +41,10 @@
     {
       "t": "2026-09-12T12:02:44.908Z",
       "note": "seq 100 -> 40"
+    },
+    {
+      "t": "2026-09-13T13:03:40.968Z",
+      "note": "decision \"Inside a row or a column that arranges itself, should one piece be able to step out of the line and be placed by hand?\" resolved: A piece can step out and float in front"
     }
   ]
 }
