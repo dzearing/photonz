@@ -1,0 +1,33 @@
+{
+  "id": "a-sweep-result-stops-wiping-what-a-person-wrote",
+  "title": "A sweep result stops wiping what a person wrote on its task",
+  "goal": "The standing task for failing walks is the only place anyone writes down what each failure actually means, and the next sweep deletes all of it. A manager pass spent a slot on 2026-09-13 working out that six of twelve failing walks already had their own task with their own diagnosis, wrote that into the task, and the sweep four hours later replaced the whole note with a fresh list. The task now tells a runner to fix 'the six walks named in the notes' and the notes name thirteen. Keep the machine's part of the note current and leave the human part alone.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T16:15:22.696Z",
+  "updated": "2026-09-13T16:15:57.940Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced from git history, 2026-09-13. queue/bin/sweep-report.mjs:47 does q.saveTask({ ...open, notes }) with a freshly built notes string, so the whole field is replaced.\n\nThe evidence is in the working tree: git diff queue/tasks/p2-normal/walks-that-fail-in-the-full-sweep.json shows the 07:45 note that began 'TRIAGED 2026-09-13 07:45 by the manager pass' and named which task owns each of six walks being replaced wholesale by the 16:12Z sweep's list.\n\nThe log entries appendLog writes survive, so the history is not lost, but nobody reads a log of thirty lines to find a triage; the notes are what a runner reads.\n\nSimplest shape that works: put the machine's block between two markers and only ever replace what is between them. Whatever the shape, the acceptance above is the bar.",
+  "acceptance": [
+    "A sweep updates only its own part of the task's notes and leaves anything written below it exactly as it was",
+    "Running queue/bin/sweep-report.mjs twice over two different result files, with a hand-written paragraph added to the task in between, keeps that paragraph and updates the walk list",
+    "The task's acceptance and its notes cannot disagree about which walks it owns: either the sweep does not touch the part that names them, or it says which of its failures are already owned elsewhere",
+    "A walk that failed in the previous sweep and passes in this one is said to have stopped failing rather than just vanishing from the list",
+    "anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T16:15:22.698Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-13T16:15:57.939Z",
+      "note": "seq 2550 -> 6"
+    }
+  ]
+}

@@ -2974,3 +2974,25 @@
 {"t":"2026-09-13T14:40:21.136Z","ev":"manager","filed":2,"readyBefore":69,"readyAfter":71,"report":"queue/manager/2026-09-13-0746.md"}
 {"t":"2026-09-13T14:40:31.927Z","ev":"manager_pass","exit":0,"ready":71}
 {"t":"2026-09-13T14:40:31.972Z","ev":"task_started","id":"the-pen-draws-a-path-corner-by-corner-and-curve","title":"The Pen draws a path, corner by corner and curve by curve","priority":"p1-high"}
+{"t":"2026-09-13T15:03:09.555Z","ev":"task_done","id":"the-pen-draws-a-path-corner-by-corner-and-curve","from":"in_progress","note":"The Pen ships in Next behind next-pen: P picks it up, a click drops a corner, a press and drag pulls a curve out of the point being placed, the run to the pointer is previewed continuously, and clicking the first point closes and fills the shape. Return keeps an open path, Escape discards it, Command Z steps back one anchor, Shift constrains, and Option places the half-smooth anchors a rounded corner needs. PenSession in PhotonzCore holds every decision (33 tests); the canvas only draws and converts. Verified on the real app through the probe with Screen Recording granted: two walks (pen-draws-a-path, pen-three-drawings) pass, the 15 tool-* walks pass, Scripts/test.sh green at 6242. Audit at queue/audits/2026-09-13-pen-draws-a-path.json with three real captures and the Figma press counts. Committed cf75e68c and pushed."}
+{"t":"2026-09-13T15:25:59.766Z","ev":"task_created","id":"turn-a-rectangle-into-a-path-and-pull-its-points","priority":"p1-high","title":"Turn a rectangle into a path and pull its points around"}
+{"t":"2026-09-13T15:25:59.832Z","ev":"task_resequenced","id":"turn-a-rectangle-into-a-path-and-pull-its-points","from":270,"to":15}
+{"t":"2026-09-13T15:25:59.902Z","ev":"task_created","id":"an-icon-you-drew-leaves-as-clean-svg","priority":"p1-high","title":"An icon you drew leaves as clean SVG"}
+{"t":"2026-09-13T15:25:59.965Z","ev":"task_resequenced","id":"an-icon-you-drew-leaves-as-clean-svg","from":270,"to":16}
+{"t":"2026-09-13T15:26:48.477Z","ev":"task_dropped","id":"an-icon-you-drew-leaves-as-clean-svg","from":"pending","note":"duplicate of an-icon-you-drew-comes-out-as-an-svg-file, which the manager filed first; its two extra points were merged there"}
+{"t":"2026-09-13T15:27:01.859Z","ev":"task_resequenced","id":"turn-a-rectangle-into-a-path-and-pull-its-points","from":15,"to":16}
+{"t":"2026-09-13T16:12:27.386Z","ev":"sweep_pass","walks":400,"passed":387,"failed":13,"seconds":4100,"complete":true}
+{"t":"2026-09-13T16:15:08.422Z","ev":"task_created","id":"the-pen-stays-in-your-hand-for-the-next-shape","priority":"p1-high","title":"The Pen stays in your hand for the next shape"}
+{"t":"2026-09-13T16:15:13.700Z","ev":"task_created","id":"a-pen-point-lands-on-the-grid-line-you-can-see","priority":"p1-high","title":"A Pen point lands on the grid line you can see"}
+{"t":"2026-09-13T16:15:17.598Z","ev":"task_created","id":"the-pen-arms-its-colour-from-the-tool-bar-like-e","priority":"p2-normal","title":"The Pen arms its colour from the tool bar like every other drawing tool"}
+{"t":"2026-09-13T16:15:22.700Z","ev":"task_created","id":"a-sweep-result-stops-wiping-what-a-person-wrote","priority":"p2-normal","title":"A sweep result stops wiping what a person wrote on its task"}
+{"t":"2026-09-13T16:15:34.020Z","ev":"task_dropped","id":"find-out-why-a-walk-passes-on-its-own-and-fails","from":"pending","note":"folded into two-effect-walks-fail-now-and-then-because-a-pre, which now owns the leaked-panel-state half as well as the race; its reproduction is copied there verbatim"}
+{"t":"2026-09-13T16:15:34.065Z","ev":"task_dropped","id":"find-out-why-the-effects-plus-goes-nameless-whil","from":"pending","note":"folded into two-effect-walks-fail-now-and-then-because-a-pre; the nameless Add Effect plus is one of the thirteen sweep failures that task now owns, and it is the same panel-not-settled cause"}
+{"t":"2026-09-13T16:15:46.185Z","ev":"objectives_updated","by":"manager","change":"unmanned-loop promoted from next to now: it has held ten open tasks for three passes while staged next, and the 2026-09-13 sweep showed the loop cannot tell a broken walk from a flaky one, which weakens every feature claim"}
+{"t":"2026-09-13T16:15:57.809Z","ev":"task_resequenced","id":"the-pen-stays-in-your-hand-for-the-next-shape","from":270,"to":12}
+{"t":"2026-09-13T16:15:57.853Z","ev":"task_resequenced","id":"a-pen-point-lands-on-the-grid-line-you-can-see","from":280,"to":17}
+{"t":"2026-09-13T16:15:57.898Z","ev":"task_resequenced","id":"two-effect-walks-fail-now-and-then-because-a-pre","from":70,"to":5}
+{"t":"2026-09-13T16:15:57.941Z","ev":"task_resequenced","id":"a-sweep-result-stops-wiping-what-a-person-wrote","from":2550,"to":6}
+{"t":"2026-09-13T16:15:57.984Z","ev":"task_resequenced","id":"a-manager-pass-does-not-wake-itself-up-again","from":72,"to":7}
+{"t":"2026-09-13T16:15:58.027Z","ev":"task_resequenced","id":"the-pen-arms-its-colour-from-the-tool-bar-like-e","from":2540,"to":63}
+{"t":"2026-09-13T16:16:20.758Z","ev":"manager","filed":4,"readyBefore":73,"readyAfter":73,"report":"queue/manager/2026-09-13-0920.md"}

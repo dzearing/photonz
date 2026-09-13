@@ -1,0 +1,36 @@
+{
+  "id": "the-pen-stays-in-your-hand-for-the-next-shape",
+  "title": "The Pen stays in your hand for the next shape",
+  "goal": "An icon is several shapes in a row, and right now the Pen puts itself down after every one. Draw a triangle and the Select arrow comes back with the triangle picked, so the next shape costs another press of P. Keep the Pen in your hand until you put it down, the way every vector app does, so a five-piece icon is five drawings rather than five drawings and five tool switches.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T16:15:08.418Z",
+  "updated": "2026-09-13T16:15:57.808Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-13-pen-draws-a-path.json, first item: 'Handing back to Select after one path is the thing most likely to be wrong for icon work.'\n\nThe Pen lives in Sources/Photonz/CanvasPen.swift and Sources/Photonz/EditorState+Pen.swift, behind FeatureCatalog.penFlag (\"next-pen\").\n\nThe hand-back is deliberate today and matches every other drawing tool, so this is a real fork: the alternative is leaving it alone for consistency. Going with keeping the Pen because the ask it was built for (2026-09-13, the user, elaborate SVG icons) is several shapes in a row, and because Illustrator, Figma and Sketch all keep the pen until you leave it. If a runner finds that keeping it breaks something structural in how tools hand back, stop and file a decision card rather than half-doing it.\n\nDo not change the other drawing tools. The Pen is the one that draws more than one thing per errand.",
+  "acceptance": [
+    "With next-pen on, press P, draw a closed triangle, and the Pen is still the tool in hand: the next click starts a new path instead of picking the triangle",
+    "The finished path is still added to the document and still undoable in one press",
+    "Escape with no path in progress puts the Pen down and brings Select back, so there is a way out that is not the tool bar",
+    "Pressing V, or clicking any other tool, puts the Pen down as it always did",
+    "The chip under the canvas says what a press does now, including how to stop",
+    "A walk covers drawing two shapes in a row with one press of P, and it passes twice on its own",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T16:15:08.420Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-13T16:15:57.807Z",
+      "note": "seq 270 -> 12"
+    }
+  ]
+}

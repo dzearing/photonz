@@ -1,0 +1,36 @@
+{
+  "id": "a-pen-point-lands-on-the-grid-line-you-can-see",
+  "title": "A Pen point lands on the grid line you can see",
+  "goal": "An icon is drawn on a grid, and a Pen point ignores the grid completely. Switch Snap to Grid on, draw a box with the Rectangle tool and its edges catch the lines; draw the same box with the Pen and every point lands wherever the pointer was, so the outline is a fraction of a pixel off on all four sides and the icon is soft at every size. Make a Pen point catch the same lines a drag catches, with the same escape: hold Command and it goes exactly where you put it.",
+  "epic": "icon-grid",
+  "priority": "p1-high",
+  "seq": 17,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T16:15:13.696Z",
+  "updated": "2026-09-13T16:15:57.852Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Verified 2026-09-13: Sources/Photonz/CanvasPen.swift contains no reference to snap or grid (grep for 'snap' and 'grid' in that file returns nothing), while CanvasView.canvasSnapSpacing (Sources/Photonz/CanvasView.swift:1425) is what drags and nudges pull to, fed by CanvasGrid.snapSpacing(atZoom:) (Sources/PhotonzCore/CanvasGrid.swift:190). So the plumbing already exists and the Pen simply does not call it.\n\nRead the comment above snapSpacing before changing anything: the rule is that a drag only ever lands on a line the canvas is actually drawing at this zoom, because pulling to invisible lines is what made snapping feel broken before. A Pen point must obey the same rule.\n\nThe Command escape is the existing one, so find how a drag reads it rather than inventing a second modifier.\n\nThis serves the pen the user asked for on 2026-09-13 for building elaborate SVG icons: an icon that is off the grid is soft at every size it is used.",
+  "acceptance": [
+    "With next-pen on, the grid visible and Snap to Grid on, clicking near a grid crossing puts the point exactly on it, and the preview shows it land there before the click commits",
+    "Holding Command while clicking places the point exactly under the pointer, the same escape a drag has",
+    "The pull handles from a press-and-drag point snap the same way, or the task says in its log why they deliberately do not",
+    "With the grid off, or Snap to Grid off, the Pen behaves exactly as it does today",
+    "Closing a path by clicking the first point still works when both points are snapped",
+    "A walk draws a snapped square with the Pen and checks the four corner coordinates are whole grid steps, and it passes twice on its own",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T16:15:13.698Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-13T16:15:57.851Z",
+      "note": "seq 280 -> 17"
+    }
+  ]
+}

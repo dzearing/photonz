@@ -1,0 +1,35 @@
+{
+  "id": "the-pen-arms-its-colour-from-the-tool-bar-like-e",
+  "title": "The Pen arms its colour from the tool bar like every other drawing tool",
+  "goal": "Every drawing tool in Photonz carries a colour on the tool bar, so you choose what you are about to draw in before you draw it. The Pen does not: a path always arrives the redline red, and the only way to change it is to draw the shape, go to the Appearance panel and repaint it. For an icon, where several pieces are different colours, that is a trip to the panel for every piece.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 63,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T16:15:17.594Z",
+  "updated": "2026-09-13T16:15:58.026Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-13-pen-draws-a-path.json: 'The Pen has no colour capsule on the tool bar: a new path is always the redline red until you repaint it in the Appearance panel. Every other drawing tool arms its colour from the bar.'\n\nCopy what the Rectangle and Ellipse tools already do rather than inventing anything; this is a gap in one tool, not a new idea. Sources/Photonz/CanvasPen.swift, behind FeatureCatalog.penFlag (\"next-pen\").\n\nRelated and NOT part of this: a closed path arrives filled and outlined the same red so its outline is invisible against its own fill. That is the same bug a new rectangle has and it is owned by a-shape-s-border-arrives-the-same-colour-as-its.",
+  "acceptance": [
+    "With next-pen on, picking the Pen shows a colour capsule on the tool bar in the same place and the same size as the other drawing tools' capsules",
+    "The colour chosen there is the fill the next path arrives with, and it is remembered for the path after that",
+    "It uses the one colour picker the rest of the app uses, not a second one",
+    "The capsule reads its name out the way the other tools' capsules do, so a walk and a screen reader can both find it",
+    "A walk sets the capsule and draws a path and checks the fill, and it passes twice on its own",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T16:15:17.596Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-13T16:15:58.025Z",
+      "note": "seq 2540 -> 63"
+    }
+  ]
+}

@@ -9,15 +9,18 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-13T14:39:59.298Z",
-  "deps": [],
+  "updated": "2026-09-13T16:15:42.998Z",
+  "deps": [
+    "two-effect-walks-fail-now-and-then-because-a-pre"
+  ],
   "blockedBy": [],
-  "notes": "Last sweep 2026-09-13T14:10:53Z: 385 of 397 walks passed in 68 minutes.\n\nFailing walks (12): border-effect-walk, contents-for-several-walk, copies-share-choice-walk, corner-radius-rounds-walk, dock-picked-first-walk, glow-effect-walk, highlight-one-outline-walk, label-fills-a-row-walk, layers-lazy-rows-walk, parts-settings-inline-walk, readout-fields-walk, turn-into-a-picture-walk\n\nFull output: queue/sweep/2026-09-13-060249.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: tutorials-the-video-track: Video track: TutorialController now runs over a host protocol rather than an EditorState, and the walk harness's waitFor and action dispatch both changed to cope with a window that has no editor in it. Every walk touches those. The 30 tutorial walks pass; the rest of the set has not been run against this.\n\nTRIAGED 2026-09-13 07:45 by the manager pass. Six of the twelve failing walks\nalready have their own open task, with their own reproduction and their own\ndiagnosis. Do NOT re-diagnose those here; this task now owns the other six only.\n\nOwned by this task (nobody else has them):\n  contents-for-several-walk\n  copies-share-choice-walk\n  highlight-one-outline-walk\n  label-fills-a-row-walk\n  parts-settings-inline-walk\n  readout-fields-walk\n\nOwned elsewhere, leave alone:\n  border-effect-walk, glow-effect-walk -> adding-an-effect-leaves-every-one-of-its-setting\n  corner-radius-rounds-walk            -> the-colour-popover-never-opens-in-the-corner-rad\n  dock-picked-first-walk               -> picking-a-plain-shape-leaves-the-panel-parked-on\n  layers-lazy-rows-walk                -> two-effect-walks-fail-now-and-then-because-a-pre\n  turn-into-a-picture-walk             -> undo-in-a-walk-cannot-use-the-command-z-chord\n\nIf one of those tasks lands first and its walk still fails in the sweep, the\nwalk comes back here.",
+  "notes": "Last sweep 2026-09-13T16:12:27Z: 387 of 400 walks passed in 68 minutes.\n\nFailing walks (13): border-effect-walk, border-offset-walk, contents-for-several-walk, copies-share-choice-walk, dock-picked-first-walk, effects-open-into-view-walk, glow-effect-walk, highlight-one-outline-walk, label-fills-a-row-walk, layers-lazy-rows-walk, panel-edge-column-walk, parts-settings-inline-walk, readout-fields-walk\n\nFull output: queue/sweep/2026-09-13-080407.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: the-pen-draws-a-path-corner-by-corner-and-curve: The Pen adds a slot to the end of the drawing family on the tool bar (next-pen), so every walk that clicks the bar by coordinate could have shifted. The 15 tool-* walks pass; the rest of the set has not been checked.\n\nTRIAGED 2026-09-13 09:20 by the manager pass, against the 16:12Z sweep.\n(The previous triage, written at 07:45, was deleted by this very sweep when it\nrewrote these notes. That is now filed as a-sweep-result-stops-wiping-what-a-person-wrote.\nThe same thing will happen to this paragraph on the next sweep, so it is\nduplicated into this task log below.)\n\nTwelve of the thirteen belong to another open task. Do NOT re-diagnose them here.\n\n  Leaked panel state or a press racing the layout, all owned by\n  two-effect-walks-fail-now-and-then-because-a-pre (this task now DEPENDS on it):\n    border-offset-walk, copies-share-choice-walk, effects-open-into-view-walk,\n    highlight-one-outline-walk, label-fills-a-row-walk, panel-edge-column-walk,\n    parts-settings-inline-walk, readout-fields-walk\n  border-effect-walk, glow-effect-walk -> adding-an-effect-leaves-every-one-of-its-setting\n  dock-picked-first-walk               -> picking-a-plain-shape-leaves-the-panel-parked-on\n  layers-lazy-rows-walk                -> two-effect-walks-fail-now-and-then-because-a-pre\n\nOwned by this task, and only this one:\n    contents-for-several-walk  (step 90 selectRow: no row called \"Rectangle\" is in\n    the layers list; the ones that are: Group 2, Group, Background. A group exists\n    that the walk did not make, so this is leaked DOCUMENT state, not panel state,\n    which is why it is not handed to the harness task.)\n\nSo the work here is: wait for the harness fix, ask for a fresh sweep, fix\ncontents-for-several-walk, and own whatever is still failing after that.\n\nThree of the thirteen were reproduced as PASSING on their own, exit 0, on\n2026-09-13 09:18: border-offset-walk, effects-open-into-view-walk and\npanel-edge-column-walk. Do not trust this list as a list of broken things.\n",
   "acceptance": [
-    "Each of the six walks named in the notes as owned by this task either passes or is rewritten to match what the app does now",
-    "Each one is run on its own and passes twice in a row",
+    "A fresh sweep is asked for after two-effect-walks-fail-now-and-then-because-a-pre lands, with queue/bin/sweep.sh request",
+    "contents-for-several-walk either passes or is rewritten to match what the app does now, and passes twice on its own",
+    "Every walk still failing in that fresh sweep is either fixed here or named against the open task that owns it",
     "Any walk that was wrong rather than broken says so in this task log",
-    "The six walks owned by another task are not touched here"
+    "anything left rough is filed as a follow-up task"
   ],
   "log": [
     {
@@ -71,6 +74,14 @@
     {
       "t": "2026-09-13T14:39:59.297Z",
       "note": "triaged: narrowed from 12 failing walks to the 6 that have no other open task; the other 6 are named against the task that owns each"
+    },
+    {
+      "t": "2026-09-13T16:12:27.327Z",
+      "note": "sweep 2026-09-13T16:12:27Z: 13 failing (border-effect-walk, border-offset-walk, contents-for-several-walk, copies-share-choice-walk, dock-picked-first-walk, effects-open-into-view-walk, glow-effect-walk, highlight-one-outline-walk, label-fills-a-row-walk, layers-lazy-rows-walk, panel-edge-column-walk, parts-settings-inline-walk, readout-fields-walk)"
+    },
+    {
+      "t": "2026-09-13T16:15:42.998Z",
+      "note": "TRIAGED 09:20: 12 of 13 belong elsewhere, 8 of them to the harness task this now depends on; this task owns contents-for-several-walk (leaked document state: a Group 2 the walk did not make) plus whatever survives a fresh sweep. border-offset-walk, effects-open-into-view-walk and panel-edge-column-walk each reproduced as PASSING on their own, exit 0."
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-13T15:24:52.098Z",
+  "updated": "2026-09-13T16:15:46.157Z",
   "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -170,8 +170,8 @@
     {
       "id": "unmanned-loop",
       "title": "Keep the unmanned loop trustworthy",
-      "note": "The system that builds everything else: dashboard accuracy, loop robustness, digest quality.",
-      "stage": "next",
+      "note": "The system that builds everything else: dashboard accuracy, loop robustness, digest quality. Promoted to now on 2026-09-13 by the manager pass: it has held ten open tasks for three passes while staged next, which the staging rule forbids, and the reason is real rather than clerical. The 16:12Z sweep reported thirteen failures and three of them were reproduced as passing on their own, so the loop's only whole-app regression signal cannot currently tell a break from a flake, and every feature that ships past it ships on a weaker claim.",
+      "stage": "now",
       "children": [
         {
           "id": "loop-robustness",

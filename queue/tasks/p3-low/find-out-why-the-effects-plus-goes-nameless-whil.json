@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 100,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T03:36:24.615Z",
-  "updated": "2026-09-13T12:29:07.951Z",
+  "updated": "2026-09-13T16:15:34.064Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on 2026-09-13 in Scripts/playtest-all.sh --no-build tutorial- , which was running while other probe work was going on, so the machine was loaded.\n\nThe failure: step 17 (panelMenu): no menu called \"Add Effect\" is in the window; the ones that are: 100% 58.0pt wide at x 801.5 says \"Choose a zoom level...\", Fill 42.0pt wide at x 1051.5 says \"Save this fill as a named style...\",  25.0pt wide at x 1123.0 says \"Add an effect: a shadow, a glow, a border or a blur\".\n\nNote the third entry: the Add Effect menu IS there, at the right size, with the right help text, and with an EMPTY name. Sources/Photonz/EffectsListInspector.swift:917 sets .accessibilityLabel(\"Add Effect\") on it.\n\nRan twice again immediately afterwards on an idle machine: ok both times. The log line before the failure says the wait never went quiet (14 of 16 slices busy), so the panel was still laying out.\n\nNot reproduced on demand, which is why this is p2 and phrased as a question.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-09-13T12:29:07.950Z",
       "note": "seq 2640 -> 100"
+    },
+    {
+      "t": "2026-09-13T16:15:34.063Z",
+      "note": "folded into two-effect-walks-fail-now-and-then-because-a-pre; the nameless Add Effect plus is one of the thirteen sweep failures that task now owns, and it is the same panel-not-settled cause"
     }
   ]
 }
