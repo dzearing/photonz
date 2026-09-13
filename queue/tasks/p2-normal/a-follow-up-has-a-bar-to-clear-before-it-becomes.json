@@ -1,0 +1,30 @@
+{
+  "id": "a-follow-up-has-a-bar-to-clear-before-it-becomes",
+  "title": "A follow-up has a bar to clear before it becomes a task",
+  "goal": "Every task the loop finishes is asked to file whatever it left rough as a new task, and it does, faithfully. That is why the queue has grown by about forty tasks a week and now stands at sixty nine ready against a target of twelve. Most of them are real. Enough of them are near-twins of something already in the queue, or a wording nit nobody using the app would ever notice, that a request from the user lands behind a wall of the loop's own homework. Give a follow-up a bar to clear, and give the things that do not clear it somewhere to go that is not a new task.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 82,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T14:39:55.277Z",
+  "updated": "2026-09-13T14:39:55.280Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Comes from the queue growth measured over the last seven days of queue/history.jsonl:\n  2026-09-06 created 52 done 58 dropped 2\n  2026-09-07 created 75 done 54 dropped 7\n  2026-09-08 created 48 done 67 dropped 3\n  2026-09-09 created 59 done 39 dropped 2\n  2026-09-12 created 52 done 23 dropped 3\n  2026-09-13 created 29 done 17 dropped 1\n  totals: created 315, done 258, dropped 18\nThe 2026-09-13 07:14 manager report read a narrower window and concluded the queue was draining; over a week it is not, it grows about 40 a week. That report also predicted this exact fix (\"if it is still above fifty in a week, the fix is a harder triage rule\").\n\nThe instruction that produces the inflow is the acceptance line every feature task carries, \"anything left rough is filed as a follow-up task\", which comes from queue/bin/manager-prompt.md and is echoed in queue/bin/runner-prompt.md. The change belongs in runner-prompt.md (the bar and the fold-first rule), and the same wording wants to reach the digest and triage prompt so the three agree.\n\nDeliberately NOT a cap on the number of follow-ups: a cap loses real findings silently. The bar plus a place to write the rest down keeps everything recoverable.\n\nEvidence that near-twins are real, from today's queue: walks-that-fail-in-the-full-sweep names twelve failing walks, and six of the twelve already have their own diagnosed open task with its own reproduction (border-effect and glow-effect under adding-an-effect-leaves-every-one-of-its-setting, corner-radius-rounds under the-colour-popover-never-opens-in-the-corner-rad, dock-picked-first under picking-a-plain-shape-leaves-the-panel-parked-on, layers-lazy-rows under two-effect-walks-fail-now-and-then-because-a-pre, turn-into-a-picture under undo-in-a-walk-cannot-use-the-command-z-chord).",
+  "acceptance": [
+    "The runner instructions say plainly what earns a follow-up task: something a person using the app would notice, that is not already covered by an open task",
+    "A rough edge that does not clear the bar is written into the finishing task's own log instead, so nothing is lost and the next pass can still find it",
+    "The instructions say to search the open queue and fold into the nearest existing task before filing a new one, and how to search",
+    "The same bar is written into whatever the digest and triage passes use, so three different passes do not each apply their own",
+    "Nothing in the change lets a runner skip filing a follow-up for something that is actually broken",
+    "anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T14:39:55.279Z",
+      "note": "created (manager)"
+    }
+  ]
+}
