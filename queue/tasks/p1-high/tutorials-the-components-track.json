@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T15:17:25.177Z",
-  "updated": "2026-09-13T03:04:33.163Z",
+  "updated": "2026-09-13T03:37:13.259Z",
   "deps": [
     "a-walkthrough-framework-guides-are-data-and-they",
     "help-has-a-tutorials-menu-organised-in-tracks-an"
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-13T03:37:05.958667Z",
       "note": "Two follow-ups filed, both p2 and both reproduced: a-copy-and-its-original-should-be-tellable-apart (three layers rows read Save Button once copies are placed, which is why no guide in the track uses the list), and find-out-why-the-effects-plus-goes-nameless-whil (one walk outside this track failed once under load looking for the Effects plus by name, and passed twice straight after). Sweep requested, because the reveal change can move the panel for up to a second longer than before."
+    },
+    {
+      "t": "2026-09-13T03:37:13.257Z",
+      "note": "Four guides under Help > Tutorials > Components, all data in TutorialGuides.swift: Make a component, Use it again and again, Override one copy, One name, two looks (planned as Variants, named for what the panel actually says). Three samples come with them. Walked end to end on the probe one walk per guide, all green, plus all 20 tutorial walks and Scripts/test.sh at 5909 tests. Checked in the app with next-components off as well as on. Three framework gaps fixed on the way: a rubber band selection now advances a waiting step, a step reveal holds out for the whole section rather than the first sliver, and a new reveal-only prepare turns the shelf to Components. Audit at queue/audits/2026-09-13-tutorials-components-track.json with five real window captures. Pushed as 823a9638."
     }
   ],
-  "started": "2026-09-13T03:04:33.161Z"
+  "started": "2026-09-13T03:04:33.161Z",
+  "completed": "2026-09-13T03:37:13.258Z"
 }

@@ -14525,3 +14525,32 @@ edit happening at all, so "pull Strength up until the address cannot be read"
 moves on at the first nudge. Filed as
 `a-tutorial-step-can-wait-for-a-setting-to-reach`. Four tracks left: Colours and
 Styles, Building UI, Components, Video.
+
+## 2026-09-13 — The Components track
+
+Help ▸ Tutorials ▸ Components now holds four guides, all of them data in the
+catalogue: **Make a component**, **Use it again and again**, **Override one
+copy**, and **One name, two looks**. The last was planned as "Variants" and is
+named for what the panel actually says, which is Versions.
+
+The track brings three samples of its own: a button drawn as two loose layers,
+the same button already promoted, and that original with two copies under it.
+
+Building it found three gaps in the walkthrough framework, each fixed where it
+happens rather than worked around in a guide: a rubber band round two layers
+never raised the `layerSelected` trigger, a step's reveal stopped at the first
+sliver of its target instead of holding out for the whole section, and there was
+no way for a step to ask the Library shelf to turn to Components. It also turned
+up one ordinary bug: Add Version handed the keyboard to the new version's name
+field one pass too early, so typing went to the canvas.
+
+Verified on the probe: one walk per guide, all 20 tutorial walks, and
+`Scripts/test.sh` at 5909 tests. Checked in the real app with `next-components`
+off as well as on. Audit:
+`queue/audits/2026-09-13-tutorials-components-track.json`.
+
+**Next:** three tracks left (Colours and Styles, Building UI, Video). Two
+follow-ups filed: an original and its copies read as three identical rows in the
+layers list, and one Looks-track walk failed once under load looking for the
+Effects plus by name. A full sweep was requested, because the reveal change can
+move the panel for up to a second longer than it used to.
