@@ -161,6 +161,10 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// The known keys, named in the error when a walk uses another one.
     static let knownKeys = ["forget", "captures", "expectNoControl", "scratch"]
 
+    /// The word a walk writes in `forget` to start from a machine that has
+    /// never run Photonz.
+    static let everything = "all"
+
     init(fields raw: Any?) throws {
         guard let raw, !(raw is NSNull) else {
             self.init()
@@ -175,13 +179,22 @@ public struct PlaytestSetup: Sendable, Equatable {
                 field: stray, reason: "is not something setup can ask for; it takes "
                     + Self.knownKeys.joined(separator: " and "))
         }
-        let forget = try Self.words(fields["forget"], field: "forget").map { word -> PlaytestMemory in
+        // "all" is the word for a machine that has never run Photonz, which is
+        // what most walks want and what none of them can name without listing
+        // every area by hand and going out of date the next time one is added.
+        var forget: [PlaytestMemory] = []
+        for word in try Self.words(fields["forget"], field: "forget") {
+            if word == Self.everything {
+                forget = PlaytestMemory.allCases
+                break
+            }
             guard let memory = PlaytestMemory(rawValue: word) else {
                 throw PlaytestScriptError.invalidSetup(
                     field: "forget", reason: "names \"\(word)\", which is not something the app remembers; "
-                        + "it remembers " + PlaytestMemory.allCases.map(\.rawValue).joined(separator: ", "))
+                        + "it remembers " + Self.everything + ", "
+                        + PlaytestMemory.allCases.map(\.rawValue).joined(separator: ", "))
             }
-            return memory
+            if !forget.contains(memory) { forget.append(memory) }
         }
         self.init(forget: forget,
                   captures: try Self.words(fields["captures"], field: "captures"),

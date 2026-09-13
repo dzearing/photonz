@@ -1926,6 +1926,30 @@ struct PlaytestScriptTests {
         #expect(!script.setup.isEmpty)
     }
 
+    // "all" is the word for the walk that wants a machine that has never run
+    // Photonz, which is most of them: 225 of the 405 walks declare nothing at
+    // all and so inherit whatever the last walk on the machine left behind.
+    // Naming ten areas one by one is how that list goes out of date, and a new
+    // area of memory then reaches nobody.
+    @Test("A walk can ask to forget everything the app remembers, in one word")
+    func setupForgetsEverything() throws {
+        let script = try decode("""
+        { "setup": { "forget": ["all"] },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.forget == PlaytestMemory.allCases)
+        #expect(!script.setup.isEmpty)
+    }
+
+    @Test("Forgetting everything and naming an area besides asks for it once")
+    func setupForgetsEverythingWithoutRepeatingItself() throws {
+        let script = try decode("""
+        { "setup": { "forget": ["color", "all", "color"] },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.forget == PlaytestMemory.allCases)
+    }
+
     @Test("A walk with no setup block asks for nothing")
     func noSetupBlockIsEmptySetup() throws {
         let script = try decode("{ \"steps\": [ { \"do\": \"blank\" } ] }")

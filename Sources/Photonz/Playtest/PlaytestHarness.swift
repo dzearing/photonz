@@ -145,6 +145,15 @@ private final class Run {
             return
         }
         note(0, "start", "script \(scriptURL.path); \(script.steps.count) steps; release \(Experiments.shared.release.rawValue)")
+        // Watching the main thread from step ZERO. A `wait` judges the editor
+        // finished from two signals, and one of them is this meter; it used to
+        // be installed by the first press or drag, so every wait before that —
+        // the wait after `blank`, the wait after the first key — read "mainBusy
+        // 0.0ms over 0 passes" and went quiet after 0.1s no matter how hard the
+        // app was working. That is a walk reading the dock while it is still
+        // being built, which is the whole of the flake this was written for.
+        MainThreadMeter.shared.install()
+        MainThreadMeter.shared.reset()
         // Whatever the walk said it needs, before step one — and, however this
         // run ends, everything it borrowed goes back.
         do {
@@ -1046,8 +1055,17 @@ private final class Run {
             note(number, step.name, Self.outlinePanel(inventory), state: inventory)
 
         case .expect(let thing, let named, let inRow, let reads, let present):
+            // Kept looking rather than read once: a claim about the panel made
+            // at the instant a relayout started answered about a panel that was
+            // half built, and a switch that reads "on" for three frames while
+            // its section re-lays out is not a switch that is on. The claim
+            // still has to come true, only not in the first frame it is asked
+            // about (`patiently`).
             note(number, step.name,
-                 try checkPanel(thing, named: named, inRow: inRow, reads: reads, present: present),
+                 try await patiently {
+                     try self.checkPanel(thing, named: named, inRow: inRow,
+                                         reads: reads, present: present)
+                 },
                  state: describe())
 
         case .expectPicked(let layers):
@@ -2031,7 +2049,18 @@ private final class Run {
     private func pressControl(_ name: String, in row: String?, count: Int,
                               modifiers: [PlaytestModifier], across: CGFloat?,
                               number: Int) async throws {
-        var target = try pressTarget(name, in: row)
+        // Waited for and scrolled to, the way a person does it: look for the
+        // control, and if the dock has it below the fold, scroll until it is
+        // where a press could land. A walk used to have to say `reveal` for
+        // that, which means every walk goes stale the next time the dock grows
+        // a section — which is exactly what happened to border-effect-walk and
+        // three others.
+        var (target, effort) = try await reachableTarget(name, in: row)
+        // ...and not pressed until it has stopped moving, so the event lands
+        // on the control rather than on whatever slid into its place.
+        let steady = await settled(target, named: name, in: row)
+        target = steady.target
+        if !steady.effort.isEmpty { effort += (effort.isEmpty ? "" : ", ") + steady.effort }
         // A press lands in the middle of the control, which for a slider means
         // the knob goes halfway and nowhere else. `across` moves the press
         // along the control's own width, so a walk can put a slider on a value
@@ -2077,6 +2106,7 @@ private final class Run {
              "\"\(target.name)\"\(place) at window \(short(target.point)), "
              + "\(count == 1 ? "one click" : "\(count) clicks")" + along
              + (modifiers.isEmpty ? "" : " with \(modifiers.map(\.rawValue).joined(separator: "+"))")
+             + (effort.isEmpty ? "" : "; " + effort)
              + "; " + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report,
              state: describe())
     }
@@ -2415,7 +2445,7 @@ private final class Run {
     /// the first measurement is only an opening bid. A control already in
     /// reach costs nothing and says so.
     private func reveal(_ name: String, in row: String?, number: Int) async throws {
-        let target = try pressTarget(name, in: row)
+        let target = try await patiently { try self.pressTarget(name, in: row) }
         guard !Self.isInReach(target) else {
             note(number, "reveal",
                  "\"\(target.name)\"\(target.detail.isEmpty ? "" : " in \(target.detail)") "
@@ -2423,12 +2453,32 @@ private final class Run {
                  state: describe())
             return
         }
+        ViewBuildMeter.shared.reset()
+        MainThreadMeter.shared.reset()
+        let moved = try await bringIntoReach(name, in: row)
+        let landed = try pressTarget(name, in: row)
+        note(number, "reveal",
+             "\"\(landed.name)\"\(landed.detail.isEmpty ? "" : " in \(landed.detail)") "
+             + "brought into reach by scrolling \(Int(moved))pt, now at window \(short(landed.point))"
+             + "; " + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report,
+             state: describe())
+    }
+
+    /// Scrolls whatever the named control sits in until a press could land on
+    /// it, and says how many points that took. Throws when nothing can bring
+    /// it in, with the reason.
+    ///
+    /// Split out of `reveal` because a press does this for itself now: a
+    /// person who cannot see the control they want scrolls to it without
+    /// being told to, and a walk that has to be told is a walk that goes stale
+    /// the next time the dock grows a section (`pressControl`).
+    @discardableResult
+    private func bringIntoReach(_ name: String, in row: String?) async throws -> Double {
+        let target = try pressTarget(name, in: row)
+        guard !Self.isInReach(target) else { return 0 }
         guard let window = target.window, let content = window.contentView else {
             throw Failure(description: "the control \"\(name)\" is in no window to scroll")
         }
-        ViewBuildMeter.shared.reset()
-        MainThreadMeter.shared.install()
-        MainThreadMeter.shared.reset()
         var moved = 0.0
         var stuck = ""
         // Six rounds is generous: each one closes the whole measured gap, and
@@ -2481,11 +2531,7 @@ private final class Run {
                 + (stuck.isEmpty ? "" : ": " + stuck)
                 + ". The window may be too short for the section it is in.")
         }
-        note(number, "reveal",
-             "\"\(landed.name)\"\(landed.detail.isEmpty ? "" : " in \(landed.detail)") "
-             + "brought into reach by scrolling \(Int(moved))pt, now at window \(short(landed.point))"
-             + "; " + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report,
-             state: describe())
+        return moved
     }
 
     /// Two points of daylight, so a control resting exactly on the edge is not
@@ -3782,12 +3828,11 @@ private final class Run {
                                    isEnabled: true, window: match.window)
     }
 
-    private func openPanelMenu(_ name: String, in row: String?, shot: String?, choose: String?,
-                               clicking: String?, number: Int) async throws {
-        let host = try requireWindow()
-        guard let content = host.contentView else {
-            throw Failure(description: "the window has no content view")
-        }
+    /// The menu button a `panelMenu` step names, found the way a press finds a
+    /// control. Pulled out on its own so the step can keep asking for it while
+    /// the dock is still laying itself out (`patiently`).
+    private func panelMenuButton(_ name: String, in row: String?,
+                                 of content: NSView) throws -> NSPopUpButton {
         let fields = Self.findAll(PanelTargetView.self, in: content)
             .filter { $0.kind == .field && $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
         var buttons = PlaytestPanelMenu.buttons(in: content)
@@ -3833,6 +3878,21 @@ private final class Run {
             throw Failure(description: "no menu called \"\(name)\" is in the window; the ones that are: "
                 + (seen.isEmpty ? "none" : seen.joined(separator: ", ")))
         }
+        return button
+    }
+
+    private func openPanelMenu(_ name: String, in row: String?, shot: String?, choose: String?,
+                               clicking: String?, number: Int) async throws {
+        let host = try requireWindow()
+        guard let content = host.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        // Kept looking for rather than read once. The plus that opens Add
+        // Effect is built with no name at all for the first frames of a
+        // relayout, so a walk that looked at the wrong instant was told there
+        // was no such menu in a window the menu was plainly in
+        // (panel-edge-column-walk, 2026-09-13).
+        let button = try await patiently { try self.panelMenuButton(name, in: row, of: content) }
         guard button.isEnabled else {
             throw Failure(description: "the \"\(name)\" menu is dimmed, so it has nothing to open")
         }
@@ -4931,6 +4991,94 @@ private final class Run {
         try? await Task.sleep(for: .seconds(seconds))
     }
 
+    /// How long a step keeps looking for the panel to catch up with it before
+    /// it gives up and fails.
+    ///
+    /// A walk used to read the dock once, at whatever instant the step before
+    /// it happened to end, and report whatever it found. The dock builds its
+    /// rows lazily and re-lays them out whenever a section opens, so "the
+    /// control is not there" and "the control is not there YET" came back as
+    /// the same sentence, and the only cure an author had was to write a
+    /// longer `wait` and hope. Six walks failed that way in the 2026-09-13
+    /// sweeps and every one of them passed on its own straight afterwards.
+    ///
+    /// Two seconds is far longer than the dock has ever taken to lay itself
+    /// out and far shorter than a walk's own timeout, so a control that has
+    /// GENUINELY gone away still fails the walk, with the message it failed
+    /// with before, two seconds later.
+    private static let panelPatience = 2.0
+
+    /// Keeps looking until the look stops failing, or the patience runs out.
+    ///
+    /// The LAST failure is what the walk reports, so nothing about a real
+    /// break reads differently than it did: a control that was never going to
+    /// arrive fails with the same sentence, naming the same neighbours.
+    private func patiently<T>(_ look: @MainActor () throws -> T) async throws -> T {
+        let deadline = CACurrentMediaTime() + Self.panelPatience
+        var last: Error?
+        while true {
+            do { return try look() } catch { last = error }
+            guard CACurrentMediaTime() < deadline else { break }
+            await sleep(0.05)
+        }
+        throw last ?? Failure(description: "the panel never settled")
+    }
+
+    /// The control a step is about to act on, waited for and scrolled to the
+    /// way a person would: if it is not in the panel yet, keep looking; if it
+    /// is there but below the fold, scroll to it. Says what it had to do, so a
+    /// dock that has started needing a scroll where it did not before shows up
+    /// in the log rather than being quietly absorbed.
+    private func reachableTarget(_ name: String, in row: String?) async throws
+        -> (target: PlaytestPressTarget, effort: String) {
+        let began = CACurrentMediaTime()
+        var target = try await patiently { try self.pressTarget(name, in: row) }
+        let waited = CACurrentMediaTime() - began
+        var effort = waited > 0.06 ? String(format: "arrived after %.2fs of looking", waited) : ""
+        guard !Self.isInReach(target) else { return (target, effort) }
+        let moved = try await bringIntoReach(name, in: row)
+        target = try pressTarget(name, in: row)
+        if moved > 0.5 {
+            effort += effort.isEmpty ? "" : ", "
+            effort += "scrolled \(Int(moved))pt to reach it"
+        }
+        return (target, effort)
+    }
+
+    /// The same control, once it has stopped moving.
+    ///
+    /// A press is real mouse events posted to the app's queue, and AppKit
+    /// works out what they landed on when it DELIVERS them, not when they were
+    /// posted. So a control measured while the dock was still re-laying itself
+    /// out is a control the press misses: the event arrives, the panel has
+    /// slid, and the click lands on whatever moved into that spot. Folding one
+    /// effect slides every heading below it, which is why the walk that folds
+    /// a Border and reads the twist back is the one that kept answering
+    /// differently two runs running.
+    ///
+    /// Settled means the box has not moved between two looks a frame apart.
+    /// That is a fact about THIS control rather than about the whole app, so
+    /// it costs a frame when the panel is still and never waits out an
+    /// animation somewhere else on screen. A control that never stops moving
+    /// is pressed anyway, at its last known place, with the log saying so:
+    /// failing there would turn a busy machine into a broken walk.
+    private func settled(_ target: PlaytestPressTarget, named name: String, in row: String?)
+        async -> (target: PlaytestPressTarget, effort: String) {
+        var last = target
+        let deadline = CACurrentMediaTime() + Self.panelPatience
+        var looks = 0
+        while CACurrentMediaTime() < deadline {
+            await sleep(0.03)
+            looks += 1
+            guard let now = try? pressTarget(name, in: row) else { continue }
+            if now.box.equalTo(last.box), Self.isInReach(now) {
+                return (now, looks > 1 ? "held still after \(looks) looks" : "")
+            }
+            last = now
+        }
+        return (last, "never held still, pressed where it last was")
+    }
+
     /// What a walk's `wait` step really means: let the editor finish, and get
     /// on with it once the editor has. Never spends more than `asked`, so
     /// nothing waits longer than it used to. Returns the line for the log,
@@ -4965,7 +5113,14 @@ private final class Run {
             if nap <= 0 { break }
             await sleep(nap)
             let busy = MainThreadMeter.shared.takeBusy()
-            let restless = isRestless()
+            // A slice the main run loop never came back in is not a quiet
+            // slice, it is a blocked one. The two look identical through
+            // `takeBusy`, which can only add up passes that finished, so the
+            // count is what tells them apart: this loop's own sleeping wakes
+            // the run loop every slice, so zero passes means the thread never
+            // got that far.
+            let passes = MainThreadMeter.shared.takePasses()
+            let restless = passes == 0 ? "the main thread never came back" : isRestless()
             slices += 1
             if busy > pace.busyBudget { busySlices += 1 }
             if let restless { restlessSlices += 1; why = restless }
@@ -6172,6 +6327,9 @@ final class MainThreadMeter {
     /// Main thread work since the last time anyone asked. A `wait` step reads
     /// this every slice to tell a busy editor from a finished one.
     private var sinceAsked: CFTimeInterval = 0
+    /// Run loop passes over the same stretch. Zero of them is not an idle
+    /// thread, it is a thread that never came back (`settle`).
+    private var passesSinceAsked = 0
 
     func install() {
         guard observer == nil else { return }
@@ -6186,6 +6344,7 @@ final class MainThreadMeter {
                     busy += d
                     sinceAsked += d
                     passes += 1
+                    passesSinceAsked += 1
                     longest = max(longest, d)
                     activeSince = nil
                     excludedInPass = 0
@@ -6202,6 +6361,7 @@ final class MainThreadMeter {
         activeSince = CACurrentMediaTime()
         excludedInPass = 0
         sinceAsked = 0
+        passesSinceAsked = 0
     }
 
     /// How much the app did on the main thread since this was last asked, and
@@ -6210,6 +6370,14 @@ final class MainThreadMeter {
     func takeBusy() -> CFTimeInterval {
         let answer = max(0, sinceAsked)
         sinceAsked = 0
+        return answer
+    }
+
+    /// How many whole run loop passes happened since this was last asked, and
+    /// the count starts again.
+    func takePasses() -> Int {
+        let answer = passesSinceAsked
+        passesSinceAsked = 0
         return answer
     }
 

@@ -627,6 +627,16 @@ seconds the walk asked for, so **no walk waits longer than it used to** and a
 walk on a slow machine still gets everything it asked for. The rule itself is
 `PlaytestSettle` in PhotonzCore, tested there without an app around it.
 
+A slice the main run loop never came back in counts as **busy, not quiet**. An
+idle thread and a blocked one both do no work, and only the number of run-loop
+passes tells them apart: the harness's own sleeping wakes the loop every slice,
+so zero passes means the thread never got that far. Until 2026-09-13 the meter
+behind that signal was installed by the first `press` or `drag` in a walk, so
+every wait before that one read `mainBusy 0.0ms over 0 passes` and went quiet
+after a tenth of a second no matter what the app was doing. That is a walk
+reading the dock while it is still being built, and it was half of the flake
+this section and the next one exist to answer.
+
 The log says which happened, and `done.json` carries `secondsSaved` for the
 walk:
 
@@ -641,6 +651,80 @@ clock and see whether it comes back:
 ```bash
 PHOTONZ_PLAYTEST_PACE=full Scripts/playtest.sh <walk.json> --no-build
 ```
+
+## A step waits for the panel instead of racing it
+
+The dock builds its rows lazily and re-lays them out whenever a section opens
+or an effect arrives, so "the control is not there" and "the control is not
+there **yet**" used to come back as the same sentence. Six walks failed that
+way in the 2026-09-13 sweeps and every one of them passed on its own straight
+afterwards. The cure an author had was to write a longer `wait` and hope, which
+is a number that is right on one machine on one day.
+
+Three things happen now before any `press`, `expect` or `panelMenu` step gives
+up:
+
+- **It keeps looking, for up to two seconds.** Far longer than the dock has
+  ever taken to lay itself out, far shorter than a walk's own timeout. The
+  failure a walk reports is the LAST one, word for word the message it used to
+  fail with, so **a control that has genuinely gone away still fails the walk**
+  — two seconds later, naming the same neighbours.
+- **A press scrolls to its target.** If the control is in the panel but below
+  the fold, the press scrolls until it is where a press can land, exactly as a
+  person does. A walk no longer has to say `reveal` first, which is what went
+  stale every time the dock grew a section: four walks were failing on that
+  alone when this was written. The log says the distance, so a panel that has
+  started needing a scroll where it did not before is visible rather than
+  quietly absorbed.
+- **A press waits for the control to hold still.** A press is real mouse events
+  posted to the app's queue, and AppKit works out what they landed on when it
+  DELIVERS them. A control measured mid-relayout is a control the press misses:
+  the event arrives, the panel has slid, and the click lands on whatever moved
+  into that spot. So the box has to read the same two looks a frame apart
+  before the events go out. A control that never stops moving is pressed anyway,
+  at its last known place, with the log saying `never held still` — a busy
+  machine should not read as a broken walk.
+
+All three show up in the press's own log line when they cost anything:
+
+```
+[30 press] "Slider" in Border 2, Width at window (1079, 218), one click at 12%
+across it; scrolled 46pt to reach it; mainBusy 68.9ms over 288 passes...
+```
+
+`reveal` is still a step, and still worth writing when the POINT of the walk is
+that something needed scrolling to. It is no longer something a walk has to
+remember.
+
+## Where a walk starts from
+
+The probe keeps its settings between runs on purpose: that is what a person's
+app does. A walk says what it needs forgotten in its `setup` block, and
+whatever it changes is put back when the run ends, pass or fail, so the ORDER
+of the walks in a sweep does not change their answers.
+
+Two things make that guarantee thinner than it looks, and both are worth
+knowing before writing a walk:
+
+- **A walk only forgets what it names**, and 225 of the 405 walks name nothing.
+  Those inherit whatever the machine was last left in — the shape style, the
+  open sections, the dock's width. Write `"forget": ["all"]` to start from a
+  machine that has never run Photonz, which is what most walks want and what
+  none of them could say in one word before:
+
+  ```json
+  { "setup": { "forget": ["all"] }, "steps": [ ... ] }
+  ```
+
+  Naming areas one by one still works and is right when a walk is ABOUT
+  something being remembered.
+
+- **Which release the probe runs is a setting too**, and no walk declares it. A
+  probe left on Current ran every walk afterwards against an app with a
+  different right hand panel, reporting pass and fail as confidently as ever.
+  `Scripts/probe-app.sh` now pins `experiments.release` to `next` before every
+  launch, because every walk is written against Next. The first line of every
+  `log.json` says which release the run was on; believe it over any assumption.
 
 ## Reading the cost of a step
 

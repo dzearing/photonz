@@ -68,6 +68,15 @@ quit_probe
 # The probe rewrites this at launch; drop it first so a failed launch reports
 # "unknown" rather than yesterday's answer.
 rm -f "$GRANTS"
+# Which release the probe is running is a SETTING, kept between launches like
+# any other, and no walk declares it. So a probe left on Current ran every walk
+# afterwards against an app with a different right hand panel, reporting
+# pass and fail as confidently as ever: the walk that asks for the Effects list
+# just failed at whatever step first wanted something Current does not have.
+# Every walk is written against Next (CLAUDE.md), so pin it here, once, before
+# each launch. Nothing else in the probe's memory is touched: a walk says what
+# it wants forgotten in its own `setup` block.
+defaults write com.dzearing.photonz.probe "experiments.release" -string next
 # A playtest script rides in as a launch argument (docs/design/playtest-harness.md);
 # only the probe bundle acts on it.
 ARGS=()
