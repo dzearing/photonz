@@ -14554,3 +14554,46 @@ follow-ups filed: an original and its copies read as three identical rows in the
 layers list, and one Looks-track walk failed once under load looking for the
 Effects plus by name. A full sweep was requested, because the reveal change can
 move the panel for up to a second longer than it used to.
+
+## 2026-09-13 — The build machine builds the app again
+
+Every run on the build machine had failed since 2026-08-23, and nobody noticed
+because the app kept building fine on this machine. The cause was a file that
+means "someone is playtesting on THIS machine right now": `queue/playtest.lock`
+had been committed, so the build machine checked it out, believed it, and
+refused to build the app bundle on every single run.
+
+The lock itself was already gone from the index before this task started, pulled
+out by hand from the review window in f2d321a2. Behind it was a second failure
+the first one had been hiding: with the lock gone, the step went on to create the
+"Photonz Dev" self-signed certificate on the runner and call `codesign` with it.
+A private key that has just been imported makes codesign ask the keychain for
+permission with a dialog, and on a headless runner nobody answers. Run
+34740281542 sat on "Codesigning" for twelve minutes and died at the job timeout.
+
+That certificate exists so a person's Screen Recording grant survives a rebuild,
+which cannot mean anything where there is no person. `Scripts/build-app.sh` now
+reaches for it only when the bundle is a dev or probe build and the build is not
+running under CI; everything else ad-hoc signs.
+
+Reading the same log turned up two more things of the same shape. The step is
+called "Build release app bundle" but ran the bare script, which selects the DEV
+variant, so it built `dist/Photonz Dev.app` while the upload asked for
+`dist/Photonz.app` and quietly got nothing, for as long as the step has existed.
+And `release.yml` calls the script bare too, so the first release run with
+`APPLE_SIGNING_IDENTITY` unset would have built the dev bundle and then failed at
+Package DMG looking for an app that was never made. A new `--release` flag builds
+the shipping bundle with no DMG and no signing identity, both workflows pass it,
+and the upload now fails rather than shrugging when its path is empty. A first CI
+step fails the run if the playtest lock is ever tracked again.
+
+Verified on the build machine, not inferred: run 34743582977 is green end to end
+in 10m27s against 25 allowed, and carries a `Photonz.app` artifact for the first
+time. Locally: the guard still refuses a dev build with the lock present (exit
+2), `--probe` and `--release` still go through, the dev app binary is
+byte-identical, and `Scripts/test.sh` passes 5933 tests. Audit:
+`queue/audits/2026-09-13-ci-lock-file.json`.
+
+**Next:** the queue's own p1 work. Worth knowing for whoever picks up a release:
+the release workflow has now been read closely and its Build app step fixed, but
+it has not been exercised end to end since.

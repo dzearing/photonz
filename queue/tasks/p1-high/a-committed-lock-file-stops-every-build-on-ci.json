@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T20:29:49.384Z",
-  "updated": "2026-09-13T06:32:49.287Z",
+  "updated": "2026-09-13T06:57:26.580Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on CI run 34716668729 (main, e5462576), step \"Build release app bundle\":\n\n  Run Scripts/build-app.sh\n  !! Refusing to rebuild \"dist/Photonz Dev.app\": a playtest is in progress (queue/playtest.lock).\n  ##[error]Process completed with exit code 2.\n\nConfirmed tracked: `git ls-files queue/playtest.lock` prints the path, and .gitignore has no playtest entry. The file has been in the tree since 2026-08-23.\n\nThis is the same shape of problem as the perf-gate task: .github/workflows/release.yml runs Scripts/build-app.sh in its \"Build app\" step, so a release would die there for a reason that has nothing to do with the release. Fix is `git rm --cached queue/playtest.lock` plus a .gitignore entry; check whether queue/bin/*.sh expects the file to be tracked before removing it.",
@@ -42,7 +42,28 @@
     {
       "t": "2026-09-13T06:34:54.180Z",
       "note": "Third thing the log gave away: the step is called \"Build release app bundle\" but ran the bare script, which selects the DEV variant, so it was building dist/Photonz Dev.app while the upload step asked for dist/Photonz.app and quietly got nothing (upload-artifact only warns by default). The same shape sits in release.yml: its Build app step is bare too, so if APPLE_SIGNING_IDENTITY is ever unset a release builds the dev bundle and the later --dmg-only step finds no dist/Photonz.app. All three fixed here, because acceptance 2 asks for a step that passes, not one that merely gets past the lock."
+    },
+    {
+      "t": "2026-09-13T06:57:23.979Z",
+      "note": "Verified before pushing, on this machine. An isolated copy of Scripts/ and VERSION in /tmp (so a broken guard could not possibly touch dist/Photonz Dev.app) proved all four cases: lock present + dev refuses with exit 2, lock present + --probe goes through, lock present + --release goes through, no lock + dev goes through. Then the real thing: CI=true Scripts/build-app.sh --release exited 0, printed \"Codesigning (ad-hoc)\", never mentioned the dev certificate at all, produced an ad-hoc signed dist/Photonz.app with identifier com.dzearing.photonz, and left the dev app binary on sha256 719e0f40... exactly as it was before. Scripts/test.sh: 5933 tests in 487 suites passed."
+    },
+    {
+      "t": "2026-09-13T06:57:23.980Z",
+      "note": "Acceptance 2 verified on the build machine, not inferred. Run 34743582977 (commit 96b36744) is green end to end in 10m27s, against 25 allowed. \"No machine-local files are committed\" passed, \"Build release app bundle\" ran 06:54:38 to 06:56:59 and printed \"==> Building Photonz 0.15.0 (release, arm64)\" then \"==> Codesigning (ad-hoc)\" then \"==> Done: dist/Photonz.app\", and the run carries a Photonz.app artifact of 8016617 bytes - the first one it has ever produced, because the step used to build the dev bundle under a name nobody uploaded."
+    },
+    {
+      "t": "2026-09-13T06:57:23.980Z",
+      "note": "Also verified the new guard step fires: with queue/playtest.lock force-added back to the index, the step body under `bash -e` printed the ::error:: line and exited 1; with the tree clean it printed \"queue/playtest.lock is not tracked\" and exited 0. Tree restored afterwards."
+    },
+    {
+      "t": "2026-09-13T06:57:23.980Z",
+      "note": "No sweep asked for: nothing here touches the app, the walks or the harness. Audit written to queue/audits/2026-09-13-ci-lock-file.json; it says plainly that there is no screenshot because this change has no screen."
+    },
+    {
+      "t": "2026-09-13T06:57:26.578Z",
+      "note": "CI run 34743582977 on main is green end to end in 10m27s, with a Photonz.app artifact attached for the first time. The committed playtest lock was already out of the index (f2d321a2); behind it the same step then hung on codesign because it created the dev signing certificate on the runner and waited forever for a keychain dialog. build-app.sh now uses that certificate only for dev and probe builds and never under CI, a new --release flag builds the shipping bundle (CI and release.yml both pass it, so neither builds the dev bundle by accident any more), and a first CI step fails the run if queue/playtest.lock is ever tracked again. Verified locally too: guard still refuses a dev build with the lock present (exit 2), dev app binary byte-identical, 5933 tests pass. Audit: queue/audits/2026-09-13-ci-lock-file.json. Commit 96b36744."
     }
   ],
-  "started": "2026-09-13T06:32:49.285Z"
+  "started": "2026-09-13T06:32:49.285Z",
+  "completed": "2026-09-13T06:57:26.579Z"
 }
