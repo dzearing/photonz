@@ -4,12 +4,12 @@
   "goal": "The command is worth running on a whole screen in one go: it separates everything it can read, leaves everything it cannot, and tells you plainly what it skipped so you are never left wondering whether it worked. It stays quick enough to feel like a command rather than a job.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 43,
+  "seq": 9,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.603Z",
-  "updated": "2026-09-12T16:42:10.914151Z",
+  "updated": "2026-09-13T05:24:50.002Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can",
     "separate-the-boxes-too-and-fill-the-hole-underne",
@@ -43,6 +43,10 @@
     {
       "t": "2026-09-12T16:42:10.914151Z",
       "note": "user corrected the repair design: repair the background in place, two layers not three"
+    },
+    {
+      "t": "2026-09-13T05:24:50.001Z",
+      "note": "seq 43 -> 9"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "The same command also lifts out the boxes: a button, a card, a bar, a row. Drag one away and what was behind it is filled in, so the screenshot never shows a hole. A box that is really just a rectangle of one colour comes out as something you can move and resize without it turning to mush.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 41,
+  "seq": 7,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.346Z",
-  "updated": "2026-09-12T16:42:10.911575Z",
+  "updated": "2026-09-13T05:24:49.901Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can"
   ],
@@ -42,6 +42,10 @@
     {
       "t": "2026-09-12T16:42:10.911575Z",
       "note": "user corrected the repair design: repair the background in place, two layers not three"
+    },
+    {
+      "t": "2026-09-13T05:24:49.900Z",
+      "note": "seq 41 -> 7"
     }
   ]
 }

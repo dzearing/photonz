@@ -4,12 +4,12 @@
   "goal": "A card in a screenshot usually sits on a soft shadow. When the card is separated, the shadow should come with it as a real shadow effect, so moving the card moves its shadow and the background where it used to be is clean. If the shadow cannot be read confidently, it stays part of the picture and the card comes out without one.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 44,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.734Z",
-  "updated": "2026-09-12T16:42:10.909911Z",
+  "updated": "2026-09-13T05:24:50.061Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can",
     "separate-the-boxes-too-and-fill-the-hole-underne"
@@ -40,6 +40,10 @@
     {
       "t": "2026-09-12T16:42:10.909911Z",
       "note": "user corrected the repair design: repair the background in place, two layers not three"
+    },
+    {
+      "t": "2026-09-13T05:24:50.060Z",
+      "note": "seq 44 -> 10"
     }
   ]
 }

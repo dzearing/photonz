@@ -9,3 +9,8 @@ dist/
 temp/
 .tmp-shots/
 queue/manager/.last-run
+
+# A playtest lock is machine-local: it says someone at THIS machine is using
+# the dev app. Committed, it followed the repo onto the build machine and made
+# every CI run refuse to build the app bundle (2026-08-23 to 2026-09-13).
+queue/playtest.lock

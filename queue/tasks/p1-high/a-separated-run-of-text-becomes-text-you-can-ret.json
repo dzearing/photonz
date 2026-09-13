@@ -4,12 +4,12 @@
   "goal": "Once text is on its own layer, the natural next thing is to change the words. Turn a separated run into a real text layer with the font, size and colour guessed from the picture, so you can retype a label instead of covering it up. Where the guess is not good enough to look right, the run stays a picture.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 45,
+  "seq": 11,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.866Z",
-  "updated": "2026-09-12T16:42:10.913801Z",
+  "updated": "2026-09-13T05:24:50.121Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can"
   ],
@@ -40,6 +40,10 @@
     {
       "t": "2026-09-12T16:42:10.913801Z",
       "note": "user corrected the repair design: repair the background in place, two layers not three"
+    },
+    {
+      "t": "2026-09-13T05:24:50.120Z",
+      "note": "seq 45 -> 11"
     }
   ]
 }
