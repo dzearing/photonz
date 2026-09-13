@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.346Z",
-  "updated": "2026-09-13T08:05:10.485Z",
+  "updated": "2026-09-13T08:15:44.967Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can"
   ],
@@ -62,7 +62,12 @@
     {
       "t": "2026-09-13T08:05:10.485Z",
       "note": "Measured in release: the 1.4 MP fixture is 39 ms end to end (text 7 ms, boxes 32 ms); a 12.2 MP capture with 81 runs and 18 boxes is 297 ms, plus the 107 ms brightness read it shares with the measure tool. Nothing touches the composite path."
+    },
+    {
+      "t": "2026-09-13T08:15:44.965Z",
+      "note": "Boxes separate alongside the runs of text, and the space each one came from is filled in. PhotonzCore/BoxSweep finds a box as something sitting on the picture's own background, one level deep; a flat box comes out as a real rounded rectangle with its colour, edge and rounding (the blue button reads #0A84FF, 14 px corners, no edge; the grey one #E9E9ED with a 2 px #CFCFD4 edge). Verified by 14 new PhotonzCore tests, 8 new fixture tests on the real capture (filled space reads 0/255 against the page beside it, 1/255 on a drawn ramp), the whole 6007-test suite green, and two playtest walks including separate-boxes-walk which drags the button clear and shows plain page behind it. Audit: queue/audits/2026-09-13-separate-boxes.json. Commit 855abe58."
     }
   ],
-  "started": "2026-09-13T07:34:39.549Z"
+  "started": "2026-09-13T07:34:39.549Z",
+  "completed": "2026-09-13T08:15:44.966Z"
 }
