@@ -3019,3 +3019,4 @@
 {"t":"2026-09-13T16:47:19.858Z","ev":"loop_reloaded","from":"6b96b2566141","to":"425af2c68a73"}
 {"t":"2026-09-13T16:47:19.973Z","ev":"loop_started","pid":80518}
 {"t":"2026-09-13T16:47:20.184Z","ev":"task_started","id":"a-path-can-be-reshaped-after-you-draw-it","title":"A path can be reshaped after you draw it","priority":"p1-high"}
+{"t":"2026-09-13T17:06:58.186Z","ev":"task_done","id":"a-path-can-be-reshaped-after-you-draw-it","from":"in_progress","note":"A picked path shows its points and they can be dragged, curved, broken, joined, added and taken out, one undo step each (Next, next-reshape-a-path). Core in PhotonzCore/PathEditing.swift with 29 tests written first; canvas in CanvasPathEdit.swift. Verified: Scripts/test.sh 6272 green, path-reshape-walk 87 steps green with real screenshots, pen and path walks green. Audit: queue/audits/2026-09-13-path-reshape.json. Sweep requested."}
