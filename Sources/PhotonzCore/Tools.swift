@@ -31,6 +31,11 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// `next-frames`). A drag makes one the size you drew, a plain click drops
     /// one at the size you picked last.
     case frame
+    /// The vector Pen (Next, `next-pen`): click a corner, press and drag a
+    /// curve, and the run of anchors becomes a path layer
+    /// (`docs/design/vector-paths.md`). The one tool in the app that draws over
+    /// several clicks rather than in one drag.
+    case pen
 
     /// The single key that picks this tool, everywhere in the product.
     ///
@@ -69,6 +74,10 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .measure: "i"
         case .fill: "g"
         case .wand: "w"
+        // P is the vector Pen everywhere in the product, which is why the
+        // arrow moved off it (see above). Photoshop's P is the pen too, so
+        // this is parity rather than a departure.
+        case .pen: "p"
         // F is the design-tool convention for a frame. Photoshop's F cycles
         // screen modes, which this app does not have, so nothing is displaced.
         case .frame: "f"
@@ -92,7 +101,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .ellipse: .ellipse
         case .highlight: .highlight
         case .select, .crop, .text, .zoomCallout, .lens, .measure, .fill,
-             .rectSelect, .ellipseSelect, .wand, .frame: nil
+             .rectSelect, .ellipseSelect, .wand, .frame, .pen: nil
         }
     }
 
@@ -137,8 +146,12 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // colour on the picture. The frame tool draws its own fixed grey.
         // A lens puts no colour on the picture either: it shows the colours
         // already there, changed.
+        // The Pen puts colour on the picture, but not from here yet: a path
+        // arrives wearing what a new box wears and is repainted from the
+        // Appearance panel, so a capsule here would be a second place to set
+        // the same two colours with nothing behind it.
         case .select, .crop, .zoomCallout, .lens, .measure,
-             .rectSelect, .ellipseSelect, .wand, .frame: .hidden
+             .rectSelect, .ellipseSelect, .wand, .frame, .pen: .hidden
         }
     }
 

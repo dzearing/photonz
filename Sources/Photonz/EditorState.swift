@@ -945,6 +945,11 @@ final class EditorState {
     var measureModeHint: MeasureModeHint?
     var measureModeHintTimer: Task<Void, Never>?
 
+    /// Next (`next-pen`): the line the Pen's chip is showing, which changes as
+    /// the path grows. The canvas owns the session and pushes the line here, so
+    /// the chip and the drawing can never disagree about how far along it is.
+    var penHint: String?
+
     /// Next (`next-measure-panel`): the "Copied" notice that is up right now,
     /// if any. Raised by Copy as Spec List, Copy Measurement and Copy Image,
     /// and dropped
@@ -1813,6 +1818,9 @@ final class EditorState {
         // after they have called through here.
         pasteToolReturn = nil
         if tool == .measure { showMeasureModeHint() }
+        // The Pen's chip opens on its first line every time the tool is picked
+        // up, whatever the last path it drew had got to.
+        penHint = tool == .pen ? PenSession.hint(for: PenSession()) : nil
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
         // layer handles) would read as interactive when it isn't. The
         // selection REGION survives within the selection family + fill

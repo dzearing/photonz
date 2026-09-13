@@ -155,11 +155,13 @@ public struct ToolBarLayout: Hashable, Sendable {
     /// the zoom callout because the two are the same idea — a box that shows
     /// the picture underneath differently — and one day the callout becomes a
     /// Magnify lens.
-    public static func bar(withFrame: Bool, withLens: Bool = false) -> ToolBarLayout {
+    public static func bar(withFrame: Bool, withLens: Bool = false,
+                           withPen: Bool = false) -> ToolBarLayout {
         var drawing: [Entry] = [.tool(.arrow), .group(.shapes), .tool(.highlight),
                                 .tool(.text), .tool(.zoomCallout)]
         if withLens { drawing.append(.tool(.lens)) }
         if withFrame { drawing.append(.tool(.frame)) }
+        if withPen { drawing.append(.tool(.pen)) }
         return ToolBarLayout(families: [
             [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
             drawing,

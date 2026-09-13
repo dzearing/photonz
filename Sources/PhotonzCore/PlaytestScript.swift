@@ -1332,6 +1332,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// What the path the Pen just drew is actually made of: how many anchors it
+    /// has, whether it closed, and how many of its runs are curves.
+    ///
+    /// A picture cannot settle any of the three. A closed triangle and an open
+    /// one photograph almost identically at the join, a curve dragged half a
+    /// point is a curve the render cannot show, and counting anchors off a
+    /// screenshot is counting dots that are chrome and gone by the time the
+    /// shot is taken. This asks the DOCUMENT, which is where the anchors live.
+    ///
+    /// `layer` names which path to ask when there is more than one; the last
+    /// path in the document is the one meant when it is left off, because a
+    /// walk that just drew one is asking about the one it drew.
+    case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?)
     /// How many layers the document must hold right now, counting the ones
     /// inside groups.
     ///
@@ -1512,7 +1525,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor",
     ]
@@ -1560,6 +1573,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectPath: "expectPath"
         case .expectLayers: "expectLayers"
         case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
@@ -1821,6 +1835,24 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expect(thing: thing, named: try f.string(thing.rawValue),
                            inRow: inRow, reads: reads, present: present)
+        case "expectPath":
+            let anchors = try f.optionalNumber("anchors")
+            let curves = try f.optionalNumber("curves")
+            let closed = try f.optionalFlag("closed")
+            guard anchors != nil || closed != nil || curves != nil else {
+                throw f.invalid("anchors", "expectPath has to claim something about the path: "
+                    + "\"anchors\" for how many points it has, \"closed\" for whether it joined "
+                    + "back up, \"curves\" for how many of its runs are curved")
+            }
+            for (field, value) in [("anchors", anchors), ("curves", curves)] {
+                guard let value else { continue }
+                guard value >= 0, value == value.rounded() else {
+                    throw f.invalid(field, "a number of \(field) is a whole number, zero or more, not \(value)")
+                }
+            }
+            self = .expectPath(layer: try f.optionalString("layer"),
+                               anchors: anchors.map { Int($0) }, closed: closed,
+                               curves: curves.map { Int($0) })
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

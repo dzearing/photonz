@@ -344,6 +344,8 @@ struct EditorView: View {
                        onZoomCalloutCommit: { editorState.addZoomCallout(from: $0, to: $1) },
                        onFrameCreate: { editorState.addFrame(from: $0, to: $1) },
                        onLensCreate: { editorState.addLens(from: $0, to: $1) },
+                       onPathCommit: { editorState.addPath($0) },
+                       onPenHintChange: { editorState.penHint = $0 },
                        onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
                        onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
                        onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
@@ -426,6 +428,14 @@ struct EditorView: View {
                                          action: notice.action)
                     } else if editorState.showsMeasureHint {
                         measureHintChip
+                    } else if editorState.showsPenHint {
+                        // The Pen's chip stays up the whole time the tool is in
+                        // hand, rather than fading like the Measure one: it is
+                        // the only place Return and Escape are told apart, and
+                        // the moment you need that is several clicks after you
+                        // picked the tool up.
+                        canvasNoticeChip(title: PenSession.hintTitle,
+                                         detail: editorState.penHintText)
                     }
                 }
                 .overlay(alignment: .bottom) {
@@ -439,6 +449,7 @@ struct EditorView: View {
                     if !entries.isEmpty { measureLegend(entries) }
                 }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
+                .animation(.easeInOut(duration: 0.2), value: editorState.showsPenHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureModeHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.copyConfirmation)
                 .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)
@@ -915,7 +926,8 @@ struct EditorView: View {
     /// slot is the same widget the compact bar uses, so the two never drift.
     @ViewBuilder private var groupedToolRow: some View {
         ForEach(Array(ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
-                                        withLens: Experiments.shared.lensEnabled)
+                                        withLens: Experiments.shared.lensEnabled,
+                                        withPen: Experiments.shared.penEnabled)
             .families.enumerated()), id: \.offset) { index, family in
             if index > 0 {
                 Divider().frame(height: 20)
@@ -1091,6 +1103,9 @@ struct EditorView: View {
         case lens
         /// The frame tool (Next, `next-frames`): the screen you build on.
         case frame
+        /// The vector Pen (Next, `next-pen`): click corners and drag curves
+        /// into one outline.
+        case pen
         /// Line, Rectangle and Ellipse as one family. Only in the grouped bar.
         case shapes
 
@@ -1131,6 +1146,7 @@ struct EditorView: View {
             case .measure: "Measure"
             case .fill: "Fill"
             case .frame: "Frame"
+            case .pen: "Pen"
             }
         }
 
@@ -1153,6 +1169,7 @@ struct EditorView: View {
             case .measure: "ruler"
             case .fill: "drop"
             case .frame: "macwindow"
+            case .pen: "pencil.tip"
             }
         }
 
@@ -1188,6 +1205,7 @@ struct EditorView: View {
             case .measure: .measure
             case .fill: .fill
             case .frame: .frame
+            case .pen: .pen
             case .marquee, .shapes, .resize: nil
             }
         }
@@ -1200,12 +1218,14 @@ struct EditorView: View {
     private var toolbarSlots: [ToolbarSlot] {
         let frames = Experiments.shared.framesEnabled
         let lens = Experiments.shared.lensEnabled
+        let pen = Experiments.shared.penEnabled
         guard Experiments.shared.toolGroupsEnabled else {
             return ToolbarSlot.allCases.filter {
                 $0 != .shapes && ($0 != .frame || frames) && ($0 != .lens || lens)
+                    && ($0 != .pen || pen)
             }
         }
-        var slots = ToolBarLayout.bar(withFrame: frames, withLens: lens)
+        var slots = ToolBarLayout.bar(withFrame: frames, withLens: lens, withPen: pen)
             .entries.map(ToolbarSlot.init)
         if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
             slots.insert(.resize, at: crop + 1)
@@ -1248,6 +1268,7 @@ struct EditorView: View {
         case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
         case .lens: toolButton(.lens, LensCopy.symbol, LensCopy.toolTitle)
         case .frame: toolButton(.frame, "macwindow", "Frame")
+        case .pen: toolButton(.pen, "pencil.tip", "Pen")
         case .measure: measureToolButton
         case .fill:
             toolButton(.fill, help: "Fill") {

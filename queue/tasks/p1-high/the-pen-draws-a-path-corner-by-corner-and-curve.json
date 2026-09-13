@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T13:08:31.831Z",
-  "updated": "2026-09-13T13:08:43.550Z",
+  "updated": "2026-09-13T15:02:57.260Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -40,6 +40,35 @@
     {
       "t": "2026-09-13T13:08:43.550Z",
       "note": "deps set: the path model comes first"
+    },
+    {
+      "t": "2026-09-13T14:40:31.970Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T14:42:01.525Z",
+      "note": "Adversarial review before building. Walked the flow as someone who has drawn with a pen elsewhere. (1) The first click must leave something visible or you think it failed, so a placed anchor is a dot on the canvas from click one. (2) Closing is guesswork unless the first anchor tells you it is a target: it grows a ring when the pointer is near enough to close, and the click lands on the anchor rather than the pixel. (3) Finishing is the part the mock does worst: vector-wt puts Close path in the Properties panel behind Shift Cmd J, which nobody new will find. Clicking the first anchor closes; Return finishes an open path; clicking the LAST anchor again also finishes, because a mouse-only user never thinks of Return. (4) Escape: the app already means cancel by Escape everywhere (annotation drag, measure placement), so Escape throws the path away and Return keeps it. Those are the two that must be told apart, and the canvas hint says both out loud while you draw. (5) Cut from the mock for this slice: the Path section of Properties (anchor type, node coordinates, Close path button) is the EDITING slice, and node coordinate fields with no way to drag a node are decoration. (6) Shortest version: no anchor editing, no per-path colour capsule on the tool bar (a new path wears the same redline red a new box wears, and Appearance repaints it), no brushes."
+    },
+    {
+      "t": "2026-09-13T15:02:57.260Z",
+      "note": "Built. PenSession (Sources/PhotonzCore/PenDrawing.swift) holds every decision the gesture makes, 33 tests; CanvasPen.swift draws the chrome and converts view to document; EditorState+Pen.swift commits ONE layer through History.perform. Tool.pen takes P, joins the END of the drawing family behind next-pen. Two walks: pen-draws-a-path-walk (close, undo one point, Escape, Return) and pen-three-drawings-walk (the three shapes the acceptance names). New playtest step expectPath asks the DOCUMENT how many anchors a path has, whether it closed and how many runs are curved, because none of the three can be settled from a picture."
+    },
+    {
+      "t": "2026-09-13T15:02:57.260Z",
+      "note": "Adversarial review of the BUILT thing, on the real app through the probe with Screen Recording granted. What I changed as a result: (1) Shift now re-snaps the preview the moment the key goes down (flagsChanged) rather than at the next mouse move, because holding shift to check a line is level is something you do with the hand already still. (2) Option was added after finding that a rounded rectangle could not be drawn at all: every dragged anchor was smooth with mirrored handles, so the straight edges came out bowed. Option now means one thing in two places (do not tie this anchor’s two sides together) and a rounded rectangle comes out exactly right in fourteen presses. Left rough and written into the audit: the tool hands back to Select after one path, which is what the acceptance asked for and is the first thing to reconsider for icon work; and the chip does not mention Option."
+    },
+    {
+      "t": "2026-09-13T15:02:57.260Z",
+      "note": "Acceptance, item by item. P and the tool bar: done, and ToolTests now asserts P belongs to the Pen and nothing else. Click a corner / drag a curve: done, drag threshold 4 view points, latched, measured on screen. Continuous preview: done, redrawn on every mouse move in the shape’s own ink. Close by clicking the first point: done, with a ring on the anchor so it is not guesswork; Return keeps the open path, Escape discards it, and the chip is where the two are told apart. Hands back with the path selected: done. Shift: done. Undo one point at a time: done, taken in performKeyEquivalent because a key equivalent never reaches keyDown. Press counts: counted by drawing each shape, recorded in the audit (triangle 4 = Figma 4, straight-plus-curve 4 = 4, rounded rectangle 14 = 14). Walk with anchor checks: done. Audit: queue/audits/2026-09-13-pen-draws-a-path.json with three real -sc.png captures."
+    },
+    {
+      "t": "2026-09-13T15:02:57.260Z",
+      "note": "The one acceptance item a runner cannot close: the first-time check with somebody who has never used this pen. There is no person in an unmanned loop to watch. The audit is written as exactly that check instead: eight steps in order, starting with the triangle, and the first evaluate question is “did you get a closed triangle out on the first try without reading anything”. What confused them gets written down when the user answers on the dashboard."
+    },
+    {
+      "t": "2026-09-13T15:02:57.260Z",
+      "note": "Asked for a full sweep: the Pen adds a slot to the end of the drawing family, so any walk that clicks the tool bar by coordinate could have shifted. The 15 tool-* walks and both pen walks pass; Scripts/test.sh is green at 6242 tests."
     }
-  ]
+  ],
+  "started": "2026-09-13T14:40:31.969Z"
 }

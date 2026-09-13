@@ -5,9 +5,10 @@ foundation under the Pen, under boolean operations, and under SVG export: none
 of those can start until a path exists as a thing the document can hold and the
 canvas can draw.
 
-Status: **built in Next** (2026-09-13). The model, the drawing, the geometry and
-the way it takes colour. There is NO Pen tool and no anchor editing yet: those
-are the two slices after this one, and this document says where they attach.
+Status: **built in Next** (2026-09-13). The model, the drawing, the geometry,
+the way it takes colour, and the **Pen** that lays one down (`next-pen`). There
+is no anchor EDITING yet — moving, converting and deleting the points of a path
+that already exists — which is the slice after this one.
 
 ## The words
 
@@ -167,12 +168,82 @@ Corners join with MITERS, because a corner anchor exists to be sharp and a round
 join would quietly curve every one of them. Open ends get round caps, which is
 what every other stroke in the app ends in. Neither is settable yet; see below.
 
+## The Pen
+
+`Sources/PhotonzCore/PenDrawing.swift` (`PenSession`) and
+`Sources/Photonz/CanvasPen.swift`. Every decision the gesture makes is in the
+first, tested; the second converts between the view and the document, draws the
+chrome, and hands one finished `PathContent` to `EditorState.addPath`, which
+commits ONE layer through `History.perform`. Nothing enters the document until
+the path ends, which is why stepping back through anchors is the session's job
+rather than undo's.
+
+### The three that decide whether it feels right
+
+**Four view points of travel is the line between a click and a drag**
+(`PenSession.dragThreshold`), which is what the rest of the app already calls
+that difference (`AnnotationDrag.isClick`). It is latched: a drag that wanders
+back to where it started is still a drag, or the anchor would flicker between a
+corner and a curve under the hand. It is measured on SCREEN, so it means the
+same thing at 8× as at 25%.
+
+**The run to the pointer is redrawn on every mouse move**, not on presses, and
+it is drawn in the ink the finished shape will wear. When the pointer is over
+the first anchor the preview shows the shape CLOSED and faintly filled, so what
+the click would give you is on screen before you commit to it.
+
+**Finishing is said out loud.** A chip under the canvas stays up the whole time
+the Pen is in hand and its line changes as the path grows; at three anchors it
+reads "Click the first point to close the shape. Return finishes it open, Esc
+discards it." Return and Escape do OPPOSITE things and that is the only place a
+person is told so. Clicking the last anchor again also finishes, for anyone who
+never thinks to press Return — which also means a double click ends a path, for
+free, since the second click of one lands on the anchor the first just placed.
+
+### Option: the rule that makes an icon drawable
+
+Option means one thing in both places it can land: **the two sides of this
+anchor are not tied together.**
+
+* Dragging a NEW anchor out with Option held sets only the handle that leaves,
+  so the edge arriving stays straight.
+* Pressing Option on the anchor just placed pulls that anchor's outgoing handle
+  back in, so the next edge leaves straight.
+
+Between them those two place the half-smooth anchors a rounded corner is made
+of — line, quarter round, line — and they are what Option does in every other
+pen, so nobody has to be told. Without them a path drawn with the Pen can only
+be all corners or all curves, and a rounded rectangle comes out with four bowed
+edges.
+
+### The rest of it
+
+Shift puts the next anchor on the nearest of the usual angles from the last one,
+keeping the distance travelled, which is the rule every constrained drag in the
+app follows. It is applied the moment Shift goes down rather than at the next
+mouse move.
+
+Command Z while drawing steps back ONE anchor. It is taken in the canvas's
+`performKeyEquivalent`, because a key equivalent never reaches a view's
+`keyDown`: the window offers it to the view hierarchy before the Edit menu. Once
+there is nothing left to step back through the pen stops answering and Command Z
+means what it always means.
+
+A path arrives wearing what a new box wears — the redline red, 4pt of line,
+filled when it closed and no fill at all when it did not, because an open path
+is a line. The Pen carries no colour capsule on the tool bar: the Appearance
+panel repaints the path it just made, and a second place to set the same two
+colours with nothing behind it is noise.
+
+**What the mock asked for and did not get.** `vector-wt.html` closes a path from
+a Close path button in the Properties panel, on ⇧⌘J. Clicking the first anchor
+is what a person actually does and what every other pen does, so that is what
+this builds; the panel's Path section (anchor type, node coordinates, Close
+path) belongs with the editing slice, because node coordinate fields with no way
+to drag a node are decoration.
+
 ## What the next slices add
 
-* **The Pen** (`P`, already reserved). Placing anchors, dragging handles as you
-  place them, closing a path, finishing an open one. This slice deliberately
-  contains no gesture at all, so the model is not shaped by whichever
-  interaction happened to be written first.
 * **Anchor editing.** Dragging anchors and handles, switching an anchor between
   corner and smooth, breaking one side loose. `alignHandles(keeping:)` and the
   optional handles are the two hooks it needs.
@@ -189,6 +260,9 @@ what every other stroke in the app ends in. Neither is settable yet; see below.
   nobody has to add one, but the row is there and it will draw a rectangle.
 * **Line cap and line join are not settable.** Icons want butt caps and a miter
   limit sooner or later.
-* **Nothing creates a path in the app.** Until the Pen lands, the only path
-  anybody can look at is `Scripts/playtest/fixtures/path-demo.photonz`, which
-  the `path-demo` walk opens.
+* **The Pen hands back to Select after one path**, the way every other drawing
+  tool does. An icon is several shapes in a row, so this is the first thing to
+  reconsider if drawing an icon feels like work.
+* **There is no way to place a half-smooth anchor without Option**, and the
+  chip does not mention Option. A pen user will try it; a newcomer will not need
+  it. Whether it deserves a line on screen is a question for the audit.

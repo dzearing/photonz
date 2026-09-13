@@ -31,6 +31,12 @@ extension CanvasNSView {
             refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             return
         }
+        // The Pen's run to the pointer tracks every move, not only presses:
+        // seeing the curve before you commit it is the whole point.
+        if tool == .pen, let viewport {
+            penMouseMoved(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
+                          event: event)
+        }
         handleMeasureHover(event)
         refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
         refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
@@ -254,7 +260,7 @@ extension CanvasNSView {
             return SelectionCursor.cursor(for: selectionMode)
         }
         if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
-            || tool == .measure { return .crosshair }
+            || tool == .measure || tool == .pen { return .crosshair }
         if tool == .text { return .iBeam }
         return nil
     }
@@ -281,6 +287,14 @@ extension CanvasNSView {
         // ⌥ pressed or let go over a layer flips the copy badge on the pointer
         // while it rests there, rather than waiting for the next mouse move.
         if tool == .select, moveDrag == nil, multiMove == nil { refreshGrabCursor() }
+        // ⇧ pressed or let go while the Pen is drawing snaps the run to the
+        // pointer onto the nearest of the usual angles THERE AND THEN, rather
+        // than at the next mouse move: holding shift to check whether a line
+        // is level is something you do with the hand already still.
+        if tool == .pen, penSession.isDrawing {
+            penSession.constrained = event.modifierFlags.contains(.shift)
+            refreshPenChrome()
+        }
         // ⌘ toggles measure snapping — refresh the hover dot so it jumps on/off
         // the edge live while held.
         refreshMeasureCreation(modifierFlags: event.modifierFlags)

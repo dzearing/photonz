@@ -160,6 +160,12 @@ struct CanvasView: NSViewRepresentable {
     let onFrameCreate: (CGPoint, CGPoint) -> Void
     /// A finished lens drag (Next, `next-lens`): the box a lens lands in.
     let onLensCreate: (CGPoint, CGPoint) -> Void
+    /// A path finished with the Pen (Next, `next-pen`), in document
+    /// coordinates: one layer, one undo step.
+    let onPathCommit: (PathContent) -> Void
+    /// What the Pen's chip under the canvas should say now, which changes as
+    /// the path grows.
+    let onPenHintChange: (String) -> Void
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -310,6 +316,8 @@ struct CanvasView: NSViewRepresentable {
         view.onZoomCalloutCommit = onZoomCalloutCommit
         view.onFrameCreate = onFrameCreate
         view.onLensCreate = onLensCreate
+        view.onPathCommit = onPathCommit
+        view.onPenHintChange = onPenHintChange
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
         view.onElementSizeCommit = onElementSizeCommit
@@ -415,6 +423,8 @@ final class CanvasNSView: NSView {
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onFrameCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onLensCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
+    var onPathCommit: ((PathContent) -> Void) = { _ in }
+    var onPenHintChange: ((String) -> Void) = { _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
@@ -838,6 +848,21 @@ final class CanvasNSView: NSView {
     var captionCloseRequest = 0
     /// In-progress drag-to-create (document coordinates).
     var annotationDrag: AnnotationDrag?
+    /// The path being laid down with the Pen (Next, `next-pen`). The one tool
+    /// that draws over several clicks, so its state outlives a single press;
+    /// every decision it makes lives in `PenSession` and is tested there.
+    var penSession = PenSession()
+    /// The run of the path already placed, plus the run to the pointer, drawn
+    /// the way the finished shape will be drawn (filled once it would close).
+    let penPathLayer = CAShapeLayer()
+    /// The anchors placed so far, as small dots.
+    let penAnchorsLayer = CAShapeLayer()
+    /// The handles being pulled out of the anchor under the hand: the two arms
+    /// and their ends.
+    let penHandlesLayer = CAShapeLayer()
+    /// The ring round the anchor a click would land ON: the first one when it
+    /// would close, the last one when it would finish.
+    let penTargetLayer = CAShapeLayer()
     /// Set by a press that committed the fresh arrow's caption field with the
     /// Arrow tool still in hand; mouse-up decides whether it was a click (hand
     /// back to Select) or a drag (the next arrow).
@@ -1768,6 +1793,11 @@ final class CanvasNSView: NSView {
         alignmentPreviewLayer.isHidden = true
         alignmentPreviewLayer.zPosition = 95
         layer?.addSublayer(alignmentPreviewLayer)
+
+        // The Pen's chrome: the shape being drawn first, then the anchors on
+        // top of it, then the handles, then the close ring, so the thing you
+        // are aiming at is never buried under the thing you are drawing.
+        setUpPenChrome()
 
         // Selection handles and the snap dot sit above every other overlay.
         // (A caliper's head dot is not drawn while its readout pill covers

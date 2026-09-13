@@ -1,0 +1,34 @@
+{
+  "feature": "The Pen draws a path",
+  "epic": "icon-vector",
+  "summary": "You can draw a shape that is not a rectangle. Pick up the Pen with P, click for corners and press and drag for curves, and the outline you are about to commit is on screen before you commit it. Click back on the first point and it closes and fills.",
+  "setup": "Photonz Dev, release Next. The Pen is on by default (Experiments, \"Draw any shape with the Pen\"). Start from a blank canvas: File, New Canvas.",
+  "try": [
+    { "do": "Press P. The Pen is the last button in the drawing group and a chip appears under the canvas saying what a click does." },
+    { "do": "Click three times to make a triangle, then click back on the very first point. It closes and fills red.", "shot": "2026-09-13-pen-three-drawings.png" },
+    { "do": "Press P again. Click once, then press and DRAG for the second point: handles come out of it and the curve behind them follows your hand while the button is down.", "shot": "2026-09-13-pen-handles-pulled.png" },
+    { "do": "Move the pointer back over the first point. It grows a ring and the preview shows the shape closed and filled.", "shot": "2026-09-13-pen-close-offered.png" },
+    { "do": "Press P, click four or five points, then press Command Z a few times. It takes back one point per press rather than the whole path." },
+    { "do": "Press P, click two points, press Escape. The drawing is gone and nothing was added." },
+    { "do": "Press P, click three points, press Return. The open line is kept as a layer and Select comes back with it picked." },
+    { "do": "Press P, click a point, then hold Option and drag the next one out. The edge arriving stays straight while the edge leaving curves, which is the corner an icon is made of." }
+  ],
+  "evaluate": [
+    "Did you get a closed triangle out on the first try without reading anything?",
+    "When you pressed and dragged, did the curve go where your hand said it would, or did it feel like it was lagging or overshooting?",
+    "Did any ordinary click accidentally make a curve? That is the drag threshold being too small, and it is four screen points right now.",
+    "Was it obvious how to stop drawing, or did you hunt? Return keeps the line, Escape throws it away, and only the chip says so.",
+    "The Pen hands back to Select the moment a path is finished, so drawing five shapes for an icon means pressing P five times. Should it stay in your hand instead?",
+    "Should the chip mention Option, or is that clutter for the one line that has to carry Return and Escape?"
+  ],
+  "rough": [
+    "Handing back to Select after one path is the thing most likely to be wrong for icon work. Every other drawing tool in the app does it and the task asked for it, so that is what it does, but an icon is several shapes in a row.",
+    "There is no anchor editing: you cannot move, delete or convert a point once the path is down, only resize the whole layer. That is the next slice and it was deliberately left out.",
+    "The mock (vector-wt) closes a path from a Close path button in the Properties panel on Shift Command J. That is not built. Clicking the first point closes it, which is what every other pen does and what a person actually reaches for; the panel's Path section belongs with the editing slice, because node coordinate fields with no way to drag a node are decoration.",
+    "The mock also shows the anchors and handles staying on screen and draggable after the path is finished. They do not: the chrome goes when the path lands. Same reason.",
+    "Press counts, against Figma, counted by drawing each one: a triangle is four presses in both. A shape with one straight edge and one curve is four in both. A rounded rectangle is fourteen in both (nine points plus four Option presses to pull a handle back in), and neither app is the way to draw one: the Rectangle tool with a corner radius is one drag.",
+    "A closed path arrives filled and outlined in the same red, so its four points of outline are invisible against its own fill. That is exactly what a new rectangle does, so it is consistent rather than right.",
+    "The Pen has no colour capsule on the tool bar: a new path is always the redline red until you repaint it in the Appearance panel. Every other drawing tool arms its colour from the bar.",
+    "Screen Recording was granted, so every picture here is the real window."
+  ]
+}

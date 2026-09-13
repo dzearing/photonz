@@ -164,6 +164,10 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
+        // The Pen owns every press while it is in hand: it draws over several
+        // clicks rather than in one drag, so there is no hit test, no marquee
+        // and no selection underneath it.
+        if tool == .pen, penMouseDown(at: p, event: event) { return }
         // Drawing tools own the pointer: every drag creates a new annotation
         // (or, for the zoom tool, defines the callout's source box).
         if tool.createsAnnotationByDrag || tool == .zoomCallout || tool == .frame
@@ -632,6 +636,10 @@ extension CanvasNSView {
             return
         }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
+        if tool == .pen {
+            penMouseDragged(to: p, event: event)
+            return
+        }
         if var drag = cropDrag {
             let bounds = cropBounds ?? CGRect(origin: .zero, size: viewport.documentSize)
             switch drag.kind {
@@ -967,6 +975,11 @@ extension CanvasNSView {
         if guideDragging {
             guideDragging = false
             refreshOverlays()
+            return
+        }
+        if tool == .pen {
+            penMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
+                       event: event)
             return
         }
         // The measure tool advances its placement on mouse-up (click/click) or on

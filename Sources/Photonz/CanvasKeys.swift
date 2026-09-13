@@ -8,6 +8,13 @@ import SwiftUI
 // `CanvasNSView`'s stored properties still live there.
 
 extension CanvasNSView {
+    /// Key equivalents reach a view before they reach the main menu, which is
+    /// the one place the Pen can answer Command Z before Undo does.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if penUndoKeyEquivalent(event) { return true }
+        return super.performKeyEquivalent(with: event)
+    }
+
     override func keyDown(with event: NSEvent) {
         // Adjusting the grid takes every key the canvas would otherwise act on,
         // so an arrow moves the markers rather than the last layer you happened
@@ -38,6 +45,9 @@ extension CanvasNSView {
             }
             return
         }
+        // The Pen owns Return and Escape while a path is being laid down: one
+        // keeps what you drew as an open line, the other throws it away.
+        if penKeyDown(event) { return }
         // Size mode: [ shrinks the pick, ] grows it. A flat screenshot has no
         // element tree, so the first guess is a guess — these two keys are what
         // make a wrong guess a half-second correction instead of a dead end.

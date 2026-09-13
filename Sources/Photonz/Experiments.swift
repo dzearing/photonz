@@ -314,6 +314,13 @@ extension Experiments {
     /// document's contents.
     var lensEnabled: Bool { isEnabled(FeatureCatalog.lensFlag) }
 
+    /// `next-pen`: whether the Pen tool exists at all — the slot at the end of
+    /// the drawing family, the letter P, and the gesture that lays a path down.
+    /// The model and the renderer are never flagged: a document that already
+    /// holds a path opens and draws correctly either way, because turning a
+    /// flag off takes away a way IN, never a document's contents.
+    var penEnabled: Bool { isEnabled(FeatureCatalog.penFlag) }
+
     /// `next-frames`: whether the frame tool, the two Layer rows and the
     /// export scope exist. A frame is a group with a size, so this needs
     /// groups: with them off there is no way in to a frame and the switch

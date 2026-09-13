@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/pen-three-drawings-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [120, 160] },
+    { "do": "click", "at": [300, 160] },
+    { "do": "click", "at": [210, 320] },
+    { "do": "click", "at": [120, 160] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "curves": 0 },
+    { "do": "describe", "stage": "1-triangle", "note": "a closed triangle in four presses: three clicks and a fourth on the first point. Figma takes the same four" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [400, 160] },
+    { "do": "drag", "from": [560, 240], "to": [560, 320], "steps": 10, "modifiers": ["option"] },
+    { "do": "click", "at": [400, 320] },
+    { "do": "click", "at": [400, 160] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "curves": 1 },
+    { "do": "describe", "stage": "2-straight-and-curve", "note": "one straight edge and one curve, in four presses: a click, an option drag that pulls a handle out on one side only, a click, and the close. Figma takes the same four" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [740, 400] },
+    { "do": "drag", "from": [824, 400], "to": [860, 400], "steps": 8, "modifiers": ["option"] },
+    { "do": "drag", "from": [860, 436], "to": [860, 472], "steps": 8 },
+    { "do": "click", "at": [860, 436], "modifiers": ["option"] },
+    { "do": "drag", "from": [860, 584], "to": [860, 620], "steps": 8, "modifiers": ["option"] },
+    { "do": "drag", "from": [824, 620], "to": [788, 620], "steps": 8 },
+    { "do": "click", "at": [824, 620], "modifiers": ["option"] },
+    { "do": "drag", "from": [656, 620], "to": [620, 620], "steps": 8, "modifiers": ["option"] },
+    { "do": "drag", "from": [620, 584], "to": [620, 548], "steps": 8 },
+    { "do": "click", "at": [620, 584], "modifiers": ["option"] },
+    { "do": "drag", "from": [620, 436], "to": [620, 400], "steps": 8, "modifiers": ["option"] },
+    { "do": "drag", "from": [656, 400], "to": [692, 400], "steps": 8 },
+    { "do": "click", "at": [656, 400], "modifiers": ["option"] },
+    { "do": "click", "at": [740, 400] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 9, "closed": true, "curves": 4 },
+    { "do": "describe", "stage": "3-rounded-rectangle", "note": "a rounded rectangle in fourteen presses: nine anchors plus four option presses that pull a handle back in so the next edge leaves straight. Figma takes the same fourteen, and neither is the way anybody should draw one: the Rectangle tool with a corner radius is one drag" },
+
+    { "do": "expectLayers", "count": 4 },
+    { "do": "snapshot", "name": "1-three-drawings" },
+    { "do": "render", "name": "2-three-drawings-render" }
+  ]
+}

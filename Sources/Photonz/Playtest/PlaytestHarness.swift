@@ -950,6 +950,11 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
+        case .expectPath(let layerName, let anchors, let closed, let curves):
+            note(number, step.name,
+                 try checkPath(layerName, anchors: anchors, closed: closed, curves: curves),
+                 state: describe())
+
         case .expectLayers(let atLeast, let atMost):
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
                  state: describe())
@@ -2682,6 +2687,49 @@ private final class Run {
         let range = [atLeast.map { "at least \($0)" }, atMost.map { "at most \($0)" }]
             .compactMap { $0 }.joined(separator: " and ")
         return "\(count) \(plural(count)) in the document, \(range), as claimed"
+    }
+
+    /// What the path the Pen drew is made of, asked of the document rather than
+    /// read off a picture (`PlaytestStep.expectPath`).
+    private func checkPath(_ layerName: String?, anchors: Int?, closed: Bool?,
+                           curves: Int?) throws -> String {
+        let editor = try requireEditor()
+        let layers = editor.document?.allLayers ?? []
+        let paths = layers.filter { $0.path != nil }
+        let layer: Layer
+        if let layerName {
+            guard let named = paths.last(where: { $0.name == layerName }) else {
+                throw Failure(description: "no path layer called \"\(layerName)\"; "
+                    + (paths.isEmpty ? "there are no paths in the document at all"
+                       : "the paths are: " + paths.map(\.name).joined(separator: ", ")))
+            }
+            layer = named
+        } else {
+            guard let last = paths.last else {
+                throw Failure(description: "no path in the document; the layers are: "
+                    + (layers.isEmpty ? "none" : layers.map(\.name).joined(separator: ", ")))
+            }
+            layer = last
+        }
+        guard let content = layer.path else {
+            throw Failure(description: "\(layer.name) is not a path")
+        }
+        let curved = content.segments.filter { !$0.isStraight }.count
+        let shape = "\(layer.name): \(content.anchors.count) "
+            + (content.anchors.count == 1 ? "anchor" : "anchors")
+            + ", \(content.isClosed ? "closed" : "open"), \(curved) curved "
+            + (curved == 1 ? "run" : "runs")
+        if let anchors, content.anchors.count != anchors {
+            throw Failure(description: "\(shape) — not the \(anchors) claimed")
+        }
+        if let closed, content.isClosed != closed {
+            throw Failure(description: "\(shape) — the walk claimed it would be "
+                + (closed ? "closed" : "open"))
+        }
+        if let curves, curved != curves {
+            throw Failure(description: "\(shape) — not the \(curves) curved claimed")
+        }
+        return shape + ", as claimed"
     }
 
     /// What an open caption field is doing, checked rather than photographed.

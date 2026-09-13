@@ -217,9 +217,10 @@ struct AnnotationBuilderTests {
 
     @Test func arrowIsOnAAndNeverOnP() {
         #expect(Tool.arrow.shortcutKey == "a")
-        // P belongs to the Pen everywhere else in the product. Nothing in the
-        // tool set may claim it until an actual Pen tool exists to do so.
-        #expect(!Tool.allCases.contains { $0.shortcutKey == "p" })
+        // P belongs to the Pen everywhere else in the product, and now the Pen
+        // is here to claim it. Nothing else may.
+        #expect(Tool.pen.shortcutKey == "p")
+        #expect(Tool.allCases.filter { $0.shortcutKey == "p" } == [.pen])
     }
 
     @Test func noTwoToolsClaimTheSameKey() {
@@ -387,7 +388,7 @@ struct ToolBarLayoutTests {
 
     /// The tools a flag adds, and so the ones a bar may legitimately not hold.
     /// Every OTHER tool is in every bar, exactly once.
-    private static let flaggedTools: Set<Tool> = [.frame, .lens]
+    private static let flaggedTools: Set<Tool> = [.frame, .lens, .pen]
 
     private func counts(in bar: ToolBarLayout) -> [Tool: Int] {
         var counts: [Tool: Int] = [:]
@@ -401,18 +402,33 @@ struct ToolBarLayoutTests {
     }
 
     @Test func everyToolAppearsExactlyOnce() {
-        // The frame tool (`next-frames`) and the lens (`next-lens`) are each
-        // behind a flag, so a bar either holds one exactly once or not at all.
+        // The frame tool (`next-frames`), the lens (`next-lens`) and the Pen
+        // (`next-pen`) are each behind a flag, so a bar either holds one
+        // exactly once or not at all.
         for frames in [false, true] {
             for lens in [false, true] {
-                let counts = counts(in: ToolBarLayout.bar(withFrame: frames, withLens: lens))
-                for tool in Tool.allCases where !Self.flaggedTools.contains(tool) {
-                    #expect(counts[tool] == 1, "\(tool) appears \(counts[tool] ?? 0) times")
+                for pen in [false, true] {
+                    let counts = counts(in: ToolBarLayout.bar(withFrame: frames, withLens: lens,
+                                                              withPen: pen))
+                    for tool in Tool.allCases where !Self.flaggedTools.contains(tool) {
+                        #expect(counts[tool] == 1, "\(tool) appears \(counts[tool] ?? 0) times")
+                    }
+                    #expect(counts[.frame] == (frames ? 1 : nil))
+                    #expect(counts[.lens] == (lens ? 1 : nil))
+                    #expect(counts[.pen] == (pen ? 1 : nil))
                 }
-                #expect(counts[.frame] == (frames ? 1 : nil))
-                #expect(counts[.lens] == (lens ? 1 : nil))
             }
         }
+    }
+
+    /// The Pen joins the END of the drawing family too, after the frame, so no
+    /// slot anybody has learned the position of moves when the flag comes on.
+    @Test func thePenJoinsTheEndOfTheDrawingFamily() {
+        let plain = ToolBarLayout.families.families
+        let penned = ToolBarLayout.bar(withFrame: false, withPen: true).families
+        #expect(penned[0] == plain[0])
+        #expect(penned[2] == plain[2])
+        #expect(penned[1] == plain[1] + [.tool(.pen)])
     }
 
     /// The frame tool joins the END of the drawing family, so no tool anybody

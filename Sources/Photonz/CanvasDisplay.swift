@@ -99,6 +99,13 @@ extension CanvasNSView {
             // A tool switch mid-drag abandons the draft annotation/endpoint edit
             // and any in-progress caliper placement.
             annotationDrag = nil
+            // ...and the path the Pen was laying down. Nothing was in the
+            // document, so there is nothing to undo; the chrome just goes.
+            if penSession.isDrawing {
+                penSession.discard()
+                onPenHintChange(PenSession.hint(for: penSession))
+            }
+            refreshPenChrome()
             measurePlacement = nil
             measurePlacementHold = nil
             measureFirstFootPress = false
@@ -288,6 +295,7 @@ extension CanvasNSView {
         refreshCollageChrome()
         refreshDropLanding()
         refreshMeasureCreation(modifierFlags: NSEvent.modifierFlags)
+        refreshPenChrome()
     }
 
     /// Editor-only collage chrome: dashed wells with a plus glyph over every

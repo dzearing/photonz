@@ -2972,3 +2972,5 @@
 {"t":"2026-09-13T14:39:48.547Z","ev":"task_created","id":"a-manager-pass-does-not-wake-itself-up-again","priority":"p2-normal","title":"A manager pass does not wake itself up again"}
 {"t":"2026-09-13T14:39:55.281Z","ev":"task_created","id":"a-follow-up-has-a-bar-to-clear-before-it-becomes","priority":"p2-normal","title":"A follow-up has a bar to clear before it becomes a task"}
 {"t":"2026-09-13T14:40:21.136Z","ev":"manager","filed":2,"readyBefore":69,"readyAfter":71,"report":"queue/manager/2026-09-13-0746.md"}
+{"t":"2026-09-13T14:40:31.927Z","ev":"manager_pass","exit":0,"ready":71}
+{"t":"2026-09-13T14:40:31.972Z","ev":"task_started","id":"the-pen-draws-a-path-corner-by-corner-and-curve","title":"The Pen draws a path, corner by corner and curve by curve","priority":"p1-high"}
