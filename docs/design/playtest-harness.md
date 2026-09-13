@@ -676,14 +676,19 @@ up:
   alone when this was written. The log says the distance, so a panel that has
   started needing a scroll where it did not before is visible rather than
   quietly absorbed.
-- **A press waits for the control to hold still.** A press is real mouse events
+- **A press waits for the control to settle.** A press is real mouse events
   posted to the app's queue, and AppKit works out what they landed on when it
   DELIVERS them. A control measured mid-relayout is a control the press misses:
   the event arrives, the panel has slid, and the click lands on whatever moved
-  into that spot. So the box has to read the same two looks a frame apart
-  before the events go out. A control that never stops moving is pressed anyway,
-  at its last known place, with the log saying `never held still` — a busy
-  machine should not read as a broken walk.
+  into that spot. Settled means two things at once — the box has read the same
+  two looks a frame apart, AND the app was quiet over that same stretch. Either
+  alone lets a press through that changes nothing: a box can sit perfectly
+  still while SwiftUI is part way through replacing the view behind it, which
+  is how the walk that folds an effect and opens it again pressed a chevron,
+  watched nothing happen, and read the same chevron back unchanged one run in
+  six. A control that never settles is pressed anyway, at its last known place,
+  with the log saying `never settled` — a busy machine should not read as a
+  broken walk.
 
 All three show up in the press's own log line when they cost anything:
 
