@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:12:52.113Z",
-  "updated": "2026-09-13T15:26:48.430479Z",
+  "updated": "2026-09-13T18:20:09.853Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve",
     "the-pen-draws-a-path-corner-by-corner-and-curve"
@@ -39,6 +39,35 @@
     {
       "t": "2026-09-13T15:26:48.430479Z",
       "note": "merged a duplicate filed by the intake window; gained gradients and the font rule"
+    },
+    {
+      "t": "2026-09-13T18:20:09.852Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T18:22:10.242131Z",
+      "note": "Adversarial review before building. (1) The mock-free question is the Export dialog: a scale row means nothing for a vector file, so picking SVG must replace it rather than grey it out. Decision: show the canvas size in points plus, when there is one, an honest line saying how many layers will go out as embedded pictures, so you learn that BEFORE you save rather than by opening the file. (2) Shortest version that delivers the value: the whole point is 'I drew an icon with the Pen, I want the icon'. So paths, rectangles, ellipses, lines, text and groups go out as real elements with their real paints; everything the app cannot say in SVG goes out as an embedded picture in the right place and is named in the report. (3) Cut: arrows (a shaft, a head and a caption pill are three drawings, and nobody draws an icon with the arrow tool), highlights (multiply blend), angular gradients (SVG has no conic ramp) and any layer wearing effects or a blend mode. All four are picture fallbacks in v1, each named, each a follow-up. (4) Checked rather than assumed: this machine's CoreSVG (NSImage) renders clipPath, mask, userSpaceOnUse gradients, embedded base64 PNG and <title>, so the render-back check can actually verify the file rather than the text."
+    },
+    {
+      "t": "2026-09-13T18:22:10.242131Z",
+      "note": "Plan: PhotonzCore/SVGExport.swift is the pure writer (geometry + string building, no CoreImage, no AppKit). It takes two closures so it stays pure: one that hands back a picture of a layer that has no vector answer, one that hands back a text layer's outline as path data. PhotonzRender/SVGExporter.swift supplies both (DocumentRenderer for the pictures, CoreText for the glyph outlines). The app gains the format, a Next flag and the dialog change. Verification is a render-back comparison in PhotonzRenderTests, not a string read."
+    },
+    {
+      "t": "2026-09-13T18:44:17.467220Z",
+      "note": "Shipped. PhotonzCore/SVGExport.swift writes the file (pure: geometry and strings, two closures handed in for the picture of a layer with no vector answer and for the outline of a text layer's letters). PhotonzRender/SVGExporter.swift supplies both, and TextRasterizer.outlinePath turns words into glyph outlines through the same framesetter the canvas draws with. The app gains the flag next-export-svg (needs next-pen), SVG in the Export sheet, and EditorState.exportSVG."
+    },
+    {
+      "t": "2026-09-13T18:44:17.467220Z",
+      "note": "Verified by rendering the file BACK, not by reading it: SVGExportRenderTests draws twelve documents twice, once through DocumentRenderer and once through the system's own SVG reader (NSImage reads SVG on this OS), and holds the two to one part in 255 averaged over the canvas. Covered: a path with a straight edge and a curve, a rounded box, an oval, a line, a bordered box, a group, an inside line, an outside line, an even-odd hole, a linear ramp, a radial ramp, outlined words, a shadowed shape falling back, and a photograph. 29 writer tests in PhotonzCoreTests. Full suite green: 6314 tests in 513 suites."
+    },
+    {
+      "t": "2026-09-13T18:44:17.467220Z",
+      "note": "Adversarial review of the built thing, on the probe. (1) The sheet's title said Export Image, which is wrong for a file with no pixels in it: now Export. (2) The first version said 'Background goes out as a picture: it is a picture rather than shapes', which is a tautology under a warning triangle. A photograph is not a failure, so the sheet now has two lines: 'Background rides along as a picture' with a photo icon, and the warning only for what genuinely could not be written, 'Path goes out as a picture: it wears a shadow'. (3) Export now opens on the format you picked last time, because exporting a set of icons should be picking SVG once. (4) Left rough, each filed: arrows/highlights/measurements ride out as pictures (an-exported-redline-is-shapes-not-a-picture-of-o), shadows and blurs cost a shape its vectors (a-shadow-survives-the-trip-out-to-svg), and a blank canvas's white background is a 17KB bitmap inside a small icon (an-icon-exported-as-svg-has-no-picture-in-it)."
+    },
+    {
+      "t": "2026-09-13T18:44:17.467220Z",
+      "note": "Walk: Scripts/playtest/svg-export-walk.json draws a shape with the Pen, draws a box, writes the SVG through the app's own export path (new probe-only writeSVG step), photographs the Export sheet on PNG and on SVG, then puts a shadow on the shape and photographs the sheet naming it. Screen Recording is granted, so the audit carries real captures. Ran the walks I touched (export, frames): 6 passed, 0 failed."
     }
-  ]
+  ],
+  "started": "2026-09-13T18:20:09.851Z"
 }

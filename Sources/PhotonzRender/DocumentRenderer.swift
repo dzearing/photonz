@@ -625,7 +625,8 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// This is what "copy the layer you picked" crops: cropping the composite
     /// hands back every layer flattened together, which is not what a person
     /// who just picked a layer meant (`CopyRoute`).
-    public func render(_ document: PhotonzDocument, store: ImageStore, only id: UUID) -> CGImage? {
+    public func render(_ document: PhotonzDocument, store: ImageStore, only id: UUID,
+                       scale: CGFloat = 1) -> CGImage? {
         // Canvas coordinates, so a layer inside a group or a screen keeps the
         // spot it looks like it is in.
         guard var layer = document.detachedLayer(id: id) else { return nil }
@@ -636,7 +637,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         if document.isOnDesignedSurface(id) {
             layer.style.shadows = layer.drawnShadows(onDesignedSurface: true)
         }
-        return render(PhotonzDocument(canvasSize: document.canvasSize, layers: [layer]), store: store)
+        let alone = PhotonzDocument(canvasSize: document.canvasSize, layers: [layer])
+        return scale == 1 ? render(alone, store: store)
+                          : render(alone, store: store, scale: scale)
     }
 
     /// One layer rendered alone, with `padding` document points of clear canvas

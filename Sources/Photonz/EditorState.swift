@@ -92,6 +92,12 @@ final class EditorState {
         didSet { UserDefaults.standard.set(isLibraryVisible, forKey: Self.libraryVisibleKey) }
     }
     var isExportDialogPresented = false
+    #if PHOTONZ_PLAYTEST
+    /// Probe only: the Export sheet opens on SVG, because a walk cannot click
+    /// inside a sheet to pick it (`PlaytestAction.exportDialogAsSVG`). Compiled
+    /// out of every shipping build.
+    var playtestOpensExportOnSVG = false
+    #endif
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false
     /// The size sheet Layer ▸ New Frame… opens (Next, `next-frames`).
@@ -1570,6 +1576,34 @@ final class EditorState {
     func compositeImage() -> CGImage? {
         guard let document else { return nil }
         return previewRenderer.render(document, store: store)
+    }
+
+    /// Writes the document out as a real SVG where the user picks (Next,
+    /// `next-export-svg`).
+    ///
+    /// The shapes go out as shapes, so what leaves the app is the icon rather
+    /// than a picture of it. Anything with no way of being said in vectors is
+    /// embedded as a picture in the right place; the Export sheet has already
+    /// said which layers those are, so this does not stop to tell you again.
+    /// `frameID` narrows it to one frame exactly as the picture formats do.
+    func exportSVG(frameID: UUID? = nil) {
+        guard let document else { return }
+        let frame = frameID.flatMap { document.layer(id: $0)?.isFrame == true ? $0 : nil }
+        let target = frame.flatMap { document.frameDocument(id: $0) } ?? document
+        guard let written = SVGExporter.data(target, store: store, renderer: previewRenderer)
+        else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.svg]
+        let base = frame.flatMap { document.layer(id: $0)?.name }
+            ?? documentURL?.deletingPathExtension().lastPathComponent
+            ?? "Photonz Export"
+        panel.nameFieldStringValue = "\(base).svg"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try written.data.write(to: url)
+        } catch {
+            presentError("Couldn't export the SVG.", error)
+        }
     }
 
     /// Renders the composite at `scale` and writes it where the user picks.

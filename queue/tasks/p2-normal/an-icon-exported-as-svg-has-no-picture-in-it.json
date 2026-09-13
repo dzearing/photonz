@@ -1,0 +1,28 @@
+{
+  "id": "an-icon-exported-as-svg-has-no-picture-in-it",
+  "title": "An icon exported as SVG has no picture in it",
+  "goal": "Draw an icon on a blank canvas and export it as SVG and the file is mostly a bitmap: the white background the canvas starts with is a picture layer, so it gets embedded whole, making a small icon a file of tens of kilobytes with a photograph in it. A flat colour is a rectangle, so write it as one, and let an icon leave as pure shapes.",
+  "epic": "icon-export",
+  "priority": "p2-normal",
+  "seq": 2580,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T18:41:40.209Z",
+  "updated": "2026-09-13T18:41:40.212Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence, from the walk that shipped with the SVG export task: Scripts/playtest/svg-export-walk.json writes /tmp/photonz-playtest/svg-export-walk/svg-export-3-icon.svg, and its log line reads 17270 bytes, every layer as shapes, of which about 17000 is the white background as base64 PNG. Two ways to tell a flat picture: ask the ImageStore for the bitmap and check every pixel is the same colour (cheap enough on export, and PixelField/BoxSweep already do this kind of scan), or catch it earlier where a blank canvas is made (BlankCanvas.swift) and give the document a flat background that is not a bitmap at all. The second is the better answer and the bigger change.",
+  "acceptance": [
+    "A blank canvas background of one flat colour exports as a rect rather than as an embedded picture",
+    "An icon drawn on a blank canvas exports to a file with no base64 in it at all",
+    "A real photograph still exports as a picture, unchanged",
+    "Checked by rendering the written file back and comparing it to the app own render"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T18:41:40.211Z",
+      "note": "created (manual)"
+    }
+  ]
+}

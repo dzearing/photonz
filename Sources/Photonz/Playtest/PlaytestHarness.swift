@@ -872,6 +872,18 @@ private final class Run {
             try writePNG(image, name: name)
             note(number, step.name, "\(name).png \(image.width)x\(image.height) px at \(scale)x")
 
+        case .writeSVG(let name):
+            let editor = try requireEditor()
+            guard let document = editor.document,
+                  let written = SVGExporter.data(document, store: editor.store) else {
+                throw Failure(description: "the document did not write as SVG")
+            }
+            try written.data.write(to: out.appendingPathComponent("\(name).svg"))
+            let pictured = written.fallbacks.isEmpty
+                ? "every layer as shapes"
+                : written.fallbacks.map { "\($0.layerName) as a picture" }.joined(separator: ", ")
+            note(number, step.name, "\(name).svg \(written.data.count) bytes, \(pictured)")
+
         case .panelMenu(let menu, let row, let shot, let choose, let clicking):
             try await openPanelMenu(menu, in: row, shot: shot, choose: choose, clicking: clicking,
                                     number: number)
@@ -1706,6 +1718,12 @@ private final class Run {
                     editor.selectLibraryItem(first.id)
                 }
             case .exportDialog: editor.isExportDialogPresented = true
+            case .exportDialogAsSVG:
+                // Asked for on the sheet itself rather than written into the
+                // app's memory, so a walk that photographs Export on SVG
+                // cannot change what the NEXT walk's Export opens on.
+                editor.playtestOpensExportOnSVG = true
+                editor.isExportDialogPresented = true
             case .showLibrary: editor.setLibraryVisible(true)
             case .showComponentShelf:
                 editor.setLibraryVisible(true)

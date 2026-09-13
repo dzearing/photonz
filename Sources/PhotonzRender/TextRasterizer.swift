@@ -112,6 +112,57 @@ public enum TextRasterizer {
         return context.makeImage()
     }
 
+    /// The words as ONE outline, in the layer's own top-left coordinates.
+    ///
+    /// What SVG export writes instead of a `<text>` element: a `<text>` renders
+    /// in whatever face the machine opening the file happens to have, so an
+    /// icon handed to somebody without the font comes out wrong, and an outline
+    /// looks the same everywhere (`docs/design/svg-export.md`).
+    ///
+    /// Laid out through exactly the same framesetter the rasterizer draws
+    /// with — the same truncation, the same box, the same alignment — so the
+    /// letters land where the canvas puts them. CoreText lays out with y
+    /// running up the box and the document counts y from the top, so every
+    /// glyph is flipped about the box on the way out.
+    public static func outlinePath(_ text: TextContent, size: CGSize) -> CGPath? {
+        guard size.width > 0, size.height > 0, text.fontSize > 0 else { return nil }
+        let text = truncating(text, toFit: size.width)
+        let box = CGRect(origin: .zero, size: size)
+        let frame = CTFramesetterCreateFrame(
+            CTFramesetterCreateWithAttributedString(attributedString(text)),
+            CFRange(location: 0, length: 0),
+            CGPath(rect: laidOutBox(text, in: box), transform: nil), nil)
+        guard let lines = CTFrameGetLines(frame) as? [CTLine], !lines.isEmpty else { return nil }
+        var origins = [CGPoint](repeating: .zero, count: lines.count)
+        CTFrameGetLineOrigins(frame, CFRange(location: 0, length: 0), &origins)
+
+        let outline = CGMutablePath()
+        for (line, lineOrigin) in zip(lines, origins) {
+            guard let runs = CTLineGetGlyphRuns(line) as? [CTRun] else { continue }
+            for run in runs {
+                let attributes = CTRunGetAttributes(run) as NSDictionary
+                guard let font = attributes[kCTFontAttributeName as String] else { continue }
+                let ctFont = font as! CTFont
+                let count = CTRunGetGlyphCount(run)
+                guard count > 0 else { continue }
+                var glyphs = [CGGlyph](repeating: 0, count: count)
+                var positions = [CGPoint](repeating: .zero, count: count)
+                CTRunGetGlyphs(run, CFRange(location: 0, length: count), &glyphs)
+                CTRunGetPositions(run, CFRange(location: 0, length: count), &positions)
+                for index in 0..<count {
+                    guard let glyph = CTFontCreatePathForGlyph(ctFont, glyphs[index], nil)
+                    else { continue }
+                    let x = lineOrigin.x + positions[index].x
+                    let y = lineOrigin.y + positions[index].y
+                    let place = CGAffineTransform(a: 1, b: 0, c: 0, d: -1,
+                                                  tx: x, ty: size.height - y)
+                    outline.addPath(glyph, transform: place)
+                }
+            }
+        }
+        return outline.isEmpty ? nil : outline
+    }
+
     /// The part of `box` the lines are laid out in, so text that does not fill
     /// its box sits where `verticalAlignment` says.
     ///

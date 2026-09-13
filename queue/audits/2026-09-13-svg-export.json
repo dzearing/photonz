@@ -1,0 +1,31 @@
+{
+  "feature": "Export what you drew as SVG",
+  "epic": "icon-export",
+  "summary": "Export has a fourth answer, SVG, and what it writes is the icon rather than a picture of it: every shape a real shape, sharp at any size, openable in any drawing tool or dropped straight into a website. Before you save, the sheet says which layers, if any, have to ride along as pictures and why.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is Export what you drew as SVG, on by default, and it needs Draw any shape with the Pen, which is also on by default.",
+  "try": [
+    { "do": "Press P and draw a closed shape: click, click, drag the third point to bend an edge, then click the first point to close it." },
+    { "do": "Draw a rounded box beside it with R, so the file has both a path and a rectangle in it.", "shot": "2026-09-13-svg-export-canvas-sc.png" },
+    { "do": "Press Command E. SVG now sits beside PNG, JPEG and HEIC, and picking it takes the 1x and 2x row away.", "shot": "2026-09-13-svg-export-sheet-sc.png" },
+    { "do": "Read the lines under the format row: what the file will be, and what rides along as a picture." },
+    { "do": "Press Return, save it, and open the file in a browser: the same drawing, and Command + makes it sharper rather than blockier." },
+    { "do": "Open the same file in a text editor: your shapes are legible as shapes, one per line, indented." },
+    { "do": "Back in Photonz, give the drawn shape a shadow from Effects, press Command E again, and read the sheet: it now names that layer as going out as a picture and says why." },
+    { "do": "Press Command E once more on a fresh drawing: it opens on SVG, because that is what you picked last time." }
+  ],
+  "evaluate": [
+    "Is the line that replaces the scale row the thing you wanted to know, or would you rather see the file size?",
+    "Does naming the layers that ride along as pictures BEFORE you save save you a trip, or is it noise you would rather not read every time?",
+    "Opened in a browser or a drawing tool, is the file the drawing you made, or is something off?",
+    "Words go out as the outlines of their letters, so the file looks right on a machine without the font but the text cannot be retyped. Is that the trade you want, or would you rather have editable type?",
+    "Export now opens on the format you picked last time. Does that help, or do you want it back on PNG every time?"
+  ],
+  "rough": [
+    "An arrow, a highlight, a measurement, a zoom callout, a lens and a collage all ride out as embedded pictures. Nothing is lost on screen, but an exported redline is a bitmap rather than shapes. Filed as a follow-up.",
+    "A shadow, a blur or a glow costs a shape its vectors: SVG has feDropShadow and feGaussianBlur and neither is wired up yet, so a shape wearing one is rasterized. This is the fallback you are most likely to hit, and it is named on the sheet.",
+    "A blank canvas starts with a white background layer, and a picture layer is a picture: it is embedded whole, which is why a tiny icon can still write a file measured in kilobytes. Deleting the background before exporting gives a transparent icon and a file a tenth the size.",
+    "A sweeping (angular) gradient falls back, because SVG has no conic ramp. Linear and radial come across exactly.",
+    "The screenshots here are real captures of the probe app (Screen Recording is granted), not offscreen renders.",
+    "Checked by rendering the written file BACK through the system's own SVG reader and comparing it to the app's own render, twelve cases, agreeing to within one part in 255 over the whole canvas. That is the check that would catch a shape in the wrong place, which reading the text never would."
+  ]
+}

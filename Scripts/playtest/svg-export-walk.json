@@ -1,0 +1,224 @@
+{
+  "out": "/tmp/photonz-playtest/svg-export-walk",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "p"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "pen"
+    },
+    {
+      "do": "click",
+      "at": [
+        220,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "drag",
+      "from": [
+        440,
+        200
+      ],
+      "to": [
+        560,
+        210
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        223,
+        523
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-drawn",
+      "note": "a closed shape drawn with the Pen: two straight edges and a curved top, filled and outlined"
+    },
+    {
+      "do": "snapshot",
+      "name": "svg-export-1-drawn"
+    },
+    {
+      "do": "render",
+      "name": "svg-export-1-drawn-doc"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        560
+      ],
+      "to": [
+        620,
+        640
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-box",
+      "note": "a rounded box beside the drawn shape, so the file has both a path and a rect in it"
+    },
+    {
+      "do": "snapshot",
+      "name": "svg-export-2-box"
+    },
+    {
+      "do": "writeSVG",
+      "name": "svg-export-3-icon"
+    },
+    {
+      "do": "describe",
+      "stage": "3-written",
+      "note": "the document written out exactly as Export's SVG answer writes it: the log line above says how big the file is and whether any layer had to go out as a picture"
+    },
+    {
+      "do": "action",
+      "action": "exportDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-sheet",
+      "note": "the Export sheet with SVG in the format row beside PNG, JPEG and HEIC"
+    },
+    {
+      "do": "snapshot",
+      "name": "svg-export-4-sheet"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsSVG"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-svg-picked",
+      "note": "the same sheet on SVG: the 1x and 2x row has gone, and in its place is what the file will be. A shape wearing a shadow would be named here as going out as a picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "svg-export-5-svg-picked"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "selectRow",
+      "row": "Path"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "addShadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsSVG"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-fallback-named",
+      "note": "a shadow put on the drawn shape: the sheet now says the shape itself goes out as a picture, and why, BEFORE anything is saved"
+    },
+    {
+      "do": "snapshot",
+      "name": "svg-export-6-fallback-named"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    }
+  ]
+}

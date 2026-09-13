@@ -124,6 +124,8 @@ public enum FeatureCatalog {
 
     public static let reshapePathFlag = "next-reshape-a-path"
 
+    public static let svgExportFlag = "next-export-svg"
+
     public static let blendModeFlag = "next-blend-mode"
 
     public static let tutorialsFlag = "next-tutorials"
@@ -430,6 +432,15 @@ public enum FeatureCatalog {
                     name: reshapePathFlag,
                     title: "Reshape a path after you have drawn it",
                     description: "Pick a path drawn with the Pen and its points appear on it, so a shape that came out nearly right can be put right instead of drawn again. Drag a point and the curves either side follow it. Click a point and its two levers appear: drag one to bend the curve, and on a smooth point the far lever swings round to match so the outline runs through without a kink. Double click a point to turn a hard corner into a smooth bend, and double click it again to turn it back. Hold Option while dragging a lever to free the two sides of a point from each other, and Option click a lever to pull it in so that side runs straight, which is how you get a point that is curved on one side and straight on the other. Double click the outline itself to add a point exactly where you clicked, without the shape moving at all. Select a point and press Delete to take it out, and the curve closes over the gap. Shift click to gather several points and move them together, with the arrow keys nudging them like anything else. Every one of these is a single undo step. Off means a path is an ordinary box you can move, resize and repaint, with no points on it.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: svgExportFlag,
+                    title: "Export what you drew as SVG",
+                    description: "Adds SVG beside PNG, JPEG and HEIC in Export, so an icon you drew leaves the app as the icon rather than as a picture of it. What you get is a real vector file any website, app or icon set can use: every shape is a shape, so it stays sharp at any size and can be opened and edited in any drawing tool. Paths keep their straight edges straight and their curves curved, a rounded box keeps its rounding, an oval is an oval, groups stay grouped in the order the layers list shows, and fills, outlines and gradients come across as they look on the canvas. Words are written as the outlines of their letters rather than as type, so the file looks the same on a machine that does not have the font, and the words themselves ride along inside it so the file can still be searched and read aloud. Anything with no way of being said in shapes, a photograph or a layer wearing a shadow or a blur, is embedded as a picture exactly where it sits, and the Export sheet says so before you save rather than leaving you to find out. Choosing SVG hides the 1x and 2x row, which means nothing for a file with no pixels in it. This goes with the Pen, Draw any shape with the Pen, which is what draws the shapes worth exporting, and turns itself off when the Pen is off. Off means Export offers the three picture formats it always did.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

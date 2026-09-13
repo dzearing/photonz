@@ -334,8 +334,10 @@ well as the point.
 
 * **Booleans** (`docs/design/mocks/pages/draw-boolean.html`) — union, subtract,
   intersect. `flattened()` and `containsInside` are the start of the geometry.
-* **SVG export**, under `icon-export`. A path is already exactly the cubic data
-  an SVG `d` attribute wants.
+* **SVG export** — done, under `icon-export`. A path is already exactly the
+  cubic data an SVG `d` attribute wants, and Export writes it:
+  `docs/design/svg-export.md` says what every layer kind writes, including the
+  ones that have no vector answer yet.
 
 ## Known rough edges
 

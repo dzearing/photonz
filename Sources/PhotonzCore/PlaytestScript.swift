@@ -497,6 +497,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case newFrameDialog, frameSelection
     /// The Export sheet, so a walk can photograph its frame scope.
     case exportDialog
+    /// The Export sheet already on SVG (Next, `next-export-svg`). A walk cannot
+    /// click inside a sheet, and Export opens on the format you picked last
+    /// time, so this asks for SVG the same way picking it once would and then
+    /// opens the sheet.
+    case exportDialogAsSVG
     /// The View menu's Library rows (Next, `next-library`), so a walk can
     /// photograph the shelf.
     case showLibrary, hideLibrary
@@ -1163,6 +1168,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// pixels per document point — 1 for the picture as it is, 2 for the one
     /// the export dialog's 2x hands back.
     case render(name: String, scale: CGFloat)
+    /// Write the document out as SVG to `<out>/<name>.svg`, the way Export's
+    /// SVG answer does (Next, `next-export-svg`). A save panel cannot be driven
+    /// from a walk, so this is how a walk proves that what leaves the app is a
+    /// real vector file and what it says about the layers it could not write as
+    /// shapes.
+    case writeSVG(name: String)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Adjustable list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -1546,7 +1557,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
         "dropImage", "expect", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeSVG",
     ]
 
     /// The `do` name this step answers to.
@@ -1578,6 +1589,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragOver: "dragOver"
         case .snapshot: "snapshot"
         case .render: "render"
+        case .writeSVG: "writeSVG"
         case .panelMenu: "panelMenu"
         case .menuShot: "menuShot"
         case .rightClick: "rightClick"
@@ -1731,6 +1743,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "render":
             self = .render(name: try f.string("name"),
                            scale: CGFloat(try f.optionalNumber("scale") ?? 1))
+        case "writeSVG":
+            self = .writeSVG(name: try f.string("name"))
         case "menuShot":
             self = .menuShot(menu: try f.string("menu"), name: try f.string("name"),
                              ticked: try f.optionalStrings("ticked"),

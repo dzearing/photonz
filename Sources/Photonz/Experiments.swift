@@ -330,6 +330,16 @@ extension Experiments {
         penEnabled && isEnabled(FeatureCatalog.reshapePathFlag)
     }
 
+    /// `next-export-svg`: whether Export offers SVG beside the three picture
+    /// formats. It needs the Pen, because the shapes worth exporting as
+    /// vectors are the ones the Pen draws: with the Pen off the switch reads
+    /// as off and Export is the three-way picker it always was. The writer
+    /// itself is never flagged, so a document exported either way is the same
+    /// file.
+    var svgExportEnabled: Bool {
+        penEnabled && isEnabled(FeatureCatalog.svgExportFlag)
+    }
+
     /// `next-frames`: whether the frame tool, the two Layer rows and the
     /// export scope exist. A frame is a group with a size, so this needs
     /// groups: with them off there is no way in to a frame and the switch
