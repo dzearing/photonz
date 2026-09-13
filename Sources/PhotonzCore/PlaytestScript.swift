@@ -314,6 +314,24 @@ public struct PlaytestPoint: Hashable, Sendable {
     }
 }
 
+/// Where one point of a path has to have ended up, which is how a walk claims
+/// that reshaping it actually reshaped it.
+///
+/// `within` is slack in the same space the point is written in, because a drag
+/// is synthesized as a run of moves and lands where the pointer lands, not on
+/// the exact number a script asked for.
+public struct PlaytestAnchorClaim: Hashable, Sendable {
+    public var index: Int
+    public var near: PlaytestPoint
+    public var within: CGFloat
+
+    public init(index: Int, near: PlaytestPoint, within: CGFloat) {
+        self.index = index
+        self.near = near
+        self.within = within
+    }
+}
+
 /// Something a script can wait on instead of sleeping a guessed number of
 /// seconds.
 public enum PlaytestCondition: Hashable, Sendable {
@@ -1344,7 +1362,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `layer` names which path to ask when there is more than one; the last
     /// path in the document is the one meant when it is left off, because a
     /// walk that just drew one is asking about the one it drew.
-    case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?)
+    case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?,
+                    smooth: Int?, anchorAt: PlaytestAnchorClaim?)
     /// How many layers the document must hold right now, counting the ones
     /// inside groups.
     ///
@@ -1838,13 +1857,33 @@ public enum PlaytestStep: Sendable, Equatable {
         case "expectPath":
             let anchors = try f.optionalNumber("anchors")
             let curves = try f.optionalNumber("curves")
+            let smooth = try f.optionalNumber("smooth")
             let closed = try f.optionalFlag("closed")
-            guard anchors != nil || closed != nil || curves != nil else {
+            // Where one named point ENDED UP, which is the only way a walk can
+            // claim that dragging it did anything: a reshaped path has the same
+            // number of points it started with.
+            var anchorAt: PlaytestAnchorClaim?
+            if let index = try f.optionalNumber("anchor") {
+                guard index >= 0, index == index.rounded() else {
+                    throw f.invalid("anchor", "a point is named by its place in the path, "
+                        + "a whole number from 0, not \(index)")
+                }
+                guard fields["near"] != nil else {
+                    throw f.invalid("near", "naming a point with \"anchor\" is only half a claim: "
+                        + "add \"near\" with the [x, y] it should have ended up at")
+                }
+                anchorAt = PlaytestAnchorClaim(index: Int(index), near: try f.point("near"),
+                                               within: try f.optionalNumber("within") ?? 8)
+            }
+            guard anchors != nil || closed != nil || curves != nil || smooth != nil
+                    || anchorAt != nil else {
                 throw f.invalid("anchors", "expectPath has to claim something about the path: "
                     + "\"anchors\" for how many points it has, \"closed\" for whether it joined "
-                    + "back up, \"curves\" for how many of its runs are curved")
+                    + "back up, \"curves\" for how many of its runs are curved, \"smooth\" for "
+                    + "how many of its points are smooth bends, or \"anchor\" and \"near\" for "
+                    + "where one point ended up")
             }
-            for (field, value) in [("anchors", anchors), ("curves", curves)] {
+            for (field, value) in [("anchors", anchors), ("curves", curves), ("smooth", smooth)] {
                 guard let value else { continue }
                 guard value >= 0, value == value.rounded() else {
                     throw f.invalid(field, "a number of \(field) is a whole number, zero or more, not \(value)")
@@ -1852,7 +1891,8 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectPath(layer: try f.optionalString("layer"),
                                anchors: anchors.map { Int($0) }, closed: closed,
-                               curves: curves.map { Int($0) })
+                               curves: curves.map { Int($0) }, smooth: smooth.map { Int($0) },
+                               anchorAt: anchorAt)
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

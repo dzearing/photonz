@@ -166,6 +166,14 @@ struct CanvasView: NSViewRepresentable {
     /// What the Pen's chip under the canvas should say now, which changes as
     /// the path grows.
     let onPenHintChange: (String) -> Void
+    /// A path being reshaped (Next, `next-reshape-a-path`): live while a point
+    /// or a lever is under the hand, then once more on release, which is the
+    /// one that becomes an undo step.
+    let onPathPreview: (UUID, PathContent) -> Void
+    let onPathEditCommit: (UUID, PathContent) -> Void
+    /// What the chip should say while a path's points are showing, and nil
+    /// when it should not be up at all.
+    let onPathEditHintChange: (String?) -> Void
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -318,6 +326,9 @@ struct CanvasView: NSViewRepresentable {
         view.onLensCreate = onLensCreate
         view.onPathCommit = onPathCommit
         view.onPenHintChange = onPenHintChange
+        view.onPathPreview = onPathPreview
+        view.onPathEditCommit = onPathEditCommit
+        view.onPathEditHintChange = onPathEditHintChange
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
         view.onElementSizeCommit = onElementSizeCommit
@@ -425,6 +436,9 @@ final class CanvasNSView: NSView {
     var onLensCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onPathCommit: ((PathContent) -> Void) = { _ in }
     var onPenHintChange: ((String) -> Void) = { _ in }
+    var onPathPreview: ((UUID, PathContent) -> Void) = { _, _ in }
+    var onPathEditCommit: ((UUID, PathContent) -> Void) = { _, _ in }
+    var onPathEditHintChange: ((String?) -> Void) = { _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
@@ -786,7 +800,16 @@ final class CanvasNSView: NSView {
     /// Selected layer (committed state, echoed from EditorState). Only
     /// `apply` writes this and the two below; it lives in CanvasDisplay.swift,
     /// and an extension in another file cannot reach a private setter.
-    var selectedLayerID: UUID?
+    var selectedLayerID: UUID? {
+        didSet {
+            // The points picked inside a path belong to THAT path: its numbers
+            // mean nothing once something else is picked, and a stale one would
+            // aim the next Delete at a point of a shape nobody is looking at.
+            guard selectedLayerID != oldValue else { return }
+            pathAnchorSelection = []
+            pathAnchorDrag = nil
+        }
+    }
     /// Selected layer's frame in document coordinates (committed state).
     var selectedLayerFrame: CGRect?
     /// The group the pointer is inside, echoed from EditorState (`CanvasGroups.swift`).
@@ -863,6 +886,19 @@ final class CanvasNSView: NSView {
     /// The ring round the anchor a click would land ON: the first one when it
     /// would close, the last one when it would finish.
     let penTargetLayer = CAShapeLayer()
+    /// Which points of the picked path are picked within it (Next,
+    /// `next-reshape-a-path`). Canvas state, never in the document: what is
+    /// picked is a fact about this window, like a marquee.
+    var pathAnchorSelection: Set<Int> = []
+    /// A point or a lever being dragged right now.
+    var pathAnchorDrag: PathAnchorDrag?
+    /// Every point of the picked path, as a dot each: round for a smooth bend,
+    /// square for a hard corner.
+    let pathAnchorsLayer = CAShapeLayer()
+    /// The points picked within it, filled rather than hollow.
+    let pathPickedAnchorsLayer = CAShapeLayer()
+    /// The levers of the picked points: the arms and the dot on each end.
+    let pathLeversLayer = CAShapeLayer()
     /// Set by a press that committed the fresh arrow's caption field with the
     /// Arrow tool still in hand; mouse-up decides whether it was a click (hand
     /// back to Select) or a drag (the next arrow).
@@ -1798,6 +1834,7 @@ final class CanvasNSView: NSView {
         // top of it, then the handles, then the close ring, so the thing you
         // are aiming at is never buried under the thing you are drawing.
         setUpPenChrome()
+        setUpPathEditChrome()
 
         // Selection handles and the snap dot sit above every other overlay.
         // (A caliper's head dot is not drawn while its readout pill covers

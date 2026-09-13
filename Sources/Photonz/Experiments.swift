@@ -321,6 +321,15 @@ extension Experiments {
     /// flag off takes away a way IN, never a document's contents.
     var penEnabled: Bool { isEnabled(FeatureCatalog.penFlag) }
 
+    /// `next-reshape-a-path`: whether a selected path shows its anchors and
+    /// lets them be dragged, converted, added and taken out. It needs the Pen,
+    /// because without one there is no way to draw a path to reshape. A path
+    /// already in a document draws either way: a flag takes away a way in,
+    /// never a document's contents.
+    var reshapePathEnabled: Bool {
+        penEnabled && isEnabled(FeatureCatalog.reshapePathFlag)
+    }
+
     /// `next-frames`: whether the frame tool, the two Layer rows and the
     /// export scope exist. A frame is a group with a size, so this needs
     /// groups: with them off there is no way in to a frame and the switch

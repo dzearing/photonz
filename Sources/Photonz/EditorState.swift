@@ -512,6 +512,12 @@ final class EditorState {
         didSet {
             if oldValue != selectedLayerID {
                 if !multiSelectedLayerIDs.isEmpty { multiSelectedLayerIDs = [] }
+                // The chip that says what a path's points do belongs to the
+                // path that was picked; the canvas lets those points go at the
+                // same moment (`CanvasNSView.selectedLayerID`), so the line
+                // goes back to its opening one rather than talking about a
+                // point nobody has picked.
+                if pathEditHint != nil { pathEditHint = nil }
                 // A fresh primary selection is what the next shift-click in
                 // a list ranges from, wherever it came from (canvas, panel,
                 // a new layer).
@@ -949,6 +955,12 @@ final class EditorState {
     /// the path grows. The canvas owns the session and pushes the line here, so
     /// the chip and the drawing can never disagree about how far along it is.
     var penHint: String?
+
+    /// Next (`next-reshape-a-path`): the line the chip shows while a path's
+    /// points are on the canvas, which changes with how many of them are
+    /// picked. Nil when no path is showing its points, which is also what
+    /// takes the chip down.
+    var pathEditHint: String?
 
     /// Next (`next-measure-panel`): the "Copied" notice that is up right now,
     /// if any. Raised by Copy as Spec List, Copy Measurement and Copy Image,

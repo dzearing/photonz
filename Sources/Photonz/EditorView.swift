@@ -346,6 +346,9 @@ struct EditorView: View {
                        onLensCreate: { editorState.addLens(from: $0, to: $1) },
                        onPathCommit: { editorState.addPath($0) },
                        onPenHintChange: { editorState.penHint = $0 },
+                       onPathPreview: { editorState.previewPath($0, $1) },
+                       onPathEditCommit: { editorState.commitPath($0, $1) },
+                       onPathEditHintChange: { editorState.pathEditHint = $0 },
                        onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
                        onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
                        onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
@@ -436,6 +439,13 @@ struct EditorView: View {
                         // picked the tool up.
                         canvasNoticeChip(title: PenSession.hintTitle,
                                          detail: editorState.penHintText)
+                    } else if editorState.showsPathEditHint {
+                        // The same chip, for the other half of the job: with a
+                        // path picked it says what its points do, because
+                        // double clicking a point and Option dragging a lever
+                        // are not things anybody guesses at.
+                        canvasNoticeChip(title: PathEditHint.title,
+                                         detail: editorState.pathEditHintText)
                     }
                 }
                 .overlay(alignment: .bottom) {
@@ -450,6 +460,7 @@ struct EditorView: View {
                 }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPenHint)
+                .animation(.easeInOut(duration: 0.2), value: editorState.showsPathEditHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureModeHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.copyConfirmation)
                 .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)

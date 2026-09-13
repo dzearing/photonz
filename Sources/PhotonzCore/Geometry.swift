@@ -132,6 +132,19 @@ public enum Geometry {
         return hypot(p.x - (a.x + t * abx), p.y - (a.y + t * aby))
     }
 
+    /// How far along segment `a`–`b` the closest point to `p` sits, from 0 at
+    /// `a` to 1 at `b`. The companion to `distance(from:toSegmentFrom:to:)`,
+    /// for when WHERE on the line a press landed matters as well as whether it
+    /// landed on it at all.
+    public static func fraction(of p: CGPoint, alongSegmentFrom a: CGPoint,
+                                to b: CGPoint) -> CGFloat {
+        let abx = b.x - a.x
+        let aby = b.y - a.y
+        let lengthSquared = abx * abx + aby * aby
+        guard lengthSquared > 0 else { return 0 }
+        return max(0, min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby) / lengthSquared))
+    }
+
     /// The arrowhead's fixed base dimensions at `scale` = 1, in points. Since
     /// 10.4 the head is sized from `scale` ALONE — not the shaft width — so the
     /// Thickness slider changes the line without bloating the head. (At ×1.0

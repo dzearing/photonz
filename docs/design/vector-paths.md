@@ -6,9 +6,10 @@ of those can start until a path exists as a thing the document can hold and the
 canvas can draw.
 
 Status: **built in Next** (2026-09-13). The model, the drawing, the geometry,
-the way it takes colour, and the **Pen** that lays one down (`next-pen`). There
-is no anchor EDITING yet — moving, converting and deleting the points of a path
-that already exists — which is the slice after this one.
+the way it takes colour, the **Pen** that lays one down (`next-pen`), and
+**reshaping one afterwards** (`next-reshape-a-path`): moving points, pulling
+their levers, turning a corner into a bend, adding a point on a run and taking
+one out. See "Reshaping one" below.
 
 ## The words
 
@@ -253,11 +254,84 @@ this builds; the panel's Path section (anchor type, node coordinates, Close
 path) belongs with the editing slice, because node coordinate fields with no way
 to drag a node are decoration.
 
+## Reshaping one
+
+`Sources/PhotonzCore/PathEditing.swift` and `Sources/Photonz/CanvasPathEdit.swift`,
+split the same way the Pen is: every decision about what the new shape IS lives
+in the first and is tested there, and the second converts between the view and
+the layer's own space, draws the chrome and hands each change to the editor.
+
+### A path shows its points when it is picked
+
+No mode, no second tool, no letter to learn. Pick a path with Select and its
+points are on it; click one and its levers appear.
+
+That is the bargain a line and an arrow already make in this app: what you edit
+a shape BY is what its selection offers, and neither of them shows the eight
+frame handles either (`Layer.hasEndpointHandles`). A path follows, for a reason
+the probe made obvious: eight blue squares round the box and a dot on every
+point are the same colour in the same places, and on a triangle three of the
+points land exactly under three of the handles and vanish into them. So a path
+showing its points wears no frame handles, its box still draws as the dashed
+outline, and **the Position and Size fields still resize it** —
+`allowsFrameResize` stays true, only the chrome and the press stand down.
+
+A path inside a copy offers nothing, like every other layer that offers no
+handles. Neither does one on a SLANT: reshaping moves the box the shape sits in
+and a turn is measured about the middle of that box, so a point dragged on a
+turned path would swing the whole shape round under the hand. Straightening it
+in the A field brings the points back.
+
+### The gestures
+
+| What you do | What happens |
+| --- | --- |
+| Drag a point | It moves; the curves either side travel with it, because handles are offsets. |
+| Click a point | It is picked, and only IT shows its levers. |
+| ⇧ click | Gathers more points; arrow keys nudge every one of them, ⇧ by ten. |
+| Drag a lever | Bends that side. On a smooth point the far lever swings round to match, keeping its own length. |
+| ⌥ drag a lever | The same, with the two sides freed from each other: the far one holds still. |
+| ⌥ click a lever | Pulls that lever in, so that side runs straight. A point curved on one side and straight on the other, which is what a rounded corner is made of. |
+| Double click a point | Hard corner becomes a smooth bend, and again turns it back. It is also how a broken point is JOINED: both sides come back in line. |
+| Double click the outline | Adds a point exactly where you clicked. |
+| Delete | Takes the picked points out, the curve closing over the gap. With no point picked it still deletes the layer. |
+| Escape | Lets the points go, before it lets the layer go. |
+
+A square dot is a hard corner and a round one is a smooth bend, so what a point
+IS can be read off the canvas. A picked one is filled in the accent instead of
+hollow. The chip under the canvas carries the three gestures nobody guesses,
+one line at a time as what is picked changes.
+
+### The two that are real geometry
+
+**Adding a point does not change the shape.** Splitting a cubic at a parameter
+has an exact answer — de Casteljau — and the two halves are the same curve
+written twice, to the last decimal place. `PathEditingTests` compares the halves
+against the original cubic at 65 places rather than against a flattened outline,
+because flattening has an error thousands of times larger than the one that test
+exists to catch. A handle that was ABSENT stays absent, so splitting a straight
+run gives two straight runs; and a straight run is split along the LINE rather
+than along its degenerate cubic, which travels unevenly (a quarter of the way
+along that cubic is 15.6% of the way along the edge).
+
+**Taking a point out undoes the split.** Where a point came from a split, the
+parameter is written in its own two levers: the point sits exactly that far
+along the line between them, so `t = |handleIn| / (|handleIn| + |handleOut|)`
+recovers it and stretching the outer handles by `1/t` and `1/(1-t)` puts the
+original curve back to within 1e-14. Where the point was placed by hand, the
+lengths of the runs either side stand in, which is close enough to look right.
+
+### One undo step each
+
+A drag previews through `EditorState.previewPath` (no history, the picture just
+follows the pointer) and lands through `commitPath`, which is one
+`History.perform`. It is the same live-then-commit pair a corner radius pull
+uses. Every commit refits the layer's box round the new shape
+(`PathBuilder.refit`), so a point dragged past the old edge moves the corner as
+well as the point.
+
 ## What the next slices add
 
-* **Anchor editing.** Dragging anchors and handles, switching an anchor between
-  corner and smooth, breaking one side loose. `alignHandles(keeping:)` and the
-  optional handles are the two hooks it needs.
 * **Booleans** (`docs/design/mocks/pages/draw-boolean.html`) — union, subtract,
   intersect. `flattened()` and `containsInside` are the start of the geometry.
 * **SVG export**, under `icon-export`. A path is already exactly the cubic data
@@ -274,3 +348,10 @@ to drag a node are decoration.
 * **There is no way to place a half-smooth anchor without Option**, and the
   chip does not mention Option. A pen user will try it; a newcomer will not need
   it. Whether it deserves a line on screen is a question for the audit.
+* **A path cannot be scaled by dragging any more once its points show.** The
+  Position and Size fields do it, and a group round it does it, but there is no
+  corner to pull. Whether that is missed is the question the reshape audit asks.
+* **Points cannot be swept up with a marquee**, only gathered with ⇧ click. On a
+  shape with thirty points that is thirty clicks.
+* **A turned path shows no points at all.** Straightening it is the way in, and
+  nothing on screen says so.

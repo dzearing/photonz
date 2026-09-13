@@ -296,6 +296,7 @@ extension CanvasNSView {
         refreshDropLanding()
         refreshMeasureCreation(modifierFlags: NSEvent.modifierFlags)
         refreshPenChrome()
+        refreshPathEditChrome()
     }
 
     /// Editor-only collage chrome: dashed wells with a plus glyph over every
@@ -919,13 +920,16 @@ extension CanvasNSView {
         }
         let dragInFlight = moveDrag != nil || resizeDrag != nil || transformDrag != nil
             || endpointDrag != nil || endpointHoldLayerID != nil || measureHandleDrag != nil
-            || captionDrag != nil
+            || captionDrag != nil || pathAnchorDrag != nil
         // The blue selection outline hides during a RESIZE (frame handles,
         // annotation endpoints, a caliper handle, or a caption pill drag that
         // re-shapes the frame) so the edges being aligned stay unobstructed;
         // it still tracks moves and rotates.
+        // A point being dragged re-shapes the outline and moves the box round
+        // it, so the blue box steps out of the way for the same reason a resize
+        // does: it would be chasing the shape rather than describing it.
         let resizing = resizeDrag != nil || endpointDrag != nil || measureHandleDrag != nil
-            || captionDrag != nil
+            || captionDrag != nil || pathAnchorDrag != nil
 
         // While a corner dot is being pulled, the chrome reads the corners
         // under the HAND rather than the ones on disk: the preview only
@@ -1001,7 +1005,18 @@ extension CanvasNSView {
         } else {
             // Eight square frame handles, hidden mid-drag and for text (which
             // resizes width-only via its own affordance).
-            if !dragInFlight, offersOwnHandles(selectedLayer), selectedLayer.allowsFrameResize {
+            //
+            // A path showing its POINTS wears none of them. Eight blue squares
+            // round the box and a dot on every point are the same colour in the
+            // same places — on the probe, a triangle's three points landed
+            // exactly under three frame handles and disappeared into them
+            // (2026-09-13) — and one of the two has to go. It is the same
+            // bargain a line or an arrow already makes: the thing you edit a
+            // shape BY is what its selection offers. The box itself still
+            // draws, and the Position and Size fields still resize it
+            // (`CanvasPathEdit`).
+            if !dragInFlight, offersOwnHandles(selectedLayer), selectedLayer.allowsFrameResize,
+               editablePath == nil {
                 let handles = CGMutablePath()
                 // Handles fit the thing they are round: on a selection too
                 // small to hold them, the four edge midpoints drop away and the

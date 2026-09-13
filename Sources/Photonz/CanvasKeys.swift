@@ -76,6 +76,15 @@ extension CanvasNSView {
             beginTextSession(layerID: id, at: layer.frame.origin)
             return
         }
+        // ⌫ with points of a path picked takes THOSE points out, not the whole
+        // shape (Next, `next-reshape-a-path`). It is read before every other
+        // delete, because a point is the smaller and more recent thing you
+        // picked; with no point picked it answers nothing and ⌫ goes on meaning
+        // what it always means.
+        if event.keyCode == 51 || event.keyCode == 117,
+           !event.modifierFlags.contains(.option), pathEditDeleteKey() {
+            return
+        }
         // ⌥⌫ fills the selected layer — or the pixel region — with the
         // foreground color (Photoshop). EditorState routes region vs layer.
         if event.keyCode == 51 || event.keyCode == 117,
@@ -164,6 +173,16 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
+        // ...and an arrow key with points of a path picked nudges those points
+        // rather than the layer, which is what makes a point you cannot quite
+        // land on with the pointer land exactly (Next, `next-reshape-a-path`).
+        if Nudge.isArrow(keyCode: event.keyCode),
+           moveDrag == nil, resizeDrag == nil, transformDrag == nil,
+           let delta = Nudge.delta(keyCode: event.keyCode, large: coarseNudge),
+           pathEditNudge(by: CGPoint(x: delta.dx, y: delta.dy)) {
+            refreshOverlays()
+            return
+        }
         // Arrow keys nudge the selected layer.
         if Nudge.isArrow(keyCode: event.keyCode),
            moveDrag == nil, resizeDrag == nil, transformDrag == nil,
@@ -180,6 +199,9 @@ extension CanvasNSView {
             return
         }
         if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer → tool
+            // Points picked inside a path let go first, so Escape steps back
+            // out of reshaping before it steps out of the selection.
+            if pathEditEscape() { return }
             if let drag = cropDrag {
                 cropDrag = nil
                 cropRect = drag.startRect

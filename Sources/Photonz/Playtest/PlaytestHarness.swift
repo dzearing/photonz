@@ -950,9 +950,11 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
-        case .expectPath(let layerName, let anchors, let closed, let curves):
+        case .expectPath(let layerName, let anchors, let closed, let curves, let smooth,
+                         let anchorAt):
             note(number, step.name,
-                 try checkPath(layerName, anchors: anchors, closed: closed, curves: curves),
+                 try checkPath(layerName, anchors: anchors, closed: closed, curves: curves,
+                               smooth: smooth, anchorAt: anchorAt),
                  state: describe())
 
         case .expectLayers(let atLeast, let atMost):
@@ -2692,7 +2694,8 @@ private final class Run {
     /// What the path the Pen drew is made of, asked of the document rather than
     /// read off a picture (`PlaytestStep.expectPath`).
     private func checkPath(_ layerName: String?, anchors: Int?, closed: Bool?,
-                           curves: Int?) throws -> String {
+                           curves: Int?, smooth: Int?,
+                           anchorAt: PlaytestAnchorClaim?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
         let paths = layers.filter { $0.path != nil }
@@ -2728,6 +2731,29 @@ private final class Run {
         }
         if let curves, curved != curves {
             throw Failure(description: "\(shape) — not the \(curves) curved claimed")
+        }
+        let bends = content.anchors.filter { $0.kind == .smooth }.count
+        if let smooth, bends != smooth {
+            throw Failure(description: "\(shape), \(bends) of them smooth — not the "
+                + "\(smooth) claimed")
+        }
+        // Where one named point ended up, asked in the space the walk wrote it
+        // in. A path's anchors are stored against its own corner, so the claim
+        // is checked on the DOCUMENT point the person would have clicked.
+        if let anchorAt {
+            guard content.anchors.indices.contains(anchorAt.index) else {
+                throw Failure(description: "\(shape) — there is no point \(anchorAt.index) "
+                    + "to be anywhere")
+            }
+            let local = content.anchors[anchorAt.index].point
+            let here = CGPoint(x: layer.frame.minX + local.x, y: layer.frame.minY + local.y)
+            let wanted = try documentPoint(anchorAt.near)
+            let off = hypot(here.x - wanted.x, here.y - wanted.y)
+            guard off <= anchorAt.within else {
+                throw Failure(description: "\(shape) — point \(anchorAt.index) is at "
+                    + "\(short(here)), which is \(String(format: "%.1f", off)) from the "
+                    + "\(short(wanted)) claimed")
+            }
         }
         return shape + ", as claimed"
     }

@@ -1,0 +1,30 @@
+{
+  "feature": "Reshape a path after you have drawn it",
+  "epic": "icon-vector",
+  "summary": "A path drawn with the Pen can now be put right instead of drawn again: pick it and its points are on it, ready to be dragged, curved, added and taken out. Every change is one undo step.",
+  "setup": "Photonz Dev, Experiments window, release Next. Reshape a path is on by default, and needs the Pen, which is also on.",
+  "try": [
+    { "do": "Press P and draw a closed shape: click a point, press and drag the next one to pull a curve out of it, click a third, then click the first one again to close it." },
+    { "do": "Press Escape to put the Pen down. The shape is picked and its points are on it: square for a hard corner, round for a smooth bend." },
+    { "do": "Drag one of the points somewhere else. The curves either side follow it.", "shot": "2026-09-13-path-reshape-point-added.png" },
+    { "do": "Click the round point. Two levers appear on it and nothing else changes.", "shot": "2026-09-13-path-reshape-levers.png" },
+    { "do": "Drag one lever end. The curve bends, and the far lever swings round to keep the bend smooth." },
+    { "do": "Option click that far lever end. It is pulled in, so that side of the point now runs straight and the other still curves." },
+    { "do": "Double click the outline halfway along a straight edge. A point lands exactly where you clicked and the shape does not move." },
+    { "do": "Press Delete to take it out again, then Shift click a second point and press Shift and an arrow key to nudge both together.", "shot": "2026-09-13-path-reshape-two-picked.png" }
+  ],
+  "evaluate": [
+    "Picking the path and finding its points there, with no mode to enter, is it obvious that they can be dragged?",
+    "Double click to curve a point and double click to add one: did you try either without reading the chip under the canvas?",
+    "The eight resize squares are gone while a path shows its points, so a path can only be scaled from the W and H fields. Do you miss dragging a corner?",
+    "At the size the points are drawn, can you still see the shape you are editing, or do they get in the way?",
+    "Option click on a lever to make one side straight is how a rounded corner gets built. Is that findable, or does it need to be somewhere you can see?"
+  ],
+  "rough": [
+    "A path can no longer be scaled by dragging. Showing the eight frame squares AND a dot on every point put them in the same places in the same colour: on a triangle three of the points landed exactly under three handles and disappeared. One of the two had to go, and the points are what you came for. Resizing still works from the Position and Size fields and from a group.",
+    "Points can only be gathered with Shift click. There is no sweeping a box over a run of them, which on a shape with thirty points is thirty clicks.",
+    "A path on a slant shows no points at all, and nothing on screen says that straightening it in the A field is the way in. Reshaping moves the box the shape sits in and a turn is measured about the middle of that box, so a point dragged on a turned path would swing the whole shape round under the hand.",
+    "The mock (vector-wt.html) puts anchor type buttons and node coordinate fields in a Path section of the Properties panel. Neither was built: a button that sets a point's kind is a slower double click, and a pair of number fields for a point you can already drag is a form nobody fills in. If typing exact coordinates for a point turns out to matter for icon work, that is the thing to add.",
+    "Delete means two things depending on what is picked: a point when one is picked, the whole layer when none is. The chip says so and Escape lets the points go first, but it is the one place this feature changes what an existing key does."
+  ]
+}

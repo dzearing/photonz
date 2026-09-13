@@ -93,8 +93,22 @@ extension CanvasNSView {
         }
         guard let layer = selectedLayerID.flatMap({ id in document?.canvasLayer(id: id) })
         else { return nil }
-        // No live frame means no frame handles were offered, so none is cued.
-        let cue = CanvasPointer.cue(at: p, layer: layer, frame: selectedLayerFrame,
+        // A path's points and levers are grabs of their own, and they are read
+        // first because they sit ON the outline, where a press would otherwise
+        // pick the whole shape up.
+        if let picked = editablePath {
+            let local = CGPoint(x: p.x - picked.layer.frame.minX,
+                                y: p.y - picked.layer.frame.minY)
+            switch picked.content.editTarget(at: local, zoom: viewport.zoom,
+                                             handlesShowing: pathAnchorSelection) {
+            case .anchor, .handle: return (.grab, .identity)
+            case .segment, nil: break
+            }
+        }
+        // No live frame means no frame handles were offered, so none is cued —
+        // which is exactly the case for a path showing its points.
+        let cue = CanvasPointer.cue(at: p, layer: layer,
+                                    frame: editablePath == nil ? selectedLayerFrame : nil,
                                     zoom: viewport.zoom,
                                     captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
                                     offersRotation: offersRotation(layer),

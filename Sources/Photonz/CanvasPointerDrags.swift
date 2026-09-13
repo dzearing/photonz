@@ -81,6 +81,12 @@ extension CanvasNSView {
             }
             return
         }
+        // A picked path shows its points, and they own the press: dragging one
+        // reshapes the outline rather than picking the whole layer up. It is
+        // read here, before the double click that zooms the window, because a
+        // double click on a path IS the gesture that adds and converts points
+        // (`CanvasPathEdit`).
+        if pathEditMouseDown(at: p, event: event) { return }
         // Double-click the window background — the matte OR the locked base image,
         // i.e. anywhere that isn't an editable layer — performs the standard
         // window zoom. `.hiddenTitleBar` leaves no real title bar to double-click,
@@ -396,7 +402,10 @@ extension CanvasNSView {
         // Frame handles. The pointer maps through the layer's inverse
         // transform so handles on a rotated/skewed layer hit where they draw.
         // ⌥ on a corner skews instead of resizing.
-        if let id = selectedLayerID, let frame = selectedLayerFrame,
+        // A path showing its points offers no frame handles, so it takes no
+        // press on one either: the chrome and the press read the same question,
+        // or there would be eight targets nobody can see (`CanvasDisplay`).
+        if let id = selectedLayerID, let frame = selectedLayerFrame, editablePath == nil,
            selectedLayer.map(offersOwnHandles) ?? true, selectedLayer?.allowsFrameResize ?? true,
            let handle = Handles.hit(at: handleSpacePoint(p, layer: selectedLayer),
                                     frame: frame, zoom: viewport.zoom,
@@ -646,6 +655,10 @@ extension CanvasNSView {
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
         if tool == .pen {
             penMouseDragged(to: p, event: event)
+            return
+        }
+        if pathAnchorDrag != nil {
+            pathEditMouseDragged(to: p, event: event)
             return
         }
         if var drag = cropDrag {
@@ -988,6 +1001,10 @@ extension CanvasNSView {
         if tool == .pen {
             penMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
                        event: event)
+            return
+        }
+        if pathEditMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
+                           event: event) {
             return
         }
         // The measure tool advances its placement on mouse-up (click/click) or on

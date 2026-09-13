@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 14,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T13:08:31.964Z",
-  "updated": "2026-09-13T13:08:43.552Z",
+  "updated": "2026-09-13T17:06:39.460219Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve",
     "the-pen-draws-a-path-corner-by-corner-and-curve"
@@ -41,6 +41,35 @@
     {
       "t": "2026-09-13T13:08:43.552Z",
       "note": "deps set: the path model comes first"
+    },
+    {
+      "t": "2026-09-13T16:47:20.182Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T17:06:39.460219Z",
+      "note": "core first, TDD: Sources/PhotonzCore/PathEditing.swift with 29 tests in Tests/PhotonzCoreTests/PathEditingTests.swift written before it. Move, set/clear a handle, corner-smooth toggle, insert (de Casteljau), remove, hit test."
+    },
+    {
+      "t": "2026-09-13T17:06:39.460219Z",
+      "note": "adversarial review BEFORE building. (1) The mock's Path section in the Properties panel (anchor type buttons, node coordinate fields, Close path) was cut: a button that sets a point's kind is a slower double click, and number fields for a point you can drag are a form nobody fills in. (2) A MODE (a second tool, or double click to enter) was rejected: the acceptance asks for points on selection, and this app already answers 'a shape you edit by its points' for lines and arrows by showing those points on selection (Layer.hasEndpointHandles). (3) The shortest version that delivers the value: no marquee over points, no panel section, no Close path button. (4) What a first-time user gets wrong: double click to add a point and Option to break a point's sides are not guessable, so the chip under the canvas carries them, one line at a time as what is picked changes."
+    },
+    {
+      "t": "2026-09-13T17:06:39.460219Z",
+      "note": "app side, Next only behind next-reshape-a-path: CanvasPathEdit.swift (chrome + gestures), EditorState+PathEdit.swift (live preview, one-step commit, the chip)."
+    },
+    {
+      "t": "2026-09-13T17:06:39.460219Z",
+      "note": "adversarial review AFTER building, on the probe, and it found a real one. First run: the eight blue frame squares and the new point dots are the same colour in the same places, and on this shape three points landed exactly under three handles and vanished into them. Fixed by standing the frame handles down while a path shows its points (chrome AND press read the same question), which is what a line or an arrow already does; the dashed box still draws and the W/H fields still resize. Points also went from 3pt to 4pt radius, since a dot smaller than its own 8pt target is a dot you aim at and miss."
+    },
+    {
+      "t": "2026-09-13T17:06:39.460219Z",
+      "note": "the half-smooth point did NOT need the model changed: PathAnchor already allows either handle to be absent independently, which is exactly a point curved on one side and straight on the other. Option click a lever clears it; double click the point joins the two sides back up."
+    },
+    {
+      "t": "2026-09-13T17:06:39.460219Z",
+      "note": "verified: Scripts/test.sh 6272 tests green; Scripts/playtest/path-reshape-walk.json 87 steps green with real screenshots; pen and path walks (8 + 4) green. Asked for a full sweep rather than running one, because the canvas mouseDown chain and PlaytestStep.expectPath both changed."
     }
-  ]
+  ],
+  "started": "2026-09-13T16:47:20.181Z"
 }

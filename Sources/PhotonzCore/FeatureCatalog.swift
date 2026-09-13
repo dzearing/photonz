@@ -122,6 +122,8 @@ public enum FeatureCatalog {
 
     public static let penFlag = "next-pen"
 
+    public static let reshapePathFlag = "next-reshape-a-path"
+
     public static let blendModeFlag = "next-blend-mode"
 
     public static let tutorialsFlag = "next-tutorials"
@@ -419,6 +421,15 @@ public enum FeatureCatalog {
                     name: penFlag,
                     title: "Draw any shape with the Pen",
                     description: "Adds the Pen, P, at the end of the drawing tools. Click to drop a corner, or press and drag to pull a curve out of the point you are placing, so one outline can have hard edges and curves in it: a triangle, a teardrop, a rounded box, the sort of shape an icon is made of. The run between the last point and the pointer is drawn while you move, so you see the curve before you commit it. Click the first point to close the shape and it fills; Return finishes it as an open line; Escape throws the drawing away. Holding Shift puts the next point on one of the usual angles. Holding Option means the two sides of a point are not tied together, which is what lets a straight edge run into a curve: drag a point out with Option held and the edge arriving at it stays straight, and press Option on the point you just placed to pull its handle back in so the next edge leaves straight. That is how a rounded corner gets drawn. Command Z steps back one point at a time while you draw instead of losing the whole path. What you get is an ordinary layer: move it, resize it, turn it, repaint its inside and its edge, give it a shadow, undo it. Off means no Pen tool and P does nothing; a path already in a document draws either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: reshapePathFlag,
+                    title: "Reshape a path after you have drawn it",
+                    description: "Pick a path drawn with the Pen and its points appear on it, so a shape that came out nearly right can be put right instead of drawn again. Drag a point and the curves either side follow it. Click a point and its two levers appear: drag one to bend the curve, and on a smooth point the far lever swings round to match so the outline runs through without a kink. Double click a point to turn a hard corner into a smooth bend, and double click it again to turn it back. Hold Option while dragging a lever to free the two sides of a point from each other, and Option click a lever to pull it in so that side runs straight, which is how you get a point that is curved on one side and straight on the other. Double click the outline itself to add a point exactly where you clicked, without the shape moving at all. Select a point and press Delete to take it out, and the curve closes over the gap. Shift click to gather several points and move them together, with the arrow keys nudging them like anything else. Every one of these is a single undo step. Off means a path is an ordinary box you can move, resize and repaint, with no points on it.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

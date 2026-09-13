@@ -1,0 +1,107 @@
+{
+  "out": "/tmp/photonz-playtest/path-reshape-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [200, 500] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "drag", "from": [450, 220], "to": [560, 220], "steps": 10 },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [700, 500] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [203, 503] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "curves": 2, "smooth": 1 },
+    { "do": "describe", "stage": "1-drawn", "note": "a closed shape drawn with the Pen: three points, one of them a smooth bend" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "expectPicked", "layers": ["Path"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-points-showing", "note": "the Pen is put down and the path is picked: its points are on it, square for a hard corner and round for a smooth bend, with the chip saying what they do" },
+    { "do": "snapshot", "name": "1-points-showing" },
+
+    { "do": "drag", "from": [700, 500], "to": [700, 620], "steps": 12 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "anchor": 2, "near": [700, 620], "within": 8 },
+    { "do": "describe", "stage": "3-point-dragged", "note": "a point picked up and moved: the curves either side followed it" },
+    { "do": "snapshot", "name": "2-point-moved" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPath", "anchors": 3, "anchor": 2, "near": [700, 500], "within": 8 },
+    { "do": "describe", "stage": "4-undo", "note": "one undo step puts the point back where it was" },
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPath", "anchors": 3, "anchor": 2, "near": [700, 620], "within": 8 },
+
+    { "do": "click", "at": [450, 220] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-levers", "note": "clicking the smooth point shows its two levers, and only its: the rest of the shape keeps its plain dots" },
+    { "do": "snapshot", "name": "3-levers-showing" },
+
+    { "do": "drag", "from": [560, 220], "to": [560, 120], "steps": 12 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "curves": 2, "smooth": 1 },
+    { "do": "describe", "stage": "6-lever-pulled", "note": "pulling one lever bent the curve, and the far lever swung round to keep the bend smooth" },
+    { "do": "snapshot", "name": "4-curve-bent" },
+
+    { "do": "click", "at": [450, 560], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 4, "closed": true },
+    { "do": "describe", "stage": "7-point-added", "note": "two clicks on the outline added a point exactly where they landed, without the shape moving" },
+    { "do": "snapshot", "name": "5-point-added" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "closed": true },
+    { "do": "describe", "stage": "8-point-removed", "note": "Delete took the point it had just added out again, and the shape closed over the gap rather than the whole layer going" },
+    { "do": "expectLayers", "count": 2 },
+
+    { "do": "click", "at": [200, 500], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "smooth": 2 },
+    { "do": "describe", "stage": "9-corner-curved", "note": "two clicks on a hard corner turned it into a smooth bend" },
+    { "do": "snapshot", "name": "6-corner-curved" },
+
+    { "do": "click", "at": [200, 500], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "smooth": 1 },
+    { "do": "describe", "stage": "10-curved-back", "note": "and the same two clicks turned it back into a hard corner" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPath", "anchors": 3, "smooth": 2 },
+    { "do": "describe", "stage": "11-one-step-each", "note": "every one of these is a single undo step" },
+    { "do": "click", "at": [450, 220] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [560, 120], "modifiers": ["option"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "curves": 2, "smooth": 1 },
+    { "do": "describe", "stage": "12-broken", "note": "Option clicking a lever pulled it in: that point is now curved on one side and straight on the other, which is what a rounded corner in an icon is made of" },
+    { "do": "snapshot", "name": "8-half-smooth" },
+
+    { "do": "click", "at": [450, 220], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "curves": 3, "smooth": 2 },
+    { "do": "describe", "stage": "13-joined", "note": "and two clicks joined the two sides back up into one smooth bend" },
+
+    { "do": "click", "at": [200, 500] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [700, 620], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "14-two-picked", "note": "shift clicking gathers a second point: both are filled in, and the chip says the arrow keys reach them" },
+    { "do": "snapshot", "name": "9-two-points-picked" },
+
+    { "do": "key", "key": "right", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPath", "anchors": 3, "anchor": 0, "near": [210, 500], "within": 2 },
+    { "do": "expectPath", "anchors": 3, "anchor": 2, "near": [710, 620], "within": 2 },
+    { "do": "describe", "stage": "15-nudged", "note": "one press of Shift and an arrow key moved both picked points ten across, and nothing else moved" },
+
+    { "do": "render", "name": "7-final-render" }
+  ]
+}
