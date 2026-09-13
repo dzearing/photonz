@@ -1,8 +1,10 @@
 #!/bin/bash
 # Builds the Photonz app bundle (arm64 release) into dist/.
 #
-# Usage: Scripts/build-app.sh [--probe|--dmg|--dmg-only]
+# Usage: Scripts/build-app.sh [--probe|--release|--dmg|--dmg-only]
 #   --probe     build the task loop's own bundle instead of the dev one
+#   --release   build dist/Photonz.app with no DMG and no signing identity —
+#               what CI wants: the shipping bundle, as an artifact
 #   --dmg       also produce dist/Photonz.dmg
 #   --dmg-only  skip the build and package the EXISTING dist/Photonz.app into
 #               the DMG — the release pipeline uses this after notarizing and
@@ -24,17 +26,18 @@
 #                          as often as it likes, because nobody is using it.
 #                          Prefer Scripts/probe-app.sh, which builds, relaunches
 #                          and reports in one step.
-#   release              → dist/Photonz.app, com.dzearing.photonz. Chosen when
-#                          CODESIGN_IDENTITY is set (CI) or a DMG is requested
-#                          (a DMG is always a release artifact; the local release
-#                          preflight runs `--dmg` without the identity).
+#   release (--release)  → dist/Photonz.app, com.dzearing.photonz. Also chosen
+#                          when CODESIGN_IDENTITY is set (the release pipeline)
+#                          or a DMG is requested (a DMG is always a release
+#                          artifact; the local release preflight runs `--dmg`
+#                          without the identity).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="$(cat VERSION)"
 DIST="dist"
 
-if [[ -n "${CODESIGN_IDENTITY:-}" || "${1:-}" == "--dmg" || "${1:-}" == "--dmg-only" ]]; then
+if [[ -n "${CODESIGN_IDENTITY:-}" || "${1:-}" == "--release" || "${1:-}" == "--dmg" || "${1:-}" == "--dmg-only" ]]; then
   VARIANT="release"
   APP_NAME="Photonz"
   DISPLAY_NAME="Photonz"
@@ -256,10 +259,25 @@ fi
 #     Scripts/dev-codesign-setup.sh.
 #  3. Ad-hoc — last resort only if the identity can't be created (e.g. no
 #     openssl@3); permissions reset every rebuild.
+#
+# Path 2 is for a PERSON's machine only, and the two conditions below say so.
+# The whole point of the stable identity is that macOS remembers a TCC grant
+# for it, which is meaningless on a build machine — and worse than meaningless,
+# because a freshly imported private key makes codesign ask the keychain for
+# permission with a dialog nobody is there to answer. On CI that is not an
+# error, it is a hang: run 34740281542 sat on `codesign` for twelve minutes and
+# died at the job timeout. So a release bundle never uses it (it is not a dev
+# app), and no build uses it under CI.
 DEV_IDENTITY="Photonz Dev"
+DEV_SIGNING_WANTED=1
+[[ "$VARIANT" == "release" ]] && DEV_SIGNING_WANTED=0
+[[ -n "${CI:-}" ]] && DEV_SIGNING_WANTED=0
 if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
   echo "==> Codesigning (Developer ID)"
   codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$APP"
+elif [[ "$DEV_SIGNING_WANTED" == "0" ]]; then
+  echo "==> Codesigning (ad-hoc — unsigned $VARIANT build, no identity to keep stable)"
+  codesign --force --deep --sign - "$APP"
 else
   # Self-heal: a fresh machine/worktree won't have the stable dev cert yet.
   # Create it once rather than ad-hoc signing (which changes the code identity

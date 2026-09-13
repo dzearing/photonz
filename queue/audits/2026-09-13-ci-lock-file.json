@@ -1,0 +1,26 @@
+{
+  "feature": "Every commit builds the app again",
+  "epic": "unmanned-loop",
+  "summary": "A file that means \"someone is playtesting on this machine right now\" had been committed to the repository since 2026-08-23, so the build machine believed it too and refused to build the app on every single run. The file is gone from the repository and can never come back quietly, and the build step that it was blocking now builds the shipping bundle instead of the local one.",
+  "setup": "Nothing to install. This is the build machine and the build script. All commands run from the repo root.",
+  "try": [
+    { "do": "Open https://github.com/dzearing/photonz/actions and look at the runs before 2026-09-13. Every one is red." },
+    { "do": "Open run 34740281542 and read the Build release app bundle step: it stops on \"Codesigning\" and never says anything again until the job is killed at 25 minutes." },
+    { "do": "Open the newest run on main and check that Build release app bundle finishes, and that an artifact called Photonz.app is attached to the run." },
+    { "do": "Run `Scripts/build-app.sh --release` here. It builds dist/Photonz.app, leaves your own dist/Photonz Dev.app alone, and never asks your keychain for anything." },
+    { "do": "Run `touch queue/playtest.lock && Scripts/build-app.sh`. It still refuses to rebuild your dev app, which is the whole point of the lock." },
+    { "do": "Run `git status` and see that the lock you just made does not appear. Delete it with `rm queue/playtest.lock` when you are done." }
+  ],
+  "evaluate": [
+    "Is a red build machine something you want to hear about, or is quietly fixing it in the loop the right handling?",
+    "The uploaded artifact is now ad-hoc signed rather than carrying the local dev certificate. Is that what you expect from a build of a commit?",
+    "The build machine now fails the run outright if the playtest lock is ever committed again. Is a hard failure right, or would a warning be enough?",
+    "Nothing here changes the app. Is an audit the right place for a build-machine fix at all, or would you rather see these only in the daily digest?"
+  ],
+  "rough": [
+    "No screenshot: this change has no on-screen surface. It lives in two workflow files and the build script, so the evidence is the run logs linked above.",
+    "Only the first of the three acceptance items was about the committed file, and that half had already been done by hand from the review window in f2d321a2. The rest of this task was the failure sitting behind it: with the lock gone, the step went on to create a code-signing certificate on the build machine and then hang forever waiting for a keychain dialog nobody was there to answer.",
+    "Two more things fell out of reading that log. The step is called Build release app bundle but was running the plain script, which builds the DEV bundle, so it was uploading nothing at all and had been for as long as the step existed. And the release workflow has the same plain call, which would have built the wrong bundle and failed the release outright the first time the signing secret was missing.",
+    "The newest run on main is the real proof of acceptance item 2 and it lands a few minutes after this commit. What was verified here by hand is the same build, run the same way (`CI=true Scripts/build-app.sh --release`): exit 0, dist/Photonz.app produced, ad-hoc signed, and the dev app's binary byte-identical before and after."
+  ]
+}

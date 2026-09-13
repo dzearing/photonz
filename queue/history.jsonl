@@ -2811,3 +2811,12 @@
 {"t":"2026-09-13T04:44:12.796Z","ev":"task_started","id":"tutorials-the-colours-and-styles-track","title":"Tutorials: the Colours and Styles track","priority":"p1-high"}
 {"t":"2026-09-13T05:12:44.710Z","ev":"task_created","id":"a-guide-pointing-at-the-library-rings-a-shelf-wi","priority":"p2-normal","title":"A guide pointing at the Library rings a shelf with its tiles cut off"}
 {"t":"2026-09-13T05:22:18.578Z","ev":"task_done","id":"tutorials-the-colours-and-styles-track","from":"in_progress","note":"Four guides under Help > Tutorials > Colours and Styles, all data in the catalogue: save a colour as a style, change it everywhere, text styles, and the Library. One new sample carries the whole track. Walked on the probe, one walk per guide, all four green; 24 tutorial walks, 14 style walks and both naming colour walks pass, full suite green at 5931. Audit at queue/audits/2026-09-13-tutorials-colours-and-styles-track.json with four real captures. Also fixed the style name field asking for the keyboard one pass too early, in all four panels that share the shape."}
+{"t":"2026-09-13T05:24:49.853Z","ev":"task_resequenced","id":"separate-a-screenshot-s-text-into-layers-you-can","from":40,"to":6}
+{"t":"2026-09-13T05:24:49.902Z","ev":"task_resequenced","id":"separate-the-boxes-too-and-fill-the-hole-underne","from":41,"to":7}
+{"t":"2026-09-13T05:24:49.949Z","ev":"task_resequenced","id":"text-inside-a-box-comes-out-inside-that-box","from":42,"to":8}
+{"t":"2026-09-13T05:24:50.003Z","ev":"task_resequenced","id":"one-command-separates-the-whole-screenshot-and-s","from":43,"to":9}
+{"t":"2026-09-13T05:24:50.062Z","ev":"task_resequenced","id":"a-separated-box-brings-its-shadow-with-it-as-a-r","from":44,"to":10}
+{"t":"2026-09-13T05:24:50.122Z","ev":"task_resequenced","id":"a-separated-run-of-text-becomes-text-you-can-ret","from":45,"to":11}
+{"t":"2026-09-13T05:25:52.783Z","ev":"task_resequenced","id":"a-committed-lock-file-stops-every-build-on-ci","from":270,"to":4}
+{"t":"2026-09-13T06:32:49.185Z","ev":"sweep_pass","walks":384,"passed":376,"failed":8,"seconds":4205,"complete":true}
+{"t":"2026-09-13T06:32:49.288Z","ev":"task_started","id":"a-committed-lock-file-stops-every-build-on-ci","title":"A committed lock file stops every build on CI","priority":"p1-high"}

@@ -73,7 +73,10 @@ jobs:
         env:
           # Empty when unsigned: build-app.sh falls back to ad-hoc signing.
           CODESIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-        run: Scripts/build-app.sh
+        # --release is not optional here even though an identity usually implies
+        # it: with the secret unset, the bare script builds the DEV bundle, and
+        # every step after this one asks for dist/Photonz.app and finds nothing.
+        run: Scripts/build-app.sh --release
 
       # Two-submission flow so BOTH artifacts carry tickets: notarize + staple
       # the app first (a stapled bundle in /Applications launches clean even

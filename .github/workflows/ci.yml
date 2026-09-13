@@ -14,6 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # queue/playtest.lock says "a person is playtesting on THIS machine", so it
+      # is only ever true where it was made. Committed on 2026-08-23, it rode the
+      # repo onto the build machine and made every run refuse to build the app
+      # until 2026-09-13. .gitignore keeps it out; this says so out loud, because
+      # a `git add -f` would otherwise bring the outage back silently.
+      - name: No machine-local files are committed
+        run: |
+          if git ls-files --error-unmatch queue/playtest.lock >/dev/null 2>&1; then
+            echo "::error::queue/playtest.lock is tracked. It is machine-local:" \
+                 "run 'git rm --cached queue/playtest.lock' — it is already in .gitignore."
+            exit 1
+          fi
+          echo "queue/playtest.lock is not tracked."
+
       - name: Swift version
         run: swift --version
 
@@ -27,12 +41,16 @@ jobs:
         # the headless CI VM and the whole process wedges. Serial is ~seconds here.
         run: Scripts/test.sh --no-parallel
 
+      # --release, not the bare default. The default variant is the DEV bundle,
+      # which meant this step built "dist/Photonz Dev.app" while the upload
+      # below asked for dist/Photonz.app and quietly got nothing.
       - name: Build release app bundle
-        run: Scripts/build-app.sh
+        run: Scripts/build-app.sh --release
 
       - name: Upload app artifact
         uses: actions/upload-artifact@v4
         with:
           name: Photonz.app
           path: dist/Photonz.app
+          if-no-files-found: error
           retention-days: 7
