@@ -1,0 +1,191 @@
+{
+  "out": "/tmp/photonz-playtest/path-demo-walk",
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/path-demo.photonz",
+      "width": 1100,
+      "height": 760
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-open",
+      "note": "four paths: corners only, curves only, both in one outline, and an open one"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-paths-open"
+    },
+    {
+      "do": "expectLayers",
+      "count": 11
+    },
+    {
+      "do": "click",
+      "at": [
+        490,
+        150
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Bowed square"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-picked",
+      "note": "the bowed square picked; its box should hug the bulge, not the anchors"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-bowed-square-picked"
+    },
+    {
+      "do": "click",
+      "at": [
+        315,
+        155
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Leaf"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-leaf",
+      "note": "the leaf picked: every run a curve, and Appearance offers a fill and a line"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-leaf-picked"
+    },
+    {
+      "do": "click",
+      "at": [
+        690,
+        170
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "describe",
+      "stage": "4-empty",
+      "note": "a click inside the open path's box but nowhere near its line picks nothing: a path is hit where the shape is, not where its box is"
+    },
+    {
+      "do": "click",
+      "at": [
+        690,
+        115
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Squiggle"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-open",
+      "note": "the open path picked: a line with no inside, so no fill is offered"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-open-path-picked"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        490,
+        150
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Bowed square"
+      ]
+    },
+    {
+      "do": "drag",
+      "from": [
+        579,
+        155
+      ],
+      "to": [
+        679,
+        155
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-resize",
+      "note": "the bowed square dragged 100 wider: the curve should scale with the box, not flatten"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-bowed-square-wider"
+    },
+    {
+      "do": "key",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-undo",
+      "note": "undone, back to the shape it opened as"
+    },
+    {
+      "do": "render",
+      "name": "5-final-render"
+    }
+  ]
+}

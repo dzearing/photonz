@@ -96,7 +96,9 @@ extension Layer {
         case .group: true
         // A lens resizes like any box, and growing one shows more of the
         // picture underneath rather than stretching what was already there.
-        case .image, .zoomCallout, .lens, .collage: true
+        // A path scales into whatever box its handles are dragged to, curves
+        // and all (`PathBuilder.resized`).
+        case .image, .zoomCallout, .lens, .collage, .path: true
         }
     }
 
@@ -139,6 +141,16 @@ extension Layer {
     /// Everything that is not an open stroke already fills its frame, so it
     /// gets the frame it always had.
     public func drawnBounds(captionPillSize: CGSize? = nil) -> CGRect {
+        // A path's box is the box its OUTLINE fills, and its line is drawn on
+        // that outline rather than round the box, so the ink reaches half a
+        // centred line past it on every side. Read from the anchors rather than
+        // from the frame so a path whose numbers have drifted from its box —
+        // one built by hand, one mid-edit — is still outlined round its ink.
+        if let path {
+            let shape = path.bounds.offsetBy(dx: frame.minX, dy: frame.minY)
+            let reach = path.strokeOutset
+            return reach > 0 ? shape.insetBy(dx: -reach, dy: -reach) : shape
+        }
         guard let a = annotation, a.shape == .line || a.shape == .arrow else {
             return withoutSlack(frame)
         }
@@ -230,6 +242,7 @@ extension Layer {
                         placedByContainer: Bool = false,
                         chosenByHand: Bool = false) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
+        if path != nil { return PathBuilder.resized(self, to: frame) }
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
         if let group {

@@ -1,0 +1,643 @@
+{
+  "canvasSize" : [
+    820,
+    470
+  ],
+  "layers" : [
+    {
+      "content" : {
+        "path" : {
+          "_0" : {
+            "anchors" : [
+              {
+                "kind" : "corner",
+                "point" : [
+                  70,
+                  0
+                ]
+              },
+              {
+                "kind" : "corner",
+                "point" : [
+                  140,
+                  130
+                ]
+              },
+              {
+                "kind" : "corner",
+                "point" : [
+                  0,
+                  130
+                ]
+              }
+            ],
+            "closed" : true,
+            "fill" : "#2F6FED",
+            "fillRule" : "nonZero",
+            "paint" : "#16336F",
+            "strokePosition" : "inside",
+            "strokeWidth" : 4
+          }
+        }
+      },
+      "frame" : [
+        [
+          60,
+          90
+        ],
+        [
+          140,
+          130
+        ]
+      ],
+      "id" : "CB4191D3-EE02-435F-A2F9-3E7A31F078E2",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Triangle",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "text" : {
+          "_0" : {
+            "colorHex" : "#3A3A3C",
+            "fontName" : "SF Pro",
+            "fontSize" : 15,
+            "string" : "Corners only",
+            "weight" : "medium"
+          }
+        }
+      },
+      "frame" : [
+        [
+          60,
+          238
+        ],
+        [
+          180,
+          20
+        ]
+      ],
+      "id" : "C2641EB4-6BF8-4775-8CAA-D7E3CBEA5C31",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Corners only",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "path" : {
+          "_0" : {
+            "anchors" : [
+              {
+                "handleIn" : [
+                  0,
+                  86
+                ],
+                "handleOut" : [
+                  86,
+                  0
+                ],
+                "kind" : "corner",
+                "point" : [
+                  0,
+                  0
+                ]
+              },
+              {
+                "handleIn" : [
+                  0,
+                  -86
+                ],
+                "handleOut" : [
+                  -86,
+                  0
+                ],
+                "kind" : "corner",
+                "point" : [
+                  130,
+                  130
+                ]
+              }
+            ],
+            "closed" : true,
+            "fill" : "#34C759",
+            "fillRule" : "nonZero",
+            "paint" : "#186B2C",
+            "strokePosition" : "inside",
+            "strokeWidth" : 4
+          }
+        }
+      },
+      "frame" : [
+        [
+          250,
+          90
+        ],
+        [
+          130,
+          130
+        ]
+      ],
+      "id" : "4A4CBF4B-E890-460A-9DD9-A7A4F8AEF233",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Leaf",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "text" : {
+          "_0" : {
+            "colorHex" : "#3A3A3C",
+            "fontName" : "SF Pro",
+            "fontSize" : 15,
+            "string" : "Curves only",
+            "weight" : "medium"
+          }
+        }
+      },
+      "frame" : [
+        [
+          250,
+          238
+        ],
+        [
+          180,
+          20
+        ]
+      ],
+      "id" : "71A975CE-FD4C-4F24-BB10-53A2F347D9EF",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Curves only",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "path" : {
+          "_0" : {
+            "anchors" : [
+              {
+                "kind" : "corner",
+                "point" : [
+                  0,
+                  0
+                ]
+              },
+              {
+                "handleOut" : [
+                  52,
+                  39
+                ],
+                "kind" : "corner",
+                "point" : [
+                  100,
+                  0
+                ]
+              },
+              {
+                "handleIn" : [
+                  52,
+                  -39
+                ],
+                "kind" : "corner",
+                "point" : [
+                  100,
+                  130
+                ]
+              },
+              {
+                "kind" : "corner",
+                "point" : [
+                  0,
+                  130
+                ]
+              }
+            ],
+            "closed" : true,
+            "fill" : "#FF9F0A",
+            "fillRule" : "nonZero",
+            "paint" : "#8A4B00",
+            "strokePosition" : "inside",
+            "strokeWidth" : 4
+          }
+        }
+      },
+      "frame" : [
+        [
+          440,
+          90
+        ],
+        [
+          139,
+          130
+        ]
+      ],
+      "id" : "B9026721-1F01-4242-9E45-2876F969CEEF",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Bowed square",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "text" : {
+          "_0" : {
+            "colorHex" : "#3A3A3C",
+            "fontName" : "SF Pro",
+            "fontSize" : 15,
+            "string" : "Straight and curved",
+            "weight" : "medium"
+          }
+        }
+      },
+      "frame" : [
+        [
+          440,
+          238
+        ],
+        [
+          200,
+          20
+        ]
+      ],
+      "id" : "A382E302-6EEC-49A3-88E2-F4FC27744920",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Straight and curved",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "path" : {
+          "_0" : {
+            "anchors" : [
+              {
+                "handleOut" : [
+                  30,
+                  -60
+                ],
+                "kind" : "smooth",
+                "point" : [
+                  0,
+                  63.782934322309
+                ]
+              },
+              {
+                "handleIn" : [
+                  -30,
+                  30
+                ],
+                "handleOut" : [
+                  30,
+                  -30
+                ],
+                "kind" : "smooth",
+                "point" : [
+                  70,
+                  13.782934322309
+                ]
+              },
+              {
+                "handleIn" : [
+                  -30,
+                  -60
+                ],
+                "kind" : "smooth",
+                "point" : [
+                  140,
+                  63.782934322309
+                ]
+              }
+            ],
+            "closed" : false,
+            "fillRule" : "nonZero",
+            "paint" : "#AF52DE",
+            "strokePosition" : "center",
+            "strokeWidth" : 10
+          }
+        }
+      },
+      "frame" : [
+        [
+          620,
+          110
+        ],
+        [
+          140,
+          63.78293432230901
+        ]
+      ],
+      "id" : "1E0E6156-601E-49C8-8FAD-95AF404C5C84",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Squiggle",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "text" : {
+          "_0" : {
+            "colorHex" : "#3A3A3C",
+            "fontName" : "SF Pro",
+            "fontSize" : 15,
+            "string" : "Open, no fill",
+            "weight" : "medium"
+          }
+        }
+      },
+      "frame" : [
+        [
+          620,
+          238
+        ],
+        [
+          180,
+          20
+        ]
+      ],
+      "id" : "E41611FB-3B6C-420F-B7E4-5549202D6C81",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Open, no fill",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "annotation" : {
+          "_0" : {
+            "arrowheadScale" : 1,
+            "arrowheadStyle" : "triangle",
+            "captionFontSize" : 20,
+            "captionPinned" : false,
+            "captionRoundness" : 1,
+            "colorHex" : "#8A4B00",
+            "cornerRadius" : 0,
+            "end" : [
+              100,
+              130
+            ],
+            "fillColorHex" : "#FFD79A",
+            "headColorHex" : "#8A4B00",
+            "shape" : "rectangle",
+            "start" : [
+              0,
+              0
+            ],
+            "strokePosition" : "inside",
+            "strokeWidth" : 0
+          }
+        }
+      },
+      "frame" : [
+        [
+          440,
+          280
+        ],
+        [
+          100,
+          130
+        ]
+      ],
+      "id" : "FEFC2A7F-022E-4E2D-8FCD-7F58A8379D88",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Rectangle",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#8A4B00",
+        "borderWidth" : 4,
+        "cornerRadius" : 0,
+        "effects" : [
+          {
+            "border" : {
+              "colorHex" : "#8A4B00",
+              "isOn" : true,
+              "position" : "inside",
+              "width" : 4
+            },
+            "kind" : "border"
+          }
+        ],
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "text" : {
+          "_0" : {
+            "colorHex" : "#3A3A3C",
+            "fontName" : "SF Pro",
+            "fontSize" : 15,
+            "string" : "Rectangle, for comparison",
+            "weight" : "medium"
+          }
+        }
+      },
+      "frame" : [
+        [
+          440,
+          420
+        ],
+        [
+          260,
+          20
+        ]
+      ],
+      "id" : "651CD1AD-D831-4613-9865-0A8C4314AAFE",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Rectangle, for comparison",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "text" : {
+          "_0" : {
+            "colorHex" : "#3A3A3C",
+            "fontName" : "SF Pro",
+            "fontSize" : 15,
+            "string" : "Paths: straight edges and curves in one outline",
+            "weight" : "medium"
+          }
+        }
+      },
+      "frame" : [
+        [
+          60,
+          36
+        ],
+        [
+          620,
+          20
+        ]
+      ],
+      "id" : "E87669E5-27F1-4EB0-A98B-C4B5B8033F4E",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Paths: straight edges and curves in one outline",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    }
+  ],
+  "pixelScale" : 1
+}

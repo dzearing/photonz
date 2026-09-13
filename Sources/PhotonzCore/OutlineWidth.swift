@@ -26,6 +26,10 @@ extension Layer {
     /// answers for the two shapes that do not have one at all
     /// (`OutlineRetirement.swift`).
     public var drawsItsOwnOutline: Bool {
+        // A path strokes its own outline and cannot do anything else: a ring
+        // round its BOX would be a rectangle round a shape that is not one, so
+        // its edge stays where the shape is (`docs/design/vector-paths.md`).
+        if path != nil { return true }
         guard let annotation else { return false }
         return !annotation.drawsARingRatherThanBeingOne && annotation.shape != .highlight
     }
@@ -34,12 +38,14 @@ extension Layer {
     /// the stroke a line or an arrow IS, or the ring nearest the eye in the
     /// Effects list.
     public var outlineWidth: CGFloat {
+        if let path { return max(path.strokeWidth, style.borderWidth) }
         guard let annotation, drawsItsOwnOutline else { return style.borderWidth }
         return max(annotation.strokeWidth, style.borderWidth)
     }
 
     /// What that line is drawn in, gradient and all.
     public var outlinePaint: Paint {
+        if let path { return path.paint }
         guard let annotation, drawsItsOwnOutline else {
             return style.borderEffects.first?.paint ?? Paint(hex: style.borderColorHex)
         }

@@ -53,6 +53,13 @@ public enum Fill {
         case .collage(var collage):
             collage.backdropColorHex = colorHex
             filled.content = .collage(collage)
+        case .path(var path):
+            // The whole shape, inside and edge, which is what pointing a
+            // bucket at a path means. A path with no fill gains one: the
+            // gesture says make this that colour, not tint what it already has.
+            path.colorHex = colorHex
+            path.fillColorHex = colorHex
+            filled.content = .path(path)
         // Neither of these has paint of its own: both draw the picture
         // underneath, so there is nothing for a bucket to fill.
         case .zoomCallout, .lens:

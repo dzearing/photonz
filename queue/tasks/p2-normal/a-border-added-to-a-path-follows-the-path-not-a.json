@@ -1,0 +1,28 @@
+{
+  "id": "a-border-added-to-a-path-follows-the-path-not-a",
+  "title": "A Border added to a path follows the path, not a box round it",
+  "goal": "A path can have straight edges and curves, but adding a Border to one in the Effects list draws a plain rectangle round it instead of following the shape. Make the border hug the outline, the way it already hugs an oval.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2530,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-13T14:36:47.966Z",
+  "updated": "2026-09-13T14:36:47.969Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-13 with a throwaway render test (triangle path, anchors (60,0),(120,100),(0,100), no stroke of its own, one BorderEffect width 6 position outside painted #FF0000, layer at (40,40), 200x200 canvas):\n\n  box top-left corner, outside the triangle: (255,0,0,255)\n  beside the apex, outside the triangle: (0,0,0,0)\n  on the triangle's own left edge: (47,111,237,255)\n\nThe corner of the BOX is pure border red although the triangle is nowhere near it. Also confirmed at the model level: Layer.ringShape answers .box for a path.\n\nThis is exactly the bug an ellipse had on 2026-09-08, fixed then by RingShape.swift (Sources/PhotonzCore/RingShape.swift). RingShape is a String-backed enum of .box and .ellipse, and DocumentRenderer.ringed generates its rings with Core Image filters (roundedRectMask / ellipseRing), so a path needs a third answer that carries real geometry rather than a case name: most likely a drawn mask from PathRasterizer.cgPath, stroked at the border width, rather than a CI generator.\n\nA path arrives with its own edge (PathContent.strokeWidth), so nobody has to add a Border to get a line, which is why this is p2 rather than p1. See docs/design/vector-paths.md, \"Known rough edges\".",
+  "acceptance": [
+    "A Border added to a closed path follows the path outline, at every width and in all three positions",
+    "A Border added to an open path follows its line rather than boxing it, or the row says plainly that it cannot",
+    "A pixel test proves the corner of a triangle path's bounding box is NOT painted by its border",
+    "Nothing changes for a picture, a frame, a group or an oval: their rings are exactly as they were"
+  ],
+  "log": [
+    {
+      "t": "2026-09-13T14:36:47.968Z",
+      "note": "created (manual)"
+    }
+  ]
+}

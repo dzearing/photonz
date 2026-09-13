@@ -300,7 +300,7 @@ extension LayerContent {
     public var readsBackdrop: Bool {
         switch self {
         case .zoomCallout, .lens: true
-        case .image, .text, .annotation, .measure, .collage, .group: false
+        case .image, .text, .annotation, .measure, .collage, .group, .path: false
         }
     }
 }

@@ -140,7 +140,9 @@ extension Layer {
         // A lens is masked to its box the way a picture is, so rounding it
         // rounds the region it covers: a blurred pill instead of a blurred box.
         case .image, .collage, .group, .lens: return true
-        case .text, .measure, .zoomCallout: return false
+        // A path turns whatever corners its anchors turn, so a radius knob
+        // over it would be a number that changes nothing.
+        case .text, .measure, .zoomCallout, .path: return false
         }
     }
 

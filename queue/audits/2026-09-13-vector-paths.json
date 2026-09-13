@@ -1,0 +1,31 @@
+{
+  "feature": "A shape can be any path",
+  "epic": "icon-vector",
+  "summary": "A shape is no longer limited to a box, an oval, a line or an arrow. There is now a path: a shape with as many points as you like, where each point is either a hard corner or a smooth bend, so straight edges and curves live in one outline. It fills, takes a line round it, takes a colour or a gradient, moves, resizes and undoes like every other shape. There is no Pen yet, so the only way to see one is the demo document below.",
+  "setup": "Photonz Dev, release Next. Nothing to switch on. Open Scripts/playtest/fixtures/path-demo.photonz from the repo (File then Open); it holds four paths and one ordinary rectangle for comparison.",
+  "try": [
+    { "do": "Open Scripts/playtest/fixtures/path-demo.photonz.", "shot": "2026-09-13-vector-paths-1-paths-open.png" },
+    { "do": "Compare the orange shape marked Straight and curved with the rectangle under it: three edges should be dead straight and the fourth should bow out." },
+    { "do": "Click the orange shape and look at where the blue outline sits against the bulge.", "shot": "2026-09-13-vector-paths-2-bowed-square-picked.png" },
+    { "do": "Drag its right-hand middle handle about 100 points further right.", "shot": "2026-09-13-vector-paths-5-bowed-square-wider.png" },
+    { "do": "Press Command Z to put it back." },
+    { "do": "Click the purple squiggle on its line, and note that Appearance offers a Color and no Fill.", "shot": "2026-09-13-vector-paths-4-open-path-picked.png" },
+    { "do": "Click inside the squiggle's empty box, well away from the line, and see that nothing is picked." },
+    { "do": "Pick the green leaf and paint its Fill with a gradient from the well beside the row." }
+  ],
+  "evaluate": [
+    "Dragged wider, does the curve read as the same curve stretched, or does it look like it changed shape?",
+    "The blue selection outline hugs the bulge while the eight drag handles sit on the square box corners. Is that the right split, or should the handles follow the shape too?",
+    "The purple squiggle is an open path, so it is offered a Color and no Fill at all. Is a Fill row that simply is not there the right answer, or would a greyed one that says why be clearer?",
+    "A path arrives red like a freshly drawn box does. For drawing an icon, is red the right thing to start from, or should a path start flat grey?",
+    "The demo shapes are all fill plus a thin line. Is anything obviously missing from what a path can wear before the Pen is worth drawing with?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so every shot here is the window as a person sees it rather than an offscreen render.",
+    "Nothing in the app CREATES a path yet, on purpose: the Pen is its own task, and mixing the drawing gesture into this one is how the model ends up shaped by whichever interaction was written first. The demo document is the only path anybody can reach, and it is committed as a fixture with a walk (path-demo) that opens it.",
+    "A Border added to a path from the Effects list still draws a rectangle round its box rather than following the outline. It is the same bug an oval had in September, in a new place. A path arrives with its own edge so nobody needs to add one, but the row is there and it will look wrong. Filed as a follow-up.",
+    "Line cap and line join cannot be set. Corners join with miters so a hard corner stays hard, and open ends get round caps. Icon work will want butt caps and a miter limit before long.",
+    "The mock (vector-wt) strokes a path with a brush and saves the pair as a Style. There is no brush engine and this slice does not pretend otherwise: the stroke is a Paint, flat or gradient, like every other stroke in the app.",
+    "The mock also shows a node inspector with X, Y and a Smooth/Corner switch. That is the editing slice, not this one. The model can already say everything that inspector needs, including an anchor that is curved on one side and straight on the other."
+  ]
+}

@@ -5635,6 +5635,11 @@ private final class Run {
                 case .image: kind = "image"
                 case .text: kind = "text"
                 case .annotation(let a): kind = "\(a.shape)"
+                // How many anchors and whether it closes: the two things a
+                // walk needs to tell one path from another without reading a
+                // picture.
+                case .path(let path):
+                    kind = "path:\(path.anchors.count)\(path.isClosed ? " closed" : " open")"
                 case .zoomCallout: kind = "callout"
                 // What the lens DOES is the whole of what it is, so the tree
                 // says it rather than making a walk read a picture.
@@ -5652,6 +5657,9 @@ private final class Run {
                 }
                 if let annotation = layer.annotation {
                     line += " stroke \(Int(annotation.strokeWidth.rounded()))"
+                }
+                if let path = layer.path {
+                    line += " stroke \(Int(path.strokeWidth.rounded()))"
                 }
                 // How much a callout magnifies and what it is drawn in, so a
                 // walk can prove what came out of a drag without reading a

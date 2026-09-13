@@ -2965,3 +2965,6 @@
 {"t":"2026-09-13T14:13:49.243Z","ev":"task_blocked","id":"the-panel-stops-explaining-itself-in-paragraphs","from":"pending","note":"waiting on the card about how much the panel may explain itself"}
 {"t":"2026-09-13T14:13:56.308Z","ev":"objectives_updated","by":"manager","change":"icon-export and icon-grid promoted to now under icon-svg: the user asked for the Pen in order to build SVG icons, and today there is no SVG export and no icon-sized frame to draw one on"}
 {"t":"2026-09-13T14:14:23.559Z","ev":"manager","filed":6,"readyBefore":65,"readyAfter":66,"report":"queue/manager/2026-09-13-0714.md"}
+{"t":"2026-09-13T14:14:35.055Z","ev":"manager_pass","exit":0,"ready":66}
+{"t":"2026-09-13T14:14:35.101Z","ev":"task_started","id":"a-shape-can-be-any-path-straight-edges-and-curve","title":"A shape can be any path: straight edges and curves in one outline","priority":"p1-high"}
+{"t":"2026-09-13T14:36:47.970Z","ev":"task_created","id":"a-border-added-to-a-path-follows-the-path-not-a","priority":"p2-normal","title":"A Border added to a path follows the path, not a box round it"}

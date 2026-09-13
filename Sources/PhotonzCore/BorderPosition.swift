@@ -108,6 +108,7 @@ extension Layer {
     public var outlineOutset: CGFloat {
         var reach = style.borderEffectOutset
         if let annotation { reach = max(reach, annotation.strokeOutset) }
+        if let path { reach = max(reach, path.strokeOutset) }
         return reach
     }
 
@@ -115,7 +116,7 @@ extension Layer {
     /// the ring the renderer lays on afterwards. Only a shape has one: its
     /// stroke is drawn by the rasterizer, so the picture it hands back has to
     /// be bigger than the frame for the stroke to be in it at all.
-    public var contentOutset: CGFloat { annotation?.strokeOutset ?? 0 }
+    public var contentOutset: CGFloat { annotation?.strokeOutset ?? path?.strokeOutset ?? 0 }
 
     /// Everything this layer's own drawing can add past its frame: the reach of
     /// its effects plus the reach of its outline. What a drag sprite is padded

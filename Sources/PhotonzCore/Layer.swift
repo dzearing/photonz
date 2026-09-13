@@ -906,6 +906,12 @@ public enum LayerContent: Hashable, Codable, Sendable {
     case image(ImageRef)
     case text(TextContent)
     case annotation(AnnotationContent)
+    /// A shape that is any outline you like: as many anchors as you want, each
+    /// a corner or a smooth bend, so straight edges and curves live in one
+    /// shape. Its own case rather than a sixth `AnnotationShape` because an
+    /// annotation is a two-point mark and a path has no fixed number of points
+    /// (`docs/design/vector-paths.md`).
+    case path(PathContent)
     case zoomCallout(ZoomCalloutContent)
     /// A layer that draws what is composited BELOW it, through one adjustment
     /// (`Lens.swift`). Beside the zoom callout rather than in the Effects list
@@ -929,7 +935,9 @@ public enum LayerContent: Hashable, Codable, Sendable {
         // A lens shows MORE of the picture as it grows, it does not stretch
         // what was already inside it, so a sprite of its start frame is never
         // the right picture.
-        case .annotation, .text, .zoomCallout, .lens, .measure, .group: false
+        // A path's line is stated in points like every other stroke, so a
+        // sprite of it stretches when the box grows.
+        case .annotation, .text, .zoomCallout, .lens, .measure, .group, .path: false
         }
     }
 
@@ -1788,6 +1796,14 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                 if chip.insetBy(dx: -tolerance, dy: -tolerance).contains(p) { return true }
             }
             return false
+        }
+        if let path {
+            // A path is hit where the SHAPE is, not where its box is: an open
+            // path is a line and a hollow one is a ring, so the empty room
+            // inside either one takes no click at all
+            // (`docs/design/vector-paths.md`).
+            let local = CGPoint(x: p.x - frame.minX, y: p.y - frame.minY)
+            return path.isHit(at: local, slop: zoom > 0 ? 6 / zoom : 6)
         }
         if let group {
             // A group has no shape of its own: the point lands on it only when

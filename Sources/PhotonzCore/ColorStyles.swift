@@ -295,6 +295,11 @@ extension Layer {
                 }
             }
         case .text: slots = [.text]
+        // A path has the two paints a shape has: its inside and its edge. The
+        // inside is only offered once the path CLOSES, because an open path has
+        // no inside to paint (`docs/design/vector-paths.md`).
+        case .path(let path):
+            slots = path.isClosed ? [.fill, .stroke] : [.stroke]
         case .measure(let measure):
             // The caliper itself, and then the chip's three — and those only
             // while there IS a chip. A measurement with its readout hidden has
@@ -342,6 +347,11 @@ extension Layer {
             // Border in the Effects list (`OutlineRetirement.swift`).
             guard !annotation.drawsARingRatherThanBeingOne else { return nil }
             return annotation.colorHex
+        case (.fill, .path(let path)):
+            guard path.isClosed else { return nil }
+            return path.fillColorHex
+        case (.stroke, .path(let path)):
+            return path.colorHex
         case (.arrowHead, .annotation(let annotation)):
             guard annotation.shape == .arrow, annotation.arrowheadStyle != .plain else { return nil }
             return annotation.headColorHex
@@ -391,6 +401,11 @@ extension Layer {
         case (.stroke, .annotation(let annotation)):
             guard !annotation.drawsARingRatherThanBeingOne else { return nil }
             return annotation.paint
+        case (.fill, .path(let path)):
+            guard path.isClosed else { return nil }
+            return path.fill
+        case (.stroke, .path(let path)):
+            return path.paint
         case (.arrowHead, .annotation(let annotation)):
             guard annotation.shape == .arrow, annotation.arrowheadStyle != .plain else { return nil }
             return annotation.headPaint
@@ -420,6 +435,12 @@ extension Layer {
         case (.stroke, .annotation(var annotation)):
             annotation.paint = paint
             content = .annotation(annotation)
+        case (.fill, .path(var path)):
+            path.fill = paint
+            content = .path(path)
+        case (.stroke, .path(var path)):
+            path.paint = paint
+            content = .path(path)
         case (.arrowHead, .annotation(var annotation)):
             annotation.headPaint = paint
             content = .annotation(annotation)
@@ -443,6 +464,9 @@ extension Layer {
         guard colorSlots.contains(slot) else { return nil }
         switch (slot, content) {
         case (.fill, .annotation(let annotation)): return annotation.colorHex
+        // A path's fill switched back on returns to the colour its edge is
+        // drawn in, exactly as a box's does.
+        case (.fill, .path(let path)): return path.colorHex
         case (.fill, .group): return Layer.defaultFrameBackgroundHex
         // A label part switched back on returns to the pill the arrow's own
         // colour makes, which is where it started: a black square nobody asked
@@ -475,6 +499,15 @@ extension Layer {
             guard let hex else { return }
             annotation.colorHex = hex
             content = .annotation(annotation)
+        case (.fill, .path(var path)):
+            // Nil is a real answer: a path with no fill is an outline, which is
+            // what half of every icon is made of.
+            path.fillColorHex = hex
+            content = .path(path)
+        case (.stroke, .path(var path)):
+            guard let hex else { return }
+            path.colorHex = hex
+            content = .path(path)
         case (.arrowHead, .annotation(var annotation)):
             guard let hex else { return }
             annotation.headColorHex = hex

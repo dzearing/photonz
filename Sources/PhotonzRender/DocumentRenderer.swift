@@ -777,6 +777,16 @@ public final class DocumentRenderer: @unchecked Sendable {
                 AnnotationRasterizer.rasterize(annotation, size: boxInPoints, scale: bake)
             }) else { return nil }
             image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
+        case .path(let path):
+            // Baked at the resolution it will be SHOWN at, like the shapes
+            // above: a path is curves and a stroke, so it can be as sharp as
+            // the words beside it however far in you are zoomed.
+            let bake = crispScale(contentScale, box: boxInPoints)
+            guard let raster = raster(for: layer.content, size: layer.frame.size,
+                                      variant: contentScale == 1 ? "" : "crisp", rasterize: {
+                PathRasterizer.rasterize(path, size: boxInPoints, scale: bake)
+            }) else { return nil }
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .measure(let measure):
             // The label text depends on the document's pixelScale (points
             // readout), which isn't part of the cache key's content.

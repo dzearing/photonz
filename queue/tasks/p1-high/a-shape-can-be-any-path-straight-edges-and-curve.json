@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T13:08:31.701Z",
-  "updated": "2026-09-13T13:08:31.770Z",
+  "updated": "2026-09-13T14:37:01.772597Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The foundation. Nothing else in this set can start until a path exists and draws, and both sibling tasks depend on it.\n\nThe one modelling decision that matters and is easy to get wrong: how a smooth point holds its two handles. The usual answer is that each anchor carries an incoming and an outgoing handle, and \"smooth\" means the two are kept in line with each other while \"corner\" means they are free or absent. Choose deliberately and write it down, because the editing slice has to break and rejoin that relationship and a model that cannot express a half-smooth point (one side curved, the other straight) will have to be rewritten then. That case is common in real icons.\n\nNo tool and no editing in this slice. A path made in a test is enough to prove it draws. Resist adding the pen here: the drawing interaction is a whole task of its own and mixing the two is how the model ends up shaped by the gesture that happened to be written first.\n\n---\nSHARED CONTEXT for the pen and path set (asked for by the user on 2026-09-13).\n\nThe user's words: \"I want the ability to draw more complex shapes than a rect - specifically polygons that can do both hard edges and bezier curves in a natural way. This will help us build ellaborate svg icons for example.\"\n\nRead \"in a natural way\" as the hard requirement, because it is the part everyone gets wrong. A pen tool is easy to implement and easy to make horrible. The test is that somebody who has used the pen in Figma, Illustrator or Sketch can draw a shape with a straight edge and a curved edge without being taught anything, on their first try, and that somebody who has not used one can still get a triangle out of it. Drag distance, what the handles do while you are still placing a point, and how you finish a path are where that is won or lost.\n\nWHAT EXISTS TODAY. Very little, which is the honest starting position:\n- AnnotationShape (Sources/PhotonzCore/Layer.swift:17) is the whole shape vocabulary: arrow, rectangle, highlight, ellipse, line. There is no polygon, no path, and no bezier anything in PhotonzCore or PhotonzRender.\n- There is no SVG code anywhere in Sources. Getting paths OUT as SVG is a separate piece of work under the icon-export epic and is deliberately not in this set.\n- The key P is already reserved for this. The task 'the-redline-arrow-tool-takes-p-the-key-the-pen-t' is done, and its goal says out loud: \"In every other screen of the app, P selects the vector Pen.\" So the Pen gets P, and the Arrow already moved off it.\n\nTHE MOCKS ALREADY SPEC THIS. Read them before designing anything, and treat them as proposals rather than gospel (CLAUDE.md):\n- docs/design/mocks/pages/vector-wt.html is the vector walkthrough. Its vocabulary is anchor, path, handle, bezier, and the tasks below use those words on purpose so the app, the mocks and the code agree.\n- docs/design/mocks/pages/icon-draw-wt.html is drawing an icon.\n- docs/design/mocks/pages/draw-boolean.html covers boolean operations, which are NOT in this set; they are the next thing under icon-vector once a path exists.\n- docs/design/mocks/shared/UX-PATTERNS.md:1276 onwards fixes where the Pen sits in each tool strip, and :1081 says a page showing vector drawing must show the Pen selected.\n\nHOW IT HAS TO FIT THE APP, so a path is a first-class layer and not a special case:\n- A path is CONTENT, a new case alongside image, text, annotation and group, not a sixth AnnotationShape. Annotations are two-point marks built from a start and an end (see AnnotationContent); a path has an arbitrary number of anchors and cannot be squeezed into that without breaking everything that assumes two endpoints.\n- It paints through the model the whole app already uses: Appearance holds what it HAS (its fill, its outline, its opacity) and Effects is the list you add to (docs/design/shape-parts.md). A path arrives with a fill and an outline like any other shape, takes a saved colour or a gradient like any other shape, and needs no new colour machinery.\n- PhotonzCore stays pure: CoreGraphics types only, no CoreImage, no AppKit, everything Sendable, value-typed, Codable, no force unwraps. The path model and every geometry decision belong there and get tested there; only the rasterizer touches CoreGraphics drawing.\n- All mutation goes through History.perform, so every anchor added, moved or deleted is undoable.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it. Design doc: docs/design/vector-paths.md is the source of truth, written by the foundation task.",
@@ -32,6 +32,39 @@
     {
       "t": "2026-09-13T13:08:31.769Z",
       "note": "seq 270 -> 12"
+    },
+    {
+      "t": "2026-09-13T14:14:35.099Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T14:37:01.772597Z",
+      "note": "Adversarial review BEFORE building. (1) The mock (vector-wt) strokes a path with a Brush and saves the pair as a Style. There is no brush engine and building one to prove a path draws would be the tail wagging the dog: the stroke is a Paint, flat or gradient, like every other stroke in the app. (2) The mock's node inspector (X, Y, Smooth/Corner, Close path) is the editing slice; the only thing this slice owes it is a model that can SAY everything it needs, including a half-smooth anchor. (3) The shortest version that delivers the value is the model plus the drawing plus the geometry, with no gesture at all - which is what the task notes asked for, and correctly: a model shaped by whichever gesture was written first is the failure mode here. (4) The one thing the mock is silently wrong about is the edge. Every other filled shape had its outline retired into the Effects list as a Border, and a path cannot follow, because a Border is a ring round the layer's BOX and a box round an arbitrary outline is a rectangle round a shape that is not one. So a path joins the line and the arrow as a shape that IS its stroke."
+    },
+    {
+      "t": "2026-09-13T14:37:01.772597Z",
+      "note": "Model decisions, written down in docs/design/vector-paths.md. Handles are stored RELATIVE to their anchor (moving an anchor drags its curve for free; mirroring is a negation; scaling multiplies points and handles by the same numbers). Either handle may be absent independently, which is what makes a half-smooth anchor expressible without a zero-length handle whose meaning is ambiguous. `kind` (.corner / .smooth) is INTENT, never geometry: nothing that draws reads it, and PathAnchor.alignHandles(keeping:) is the one place the smooth promise is kept, for the editing slice to call."
+    },
+    {
+      "t": "2026-09-13T14:37:01.772597Z",
+      "note": "Built: Sources/PhotonzCore/VectorPath.swift (PathAnchor, PathSegment, Bezier extent maths, PathContent, PathBuilder, flatten/contains/distance), Sources/PhotonzRender/PathRasterizer.swift, LayerContent.path wired through colour slots, resized(to:), drawnBounds, contentOutset, outlineWidth/Paint, Fill (the bucket), the renderer's content switch and the playtest layer tree. 36 core tests + 15 render tests, all written before the code they check. Full suite 6208 tests green."
+    },
+    {
+      "t": "2026-09-13T14:37:01.772597Z",
+      "note": "Adversarial review of the BUILT thing, on the probe (path-demo walk, Screen Recording granted so the shots are the real window). Found and fixed: clicking picked a path by its BOUNDING BOX, so an open path's empty box swallowed clicks nowhere near its line. PathContent.isHit now tests inside-the-fill for a filled shape and distance-to-the-outline for a hollow or open one, with the same six screen points of slop a thin arrow gets; walked in the app (a click in the squiggle's empty box picks nothing). Found and FILED rather than fixed: a Border added to a path from the Effects list still draws a rectangle round its box (reproduced with a render probe, red at the box corner where the triangle is nowhere near). Left alone deliberately: line cap and join are not settable."
+    },
+    {
+      "t": "2026-09-13T14:37:01.772597Z",
+      "note": "Verified in the real app, not just in tests: all four demo paths render, the bowed square's selection outline hugs the bulge, dragging it 100 wider scales the curve rather than flattening it (139 -> 236 wide, straight edges still straight), Command Z puts it back, the closed path's Appearance shows Fill and Color while the open one shows Color alone. Shots in queue/audits/."
+    },
+    {
+      "t": "2026-09-13T14:37:01.772597Z",
+      "note": "Perf: the composite path gained one switch case that only runs for path layers. RenderPerfTests green - 12MP/10-layer export at 2x 147ms against a 373ms budget, interactive re-render 7.2ms against 28ms."
+    },
+    {
+      "t": "2026-09-13T14:37:01.772597Z",
+      "note": "Shipped: docs/design/vector-paths.md, Scripts/playtest/fixtures/path-demo.photonz (the only path anybody can look at until the Pen exists) + Scripts/playtest/path-demo-walk.json, audit queue/audits/2026-09-13-vector-paths.json with five real screenshots. Follow-up filed: a-border-added-to-a-path-follows-the-path-not-a (p2)."
     }
-  ]
+  ],
+  "started": "2026-09-13T14:14:35.098Z"
 }
