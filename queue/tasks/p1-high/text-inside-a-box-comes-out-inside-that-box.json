@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 8,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.481Z",
-  "updated": "2026-09-13T08:16:07.044Z",
+  "updated": "2026-09-13T08:29:08.948Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can",
     "separate-the-boxes-too-and-fill-the-hole-underne"
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-13T08:29:01.470932Z",
       "note": "ACCEPTANCE ITEM 2 IS HALF MET AND SAID SO. The rule goes as deep as the screen and is tested three deep, but no REAL capture produces three deep: BoxSweep takes one level, so a box can never hold a box and the deepest real tree is box > text. Cutting a child out of its parent's pixels and patching the parent's own hole is a slice of its own, filed as separate-the-rows-inside-a-card-not-just-the-car (p2) with the reproduction and the reasoning. Not smuggled in here: it also changes what a settings pane separates into (three switches and two fields appear), which is the user's call and is asked in the audit."
+    },
+    {
+      "t": "2026-09-13T08:29:08.946Z",
+      "note": "Separated pieces now nest: a label that sat in a button comes out inside that button, one click picks the whole button and dragging it carries the words. PhotonzCore/LayerNesting is the rule (smallest thing that holds nine tenths of the piece; depth-unlimited; 13 tests written first), SeparatedPiece.children builds the groups in the same single mutation so the tree is one undo step. Verified in the real app: Scripts/playtest/separate-hierarchy-walk.json with Screen Recording granted, plus the two existing separate walks updated and green; 6028 tests pass. Audit queue/audits/2026-09-13-separate-hierarchy.json. Three-deep on a REAL capture still needs nested-box detection, filed as separate-the-rows-inside-a-card-not-just-the-car."
     }
   ],
-  "started": "2026-09-13T08:16:07.042Z"
+  "started": "2026-09-13T08:16:07.042Z",
+  "completed": "2026-09-13T08:29:08.947Z"
 }
