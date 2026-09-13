@@ -5056,27 +5056,46 @@ private final class Run {
     /// a Border and reads the twist back is the one that kept answering
     /// differently two runs running.
     ///
-    /// Settled means the box has not moved between two looks a frame apart.
-    /// That is a fact about THIS control rather than about the whole app, so
-    /// it costs a frame when the panel is still and never waits out an
-    /// animation somewhere else on screen. A control that never stops moving
-    /// is pressed anyway, at its last known place, with the log saying so:
-    /// failing there would turn a busy machine into a broken walk.
+    /// Settled means two things at once: the control's box has not moved since
+    /// the look before, and the app was quiet over that same stretch. Either
+    /// alone lets a press through that changes nothing. A box can sit perfectly
+    /// still while SwiftUI is part way through replacing the view behind it,
+    /// which is how the walk that folds an effect and opens it again came to
+    /// press a chevron, watch nothing happen, and read the same chevron back
+    /// unchanged one run in six.
+    ///
+    /// A control that never settles is pressed anyway, at its last known place,
+    /// with the log saying so: failing there would turn a busy machine into a
+    /// broken walk.
     private func settled(_ target: PlaytestPressTarget, named name: String, in row: String?)
         async -> (target: PlaytestPressTarget, effort: String) {
         var last = target
         let deadline = CACurrentMediaTime() + Self.panelPatience
         var looks = 0
+        _ = MainThreadMeter.shared.takeBusy()
+        _ = MainThreadMeter.shared.takePasses()
         while CACurrentMediaTime() < deadline {
             await sleep(0.03)
             looks += 1
-            guard let now = try? pressTarget(name, in: row) else { continue }
-            if now.box.equalTo(last.box), Self.isInReach(now) {
-                return (now, looks > 1 ? "held still after \(looks) looks" : "")
+            let busy = MainThreadMeter.shared.takeBusy()
+            let passes = MainThreadMeter.shared.takePasses()
+            // Reading the panel means walking the whole view tree, which is
+            // main thread work and is NOT the app's: left in, it swamped the
+            // budget every slice and the answer was always "still busy". The
+            // meter takes it off the pass it happened in, the same way the
+            // harness's other looking is taken off.
+            let began = CACurrentMediaTime()
+            let restless = isRestless()
+            let now = try? pressTarget(name, in: row)
+            MainThreadMeter.shared.exclude(CACurrentMediaTime() - began)
+            let quiet = passes > 0 && busy <= pace.busyBudget && restless == nil
+            guard let now else { continue }
+            if quiet, now.box.equalTo(last.box), Self.isInReach(now) {
+                return (now, looks > 2 ? "settled after \(looks) looks" : "")
             }
             last = now
         }
-        return (last, "never held still, pressed where it last was")
+        return (last, "never settled, pressed where it last was")
     }
 
     /// What a walk's `wait` step really means: let the editor finish, and get
