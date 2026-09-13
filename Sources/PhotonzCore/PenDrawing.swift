@@ -66,6 +66,24 @@ public struct PenSession: Equatable, Sendable {
     /// rather than jumping to it at the moment of the click.
     public var constrained: Bool = false
 
+    /// The lines a point lands on, or nil when nothing is pulling: the grid
+    /// switched off, Snap to grid switched off, or a grid too fine to draw at
+    /// this zoom. The canvas hands over the SAME lines a drag pulls to
+    /// (`CanvasNSView.canvasNudgeGrid`), which is what keeps a point drawn
+    /// with the Pen and an edge dragged with the mouse on the same paper.
+    ///
+    /// Only lines the canvas is actually DRAWING ever reach here. Pulling to
+    /// invisible lines is what made snapping feel broken before, and a pen
+    /// point that lands somewhere you cannot see a line is the same complaint
+    /// with a different tool.
+    public var grid: NudgeGrid?
+
+    /// Whether ⌘ is held, which means "exactly where I put it": the one key
+    /// that refuses the magnets everywhere on the canvas. Kept as state as
+    /// well as passed to `press`, so pressing or releasing it moves the
+    /// preview point there and then rather than at the next mouse move.
+    public var free: Bool = false
+
     /// The press in progress, nil between clicks.
     private var press: Press?
 
@@ -131,9 +149,18 @@ public struct PenSession: Equatable, Sendable {
         return within(point, of: last.point, zoom: zoom)
     }
 
+    /// Whether a click at `point` would land on `target`.
+    ///
+    /// It asks where the point would actually LAND, not where the pointer is,
+    /// so the grid widens this rather than fighting it. Half a cell is wider
+    /// than the eight points a click gets on its own: without this, circling
+    /// back to the start of a shape on graph paper drops a second anchor
+    /// exactly on top of the first one and the path never closes.
     private func within(_ point: CGPoint, of target: CGPoint, zoom: CGFloat) -> Bool {
         let scale = zoom > 0 ? zoom : 1
-        return hypot(point.x - target.x, point.y - target.y) * scale <= Self.anchorTargetRadius
+        let landing = onGrid(point)
+        return hypot(landing.x - target.x, landing.y - target.y) * scale
+            <= Self.anchorTargetRadius
     }
 
     // MARK: - The gesture
@@ -149,9 +176,11 @@ public struct PenSession: Equatable, Sendable {
     /// line — drawable at all, and they are what Option does in every other
     /// pen, so nobody has to be told.
     public mutating func press(at point: CGPoint, constrained: Bool,
-                               breaking: Bool = false, zoom: CGFloat) {
+                               breaking: Bool = false, free: Bool = false,
+                               zoom: CGFloat) {
         self.zoom = zoom
         self.constrained = constrained
+        self.free = free
         pointer = point
         if breaking, let last = anchors.last, within(point, of: last.point, zoom: zoom) {
             press = Press(origin: last.point, raw: point, handle: nil, dragged: false,
@@ -325,10 +354,34 @@ public struct PenSession: Equatable, Sendable {
     /// held. The distance travelled is kept, which is how every constrained
     /// drag in the app behaves (`AnnotationDrag.end`).
     private func place(_ point: CGPoint, constrained: Bool) -> CGPoint {
-        guard constrained, let last = anchors.last else { return point }
+        guard constrained, let last = anchors.last else { return onGrid(point) }
         let offset = Self.snappedToFortyFive(CGPoint(x: point.x - last.point.x,
                                                      y: point.y - last.point.y))
-        return CGPoint(x: last.point.x + offset.x, y: last.point.y + offset.y)
+        let held = CGPoint(x: last.point.x + offset.x, y: last.point.y + offset.y)
+        // The angle owns the point, the way it does for every constrained drag
+        // on the canvas, so the grid only gets the axis the angle left free. A
+        // level run from a point already on a line therefore ends on a
+        // crossing — which is most of what ⇧ is for on graph paper — while a
+        // diagonal keeps the 45 degrees the key is holding it at.
+        let landed = onGrid(held)
+        if offset.y == 0 { return CGPoint(x: landed.x, y: held.y) }
+        if offset.x == 0 { return CGPoint(x: held.x, y: landed.y) }
+        return held
+    }
+
+    /// Where a point put down at `point` really lands: on the nearest crossing
+    /// of the grid the canvas is drawing, or exactly where it was put when
+    /// nothing is pulling or ⌘ says so.
+    ///
+    /// A grid of columns draws nothing across the canvas, so there is no line
+    /// across to land on and the vertical stays where the hand put it.
+    private func onGrid(_ point: CGPoint) -> CGPoint {
+        guard !free, let grid, grid.spacing.isFinite, grid.spacing > 0 else { return point }
+        return CGPoint(
+            x: Snapping.quantized(point.x, to: grid.spacing, from: grid.origin.x),
+            y: grid.axes.drawsRows
+                ? Snapping.quantized(point.y, to: grid.spacing, from: grid.origin.y)
+                : point.y)
     }
 
     /// The same offset turned onto the nearest multiple of 45 degrees, at the
@@ -338,7 +391,13 @@ public struct PenSession: Equatable, Sendable {
         guard length > 0 else { return offset }
         let step = CGFloat.pi / 4
         let angle = (atan2(offset.y, offset.x) / step).rounded() * step
-        return CGPoint(x: cos(angle) * length, y: sin(angle) * length)
+        // Rounded onto the axis rather than left a billionth of a point off
+        // it: a level run has to BE level, or the grid cannot tell which axis
+        // the angle is holding and a "straight" edge lands off the paper.
+        let x = cos(angle) * length
+        let y = sin(angle) * length
+        return CGPoint(x: abs(x) < 1e-9 * length ? 0 : x,
+                       y: abs(y) < 1e-9 * length ? 0 : y)
     }
 
     /// A path wearing what a freshly drawn shape wears. An OPEN path carries no

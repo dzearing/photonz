@@ -1,0 +1,28 @@
+{
+  "feature": "A Pen point lands on the grid line you can see",
+  "epic": "icon-grid",
+  "summary": "With the grid on, a point clicked with the Pen now lands on the nearest crossing of the lines the canvas is drawing, the same lines a dragged box catches. Hold Command and it goes exactly where the pointer is.",
+  "setup": "Photonz Dev, release Next. The Pen and the canvas grid are both on by default in Next, so there is nothing to switch on in Experiments.",
+  "try": [
+    { "do": "Open a new blank canvas and switch the grid on from View, Show Grid." },
+    { "do": "Press P for the Pen and click four rough corners of a square, nowhere near the lines on purpose." },
+    { "do": "Watch the line running to the pointer before each click: it already reaches the crossing the click will land on.", "shot": "2026-09-13-pen-on-the-grid-close.png" },
+    { "do": "Move the pointer back toward the first corner and click it to close the shape.", "shot": "2026-09-13-pen-on-the-grid-square.png" },
+    { "do": "Pick the shape and read Position and Size in the panel: every number should be a whole grid step." },
+    { "do": "Draw a second shape with Command held on every click, and see the points land exactly under the pointer." },
+    { "do": "Switch Snap to grid off in the Canvas section, draw a third shape, and see the Pen place points exactly where it always did." }
+  ],
+  "evaluate": [
+    "Does the point land where the preview line said it would, every time?",
+    "Is the pull the right strength, or does it fight you when you are deliberately drawing between two lines?",
+    "Closing the shape now works from about half a cell away rather than eight points. Does that feel forgiving or does it snatch the click?",
+    "Holding Command is how you get off the grid. Is that the key your hand reaches for, given it is also the key for undo while drawing?",
+    "Do you want the grid lines under the point to light up while you draw, the way they do while you drag a box?"
+  ],
+  "rough": [
+    "The handles you pull out of a point are NOT put on the grid. A handle end is not a point on the outline, it is how hard the curve bends, and on a 32pt grid every curve would have to bend in whole cells while a short handle would collapse to nothing and lose the curve you just pulled. It is measured from the point's snapped home, so the curve still hangs off the right place. Filed as a follow-up to ask whether icon work wants them snapped after all.",
+    "Nothing lights up to say what caught the point. A drag lights the grid line it came to rest on; the Pen just puts the point on the crossing and lets the preview say so. Lighting two lines on every mouse move felt like noise, but that is a judgement made without you.",
+    "Shift keeps owning the angle. A level or upright run takes the grid on the axis the angle left free, so it ends on a crossing; a 45 degree run keeps its angle and ignores the grid, because quantizing either axis would bend the line the key is holding straight.",
+    "Screen Recording was granted for this run, so both pictures here are real window captures from Scripts/playtest/pen-on-the-grid-walk.json rather than offscreen renders."
+  ]
+}

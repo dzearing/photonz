@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 17,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:15:13.696Z",
-  "updated": "2026-09-13T16:15:57.852Z",
+  "updated": "2026-09-13T20:51:53.930Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Verified 2026-09-13: Sources/Photonz/CanvasPen.swift contains no reference to snap or grid (grep for 'snap' and 'grid' in that file returns nothing), while CanvasView.canvasSnapSpacing (Sources/Photonz/CanvasView.swift:1425) is what drags and nudges pull to, fed by CanvasGrid.snapSpacing(atZoom:) (Sources/PhotonzCore/CanvasGrid.swift:190). So the plumbing already exists and the Pen simply does not call it.\n\nRead the comment above snapSpacing before changing anything: the rule is that a drag only ever lands on a line the canvas is actually drawing at this zoom, because pulling to invisible lines is what made snapping feel broken before. A Pen point must obey the same rule.\n\nThe Command escape is the existing one, so find how a drag reads it rather than inventing a second modifier.\n\nThis serves the pen the user asked for on 2026-09-13 for building elaborate SVG icons: an icon that is off the grid is soft at every size it is used.",
@@ -31,6 +31,44 @@
     {
       "t": "2026-09-13T16:15:57.851Z",
       "note": "seq 280 -> 17"
+    },
+    {
+      "t": "2026-09-13T20:35:31.042Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T20:51:53.000Z",
+      "note": "review before building: the pull already exists (CanvasNSView.canvasNudgeGrid, the same value the arrow keys and every drag read), so the whole job is the Pen calling it. Kept it to the grid ONLY: the text click also takes pinned guides, but acceptance says the Pen must behave exactly as today with the grid off, and guide catching would break that."
+    },
+    {
+      "t": "2026-09-13T20:51:53.000Z",
+      "note": "review found a real trap the task did not mention: wouldClose/wouldFinish measured the RAW pointer against the anchor, 8 screen points. Half a cell is wider than that, so on a 32 grid a click 15 points from the first corner snapped exactly onto it and was NOT read as closing: the path took a second anchor on top of the first and never closed. Fixed by measuring where the click would LAND rather than where the pointer is, so the grid widens closing instead of breaking it. Test: aClickTheGridWouldPutOnTheFirstPointClosesThePath."
+    },
+    {
+      "t": "2026-09-13T20:51:53.000Z",
+      "note": "handles deliberately do NOT snap (acceptance item 3 allows this with a reason). A handle end is not a point on the outline, it is how hard the curve bends there; on a 32pt grid every curve would bend in whole cells and a handle shorter than half a cell would collapse to zero, throwing away the curve just pulled. It IS measured from the anchor's snapped home, so the curve hangs off the right place (test: theHandlePulledOutOfASnappedPointIsMeasuredFromWhereItLanded)."
+    },
+    {
+      "t": "2026-09-13T20:51:53.000Z",
+      "note": "shift: the angle owns the point, as it does for every constrained drag, so the grid only takes the axis the angle left free. A level run from a point already on a line ends on a crossing; a 45 keeps its 45. snappedToFortyFive now rounds a negligible component to exact zero so an upright run is really upright and the axis test can tell."
+    },
+    {
+      "t": "2026-09-13T20:51:53.000Z",
+      "note": "code: PenSession.grid (NudgeGrid) + PenSession.free + place()/onGrid() in Sources/PhotonzCore/PenDrawing.swift; the canvas feeds both on press, drag, move, release and flagsChanged (CanvasPen.swift, CanvasPointerCue.swift). No release fork was needed: the Pen is shared code behind next-pen, which only Next has on."
+    },
+    {
+      "t": "2026-09-13T20:51:53.000Z",
+      "note": "verified: 12 new tests in PenDrawingTests (46 in the suite), Scripts/test.sh green at 6367 tests; Scripts/playtest/pen-on-the-grid-walk.json passes and was run three times (alone, in the pen sweep, in the grid sweep); the 17 grid walks, 9 pen walks and 5 path walks all pass. Screen Recording was granted, so the audit carries real window captures."
+    },
+    {
+      "t": "2026-09-13T20:51:53.000Z",
+      "note": "left rough and filed: the-grid-line-under-a-pen-point-lights-up-while (p2). The handle question rides on the audit's own line rather than a task, because it is a question for the user rather than work."
+    },
+    {
+      "t": "2026-09-13T20:51:53.928Z",
+      "note": "Pen points snap to the visible grid: PenSession.grid/free + place() in PhotonzCore, fed by CanvasNSView.canvasNudgeGrid. Command places exactly, handles deliberately unsnapped, closing measured at the landing point so half a cell no longer breaks it. 12 new unit tests, Scripts/test.sh green (6367), pen-on-the-grid-walk passes three times, grid/pen/path sweeps green. Audit queue/audits/2026-09-13-pen-on-the-grid.json with real captures."
     }
-  ]
+  ],
+  "started": "2026-09-13T20:35:31.041Z",
+  "completed": "2026-09-13T20:51:53.929Z"
 }

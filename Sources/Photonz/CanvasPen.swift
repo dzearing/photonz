@@ -180,8 +180,10 @@ extension CanvasNSView {
     func penMouseDown(at p: CGPoint, event: NSEvent) -> Bool {
         guard tool == .pen, let viewport else { return false }
         let startingAPath = !penSession.isDrawing
+        penSession.grid = canvasNudgeGrid
         penSession.press(at: p, constrained: event.modifierFlags.contains(.shift),
                          breaking: event.modifierFlags.contains(.option),
+                         free: event.modifierFlags.contains(.command),
                          zoom: viewport.zoom)
         if startingAPath, selectedLayerFrame != nil {
             selectedLayerFrame = nil
@@ -193,6 +195,7 @@ extension CanvasNSView {
 
     func penMouseDragged(to p: CGPoint, event: NSEvent) {
         guard tool == .pen, let viewport else { return }
+        penSession.grid = canvasNudgeGrid
         penSession.drag(to: p, constrained: event.modifierFlags.contains(.shift),
                         zoom: viewport.zoom)
         refreshPenChrome()
@@ -203,6 +206,7 @@ extension CanvasNSView {
         switch penSession.release() {
         case .placed, .retracted, .nothing:
             penSession.pointer = p
+            penSession.free = event.modifierFlags.contains(.command)
             refreshPenChrome()
         case .closed(let content), .finished(let content):
             commitPen(content)
@@ -218,6 +222,11 @@ extension CanvasNSView {
         penSession.pointer = p
         penSession.zoom = viewport.zoom
         penSession.constrained = event.modifierFlags.contains(.shift)
+        // The grid is read on every move rather than once at the start of a
+        // path: the lines a drag pulls to follow the zoom, so a path drawn
+        // across a pinch lands on the lines that are on screen NOW.
+        penSession.grid = canvasNudgeGrid
+        penSession.free = event.modifierFlags.contains(.command)
         refreshPenChrome()
     }
 

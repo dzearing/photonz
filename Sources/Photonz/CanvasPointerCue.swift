@@ -304,9 +304,14 @@ extension CanvasNSView {
         // ⇧ pressed or let go while the Pen is drawing snaps the run to the
         // pointer onto the nearest of the usual angles THERE AND THEN, rather
         // than at the next mouse move: holding shift to check whether a line
-        // is level is something you do with the hand already still.
+        // is level is something you do with the hand already still. ⌘ is read
+        // in the same breath, for the same reason: it takes the point off the
+        // grid under a hand that is already still, so you can see the two
+        // places it could land before choosing one.
         if tool == .pen, penSession.isDrawing {
             penSession.constrained = event.modifierFlags.contains(.shift)
+            penSession.free = event.modifierFlags.contains(.command)
+            penSession.grid = canvasNudgeGrid
             refreshPenChrome()
         }
         // ⌘ toggles measure snapping — refresh the hover dot so it jumps on/off

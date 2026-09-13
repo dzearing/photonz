@@ -217,6 +217,39 @@ pen, so nobody has to be told. Without them a path drawn with the Pen can only
 be all corners or all curves, and a rounded rectangle comes out with four bowed
 edges.
 
+### On the grid
+
+An icon is drawn on graph paper, so a Pen point lands on the graph paper. With
+the grid showing and Snap to grid on, a click puts its anchor on the nearest
+crossing of the lines the canvas is DRAWING — the same lines a drag pulls to,
+read from `CanvasNSView.canvasNudgeGrid`, so a box dragged with the Rectangle
+tool and a box clicked out with the Pen sit on the same lines. Holding Command
+puts the point exactly under the pointer, which is the one escape from the
+magnets everywhere else on the canvas. Grid off, or Snap to grid off, and the
+Pen places points exactly where it always did.
+
+Three consequences worth knowing:
+
+* **The preview is the promise.** The run to the pointer already reaches the
+  crossing the click will land on, so you see where the point goes before you
+  commit it.
+* **Closing gets easier, not harder.** A click lands on the first anchor when
+  the point it would PLACE is that anchor, rather than when the pointer is
+  within eight points of it. Half a cell is wider than eight points, so without
+  that a circle back to the start drops a second anchor exactly on top of the
+  first and the shape never closes.
+* **Shift still owns the angle.** A constrained run takes the grid only on the
+  axis the angle left free: a level run from a point already on a line ends on
+  a crossing, and a 45 degree run keeps its 45 degrees rather than being bent
+  onto the paper.
+
+The handles pulled out of a point are NOT quantized. A handle end is not a point
+on the outline, it is how hard the curve bends there, and on a 32pt grid every
+curve would have to bend in whole cells; a handle shorter than half a cell would
+collapse to nothing and throw away the curve you just pulled. It is measured
+from the anchor's snapped home, though, so the curve hangs off the right place.
+`Scripts/playtest/pen-on-the-grid-walk.json` is the walk.
+
 ### The rest of it
 
 Shift puts the next anchor on the nearest of the usual angles from the last one,

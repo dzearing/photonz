@@ -478,4 +478,150 @@ struct PenDrawingTests {
         #expect(!session.isDrawing)
         #expect(PenSession.hint(for: session) == opening)
     }
+
+    // MARK: The grid
+
+    /// The graph paper a pen test draws on: 32 point squares counted from the
+    /// corner, which is what the canvas actually draws at 100%.
+    private let graphPaper = NudgeGrid(spacing: 32)
+
+    @Test func aPointLandsOnTheNearestCrossingOfTheGridYouCanSee() {
+        var session = PenSession()
+        session.grid = graphPaper
+        _ = click(&session, 407, 293)
+        #expect(session.anchors[0].point == CGPoint(x: 416, y: 288))
+    }
+
+    @Test func commandPutsThePointExactlyWhereYouClicked() {
+        // The same escape a drag has, and it is read at the moment of the
+        // press rather than latched.
+        var session = PenSession()
+        session.grid = graphPaper
+        session.press(at: CGPoint(x: 407, y: 293), constrained: false, free: true, zoom: 1)
+        _ = session.release()
+        #expect(session.anchors[0].point == CGPoint(x: 407, y: 293))
+    }
+
+    @Test func nothingPullingLeavesEveryPointWhereItWasPut() {
+        // Grid off, or Snap to grid off: the canvas hands over no grid at all
+        // and the Pen behaves exactly as it always did.
+        var session = PenSession()
+        _ = click(&session, 407, 293)
+        #expect(session.anchors[0].point == CGPoint(x: 407, y: 293))
+    }
+
+    @Test func theGridIsCountedFromWhereItStarts() {
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, origin: CGPoint(x: 5, y: 5))
+        _ = click(&session, 100, 100)
+        #expect(session.anchors[0].point == CGPoint(x: 101, y: 101))
+    }
+
+    @Test func aGridOfColumnsOnlyCatchesTheAxisItDraws() {
+        // Nothing is drawn across the canvas, so there is no line across to
+        // land on and the vertical stays where the hand put it.
+        var session = PenSession()
+        session.grid = NudgeGrid(spacing: 32, axes: .columns)
+        _ = click(&session, 407, 293)
+        #expect(session.anchors[0].point == CGPoint(x: 416, y: 293))
+    }
+
+    @Test func theRunToThePointerShowsWhereThePointWillLand() {
+        // The preview is the promise: what it draws before the click is where
+        // the click puts the point.
+        var session = PenSession()
+        session.grid = graphPaper
+        _ = click(&session, 96, 96)
+        session.pointer = CGPoint(x: 407, y: 293)
+        guard let preview = session.previewPath, let reach = preview.anchors.last else {
+            Issue.record("the preview should reach from the anchor to the pointer")
+            return
+        }
+        #expect(reach.point == CGPoint(x: 416, y: 288))
+    }
+
+    @Test func aSquareClickedRoughlyComesOutOnWholeGridSteps() {
+        var session = PenSession()
+        session.grid = graphPaper
+        _ = click(&session, 131, 67)
+        _ = click(&session, 355, 71)
+        _ = click(&session, 358, 290)
+        _ = click(&session, 129, 293)
+        #expect(session.anchors.map(\.point) == [CGPoint(x: 128, y: 64),
+                                                 CGPoint(x: 352, y: 64),
+                                                 CGPoint(x: 352, y: 288),
+                                                 CGPoint(x: 128, y: 288)])
+    }
+
+    @Test func theHandlePulledOutOfASnappedPointIsMeasuredFromWhereItLanded() {
+        // The anchor takes the grid; the handle is not a point ON the outline,
+        // so it is not quantized — but it is measured from the anchor's
+        // snapped home, or the curve would be hung off the wrong place.
+        var session = PenSession()
+        session.grid = graphPaper
+        session.press(at: CGPoint(x: 407, y: 293), constrained: false, zoom: 1)
+        session.drag(to: CGPoint(x: 450, y: 300), constrained: false, zoom: 1)
+        _ = session.release()
+        #expect(session.anchors[0].point == CGPoint(x: 416, y: 288))
+        #expect(session.anchors[0].handleOut == CGPoint(x: 34, y: 12))
+    }
+
+    @Test func aClickTheGridWouldPutOnTheFirstPointClosesThePath() {
+        // Half a cell is wider than the eight points a click gets on its own,
+        // so without this a circle back to the start drops a second anchor on
+        // top of the first and the shape never closes.
+        var session = PenSession()
+        session.grid = graphPaper
+        _ = click(&session, 128, 64)
+        _ = click(&session, 352, 64)
+        _ = click(&session, 352, 288)
+        let pointer = CGPoint(x: 139, y: 74)
+        #expect(session.wouldClose(at: pointer, zoom: 1))
+        session.press(at: pointer, constrained: false, zoom: 1)
+        guard case .closed(let content) = session.release() else {
+            Issue.record("a click the grid puts on the first point should close the path")
+            return
+        }
+        #expect(content.anchors.count == 3)
+    }
+
+    @Test func commandNearTheFirstPointStillPlacesAPointRatherThanClosing() {
+        // ⌘ means "exactly where I put it", and that includes not being
+        // gathered up by the anchor a grid step away.
+        var session = PenSession()
+        session.grid = graphPaper
+        _ = click(&session, 128, 64)
+        _ = click(&session, 352, 64)
+        _ = click(&session, 352, 288)
+        let pointer = CGPoint(x: 139, y: 74)
+        session.free = true
+        #expect(!session.wouldClose(at: pointer, zoom: 1))
+        session.press(at: pointer, constrained: false, free: true, zoom: 1)
+        #expect(session.release() == .placed)
+        #expect(session.anchors.count == 4)
+        #expect(session.anchors[3].point == pointer)
+    }
+
+    @Test func shiftKeepsTheAngleAndTakesTheGridOnTheAxisItLeavesFree() {
+        // A level run from a point already on a line: the angle owns the
+        // vertical, so the grid takes the horizontal and the far end lands on
+        // a crossing rather than beside one.
+        var session = PenSession()
+        session.grid = graphPaper
+        _ = click(&session, 128, 64)
+        _ = click(&session, 407, 70, constrained: true)
+        #expect(session.anchors[1].point.y == 64)
+        #expect(session.anchors[1].point.x == 416)
+    }
+
+    @Test func aDiagonalUnderShiftKeepsItsAngleRatherThanTheGrid() {
+        // Both axes are owned by the angle at 45 degrees, so quantizing either
+        // one would bend the line the key is holding straight.
+        var session = PenSession()
+        session.grid = graphPaper
+        _ = click(&session, 0, 0)
+        _ = click(&session, 100, 90, constrained: true)
+        let placed = session.anchors[1].point
+        #expect(abs(placed.x - placed.y) < 0.001)
+    }
 }
