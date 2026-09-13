@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 16,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T15:25:59.762Z",
-  "updated": "2026-09-13T18:46:22.821Z",
+  "updated": "2026-09-13T19:17:40.511Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve",
     "a-path-can-be-reshaped-after-you-draw-it"
@@ -56,7 +56,16 @@
     {
       "t": "2026-09-13T18:59:13.257396Z",
       "note": "Core and renderer done, 24 core tests and 16 render tests, all written before the code. Three things had to be fixed for the picture to survive the turn, each reproduced on rendered pixels first. (1) A ring round a path followed the layer's BOX, so a rounded box converted to a path kept its curved fill inside a hard square frame: the naive conversion differed by 3044 bytes on a rounded box and 11998 on a circle. DocumentRenderer.pathSilhouette now grows or shrinks the outline itself by sweeping it with a disc (a stroke of twice the reach IS that sweep), mitred so a square corner pushed out stays square. That also fixes a defect already in the app: a pen-drawn path given a Border got a rectangular frame round its bounding box. (2) A path's stroke reach was half a point on an odd width, which put its whole bitmap on a half pixel and let the compositor resample a hard edge soft. PathContent.strokeOutset now rounds up, the same way a line's own overhang already does. (3) GradientPainter.stroke never set the line cap for a FLAT paint, only for a gradient, so every open path in the app ended in square butts while asking for round ones. Result: a plain box, a filled box, a line at three weights and a wide oval with no edge are byte for byte identical; a rounded box, a circle and everything wearing shadows, extra borders or a gradient edge differ by at most 1 or 2 parts in 255 on a few dozen edge samples out of 288000. The one real difference left is a NON-CIRCULAR oval with a border: the app draws that ring as a second oval inset in its box, which only equals a fixed distance inside the curve on a circle, so the path's ring (the true offset) sits under a pixel away along the flanks. The path's is the correct one; filed separately."
+    },
+    {
+      "t": "2026-09-13T19:17:40.466017Z",
+      "note": "Shipped in cb69185e. Every acceptance item verified rather than assumed. Menus: both, checked on the probe (the row menu carries it above Turn Into Picture and drops it once the layer IS a path; the Layer menu carries it and dims it where it cannot apply). Identical picture: proved twice, by 16 pixel tests that composite each shape and the path it becomes and compare byte for byte, and on the probe, where the whole 900x600 document is identical byte for byte before the turn, after it, and after two undos. Real curves: the corner is a quarter circle checked by sampling the rendered pixels on the 45 degree diagonal, and a circle is sampled at 64 places round its edge. Editable immediately: the walk pulls the point where the left edge meets the top left curve and expectPath checks it landed. One undo step, back to a rectangle with its Corner Radius row: checked in a core test and on the probe. The question: TurnIntoPathPrompt through SilencedQuestions, screenshot in the audit. Tests written first. Walk: Scripts/playtest/turn-into-a-path-walk.json, 64 steps. Audit: queue/audits/2026-09-13-turn-into-a-path.json with six real screen captures and a magnified corner at 8x.\n\nOne acceptance item is honestly PARTIAL: a non-circular oval wearing a border is not byte identical after the turn, because the app draws a border on an ellipse as a second oval inset in its box rather than a line a fixed distance inside the curve, which only agree on a circle. The path's ring is the correct one. Filed as an-oval-s-own-border-hugs-the-oval-not-the-box-r, p2, with the reproduction in it. Also filed a-layer-that-stopped-being-a-rectangle-stops-bei, p2: the row still reads Rectangle after the turn.\n\nRan the path, pen, border, corner and svg walks: all pass except border-effect-walk, which was already failing in the 18:20Z sweep and is somebody else's task. Asked for a full sweep because three shared drawing changes landed."
+    },
+    {
+      "t": "2026-09-13T19:17:40.509Z",
+      "note": "Turn Into Path shipped in cb69185e, Next only behind next-turn-into-path. A rectangle, rounded rectangle, ellipse or line becomes a path from the layer row menu and the Layer menu, keeping exactly the look it had: proved byte for byte by 16 pixel tests and again on the probe, where the whole document is identical before the turn, after it, and after two undos. Rounded corners become real quarter circles at the 0.5523 constant, checked by sampling pixels. 25 core tests and the pixel tests were written before the code; Scripts/playtest/turn-into-a-path-walk.json walks it in 64 steps; audit at queue/audits/2026-09-13-turn-into-a-path.json with six screen captures and a magnified corner. Three shared drawing defects had to be fixed on the way and are each reproduced in the commit: a border on a path followed the layer box, a path with an odd stroke width sat on a half pixel, and a flat stroke never got the line cap it asked for."
     }
   ],
-  "started": "2026-09-13T18:46:22.819Z"
+  "started": "2026-09-13T18:46:22.819Z",
+  "completed": "2026-09-13T19:17:40.510Z"
 }
