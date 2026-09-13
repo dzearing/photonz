@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p1-high",
   "seq": 16,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T15:25:59.898Z",
-  "updated": "2026-09-13T15:25:59.969Z",
+  "updated": "2026-09-13T15:26:48.476Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -39,6 +39,10 @@
     {
       "t": "2026-09-13T15:25:59.969Z",
       "note": "deps set: the path model comes first"
+    },
+    {
+      "t": "2026-09-13T15:26:48.475Z",
+      "note": "duplicate of an-icon-you-drew-comes-out-as-an-svg-file, which the manager filed first; its two extra points were merged there"
     }
   ]
 }
