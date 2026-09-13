@@ -12,7 +12,10 @@ const clip = (s, n = 110) => {
   return s.length > n ? s.slice(0, n - 1) + '…' : s;
 };
 
-// one-line summary of a tool call's most telling input
+// one-line summary of a tool call's most telling input.
+// The ▸ is load-bearing beyond decoration: queue-lib.mjs reads it as proof the
+// runner got to work, and so refuses to mistake a tool call that quotes "spend
+// limit" for the CLI refusing to run. Change the marker there too.
 function toolLine(name, input = {}) {
   const pick = input.command || input.file_path || input.path || input.pattern || input.url
     || input.prompt || input.description || input.query || '';

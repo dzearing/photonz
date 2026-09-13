@@ -484,26 +484,51 @@ export const ENVIRONMENT_SIGNATURES = [
     fix: 'Wait for the reset the message names, or raise the limit. The loop retries on its own.',
   },
 ];
-export const environmentSignature = (text) => ENVIRONMENT_SIGNATURES.find((sig) => sig.pattern.test(String(text || ''))) || null;
-export const isSignInFailure = (text) => SIGN_IN_PATTERN.test(String(text || ''));
-export const isSpendLimitFailure = (text) => SPEND_LIMIT_PATTERN.test(String(text || ''));
+const stripAnsi = (s) => String(s || '').replace(/\x1b\[[0-9;]*m/g, '');
+// Lines stream-format.mjs writes, not the CLI: a tool call, the result banner,
+// the session line. They are the runner talking, and a runner is free to quote
+// a refusal word for word — filing a task called "A loop stalled on the spend
+// limit reaches the person" is what set this trap off on 2026-09-12. The phrase
+// patterns above stay broad on purpose (a wording we have not seen yet should
+// still be caught); precision comes from WHO wrote the line, not from how the
+// sentence is worded.
+const TOOL_LINE = /^▸/;
+const isFormatterLine = (line) => TOOL_LINE.test(line) || /^■/.test(line) || /^session .+ started$/.test(line);
+export const environmentSignature = (text) => {
+  const line = stripAnsi(text).trim();
+  if (isFormatterLine(line)) return null;
+  return ENVIRONMENT_SIGNATURES.find((sig) => sig.pattern.test(line)) || null;
+};
+export const isSignInFailure = (text) => environmentSignature(text)?.id === 'signin';
+export const isSpendLimitFailure = (text) => environmentSignature(text)?.id === 'spend';
 export const isEnvironmentFailure = (text) => !!environmentSignature(text);
 export const SIGN_IN_HINT = 'Sign-in needed: run `claude` in a terminal and log in. The loop retries on its own.';
 
-// The one line of a runner's output worth keeping as its error. The CLI's own
-// complaints (stderr) beat the runner's last words (stdout), and a refusal
-// (sign-in, spend limit) beats whatever the CLI printed after it, since that
-// line explains everything. Stdout is only searched for a refusal when stderr
-// is empty: a runner working on this very feature echoes the phrases in its
-// tool calls.
-const stripAnsi = (s) => String(s || '').replace(/\x1b\[[0-9;]*m/g, '');
-export function pickRunnerError(stderrText = '', stdoutText = '') {
+// What a finished runner's output meant: the one line worth keeping as its
+// error, and whether the CLI itself refused to run (sign-in, spend limit).
+//
+// The verdict is made HERE, with the whole output in view, and carried forward;
+// re-reading a single line later cannot tell the two apart. Two channels, two
+// rules:
+//
+//   stderr  the CLI's own. Nothing a runner does writes to it, so a refusal
+//           there is a refusal, wherever in the file it sits.
+//   stdout  the runner's formatted stream. It carries a refusal only when the
+//           runner never got to work: one tool call anywhere means the CLI let
+//           it run, so whatever it said about spend limits it was quoting, not
+//           hitting. A real refusal is the whole stream (2026-08-26: session
+//           line, the message, done) and it reaches stderr as well.
+export function classifyRunnerOutput(stderrText = '', stdoutText = '') {
   const lines = (s) => stripAnsi(s).split('\n').map((l) => l.trim()).filter(Boolean);
   const err = lines(stderrText);
   const out = lines(stdoutText);
-  if (err.length) return err.find(isEnvironmentFailure) || err[err.length - 1];
-  return out.find(isEnvironmentFailure) || out[out.length - 1] || '';
+  const refusal = err.find(isEnvironmentFailure)
+    || (out.some((l) => TOOL_LINE.test(l)) ? null : out.find(isEnvironmentFailure))
+    || null;
+  if (refusal) return { line: refusal, reason: environmentSignature(refusal).id };
+  return { line: (err.length ? err[err.length - 1] : out[out.length - 1]) || '', reason: null };
 }
+export const pickRunnerError = (stderrText = '', stdoutText = '') => classifyRunnerOutput(stderrText, stdoutText).line;
 
 // Park a task: it has failed on its own often enough that retrying it is just
 // burning runners. Blocked keeps it out of claimNext; parked/parkReason say why
@@ -536,7 +561,12 @@ function unparkTask(id, reason) {
 //   outcome  ok | failed | parked | signin | spend
 //   backoff  seconds to sleep before the next claim
 //   reason   signin | spend | null: which refusal the runner's words named
-export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = 'task' } = {}) {
+//
+// `reason` is also an INPUT, and the loop always supplies it: classifyRunnerOutput
+// decided it with the whole run in view, and passing '' means "no refusal, and I
+// looked". Left out entirely (drills, and anything calling this with a bare line)
+// the error text is sniffed as before.
+export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = 'task', reason: givenReason } = {}) {
   const s = readStatus();
   const task = taskId ? findTask(taskId) : null;
   // What counts as failure: for a task run, the runner leaving its task
@@ -546,7 +576,9 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
   // limit is hit. A runner that finalized its task and then exited non-zero
   // still did the work.
   const unfinalized = !!task && task.status === 'in_progress';
-  const signature = environmentSignature(error);
+  const signature = givenReason === undefined
+    ? environmentSignature(error)
+    : (ENVIRONMENT_SIGNATURES.find((sig) => sig.id === givenReason) || null);
   const reason = signature ? signature.id : null;
   const signIn = reason === 'signin';
   const spend = reason === 'spend';

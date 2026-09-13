@@ -95,6 +95,18 @@ happens now, after every runner exit:
   a dozen tool calls), so there the per-task rule stays in charge: the failure
   is counted, three in a row park the task, and a streak across tasks blames
   the environment as before.
+- **A runner that talks about a refusal has not hit one.** The words are read
+  out of the runner's own output, so on 2026-09-12 a digest that filed a task
+  called "A loop stalled on the spend limit reaches the person" was recorded as
+  having hit the limit: unhealthy, a backoff, the digest deferred, and a
+  dashboard saying the build had stopped when it had not. The verdict is now
+  reached once, by `classifyRunnerOutput`, with the whole run in view, and
+  carried to `recordRunnerExit` rather than guessed again from one line. Two
+  channels, two rules: **stderr** is the CLI's own, so a refusal there is a
+  refusal; **stdout** is the runner's formatted stream, and it can only carry
+  one when the runner never got to work, because a single tool call means the
+  CLI let it run. The phrase patterns stay deliberately broad — precision comes
+  from who wrote the line, not from how the sentence is worded.
 
 A fourth way the loop can stop working is quieter than any of these: it keeps
 running, healthily, on a copy of itself from days ago. zsh parses a script once,
@@ -114,8 +126,10 @@ before this landed can be silent about it.
 `queue/bin/failure-drill.sh` proves all of the above against the real loop:
 one scenario for a runner that always dies, one for a login that expires and
 is later restored, one for a spend limit that refuses the digest run and later
-clears, and one for a fix landed in the loop's own script (which builds a
-stand-in repo of symlinks so the real one is never written to).
+clears, one for a fix landed in the loop's own script (which builds a
+stand-in repo of symlinks so the real one is never written to), and one for a
+runner that finishes its work while quoting a refusal in every place the loop
+reads.
 
 Whatever still slips through cannot balloon the files the dashboard reads. A
 task's `log` is capped at 120 entries (the oldest 20 and the newest 99 are kept,

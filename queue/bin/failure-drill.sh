@@ -44,6 +44,15 @@
 #  16. status.json names the copy the loop is running, and the dashboard reads
 #      a loop that has not named one as stale
 #
+# Scenario 5, a runner that works ON the spend limit (2026-09-12 12:04):
+#
+#  17. a runner that finishes its work while quoting a refusal in its tool
+#      calls, its prose and its summary is recorded as ok, not as a refusal
+#  18. the digest such a run wrote is kept, never deferred, and the loop stays
+#      healthy with nothing to raise a limit over
+#  19. a real refusal is still caught, on stderr and in a stream where the
+#      runner never got to work, for a digest run and a task run alike
+#
 # Nothing here touches the real queue or the real repo history.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -55,7 +64,8 @@ SANDBOX=$(mktemp -d -t photonz-drill)
 SANDBOX2=$(mktemp -d -t photonz-drill-signin)
 SANDBOX3=$(mktemp -d -t photonz-drill-spend)
 SANDBOX4=$(mktemp -d -t photonz-drill-reload)
-trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4"' EXIT
+SANDBOX5=$(mktemp -d -t photonz-drill-talk)
+trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4" "$SANDBOX5"' EXIT
 QDIR="$SANDBOX/queue"
 BIN="$SANDBOX/bin"
 mkdir -p "$QDIR" "$BIN"
@@ -549,9 +559,151 @@ process.exit(failed ? 1 : 0);
 '
 S4=$?
 
-if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 )); then
+# ---- scenario 5: a runner that WORKS ON the spend limit ---------------------
+# 2026-09-12 12:04: the daily digest ran, filed a task called "A loop stalled on
+# the spend limit reaches the person", wrote its digest and exited 0. The loop
+# read its own runner's tool calls, found the words "spend limit" in one, and
+# recorded an environment failure: health unhealthy, a backoff, the digest
+# deferred, and a dashboard that said the build had stopped when it had not.
+# This proves a runner talking about a refusal is not a runner that hit one,
+# and that a real refusal is still caught exactly as before.
+QDIR5="$SANDBOX5/queue"
+BIN5="$SANDBOX5/bin"
+STATE5="$SANDBOX5/state"
+mkdir -p "$QDIR5/digests" "$BIN5" "$STATE5"
+
+# The fake runner does its job and quotes the refusal all the way through: in
+# the tool calls the formatter renders, in its prose, and in the result summary
+# the loop keeps as its error line. Nothing is wrong with this run.
+cat > "$BIN5/claude" <<'FAKE'
+#!/bin/zsh
+prompt="${@[-1]}"
+kind=digest; [[ "$prompt" == *"TASK FILE: "* ]] && kind=task
+title="A loop stalled on the spend limit reaches the person"
+echo '{"type":"system","subtype":"init","session_id":"drill-session"}'
+echo "{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"tool_use\",\"name\":\"Bash\",\"input\":{\"command\":\"node queue/bin/queue.mjs addjson '$title'\"}}]}}"
+echo "{\"type\":\"assistant\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"Filed it: the loop should say so when it has hit your monthly spend limit.\"}]}}"
+if [[ $kind == task ]]; then
+  file="${prompt##*TASK FILE: }"
+  id=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).id)' "$file")
+  node queue/bin/queue.mjs status "$id" done "drill: finished while talking about the spend limit" >/dev/null
+else
+  printf '# Daily digest %s\n\n## Summary\nA real digest that happens to discuss the spend limit.\n' "$(date +%F)" > "$PHOTONZ_QUEUE_DIR/digests/$(date +%F).md"
+fi
+echo "{\"type\":\"result\",\"subtype\":\"success\",\"result\":\"Filed $title. You have hit your monthly spend limit is now the wording the loop shows.\"}"
+exit 0
+FAKE
+chmod +x "$BIN5/claude"
+
+export PATH="$BIN5:$PATH"
+export PHOTONZ_QUEUE_DIR="$QDIR5"
+export DRILL_STATE="$STATE5"
+export PHOTONZ_BACKOFF_STEPS="1,2,3,4,5"
+export PHOTONZ_DIGEST_HOUR=0
+export PHOTONZ_MAX_ITERS=2                  # the digest run, then the task run
+
+Q add "Drill task five" p1-high "drill" >/dev/null
+
+echo "[drill] scenario 5: running the real go loop against a runner that talks about the spend limit..."
+queue/bin/go-loop.sh > "$SANDBOX5/drill.log" 2>&1
+export DRILL_LOG="$SANDBOX5/drill.log"
+
+PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
+const fs = await import("node:fs");
+const q = process.env.PHOTONZ_QUEUE_DIR;
+const st = process.env.DRILL_STATE;
+const today = new Date().toISOString().slice(0, 10);
+const read = (f, fb) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return fb; } };
+const status = read(q + "/status.json", {});
+const history = fs.readFileSync(q + "/history.jsonl", "utf8").trim().split("\n").map(JSON.parse);
+const tasks = ["p0-critical","p1-high","p2-normal","p3-low"].flatMap((p) => {
+  const d = q + "/tasks/" + p;
+  return fs.existsSync(d) ? fs.readdirSync(d).map((f) => JSON.parse(fs.readFileSync(d + "/" + f, "utf8"))) : [];
+});
+const task = tasks[0] || {};
+const log = fs.readFileSync(process.env.DRILL_LOG, "utf8");
+let failed = 0;
+const check = (name, ok, detail) => {
+  console.log((ok ? "  PASS  " : "  FAIL  ") + name + (detail ? "\n          " + detail : ""));
+  if (!ok) failed++;
+};
+
+const fails = history.filter((e) => e.ev === "runner_failed");
+const digest = (() => { try { return fs.readFileSync(q + "/digests/" + today + ".md", "utf8"); } catch { return ""; } })();
+
+check("a runner that finishes its work while quoting the spend limit is not recorded as a failure",
+  fails.length === 0,
+  fails.length + " runner_failed events: " + JSON.stringify(fails.map((e) => [e.kind, e.outcome, (e.error || "").slice(0, 60)])));
+check("the loop stayed healthy and named no refusal",
+  status.health === "ok" && status.consecutiveFailures === 0 && !status.lastError,
+  "health=" + status.health + " consecutive=" + status.consecutiveFailures + " lastError=" + JSON.stringify(status.lastError));
+check("the digest it wrote was kept, not deferred and not stubbed",
+  /A real digest that happens to discuss the spend limit/.test(digest)
+    && history.filter((e) => e.ev === "digest_deferred").length === 0
+    && history.filter((e) => e.ev === "digest_failed").length === 0,
+  "digest=" + JSON.stringify(digest.slice(0, 80)));
+check("the loop window never told anyone to go and raise a limit",
+  !/spend limit hit: the agent refused to run/.test(log),
+  (log.match(/spend limit hit[^\n]*/) || ["no such line"])[0]);
+check("the task that followed finished, uncharged and never parked",
+  task.status === "done" && !(task.failures > 0) && !task.parked,
+  task.id + "=" + task.status + " failures=" + (task.failures || 0));
+check("no task is left in_progress", tasks.every((t) => t.status !== "in_progress"),
+  tasks.map((t) => t.id + "=" + t.status).join(", "));
+
+// The same judgement, called directly. These are the shapes that matter: the
+// reproduction from 2026-09-13, the line the real 2026-09-12 run recorded, and
+// the two real refusals that must still be caught.
+process.env.PHOTONZ_QUEUE_DIR = st + "/unit-queue";
+fs.mkdirSync(process.env.PHOTONZ_QUEUE_DIR, { recursive: true });
+const { classifyRunnerOutput, recordRunnerExit, readStatus, writeStatus } = await import(process.cwd() + "/queue/bin/queue-lib.mjs");
+const stream = (...lines) => lines.join("\n") + "\n";
+const working = stream(
+  "session drill-sessio… started",
+  "▸ Bash  node queue/bin/queue.mjs addjson A loop stalled on the spend limit reaches the person",
+  "Filed it, and the runner said so.",
+  "■ runner finished (success)",
+  "Filed the task. You have hit your monthly spend limit is now the wording the loop shows.");
+check("a working runner quoting the refusal in a tool call is no refusal",
+  classifyRunnerOutput("", working).reason === null,
+  JSON.stringify(classifyRunnerOutput("", working)));
+check("nor is one quoting it in the summary the loop keeps as its error line",
+  classifyRunnerOutput("", stream("▸ Edit  queue/bin/queue-lib.mjs", "■ runner finished (success)", "Fixed: a spend limit line no longer stalls the loop")).reason === null, "");
+check("nor a runner quoting a sign-in failure in a tool call",
+  classifyRunnerOutput("", stream("▸ Grep  failed to authenticate", "■ runner finished (success)", "done")).reason === null, "");
+
+const refusal = "You’ve hit your monthly spend limit · raise it at claude.ai/settings/usage · your weekly limit resets Aug 29 at 1am";
+check("a real refusal on stderr is still caught",
+  classifyRunnerOutput(refusal + "\n", working).reason === "spend", JSON.stringify(classifyRunnerOutput(refusal + "\n", working)));
+check("a real refusal in a stream where the runner never got to work is still caught",
+  classifyRunnerOutput("", stream("session drill-sessio… started", refusal, "■ runner finished (success)")).reason === "spend", "");
+check("a real sign-in refusal is still caught, on either channel",
+  classifyRunnerOutput("Failed to authenticate: OAuth session expired\n", "").reason === "signin"
+    && classifyRunnerOutput("", stream("session x… started", "Failed to authenticate: OAuth session expired", "■ runner finished (success)")).reason === "signin", "");
+
+// The recorded 2026-09-12 digest run, replayed exactly as history.jsonl kept it.
+const recorded = "▸ Bash node queue/bin/queue.mjs addjson \"$(cat <<'EOF' { \"title\": \"A loop stalled on the spend limit reaches the per…";
+writeStatus({ health: "ok", consecutiveFailures: 0, lastError: null, failureStreak: null });
+const replay = recordRunnerExit({ taskId: null, exit: 0, error: recorded, kind: "digest" });
+check("the 2026-09-12 digest run replays as ok",
+  replay.outcome === "ok" && readStatus().health === "ok",
+  "outcome=" + replay.outcome + " health=" + readStatus().health);
+
+// ...and a digest run that really was refused still fails, from the first one.
+writeStatus({ health: "ok", consecutiveFailures: 0, lastError: null, failureStreak: null });
+const realRefusal = recordRunnerExit({ taskId: null, exit: 0, error: refusal, kind: "digest", reason: "spend" });
+check("a digest run that really was refused still fails on the first refusal",
+  realRefusal.outcome === "spend" && realRefusal.environment === true && readStatus().health === "unhealthy",
+  "outcome=" + realRefusal.outcome + " health=" + readStatus().health);
+
+console.log(failed ? "\n[drill] scenario 5: " + failed + " check(s) failed" : "\n[drill] scenario 5: all checks passed");
+process.exit(failed ? 1 : 0);
+'
+S5=$?
+
+if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 && S5 == 0 )); then
   echo "[drill] all checks passed"
   exit 0
 fi
-echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4)"
+echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4, scenario 5 exit $S5)"
 exit 1

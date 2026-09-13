@@ -1,0 +1,27 @@
+{
+  "feature": "The loop tells a real refusal from a runner talking about one",
+  "epic": "unmanned-loop",
+  "summary": "The loop decided whether it had been cut off by searching its own runner's output for the words \"spend limit\" and \"could not sign in\", so a runner that finished a piece of work ABOUT the spend limit was recorded as having hit it: the dashboard went red, the loop backed off, and the daily digest it had just written was thrown away as never run. A refusal is now believed only from a channel the runner cannot write to, or from a run where the runner never got to do anything, so the health the dashboard reports is the health the loop has.",
+  "setup": "Nothing to install, nothing running. All commands are from the repo root and none of them touch the real queue.",
+  "try": [
+    { "do": "Run `LC_ALL=C grep 2026-09-12T12:04:17.518Z queue/history.jsonl`. That is a digest run that finished its work, recorded as having hit the spend limit, with one of its own tool calls kept as the error." },
+    { "do": "Run `printf '\\u25b8 Bash  queue.mjs addjson \"A loop stalled on the spend limit reaches the person\"\\n' > /tmp/out.txt` to make that same output again." },
+    { "do": "Run `PHOTONZ_QUEUE_DIR=$(mktemp -d) node queue/bin/queue.mjs runner-classify /dev/null /tmp/out.txt`. It answers RUNNER_REASON='' : nothing refused anything." },
+    { "do": "Run `printf \"You've hit your monthly spend limit \\u00b7 your session limit resets 6pm\\n\" > /tmp/err.txt` to make a real refusal instead." },
+    { "do": "Run `PHOTONZ_QUEUE_DIR=$(mktemp -d) node queue/bin/queue.mjs runner-classify /tmp/err.txt /dev/null`. It answers RUNNER_REASON='spend', exactly as before." },
+    { "do": "Run `queue/bin/failure-drill.sh` (about two minutes) and read scenario 5: the real loop, a runner that quotes the refusal everywhere and works anyway, and a loop that stays healthy." },
+    { "do": "Open http://127.0.0.1:8791, Project section, and check the loop reads running rather than unhealthy." }
+  ],
+  "evaluate": [
+    "When the loop really is refused, is the red pill on the dashboard enough to reach you, or does a stall need to find you somewhere else?",
+    "A refusal is now only believed from the agent's own error channel, or from a run where nothing happened. If one ever arrives another way, the loop records a plain failure and backs off without naming it. Is that the right way to be wrong?",
+    "Does the dashboard still tell you plainly what to do on a real refusal (wait for the reset, or raise the limit)?",
+    "The queue's checks live in drills you run by hand. Should they run on every commit instead, like the app's tests do?"
+  ],
+  "rough": [
+    "No screenshot: the only thing to see is the dashboard NOT going red, and staging a real refusal means actually hitting the spend limit. The evidence is the drill and the replay of the recorded 2026-09-12 run, both of which anyone can run in the steps above.",
+    "The reproduction written into the task notes transcribes the tool-call marker the loop prints as a plain \">\". In that ASCII form, on three lines of output, it is genuinely indistinguishable from a real refusal and still reads as one. The real stream never looks like that, and the drill runs the real formatter, but it is worth knowing the rule leans on that marker: stream-format.mjs now carries a comment saying so.",
+    "A spend limit that lands mid-work and reaches only the formatted stream, never the error channel, is now recorded as an ordinary runner failure rather than named as a refusal. Every real one on record reached both, and on a task run the failure is counted either way, so what is lost is the wording, not the reaction.",
+    "Left alone on purpose: the phrases themselves stay loosely matched, so a wording we have not seen yet is still caught. Precision now comes from who wrote the line rather than from how the sentence reads, which is the part that can be tested."
+  ]
+}

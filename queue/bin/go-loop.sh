@@ -48,7 +48,10 @@ CLAUDE_FLAGS=(--dangerously-skip-permissions --output-format stream-json --verbo
 # Set by run_runner: the last non-blank line the runner complained with. This is
 # what the dashboard shows when the loop goes unhealthy, so a wedged loop names
 # its own cause ("Credit balance is too low") instead of just sitting there.
+# RUNNER_REASON is the verdict that goes with it: signin, spend, or empty for a
+# run nothing refused.
 RUNNER_ERR=""
+RUNNER_REASON=""
 run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop.log
   local errf outf rc
   errf=$(mktemp -t goloop-err) || return 1
@@ -56,10 +59,14 @@ run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop
   claude -p "${CLAUDE_FLAGS[@]}" "$1" 2>"$errf" | node queue/bin/stream-format.mjs | tee -a "$LOG" "$outf"
   rc=${pipestatus[1]}
   cat "$errf" >> "$LOG"
-  # The queue picks the telling line: a sign-in failure wherever it sits, else
-  # the last stderr line, else the last stdout line (some failures, API errors
-  # mid-stream, only ever reach stdout).
-  RUNNER_ERR=$(Q runner-error "$errf" "$outf")
+  # The queue reads the whole run once: the telling line (a refusal wherever it
+  # sits on stderr, else the last stderr line, else the last stdout line — some
+  # failures, API errors mid-stream, only ever reach stdout) AND whether the CLI
+  # itself refused. Judging that here, with the tool calls still in view, is what
+  # keeps a runner that merely TALKS about the spend limit from being read as one
+  # that hit it (2026-09-12: a healthy digest recorded as an environment failure).
+  RUNNER_ERR=""; RUNNER_REASON=""
+  eval "$(Q runner-classify "$errf" "$outf")"
   rm -f "$errf" "$outf"
   return $rc
 }
@@ -73,7 +80,7 @@ run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop
 # run that ended in one is deferred, never stubbed.
 record_exit() { # $1 = task id or "-", $2 = exit code
   OUTCOME=failed; BACKOFF=60; FAILURES=1; HEALTH=unhealthy; ENVFAIL=0; SIGNIN=0; REASON=""
-  eval "$(Q runner-exit "$1" "$2" "$RUNNER_ERR")"
+  eval "$(Q runner-exit "$1" "$2" --reason "$RUNNER_REASON" "$RUNNER_ERR")"
 }
 
 # Manager pass: the loop's own product manager. Whenever fewer than

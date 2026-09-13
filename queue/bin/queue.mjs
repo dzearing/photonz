@@ -24,7 +24,10 @@
 //   node queue/bin/queue.mjs runner-error <stderrFile> <stdoutFile>
 //                                            print the one line of a runner's output worth keeping
 //                                            (a sign-in failure first, else the last stderr/stdout line)
-//   node queue/bin/queue.mjs runner-exit <taskId|-> <exitCode> [error]
+//   node queue/bin/queue.mjs runner-classify <stderrFile> <stdoutFile>
+//                                            the same line PLUS whether the CLI itself refused, as
+//                                            shell vars (RUNNER_ERR/RUNNER_REASON) for the go loop to eval
+//   node queue/bin/queue.mjs runner-exit <taskId|-> <exitCode> [--reason signin|spend|''] [error]
 //                                            record how a runner ended; prints shell vars
 //                                            (OUTCOME/BACKOFF/FAILURES/HEALTH/ENVFAIL/SIGNIN/REASON) for the go loop to eval
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
@@ -113,16 +116,34 @@ try {
       out(q.pickRunnerError(slurp(args[0]), slurp(args[1])));
       break;
     }
+    // One reading of the whole run, so the verdict travels with the line instead
+    // of being guessed again from it: only here is it visible that the words
+    // "spend limit" came out of the runner's own tool call.
+    case 'runner-classify': {
+      const slurp = (f) => { try { return f ? readFileSync(f, 'utf8') : ''; } catch { return ''; } };
+      const shq = (s) => `'${String(s ?? '').replace(/'/g, `'\\''`)}'`;
+      const c = q.classifyRunnerOutput(slurp(args[0]), slurp(args[1]));
+      out(`RUNNER_ERR=${shq(c.line)}\nRUNNER_REASON=${shq(c.reason || '')}`);
+      break;
+    }
     // The go loop evals this, so print shell assignments, not JSON. OUTCOME is
     // ok|failed|parked|signin|spend, BACKOFF is seconds to wait before claiming
     // again, REASON is the refusal the runner's words named (signin|spend) or
     // empty.
     case 'runner-exit': {
+      // --reason is the verdict runner-classify already reached. Present means
+      // trust it (empty = no refusal, and something looked); absent means fall
+      // back to reading the error line, for anything still calling the old way.
+      const rest = args.slice(2);
+      const flag = rest.indexOf('--reason');
+      const given = flag === -1 ? undefined : (rest[flag + 1] || '');
+      if (flag !== -1) rest.splice(flag, 2);
       const r = q.recordRunnerExit({
         taskId: args[0] && args[0] !== '-' ? args[0] : null,
         exit: Number(args[1] || 0),
-        error: args.slice(2).join(' '),
+        error: rest.join(' '),
         kind: args[0] && args[0] !== '-' ? 'task' : 'digest',
+        ...(given === undefined ? {} : { reason: given }),
       });
       const health = (r.reason || r.consecutiveFailures >= q.UNHEALTHY_AT) ? 'unhealthy' : 'ok';
       out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${health} ENVFAIL=${r.environment ? 1 : 0} SIGNIN=${r.signIn ? 1 : 0} REASON=${r.reason || ''}`);

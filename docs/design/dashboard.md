@@ -82,6 +82,12 @@ read the same way: the CLI reports it as a success too, so a digest run that
 says it is deferred rather than stubbed, the loop reports `unhealthy` at once,
 and the hero pill says **Spend limit hit** with when it resets. On a task run
 the limit can land mid-work, so there the usual per-task rule stays in charge.
+Reading a runner's words this way has one trap, and the loop fell in it on
+2026-09-12: a digest that filed a task about the spend limit was recorded as
+having hit one, so the dashboard said the build had stopped while it was
+building. A refusal now only counts from a channel the runner cannot write
+(the CLI's stderr) or from a stream where the runner never got to work, so a
+runner talking about a limit reads as the healthy run it is.
 Details and the drill that verifies it: `queue/README.md`.
 
 ## When the loop is behind its own script
