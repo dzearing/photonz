@@ -921,6 +921,10 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
+        case .expectLayers(let atLeast, let atMost):
+            note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
+                 state: describe())
+
         case .expectCaption(let aligned, let caret, let outline):
             note(number, step.name,
                  try checkCaption(aligned: aligned, caret: caret, outline: outline),
@@ -2567,6 +2571,32 @@ private final class Run {
         return count == 0
             ? "nothing has been measured, as claimed"
             : "\(count) \(plural(count)) on the canvas, as claimed"
+    }
+
+    /// How many layers the document holds, groups and their children counted.
+    ///
+    /// The panel renders the rows you can see and no more, so a claim about a
+    /// hundred layers has to be asked of the document. The failure says the
+    /// number it found and the first few names, because "138, not at least
+    /// 150" is a different bug from "1, not at least 150".
+    private func checkLayers(atLeast: Int?, atMost: Int?) throws -> String {
+        let editor = try requireEditor()
+        let layers = editor.document?.allLayers ?? []
+        let count = layers.count
+        func plural(_ n: Int) -> String { n == 1 ? "layer" : "layers" }
+        func refuse(_ claim: String) -> Failure {
+            Failure(description: "\(count) \(plural(count)) in the document, \(claim)"
+                + (layers.isEmpty ? ""
+                   : "; the first few: " + layers.prefix(6).map(\.name).joined(separator: ", ")))
+        }
+        if let atLeast, count < atLeast { throw refuse("not at least \(atLeast)") }
+        if let atMost, count > atMost { throw refuse("more than the \(atMost) claimed") }
+        if let atLeast, let atMost, atLeast == atMost {
+            return "\(count) \(plural(count)) in the document, as claimed"
+        }
+        let range = [atLeast.map { "at least \($0)" }, atMost.map { "at most \($0)" }]
+            .compactMap { $0 }.joined(separator: " and ")
+        return "\(count) \(plural(count)) in the document, \(range), as claimed"
     }
 
     /// What an open caption field is doing, checked rather than photographed.

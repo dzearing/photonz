@@ -59,17 +59,28 @@ public enum LayerSeparator {
         /// surroundings did not justify a fill or the app could not read them
         /// confidently enough to cut them.
         public let skipped: Int
+        /// How many were read perfectly well and left in the picture anyway,
+        /// because one command only takes so much out of one screenshot
+        /// (`SeparateBudget`). These are a different sentence from `skipped`:
+        /// they are still there to be taken, and the next run takes them.
+        public let crowded: Int
         /// The spaces filled in behind the pieces. They never overlap, which is
         /// what "no region is patched twice" means and what a test can check.
         public let patched: [CGRect]
 
         public init(background: CGImage, pieces: [Piece], skipped: Int,
-                    patched: [CGRect] = []) {
+                    crowded: Int = 0, patched: [CGRect] = []) {
             self.background = background
             self.pieces = pieces
             self.skipped = skipped
+            self.crowded = crowded
             self.patched = patched
         }
+
+        /// Everything still in the picture when the command finished, for
+        /// either reason. The number the pill prints, and the one a test can
+        /// check against what the sweep found.
+        public var left: Int { skipped + crowded }
 
         /// The pieces arranged the way the screen was: a label that sits in a
         /// button is a child of that button, a row inside a card sits under the
@@ -142,20 +153,28 @@ public enum LayerSeparator {
         var boxPieces: [Piece] = []
         var patched: [CGRect] = []
         var skipped = 0
-        // What the text sweep found and could NOT take. A word left in the
-        // picture must not come back round as a box, so the box pass is told
-        // about it along with the words that did come out.
-        var spokenFor: [CGRect] = []
+        var crowded = 0
 
         // MARK: The runs of text
         let sweep = TextRunSweep.sweep(in: luma, gap: gap, minElement: minElement)
+        // A whole screen is not a settings pane: a dense web page offers
+        // hundreds of runs, and a layers list with hundreds of rows in it is a
+        // wall rather than a list. The biggest ones come out, the rest stay in
+        // the picture and are counted, and the next run takes them.
+        let chosen = SeparateBudget.choose(sweep.runs, limit: SeparateBudget.maxTextRuns)
+        // Plus whatever the sweep itself had to stop short of, which is still
+        // sitting in the picture and still has to be counted.
+        crowded += chosen.crowdedOut + sweep.beyondLimit
+        // Everything the text sweep found, taken or not. A word left in the
+        // picture must not come back round as a box, so the box pass is told
+        // about the ones that stayed as well as the ones that came out.
+        let spokenFor = sweep.runs
         let halo = max(1, Int((haloRatio * gap).rounded()))
         var fills: [(rect: CGRect, fill: PatchFill)] = []
         // Every reading comes off the ORIGINAL pixels: a run is cut and its
         // ring is sampled before a single hole is filled, so one patch can
         // never become another run's idea of what the background was.
-        for run in sweep.runs {
-            spokenFor.append(run)
+        for run in chosen.kept.map({ sweep.runs[$0] }) {
             let box = run.insetBy(dx: CGFloat(-halo), dy: CGFloat(-halo))
                 .integral.intersection(bounds)
             guard !box.isNull, box.width >= 1, box.height >= 1 else { skipped += 1; continue }
@@ -178,8 +197,12 @@ public enum LayerSeparator {
         if boxes {
             let field = PixelField(width: w, height: h, samples: pixels)
             let found = BoxSweep.sweep(in: field, avoiding: spokenFor, minElement: minElement)
+            // Same ceiling, its own much smaller number: a box is a container,
+            // and thirty groups to open is already more than a list wants.
+            let takeable = SeparateBudget.choose(found.boxes.map(\.rect), limit: SeparateBudget.maxBoxes)
+            crowded += takeable.crowdedOut
             var boxFills: [(rect: CGRect, fill: PatchFill)] = []
-            for box in found.boxes {
+            for box in takeable.kept.map({ found.boxes[$0] }) {
                 let grown = box.rect.insetBy(dx: -1, dy: -1).integral.intersection(bounds)
                 guard !grown.isNull,
                       !patched.contains(where: { $0.intersects(grown) && !grown.contains($0) }),
@@ -211,11 +234,11 @@ public enum LayerSeparator {
         }
 
         guard !patched.isEmpty else {
-            return Result(background: image, pieces: [], skipped: skipped)
+            return Result(background: image, pieces: [], skipped: skipped, crowded: crowded)
         }
         guard let background = makeImage(pixels, width: w, height: h) else { return nil }
         return Result(background: background, pieces: boxPieces + runs, skipped: skipped,
-                      patched: patched)
+                      crowded: crowded, patched: patched)
     }
 
     // MARK: - The ring

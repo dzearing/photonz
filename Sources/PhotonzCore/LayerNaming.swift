@@ -93,6 +93,26 @@ public enum LayerNaming {
     }
 
     /// `base`, then "base 2", "base 3"… — the first one nobody is using.
+    /// The number a fresh BATCH of app-written names should start at: one past
+    /// the highest `<stem> N` already spoken for, and 1 when none is.
+    ///
+    /// `firstFree` answers for one layer arriving on its own. This answers for
+    /// a command that mints a numbered run of them at once — Separate into
+    /// Layers hands back a hundred and forty two pieces, and a dense screenshot
+    /// takes more than one run to come apart. Numbering the second run from
+    /// scratch left the list holding two rows called Text 57.
+    ///
+    /// The unnumbered name counts as the first, so "Text" is followed by
+    /// "Text 2".
+    public static func numberAfter(_ stem: String, taken: Set<String>) -> Int {
+        var highest = 0
+        for name in taken where matches(name, stem: stem) {
+            let tail = name.dropFirst(stem.count).trimmingCharacters(in: .whitespaces)
+            highest = max(highest, tail.isEmpty ? 1 : Int(tail) ?? 0)
+        }
+        return highest + 1
+    }
+
     static func firstFree(base: String, taken: Set<String>) -> String {
         guard taken.contains(base) else { return base }
         var n = 2

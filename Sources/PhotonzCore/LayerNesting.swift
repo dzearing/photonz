@@ -56,6 +56,11 @@ public enum LayerNesting {
     /// Order is preserved inside every level, so the stacking order the
     /// separator chose — boxes first, then the words that sit on them — is the
     /// stacking order that comes out.
+    ///
+    /// The tree stops at `SeparateBudget.maxDepth` levels. Nothing is lost when
+    /// it does: a piece deeper than that joins the deepest group that holds it,
+    /// so it still travels with the thing a person would drag, and the layers
+    /// list never indents a row further in than the twist that opens it.
     public static func nest(_ rects: [CGRect]) -> [Node] {
         let boxes = rects.map { $0.standardized }
         let areas = boxes.map { $0.width * $0.height }
@@ -82,10 +87,22 @@ public enum LayerNesting {
         for index in boxes.indices {
             if let parent = parent[index] { children[parent].append(index) } else { roots.append(index) }
         }
-        func build(_ index: Int) -> Node {
-            Node(index: index, children: children[index].map(build))
+        // At the last level a group is allowed, everything still under it comes
+        // in as ONE flat row of children rather than a ladder nobody can see
+        // the end of.
+        func build(_ index: Int, level: Int) -> Node {
+            guard level < SeparateBudget.maxDepth - 1 else {
+                return Node(index: index, children: descendants(of: index, in: children)
+                    .map { Node(index: $0) })
+            }
+            return Node(index: index, children: children[index].map { build($0, level: level + 1) })
         }
-        return roots.map(build)
+        return roots.map { build($0, level: 1) }
+    }
+
+    /// Everything under `index`, in the order the levels came in.
+    private static func descendants(of index: Int, in children: [[Int]]) -> [Int] {
+        children[index].flatMap { [$0] + descendants(of: $0, in: children) }
     }
 
     /// How many levels deep a forest goes. Zero for nothing at all.

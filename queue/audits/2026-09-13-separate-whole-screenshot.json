@@ -1,0 +1,32 @@
+{
+  "feature": "One command separates the whole screenshot",
+  "epic": "ui-building",
+  "summary": "Separate into Layers is now worth running on a whole screen rather than one pane: a full window comes apart into a hundred and forty pieces in a tenth of a second, the list stops at a limit instead of becoming a wall with a row for every word on the page, and the pill says in one sentence how many are still in the picture and what to do about them. A photograph comes back untouched and says so.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags on by default: Separate a screenshot into layers, Group what you selected. Any dense screenshot works; the pictures here use Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png, which is a capture of the project dashboard.",
+  "try": [
+    { "do": "Open a dense screenshot: a whole window, or a page with a lot of text on it." },
+    { "do": "Right click the Background row in the layers list and choose Separate into Layers." },
+    { "do": "Read the pill before it fades: it counts what came out AND what it left in the picture.", "shot": "2026-09-13-whole-1-pill.png" },
+    { "do": "Scroll the layers list: a hundred and forty two pieces, each thumbnail showing its own words.", "shot": "2026-09-13-whole-2-layers.png" },
+    { "do": "Right click Background and run Separate into Layers again. It takes the next batch, numbered on from where the first stopped.", "shot": "2026-09-13-whole-3-again.png" },
+    { "do": "Press Command Z twice. Two presses take back both runs and leave the untouched screenshot." },
+    { "do": "Open a photograph and run it on that. Nothing comes out and the pill says so.", "shot": "2026-09-13-whole-4-photograph.png" },
+    { "do": "Open a capture with buttons in it and run it. Pieces still arrive arranged the way the screen was.", "shot": "2026-09-13-whole-5-nested.png" }
+  ],
+  "evaluate": [
+    "One command stops at 150 pieces. Is that the right ceiling, or would you rather it took everything on the page and let the list be as long as it is?",
+    "Past the limit it takes the BIGGEST pieces, so you get the headings and the cards and not the hundredth body-text run. Is that the half you would have wanted?",
+    "The pill ends with \"run it again for more\" rather than offering a button to press. Is a sentence enough, or do you want the button?",
+    "On a photograph it says \"Nothing here reads as text or a box\" and does not mention the 437 pieces of texture it found and could not read. Is hiding that number right, or do you want the app to always say what it saw?",
+    "A hundred and forty two rows called Text 1 to Text 142 is a long list even with thumbnails. Is that usable as it stands, or does a separation this size need the list grouped by where the pieces were on the page?"
+  ],
+  "rough": [
+    "MEASURED on five genuinely different real captures, not judged by eye. The settings pane (1.4 MP at 2x): 9 runs and 2 buttons out, 2 cards left because of their shadows. A dark inspector panel (0.4 MP at 2x): 10 runs out, 7 left. This app's whole window (7.7 MP at 2x): 93 runs out, 26 left, nothing crowded out. The project dashboard (5.1 MP at 1x): 142 out of 724, the rest crowded out and reachable by running it again. An encyclopedia article (5.1 MP at 1x): 98 runs and 9 boxes out, 118 left. A photograph of a mountain (1.7 MP): nothing out, nothing claimed.",
+    "THE BIGGEST GAP: boxes are found on a flat light page and almost nowhere else. Three of the five captures returned ZERO boxes, including this app's own window, because the box sweep needs one colour behind everything and a window with a dark canvas, a toolbar and two panels does not offer one. So a whole-window capture comes apart into words only, which is half the feature. Filed as a follow-up.",
+    "The limit keeps 500 rows from happening but does not make 142 pleasant. At the window size in these pictures the layers list shows about five rows at a time, so a separation this size is a very long scroll, and every row is called Text N.",
+    "PERF, release build: 12 to 30 ms per megapixel. The 7.7 megapixel full-screen capture reads in 138 ms and separates in 98 ms; the 12.2 megapixel case is 108 ms and 292 ms, and that one is the fixture tiled out rather than a real capture, because no screen on this machine is bigger than 7.7 megapixels. The walk that runs the whole command prints what the main thread was doing while it ran: no stall recorded, quiet 0.1 s after the command.",
+    "The honesty fix that came out of measuring: the sweep used to stop at 400 candidates and say nothing, so the pill on the dashboard capture claimed 256 left when 580 were. It now counts what it stopped short of.",
+    "The count is still a texture number on a picture that is PART photograph. Something that comes apart and also holds a hero image will say \"40 runs of text. 200 left in the picture\", where most of those 200 are blades of grass. Only the nothing-came-out case is handled.",
+    "Screen Recording was granted, so every picture here is the real window rather than an offscreen render."
+  ]
+}

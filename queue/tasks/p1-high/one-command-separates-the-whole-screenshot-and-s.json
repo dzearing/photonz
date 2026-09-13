@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.603Z",
-  "updated": "2026-09-13T05:24:50.002Z",
+  "updated": "2026-09-13T08:30:10.433Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can",
     "separate-the-boxes-too-and-fill-the-hole-underne",
@@ -47,6 +47,27 @@
     {
       "t": "2026-09-13T05:24:50.001Z",
       "note": "seq 43 -> 9"
+    },
+    {
+      "t": "2026-09-13T08:30:10.432Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T09:27:20.424922Z",
+      "note": "ADVERSARIAL REVIEW BEFORE BUILDING, done by measuring rather than by reading. Built a bench (Tests/PhotonzRenderTests/SeparateBenchTests.swift, off unless you name files) and ran the command over six real pictures: the settings pane fixture, a dark inspector panel, this app's whole window at 7.7 MP, the project dashboard, an encyclopedia article, and a photograph. Findings that set the work: (1) the dense page produced 390 flat layers, which is the wall this task is about; (2) the sweep silently truncated at 400 candidates, so the pill's count of what was left was a LIE (256 claimed, 580 actual); (3) a real textured photograph found 437 unreadable pieces and would have announced them, which reads as the app failing; (4) perf was never the problem: 12 to 30 ms per megapixel."
+    },
+    {
+      "t": "2026-09-13T09:27:20.424922Z",
+      "note": "BUILT. SeparateBudget (PhotonzCore, TDD): 150 runs of text, 30 boxes, 4 levels deep, biggest first, the rest counted as crowded out rather than dropped. 150 is measured, not chosen: a whole window offers 119 pieces and must come apart in ONE command, a dense web page offers 724 and must not. LayerNesting now flattens past four levels instead of indenting forever. TextRunSweep counts what it stops short of (Sweep.beyondLimit) so the pill's number is checkable. The pill gained a third sentence, 'N left in the picture, run it again for more', offered only when something did come out; and a photograph is told it is a photograph rather than given a texture count. Separated names carry on across runs (LayerNaming.numberAfter) so no list holds two rows called Text 57."
+    },
+    {
+      "t": "2026-09-13T09:27:20.424922Z",
+      "note": "VERIFIED. Scripts/test.sh green, 6052 tests. New walk Scripts/playtest/separate-whole-screenshot-walk.json runs the whole command twice on a dense capture and once on the settings pane: 1 layer, 143, 285, back to 1, with the nesting intact, and a new expectLayers step so a walk can check a count the panel cannot answer (it only renders the rows you can see). All four separate walks pass. Main thread: no stall recorded, quiet 0.1 s after the command. Audit at queue/audits/2026-09-13-separate-whole-screenshot.json with five real captures and five real window shots."
+    },
+    {
+      "t": "2026-09-13T09:27:20.424922Z",
+      "note": "Left undone and filed: boxes are found on a flat light page and almost nowhere else (zero on three of five captures, including this app's own window), so a whole-window capture comes apart into words only. Filed as separate-finds-the-boxes-in-a-dark-window-too-no with the bench output in it."
     }
-  ]
+  ],
+  "started": "2026-09-13T08:30:10.431Z"
 }

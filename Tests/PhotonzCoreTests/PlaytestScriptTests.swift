@@ -1515,6 +1515,45 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectMeasures"))
     }
 
+    // A command that makes a HUNDRED layers cannot be checked by naming rows:
+    // the panel only renders the handful you can see, so a walk asking for
+    // "Text 100" is told it is not there when it is. `expectLayers` asks the
+    // document instead, which is where the answer actually is.
+    @Test("An expectLayers step says how many layers the document must hold")
+    func expectLayersNamesTheRange() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectLayers", "atLeast": 100, "atMost": 160 } ] }
+        """)
+        guard case .expectLayers(let atLeast, let atMost) = script.steps[0] else {
+            Issue.record("expectLayers"); return
+        }
+        #expect(atLeast == 100)
+        #expect(atMost == 160)
+        #expect(script.steps[0].name == "expectLayers")
+        #expect(PlaytestStep.names.contains("expectLayers"))
+    }
+
+    @Test("An expectLayers step can name one exact number instead of a range")
+    func expectLayersTakesACount() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectLayers", "count": 12 } ] }
+        """)
+        guard case .expectLayers(let atLeast, let atMost) = script.steps[0] else {
+            Issue.record("expectLayers"); return
+        }
+        #expect(atLeast == 12)
+        #expect(atMost == 12)
+    }
+
+    @Test("An expectLayers step that claims nothing at all is refused")
+    func expectLayersHasToClaimSomething() throws {
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectLayers" } ] }
+            """)
+        }
+    }
+
     // Opening an effect used to leave its settings below the bottom of the
     // panel, with nothing scrolling to them (2026-09-08). A capture cannot
     // prove the fix: it shows the panel, and a person has to decide whether

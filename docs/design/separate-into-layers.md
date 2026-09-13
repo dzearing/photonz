@@ -294,6 +294,77 @@ patch and its boxes are gone. Nothing is separated again and no second repair is
 stacked. The command still answers — the notice pill says nothing was found —
 rather than looking broken.
 
+## How much one command takes
+
+A whole screen is not a settings pane, and the limit is set from measurement
+rather than taste. Run over real captures, what the sweep finds:
+
+| capture | pieces it can read |
+| --- | --- |
+| the settings pane fixture, 1.4 MP at 2x | 11 |
+| a dark inspector panel, 0.4 MP at 2x | 17 |
+| this app's whole window, 7.7 MP at 2x | 119 |
+| a dense web dashboard, 5.1 MP at 1x | 724 |
+| an encyclopedia article, 5.1 MP at 1x | 225 |
+| a photograph of a mountain, 1.7 MP | 437, none of them readable |
+
+The first three are a layers list. The fourth is a wall of identical names you
+scroll rather than read, and a command that hands you one has not helped you.
+So `PhotonzCore/SeparateBudget.swift` sets the ceiling:
+
+- **150 runs of text**, which sits above the whole-window case on purpose:
+  taking a whole screen apart in ONE command is the entire point, so the limit
+  must not bite on the ordinary picture. It bites on the web page.
+- **30 boxes**, far fewer, because a box is a container and thirty groups to
+  open is already more than a list wants.
+- **4 levels deep** (`LayerNesting`), which is past anything a detector finds
+  today and is where a row's name would start further in than the twist that
+  opens it. Nothing is thrown away to keep it: a piece deeper than four levels
+  joins the deepest group that holds it, so it still travels with the thing a
+  person would drag.
+
+**Past the limit the biggest pieces come out.** On a dense page the small ones
+are the hundredth body-text run, which is exactly the piece nobody was going to
+reach for; the big ones are the headings, the cards and the buttons. The rest
+stay in the picture untouched and are COUNTED.
+
+**And running it again takes the next hundred and fifty.** The pieces that came
+out are no longer in the picture, so the next sweep reaches the ones behind
+them. Measured on the dashboard capture: 142 out, 361 left; run again, 142 more
+out, 219 left. That is what the pill means by *run it again for more*, and the
+second run's names carry on where the first stopped (`LayerNaming.numberAfter`)
+so no list ever holds two rows called Text 57.
+
+Nothing found is ever dropped silently, which is what makes the count in the
+pill checkable: `TextRunSweep` stops at 400 candidates but hands back how many
+it stopped short of (`Sweep.beyondLimit`), and every one of those is added to
+the tally. Before that it truncated quietly, and the pill on the dashboard
+capture said 256 left when 580 were.
+
+### How long it takes
+
+Linear in pixels, 12 to 30 ms per megapixel in a release build, and it runs off
+the main thread with the document touched only when it comes back. Measured end
+to end, reading the picture plus separating it:
+
+| capture | reading | separating |
+| --- | --- | --- |
+| 1.4 MP settings pane | 37 ms | 42 ms |
+| 5.1 MP web dashboard | 73 ms | 73 ms |
+| 7.7 MP whole screen at 2x | 138 ms | 98 ms |
+| 12.2 MP tiled fixture | 108 ms | 292 ms |
+
+Single cold passes, except the last row, which is the faster of two. No real
+capture on the machine this was measured on reaches 12 megapixels: the
+screen is 3456 x 2234, which is 7.7. The 12 megapixel row is the fixture tiled
+out to 4032 x 3024 with twelve times as much text in it as any real screenshot
+would have, which is the honest worst case rather than a real one.
+
+Nothing is shown while it works, and the walk that runs it over a whole
+screenshot prints what the main thread was doing while it did: the app settles
+0.1 s after the command and records no stall at all. A spinner that flashes for
+a tenth of a second is worse than no spinner.
+
 ## What it says
 
 A notice pill (`CopyConfirmation.Subject.separatedIntoLayers`) because the canvas
@@ -309,6 +380,26 @@ something and cannot read it: "1 piece left in the picture, too unclear to read"
 
 With boxes it counts both: "9 runs of text and 2 boxes. 2 left in the picture,
 too unclear to read".
+
+There is a THIRD sentence, for the picture that offered more than one command
+takes: "142 runs of text. 361 left in the picture, run it again for more". The
+count is everything still in the picture for either reason, because that is the
+number a person can check by looking at it; what changes is what to do about it,
+and a piece the limit crowded out comes out on the next run while one that could
+not be read never does. The line is only offered when something actually came
+out — with nothing to show for the first run, sending somebody round again would
+be a loop.
+
+**A photograph is told it is a photograph.** Measured on one of a mountain: 437
+pieces found in the grass and the rock face, none of them readable, none of them
+anything a person would point at. "437 pieces left in the picture" is a true
+sentence about texture and a useless one about the photograph, and it reads as
+the app having failed at something. So past a handful
+(`CopyConfirmation.unreadableWorthNaming`), with nothing taken, the pill says
+the plain thing: "Nothing here reads as text or a box". Under a handful it still
+counts them, because that is the case the count is FOR — a caption burnt into a
+photograph is one or two things you are looking straight at, wondering why they
+are still there.
 
 The FIRST run is left picked — one outline on the canvas, at the top of the page
 where reading starts, and the layers list scrolled to the new rows. Deliberately

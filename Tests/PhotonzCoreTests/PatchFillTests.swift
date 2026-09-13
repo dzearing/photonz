@@ -121,9 +121,10 @@ struct PatchFillTests {
 @Suite("What the separate pill says")
 struct SeparateNoticeTests {
 
-    private func pill(runs: Int, boxes: Int = 0, skipped: Int) -> CopyConfirmation {
+    private func pill(runs: Int, boxes: Int = 0, skipped: Int,
+                      crowded: Int = 0) -> CopyConfirmation {
         CopyConfirmation(subject: .separatedIntoLayers(runs: runs, boxes: boxes,
-                                                       skipped: skipped),
+                                                       skipped: skipped, crowded: crowded),
                          shownAt: Date())
     }
 
@@ -158,6 +159,41 @@ struct SeparateNoticeTests {
     @Test func aPictureItCannotReadSaysSoInstead() {
         #expect(pill(runs: 0, skipped: 3).detail
             == "3 pieces left in the picture, too unclear to read")
+        #expect(pill(runs: 0, skipped: 1).detail
+            == "1 piece left in the picture, too unclear to read")
+    }
+
+    @Test func aPictureWithMorePiecesThanOneCommandTakesSaysWhatToDoNext() {
+        // The limit case, which is NOT the same sentence as "could not read
+        // it": these are pieces the app read perfectly well and chose to leave,
+        // and the thing to do about them is run the command again.
+        #expect(pill(runs: 100, boxes: 2, skipped: 0, crowded: 290).detail
+            == "100 runs of text and 2 boxes. 290 left in the picture, run it again for more")
+        // Both reasons in one picture: the count is everything still in it,
+        // because that is the number a person can check by looking.
+        #expect(pill(runs: 100, skipped: 2, crowded: 290).detail
+            == "100 runs of text. 292 left in the picture, run it again for more")
+    }
+
+    @Test func itDoesNotOfferAnotherRunWhenNothingCameOutOfThisOne() {
+        // Running it again would find the same pieces and fail on them the
+        // same way, so the line that says to would be sending somebody round a
+        // loop.
+        #expect(pill(runs: 0, skipped: 2, crowded: 1).detail
+            == "3 pieces left in the picture, too unclear to read")
+    }
+
+    @Test func aPhotographIsToldItIsAPhotographRatherThanGivenANumber() {
+        // MEASURED on a real photograph of a mountain: the sweep finds 437
+        // pieces in the grass and the rock and can read none of them. Saying
+        // "437 left in the picture" is true about texture and useless about the
+        // photograph, and it reads as the app having failed at something.
+        #expect(pill(runs: 0, skipped: 150, crowded: 287).detail
+            == "Nothing here reads as text or a box")
+        #expect(pill(runs: 0, skipped: 437).title == "Nothing to separate")
+        // A caption burnt into a photograph is the case the count is FOR, and
+        // it still says it: you are looking straight at the words wondering why
+        // they are still there.
         #expect(pill(runs: 0, skipped: 1).detail
             == "1 piece left in the picture, too unclear to read")
     }

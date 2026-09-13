@@ -130,4 +130,21 @@ struct LayerDuplicateNamingTests {
         #expect(LayerNaming.copyName(of: "Card copy 7", taken: ["Card copy 7"]) == "Card copy")
         #expect(LayerNaming.copyName(of: "copy", taken: ["copy"]) == "copy copy")
     }
+
+    // Separate into Layers numbers its pieces Text 1, Text 2, … and a dense
+    // screenshot takes more than one run to come apart. Numbering from scratch
+    // on the second run left the list holding two rows called Text 57, which is
+    // the one thing a numbered name exists to prevent.
+    @Test func aSecondBatchOfAppNamedLayersCarriesOnFromTheLastNumber() {
+        #expect(LayerNaming.numberAfter("Text", taken: []) == 1)
+        #expect(LayerNaming.numberAfter("Text", taken: ["Text 1", "Text 2"]) == 3)
+        // The unnumbered name is the first one, so the next is 2.
+        #expect(LayerNaming.numberAfter("Text", taken: ["Text"]) == 2)
+        // Gaps do not matter: what matters is that nothing is reused.
+        #expect(LayerNaming.numberAfter("Text", taken: ["Text 9"]) == 10)
+    }
+
+    @Test func numberingIgnoresNamesThatOnlyLookLikeTheStem() {
+        #expect(LayerNaming.numberAfter("Text", taken: ["Texture 9", "Box 4", "My Text 3"]) == 1)
+    }
 }

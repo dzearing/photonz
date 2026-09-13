@@ -92,7 +92,8 @@ extension EditorState {
               let ref = layer.imageRef else { return }
         guard let result, !result.pieces.isEmpty else {
             raiseCanvasNotice(.separatedIntoLayers(runs: 0, boxes: 0,
-                                                   skipped: result?.skipped ?? 0))
+                                                   skipped: result?.skipped ?? 0,
+                                                   crowded: result?.crowded ?? 0))
             return
         }
 
@@ -106,6 +107,14 @@ extension EditorState {
         let sy = pixels.height > 0 ? frame.height / pixels.height : 1
 
         let patched = store.register(result.background)
+        // Where the numbering picks up. A dense screenshot takes more than one
+        // run to come apart — the pill says so and says to run it again — and
+        // starting over at Text 1 each time would leave the list holding two
+        // rows called Text 57. It also steps around any text layer already in
+        // the document, since a typed one is called Text too.
+        let taken = Set((document.allLayers).map(\.name))
+        let firstRun = LayerNaming.numberAfter(Self.separatedRunName, taken: taken)
+        let firstBox = LayerNaming.numberAfter(Self.separatedBoxName, taken: taken)
         var runs = 0, boxes = 0
         var bodyNames: [String] = []
         let flat = result.pieces.map { piece -> PhotonzDocument.SeparatedPiece in
@@ -116,11 +125,11 @@ extension EditorState {
             let name: String
             switch piece.kind {
             case .text:
+                name = "\(Self.separatedRunName) \(firstRun + runs)"
                 runs += 1
-                name = "\(Self.separatedRunName) \(runs)"
             case .box:
+                name = "\(Self.separatedBoxName) \(firstBox + boxes)"
                 boxes += 1
-                name = "\(Self.separatedBoxName) \(boxes)"
             }
             switch piece.body {
             case .picture(let image):
@@ -204,7 +213,13 @@ extension EditorState {
         }
         multiSelectedLayerIDs = []
         selectedLayerID = first.map { made[$0] } ?? made.first
+        // Both halves of what just happened: what came out, and what stayed in
+        // the picture. A screenshot dense enough to have pieces crowded out
+        // says so and says what to do about it, which is run the command again
+        // on the same picture: the pieces that came out are no longer in it, so
+        // the next run reaches the ones behind them.
         raiseCanvasNotice(.separatedIntoLayers(runs: runs, boxes: boxes,
-                                               skipped: result.skipped))
+                                               skipped: result.skipped,
+                                               crowded: result.crowded))
     }
 }

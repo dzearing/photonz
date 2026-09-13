@@ -1298,6 +1298,21 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// How many layers the document must hold right now, counting the ones
+    /// inside groups.
+    ///
+    /// The panel cannot answer this. A command that makes a hundred layers
+    /// renders a dozen rows and keeps the rest until you scroll to them, so a
+    /// walk that asks the panel for "Text 100" is told it is not there when it
+    /// is — which is how a walk over a whole screenshot fails for the wrong
+    /// reason. This asks the DOCUMENT, which is where the count lives.
+    ///
+    /// A range rather than one number, because the thing usually worth claiming
+    /// is "a lot came out and the list did not become a wall": `atLeast` is the
+    /// floor a person would notice missing, `atMost` the ceiling the limit
+    /// promises (`SeparateBudget`). `count` sets both to the same number when a
+    /// walk really does know the answer exactly.
+    case expectLayers(atLeast: Int?, atMost: Int?)
     /// Claims about the arrow caption field that is open right now: how the
     /// draft is laid out across its bubble, where the caret is waiting, and
     /// whether the blue outline is drawn round the bubble on screen.
@@ -1463,7 +1478,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectCaption", "expectInView", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor",
     ]
@@ -1511,6 +1526,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectLayers: "expectLayers"
         case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
         case .expectInView: "expectInView"
@@ -1780,6 +1796,26 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
             self = .expectMeasures(count: Int(howMany))
+        case "expectLayers":
+            let count = try f.optionalNumber("count")
+            let atLeast = try f.optionalNumber("atLeast") ?? count
+            let atMost = try f.optionalNumber("atMost") ?? count
+            guard atLeast != nil || atMost != nil else {
+                throw f.invalid("atLeast", "expectLayers has to claim something: "
+                    + "\"count\" for an exact number of layers, or \"atLeast\" and \"atMost\" "
+                    + "for the range a walk is willing to see")
+            }
+            for (field, value) in [("atLeast", atLeast), ("atMost", atMost)] {
+                guard let value else { continue }
+                guard value >= 0, value == value.rounded() else {
+                    throw f.invalid(field, "a number of layers is a whole number, zero or more, not \(value)")
+                }
+            }
+            if let atLeast, let atMost, atLeast > atMost {
+                throw f.invalid("atLeast", "atLeast \(atLeast) is more than atMost \(atMost), "
+                    + "so no number of layers could ever pass")
+            }
+            self = .expectLayers(atLeast: atLeast.map { Int($0) }, atMost: atMost.map { Int($0) })
         case "expectCaption":
             func word<V: CaptionClaimWord>(_ field: String) throws -> V? {
                 guard let raw = try f.optionalString(field) else { return nil }

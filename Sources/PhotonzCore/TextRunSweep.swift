@@ -63,10 +63,19 @@ public enum TextRunSweep {
         public let runs: [CGRect]
         /// Which pixels carried ink, for whoever has to sample the background.
         public let ink: InkMask
+        /// How many further runs were read and NOT handed back, because the
+        /// sweep's own ceiling was reached.
+        ///
+        /// Not a detail: whatever separates a picture has to be able to say how
+        /// much is still in it, and a run dropped silently here is one the pill
+        /// would never mention. They are the smallest of what was found, since
+        /// the sweep works down from the biggest.
+        public let beyondLimit: Int
 
-        public init(runs: [CGRect], ink: InkMask) {
+        public init(runs: [CGRect], ink: InkMask, beyondLimit: Int = 0) {
             self.runs = runs
             self.ink = ink
+            self.beyondLimit = beyondLimit
         }
 
         public static let empty = Sweep(runs: [], ink: .empty)
@@ -95,6 +104,10 @@ public enum TextRunSweep {
     /// How many runs one sweep will return. A dense screenshot offers a couple
     /// of hundred; past that the picture is not a screenshot of a UI and the
     /// answer would be noise either way.
+    ///
+    /// Anything past it is COUNTED rather than thrown away (`Sweep.beyondLimit`),
+    /// so a picture that offers more than this can still be described honestly
+    /// by whoever is holding the result.
     public static let defaultLimit = 400
 
     /// Every run of text in `luma`.
@@ -176,10 +189,14 @@ public enum TextRunSweep {
                               width: box.width, height: box.height)
             if accepted.contains(where: { $0.intersects(rect) }) { continue }
             accepted.append(rect)
-            if accepted.count == limit { break }
         }
+        // The ceiling is applied at the END rather than as an early exit, so
+        // the ones past it are counted instead of vanishing. They are the
+        // smallest, because the loop works down from the biggest piece.
+        let beyondLimit = max(0, accepted.count - limit)
+        accepted = Array(accepted.prefix(limit))
 
-        return Sweep(runs: readingOrder(accepted), ink: mask)
+        return Sweep(runs: readingOrder(accepted), ink: mask, beyondLimit: beyondLimit)
     }
 
     /// The runs sorted the way an eye reads them: banded by row, then left to

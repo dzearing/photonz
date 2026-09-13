@@ -1,0 +1,229 @@
+{
+  "out": "/tmp/photonz-playtest/separate-whole-screenshot",
+  "seed": "ONE COMMAND OVER A WHOLE SCREENSHOT. The walk opens a dense capture of a whole page, runs Separate into Layers once on the Background picture, and checks the three things that only go wrong at that size: that a lot of pieces come out in one go, that the list stops at the limit instead of becoming a wall with a row for every word on the page, and that the pill says how many were left in the picture and what to do about them. Then it runs the command a SECOND time to prove the leftovers really are still there to take, takes both runs back with two presses, and finishes on the settings pane capture to prove the tree is still a tree: a button that comes out as a group with its own words inside it.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-before",
+      "note": "a dense page as it opens: one locked Background picture and nothing else. There are five hundred readable runs of text in this capture, which is far more than any layers list wants"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "whole-1-before"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 4
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-command-one-pill",
+      "note": "THE FIRST TEST: one command took the whole picture apart, and the pill says BOTH halves of what happened - how many pieces came out, and how many are still in the picture. The wait step above prints what the main thread was doing while it ran, which is the number that says whether the app looked frozen"
+    },
+    {
+      "do": "snapshot",
+      "name": "whole-2-pill"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-wall-holds",
+      "note": "THE SECOND TEST: well over a hundred pieces came out in one go, and the command stopped at its limit rather than handing back a row for every word on the page. The claim below is asked of the document, because the panel only renders the rows you can see"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 100,
+      "atMost": 151
+    },
+    {
+      "do": "snapshot",
+      "name": "whole-3-layers"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 4
+    },
+    {
+      "do": "describe",
+      "stage": "3-run-it-again-takes-more",
+      "note": "THE THIRD TEST, and the one the pill's own sentence promises: what was left in the picture is still IN the picture, so running the command again on the same Background takes the next hundred and something. The second run's pieces carry on numbering where the first stopped, so nothing in the list is called Text 57 twice - a row called Text 200 can only exist because of that"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 200,
+      "atMost": 302
+    },
+    {
+      "do": "selectRow",
+      "row": "Text 200"
+    },
+    {
+      "do": "snapshot",
+      "name": "whole-4-again"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-two-runs-two-presses",
+      "note": "THE FOURTH TEST: each run is ONE undo step however many layers it made, so two presses put back both runs and leave the untouched screenshot on its own"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "row": "Background",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "whole-5-undone"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "describe",
+      "stage": "5-and-it-is-still-a-tree",
+      "note": "THE FIFTH TEST: the limit flattened nothing. On a capture with buttons in it the pieces still arrive arranged the way the screen was - Box 1 and Box 2 are the two buttons, and each one opens onto the words that were sitting on it and the button itself"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 10,
+      "atMost": 20
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text 1",
+      "by": -400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "row": "Box 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Box 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Fill",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "whole-6-nested"
+    }
+  ],
+  "setup": {
+    "forget": [
+      "groups"
+    ]
+  }
+}

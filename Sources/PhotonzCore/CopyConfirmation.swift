@@ -87,11 +87,16 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// A picture was taken apart by Separate into Layers. The canvas looks
         /// IDENTICAL the instant after — nothing moves, the words are simply on
         /// their own layers now — so without a word on screen the command reads
-        /// as having done nothing at all. `skipped` is how many runs were left
-        /// in the picture because the app could not read them confidently,
-        /// which is the other half of what just happened and the half nobody
-        /// would otherwise find out about.
-        case separatedIntoLayers(runs: Int, boxes: Int, skipped: Int)
+        /// as having done nothing at all.
+        ///
+        /// The two counts of what stayed behind are two different sentences and
+        /// must not be merged into one. `skipped` is what the app could not
+        /// read confidently and will never take, which is the half of the
+        /// command nobody would otherwise find out about. `crowded` is what it
+        /// read perfectly well and left because one command only takes so much
+        /// (`SeparateBudget`) — and the thing to do about those is run the
+        /// command again.
+        case separatedIntoLayers(runs: Int, boxes: Int, skipped: Int, crowded: Int = 0)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -184,7 +189,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .linksBroken(let report): return report.title
         case .toolColorStyle(let notice): return notice.title
         case .regionSliceRefused(let refusal): return refusal.title
-        case .separatedIntoLayers(let runs, let boxes, _):
+        case .separatedIntoLayers(let runs, let boxes, _, _):
             return runs + boxes == 0 ? "Nothing to separate" : "Separated"
         }
     }
@@ -237,7 +242,7 @@ public struct CopyConfirmation: Hashable, Sendable {
             // two ways out in one sentence is one too many to read, and the
             // button IS the way out.
             return refusal.detail(offeringItsOwnWayOut: action != nil)
-        case .separatedIntoLayers(let runs, let boxes, let skipped):
+        case .separatedIntoLayers(let runs, let boxes, let skipped, let crowded):
             var parts: [String] = []
             if runs > 0 { parts.append(runs == 1 ? "1 run of text" : "\(runs) runs of text") }
             if boxes > 0 { parts.append(boxes == 1 ? "1 box" : "\(boxes) boxes") }
@@ -245,16 +250,45 @@ public struct CopyConfirmation: Hashable, Sendable {
                 // Two different nothings, and saying the wrong one is a lie.
                 // Running the command twice finds nothing at all, because the
                 // first run took it; a photograph with a caption on it finds
-                // something and cannot read it.
-                guard skipped > 0 else { return "Nothing here reads as text or a box" }
-                let left = skipped == 1 ? "1 piece" : "\(skipped) pieces"
-                return "\(left) left in the picture, too unclear to read"
+                // something and cannot read it. Nothing came out here, so
+                // there is no point sending anybody round again: whatever was
+                // crowded out would be picked and refused the same way.
+                let left = skipped + crowded
+                guard left > 0, left <= Self.unreadableWorthNaming else {
+                    return "Nothing here reads as text or a box"
+                }
+                let pieces = left == 1 ? "1 piece" : "\(left) pieces"
+                return "\(pieces) left in the picture, too unclear to read"
             }
             let made = parts.joined(separator: " and ")
-            guard skipped > 0 else { return made }
-            return "\(made). \(skipped) left in the picture, too unclear to read"
+            // The count is EVERYTHING still in the picture, for both reasons,
+            // because that is the number a person can check by looking at it.
+            // What changes is what to do about it: a piece the limit crowded
+            // out comes out on the next run, and one it could not read never
+            // does.
+            guard skipped + crowded > 0 else { return made }
+            guard crowded > 0 else {
+                return "\(made). \(skipped) left in the picture, too unclear to read"
+            }
+            return "\(made). \(skipped + crowded) left in the picture, run it again for more"
         }
     }
+
+    /// How many unreadable pieces are worth counting out loud when NOTHING
+    /// came out of a picture.
+    ///
+    /// A photograph with a caption burnt into it offers one or two things a
+    /// person can see and did not get, and saying so is the whole point: they
+    /// are looking straight at the caption wondering why it is still there.
+    ///
+    /// A photograph of a mountain is a different picture entirely. Measured on
+    /// one: 437 pieces found in the grass and the rock face, none of them
+    /// readable, none of them anything a person would point at. "437 pieces
+    /// left in the picture" is a true sentence about texture and a useless one
+    /// about the photograph — it reads as the app having failed at something,
+    /// when what actually happened is that this is not a screenshot. Past a
+    /// handful, the plain answer is the honest one.
+    public static let unreadableWorthNaming = 5
 
     /// "1 measurement" / "N measurements".
     private static func measurementPhrase(_ count: Int) -> String {
