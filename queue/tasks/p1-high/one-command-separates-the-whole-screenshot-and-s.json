@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 9,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.603Z",
-  "updated": "2026-09-13T08:30:10.433Z",
+  "updated": "2026-09-13T09:27:34.852Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can",
     "separate-the-boxes-too-and-fill-the-hole-underne",
@@ -67,7 +67,12 @@
     {
       "t": "2026-09-13T09:27:20.424922Z",
       "note": "Left undone and filed: boxes are found on a flat light page and almost nowhere else (zero on three of five captures, including this app's own window), so a whole-window capture comes apart into words only. Filed as separate-finds-the-boxes-in-a-dark-window-too-no with the bench output in it."
+    },
+    {
+      "t": "2026-09-13T09:27:34.850Z",
+      "note": "One command now takes a whole screenshot apart: a 150-piece ceiling (SeparateBudget, biggest first, 4 levels deep) so a dense page stops being a wall of 400 rows, with everything left over counted and reachable by running it again; the pill says both halves in one sentence and tells a photograph it is a photograph. Two honesty bugs fixed that only measurement found (the sweep truncated silently; a photo announced 437 texture blobs). Verified: 6052 tests green, new separate-whole-screenshot walk (1 -> 143 -> 285 -> 1, nesting intact) plus the three existing separate walks, five real captures benched, audit at queue/audits/2026-09-13-separate-whole-screenshot.json. Filed the one real gap: boxes are found on a flat light page and almost nowhere else."
     }
   ],
-  "started": "2026-09-13T08:30:10.431Z"
+  "started": "2026-09-13T08:30:10.431Z",
+  "completed": "2026-09-13T09:27:34.851Z"
 }
