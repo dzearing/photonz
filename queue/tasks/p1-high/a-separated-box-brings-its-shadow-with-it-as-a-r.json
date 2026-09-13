@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T16:38:29.734Z",
-  "updated": "2026-09-13T05:24:50.061Z",
+  "updated": "2026-09-13T09:29:36.580Z",
   "deps": [
     "separate-a-screenshot-s-text-into-layers-you-can",
     "separate-the-boxes-too-and-fill-the-hole-underne"
@@ -44,6 +44,35 @@
     {
       "t": "2026-09-13T05:24:50.060Z",
       "note": "seq 44 -> 10"
+    },
+    {
+      "t": "2026-09-13T09:29:36.579Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-13T10:02:57.476496Z",
+      "note": "ADVERSARIAL REVIEW, before building. (1) The task frames the shadow as the stretch, but the shadow is not the prize: the CARDS are. On the fixture both cards were found and both refused, so what this actually unlocks is the biggest pieces of a screenshot becoming takeable at all. (2) A first-time user never asks for a shadow to be extracted; they drag a card and expect it to look the same, so the acceptance is invisibility - nothing may look different until you move something. (3) Shortest version that delivers the value: read only what the renderer can reproduce, one black shadow with one blur and one offset, and refuse everything else. That is less code AND a higher correctness bar, so it is what got built. (4) Cut as decorative: reading an arbitrary RGB shadow colour, which would have put '#000005 at 100%' in the inspector - a number nobody typed. Black plus an opacity is what a person would have set. (5) The gate has to be ONE model explaining all four edges at once, not four independent reads, or an underline four pixels below a card passes as a shadow with a big offset."
+    },
+    {
+      "t": "2026-09-13T10:02:57.476496Z",
+      "note": "Reading modelled rather than guessed: alpha(t) = opacity x Phi((o - t)/sigma) along the middle of each edge, four unknowns (opacity, sigma, dx, dy) fitted against all four edges together, coarse then fine, opacity in closed form. PhotonzCore/ShadowRead.swift, 14 tests written first (Tests/PhotonzCoreTests/ShadowReadTests.swift), half of them the things that must NOT read as a shadow."
+    },
+    {
+      "t": "2026-09-13T10:02:57.476496Z",
+      "note": "The fit had to move into LINEAR LIGHT. Read straight off the bytes the fixture's shadow measures 10% black; laid down again by the renderer that same 10% darkens the page by half as much, because CoreImage composites in linear. Caught by the round-trip test, which missed by 11 levels out of 255 before and 2 after."
+    },
+    {
+      "t": "2026-09-13T10:12:53.110887Z",
+      "note": "ADVERSARIAL REVIEW, on the built thing, in the app. The playtest walk found the one real UX miss: a card with labels on it comes out as a GROUP, one click picks the group, and the shadow was sitting on a child row called Picture inside it - so the Appearance list was empty for the card you were looking at. Moved the shadow onto the group. Verified in the probe: clicking the first card shows Shadow, black, Drop, Softness 2 px, Distance 2 px, Direction 90 degrees, Opacity 23 percent (queue/audits/2026-09-13-separate-shadow-picked.png)."
+    },
+    {
+      "t": "2026-09-13T10:12:53.110887Z",
+      "note": "Five walks run and green: separate-boxes, separate-hierarchy, separate-into-layers, separate-whole-screenshot, and a new separate-shadow walk. Their expectations and narratives all had to be rewritten: the capture now yields 13 pieces in 5 top-level rows rather than 11 in 9, the boxes renumbered (Box 1 and Box 2 are the cards, Box 3 and Box 4 the buttons), and the layers list got long enough that the walks had to scroll to reach the first card."
+    },
+    {
+      "t": "2026-09-13T10:12:53.110887Z",
+      "note": "Measured, release build: the settings pane went from 42 ms to 146 ms and the 12.2 megapixel tiled fixture from 292 ms to 905 ms, because the two 1312x264 cards are now actually cut and repaired instead of skipped. Design doc's timing table updated; the other two rows are marked as not re-measured."
     }
-  ]
+  ],
+  "started": "2026-09-13T09:29:36.578Z"
 }

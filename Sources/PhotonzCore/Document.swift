@@ -778,20 +778,29 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         /// rewritten against it when the group is built, so a caller never has
         /// to think in two coordinate spaces at once.
         public let children: [SeparatedPiece]
+        /// The shadow this piece was sitting on in the picture, read back off
+        /// the pixels so it comes off WITH the piece and the space it came from
+        /// is plain page again. Nil when the picture did not say clearly enough
+        /// what the shadow was, which leaves the piece flat rather than wearing
+        /// a guess (`ShadowRead`).
+        public let shadow: ShadowStyle?
 
         public init(frame: CGRect, content: Content, name: String,
-                    bodyName: String = "Picture", children: [SeparatedPiece] = []) {
+                    bodyName: String = "Picture", children: [SeparatedPiece] = [],
+                    shadow: ShadowStyle? = nil) {
             self.frame = frame
             self.content = content
             self.name = name
             self.bodyName = bodyName
             self.children = children
+            self.shadow = shadow
         }
 
         public init(frame: CGRect, ref: ImageRef, name: String,
-                    bodyName: String = "Picture", children: [SeparatedPiece] = []) {
+                    bodyName: String = "Picture", children: [SeparatedPiece] = [],
+                    shadow: ShadowStyle? = nil) {
             self.init(frame: frame, content: .picture(ref), name: name,
-                      bodyName: bodyName, children: children)
+                      bodyName: bodyName, children: children, shadow: shadow)
         }
 
         /// This piece and everything inside it.
@@ -825,10 +834,13 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     public mutating func separateIntoLayers(id: UUID, patched: ImageRef,
                                             pieces: [SeparatedPiece]) -> [UUID] {
         guard let source = layer(id: id), source.imageRef != nil else { return [] }
-        func body(_ piece: SeparatedPiece, named name: String) -> Layer {
+        func body(_ piece: SeparatedPiece, named name: String, shadowed: Bool) -> Layer {
+            var style = LayerStyle()
+            if shadowed, let shadow = piece.shadow { style.shadows = [shadow] }
             switch piece.content {
             case .picture(let ref):
-                return Layer(name: name, content: .image(ref), frame: piece.frame)
+                return Layer(name: name, content: .image(ref), frame: piece.frame,
+                             style: style)
             case .shape(let fill, let radii, let borderWidth, let borderColor):
                 var annotation = AnnotationContent(
                     shape: .rectangle, start: .zero,
@@ -841,12 +853,20 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                 // somebody turns one on: its own fill.
                 annotation.colorHex = (borderColor ?? fill).hexString
                 return Layer(name: name, content: .annotation(annotation),
-                             frame: piece.frame)
+                             frame: piece.frame, style: style)
             }
         }
         /// One piece as a layer, in the space its own frame was given in.
         func build(_ piece: SeparatedPiece) -> Layer {
-            guard !piece.children.isEmpty else { return body(piece, named: piece.name) }
+            // The shadow goes on the thing a person PICKS. A card with labels
+            // on it is a group, one click picks the group, and a shadow hidden
+            // on a child called Picture is a shadow nobody can find: the
+            // Appearance list would be empty for the card you are looking at.
+            // A group casts one shadow from everything inside it, which for a
+            // card and its own labels is the card's own outline.
+            guard !piece.children.isEmpty else {
+                return body(piece, named: piece.name, shadowed: true)
+            }
             // Everything inside a group is stored against the group's corner,
             // so one move carries the lot and nothing has to be kept in step.
             let origin = piece.frame.origin
@@ -855,11 +875,13 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                 moved.frame = layer.frame.offsetBy(dx: -origin.x, dy: -origin.y)
                 return moved
             }
-            let inside = [against(body(piece, named: piece.bodyName))]
+            let inside = [against(body(piece, named: piece.bodyName, shadowed: false))]
                 + piece.children.map { against(build($0)) }
-            return Layer(name: piece.name,
-                         content: .group(GroupContent(children: inside)),
-                         frame: CGRect(origin: origin, size: .zero))
+            var group = Layer(name: piece.name,
+                              content: .group(GroupContent(children: inside)),
+                              frame: CGRect(origin: origin, size: .zero))
+            if let shadow = piece.shadow { group.style.shadows = [shadow] }
+            return group
         }
         let made = pieces.map(build)
         withSiblings(of: id) { siblings, index in

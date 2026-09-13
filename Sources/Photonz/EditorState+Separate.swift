@@ -131,11 +131,25 @@ extension EditorState {
                 name = "\(Self.separatedBoxName) \(firstBox + boxes)"
                 boxes += 1
             }
+            // The shadow was read in image pixels too, so it is scaled the
+            // same way the rounding is: a picture shown at half size gets half
+            // the blur and half the throw, which is the only way a separated
+            // card keeps looking like the one in the screenshot.
+            let shadow = piece.shadow.map { shadow -> ShadowStyle in
+                var scaled = shadow
+                let scale = (sx + sy) / 2
+                scaled.radius = shadow.radius * scale
+                scaled.offset = CGSize(width: shadow.offset.width * sx,
+                                       height: shadow.offset.height * sy)
+                scaled.spread = shadow.spread * scale
+                return scaled
+            }
             switch piece.body {
             case .picture(let image):
                 bodyNames.append(Self.separatedPictureBodyName)
                 return PhotonzDocument.SeparatedPiece(frame: placed,
-                                                      ref: store.register(image), name: name)
+                                                      ref: store.register(image), name: name,
+                                                      shadow: shadow)
             case .shape(let shape):
                 bodyNames.append(Self.separatedShapeBodyName)
                 // The shape was read in image pixels; the layer lives in the
@@ -154,7 +168,7 @@ extension EditorState {
                                         bottomLeft: shape.radii.bottomLeft * scale),
                                     borderWidth: shape.borderWidth * scale,
                                     borderColor: shape.borderColor),
-                    name: name)
+                    name: name, shadow: shadow)
             }
         }
 
@@ -176,7 +190,7 @@ extension EditorState {
                 return PhotonzDocument.SeparatedPiece(
                     frame: piece.frame, content: piece.content, name: piece.name,
                     bodyName: bodyNames[node.index],
-                    children: node.children.map(assemble))
+                    children: node.children.map(assemble), shadow: piece.shadow)
             }
             pieces = result.nested.map(assemble)
         } else {

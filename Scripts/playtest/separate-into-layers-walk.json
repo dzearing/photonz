@@ -64,7 +64,7 @@
     {
       "do": "describe",
       "stage": "1-separated",
-      "note": "THE FIRST TEST: the nine runs of text in the capture are now nine layers over the picture, named Text 1 to Text 9 down the page, with the two buttons underneath them as Box 1 and Box 2 (separate-boxes-walk checks those), and the canvas looks identical because nothing has moved yet"
+      "note": "THE FIRST TEST: the nine runs of text in the capture are now nine layers over the picture, named Text 1 to Text 9 down the page, with the two cards and the two buttons underneath them as Box 1 to Box 4 (separate-boxes-walk checks those), and the canvas looks identical because nothing has moved yet"
     },
     {
       "do": "expect",
@@ -108,7 +108,7 @@
     {
       "do": "describe",
       "stage": "2-one-undo-puts-the-screenshot-back",
-      "note": "THE SECOND TEST: ONE press takes back the whole separation, all eleven layers and the repaired picture together, and leaves the screenshot exactly as it opened"
+      "note": "THE SECOND TEST: ONE press takes back the whole separation, all thirteen layers and the repaired picture together, and leaves the screenshot exactly as it opened"
     },
     {
       "do": "expect",
@@ -149,7 +149,7 @@
     {
       "do": "scrollPanel",
       "row": "Text 1",
-      "by": -400
+      "by": -80
     },
     {
       "do": "wait",

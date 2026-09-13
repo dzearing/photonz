@@ -258,13 +258,15 @@ struct SeparateIntoLayersFixtureTests {
             "\(Int($0.rect.width))x\(Int($0.rect.height)) at (\(Int($0.rect.minX)),"
                 + "\(Int($0.rect.minY))) \($0.image == nil ? "shape" : "picture")"
         }.joined(separator: ", "))
-        // The two buttons. The switches and the text fields are ON the cards,
-        // so they are part of them rather than rows of their own — one level,
-        // which is the rule — and the cards themselves are left in the picture
-        // because of their shadow (below).
-        #expect(boxes.count == 2)
+        // Both cards and both buttons. The switches and the text fields are ON
+        // the cards, so they are part of them rather than rows of their own —
+        // one level, which is the rule. The cards used to be left in the
+        // picture because of their shadow; they come out wearing it now.
+        #expect(boxes.count == 4)
         #expect(boxes.contains { $0.rect == CGRect(x: 233, y: 756, width: 248, height: 60) })
         #expect(boxes.contains { $0.rect == CGRect(x: 64, y: 756, width: 145, height: 60) })
+        #expect(boxes.contains { $0.rect == CGRect(x: 64, y: 148, width: 1312, height: 264) })
+        #expect(boxes.contains { $0.rect == CGRect(x: 64, y: 452, width: 1312, height: 264) })
     }
 
     // MARK: - Text inside a box comes out inside that box
@@ -283,19 +285,23 @@ struct SeparateIntoLayersFixtureTests {
         }
         print("TREE\n" + describe(tree, "").joined(separator: "\n"))
 
-        // Eleven pieces came out of this capture and nine of them are nobody's
-        // child: the heading and the six row labels, plus the two buttons. The
-        // two buttons' labels are inside their buttons.
-        #expect(tree.count == 9)
+        // Thirteen pieces came out of this capture and five of them are
+        // nobody's child: the heading, the two cards and the two buttons. Every
+        // other piece is a label sitting in one of them — three rows on each
+        // card, one on each button.
+        #expect(tree.count == 5)
         let holders = tree.filter { !$0.children.isEmpty }
-        #expect(holders.count == 2)
+        #expect(holders.count == 4)
         for holder in holders {
             #expect(result.pieces[holder.index].kind == .box)
-            #expect(holder.children.count == 1)
-            let label = result.pieces[holder.children[0].index]
-            #expect(label.kind == .text)
-            // The label really does sit in the button it was put in.
-            #expect(result.pieces[holder.index].rect.intersects(label.rect))
+            let box = result.pieces[holder.index].rect
+            #expect(holder.children.count == (box.width > 1000 ? 3 : 1))
+            for child in holder.children {
+                let label = result.pieces[child.index]
+                #expect(label.kind == .text)
+                // The label really does sit in the thing it was put in.
+                #expect(box.intersects(label.rect))
+            }
         }
         // The Save Changes label under the blue button, not beside it.
         let blue = try #require(tree.first { result.pieces[$0.index].rect.minX == 233 })
@@ -312,23 +318,122 @@ struct SeparateIntoLayersFixtureTests {
         #expect(Set(all).count == all.count)
     }
 
-    @Test func aCardWithAShadowUnderItIsLeftInThePicture() throws {
+    // MARK: - A card brings its shadow with it
+
+    @Test func aCardComesOutWearingTheShadowItHadInThePicture() throws {
         let result = try #require(Self.whole)
-        // Rule three, on the capture. Both cards are found — they are two of
-        // the four things sitting on this page — and both are put back, because
-        // what is around them is not one colour and not a straight ramp: it is
-        // a soft shadow, darkest against the card and gone six pixels out.
-        // Filling the space with any one colour would leave that shadow behind
-        // as a grey halo of a card that is no longer there.
-        #expect(!result.boxes.contains { $0.rect.width > 1000 })
-        #expect(result.skipped == 2)
+        // The cards used to be the one thing on this page the command could not
+        // take: what surrounds them is neither one colour nor a straight ramp,
+        // it is a soft shadow, and filling that space with any single colour
+        // would have left a grey halo of a card that is no longer there.
+        #expect(result.skipped == 0)
+        let cards = result.boxes.filter { $0.rect.width > 1000 }
+        #expect(cards.count == 2)
         let bytes = try #require(LayerSeparator.read(Self.capture!))
-        let profile = (411...418).map { y -> String in
-            "\(y):\(bytes[(y * 1440 + 700) * 4])"
+        let profile = (411...419).map { "\($0):\(bytes[($0 * 1440 + 700) * 4])" }
+        print("SHADOW under the first card, down the page at x=700, the grey runs "
+            + profile.joined(separator: " "))
+        for card in cards {
+            let shadow = try #require(card.shadow)
+            print("SHADOW \(Int(card.rect.width))x\(Int(card.rect.height)) at "
+                + "(\(Int(card.rect.minX)),\(Int(card.rect.minY))): \(shadow.colorHex) at "
+                + String(format: "%.1f%%", shadow.opacity * 100)
+                + ", blur \(shadow.radius) px, "
+                + "offset (\(shadow.offset.width), \(shadow.offset.height))")
+            #expect(shadow.colorHex == "#000000")
+            #expect(shadow.kind == .drop)
+            #expect(shadow.spread == 0)
+            // Straight down, not sideways, and soft rather than a hard edge.
+            #expect(abs(shadow.offset.width) <= 0.3)
+            #expect(shadow.offset.height >= 1 && shadow.offset.height <= 3)
+            #expect(shadow.radius >= 1.5 && shadow.radius <= 3)
+            // Around a fifth, which is what a system card's shadow is once it
+            // is written as the opacity a renderer would lay down in linear
+            // light rather than the darkening a PNG happens to store.
+            #expect(shadow.opacity > 0.15 && shadow.opacity < 0.3)
         }
-        print("SKIP the cards are left in the picture. Under the first one, down the "
-            + "page at x=700, the grey runs \(profile.joined(separator: " ")) — a shadow, "
-            + "not a page")
+        // Both cards on one page were drawn with one shadow, so both come back
+        // with the same one. Two cards wearing two different shadows would look
+        // wrong the moment they sat beside each other.
+        #expect(cards[0].shadow == cards[1].shadow)
+    }
+
+    @Test func theSpaceACardAndItsShadowCameFromIsPlainPage() throws {
+        let result = try #require(Self.whole)
+        let card = try #require(result.boxes.first { $0.rect.width > 1000 })
+        let bytes = try #require(LayerSeparator.read(result.background))
+        // The page's own colour, read from a corner nothing was ever near.
+        let page = (bytes[(8 * 1440 + 8) * 4], bytes[(8 * 1440 + 8) * 4 + 1],
+                    bytes[(8 * 1440 + 8) * 4 + 2])
+        var worst = 0
+        var seen: Set<String> = []
+        // The card's own box plus everything the shadow reached, which on this
+        // capture is about seven pixels on every side.
+        let grown = card.rect.insetBy(dx: -8, dy: -8)
+        for y in Int(grown.minY)..<Int(grown.maxY) {
+            for x in Int(grown.minX)..<Int(grown.maxX) {
+                let i = (y * 1440 + x) * 4
+                seen.insert("\(bytes[i]),\(bytes[i + 1]),\(bytes[i + 2])")
+                worst = max(worst, max(abs(Int(bytes[i]) - Int(page.0)),
+                                       max(abs(Int(bytes[i + 1]) - Int(page.1)),
+                                           abs(Int(bytes[i + 2]) - Int(page.2)))))
+            }
+        }
+        print("PATCH the card's space plus its shadow, \(Int(grown.width))x"
+            + "\(Int(grown.height)), reads \(seen.count) distinct colour(s); worst channel "
+            + "difference from the page elsewhere: \(worst)/255")
+        // Exact: not a trace of the shadow is left where the card used to be.
+        #expect(seen.count == 1)
+        #expect(worst == 0)
+    }
+
+    @Test func aBoxWithARuleUnderItComesOutWithNoShadowRatherThanAWrongOne() throws {
+        // The case the whole reading is built to refuse. A dark rule six pixels
+        // under a card is exactly what a one-sided falloff test would call a
+        // shadow with a big offset, and a card wearing a shadow it never had
+        // looks broken in a way a card with no shadow does not. So the box
+        // still comes out — nothing about the repair changed — and it comes out
+        // flat.
+        let w = 640, h = 440
+        var bytes = [UInt8](repeating: 0, count: w * h * 4)
+        for i in stride(from: 0, to: bytes.count, by: 4) {
+            bytes[i] = 242; bytes[i + 1] = 242; bytes[i + 2] = 247; bytes[i + 3] = 255
+        }
+        func paint(_ rect: CGRect, _ radius: Double, _ rgb: (Double, Double, Double)) {
+            let r = min(radius, min(Double(rect.width), Double(rect.height)) / 2)
+            for y in Int(rect.minY - 2)..<Int(rect.maxY + 2) {
+                for x in Int(rect.minX - 2)..<Int(rect.maxX + 2) {
+                    guard x >= 0, y >= 0, x < w, y < h else { continue }
+                    let hx = Double(rect.width) / 2 - r, hy = Double(rect.height) / 2 - r
+                    let ax = abs(Double(x) + 0.5 - Double(rect.midX)) - hx
+                    let ay = abs(Double(y) + 0.5 - Double(rect.midY)) - hy
+                    let d = sqrt(max(ax, 0) * max(ax, 0) + max(ay, 0) * max(ay, 0))
+                        + min(max(ax, ay), 0) - r
+                    let cover = min(max(0.5 - d, 0), 1)
+                    guard cover > 0 else { continue }
+                    let i = (y * w + x) * 4
+                    for (k, value) in [rgb.0, rgb.1, rgb.2].enumerated() {
+                        bytes[i + k] = UInt8(value * cover + Double(bytes[i + k]) * (1 - cover))
+                    }
+                }
+            }
+        }
+        paint(CGRect(x: 120, y: 310, width: 400, height: 2), 0, (170, 170, 175))
+        paint(CGRect(x: 120, y: 100, width: 400, height: 200), 16, (10, 132, 255))
+        let image = try #require(LayerSeparator.makeImage(bytes, width: w, height: h))
+        let luma = EdgeMapAnalyzer.analyzeFully(image).luma
+        let result = try #require(LayerSeparator.separate(image, luma: luma))
+        let box = try #require(result.boxes.first)
+        print("RULE a card with a dark rule six pixels under it came out "
+            + "\(Int(box.rect.width))x\(Int(box.rect.height)) with "
+            + "\(box.shadow == nil ? "no shadow" : "a shadow"), which is the right answer")
+        #expect(result.boxes.count == 1)
+        #expect(box.rect == CGRect(x: 120, y: 100, width: 400, height: 200))
+        #expect(box.shadow == nil)
+        // And the rule is still in the picture, untouched, since a 2 px strip is
+        // nothing a person would point at.
+        let after = try #require(LayerSeparator.read(result.background))
+        #expect(after[(311 * w + 300) * 4] == 170)
     }
 
     @Test func aFlatButtonComesOutAsARealShapeWithItsOwnRounding() throws {

@@ -185,7 +185,7 @@
     {
       "do": "describe",
       "stage": "5-and-it-is-still-a-tree",
-      "note": "THE FIFTH TEST: the limit flattened nothing. On a capture with buttons in it the pieces still arrive arranged the way the screen was - Box 1 and Box 2 are the two buttons, and each one opens onto the words that were sitting on it and the button itself"
+      "note": "THE FIFTH TEST: the limit flattened nothing. On a capture with cards and buttons in it the pieces still arrive arranged the way the screen was - each box opens onto the words that were sitting on it and the box itself, listed as Picture when it came out as pixels and Fill when it came out as a real rectangle"
     },
     {
       "do": "expectLayers",
@@ -208,12 +208,7 @@
     },
     {
       "do": "expect",
-      "row": "Box 2",
-      "present": true
-    },
-    {
-      "do": "expect",
-      "row": "Fill",
+      "row": "Picture",
       "present": true
     },
     {

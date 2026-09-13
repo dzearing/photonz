@@ -1,0 +1,198 @@
+{
+  "out": "/tmp/photonz-playtest/separate-shadow",
+  "seed": "A separated card brings its SHADOW with it. The walk opens a settings pane capture, runs Separate into Layers, picks the first card, checks the Appearance list is showing it a real shadow read off the picture, drags the card clear of where it was, and looks for two things: the shadow moved WITH the card, and the space it came from is plain page with no grey halo of a card that is no longer there.",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-before",
+      "note": "the capture as it opens: one locked Background picture. The two white cards down the page each sit on a soft shadow, darkest right against the card and gone about seven pixels out. That shadow is what this walk is about"
+    },
+    {
+      "do": "snapshot",
+      "name": "shadow-1-before"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "action",
+      "action": "separateIntoLayers"
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-cards-came-out",
+      "note": "THE FIRST TEST: the pill counts four boxes. Before this the two cards were the one thing on the page the command could not take, because the soft shadow around them is neither one colour nor a straight ramp and filling that space would have left a grey halo behind"
+    },
+    {
+      "do": "snapshot",
+      "name": "shadow-2-pill"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "row": "Box 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Box 4",
+      "present": true
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Text 1",
+      "by": -400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "row": "Box 1",
+      "present": true
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        260
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-the-shadow-is-a-shadow",
+      "note": "THE SECOND TEST: one click on the first card picks the whole card, and the Appearance list is showing it a real Shadow with numbers read off the picture itself, black at about 23 percent with a 2 pixel blur thrown 2 pixels down the page. It can be switched off, recoloured or softened like any shadow you added yourself. The shadow is on the card you picked, not hidden on a row inside it"
+    },
+    {
+      "do": "snapshot",
+      "name": "shadow-3-appearance"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        260
+      ],
+      "to": [
+        790,
+        340
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-it-travels",
+      "note": "THE THIRD TEST, and the one this walk turns on: the card has been dragged down and to the right, and its shadow went with it, still darkest against the card and still thrown the same way. Where the card used to be there must be plain page, the same grey as everything around it, with no dark smudge where the old shadow was"
+    },
+    {
+      "do": "snapshot",
+      "name": "shadow-4-dragged"
+    },
+    {
+      "do": "render",
+      "name": "shadow-4-dragged-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-undone",
+      "note": "THE FOURTH TEST: one press takes back the drag and one more takes back the whole separation, the shadows with it, leaving the screenshot exactly as it opened"
+    },
+    {
+      "do": "expect",
+      "row": "Box 1",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "row": "Background",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "shadow-5-undone"
+    },
+    {
+      "do": "render",
+      "name": "shadow-5-undone-doc"
+    }
+  ],
+  "setup": {
+    "forget": [
+      "groups"
+    ]
+  }
+}

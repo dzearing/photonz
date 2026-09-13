@@ -1,0 +1,46 @@
+{
+  "feature": "Separate into Layers: a card brings its shadow with it",
+  "epic": "ui-building",
+  "summary": "A card in a screenshot used to be the one thing Separate into Layers could not take, because the soft shadow around it is neither one colour nor a straight ramp. The shadow is now read off the picture as a real shadow effect on the card's own layer, so the card comes out, moving it moves its shadow, and the space it came from is plain page.",
+  "setup": "Photonz Dev, release Next. Separate into Layers is on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, or any screenshot with a card in it.",
+  "try": [
+    {
+      "do": "Open a screenshot with a card or a panel in it."
+    },
+    {
+      "do": "Right click the Background row in the layers list and choose Separate into Layers."
+    },
+    {
+      "do": "Read the pill: it counts boxes, and the cards are now among them."
+    },
+    {
+      "do": "Pick the top card in the layers list and look at Appearance: it has a Shadow it was never given.",
+      "shot": "2026-09-13-separate-shadow-picked.png"
+    },
+    {
+      "do": "Drag the card away with the select tool."
+    },
+    {
+      "do": "Look at the shadow travelling with it, and at the page where the card used to be.",
+      "shot": "2026-09-13-separate-shadow-dragged.png"
+    },
+    {
+      "do": "Press Command Z twice: the drag, then the whole separation."
+    }
+  ],
+  "evaluate": [
+    "Does the card look the same the instant after separating as it did before, or can you see the moment the real shadow replaced the painted one?",
+    "When you drag the card, does its shadow read as the same shadow it had, or does it look lighter, heavier or thrown a different way?",
+    "Where the card used to be, is the page clean, or can you find the ghost of the old shadow?",
+    "Is a shadow the app could not read confidently better left out, or would you rather have an approximate one you can then edit?",
+    "The numbers land in the Appearance list as a blur and an offset in points. Are those the numbers you would want to redline from?"
+  ],
+  "rough": [
+    "The reading only claims what the renderer can lay back down: one black shadow with one blur and one offset. A shadow with spread, or one with a colour in it, is refused and the box stays in the picture rather than coming out wearing an approximation. That is the bar the task set, but it does mean some cards still will not come out.",
+    "A card within about seven pixels of the edge of the screenshot cannot be read: most of its shadow was never in the picture. It stays in the picture, and nothing on screen says why.",
+    "A card whose shadow reaches a control sitting close under it is refused too, because repairing the space would paint over that control. On a tight layout this is the case that will bite.",
+    "The shadow goes on the CARD a person picks rather than on the picture inside it, which is why the Appearance list has something in it the moment you click the card. That was not the first build: the shadow sat on a row called Picture inside the group, where nobody would find it, and the playtest walk is what showed it up.",
+    "Taking the whole settings pane apart went from 42 ms to 146 ms in a release build, because the two cards are now actually cut out and repaired rather than skipped. Still well under the tenth of a second where a spinner would be worth having.",
+    "The numbers land in the Appearance list as Softness, Distance and Direction, which is the app's own vocabulary rather than blur and offset. Black at 23 percent, 2 px soft, 2 px down reads sensibly, but nobody has checked it against what the screenshot's own designer would have typed."
+  ]
+}

@@ -48,21 +48,11 @@
     {
       "do": "describe",
       "stage": "1-the-list-reads-like-the-screen",
-      "note": "THE FIRST TEST: the layers list is a tree and not a pile. Box 1 and Box 2 are the two buttons and each one OPENS: inside is the button itself and the words that were sitting on it. The heading and the six row labels belong to nothing, so they stayed at the top level rather than being pushed into a group that does not fit them"
-    },
-    {
-      "do": "scrollPanel",
-      "row": "Text 1",
-      "by": -400
+      "note": "THE FIRST TEST: the layers list is a tree and not a pile. Box 3 and Box 4 are the two buttons and each one OPENS: inside is the button itself and the words that were sitting on it. The heading and the six row labels belong to nothing, so they stayed at the top level rather than being pushed into a group that does not fit them"
     },
     {
       "do": "wait",
       "seconds": 0.5
-    },
-    {
-      "do": "expect",
-      "row": "Box 1",
-      "present": true
     },
     {
       "do": "expect",
@@ -80,6 +70,29 @@
       "present": true
     },
     {
+      "do": "scrollPanel",
+      "row": "Text 1",
+      "by": -400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "row": "Box 1",
+      "present": true
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Box 1",
+      "by": 400
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
       "do": "snapshot",
       "name": "hierarchy-2-layers"
     },
@@ -91,7 +104,7 @@
     {
       "do": "describe",
       "stage": "1b-inside-the-box",
-      "note": "The same list scrolled to the two buttons: Box 1 and Box 2 each open onto the button itself and the words that were sitting on it, indented under it. Everything that belongs to nothing is a row of its own above them"
+      "note": "The same list scrolled to the two buttons: Box 3 and Box 4 each open onto the button itself and the words that were sitting on it, indented under it. Box 1 and Box 2 above them are the two cards, each holding their three row labels. Everything that belongs to nothing is a row of its own"
     },
     {
       "do": "wait",

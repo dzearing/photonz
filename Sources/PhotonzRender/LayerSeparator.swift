@@ -38,6 +38,19 @@ public enum LayerSeparator {
         public let rect: CGRect
         public let kind: Kind
         public let body: Body
+        /// The shadow this piece was sitting on in the picture, read back as a
+        /// real shadow so it moves with the piece — and so the space it came
+        /// from is plain page again. Nil whenever the picture did not say
+        /// clearly enough what the shadow was, which leaves the piece flat
+        /// rather than wearing a guess (`ShadowRead`).
+        public let shadow: ShadowStyle?
+
+        public init(rect: CGRect, kind: Kind, body: Body, shadow: ShadowStyle? = nil) {
+            self.rect = rect
+            self.kind = kind
+            self.body = body
+            self.shadow = shadow
+        }
 
         /// The bitmap, when it is one.
         public var image: CGImage? {
@@ -203,25 +216,42 @@ public enum LayerSeparator {
             crowded += takeable.crowdedOut
             var boxFills: [(rect: CGRect, fill: PatchFill)] = []
             for box in takeable.kept.map({ found.boxes[$0] }) {
-                let grown = box.rect.insetBy(dx: -1, dy: -1).integral.intersection(bounds)
+                // A card usually sits on a soft shadow, and a shadow is the one
+                // thing around a box that neither agrees with itself nor ramps
+                // evenly — so without reading it, every shadowed card in every
+                // screenshot stays in the picture. Read as a real shadow it
+                // comes off WITH the card, and the space underneath is plain
+                // page again rather than a grey halo of a card that has moved.
+                let shadow = ShadowRead.read(box.rect, in: field,
+                                             isBackdrop: { found.isBackdrop($0, $1) })
+                let out = shadow.map { max(1, Int($0.reach.rounded(.up))) } ?? 1
+                let grown = box.rect.insetBy(dx: CGFloat(-out), dy: CGFloat(-out))
+                    .integral.intersection(bounds)
                 guard !grown.isNull,
                       !patched.contains(where: { $0.intersects(grown) && !grown.contains($0) }),
-                      !boxFills.contains(where: { $0.rect.intersects(grown) })
+                      !boxFills.contains(where: { $0.rect.intersects(grown) }),
+                      shadow == nil || onlyBackdrop(grown, outside: box.rect, in: found)
                 else { skipped += 1; continue }
                 guard let ring = ring(around: grown, in: pixels, width: w, height: h,
                                       keeping: { found.isBackdrop($0, $1) }),
                       let fill = PatchDecision.decide(ring) else { skipped += 1; continue }
+                // What was under the box's own antialiased rim. With a shadow
+                // that is the page ALREADY DARKENED by the shadow, not the bare
+                // page: read against the bare page a card's edge comes out too
+                // faint and dissolves into whatever it is dragged onto.
+                let under = background(fill, over: grown, shadow: shadow, box: box.rect)
                 let body: Piece.Body
                 if let shape = box.shape {
                     body = .shape(shape)
                 } else if let cut = cutBox(box, from: pixels, width: w, height: h,
-                                           islands: found, over: fill) {
+                                           islands: found, under: under) {
                     body = .picture(cut)
                 } else {
                     skipped += 1
                     continue
                 }
-                boxPieces.append(Piece(rect: box.rect, kind: .box, body: body))
+                boxPieces.append(Piece(rect: box.rect, kind: .box, body: body,
+                                       shadow: shadow?.style))
                 boxFills.append((grown, fill))
             }
             for (rect, fill) in boxFills {
@@ -351,7 +381,7 @@ public enum LayerSeparator {
     /// against the paint right beside it, so a card that is barely lighter than
     /// its page keeps its edge instead of dissolving into it.
     static func cutBox(_ box: BoxSweep.Box, from pixels: [UInt8], width w: Int, height h: Int,
-                       islands: BoxSweep.Sweep, over fill: PatchFill) -> CGImage? {
+                       islands: BoxSweep.Sweep, under: (Int, Int) -> RGBA) -> CGImage? {
         let x0 = Int(box.rect.minX), y0 = Int(box.rect.minY)
         let bw = Int(box.rect.width), bh = Int(box.rect.height)
         guard bw > 0, bh > 0 else { return nil }
@@ -367,8 +397,7 @@ public enum LayerSeparator {
             for x in 0..<bw where mine(x, y) {
                 let index = y * bw + x
                 let pixel = color(pixels, w, x0 + x, y0 + y)
-                let under = fill.color(u: (Double(x) + 0.5) / Double(bw),
-                                       v: (Double(y) + 0.5) / Double(bh))
+                let under = under(x0 + x, y0 + y)
                 var alpha = 1.0
                 if rim(x, y) {
                     // The paint beside it, which is what a fully covered pixel
@@ -390,6 +419,39 @@ public enum LayerSeparator {
         }
         guard drawn > 0 else { return nil }
         return makeImage(out, width: bw, height: bh)
+    }
+
+    // MARK: - What was behind a box
+
+    /// Whether everything the repair will paint over, outside the box itself,
+    /// is background.
+    ///
+    /// Asked only of a box with a shadow, because that is the one whose repair
+    /// reaches: a shadow's reach can be seventeen pixels, and painting that
+    /// over a control sitting eight pixels below the card would erase it. A box
+    /// whose repair would reach anything that is not page is left in the
+    /// picture instead.
+    static func onlyBackdrop(_ grown: CGRect, outside box: CGRect,
+                             in found: BoxSweep.Sweep) -> Bool {
+        for y in Int(grown.minY)..<Int(grown.maxY) {
+            for x in Int(grown.minX)..<Int(grown.maxX) {
+                guard !box.contains(CGPoint(x: Double(x) + 0.5, y: Double(y) + 0.5)) else { continue }
+                guard found.isBackdrop(x, y) else { return false }
+            }
+        }
+        return true
+    }
+
+    /// What the picture looked like under a box, pixel by pixel, in IMAGE
+    /// coordinates: the fill that is about to be painted into the space, plus
+    /// whatever the box's own shadow was darkening.
+    static func background(_ fill: PatchFill, over grown: CGRect,
+                           shadow: ShadowRead.Reading?, box: CGRect) -> (Int, Int) -> RGBA {
+        if let shadow { return { x, y in shadow.background(at: x, y: y, of: box) } }
+        return { x, y in
+            fill.color(u: (Double(x) + 0.5 - Double(grown.minX)) / Double(grown.width),
+                       v: (Double(y) + 0.5 - Double(grown.minY)) / Double(grown.height))
+        }
     }
 
     // MARK: - Reading and writing one pixel

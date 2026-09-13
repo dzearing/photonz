@@ -349,10 +349,21 @@ to end, reading the picture plus separating it:
 
 | capture | reading | separating |
 | --- | --- | --- |
-| 1.4 MP settings pane | 37 ms | 42 ms |
-| 5.1 MP web dashboard | 73 ms | 73 ms |
-| 7.7 MP whole screen at 2x | 138 ms | 98 ms |
-| 12.2 MP tiled fixture | 108 ms | 292 ms |
+| 1.4 MP settings pane | 37 ms | 146 ms |
+| 5.1 MP web dashboard | 73 ms | 73 ms † |
+| 7.7 MP whole screen at 2x | 138 ms | 98 ms † |
+| 12.2 MP tiled fixture | 110 ms | 905 ms |
+
+† measured before the shadow slice and not re-measured since; both will have
+gone up in the same way the other two rows did.
+
+The two rows that were re-measured went up because the CARDS now come out. Most
+of that is work the command could not do before: cutting two 1312 x 264 cards to
+their own outlines, and painting a repair over their space and their shadows.
+The shadow reading itself is bounded by design — each edge is read at most 256
+pixels along and 48 out, and the search for the four numbers is separable, so
+one whole card costs about forty milliseconds in a DEBUG build and the search is
+eighteen times cheaper than the obvious three-deep grid it started as.
 
 Single cold passes, except the last row, which is the faster of two. No real
 capture on the machine this was measured on reaches 12 megapixels: the
@@ -503,12 +514,107 @@ a nesting pass can be added without reopening any of it:
   happens and how undo sees it did not change, and the whole tree is still one
   press of Command Z.
 
-Shadows are not modelled at all yet, and on the fixture that is exactly what
-stops the two cards coming out. Both are found — they are two of the four things
-sitting on that page — and both are put back, because what is around them is not
-one colour and not a straight ramp: it is a soft shadow, darkest against the card
-(223 out of 255 against a 242 page) and gone six pixels out. Filling that space
-with any one colour would leave the shadow behind as a grey halo of a card that
-is no longer there, so rule three applies and the card stays in the picture. The
-shadow slice is what changes that: a shadow read as a shadow comes off WITH its
-box, as a real shadow effect, and then the space under it is plain page again.
+## A box brings its shadow with it
+
+`PhotonzCore/ShadowRead.swift`.
+
+A card sits on a soft shadow, and a shadow is the one thing around a box that
+neither agrees with itself nor ramps evenly. Before this, that alone stopped
+every shadowed card in every screenshot from coming out: on the fixture both
+cards were found and both were put back, because what surrounds them is darkest
+against the card (223 out of 255 against a 242 page) and gone six pixels out,
+and filling that space with any one colour would have left a grey halo of a card
+that is no longer there.
+
+Read as a shadow, it comes off WITH the card as a real shadow effect, the space
+underneath is plain page again, and moving the card moves its shadow.
+
+### The model
+
+A drop shadow is the box's own silhouette, blurred by a gaussian, moved by an
+offset, painted in one colour at one opacity. Along the middle of a straight
+edge, well away from the corners, the blur of a half plane is exactly the
+gaussian's own integral, so how dark the picture is `t` pixels out from that
+edge is
+
+    alpha(t) = opacity · Phi((o - t) / sigma)
+
+where `o` is how far the shadow reaches past that edge: `-dx` on the left, `+dx`
+on the right, `-dy` on the top, `+dy` on the bottom. Four unknowns — opacity,
+sigma, dx, dy — fitted against ALL FOUR edges at once with the same opacity and
+the same sigma, coarse then fine, with the opacity falling out in closed form
+because the model is linear in it.
+
+Fitting all four edges together is what makes the answer checkable rather than
+plausible. A real shadow explains four edges with one set of numbers. Almost
+nothing else does.
+
+### In linear light, which is not a detail
+
+The fit is done on the light the pixels stand for, not on the bytes they are
+stored as, because that is where the renderer lays a shadow down. Read straight
+off the bytes, the fixture's card shadow measures ten percent black; laid back
+down by the renderer, ten percent darkens that page by half as much as the
+screenshot did. The numbers looked reasonable in the inspector and the card came
+out visibly flat. Every tolerance here is still written in levels out of 255,
+which is the unit a screenshot is stored in and the unit an error is visible in,
+and each reading carries its own conversion between the two.
+
+### What is refused, and why that is most of it
+
+A wrong shadow makes a separated card look broken in a way a missing one does
+not, so the reading hands back nil on any of:
+
+- **An edge that disagrees with itself.** A shadow is the same all the way along
+  a straight edge. A reflection, a page that shades sideways and a neighbour's
+  own shadow are not.
+- **A page that never comes back.** Each edge is read outward until the picture
+  starts getting DARKER again — a shadow only ever fades, so anything that
+  darkens further out is the next thing along — and the page has to have
+  returned by the end of what is left. This is also what lets two stacked cards
+  each keep their own shadow instead of finding the neighbour's darkness in
+  their own tail.
+- **Four edges that disagree about the page colour.** A page shading dark to
+  light fails here.
+- **Anything under three levels at its darkest**, which is rounding noise.
+- **A falloff that is not a gaussian's.** Every reading on every edge has to sit
+  within one and a half levels of the one fitted shadow. A soft darkening that
+  falls off in a straight line misses by seven.
+- **A glow, or a coloured cast.** Only darkening straight towards black is read.
+- **A box too near the frame**, or one whose repair would paint over something
+  that is not page. A shadow's reach can be seventeen pixels and painting that
+  over a control sitting eight pixels below the card would erase it.
+
+Deliberately NOT read: **spread** (a silhouette grown or shrunk before blurring,
+which this model cannot tell apart from an offset — real UI shadows almost never
+carry one) and **a tinted shadow** (the colour comes back as black at some
+opacity). Both come back nil and the box stays in the picture.
+
+### The repair
+
+The space painted over is the box grown by the shadow's REACH: the distance at
+which the fitted shadow stops darkening the page by even a third of a level. On
+the fixture that is seven pixels, and what is left behind is one flat colour,
+byte for byte, with no trace of the shadow.
+
+The box's own antialiased rim is unmixed against the page ALREADY DARKENED by
+the shadow rather than against the bare page. Read against the bare page a
+card's edge comes out too faint and dissolves into whatever it is dragged onto.
+
+### What it measures on the fixture
+
+Both cards: `#000000` at 22.6%, blur 2.05 px, offset (0, 2) — the same shadow
+for both, which is what the page was drawn with. Rebuilt through the app's own
+renderer and compared against the screenshot it came from, the shadow bands
+differ by at most 2 levels out of 255 and 0.03 on average
+(`SeparatedShadowRoundTripTests`). That round trip is the only check that can
+say the numbers are right rather than plausible, and it is also what pins their
+meaning: `radius` is a gaussian sigma in image pixels, and a positive `offset`
+height throws the shadow down the page.
+
+### What it does to the fixture's tree
+
+The two cards are now the biggest things that come out, so the capture goes from
+eleven pieces in nine top-level rows to thirteen pieces in five: the heading,
+the two cards each holding their three row labels, and the two buttons each
+holding theirs.
