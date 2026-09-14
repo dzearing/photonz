@@ -2056,6 +2056,19 @@ struct PlaytestScriptTests {
         #expect(condition == .sectionInView("Rectangle") && timeout == 3)
     }
 
+    @Test func waitForReadsALayerRowByItsName() {
+        // The claim "picking that shape put its row in front of you" is a step
+        // the walk fails on too, in a list that shows five rows out of forty.
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "layerRowInView", "value": "Rectangle 12", "timeout": 3 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, let timeout) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .layerRowInView("Rectangle 12") && timeout == 3)
+    }
+
     @Test func waitForRejectsASectionWithNoName() {
         let json = """
         { "out": "/tmp/x", "steps": [ { "do": "waitFor", "condition": "sectionInView" } ] }

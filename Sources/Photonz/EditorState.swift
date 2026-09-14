@@ -572,7 +572,12 @@ final class EditorState {
     /// don't silently drop it from the selection.
     var multiSelectedLayerIDs: Set<UUID> = [] {
         didSet {
-            for id in multiSelectedLayerIDs where !oldValue.contains(id) { revealInLayersList(id) }
+            // Whatever the selection just gained, asked for in one go: a
+            // band that catches ten layers is one "show me these", and the
+            // list answers by moving as little as it can, which is usually not
+            // at all because one of them is already under your eyes.
+            let gained = multiSelectedLayerIDs.subtracting(oldValue)
+            if !gained.isEmpty { revealInLayersList(gained) }
             if !multiSelectedLayerIDs.isEmpty, selectedLibraryItemID != nil { selectedLibraryItemID = nil }
             // A half-typed style name belongs to the layers that were picked
             // when the field opened, and those are not the layers any more
@@ -1044,6 +1049,27 @@ final class EditorState {
     /// document that is arriving, so setting them up cannot overwrite the
     /// record of the file that is leaving.
     @ObservationIgnored var isRestoringOpenGroups = false
+
+    /// The rows the layers list has been asked to bring into view, and the tick
+    /// that says it is a FRESH ask.
+    ///
+    /// Picking something on the canvas and finding its row off the bottom of a
+    /// long list is the list and the canvas saying two different things, so
+    /// every path that moves the selection ends up here
+    /// (`revealInLayersList`). The tick matters because the same layer can be
+    /// asked for twice — pick it, scroll away by hand, pick something else,
+    /// pick it again — and the second ask has to read as an ask rather than as
+    /// an unchanged value.
+    ///
+    /// What the list does about it is the list's own business: a row already on
+    /// screen never moves it (`LayerListMetrics.revealOffset`).
+    var layersListReveal: LayersListReveal?
+
+    /// One "show me these rows", and which ask it is.
+    struct LayersListReveal: Equatable {
+        var ids: Set<UUID>
+        var tick: Int
+    }
 
     /// The mark the right hand panel wears while something is held over it —
     /// who armed it, and the deadline that clears it when the drag ends without

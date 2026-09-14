@@ -117,16 +117,31 @@ extension EditorState {
         if expandedGroupIDs.contains(id) { expandedGroupIDs.remove(id) } else { expandedGroupIDs.insert(id) }
     }
 
-    /// Opens every group above a layer, so its row is on screen. Called
-    /// whenever the selection changes, which is what keeps the canvas and the
-    /// list saying the same thing.
+    /// Opens every group above a layer and asks the list to bring its row into
+    /// view. Called whenever the selection changes, which is what keeps the
+    /// canvas and the list saying the same thing.
     func revealInLayersList(_ id: UUID) {
-        guard let document else { return }
-        let ancestors = document.ancestorIDs(of: id)
+        revealInLayersList([id])
+    }
+
+    /// The same for a selection that arrived all at once — a band drawn round
+    /// several layers, Select All, an undo putting a selection back. The list
+    /// is asked for all of them together rather than once per layer, because
+    /// "bring one of these into view" has an answer and "bring this one, then
+    /// this one, then this one" does not.
+    func revealInLayersList(_ ids: Set<UUID>) {
+        guard let document, !ids.isEmpty else { return }
+        let ancestors = ids.reduce(into: Set<UUID>()) { $0.formUnion(document.ancestorIDs(of: $1)) }
         // Only a group that is not open yet is worth a write: the layers list
         // animates on this set, so an unchanged write is a re-layout for nothing.
-        guard ancestors.contains(where: { !expandedGroupIDs.contains($0) }) else { return }
-        expandedGroupIDs.formUnion(ancestors)
+        if ancestors.contains(where: { !expandedGroupIDs.contains($0) }) {
+            expandedGroupIDs.formUnion(ancestors)
+        }
+        // ...and the scroll, which is the part that is flagged. Opening the
+        // groups above a picked layer is what the list has always done in both
+        // releases; following it down a long list is the new half.
+        guard Experiments.shared.layersFollowPick else { return }
+        layersListReveal = LayersListReveal(ids: ids, tick: (layersListReveal?.tick ?? 0) &+ 1)
     }
 
     /// Whether a drag carrying `ids` can land here — what decides between a

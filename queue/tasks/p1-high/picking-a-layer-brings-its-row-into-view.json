@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T02:56:13.149Z",
-  "updated": "2026-09-14T03:35:25.617Z",
+  "updated": "2026-09-14T03:56:25.066424Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-13: \"when a single layer is clicked on, the layers list doesn't scroll to the selected layer\".\n\nConfirmed by reading: there is no scroll-to-row machinery in the layers list at all. Sources/Photonz/LayersListView.swift:279 is the ScrollView and :404 the LazyVStack of rows, and a grep for scrollTo, ScrollViewReader, scrollPosition or anything like them across that file finds nothing. So this is missing rather than broken.\n\nThe trap: the list is deliberately lazy. The comment at LayersListView.swift:366 says \"LazyVStack builds a row the first time it comes into view\", and :198 and :257 carry logic about which rows are built and a reserved row count, added by the shipped task 'the-layers-list-only-builds-the-rows-you-can-see'. Scrolling to a row that has never been built is exactly the case that quietly does nothing, and it is also the case this report is about, because the row the user could not see is by definition off screen. Test with a list long enough that the target has never been realised, not with a list of six.\n\nDo not let this fight the work already queued about the panel moving itself. The pending task 'picking-a-text-layer-leaves-its-settings-below-t' (p2, seq 10) is about the PROPERTIES panel scrolling to a picked thing's settings, and it is waiting on a user decision about whether picking something should move the panel at all. That is a different surface from the layers list, but it is the same question asked twice, and one of its acceptance items already says \"Clicking a row in the layers list does not scroll that list off the top of the panel\". Read that task and its decision card first; if the user answers that picking should never move anything, this task has to be revisited rather than built as written. Say in the log which way it went.\n\nThe \"already visible does nothing\" item is the one that decides whether this feels good or annoying. A list that re-scrolls on every pick, including picks of rows you can already see, is worse than one that never scrolls.",
@@ -36,6 +36,34 @@
     {
       "t": "2026-09-14T03:35:25.616Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T03:56:25.066424Z",
+      "note": "READ THE OTHER TASK FIRST, as the notes asked. The decision on 'picking-a-text-layer-leaves-its-settings-below-t' resolved on 2026-09-13 as \"What you picked sits at the top\" \u2014 the user chose REORDERING the properties panel over SCROLLING it. That is a decision about the panel's sections, not about the layers list: a list cannot reorder its rows to put the picked one first, and the user filed this task the same day, after answering that card. So it was built as written. The one thing carried across from that answer is the taste it shows: it does not move if it does not have to."
+    },
+    {
+      "t": "2026-09-14T03:56:25.066424Z",
+      "note": "ADVERSARIAL REVIEW, before building. (a) The shortest version is the whole version: there is no new control, no new affordance and nothing to learn, so the only risk is moving when it should not. Every rule here is a rule about NOT moving. (b) The collision that matters is the band: a rubber band on the canvas rewrites the multi-selection on every frame, and a list that chased it would be a list scrolling under your pointer sixty times a second. Answered by testing the WHOLE arriving selection for visibility, so once anything it caught is on screen nothing moves; measured in the walk, a band round eighteen layers moved the list 40pt, once. (c) Dragging a row to reorder cannot fight it either: the row you grabbed is by definition on screen. (d) Two of the pick paths the acceptance names do not exist in the app \u2014 the arrow keys nudge the picked layer rather than stepping to the next one, and Command A marquees the canvas rather than selecting every layer \u2014 so those clauses are met by every path that DOES move the selection going through one place."
+    },
+    {
+      "t": "2026-09-14T03:56:25.066424Z",
+      "note": "BUILT. Core: LayerListMetrics.rowTop / revealOffset (PhotonzCore, pure, nine tests in LayerListRevealTests) works out the offset from the row's PLACE rather than from its frame, which is the trap the task notes named: the row this feature is about is one the lazy stack has never built, and an unbuilt row has no frame. It reuses DockReveal for the shortest-move rule, so the layers list and the properties panel now decide 'is it on screen' the same way. App: EditorState.layersListReveal is the ask (ids + a tick, so the same layer asked for twice reads as two asks), set by revealInLayersList, which every selection path already funnelled through; LayersListView applies it with ScrollPosition.scrollTo(y:) inside a 0.24s easeInOut. Scroll offset is kept in a plain box (LayerListScroll), never in @State, so a scroll does not redraw the list."
+    },
+    {
+      "t": "2026-09-14T03:56:25.066424Z",
+      "note": "FLAGGED next-layers-follow-pick, next only, on by default. LayersListView is shared between the releases, so only the SCROLL is behind the flag; opening the groups above a picked layer is what both releases already did."
+    },
+    {
+      "t": "2026-09-14T03:56:25.066424Z",
+      "note": "VERIFIED on the probe with Screen Recording granted. New walk Scripts/playtest/layers-list-follows-pick-walk.json, 21 layers in a list showing five: picking the bottom-left rectangle scrolled 0 -> 598pt and its row is on screen; a row already on screen moved nothing; scrolled to the top by hand then clicking the same layer again moved nothing; a new shape brought the list back up 598 -> 0; stepping into a SHUT group opened it and scrolled to the piece (row 21); a band round eighteen layers moved 760 -> 720. New waitFor condition layerRowInView, plus layerRowsInView and layerReveal in every panel read."
+    },
+    {
+      "t": "2026-09-14T03:56:25.066424Z",
+      "note": "ONE WALK NEEDED FIXING and it is worth knowing why: separate-into-layers-walk read rows that were no longer BUILT. It picks the Background row, which is the last one, so the list now scrolls to the bottom and the lazy stack lets go of the rows at the top; `expect` reads what the panel has built. Fixed by scrolling back up before the two claims, which also makes 'there is no Text 10' mean something, since a new layer would land at the top where it was not even looking. Any other walk that picks one layer and then claims a distant row is built could hit the same thing, which is why a sweep was asked for."
+    },
+    {
+      "t": "2026-09-14T03:56:25.066424Z",
+      "note": "Scripts/test.sh green (6398 tests). layers-* walks, panel-controls-walk and open-groups-remembered-walk all pass. dock-picked-first-walk and contents-for-several-walk fail, both already failing in the 2026-09-14T03:26Z sweep before this change. A sweep was requested rather than run."
     }
   ],
   "started": "2026-09-14T03:35:25.615Z"

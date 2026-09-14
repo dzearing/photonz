@@ -75,6 +75,70 @@ public enum LayerListMetrics {
         return start..<max(start, end)
     }
 
+    /// Where a row's top edge sits inside the list, measured from the top of
+    /// the first row. Every row is the same shape, so this falls out of the
+    /// index the same way the height does.
+    public static func rowTop(index: Int, rowHeight: CGFloat) -> CGFloat {
+        CGFloat(max(0, index)) * rowStride(rowHeight: rowHeight)
+    }
+
+    /// How far the list has to be scrolled to put one of these rows on screen,
+    /// or nil when it should not move at all.
+    ///
+    /// This is the list's side of "what you have in your hand and what the list
+    /// is showing are never two different things". Three rules, and the first
+    /// one is the important one:
+    ///
+    /// - A row you can ALREADY see wins. The list does not move, so picking
+    ///   things near the top never jolts the panel, and a band drawn round
+    ///   half a document does not send the rows past your eyes.
+    /// - When nothing is on screen, the row nearest to where you are looking
+    ///   is the one brought in, so the list travels as little as it can.
+    /// - The move itself is the shortest one that shows the whole row
+    ///   (`DockReveal`): down to its bottom edge for a row below the fold, up
+    ///   to its top edge for one above it.
+    ///
+    /// - Parameters:
+    ///   - rowIndices: the rows worth showing, by their place in the list.
+    ///     Usually the one row just picked; several when a selection arrived
+    ///     all at once.
+    ///   - currentOffset: how far the list is scrolled now, in points from the
+    ///     top of the first row.
+    ///   - contentHeight: every row the list holds, so the answer is never past
+    ///     the end of it (`naturalHeight`).
+    public static func revealOffset(rowIndices: [Int],
+                                    rowHeight: CGFloat,
+                                    viewportHeight: CGFloat,
+                                    currentOffset: CGFloat,
+                                    contentHeight: CGFloat) -> CGFloat? {
+        let rows = rowIndices.filter { $0 >= 0 }.sorted()
+        guard !rows.isEmpty, rowHeight > 0, viewportHeight > 0 else { return nil }
+        func action(_ index: Int) -> DockReveal.Action {
+            DockReveal.action(sectionTop: rowTop(index: index, rowHeight: rowHeight) - currentOffset,
+                              sectionHeight: rowHeight,
+                              viewportHeight: viewportHeight)
+        }
+        // One of them is already there whole: leave the list exactly where the
+        // reader left it.
+        guard !rows.contains(where: { action($0) == .none }) else { return nil }
+        // Otherwise the nearest one to the top of what is on screen, which is
+        // the least travel. Sorted above, so an exact tie takes the upper row.
+        guard let target = rows.min(by: {
+            abs(rowTop(index: $0, rowHeight: rowHeight) - currentOffset)
+                < abs(rowTop(index: $1, rowHeight: rowHeight) - currentOffset)
+        }) else { return nil }
+        let top = rowTop(index: target, rowHeight: rowHeight)
+        let wanted = switch action(target) {
+        case .bottom: top + rowHeight - viewportHeight
+        default: top
+        }
+        let furthest = max(0, contentHeight - viewportHeight)
+        let offset = min(max(0, wanted), furthest)
+        // Clamping can land on where the list already is, and a scroll of a
+        // third of a point is a redraw for nothing.
+        return abs(offset - currentOffset) < DockReveal.slack ? nil : offset
+    }
+
     /// One row plus the gap under it. Never zero, so dividing by it is safe
     /// before the first measurement lands.
     private static func rowStride(rowHeight: CGFloat) -> CGFloat {

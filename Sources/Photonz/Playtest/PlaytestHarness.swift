@@ -5459,6 +5459,8 @@ private final class Run {
             InspectorLayoutProbe.shared.measured
                 .first { $0.title == title }
                 .map { InspectorLayoutProbe.shared.isHeaderVisible($0) } ?? false
+        case .layerRowInView(let name):
+            LayersListProbe.shared.isInView(name)
         case .tutorialStep(let id):
             TutorialController.shared.run?.step.id == id
         }
@@ -6301,6 +6303,14 @@ private final class Run {
             // reveal that keeps a click on a layer from leaving that layer's
             // own settings below the fold.
             "pickReveal": InspectorLayoutProbe.shared.pickReveal ?? "none yet",
+            // The rows of the layers list a person can see WHOLE, in order.
+            // The list shows five rows of however many the document has, so
+            // "the layer you just picked is one of these" is the whole claim
+            // the list following a pick has to keep true.
+            "layerRowsInView": LayersListProbe.shared.rowsInView,
+            // ...and what the last pick did about it: which rows it was asked
+            // for, where the list was, and where it went.
+            "layerReveal": LayersListProbe.shared.lastReveal ?? "none yet",
             "tooltip": HintTooltipController.shared.visibleDescription ?? "none",
             "edgeMap": !editor.snappingEdgeMap.isEmpty,
             "firstResponder": window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil",

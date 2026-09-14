@@ -1,0 +1,28 @@
+{
+  "feature": "The layers list follows what you pick",
+  "epic": "ui-building",
+  "summary": "Click a layer on the picture and the layers list brings that layer's row into view. It moves as little as it has to, and a row you can already see does not move it at all.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"The layers list follows what you pick\", on by default. Open any picture with more layers than the layers area shows (it rests at five rows).",
+  "try": [
+    { "do": "Draw twenty rectangles, or open a picture that already has that many layers.", "shot": "2026-09-13-layers-follow-pick-before.png" },
+    { "do": "Click the very first shape you drew, the one at the bottom of the list, on the canvas.", "shot": "2026-09-13-layers-follow-pick-after.png" },
+    { "do": "Click a shape whose row you can already see, and watch the list stay exactly where it is." },
+    { "do": "Scroll the layers list to the top by hand, then click that same shape on the canvas again." },
+    { "do": "Draw a new shape while the list is scrolled to the bottom." },
+    { "do": "Put two layers in a group, shut the group, then double click one of its pieces on the canvas." },
+    { "do": "Drag a band round half the picture and watch what the list does." }
+  ],
+  "evaluate": [
+    "When the row arrives, does it land where your eye already is, or does it feel like the panel jumped?",
+    "The row lands hard against the edge it came in from, with nothing under it. Would half a row of breathing room read better, or is the shortest move the right one?",
+    "Is a quarter of a second the right speed, or would you rather it were instant?",
+    "Clicking a layer that is ALREADY picked never moves the list, so a list you scrolled by hand stays put. Is that what you expect, or would you rather a second click brought the row back?",
+    "When a band catches a dozen layers, bringing the nearest one in is the rule. Does that feel right, or should a band leave the list alone entirely?"
+  ],
+  "rough": [
+    "Two of the ways the task listed for picking a layer do not exist in the app: the arrow keys nudge the layer that is already picked rather than stepping to the next one, and Command A marquees the canvas rather than selecting every layer. Everything that DOES move the selection goes through one place, so undo, a new shape, a duplicate, a row click and a band all follow.",
+    "Nothing happens when you click a layer that is already picked, including when its row is off screen because you scrolled there by hand. That is deliberate, so a list you put somewhere stays put, but it is the one case where a person could ask twice and get nothing.",
+    "The list is only pushed when the selection CHANGES. A row that scrolls out of view because the panel got shorter is not brought back.",
+    "Screenshots here are real window captures from the probe, taken with Screen Recording granted."
+  ]
+}

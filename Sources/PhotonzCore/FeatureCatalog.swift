@@ -76,6 +76,8 @@ public enum FeatureCatalog {
 
     public static let layerGroupsFlag = "next-layer-groups"
 
+    public static let layersFollowPickFlag = "next-layers-follow-pick"
+
     public static let alignLayersFlag = "next-align-layers"
 
     public static let framesFlag = "next-frames"
@@ -400,6 +402,15 @@ public enum FeatureCatalog {
                     name: toolTipsFlag,
                     title: "Tools explain themselves with a tooltip",
                     description: "Resting the pointer on a tool in the floating tool bar shows a small label with the tool's name and the key that picks it, in the app's own tooltip style: it appears once the pointer has been still for a moment, follows the pointer from tool to tool without flicker, and never gets in the way of a click. Off means the buttons show the plain system help tag, which may not appear at all.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: layersFollowPickFlag,
+                    title: "The layers list follows what you pick",
+                    description: "Click something on the picture and the layers list brings that layer's row into view, so what you have in your hand and what the list is showing are never two different things. It moves as little as it has to and never centres the row, a row you can already see does not move the list at all, and a layer inside a shut group opens that group first. It follows the arrow keys, a newly drawn shape and an undo that puts a selection back, the same as a click. Off means the list stays exactly where it was and the row you picked can be sitting off the bottom of a long list with nothing to say so.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

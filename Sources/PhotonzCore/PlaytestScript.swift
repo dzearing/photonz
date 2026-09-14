@@ -380,6 +380,11 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// ...and the weaker claim, for a section too tall to ever fit whole: its
     /// header is on screen, so you at least know the settings are there.
     case sectionHeaderInView(String)
+    /// A layer's row, by the layer's name, is on screen WHOLE in the layers
+    /// list, without anyone touching the scroll wheel. "Clicking that shape
+    /// puts its row in front of you" is then a step the walk fails on rather
+    /// than a number a person reads back off the log afterwards.
+    case layerRowInView(String)
     /// A guide is running and it is on this step, named by the step's id. What
     /// a walk waits on after doing the thing a waiting step asked for, so
     /// "picking the Measure tool really moved the guide on" is a step the walk
@@ -1746,8 +1751,9 @@ public enum PlaytestStep: Sendable, Equatable {
             case "measureMode": .measureMode(try f.enumValue("value", MeasureToolMode.self))
             case "sectionInView": .sectionInView(try f.string("value"))
             case "sectionHeaderInView": .sectionHeaderInView(try f.string("value"))
+            case "layerRowInView": .layerRowInView(try f.string("value"))
             case "tutorialStep": .tutorialStep(try f.string("value"))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView or tutorialStep")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, layerRowInView or tutorialStep")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

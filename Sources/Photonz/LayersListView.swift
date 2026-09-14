@@ -187,6 +187,14 @@ struct LayerRowDropDelegate: DropDelegate {
 
 // MARK: - Layers section
 
+/// How far the layers list is scrolled, in points from the top of the first
+/// row. A box rather than view state: it is written on every frame of a scroll
+/// and nothing is drawn from it, so nothing should redraw because of it.
+@MainActor final class LayerListScroll {
+    var offset: CGFloat = 0
+}
+
+
 /// The layer list: thumbnails, visibility, lock, rename (double-click),
 /// drag-reorder, and selection. Lives inside the docked inspector's Layers
 /// section.
@@ -199,6 +207,13 @@ struct LayersListView: View {
     /// picture made for them, so opening a document with a hundred layers
     /// costs the same handful of renders as opening one with ten.
     @State private var firstVisibleRow = 0
+    /// How far the list is scrolled, and where it has been asked to go. Held in
+    /// a box rather than in `@State` on purpose: the offset changes on every
+    /// frame of a scroll, and a view that redrew itself to remember a number
+    /// nothing draws is the jank this list's other comments are about.
+    @State private var scroll = LayerListScroll()
+    /// What the list is told to scroll to, when a pick asks it to follow.
+    @State private var scrollPosition = ScrollPosition()
     @FocusState private var renameFieldFocused: Bool
 
     /// The layer area's max height (user-resizable, persisted). Beyond this the
@@ -281,6 +296,16 @@ struct LayersListView: View {
             }
             .frame(height: viewport)
             .scrollBounceBehavior(.basedOnSize)
+            .scrollPosition($scrollPosition)
+            // How far down the list is, in points. Nothing is drawn from it,
+            // so it is put in the box rather than in state: a scroll is sixty
+            // of these a second and not one of them changes the picture.
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.contentOffset.y + geometry.contentInsets.top
+            } action: { _, offset in
+                scroll.offset = offset
+                recordLayerListScroll(offset)
+            }
             // Which row is at the top, watched as a ROW rather than as an
             // offset: the action then fires once per row you scroll past
             // instead of once per frame, which is what keeps this cheap.
@@ -313,16 +338,55 @@ struct LayersListView: View {
                 onMetrics?(unpressed, extras)
             }
         }
+        .layersListProbe(rows: displays.map(\.name), rowHeight: rowHeight, viewport: viewport)
         .onAppear { onMetrics?(unpressed, listExtrasHeight) }
         .onChange(of: unpressed) { _, latest in onMetrics?(latest, listExtrasHeight) }
         // The Rename command asks for a row's field. Only rows this list shows
         // answer, so the Measurements list next door does not open a second
         // field on the same layer.
+        // Something was picked — on the canvas, with an arrow key, by an undo
+        // putting a selection back. Bring its row into view, and do nothing at
+        // all when it is already there.
+        .onChange(of: editorState.layersListReveal) { _, request in
+            guard let request else { return }
+            follow(request, displays: displays, viewport: viewport)
+        }
         .onChange(of: editorState.layerAwaitingRename) { _, id in
             guard let id, editorState.panelRows.contains(where: { $0.id == id }),
                   let layer = editorState.document?.layer(id: id) else { return }
             editorState.layerAwaitingRename = nil
             beginRename(id: layer.id, name: layer.name)
+        }
+    }
+
+    /// Brings a picked row into view, or leaves the list exactly where it is.
+    ///
+    /// The arithmetic is `LayerListMetrics.revealOffset` and the rules are
+    /// there: a row you can already see wins, the nearest one is the one
+    /// brought in, and the move is the shortest that shows the whole row. It
+    /// is worked out from the row's PLACE rather than from its frame, because
+    /// the row this is usually about is one the lazy stack has never built —
+    /// which is exactly what "off the bottom of a long list" means — and an
+    /// unbuilt row has no frame to measure.
+    private func follow(_ request: EditorState.LayersListReveal,
+                        displays: [LayerRowDisplay], viewport: CGFloat) {
+        let indices = request.ids.compactMap { id in displays.firstIndex { $0.id == id } }
+        let content = LayerListMetrics.naturalHeight(rowCount: displays.count,
+                                                     rowHeight: rowHeight,
+                                                     canvasRowHeight: canvasRowHeight)
+        let target = LayerListMetrics.revealOffset(rowIndices: indices,
+                                                   rowHeight: rowHeight,
+                                                   viewportHeight: viewport,
+                                                   currentOffset: scroll.offset,
+                                                   contentHeight: content)
+        recordLayerReveal(rows: indices, from: scroll.offset, to: target, viewport: viewport)
+        guard let target else { return }
+        // Taken as read straight away: the geometry only reports back once the
+        // animation has run, and a second pick arriving mid-flight has to
+        // reckon from where the list is going, not from where it was.
+        scroll.offset = target
+        withAnimation(.easeInOut(duration: 0.24)) {
+            scrollPosition.scrollTo(y: target)
         }
     }
 

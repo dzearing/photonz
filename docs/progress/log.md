@@ -14840,3 +14840,44 @@ walk (`dock-picked-first-walk` came out owned by two tasks and only one is
 really about it). Filed as
 `a-task-says-which-failing-walk-it-owns-instead-o` at p3-low: a task should
 declare the walks it owns, with the text match as a fallback.
+
+## 2026-09-13 — Picking a layer brings its row into view
+
+**What changed.** The layers list follows what you pick. Click a shape on the
+canvas and the list brings that layer's row on screen, so the list and the
+canvas stop saying two different things. It is mostly a set of rules about NOT
+moving: a row you can already see wins and nothing happens, the move is the
+shortest one that shows the whole row rather than a centring jump, and a list
+you scrolled by hand stays where you put it when you click the layer that is
+already picked. A layer inside a shut group opens that group first, which the
+app already did; the scrolling half is the new part and it is flagged
+`next-layers-follow-pick`, Next only, on by default.
+
+**How it is worked out.** `LayerListMetrics.revealOffset` (PhotonzCore, pure,
+nine tests) takes the rows to show, the row height, the viewport and where the
+list is now, and answers with an offset or with nothing. It reasons from the
+row's PLACE rather than from its frame, which matters: the row this feature
+exists for is one the lazy stack has never built, and an unbuilt row has no
+frame to measure. The shortest-move rule is `DockReveal`, the same call the
+properties panel makes, so the two surfaces decide "is it on screen" the same
+way. `EditorState.revealInLayersList` was already the one place every selection
+path funnelled through, so undo, a new shape, a duplicate, a row click and a
+band all follow with no new call sites.
+
+**Verified.** New `layers-list-follows-pick-walk`, 21 layers in a list showing
+five, with real window captures: picking the bottom-left rectangle scrolled 0
+to 598pt and its row is on screen; a row already on screen moved nothing;
+scrolled to the top by hand and clicking the same layer again moved nothing; a
+new shape brought the list back up; stepping into a shut group opened it and
+scrolled to the piece; a band round eighteen layers moved the list 40pt, once.
+`Scripts/test.sh` green, 6398 tests.
+
+**Rough.** `separate-into-layers-walk` had to gain a scroll step: it picks the
+Background row, which is the last one, so the list now scrolls to the bottom and
+the lazy stack lets go of the rows at the top, which is where its two claims
+were looking. Any other walk that picks one layer and then claims a distant row
+is built could hit the same thing, so a sweep was requested rather than run.
+Two of the pick paths the task asked for do not exist in the app: the arrow keys
+nudge the layer that is already picked, and Command A marquees the canvas
+rather than selecting every layer. Audit:
+`queue/audits/2026-09-13-layers-follow-pick.json`.

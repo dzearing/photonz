@@ -163,3 +163,93 @@ struct LayerThumbnailWindowTests {
         #expect(LayerListMetrics.firstVisibleRow(scrollOffset: 100, rowHeight: 0) == 0)
     }
 }
+
+/// The list follows what you pick. A row you cannot see is a list that
+/// disagrees with the canvas, and a list that re-scrolls on every pick is worse
+/// than one that never scrolls, so most of these pin the times it must NOT
+/// move.
+@Suite("Layers list follows what you pick")
+struct LayerListRevealTests {
+
+
+    /// A row is 38pt with a 2pt gap under it, so the list moves in strides of
+    /// 40. The viewport here is five rows, which is what the panel rests at.
+    private static let viewport: CGFloat = 5 * 40
+    private static let content = LayerListMetrics.naturalHeight(rowCount: 40, rowHeight: 38,
+                                                                canvasRowHeight: 38)
+
+    private func reveal(_ rows: [Int], at offset: CGFloat,
+                        viewport: CGFloat = LayerListRevealTests.viewport) -> CGFloat? {
+        LayerListMetrics.revealOffset(rowIndices: rows, rowHeight: 38, viewportHeight: viewport,
+                                      currentOffset: offset,
+                                      contentHeight: LayerListRevealTests.content)
+    }
+
+    @Test("A row you can already see does not move the list")
+    func visibleRowStaysPut() {
+        #expect(reveal([0], at: 0) == nil)
+        #expect(reveal([3], at: 0) == nil)
+        // The fifth row's bottom is exactly the fold, so it counts as seen.
+        #expect(reveal([4], at: 0) == nil)
+    }
+
+    @Test("A row below the fold comes up by the shortest move that shows it whole")
+    func rowBelowTheFoldScrollsUp() {
+        // Row 9 runs 360-398, and the list is 200 tall, so 198 down puts its
+        // bottom edge exactly on the fold.
+        #expect(reveal([9], at: 0) == CGFloat(198))
+    }
+
+    @Test("A row above the fold lines its top up with the top of the list")
+    func rowAboveTheFoldScrollsDown() {
+        #expect(reveal([2], at: 400) == 80)
+    }
+
+    @Test("Nothing to do is nothing to do, whatever it is asked")
+    func nothingToDo() {
+        #expect(reveal([], at: 0) == nil)
+        #expect(reveal([-1], at: 0) == nil)
+        #expect(LayerListMetrics.revealOffset(rowIndices: [9], rowHeight: 0, viewportHeight: 200,
+                                              currentOffset: 0, contentHeight: 800) == nil)
+        #expect(LayerListMetrics.revealOffset(rowIndices: [9], rowHeight: 38, viewportHeight: 0,
+                                              currentOffset: 0, contentHeight: 800) == nil)
+    }
+
+    @Test("One row of several already on screen is enough to leave the list alone")
+    func oneVisibleRowIsEnough() {
+        // Picked all forty: row 0 is under your eyes, so nothing moves.
+        #expect(reveal(Array(0..<40), at: 0) == nil)
+    }
+
+    @Test("With none of them on screen the nearest row is the one brought in")
+    func nearestRowWins() {
+        // Looking at rows 10-14 (offset 400) with rows 2 and 30 picked: row 2
+        // is 320 points away and row 30 is 800, so row 2 is the one shown.
+        #expect(reveal([2, 30], at: 400) == 80)
+    }
+
+    @Test("The list never scrolls past its own end")
+    func neverPastTheEnd() {
+        let last = LayerListMetrics.revealOffset(rowIndices: [39], rowHeight: 38,
+                                                 viewportHeight: LayerListRevealTests.viewport,
+                                                 currentOffset: 0,
+                                                 contentHeight: LayerListRevealTests.content)
+        // The last LAYER row is not the end of the list: the Canvas row and
+        // the padding sit under it, so this stops 42 points short of the floor.
+        #expect(last == CGFloat(39 * 40 + 38) - LayerListRevealTests.viewport)
+        #expect(last ?? 0 <= LayerListRevealTests.content - LayerListRevealTests.viewport)
+    }
+
+    @Test("A list shorter than its viewport has nowhere to go")
+    func shortListDoesNotMove() {
+        let content = LayerListMetrics.naturalHeight(rowCount: 3, rowHeight: 38, canvasRowHeight: 38)
+        #expect(LayerListMetrics.revealOffset(rowIndices: [2], rowHeight: 38, viewportHeight: 400,
+                                              currentOffset: 0, contentHeight: content) == nil)
+    }
+
+    @Test("A row taller than the list shows its top rather than refusing")
+    func tallRowShowsItsTop() {
+        #expect(LayerListMetrics.revealOffset(rowIndices: [4], rowHeight: 38, viewportHeight: 30,
+                                              currentOffset: 0, contentHeight: 800) == 160)
+    }
+}

@@ -307,6 +307,12 @@ extension Experiments {
     /// is the flat one it always was.
     var layersListShowsGroups: Bool { layerGroupsEnabled }
 
+    /// `next-layers-follow-pick`: whether picking a layer brings its row into
+    /// view in the layers list. Only the SCROLL is flagged — opening the groups
+    /// above a picked layer is what the list has always done, in both releases,
+    /// and a row that is already on screen never moves either way.
+    var layersFollowPick: Bool { isEnabled(FeatureCatalog.layersFollowPickFlag) }
+
     /// `next-lens`: whether the Lens tool, its capsule settings and the Lens
     /// section of the panel exist. The model and the renderer are never
     /// flagged: a document that already holds a lens opens and draws correctly

@@ -1,0 +1,491 @@
+{
+ "out": "/tmp/photonz-playtest/layers-list-follows-pick",
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1440,
+   "canvasHeight": 1024,
+   "width": 1240,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    120,
+    780
+   ],
+   "to": [
+    360,
+    960
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    900,
+    120
+   ],
+   "to": [
+    1100,
+    260
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "action",
+   "action": "duplicateLayer"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "stacked",
+   "note": "twenty one rows in a list that shows five; every new layer landed on top, so the list is at the top and never had to move"
+  },
+  {
+   "do": "panel",
+   "stage": "stacked"
+  },
+  {
+   "do": "snapshot",
+   "name": "stacked"
+  },
+  {
+   "do": "click",
+   "at": [
+    240,
+    870
+   ]
+  },
+  {
+   "do": "waitFor",
+   "condition": "layerRowInView",
+   "value": "Rectangle",
+   "timeout": 3
+  },
+  {
+   "do": "describe",
+   "stage": "picked-far",
+   "note": "picked the rectangle at the bottom left, whose row is nineteen rows down a list showing five"
+  },
+  {
+   "do": "panel",
+   "stage": "picked-far"
+  },
+  {
+   "do": "snapshot",
+   "name": "picked-far"
+  },
+  {
+   "do": "scrollPanel",
+   "by": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    240,
+    870
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "hand-scrolled",
+   "note": "scrolled to the top by hand, then clicked the same layer again: the list must stay where it was put"
+  },
+  {
+   "do": "panel",
+   "stage": "hand-scrolled"
+  },
+  {
+   "do": "click",
+   "at": [
+    1288,
+    478
+   ]
+  },
+  {
+   "do": "waitFor",
+   "condition": "layerRowInView",
+   "value": "Rectangle 20",
+   "timeout": 3
+  },
+  {
+   "do": "describe",
+   "stage": "picked-near",
+   "note": "picked the topmost rectangle, whose row is the first one and already on screen"
+  },
+  {
+   "do": "panel",
+   "stage": "picked-near"
+  },
+  {
+   "do": "click",
+   "at": [
+    240,
+    870
+   ]
+  },
+  {
+   "do": "waitFor",
+   "condition": "layerRowInView",
+   "value": "Rectangle",
+   "timeout": 3
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    500,
+    480
+   ],
+   "to": [
+    700,
+    600
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "waitFor",
+   "condition": "layerRowInView",
+   "value": "Rectangle 21",
+   "timeout": 3
+  },
+  {
+   "do": "describe",
+   "stage": "new-shape",
+   "note": "the list was at the bottom; a new shape goes on top, so the list came back up to it"
+  },
+  {
+   "do": "panel",
+   "stage": "new-shape"
+  },
+  {
+   "do": "snapshot",
+   "name": "new-shape"
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle"
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle 2",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "action",
+   "action": "group"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "grouped",
+   "note": "the bottom left rectangle and one of the stack, made into a group"
+  },
+  {
+   "do": "panel",
+   "stage": "grouped"
+  },
+  {
+   "do": "reveal",
+   "control": "Twist",
+   "in": "Group"
+  },
+  {
+   "do": "press",
+   "control": "Twist",
+   "in": "Group"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "group-shut",
+   "note": "the group shut, so the rectangle inside it has no row at all"
+  },
+  {
+   "do": "panel",
+   "stage": "group-shut"
+  },
+  {
+   "do": "scrollPanel",
+   "by": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    240,
+    870
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "action",
+   "action": "stepIntoSelection"
+  },
+  {
+   "do": "waitFor",
+   "condition": "layerRowInView",
+   "value": "Rectangle",
+   "timeout": 3
+  },
+  {
+   "do": "describe",
+   "stage": "inside-group",
+   "note": "stepped into the group: it opened, and the row for the piece picked came into view"
+  },
+  {
+   "do": "panel",
+   "stage": "inside-group"
+  },
+  {
+   "do": "snapshot",
+   "name": "inside-group"
+  },
+  {
+   "do": "click",
+   "at": [
+    700,
+    950
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "before-band",
+   "note": "nothing picked, the list left wherever the last pick put it"
+  },
+  {
+   "do": "panel",
+   "stage": "before-band"
+  },
+  {
+   "do": "drag",
+   "from": [
+    860,
+    80
+   ],
+   "to": [
+    1430,
+    620
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "band",
+   "note": "a band round most of the stack: several rows arrive at once"
+  },
+  {
+   "do": "panel",
+   "stage": "band"
+  },
+  {
+   "do": "snapshot",
+   "name": "band"
+  }
+ ]
+}
