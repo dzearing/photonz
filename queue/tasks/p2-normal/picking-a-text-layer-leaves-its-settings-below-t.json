@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T09:45:45.773Z",
-  "updated": "2026-09-14T13:30:21.305Z",
+  "updated": "2026-09-14T13:30:37.976Z",
   "deps": [],
   "blockedBy": [],
   "notes": "TRIAGED 2026-09-09: the p1 bug this was filed as no longer reproduces, so it is a p2 open question now, not a critical bug.\n\nWhat I ran, on a clean tree at HEAD 7e1e4d6d with the probe rebuilt from that commit:\n  Scripts/playtest-all.sh dock-picked-first          -> 1 passed, 0 failed, 18s\n  Scripts/playtest-all.sh --no-build panel-controls  -> 1 passed, 0 failed, 16s\nBoth were also green on the earlier 05:02 probe, so this is not a build fluke.\n\nWhat fixed it: 7f65ae4d, Picking a layer brings its own section into view, audit queue/audits/2026-09-09-dock-picked-first-reveal.json. The panel now scrolls itself to the picked section. That is option scroll on this task's own decision card, shipped by a neighbouring task while the card was still pending, and unflagged. So the question was answered by the app rather than by the user.\n\nWhy the card still stands. The shipped scroll has a cost the audit names itself: the panel holds about 1030 points of sections in a 690 point window, so showing the Text section means the layers list goes off the top. You click a row and the list of rows leaves. Picking from the layers list is the main way anybody moves between layers while building UI, so a click that takes the list away is worth an answer rather than a default.\n\nIt also crosses a written rule. UX-PATTERNS section 3, Reveal: ambient changes never may, a selection moving, a document loading, a background update leave a shut header shut and do not scroll. A selection moving now scrolls the dock. Either the rule moves or the behaviour does; that scrub is filed separately.\n\nFolded in from two-panel-walks-are-failing-on-main, closed as done by the same pass: panel-controls-walk was fixed by 64ac9f3c, and a verified alternative to the scroll is in hand there, a v5 order migration moving the picked section above Effects, guarded by shapePartsEnabled, which makes the walk pass at 1200x720 with no self-scrolling at all.",
@@ -123,7 +123,12 @@
     {
       "t": "2026-09-14T13:30:21.304Z",
       "note": "Audit: queue/audits/2026-09-14-dock-one-rule.json, with three real screen captures (Screen Recording granted this run)."
+    },
+    {
+      "t": "2026-09-14T13:30:37.974Z",
+      "note": "One rule: the order puts what you picked directly under the layers list (migration v5, Next only), so nothing scrolls for a pick; the height budget keeps it there by squeezing lists and never forms; and adding an effect reveals it the way opening one does. The layers list's own reveal, which was aimed at a height the dock had already taken away, now runs at the live height. Height arithmetic and reveals lifted into Sources/Photonz/InspectorDockLayout.swift with the rule at the top of it, and written into UX-PATTERNS section 3. Verified: Scripts/test.sh green, dock-picked-first, layers-list-follows-pick, effects-room-for-the-one-you-opened, panel-start-margin, glow-effect and border-effect all pass, plus twenty more dock walks; sweep requested. Commit 58f4db78, audit queue/audits/2026-09-14-dock-one-rule.json."
     }
   ],
-  "started": "2026-09-14T12:55:55.856Z"
+  "started": "2026-09-14T12:55:55.856Z",
+  "completed": "2026-09-14T13:30:37.975Z"
 }

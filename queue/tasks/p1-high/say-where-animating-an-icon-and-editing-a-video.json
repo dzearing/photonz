@@ -1,0 +1,42 @@
+{
+  "id": "say-where-animating-an-icon-and-editing-a-video",
+  "title": "Say where animating an icon and editing a video are the same job",
+  "goal": "With both sets of flows on the table, work out honestly where they are one experience and where they only look like one. The answer decides whether the next year of this is one surface built once or two surfaces that happen to both involve time, and it should be written plainly enough that somebody can disagree with it.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 18,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T14:04:11.611Z",
+  "updated": "2026-09-14T14:04:11.862Z",
+  "deps": [
+    "mock-how-somebody-actually-animates-an-icon"
+  ],
+  "blockedBy": [],
+  "notes": "Depends on the mocks existing. This is the task that actually answers the user's question, and its output is a recommendation plus a decision card, not code.\n\nBe honest about the asymmetry rather than finding a tidy answer. Doing animation first plausibly accelerates video, because video would inherit a proven time and keyframe model. Doing video first does not accelerate animation, because nothing about codecs, audio or frame scheduling teaches you anything about emitting declarative SMIL. If the comparison finds the reverse, say so with the evidence; if it finds what is written here, say that too and do not dress it up as a surprise.\n\nThe trap to avoid is the tidy answer. Two flows can be drawn to look identical by drawing them vaguely. Where the mocks had to be vague to make two things match, that is a finding and belongs in the report.\n\n---\nSHARED CONTEXT for the animation and video alignment study (asked for by the user on 2026-09-14).\n\nThe user's words: \"We also don't have usage clickthroughs for creating animated svgs so its unclear if anything could align with the clickthroughs of editing videos. We might want to figure out if there are opportunities to consolidate experience flows at all before building by mocking some flows up first and seeing how it will work. I want it to make sense for the user's usage scenario, and we might need different project types to isolate/hide some of the scenarios.\"\n\nTHIS IS A STUDY, NOT A BUILD. Nothing in this set changes Sources/. The deliverable is mocks and a written recommendation the user decides on. Do not start building a timeline, a keyframe model or a project type off the back of it; the whole point is to find out what to build before building it.\n\nWHAT EXISTS, checked rather than assumed:\n- Ten video clickthroughs under docs/design/mocks/pages: video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-transition-wt, video-freeze-wt, video-title-wt, video-captions, video-compositing, video-speed.\n- Six drawing ones: vector-wt, icon-draw-wt, icon-gradient-wt, draw, draw-boolean, iconography.\n- ZERO for animating anything. The user is right: there is nothing to compare against.\n- No project type concept in the app at all. A document is a canvas with a size (AppCoordinator.newBlankCanvasWindow(size:), File > New Blank Canvas). There is no kind, no template, nothing that hides one scenario's tools from another.\n- Video today is a SEPARATE editor from the layer document: VideoEditorState and VideoEditorView, single clip, trim and crop and export. TrimTimeline and PlaybackScrubber are SwiftUI views bound to VideoEditorState, not a reusable time model, and PhotonzCore has no notion of time or keyframes at all. So the \"shared foundation\" is not something being reused; it is something that would have to be built, which is exactly why the user wants to look before leaping.\n\nTHE QUESTION UNDERNEATH, worth holding on to while mocking: the two things genuinely overlap in ONE place, a document that has a duration, a playhead and keyframes on properties. They diverge everywhere else. Video is sampled media: codecs, audio, frame scheduling, large data. Animated SVG is declarative: properties animate and the export emits SMIL or CSS and never rasterizes at all. A mock that pretends those are the same surface will look tidy and mislead everybody.\n\nConform to the shared mock library rather than inventing: docs/design/mocks/shared/UX-PATTERNS.md is the rulebook, docs/design/mocks/shared/AGENTS.md explains how pages are built, components/ holds the shared CSS and JS, and docs/design/mocks/dev-server.mjs serves them. A page that invents its own shell or its own controls cannot be compared with the video pages, which defeats the purpose.",
+  "acceptance": [
+    "The animation flows and the video flows are laid out side by side, step for step, so the comparison can be seen rather than asserted",
+    "A written answer names what is genuinely the same job, what is superficially similar but different underneath, and what is unique to each",
+    "The answer covers at least: how time is shown and moved through, how a change over time is expressed, how you preview it, and how it leaves the app",
+    "Every claim that two things could be one thing is backed by both flows working with that one thing, shown in the mocks rather than argued in prose",
+    "The cost of consolidating is stated as plainly as the benefit, including what video would have to become: it is a separate single-clip editor today and sharing anything means it moves into the layer document",
+    "It says what to build FIRST and why, in a way the user can accept or reject in one read",
+    "A decision card is opened for the user with the real options and a recommendation, rather than the answer being taken for granted",
+    "Audit under queue/audits/ with the side-by-side, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T14:04:11.613Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-14T14:04:11.698Z",
+      "note": "seq 280 -> 18"
+    },
+    {
+      "t": "2026-09-14T14:04:11.862Z",
+      "note": "deps set: mock first, then compare, then decide"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "work-out-whether-the-app-needs-project-types-at",
+  "title": "Work out whether the app needs project types at all",
+  "goal": "A document today is a canvas with a size, and every tool in the app is offered on it whether or not it makes sense. If somebody is drawing a 24 point icon they do not need video trimming, and if they are cutting a recording they do not need an icon grid. Work out whether the app should know what kind of thing you are making, and if so what each kind shows and hides, or whether that is a worse idea than it looks.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 19,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T14:04:11.769Z",
+  "updated": "2026-09-14T14:04:11.863Z",
+  "deps": [
+    "mock-how-somebody-actually-animates-an-icon",
+    "say-where-animating-an-icon-and-editing-a-video"
+  ],
+  "blockedBy": [],
+  "notes": "Depends on both tasks before it, because the answer follows from what the flows turned out to need.\n\nThe user raised this themselves: \"we might need different project types to isolate/hide some of the scenarios.\" Treat it as a question to answer rather than a decision already made. There is a real argument against: the app has one document model and one canvas, and a type that hides tools can make a person feel the app is broken rather than focused, especially when they are one click from needing the hidden thing.\n\nWhat exists today is nothing. AppCoordinator.newBlankCanvasWindow(size:) makes a canvas of a size, File > New Blank Canvas asks for one, and that is the whole of it. There is already a weaker version of the idea in the app worth looking at first: an icon frame knows it is an icon size and changes what a shape drawn in it looks like (the done tasks a-new-frame-can-be-an-icon-size and a-shape-drawn-in-an-icon-frame-comes-in-at-a-weight). That is context following the FRAME rather than the document, and it may be the better answer: the same document can then hold an icon and a screenshot without either being in the wrong kind of project.\n\n---\nSHARED CONTEXT for the animation and video alignment study (asked for by the user on 2026-09-14).\n\nThe user's words: \"We also don't have usage clickthroughs for creating animated svgs so its unclear if anything could align with the clickthroughs of editing videos. We might want to figure out if there are opportunities to consolidate experience flows at all before building by mocking some flows up first and seeing how it will work. I want it to make sense for the user's usage scenario, and we might need different project types to isolate/hide some of the scenarios.\"\n\nTHIS IS A STUDY, NOT A BUILD. Nothing in this set changes Sources/. The deliverable is mocks and a written recommendation the user decides on. Do not start building a timeline, a keyframe model or a project type off the back of it; the whole point is to find out what to build before building it.\n\nWHAT EXISTS, checked rather than assumed:\n- Ten video clickthroughs under docs/design/mocks/pages: video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-transition-wt, video-freeze-wt, video-title-wt, video-captions, video-compositing, video-speed.\n- Six drawing ones: vector-wt, icon-draw-wt, icon-gradient-wt, draw, draw-boolean, iconography.\n- ZERO for animating anything. The user is right: there is nothing to compare against.\n- No project type concept in the app at all. A document is a canvas with a size (AppCoordinator.newBlankCanvasWindow(size:), File > New Blank Canvas). There is no kind, no template, nothing that hides one scenario's tools from another.\n- Video today is a SEPARATE editor from the layer document: VideoEditorState and VideoEditorView, single clip, trim and crop and export. TrimTimeline and PlaybackScrubber are SwiftUI views bound to VideoEditorState, not a reusable time model, and PhotonzCore has no notion of time or keyframes at all. So the \"shared foundation\" is not something being reused; it is something that would have to be built, which is exactly why the user wants to look before leaping.\n\nTHE QUESTION UNDERNEATH, worth holding on to while mocking: the two things genuinely overlap in ONE place, a document that has a duration, a playhead and keyframes on properties. They diverge everywhere else. Video is sampled media: codecs, audio, frame scheduling, large data. Animated SVG is declarative: properties animate and the export emits SMIL or CSS and never rasterizes at all. A mock that pretends those are the same surface will look tidy and mislead everybody.\n\nConform to the shared mock library rather than inventing: docs/design/mocks/shared/UX-PATTERNS.md is the rulebook, docs/design/mocks/shared/AGENTS.md explains how pages are built, components/ holds the shared CSS and JS, and docs/design/mocks/dev-server.mjs serves them. A page that invents its own shell or its own controls cannot be compared with the video pages, which defeats the purpose.",
+  "acceptance": [
+    "A recommendation with a clear yes or no on whether the app should have project types, argued from the flows rather than from taste",
+    "If yes: the kinds are named, and for each one it says what is shown, what is hidden, and what happens when somebody needs a hidden thing anyway",
+    "If no: it says what solves the same problem instead, since the problem is real whatever the answer is",
+    "The cost of being wrong is stated for each direction: a type that hides too much makes the app feel crippled, and no types at all makes every surface carry every tool forever",
+    "It says what happens to documents that already exist, which have no type and must not become second class",
+    "Mocked, not just written: the entry point where a kind is chosen, and one surface shown under two different kinds so the difference is visible",
+    "A decision card is opened for the user with the options and a recommendation",
+    "Audit under queue/audits/ and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T14:04:11.771Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-14T14:04:11.858Z",
+      "note": "seq 280 -> 19"
+    },
+    {
+      "t": "2026-09-14T14:04:11.863Z",
+      "note": "deps set: mock first, then compare, then decide"
+    }
+  ]
+}

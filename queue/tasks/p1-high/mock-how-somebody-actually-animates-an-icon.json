@@ -1,0 +1,35 @@
+{
+  "id": "mock-how-somebody-actually-animates-an-icon",
+  "title": "Mock how somebody actually animates an icon",
+  "goal": "There is no picture anywhere of what animating an icon in this app looks like, so nobody can say whether it should feel like editing a video or like something else entirely. Draw the flows as clickthroughs, the same way the video flows are drawn, so there is something real to look at and argue with before any of it is built.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 17,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T14:04:11.452Z",
+  "updated": "2026-09-14T14:04:11.539Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "First of three, and the only one that produces new pictures. The next task compares these with the video flows; the one after decides whether the app needs project types. Neither can start until there is something to compare.\n\nPick the scenarios from what somebody would really do, not from a feature list. An icon that pulses, a spinner that loops forever, a toggle that animates between two states, and a mark that draws itself on are the four that cover most of what people make animated SVGs for, and they stress different things: repetition, easing, two named states, and animating a path rather than a transform.\n\nResist designing the timeline in these pages. Draw what the person does and what they see; if a timeline turns out to be the answer, the comparison task will say so, and if something simpler works for icons then drawing a video timeline here will have talked everybody into the wrong thing.\n\n---\nSHARED CONTEXT for the animation and video alignment study (asked for by the user on 2026-09-14).\n\nThe user's words: \"We also don't have usage clickthroughs for creating animated svgs so its unclear if anything could align with the clickthroughs of editing videos. We might want to figure out if there are opportunities to consolidate experience flows at all before building by mocking some flows up first and seeing how it will work. I want it to make sense for the user's usage scenario, and we might need different project types to isolate/hide some of the scenarios.\"\n\nTHIS IS A STUDY, NOT A BUILD. Nothing in this set changes Sources/. The deliverable is mocks and a written recommendation the user decides on. Do not start building a timeline, a keyframe model or a project type off the back of it; the whole point is to find out what to build before building it.\n\nWHAT EXISTS, checked rather than assumed:\n- Ten video clickthroughs under docs/design/mocks/pages: video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-transition-wt, video-freeze-wt, video-title-wt, video-captions, video-compositing, video-speed.\n- Six drawing ones: vector-wt, icon-draw-wt, icon-gradient-wt, draw, draw-boolean, iconography.\n- ZERO for animating anything. The user is right: there is nothing to compare against.\n- No project type concept in the app at all. A document is a canvas with a size (AppCoordinator.newBlankCanvasWindow(size:), File > New Blank Canvas). There is no kind, no template, nothing that hides one scenario's tools from another.\n- Video today is a SEPARATE editor from the layer document: VideoEditorState and VideoEditorView, single clip, trim and crop and export. TrimTimeline and PlaybackScrubber are SwiftUI views bound to VideoEditorState, not a reusable time model, and PhotonzCore has no notion of time or keyframes at all. So the \"shared foundation\" is not something being reused; it is something that would have to be built, which is exactly why the user wants to look before leaping.\n\nTHE QUESTION UNDERNEATH, worth holding on to while mocking: the two things genuinely overlap in ONE place, a document that has a duration, a playhead and keyframes on properties. They diverge everywhere else. Video is sampled media: codecs, audio, frame scheduling, large data. Animated SVG is declarative: properties animate and the export emits SMIL or CSS and never rasterizes at all. A mock that pretends those are the same surface will look tidy and mislead everybody.\n\nConform to the shared mock library rather than inventing: docs/design/mocks/shared/UX-PATTERNS.md is the rulebook, docs/design/mocks/shared/AGENTS.md explains how pages are built, components/ holds the shared CSS and JS, and docs/design/mocks/dev-server.mjs serves them. A page that invents its own shell or its own controls cannot be compared with the video pages, which defeats the purpose.",
+  "acceptance": [
+    "Clickthrough pages exist for the core animation scenarios, at minimum: giving a drawn icon a simple motion, editing the timing of that motion, previewing it looping, and getting it out as a file",
+    "Each page shows a whole flow from entry to result, the way the video walkthrough pages do, not a single screen",
+    "They use the shared mock library and conform to UX-PATTERNS, so they sit beside the video pages and can be compared with them rather than being a different-looking thing",
+    "The pages show what the person is trying to achieve, not a tour of controls: an icon that needs to wiggle, a loading spinner, a state change on a button",
+    "Where a flow needs something the app has no answer for, the page says so plainly rather than drawing a control that would have to be invented",
+    "Every page is reachable from the mock index and passes the existing mock checks",
+    "Audit under queue/audits/ with each page captured, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T14:04:11.454Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-14T14:04:11.538Z",
+      "note": "seq 280 -> 17"
+    }
+  ]
+}
