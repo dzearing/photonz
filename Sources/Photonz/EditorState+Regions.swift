@@ -309,6 +309,73 @@ extension EditorState {
         } }
     }
 
+    // MARK: - New Layer via Cut (⇧⌘J)
+
+    /// Whether ⇧⌘J has anything to do. A marquee over pixels is the whole
+    /// test: which layer it lands on, and whether that layer can take it, is
+    /// answered out loud when the key is pressed rather than by a dim row, so
+    /// somebody holding a marquee over a rectangle gets a reason instead of
+    /// silence.
+    var canCutSelectionToLayer: Bool {
+        Experiments.shared.newLayerViaCutEnabled && selectionTargetsPixels && selection != nil
+    }
+
+    /// ⇧⌘J, "New Layer via Cut": the piece inside the marquee lifts onto a
+    /// layer of its own, and the space it came from fills in with what was
+    /// around it.
+    ///
+    /// Photoshop's Layer Via Cut leaves a hole. Filling it is the reason this
+    /// is worth having, and none of the filling is new: `SmartCut` walks the
+    /// ring round whatever outline the marquee has and `PatchDecision` decides
+    /// what goes in it, the same pair Separate into Layers uses.
+    ///
+    /// It takes from the layer the marquee's whole family takes from
+    /// (`RegionTarget`) rather than from everything flattened together: a cut
+    /// that healed the composite would be writing into layers nobody chose. A
+    /// marquee over something no piece can come out of is REFUSED out loud,
+    /// exactly as ⌘X, ⌫ and ⌥⌫ already are over the very same marquee.
+    func newLayerViaCut() {
+        guard Experiments.shared.newLayerViaCutEnabled,
+              selectionTargetsPixels, let region = selection, let document else { return }
+        if let refusal = regionSliceRefusal(action: .cutToLayer) {
+            raiseRegionSliceRefusal(refusal, layer: pickedLayerID)
+            return
+        }
+        guard let id = regionTargetID(), let layer = document.layer(id: id),
+              let ref = layer.imageRef, layer.crop == nil, layer.transform.isIdentity,
+              layer.frame.width > 0, layer.frame.height > 0,
+              let bitmap = store.image(for: ref) else { NSSound.beep(); return }
+        var docToBitmap = CGAffineTransform(scaleX: CGFloat(bitmap.width) / layer.frame.width,
+                                            y: CGFloat(bitmap.height) / layer.frame.height)
+            .translatedBy(x: -layer.frame.minX, y: -layer.frame.minY)
+        let localPath = region.path.copy(using: &docToBitmap) ?? region.path
+        // Nothing under the marquee: an invisible new layer is worse than an
+        // honest refusal, and it is what ⌘C says with the same marquee.
+        guard let cut = SmartCut.cut(bitmap, path: localPath) else { NSSound.beep(); return }
+        // Named the way duplicating that layer names it, so the panel reads
+        // "Background 2" over "Background" rather than filing an anonymous
+        // piece.
+        let name = LayerNaming.copyName(of: layer.name,
+                                        taken: Set(document.allLayers.map(\.name)))
+        let pieceRef = store.register(cut.piece)
+        let patchedRef = store.register(cut.patched)
+        discardDragPreview()
+        var newID: UUID?
+        perform {
+            newID = $0.cutRegionToLayer(id: id, patched: patchedRef, piece: pieceRef,
+                                        pieceFrame: cut.pieceRect.applying(docToBitmap.inverted()),
+                                        name: name)?.id
+        }
+        // The marquee has done its job, like Photoshop's Layer via Cut, and
+        // the piece is in your hand so it can be dragged straight away.
+        selection = nil
+        selectedLayerID = newID
+        // Only when the app could not read what went behind the piece. A cut
+        // whose surroundings agreed changed the canvas in front of the person
+        // who asked for it, and a pill saying so is nagging.
+        if cut.heal != .matched { raiseCanvasNotice(.cutToOwnLayer(cut.heal)) }
+    }
+
     // MARK: Region content move (Photoshop Move-tool semantics)
 
     /// Select(V)-tool drag starting inside a pixel region: lift the region's

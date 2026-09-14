@@ -23,6 +23,56 @@ public enum RegionOps {
         }
     }
 
+    /// `image` with the path's interior repaired: the space the piece came out
+    /// of, filled with what `PatchDecision` read off the background around it.
+    ///
+    /// `box` is the rect the fill's `u` and `v` are measured against, which is
+    /// the piece's own integral box — the same one the ring was walked around,
+    /// so a fitted ramp lands exactly where the fit said it would.
+    ///
+    /// A flat fill goes in with one `fillPath`, the same call `filled` makes,
+    /// so a piece cut out of a solid panel leaves that panel one colour BYTE
+    /// FOR BYTE. A ramp goes in as one band per row (or per column), which is
+    /// exact because `PatchFill`'s gradient is constant along its other axis:
+    /// no gradient object in the middle to interpolate it a second time and a
+    /// level differently.
+    public static func patched(_ image: CGImage, path: CGPath, fill: PatchFill,
+                               box: CGRect) -> CGImage? {
+        guard box.width > 0, box.height > 0 else { return nil }
+        return redraw(image) { context, height in
+            context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: height))
+            context.saveGState()
+            defer { context.restoreGState() }
+            func set(_ color: RGBA) {
+                context.setFillColor(CGColor(srgbRed: color.r, green: color.g,
+                                             blue: color.b, alpha: color.a))
+            }
+            switch fill {
+            case .solid(let color):
+                addTopLeftPath(path, to: context, height: height)
+                set(color)
+                context.fillPath(using: .evenOdd)
+            case .gradient(_, _, let axis):
+                addTopLeftPath(path, to: context, height: height)
+                context.clip(using: .evenOdd)
+                switch axis {
+                case .down:
+                    for y in Int(box.minY)..<Int(box.maxY) {
+                        set(fill.color(u: 0.5, v: (Double(y) - box.minY + 0.5) / box.height))
+                        context.fill(CGRect(x: box.minX, y: CGFloat(height - y - 1),
+                                            width: box.width, height: 1))
+                    }
+                case .across:
+                    for x in Int(box.minX)..<Int(box.maxX) {
+                        set(fill.color(u: (Double(x) - box.minX + 0.5) / box.width, v: 0.5))
+                        context.fill(CGRect(x: CGFloat(x), y: CGFloat(height) - box.maxY,
+                                            width: 1, height: box.height))
+                    }
+                }
+            }
+        }
+    }
+
     /// `image` with the path's interior cleared to transparent.
     public static func erased(_ image: CGImage, path: CGPath) -> CGImage? {
         redraw(image) { context, height in
@@ -92,15 +142,24 @@ public enum RegionOps {
         }
         guard drew else { return nil }
         var minX = w, minY = h, maxX = -1, maxY = -1
+        // Each row from both ends inwards rather than straight through: a
+        // piece cut out of a big picture is millions of pixels and almost all
+        // of them are in the middle of it, where they can tell the box
+        // nothing. Two probes a row instead of a few thousand is the
+        // difference between a command that lands and one you wait for.
         rgba.withUnsafeBufferPointer { px in
             for y in 0..<h {
                 let row = y * w
-                for x in 0..<w where px[(row + x) * 4 + 3] > 0 {
-                    if x < minX { minX = x }
-                    if x > maxX { maxX = x }
-                    if y < minY { minY = y }
-                    if y > maxY { maxY = y }
-                }
+                var first = -1
+                for x in 0..<w where px[(row + x) * 4 + 3] > 0 { first = x; break }
+                guard first >= 0 else { continue }
+                var last = first
+                for x in stride(from: w - 1, through: first, by: -1)
+                where px[(row + x) * 4 + 3] > 0 { last = x; break }
+                if first < minX { minX = first }
+                if last > maxX { maxX = last }
+                if y < minY { minY = y }
+                if y > maxY { maxY = y }
             }
         }
         guard maxX >= minX, maxY >= minY else { return nil }

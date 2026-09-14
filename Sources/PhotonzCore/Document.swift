@@ -745,6 +745,37 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         return layer
     }
 
+    /// Layer ▸ New Layer via Cut (⇧⌘J): the piece goes on a layer of its OWN
+    /// directly over the picture it came out of, and that picture's bitmap is
+    /// replaced by `patched` — the same pixels with the space the piece came
+    /// from filled in from what was around it.
+    ///
+    /// One mutation, so ONE undo puts back the piece, the hole and the fill
+    /// together. Photoshop's Layer Via Cut leaves a hole; this is the same
+    /// command with the hole healed, which is the whole reason it exists.
+    ///
+    /// The picture KEEPS ITS BOX. Nothing was taken away from it: the space
+    /// was filled, so there are no fewer pixels to tighten to. That is what
+    /// lets the locked Background stay the size of the picture here without
+    /// needing a case of its own, unlike a region delete.
+    ///
+    /// Directly OVER the picture rather than on top of everything, and in the
+    /// picture's OWN sibling space, so a screenshot inside a group cuts inside
+    /// that group and an arrow somebody drew over the screenshot stays over
+    /// the piece. Nil when `id` is not a picture.
+    @discardableResult
+    public mutating func cutRegionToLayer(id: UUID, patched: ImageRef,
+                                          piece: ImageRef, pieceFrame: CGRect,
+                                          name: String) -> Layer? {
+        guard let source = layer(id: id), source.imageRef != nil else { return nil }
+        let made = Layer(name: name, content: .image(piece), frame: pieceFrame)
+        guard withSiblings(of: id, { siblings, index in
+            siblings[index].content = .image(patched)
+            siblings.insert(made, at: index + 1)
+        }) else { return nil }
+        return made
+    }
+
     /// One piece Separate into Layers took out of a picture: what came out,
     /// where it sits in the SOURCE LAYER'S OWN sibling space (so a picture
     /// inside a group separates into that group), and what to call it.

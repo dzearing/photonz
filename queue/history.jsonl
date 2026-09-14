@@ -3020,3 +3020,6 @@
 {"t":"2026-09-14T05:22:04.509Z","ev":"task_resequenced","id":"a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei","from":2670,"to":9.3}
 {"t":"2026-09-14T05:22:04.555Z","ev":"task_resequenced","id":"an-icon-frame-shows-the-space-an-icon-has-to-liv","from":2680,"to":9.4}
 {"t":"2026-09-14T05:22:39.464Z","ev":"manager","filed":3,"readyBefore":83,"readyAfter":83,"report":"queue/manager/2026-09-13-2230.md"}
+{"t":"2026-09-14T05:22:53.377Z","ev":"manager_pass","exit":0,"ready":83}
+{"t":"2026-09-14T05:22:53.425Z","ev":"task_started","id":"cut-a-selection-onto-its-own-layer-and-heal-the","title":"Cut a selection onto its own layer and heal the hole behind it","priority":"p1-high"}
+{"t":"2026-09-14T05:44:04.776Z","ev":"task_created","id":"find-out-what-a-big-marquee-really-costs-to-cut","priority":"p2-normal","title":"Find out what a big marquee really costs to cut in the shipping build"}

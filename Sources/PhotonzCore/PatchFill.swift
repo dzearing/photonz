@@ -41,6 +41,26 @@ public enum PatchFill: Equatable, Sendable {
     }
 }
 
+/// How the space a piece came out of was filled in, which is the only part of
+/// a cut worth saying out loud.
+///
+/// `matched` never needs announcing: the person watched the canvas change and
+/// what went in was read off the picture. The other two are the app admitting
+/// what it did not know, and a person who is not told cannot tell a repair
+/// from a smudge.
+public enum PatchHeal: String, Hashable, Sendable, Codable {
+    /// The surroundings agreed with themselves or ramped evenly, so the fill
+    /// was READ rather than guessed (`PatchDecision.decide`).
+    case matched
+    /// The surroundings justified nothing, and the person asked for the cut
+    /// anyway, so the middle colour of what was around it went in. One flat
+    /// colour, because a guess must not pretend to detail it does not have.
+    case guessed
+    /// There was no background to read at all, which is what a marquee flung
+    /// round the whole layer leaves. The space is honestly empty.
+    case cleared
+}
+
 /// The background just outside a piece, as read off the picture.
 ///
 /// Samples carry WHERE they sat as well as what colour they were, because that
@@ -120,6 +140,17 @@ public enum PatchDecision {
             }
             .filter { $0.residual <= fitTolerance }
         return candidates.min(by: { $0.residual < $1.residual })?.fill
+    }
+
+    /// The middle of a ring: the per-channel median of everything in it.
+    ///
+    /// What goes into the space when `decide` can justify nothing and the
+    /// person asked for the cut anyway (`PatchHeal.guessed`). The median
+    /// rather than the mean for the same reason `decide` uses it: it lands ON
+    /// a colour that was really there rather than between two that were.
+    public static func middle(of ring: PatchRing) -> RGBA? {
+        guard !ring.samples.isEmpty else { return nil }
+        return median(ring.samples.map(\.color))
     }
 
     // MARK: - Reading the ring

@@ -31,6 +31,11 @@ public struct RegionSliceRefusal: Hashable, Sendable {
         /// nothing, while the other two had already learned to explain
         /// themselves over the very same marquee.
         case fill
+        /// ⇧⌘J, New Layer via Cut. The one key in the family with no
+        /// whole-layer version behind it: without a marquee there is no
+        /// piece, and ⌘J on its own duplicates the layer rather than cutting
+        /// anything out of it. So its way out has to point somewhere else.
+        case cutToLayer
     }
 
     /// Why this layer cannot take it, which is the half a person can act on.
@@ -82,6 +87,7 @@ public struct RegionSliceRefusal: Hashable, Sendable {
         case .cut: return "Cannot cut a piece out"
         case .erase: return "Cannot delete a piece"
         case .fill: return "Cannot fill a piece"
+        case .cutToLayer: return "Cannot cut a piece onto its own layer"
         }
     }
 
@@ -107,6 +113,11 @@ public struct RegionSliceRefusal: Hashable, Sendable {
         case .cut: wayOut = "Clear the marquee to cut the whole layer."
         case .erase: wayOut = "Clear the marquee to delete the whole layer."
         case .fill: wayOut = "Clear the marquee to fill the whole layer."
+        // NOT "clear the marquee to cut the whole layer": there is no such
+        // thing. Clearing it and pressing ⌘J makes a copy of the layer and
+        // takes nothing out of anything, so the line points at the nearest
+        // command that really works rather than at one that would surprise.
+        case .cutToLayer: wayOut = "Command J copies the whole layer instead."
         }
         switch reason {
         case .notPixels:
@@ -133,7 +144,7 @@ public struct RegionSliceRefusal: Hashable, Sendable {
     /// and reread.
     private var pieceClause: String {
         switch action {
-        case .cut, .erase: return "a piece taken out"
+        case .cut, .erase, .cutToLayer: return "a piece taken out"
         case .fill: return "a piece filled in"
         }
     }

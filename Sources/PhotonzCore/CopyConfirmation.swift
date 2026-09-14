@@ -106,6 +106,15 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// stays a picture has to say WHY, and every reason here is a sentence
         /// they can do something about.
         case turnedIntoText(TextReading.Outcome)
+        /// ⇧⌘J: a piece is now on a layer of its own and the space it came
+        /// from has been filled in.
+        ///
+        /// Raised ONLY when the fill was not read off the picture. A cut whose
+        /// surroundings agreed changed the canvas in front of the person who
+        /// asked for it, and a pill saying so is nagging. A fill the app could
+        /// not justify is the opposite: it looks exactly like a repair, and
+        /// nobody can tell the two apart without being told.
+        case cutToOwnLayer(PatchHeal)
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -202,6 +211,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return runs + boxes == 0 ? "Nothing to separate" : "Separated"
         case .turnedIntoText(let outcome):
             return outcome.reading == nil ? "Still a picture" : "Turned into text"
+        case .cutToOwnLayer:
+            return "Cut to its own layer"
         }
     }
 
@@ -296,6 +307,19 @@ public struct CopyConfirmation: Hashable, Sendable {
                 return "\(TextReading.layerName(for: reading.string)), \(face)"
             case .refused(let why):
                 return why.sentence
+            }
+        case .cutToOwnLayer(let heal):
+            switch heal {
+            case .matched:
+                return "The space it came from was filled in with the colours around it"
+            case .guessed:
+                // Said plainly, because it looks exactly like a repair. The
+                // person asked for the cut, so the app made one rather than
+                // ignoring the key, and this is the sentence that stops the
+                // guess passing itself off as a reading.
+                return "The colours around it did not agree, so the fill is a guess at the middle of them"
+            case .cleared:
+                return "There was nothing around it to read, so the space it came from is empty"
             }
         }
     }

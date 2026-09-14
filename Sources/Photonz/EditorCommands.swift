@@ -410,6 +410,15 @@ struct EditorCommands: Commands {
             Button("New Layer via Copy") { editor?.newLayerViaCopy() }
             .keyboardShortcut("j", modifiers: .command)
             .disabled(editor?.selection == nil && !hasLayerSelection)
+            // Photoshop ⇧⌘J, and its twin: the same command with the piece
+            // TAKEN rather than copied, and the space it came from filled in
+            // from what was around it (`newLayerViaCut`). Directly under the
+            // copy row it is the sibling of, so the pair reads as a pair.
+            if Experiments.shared.newLayerViaCutEnabled {
+                Button("New Layer via Cut") { editor?.newLayerViaCut() }
+                    .keyboardShortcut("j", modifiers: [.command, .shift])
+                    .disabled(!(editor?.canCutSelectionToLayer ?? false))
+            }
             Button("Blur Behind Selection") { editor?.blurBehindSelection() }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
                 .disabled(editor?.selection == nil)

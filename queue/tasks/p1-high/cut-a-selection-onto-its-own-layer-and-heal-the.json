@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 14,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T03:35:37.681Z",
-  "updated": "2026-09-14T03:35:37.727Z",
+  "updated": "2026-09-14T05:44:14.162036Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-13: \"i want a special 'smart cut' feature, where i highlight something, i hit cmd-shift-x, and instead of cut, it move the selection to its own layer, leaving the hole in the source layer filled with the bg color which is intelligently derived from the edges.\"\n\nMOST OF THIS IS ALREADY BUILT. This is a command over machinery the auto-separate work landed on 2026-09-13, not new image processing:\n- PhotonzCore/PatchFill.swift is the whole intelligent-fill answer. PatchRing carries ring samples, and PatchDecision.decide returns a flat colour where the ring agrees (tolerance two levels out of 255, so the flat case is exact) or a fitted straight gradient where it ramps. Reuse it; do not write a second fill.\n- PatchRing is a bag of samples with u and v coordinates and knows NOTHING about shape, so a non-rectangular marquee only needs a ring builder that walks outside the selection path. The decision half is already shape-agnostic.\n- PhotonzRender/LayerSeparator.swift already cuts pieces out and patches behind them for the automatic case.\n- EditorState+Regions.swift deleteRegion already erases a region from a layer and tightens the frame to the surviving pixels; promoteSelectionToLayer already lifts a marquee onto a new layer. Smart cut is those two plus the patch, in ONE History.perform.\n\nTHE KEY, and this is worth settling before building. The user asked for Command Shift X, which is free in this app. But the app already has \"New Layer via Copy\" on Command J (EditorCommands.swift:410), which is Photoshop's exact key for Layer Via Copy, and Photoshop's SIBLING of that command is Layer Via Cut on Shift Command J, which is precisely this feature. Shift Command J is free. The user's standing preference is to default new keybindings to Photoshop's, and Command Shift X is Liquify in Photoshop. So the recommendation is to ship this as \"New Layer via Cut\" on Shift Command J, sitting directly under the New Layer via Copy row it is the twin of, and to say so to the user. Build it on the key the user asked for if they hold to it; either way it is one line, and the two must not both be bound.\n\nWhat this app adds over Photoshop's version, and the reason it is worth building: Photoshop's Layer Via Cut leaves a hole. This fills it from what was around it.\n\nThe case that needs a decision rather than a default: PatchDecision.decide returns nil when the surroundings justify nothing. Auto-separate answers that by SKIPPING the piece, which is right when the app chose the piece itself. Here the person chose it and pressed a key, so refusing to cut would be ignoring an instruction. Recommended: cut anyway, fill with the median of the ring, and say once that the fill was a guess. Record the choice in the audit.\n\nWhich layer it cuts from: the region already resolves a target (regionTargetID in EditorState+Regions.swift) and there is an existing refusal path (RegionSliceRefusal) for a marquee over something no piece can be taken out of. Use both rather than inventing a new answer, so this key refuses out loud exactly like Command X and Delete already do over the same marquee.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
@@ -35,6 +35,63 @@
     {
       "t": "2026-09-14T03:35:37.726Z",
       "note": "seq 270 -> 14"
+    },
+    {
+      "t": "2026-09-14T05:22:53.423Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T05:24:32.952286Z",
+      "note": "adversarial review, before building. (1) THE KEY: shipping as \"New Layer via Cut\" on Shift Command J, not Command Shift X. Shift Command J is Photoshop's Layer Via Cut, it is free here, it sits directly under the New Layer via Copy row it is the twin of, and Command Shift X is Photoshop's Liquify. The user's standing rule is to default new keys to Photoshop's. Not blocking the feature on this: it is one line, and the audit carries it as a line the user can disagree with."
+    },
+    {
+      "t": "2026-09-14T05:24:32.952286Z",
+      "note": "adversarial review (2) WHICH PIXELS: not the flattened composite. The nothing-picked half of Command J promotes every layer flattened together, which cannot be healed because there is no one layer to heal. So this routes through RegionTarget exactly like Backspace, Option Backspace and the bucket do, and refuses out loud through RegionSliceRefusal over a marquee on a shape or a piece of text. New refusal action .cutToLayer, because the way out differs: clearing the marquee makes Command J duplicate the layer, it does not cut anything."
+    },
+    {
+      "t": "2026-09-14T05:24:32.952286Z",
+      "note": "adversarial review (3) THE TASK NOTE IS WRONG ABOUT TIGHTENING. It says smart cut is deleteRegion plus promoteSelectionToLayer plus the patch. deleteRegion tightens the source layer's frame to the surviving pixels, which is exactly what must NOT happen here: the hole is filled, so there are no fewer pixels and the layer keeps its box. That also means the locked Background needs no special case at all, since nothing was going to resize it. Simpler than the task expected."
+    },
+    {
+      "t": "2026-09-14T05:24:32.952286Z",
+      "note": "adversarial review (4) SHORTEST VERSION: one pure ring walk (PatchRingWalk) so a ring can follow any outline, one render entry point (SmartCut.cut), one Document step (cutRegionToLayer), one command. No second fill, no new image processing: PatchDecision decides, RegionOps draws."
+    },
+    {
+      "t": "2026-09-14T05:24:32.952286Z",
+      "note": "adversarial review (5) NOISE: the pill only speaks when the fill was a guess or there was nothing to read. On the common case the canvas visibly changed and a pill saying so is nagging."
+    },
+    {
+      "t": "2026-09-14T05:24:32.952286Z",
+      "note": "adversarial review (6) FIRST TIME USER: the row is dim with no marquee up, so the key can never look like it did nothing. The piece is cut from the layer's BITMAP, so the source layer's own blur or shadow stays on the source and does not travel with the piece. Recorded as rough."
+    },
+    {
+      "t": "2026-09-14T05:44:14.162036Z",
+      "note": "BUILT. New Layer via Cut, Shift Command J, Layer menu directly under New Layer via Copy, behind next-new-layer-via-cut (on by default in Next). Core: PatchRingWalk (the ring round any outline), PatchHeal, PatchDecision.middle, CopyConfirmation.cutToOwnLayer, RegionSliceRefusal.Action.cutToLayer, PhotonzDocument.cutRegionToLayer. Render: SmartCut.cut and RegionOps.patched. App: EditorState.newLayerViaCut and canCutSelectionToLayer in EditorState+Regions.swift. Playtest step newLayerViaCut plus Scripts/playtest/cut-onto-its-own-layer-walk.json."
+    },
+    {
+      "t": "2026-09-14T05:44:14.162036Z",
+      "note": "Verified, not assumed. 6426 tests in 522 suites pass. 19 new tests written BEFORE the implementation cover the flat surround (exact, byte for byte), the gradient surround, an ellipse, a wand shape with a hole in it, the surround that justifies nothing, a marquee over the whole layer, and the refusals. Walks run and green: cut-onto-its-own-layer, delete-over-a-marquee, region-keeps-your-layer, cut-says-what-it-cannot-do, new-layer-takes-your-layer, all six separate-* and all seven marquee-* walks."
+    },
+    {
+      "t": "2026-09-14T05:44:14.162036Z",
+      "note": "Proved in the REAL app, not by eye. The walk's own document render was sampled afterwards: where the word General had been, every pixel of the healed space is exactly (242,242,247), the same byte triple as the page all round it, where before the cut the same pixels were black glyph. The dragged piece sits 41x13 at 480,644 with the screenshot behind it whole."
+    },
+    {
+      "t": "2026-09-14T05:44:14.162036Z",
+      "note": "Two adversarial findings turned into changes. (a) A ring snug on an outline reads the ANTIALIASED RIM of the thing being cut, so a wand selection, which follows ink exactly, turned an exact panel colour into a guess. PatchRingWalk now skips the band touching the outline and reads two to four pixels out. (b) The mask was four bytes a pixel and the edge pass converted every one of five million pixels back and forth through global coordinates. Both fixed; RegionOps.trimmed also now probes each row from both ends instead of reading through the middle, which speeds up a region delete on a big picture too."
+    },
+    {
+      "t": "2026-09-14T05:44:14.162036Z",
+      "note": "THE KEY, decided rather than blocked. Shipped as Shift Command J, which is Photoshop's own Layer Via Cut, not the Command Shift X the user named (that is Photoshop's Liquify). The user's standing rule is to default new keys to Photoshop's, and the row belongs under New Layer via Copy as its twin. It is one line to change, and it is the first line of the audit's evaluate list so the user can overrule it with one click rather than the feature waiting on a decision card."
+    },
+    {
+      "t": "2026-09-14T05:44:14.162036Z",
+      "note": "Not done and said so: the cost of an enormous marquee was only measured in a DEBUG test build (small marquee 81ms, an ellipse over half a 12MP picture 1179ms), which overstates the shipping build by a lot. Filed as find-out-what-a-big-marquee-really-costs-to-cut at p2-normal with the part-by-part numbers. Sweep requested because RegionOps.trimmed is shared by every region delete."
+    },
+    {
+      "t": "2026-09-14T05:44:14.162036Z",
+      "note": "Audit: queue/audits/2026-09-14-cut-to-own-layer.json, with four real window captures from the walk (Screen Recording was granted) and a 10x before and after of the patched edge cropped from the document's own pixels."
     }
-  ]
+  ],
+  "started": "2026-09-14T05:22:53.422Z"
 }

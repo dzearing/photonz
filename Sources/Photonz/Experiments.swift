@@ -289,6 +289,11 @@ extension Experiments {
     /// catalog, so Current never offers the command.
     var separateIntoLayersEnabled: Bool { isEnabled(FeatureCatalog.separateIntoLayersFlag) }
 
+    /// New Layer via Cut, ⇧⌘J and the Layer menu row under New Layer via Copy
+    /// (Next, `next-new-layer-via-cut`). Exists only in the Next release's
+    /// catalog, so Current never offers the command.
+    var newLayerViaCutEnabled: Bool { isEnabled(FeatureCatalog.newLayerViaCutFlag) }
+
     /// `next-blank-canvas`: whether an empty window offers Blank canvas
     /// alongside open, capture and paste. Exists only in the Next release's
     /// catalog, so Current always reads false and its empty window is

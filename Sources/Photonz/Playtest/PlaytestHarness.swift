@@ -1894,6 +1894,7 @@ private final class Run {
             case .selectCanvas: editor.selectCanvas()
             case .duplicateLayer: editor.duplicateSelectedLayers()
             case .newLayerViaCopy: editor.newLayerViaCopy()
+            case .newLayerViaCut: editor.newLayerViaCut()
             case .newLayer: editor.newEmptyLayer()
             case .separateIntoLayers:
                 if let id = editor.selectedLayerID { editor.separateIntoLayers(id: id) }
