@@ -9,12 +9,12 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T14:59:22.144Z",
+  "updated": "2026-09-14T18:06:16.244Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T14:59:22Z: 410 of 413 walks passed in 88 minutes.\n\nFailing walks (3): effect-style-walk, layers-lazy-rows-walk, measure-row-menu-walk\n\nStopped failing since the last sweep (4): dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, layers-list-follows-pick-walk, panel-start-margin-walk\n\nFull output: queue/sweep/2026-09-14-063146.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: picking-a-text-layer-leaves-its-settings-below-t: the dock's section order changed for Next (what you picked now sits directly under Layers) and the pick-time scroll was removed, so every walk that reads the panel is affected\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T18:06:16Z: 416 of 417 walks passed in 87 minutes.\n\nFailing walks (1): measure-row-menu-walk\n\nStopped failing since the last sweep (2): effect-style-walk, layers-lazy-rows-walk\n\nFull output: queue/sweep/2026-09-14-093854.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-paint-tool-throws-your-marquee-away-for-good: A marquee now survives every tool change (EditorState.setTool no longer clears the selection region). I ran the 29 walks that use a selection tool or the crop tool and all passed, but the rule is shared state that any walk switching tools can touch.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
   "acceptance": [
     "A fresh sweep is asked for after two-effect-walks-fail-now-and-then-because-a-pre lands, with queue/bin/sweep.sh request",
     "contents-for-several-walk either passes or is rewritten to match what the app does now, and passes twice on its own",
@@ -146,6 +146,10 @@
     {
       "t": "2026-09-14T14:59:22.143Z",
       "note": "sweep 2026-09-14T14:59:22Z: 3 failing (effect-style-walk, layers-lazy-rows-walk, measure-row-menu-walk); stopped failing: dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, layers-list-follows-pick-walk, panel-start-margin-walk"
+    },
+    {
+      "t": "2026-09-14T18:06:16.243Z",
+      "note": "sweep 2026-09-14T18:06:16Z: 1 failing (measure-row-menu-walk); stopped failing: effect-style-walk, layers-lazy-rows-walk"
     }
   ]
 }

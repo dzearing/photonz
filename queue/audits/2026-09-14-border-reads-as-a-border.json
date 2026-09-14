@@ -1,0 +1,28 @@
+{
+  "feature": "A shape arrives with no edge, and the edge you add reads",
+  "epic": "ui-building",
+  "summary": "A box or an oval now comes out as its fill and nothing else, with an empty Effects list, and the Border you add from the plus lands in an ink that stands out from the fill instead of a copy of it. Turning Fill off still leaves you the outline of the shape.",
+  "setup": "Photonz Dev, any document. Nothing to switch on: this is how shapes are drawn now, in both releases.",
+  "try": [
+    { "do": "Press R and drag out a box." },
+    { "do": "Look at the Effects list in the dock: it is empty, and the plus is the only thing in it.", "shot": "2026-09-14-border-reads-as-a-border-1.png" },
+    { "do": "Press the plus on the Effects header and choose Border.", "shot": "2026-09-14-border-reads-as-a-border-2.png" },
+    { "do": "Drag the Border Width slider up and watch the line thicken." },
+    { "do": "Press R and drag out a second box: it wears the same ring.", "shot": "2026-09-14-border-reads-as-a-border-4.png" },
+    { "do": "Pick either box, open the Fill swatch in Appearance and untick Fill." },
+    { "do": "Draw a box on a near-black fill and add a Border: the ring comes out white rather than black." }
+  ],
+  "evaluate": [
+    "Is an empty Effects list on a fresh shape what you expect, or do you miss having the Border row sitting there to reach for?",
+    "When you press the plus and choose Border, is the 2 px line it lands at enough to see, or should the first ring be thicker?",
+    "Is graphite the right colour for a first ring on a red box, or would you rather it took a deeper shade of the fill?",
+    "Adding a border is now two moves for an outlined shape (draw, then plus). Does that feel like one move too many?",
+    "With the box tool in hand the toolbar's border swatch shows a slash, because the next box has no line. Does that read as off, or as broken?"
+  ],
+  "rough": [
+    "While a shape is selected, the marching-ants outline sits exactly where a new 2 px ring lands, so the first press of the plus can look like nothing happened until you deselect or pull Width. The edge a box used to arrive with was 4 px. I left the width alone rather than make a second visual call you did not ask for.",
+    "A gradient fill picks the ring's ink from the average of its ramp, so a ramp that runs white to black gets one ink for the whole ring rather than a ring that changes along with it.",
+    "An unfilled shape's first ring is still the shape's own colour, not an ink chosen for the canvas behind it: a red outline box on a dark canvas is as hard to see as it ever was.",
+    "24 walks assumed a fresh box wears a ring and had to be taught to add one; I repaired every one of them, and asked for a full sweep in case a walk I did not think of photographs a box."
+  ]
+}

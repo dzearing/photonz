@@ -100,6 +100,40 @@
       "seconds": 0.6
     },
     {
+      "do": "drag",
+      "from": [
+        200,
+        420
+      ],
+      "to": [
+        380,
+        540
+      ],
+      "steps": 8,
+      "comment": "A box tool arrives with no edge at all, so the bar's border swatch is empty until an edge exists. Drawing one box and giving it a Border arms the tool, which is what the rest of this walk drags between."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
       "do": "press",
       "control": "Color",
       "in": "Toolbar border"

@@ -184,6 +184,16 @@
       "note": "the shelf is the whole Library panel, so a tile let go of an inch from where it started refuses instead of offering to save a second copy of itself"
     },
     {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@border",
+      "comment": "A shape arrives with no edge until you ask for one, so the Border this colour lands on is added here."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "dragColor",
       "from": "Brand",
       "onto": "@border",

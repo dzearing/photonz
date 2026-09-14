@@ -41,6 +41,16 @@
     {
       "do": "panelMenu",
       "menu": "Add Effect",
+      "choose": "Border",
+      "comment": "The Border this walk scrolls back to, added from the plus: a shape arrives with no edge."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
       "choose": "Shadow"
     },
     {

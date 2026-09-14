@@ -41,6 +41,16 @@
     {
       "do": "panelMenu",
       "menu": "Add Effect",
+      "choose": "Border",
+      "comment": "A shape arrives with no edge, so the Border this walk folds and unfolds is added here."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
       "choose": "Shadow"
     },
     {

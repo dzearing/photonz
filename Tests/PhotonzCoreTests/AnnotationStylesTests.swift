@@ -58,12 +58,11 @@ struct AnnotationStylesTests {
         #expect(styles.content(for: .arrow)?.strokeWidth == 8)
         #expect(styles.strokeWidth(forShape: .arrow) == 8)
         #expect(styles.content(for: .line)?.strokeWidth == AnnotationContent.defaultStrokeWidth)
-        // A box and an oval draw no stroke of their own: their edge arrives as
-        // a Border instead (`OutlineRetirementTests`).
+        // A box and an oval draw no stroke of their own, and no edge either
+        // until you ask for one (`BorderInk.swift`).
         for tool in [Tool.rectangle, .ellipse] {
             #expect(styles.content(for: tool)?.strokeWidth == 0)
-            #expect(styles.arrivingStyle(forShape: tool.annotationShape!)
-                .borderEffects.first?.width == AnnotationContent.defaultStrokeWidth)
+            #expect(styles.arrivingStyle(forShape: tool.annotationShape!).borderEffects.isEmpty)
         }
     }
 
@@ -320,8 +319,7 @@ struct AnnotationStylesRememberingTests {
 
         let oval = styles.arrivingStyle(forShape: .ellipse)
         let pristine = AnnotationStyles().arrivingStyle(forShape: .ellipse)
-        #expect(oval.borderEffects.count == 1)
-        #expect(oval.borderEffects.first?.isOn == true)
+        #expect(oval.borderEffects.isEmpty)
         #expect(oval.borderEffects == pristine.borderEffects)
     }
 

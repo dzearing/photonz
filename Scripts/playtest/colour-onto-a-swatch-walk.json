@@ -62,6 +62,16 @@
       "name": "colour-1-two-colours"
     },
     {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@border",
+      "comment": "A shape arrives with no edge until you ask for one, so the Border this colour is carried onto is added here."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "dragColor",
       "from": "@fill",
       "onto": "@border",

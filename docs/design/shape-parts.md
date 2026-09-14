@@ -64,9 +64,17 @@ will arrive as one more row with a switch, a colour and its own settings.
 > with no way to tell which one you were looking at (reported by the user on
 > 2026-09-07 and again on 2026-09-08). So a layer has NO Outline part any more:
 > its edge is a Border in the Effects list, one of a list it can hold several
-> of, with its own colour, width and position. A freshly drawn box still arrives
-> with its edge already listed, so nothing you draw looks different — the user
-> settled that on the decision card. See `OutlineRetirement.swift`.
+> of, with its own colour, width and position. See `OutlineRetirement.swift`.
+>
+> **Superseded again on 2026-09-14: no edge until you ask for one.** A freshly
+> drawn box used to arrive with its edge already listed, and that edge was
+> painted the exact colour of the fill, so the panel said Border, 4 pt, while
+> the picture had no line in it. The user settled it on the decision card "When
+> you draw a shape, what should its border look like before you have picked a
+> colour for it?": a shape is now its fill and nothing else, its Effects list
+> starts empty, and the border you add from the plus arrives in an ink that
+> stands out from the fill. Switching Fill off still leaves the outline of the
+> shape rather than nothing at all. See `BorderInk.swift`.
 >
 > The rest of this section is kept for the record of what the split used to be.
 

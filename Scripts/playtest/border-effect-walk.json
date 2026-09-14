@@ -39,15 +39,6 @@
       "seconds": 0.6
     },
     {
-      "do": "press",
-      "control": "Remove",
-      "in": "@border"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.5
-    },
-    {
       "do": "expect",
       "control": "Remove",
       "present": false
@@ -55,7 +46,7 @@
     {
       "do": "describe",
       "stage": "1-plain",
-      "note": "a plain filled box, no line of any kind on it, and an empty Effects list: a box arrives with a Border in Effects, and the cross takes it off so the walk can add one back from the plus"
+      "note": "a box with nothing on it: a shape arrives as its fill and no more, so the Effects list starts empty (`BorderInk.swift`)"
     },
     {
       "do": "snapshot",

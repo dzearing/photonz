@@ -333,6 +333,12 @@ extension PhotonzDocument {
             updateLayer(id: id) {
                 $0.unbindColorStyle(for: slot)
                 $0.setColorHex(seed, for: slot)
+                // Switching a box's inside off used to leave an outline box,
+                // because its edge was there all along wearing the fill's
+                // colour. A shape arrives with no edge now, so the outline that
+                // carries it comes from here instead of from nowhere
+                // (`BorderInk.swift`).
+                $0.gainingItsOutlineIfNothingWouldPaint()
             }
             changed += 1
         }

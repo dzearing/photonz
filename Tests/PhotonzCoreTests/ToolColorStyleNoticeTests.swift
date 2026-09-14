@@ -296,6 +296,9 @@ struct ToolColorStyleNoticeTests {
         var doc = document()
         var styles = AnnotationStyles()
         let surface = doc.addColorStyle(name: "Surface", colorHex: "#101820", roles: [.surface])
+        // A box has no edge until you ask for one (`BorderInk.swift`), so this
+        // one is asked for: the sentence is about the outline a shape HAS.
+        styles.setStrokeWidth(AnnotationContent.defaultStrokeWidth, forShape: .rectangle)
         styles.arm(Paint(hex: "#101820"), styleID: surface, name: "Surface",
                    slot: .stroke, forShape: .rectangle)
 

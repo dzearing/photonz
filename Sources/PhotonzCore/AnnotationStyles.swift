@@ -119,14 +119,13 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// The non-destructive effects (shadow, opacity, blur, …) a NEW annotation
     /// of this shape starts with — captured from the last one the user styled,
     /// so e.g. adding a drop shadow to one arrow carries to the next.
-    /// ...and, on a box or an oval, the EDGE it arrives with.
+    /// ...and, on a box or an oval, the EDGE the tool is holding.
     ///
-    /// The user settled this on 2026-09-08: with the Outline row gone from
-    /// Appearance, a freshly drawn shape still comes out with a line round it,
-    /// and that line is a Border in the Effects list, ready to be retuned,
-    /// reordered or taken off with the cross (`OutlineRetirement.swift`). So
-    /// the width, the colour and the side of the edge the tool is armed with go
-    /// in as a Border rather than as the shape's own stroke.
+    /// A shape's line is a Border in the Effects list rather than a stroke of
+    /// its own (`OutlineRetirement.swift`), so the width, the colour and the
+    /// side the tool is armed with go in as one. A tool holding no edge arms
+    /// none: a box arrives as its fill and nothing else until a border is
+    /// asked for, which the user settled on 2026-09-13 (`BorderInk.swift`).
     public func layerStyle(forShape shape: AnnotationShape) -> LayerStyle {
         defaults(forShape: shape).layerStyle
     }
@@ -136,8 +135,24 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     public func arrivingStyle(forShape shape: AnnotationShape) -> LayerStyle {
         let d = defaults(forShape: shape)
         var style = d.layerStyle
-        guard shape.arrivesWithABorder, d.strokeWidth > 0 else { return style }
-        var border = BorderEffect(width: d.strokeWidth, position: d.strokePosition)
+        guard shape.arrivesWithABorder else { return style }
+        var width = d.strokeWidth
+        // A shape never arrives as nothing. With no edge armed AND no inside,
+        // there would be no paint anywhere on it: an invisible layer somebody
+        // has to find in the layers list to prove they drew it. Taking the
+        // tool's Fill off has always meant "give me the outline one", and this
+        // is where that outline comes from now that an edge is no longer there
+        // by default (`BorderInk.swift`).
+        //
+        // A row that is SWITCHED OFF is left alone: that is somebody saying no
+        // to a line in so many words (2026-09-06), and the row sits in the
+        // panel one press from coming back. Only the absence of any row at all
+        // is a blank for this to fill.
+        if width <= 0, d.fill == nil, style.borderEffects.isEmpty {
+            width = AnnotationContent.defaultStrokeWidth
+        }
+        guard width > 0 else { return style }
+        var border = BorderEffect(width: width, position: d.strokePosition)
         // The whole paint, so a tool armed with a gradient draws a gradient
         // edge exactly as it did when the edge was the shape's own stroke.
         border.paint = d.paint
@@ -229,6 +244,27 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public mutating func setStrokeWidth(_ width: CGFloat, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].strokeWidth = width
+    }
+
+    /// The Width the USER just asked this tool for, which is the same as
+    /// setting it except in one case: an edge arriving FROM NOTHING on a shape
+    /// that has an inside takes an ink that stands out from that inside,
+    /// rather than a copy of it.
+    ///
+    /// That case is the toolbar's Border switch. Without this, ticking Border
+    /// on an untouched box tool armed a ring the exact colour of the fill,
+    /// which is the thing "no edge until you ask for one" was answering
+    /// (`BorderInk.swift`). Only ever the FIRST one: once the tool is holding
+    /// an edge, its colour is whatever was last left on one, and
+    /// `remember(_:forShape:)` sets the width straight so a colour somebody
+    /// chose is never second-guessed.
+    public mutating func armEdge(width: CGFloat, forShape shape: AnnotationShape) {
+        if shape.arrivesWithABorder, width > 0,
+           strokeWidth(forShape: shape) <= 0,
+           BorderInk.isLost(paint(forShape: shape), against: fillPaint(forShape: shape)) {
+            setPaint(BorderInk.standingOut(from: fillPaint(forShape: shape)), forShape: shape)
+        }
+        setStrokeWidth(width, forShape: shape)
     }
 
     /// Where the next shape of this kind draws its outline.
@@ -579,8 +615,14 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         // reach for a box to fill an area; outline-only is a fill-color choice
         // away. Nil fill (arrow/line/highlight) means no interior fill.
         let fill: String? = (shape == .rectangle || shape == .ellipse) ? color : nil
+        // ...and NO edge until you ask for one. A box used to arrive with a
+        // 4pt border in the Effects list painted the same colour as the fill,
+        // so the panel said Border while the picture had no line in it; the
+        // user settled that on 2026-09-13 (`BorderInk.swift`). A line and an
+        // arrow ARE their stroke, so theirs is untouched.
+        let width: CGFloat = shape.arrivesWithABorder ? 0 : AnnotationContent.defaultStrokeWidth
         return ShapeDefaults(colorHex: color,
-                             strokeWidth: AnnotationContent.defaultStrokeWidth,
+                             strokeWidth: width,
                              arrowheadScale: AnnotationStyles.defaultArrowheadScale,
                              fillColorHex: fill)
     }
@@ -602,12 +644,14 @@ extension AnnotationContent {
 
 extension AnnotationShape {
 
-    /// Whether a freshly drawn one of these arrives with a Border in its
-    /// Effects list instead of a stroke of its own.
+    /// Whether one of these draws its edge as a Border in its Effects list
+    /// rather than as a stroke of its own.
     ///
     /// A box and an oval have an inside, so the line round them is a ring that
-    /// can come off. A line and an arrow ARE their stroke, and a highlight is a
-    /// wash, so neither arrives with a border (`OutlineRetirement.swift`).
+    /// can come off — and since 2026-09-14 one they arrive without, until it is
+    /// asked for (`BorderInk.swift`). A line and an arrow ARE their stroke, and
+    /// a highlight is a wash, so neither has a ring to hold
+    /// (`OutlineRetirement.swift`).
     public var arrivesWithABorder: Bool {
         switch self {
         case .rectangle, .ellipse: return true

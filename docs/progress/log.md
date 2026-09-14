@@ -15182,3 +15182,30 @@ asks whether Escape is the press people reach for now, and whether Delete
 should belong to the outline or to the shape you just drew — with a marquee up,
 ⌫ still refuses to remove a freshly drawn rectangle and explains why. A full
 walk sweep was requested for the shared-state change.
+
+## 2026-09-14 — A shape arrives with no edge, and the edge you add reads
+
+Built the answer to "When you draw a shape, what should its border look like
+before you have picked a colour for it?" — the user chose **no edge until you
+ask for one**. A box or an oval now comes out as its fill and nothing else with
+an empty Effects list, instead of arriving with a Border painted the exact
+colour of the fill, which is why dragging Width used to appear to do nothing.
+
+`Sources/PhotonzCore/BorderInk.swift` carries the whole rule. A border born
+anywhere takes an ink that stands out from the fill, picked by contrast ratio
+rather than a lightness threshold: the arriving red sits at 0.39 lightness, so
+"dark fill, light ring" would have put a white ring on it at 2.4:1 where the
+graphite one reads at 7.1:1. Three doors, all covered — the plus
+(`Document.addEffect`), the panel's Width (`AnnotationBuilder.restyled`) and
+the toolbar's Border switch (`AnnotationStyles.armEdge`, which only ever
+repaints the FIRST edge, so the memory rule is untouched). And a shape never
+becomes nothing: `Layer.gainingItsOutlineIfNothingWouldPaint` means switching
+Fill off still leaves the outline box it always did.
+
+24 walks assumed a fresh box wears a ring and were taught to add one; all pass,
+plus the new `border-reads-as-a-border-walk`. A full sweep is requested, since
+any walk that draws a box and photographs it is in range.
+
+Next: the audit at `queue/audits/2026-09-14-border-reads-as-a-border.json` asks
+whether the 2 px a first ring lands at is enough to see, since the selection
+outline sits exactly where it lands while the shape is still picked.

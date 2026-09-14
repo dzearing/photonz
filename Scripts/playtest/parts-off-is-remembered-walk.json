@@ -1,74 +1,347 @@
 {
   "out": "/tmp/photonz-playtest/parts-off-is-remembered",
   "seed": "Switching a part off is remembered for the next shape you draw. Reported by the user on 2026-09-06: take a box outline off, draw another box, and the outline is back. Since 2026-09-08 that line is a Border in the Effects list rather than an Outline row in Appearance, so the walk presses the Border switch, and a box drawn after it comes out bare while still carrying the Border row switched off, which is how one press puts the line back. This walk switches each part in turn and draws a fresh shape after every press, so the box that comes out has to match the box the switch was pressed on. It ends on a shadow, which is an effect rather than a part since 2026-09-07 and so is added from the plus rather than switched on. It also draws an ellipse in the middle, which must be untouched by anything done to a rectangle.",
-  "setup": { "forget": ["panel", "shapes", "tools"] },
+  "setup": {
+    "forget": [
+      "panel",
+      "shapes",
+      "tools"
+    ]
+  },
   "steps": [
-    { "do": "blank", "canvasWidth": 900, "canvasHeight": 620, "width": 1400, "height": 950 },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [120, 120], "to": [300, 240], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-box-as-drawn",
-      "note": "a box as it comes out of the tool: fill on, a Border in Effects switched on, no shadow." },
-    { "do": "panel", "stage": "1-box-as-drawn" },
-    { "do": "press", "control": "Switch", "in": "@border" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "control": "Switch", "in": "@border", "reads": "off" },
-    { "do": "panel", "stage": "2-outline-off" },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [340, 120], "to": [520, 240], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "3-second-box",
-      "note": "the next box, drawn after the border was switched off. It has to come out with no line round it: this is the bug the user reported. Since 2026-09-08 the ROW comes with it, switched off and holding the width, colour and side the last box's border had, exactly as a switched-off shadow does, so the line is one press away rather than a trip to the plus." },
-    { "do": "expect", "control": "Switch", "in": "@border", "reads": "off" },
-    { "do": "render", "name": "parts-off-3-second-box-doc" },
-    { "do": "panel", "stage": "3-second-box" },
-    { "do": "snapshot", "name": "parts-off-3-second-box" },
-    { "do": "tool", "tool": "ellipse" },
-    { "do": "drag", "from": [560, 120], "to": [740, 240], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "4-ellipse-unchanged",
-      "note": "an ellipse, untouched by anything done to a rectangle: its Border switch reads on." },
-    { "do": "expect", "control": "Switch", "in": "@border", "reads": "on" },
-    { "do": "panel", "stage": "4-ellipse-unchanged" },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [120, 300], "to": [300, 420], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "5-border-back-on",
-      "note": "the line comes back with one press on the row the box arrived carrying, rather than a fresh one from the plus." },
-    { "do": "press", "control": "Switch", "in": "@border" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "control": "Switch", "in": "@border", "reads": "on" },
-    { "do": "panel", "stage": "5-border-back-on" },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [340, 300], "to": [520, 420], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "6-border-restored",
-      "note": "a Border was put back on the last box, so this one comes out wearing one too." },
-    { "do": "expect", "control": "Switch", "in": "@border", "reads": "on" },
-    { "do": "panel", "stage": "6-outline-restored" },
-    { "do": "press", "control": "Switch", "in": "@fill" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [560, 300], "to": [740, 420], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "panel", "stage": "7-fill-off-inherited" },
-    { "do": "panelMenu", "menu": "Add Effect", "choose": "@shadow" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [120, 470], "to": [300, 580], "steps": 10 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "8-shadow-on-inherited",
-      "note": "every part now stands where the switches left it: no fill, a Border, and a shadow. A shadow is an effect rather than a part since 2026-09-07, so it is added from the plus on the Effects header, and it is remembered the same way." },
-    { "do": "expect", "control": "Switch", "in": "@shadow", "reads": "on" },
-    { "do": "panel", "stage": "8-shadow-on-inherited" },
-    { "do": "snapshot", "name": "parts-off-is-remembered" }
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 620,
+      "width": 1400,
+      "height": 950
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        300,
+        240
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-box-as-drawn",
+      "note": "a box as it comes out of the tool: fill on, no edge until you ask for one, so the Border added here from the plus is the one this walk switches off."
+    },
+    {
+      "do": "panel",
+      "stage": "1-box-as-drawn"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@border",
+      "reads": "off"
+    },
+    {
+      "do": "panel",
+      "stage": "2-outline-off"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        120
+      ],
+      "to": [
+        520,
+        240
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-second-box",
+      "note": "the next box, drawn after the border was switched off. It has to come out with no line round it: this is the bug the user reported. Since 2026-09-08 the ROW comes with it, switched off and holding the width, colour and side the last box's border had, exactly as a switched-off shadow does, so the line is one press away rather than a trip to the plus."
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@border",
+      "reads": "off"
+    },
+    {
+      "do": "render",
+      "name": "parts-off-3-second-box-doc"
+    },
+    {
+      "do": "panel",
+      "stage": "3-second-box"
+    },
+    {
+      "do": "snapshot",
+      "name": "parts-off-3-second-box"
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        120
+      ],
+      "to": [
+        740,
+        240
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-ellipse-unchanged",
+      "note": "an ellipse, untouched by anything done to a rectangle: an oval arrives with no edge at all, so the switched-off row the boxes carry has plainly not leaked across to it."
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@border",
+      "present": false
+    },
+    {
+      "do": "panel",
+      "stage": "4-ellipse-unchanged"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        300
+      ],
+      "to": [
+        300,
+        420
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-border-back-on",
+      "note": "the line comes back with one press on the row the box arrived carrying, rather than a fresh one from the plus."
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@border",
+      "reads": "on"
+    },
+    {
+      "do": "panel",
+      "stage": "5-border-back-on"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        520,
+        420
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-border-restored",
+      "note": "a Border was put back on the last box, so this one comes out wearing one too."
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@border",
+      "reads": "on"
+    },
+    {
+      "do": "panel",
+      "stage": "6-outline-restored"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        560,
+        300
+      ],
+      "to": [
+        740,
+        420
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panel",
+      "stage": "7-fill-off-inherited"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        470
+      ],
+      "to": [
+        300,
+        580
+      ],
+      "steps": 10
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-shadow-on-inherited",
+      "note": "every part now stands where the switches left it: no fill, a Border, and a shadow. A shadow is an effect rather than a part since 2026-09-07, so it is added from the plus on the Effects header, and it is remembered the same way."
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@shadow",
+      "reads": "on"
+    },
+    {
+      "do": "panel",
+      "stage": "8-shadow-on-inherited"
+    },
+    {
+      "do": "snapshot",
+      "name": "parts-off-is-remembered"
+    }
   ]
- }
+}

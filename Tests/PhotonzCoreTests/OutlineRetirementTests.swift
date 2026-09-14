@@ -240,15 +240,17 @@ struct OutlineRetirementTests {
 
     // MARK: - What a freshly drawn shape arrives with
 
-    @Test("A new rectangle arrives with its edge in the Effects list")
-    func aNewRectangleArrivesWithABorder() {
+    // A box used to arrive with its edge already in the list, painted the
+    // same colour as its fill: the panel said Border, 4 pt, and the picture
+    // had no line in it. The user settled that on 2026-09-13 — no edge until
+    // you ask for one (`BorderInk.swift`). The edge a box DOES have still
+    // lives here, in the Effects list, which is what this file is about.
+    @Test("A new rectangle arrives with no edge at all")
+    func aNewRectangleArrivesWithNoBorder() {
         let styles = AnnotationStyles()
         let content = try? #require(styles.content(for: .rectangle))
         #expect(content?.strokeWidth == 0)
-        let style = styles.arrivingStyle(forShape: .rectangle)
-        #expect(style.borderEffects.count == 1)
-        #expect(style.borderEffects.first?.width == AnnotationContent.defaultStrokeWidth)
-        #expect(style.borderEffects.first?.colorHex == ShapeDefaults.standard(for: .rectangle).colorHex)
+        #expect(styles.arrivingStyle(forShape: .rectangle).borderEffects.isEmpty)
     }
 
     @Test("A new arrow arrives with no border at all")

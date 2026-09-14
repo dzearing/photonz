@@ -39,6 +39,15 @@
       "seconds": 0.8
     },
     {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "describe",
       "stage": "1-one-border",
       "note": "a box with one Border in Effects, opened: Color, Position and Width, and the Width slider drawn whole rather than sliced across the middle"

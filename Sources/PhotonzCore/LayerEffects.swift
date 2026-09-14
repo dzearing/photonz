@@ -826,10 +826,19 @@ extension PhotonzDocument {
             if !addable.kind.isCountable,
                layer.style.effects.contains(where: { $0.kind == addable.kind }) { continue }
             updateLayer(id: id) { target in
+                var arriving = addable.newEffect
+                // A ring you asked for is a ring you can see: it lands in an
+                // ink that stands out from whatever the layer is filled with,
+                // rather than a fixed black that disappears on a dark one
+                // (`BorderInk.swift`).
+                if case .border(var ring) = arriving {
+                    ring.paint = BorderInk.standingOut(from: target.paint(for: .fill))
+                    arriving = .border(ring)
+                }
                 // Through the layer, never through the list: a name worn by an
                 // effect below the new one has to come down a place with it
                 // (`ColorStyles.swift`, `insertEffect`).
-                target.insertEffect(addable.newEffect,
+                target.insertEffect(arriving,
                                     at: target.style.insertionIndex(for: addable.kind))
             }
             changed += 1

@@ -1,43 +1,163 @@
 {
   "out": "/tmp/photonz-playtest/colour-onto-an-off-part",
   "steps": [
-    { "do": "blank", "canvasWidth": 1100, "canvasHeight": 700, "width": 1500, "height": 950 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [180, 180], "to": [520, 380], "steps": 8 },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "tool", "tool": "select" },
-    { "do": "selectRow", "row": "Rectangle" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "action", "action": "paintSelectionColor" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Switch", "in": "@border" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "1-no-line",
-      "note": "the box has no line round it: the Border switch reads off and the row shows no colour. selectedColors must read fill #B0184A and stroke #FF3B30" },
-    { "do": "snapshot", "name": "offpart-1-no-line" },
-    { "do": "dragColor", "from": "@fill", "onto": "@border",
-      "hold": "offpart-2-in-flight", "expect": "takes" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "2-landed",
-      "note": "letting go both gave the box a line and painted it: selectedColors must read stroke #B0184A and the Border switch must read on at 4 px" },
-    { "do": "snapshot", "name": "offpart-3-landed" },
-    { "do": "action", "action": "undo" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "3-one-undo",
-      "note": "ONE undo took the whole thing back: the switch reads off again and stroke is #FF3B30" },
-    { "do": "snapshot", "name": "offpart-4-one-undo" },
-    { "do": "panelMenu", "menu": "Add Effect", "choose": "@shadow" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "press", "control": "Switch", "in": "@shadow" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "4-shadow-off",
-      "note": "a shadow added and then switched off. Its five settings and its colour are gone from the list, so the row itself is all there is to let a colour go on." },
-    { "do": "dragColor", "from": "@fill", "onto": "@shadow",
-      "hold": "offpart-5-onto-shadow", "expect": "takes" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "5-shadow",
-      "note": "the same gesture works on an effect that is switched off: the shadow comes back on in the fill colour" },
-    { "do": "snapshot", "name": "offpart-6-shadow" }
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1500,
+      "height": 950
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        180
+      ],
+      "to": [
+        520,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "paintSelectionColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-no-line",
+      "note": "the box has no line round it: the Border switch reads off and the row shows no colour. selectedColors must read fill #B0184A and stroke #FF3B30"
+    },
+    {
+      "do": "snapshot",
+      "name": "offpart-1-no-line"
+    },
+    {
+      "do": "dragColor",
+      "from": "@fill",
+      "onto": "@border",
+      "hold": "offpart-2-in-flight",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-landed",
+      "note": "letting go both gave the box a line and painted it: selectedColors must read stroke #B0184A and the Border switch must read on at 4 px"
+    },
+    {
+      "do": "snapshot",
+      "name": "offpart-3-landed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-one-undo",
+      "note": "ONE undo took the whole thing back: the switch reads off again and stroke is #FF3B30"
+    },
+    {
+      "do": "snapshot",
+      "name": "offpart-4-one-undo"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "@shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "@shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-shadow-off",
+      "note": "a shadow added and then switched off. Its five settings and its colour are gone from the list, so the row itself is all there is to let a colour go on."
+    },
+    {
+      "do": "dragColor",
+      "from": "@fill",
+      "onto": "@shadow",
+      "hold": "offpart-5-onto-shadow",
+      "expect": "takes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-shadow",
+      "note": "the same gesture works on an effect that is switched off: the shadow comes back on in the fill colour"
+    },
+    {
+      "do": "snapshot",
+      "name": "offpart-6-shadow"
+    }
   ]
 }

@@ -381,16 +381,39 @@ extension AnnotationBuilder {
         // width sets that border's (`OutlineRetirement.swift`). A line and an
         // arrow ARE their stroke, so theirs is set where it always was.
         if a.drawsARingRatherThanBeingOne {
+            // What the shape's inside will be once this edit has landed, which
+            // is what a new ring has to stand out from. Read here rather than
+            // after, because the fill and the edge can change in one breath.
+            let interior = fill ?? fillColorHex.map { $0.map { Paint(hex: $0) } } ?? a.fill
             if let strokeWidth {
                 let hadOne = updated.style.borderEffectIndex != nil
                 updated.style.borderWidth = strokeWidth
-                // A shape gaining an edge takes the colour it is being painted,
-                // or the one it was already wearing, never a black one nobody
-                // asked for.
+                // A shape gaining an edge takes the colour it is being painted
+                // with in the same breath, and otherwise an ink that STANDS OUT
+                // from what it is filled with. It used to take the fill's own
+                // colour, which made the first border on a filled shape
+                // invisible: the panel said Border, 4 pt, and the picture had
+                // no line in it (`BorderInk.swift`). An unfilled shape has
+                // nothing behind its ring but the canvas, so there the shape's
+                // own colour is still the right answer.
                 if !hadOne, let index = updated.style.borderEffectIndex {
                     updated.style.effects[index].border?.paint =
-                        paint ?? colorHex.map { Paint(hex: $0) } ?? a.paint
+                        paint ?? colorHex.map { Paint(hex: $0) }
+                        ?? (interior == nil ? a.paint : BorderInk.standingOut(from: interior))
                 }
+            }
+            // ...and a shape never becomes nothing. Taking the inside away from
+            // a shape with no ring would leave no paint anywhere on it, where
+            // it used to leave the outline box the edge was always quietly
+            // carrying. So the outline arrives, in the shape's own colour,
+            // which is exactly what that outline box always looked like
+            // (`BorderInk.swift`).
+            if let fillWanted = fill ?? fillColorHex.map({ $0.map { Paint(hex: $0) } }),
+               fillWanted == nil {
+                var probe = updated
+                probe.content = .annotation({ var c = a; c.fill = nil; return c }())
+                probe.gainingItsOutlineIfNothingWouldPaint()
+                updated.style = probe.style
             }
             if let index = updated.style.borderEffectIndex {
                 if let paint { updated.style.effects[index].border?.paint = paint }

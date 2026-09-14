@@ -448,7 +448,10 @@ extension EditorState {
             perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, strokeWidth: width) } }
         }
         if let shape = styleTargetShape, shape != .highlight {
-            annotationStyles.setStrokeWidth(width, forShape: shape)
+            // Through `armEdge`, because this is a person asking for a Width:
+            // a box's first edge comes in an ink that reads against its inside
+            // rather than a copy of it (`BorderInk.swift`).
+            annotationStyles.armEdge(width: width, forShape: shape)
         }
         saveAnnotationStyles()
     }

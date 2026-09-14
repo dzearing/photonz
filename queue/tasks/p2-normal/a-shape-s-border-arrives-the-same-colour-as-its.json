@@ -5,18 +5,20 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T18:24:56.607Z",
-  "updated": "2026-09-13T13:04:09.934Z",
+  "updated": "2026-09-14T19:14:49.549Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-08 while repairing the five stale border walks. Reproduced on the probe build at 0ef9bd9f.\n\nCommand (walk body saved at /tmp/pz-probe/border-invisible.json: blank 900x600, key r, drag 340,300 to 560,460, press Slider in Border across 0.3, panelMenu Border choose Outside, render, press Color in Border, panel):\n\n  Scripts/playtest.sh /tmp/pz-probe/border-invisible.json --no-build\n\nOutput:\n  border picker swatch marked as current: [{'detail': '#FF2114, already picked', 'name': 'Shades 5'}]\n  fill centre pixel: (255, 59, 48)\n  11pt outside border pixel: (255, 59, 48)\n\nThe panel at that moment reads Fill (red swatch), Border > Color (the same red swatch), Position Outside, Width 11 pt. An 11 pt outside ring painted in the fill colour is invisible on white, and the only visible effect of dragging Width is that the shape grows.\n\nThis is why corner-radius-rounds-walk and ellipse-border-walk now have to press the Border Color well and pick Shades 9 before their ring is legible: without it the walk passes while photographing nothing. Those two walks are the regression test to keep honest if this changes.\n\nA shape arrives at Width 0, so nobody sees the clash until they pull the slider. Likely fix is in the arriving style (PhotonzCore AnnotationStyles.arrivingStyle(forShape:)) or wherever a new layer's border colour is seeded: a first border wants a colour that contrasts with the fill rather than a copy of it. Whether that should be a fixed ink, a darker shade of the fill, or the last border colour you used is a UX judgment, hence p2 and not a silent fix.",
   "acceptance": [
-    "Drawing a shape and dragging its Border width off zero puts a line on screen you can see against the fill, with no second trip to the colour well",
-    "The border colour a shape arrives with is still whatever you last left a border on that kind of shape, so the memory rule is not undone",
-    "A walk proves it: the pixel under an outside border is a different colour from the pixel inside the fill"
+    "A freshly drawn box or oval has an empty Effects list: no Border row claiming a line you cannot see",
+    "Adding a Border from the plus puts a ring on screen you can see against the fill straight away, with no trip to the colour well",
+    "Whatever border you last left on a box is still what the next box arrives with, so the memory rule is not undone",
+    "Turning a shape's fill off still leaves you an outline of the shape rather than nothing at all",
+    "A walk proves it: after adding a border the pixel under the ring is a different colour from the pixel inside the fill"
   ],
   "log": [
     {
@@ -66,7 +68,52 @@
     {
       "t": "2026-09-13T13:04:09.933Z",
       "note": "decision \"When you draw a shape, what should its border look like before you have picked a colour for it?\" resolved: No edge until you ask for one"
+    },
+    {
+      "t": "2026-09-14T18:06:16.420Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T18:07:42.258Z",
+      "note": "Answer in hand: option c, no edge until you ask for one. Read the resolved card: a fresh box is just the fill with an empty Effects list, and the border you add arrives in a colour that stands out from the fill."
+    },
+    {
+      "t": "2026-09-14T18:07:45.742150Z",
+      "note": "Acceptance rewritten to match the answer: the old checklist was written for 'drag Width off zero and see a line', which option c retires. Done now means a fresh shape has no border row at all, and the border you add is visible the moment it appears."
+    },
+    {
+      "t": "2026-09-14T18:07:51.809Z",
+      "note": "Adversarial review before building. (1) There are TWO doors to a first border, not one: the plus on the Effects header, and the Border checkbox in the toolbar's shape popover. The second runs through AnnotationEditing.restyled, whose rule today is 'a shape gaining an edge takes the colour it is being painted' - i.e. the fill - so fixing only the plus would leave the same invisible ring one control away. Both doors get the same rule. (2) Building option c naively breaks something the decision itself praised: with no border by default, switching a shape's Fill off leaves NOTHING on the canvas, where today it leaves a red outline box. So the rule has to be 'a shape never becomes nothing': take the fill away and the outline arrives to carry the shape. (3) 'A colour that stands out from the fill' needs an actual rule - near-black is as invisible on a dark fill as red is on red - so the ink is chosen by the fill's brightness, graphite on a light fill, white on a dark one. (4) Shortest version that delivers it: no new UI, no new control, three rules in the core model and a walk. Nothing from option a (darkening the fill) gets built."
+    },
+    {
+      "t": "2026-09-14T19:14:36.439Z",
+      "note": "Built option c in PhotonzCore, so both releases get it: the shape model and the editor are shared and there is no fork of either in Releases/, so there was nothing to port. New BorderInk.swift carries the whole rule and the why. (1) ShapeDefaults.standard gives a box and an oval width 0, so arrivingStyle hands back an empty Effects list. (2) A border BORN anywhere takes an ink that stands out from the fill, chosen by contrast ratio rather than a lightness threshold - the arriving red sits at 0.39 lightness, so a light/dark test would have put a white ring on it at 2.4:1 where graphite reads at 7.1:1. Three doors, all covered: the plus (Document.addEffect), the panel's Width (AnnotationBuilder.restyled), and the toolbar's Border switch (AnnotationStyles.armEdge, new, which only ever repaints the FIRST edge so remember() is untouched). (3) A shape never becomes nothing: Layer.gainingItsOutlineIfNothingWouldPaint, called from restyled and from Document.setColorEnabled, so switching Fill off still leaves the red outline box it always did."
+    },
+    {
+      "t": "2026-09-14T19:14:39.198Z",
+      "note": "Verified on the probe (Screen Recording granted, so the audit carries real captures). Scripts/playtest/border-reads-as-a-border-walk.json, new: draw a box, read the panel, add a Border from the plus, pull Width, draw a second box. Scanning the renders across the middle of the box gives, in order: fresh 340:#FF3B30 560:#FFFFFF (flat, no rim); after the plus 338:#1C1C1E 340:#FF3B30 560:#1C1C1E (a 2 px graphite ring against a red fill); after the Width drag an 11 px ring; and the SECOND box 609:#1C1C1E 620:#FF3B30 (same ink, same width, so the memory rule holds). The panel dump for the fresh box lists only the plus under Effects. outline-position-walk proves the fill-off case: its render is a 20 px red rim with a white middle."
+    },
+    {
+      "t": "2026-09-14T19:14:43.979Z",
+      "note": "Adversarial review of the built thing, on the probe: pressing the plus while the shape is still selected can look like nothing happened, because the marching-ants outline sits exactly where the new 2 px ring lands. It is there (the pixels say so) and it reads the moment you deselect or pull Width. The edge a box used to arrive with was 4 px, so a wider first ring would be the obvious fix, but the width a border is born at is the app's existing answer for every layer and widening it only for shapes is a second visual call the user did not ask for. Left as an evaluate question on the audit instead."
+    },
+    {
+      "t": "2026-09-14T19:14:44.022Z",
+      "note": "left rough: a gradient fill picks its ring's ink from the AVERAGE of the ramp, so a white-to-black fill gets one ink for the whole ring. Nobody would notice without hunting for it, and the alternative (a ring that changes along its length) is a feature rather than a fix."
+    },
+    {
+      "t": "2026-09-14T19:14:44.063Z",
+      "note": "left rough: an UNFILLED shape's first ring still takes the shape's own colour rather than an ink picked for the canvas behind it, so a red outline box on a dark canvas is as hard to see as it always was. Unchanged by this task, and changing it would mean the app second-guessing a colour somebody picked."
+    },
+    {
+      "t": "2026-09-14T19:14:44.106Z",
+      "note": "24 walks assumed a freshly drawn box wears a ring and were taught to add one from the plus (or, where the walk was about a shape being plain, to stop taking off a ring that is no longer there): border-effect, border-off-keeps-its-row, border-offset, ellipse-border, corner-radius-rounds, highlight-one-outline, one-outline-two-kinds, outline-position, colour-onto-an-off-part, parts-off-is-remembered, effect-colour, effect-row-is-a-small-pane, effect-style, effects-fit-one-open, effects-open-into-view, effects-remembered, effects-room-for-the-one-you-opened, effects-say-their-reach, glow-effect, colour-off-the-shelf, colour-onto-a-swatch, colour-only-where-it-paints, toolbar-colour, plus the new border-reads-as-a-border. All 24 pass. Asked for a full sweep because any walk that draws a box and photographs it is in range."
+    },
+    {
+      "t": "2026-09-14T19:14:49.547Z",
+      "note": "A shape arrives with no edge until you ask for one, and the edge you ask for reads. PhotonzCore/BorderInk.swift holds the rule; the plus, the panel's Width and the toolbar's Border switch all give a first ring an ink chosen by contrast against the fill, and switching Fill off still leaves the outline. Verified on the probe: new border-reads-as-a-border-walk shows a flat box, then a 2 px graphite ring on red, then the next box wearing the same ring; 6515 core tests green; 24 border/outline/effect/colour/parts walks repaired and passing. Audit: queue/audits/2026-09-14-border-reads-as-a-border.json."
     }
   ],
-  "started": "2026-09-08T18:26:27.791Z"
+  "started": "2026-09-14T18:06:16.419Z",
+  "completed": "2026-09-14T19:14:49.548Z"
 }

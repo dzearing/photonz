@@ -41,7 +41,16 @@
       "seconds": 0.8
     },
     {
-      "comment": "A fresh box comes with its outline already in the list, open. That is the effect the room starts with.",
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The Border added from the plus is the effect the room starts with: a fresh box comes with no edge at all.",
       "do": "expect",
       "control": "Twist",
       "in": "Border",
