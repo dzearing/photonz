@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-08T09:45:45.773Z",
-  "updated": "2026-09-14T12:53:14.753Z",
+  "updated": "2026-09-14T13:30:21.305Z",
   "deps": [],
   "blockedBy": [],
   "notes": "TRIAGED 2026-09-09: the p1 bug this was filed as no longer reproduces, so it is a p2 open question now, not a critical bug.\n\nWhat I ran, on a clean tree at HEAD 7e1e4d6d with the probe rebuilt from that commit:\n  Scripts/playtest-all.sh dock-picked-first          -> 1 passed, 0 failed, 18s\n  Scripts/playtest-all.sh --no-build panel-controls  -> 1 passed, 0 failed, 16s\nBoth were also green on the earlier 05:02 probe, so this is not a build fluke.\n\nWhat fixed it: 7f65ae4d, Picking a layer brings its own section into view, audit queue/audits/2026-09-09-dock-picked-first-reveal.json. The panel now scrolls itself to the picked section. That is option scroll on this task's own decision card, shipped by a neighbouring task while the card was still pending, and unflagged. So the question was answered by the app rather than by the user.\n\nWhy the card still stands. The shipped scroll has a cost the audit names itself: the panel holds about 1030 points of sections in a 690 point window, so showing the Text section means the layers list goes off the top. You click a row and the list of rows leaves. Picking from the layers list is the main way anybody moves between layers while building UI, so a click that takes the list away is worth an answer rather than a default.\n\nIt also crosses a written rule. UX-PATTERNS section 3, Reveal: ambient changes never may, a selection moving, a document loading, a background update leave a shut header shut and do not scroll. A selection moving now scrolls the dock. Either the rule moves or the behaviour does; that scrub is filed separately.\n\nFolded in from two-panel-walks-are-failing-on-main, closed as done by the same pass: panel-controls-walk was fixed by 64ac9f3c, and a verified alternative to the scroll is in hand there, a v5 order migration moving the picked section above Effects, guarded by shapePartsEnabled, which makes the walk pass at 1200x720 with no self-scrolling at all.",
@@ -91,7 +91,39 @@
     {
       "t": "2026-09-14T12:53:03.329Z",
       "note": "Folded in from the-panel-keeps-its-height-sharing-in-a-file-of: the height sharing arithmetic and the three scroll-to-what-you-picked routines still live inside the 1,310 line dock view. Doing this task means rewriting all three of them, so lift them into their own file while you are in there rather than leaving a separate refactor task standing."
+    },
+    {
+      "t": "2026-09-14T12:55:55.857Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T13:30:21.028Z",
+      "note": "ADVERSARIAL REVIEW before building. The answered card says 'top', which is an ORDER answer, so building it faithfully means the pick-time scroll goes, not sits beside the order as a fallback. Checked the case that worried me, a section too tall to fit under a squeezed Layers: the only thing above the pick's own section is the layers list, the budget squeezes lists and never forms, so the pick starts at about 169pt in a 690pt dock and every owner section (Text 176, Measurement 279, Zoom Callout 114) is whole. Kept ONE thing the card did not ask about: the release called current has none of this order (the v4 and v5 migrations are both gated on next-shape-parts, which is a next-only flag), so removing the scroll there would put a piece of text's settings below the bottom edge with nothing to reach them. Current keeps the old mechanism, gated, and it goes when Next is promoted."
+    },
+    {
+      "t": "2026-09-14T13:30:21.074Z",
+      "note": "SHIPPED. (1) Order: migration v5, orderVersionPickedUnderLayers, moves every picked-thing section to sit directly after Layers, above Appearance and Effects. (2) No reveal on selection in Next: requestPickedReveal/applyPickedReveal are gone from the panel; what is left is gated on !shapePartsEnabled and lives in InspectorDockReveal.requestPick for the current release only. (3) Adding an effect reveals it, EditorState.revealAddedEffect, called from addEffect and addEffectStyle, so the new pane gets both the room the Effects list keeps for the effect being worked on and the scroll that puts it on screen. (4) The layers list's own reveal was landing short: it was worked out against the height the list had before the dock re-budgeted under it (aimed at a 135pt list, given 112, so the row it brought in sat 23pt past the bottom edge). It now runs a turn later at the live height and re-runs while the pick is still settling. (5) Lifted out into Sources/Photonz/InspectorDockLayout.swift: DockMetrics, DockBudgetScratch, InspectorDockLayout (the height arithmetic), DockRevealScratch and InspectorDockReveal, with the one rule written at the top of that file. InspectorPanel.swift is 418 lines lighter."
+    },
+    {
+      "t": "2026-09-14T13:30:21.120Z",
+      "note": "Rule written into docs/design/mocks/shared/UX-PATTERNS.md section 3, replacing the provisional 'a pick may scroll the dock' block that said itself it was waiting on this card. The four limits it listed survive as the three numbered rules; the mechanism paragraph is replaced."
+    },
+    {
+      "t": "2026-09-14T13:30:21.166Z",
+      "note": "Two stale walk claims found and corrected, both failing for days for reasons nothing to do with this task. dock-picked-first-walk claimed 'an arrow is the one shape that still has a section of its own' and waited for sectionInView(Arrow); AnnotationInspector.visibleRows returns [] whenever shapePartsEnabled, so that section has not existed in Next since 2026-09-09 and the walk could never pass. It now claims what is true: an arrow is in the rectangle's case, Appearance whole on screen. effects-room-for-the-one-you-opened-walk pressed each chevron twice in a row with no reading between, so one swallowed press left every later fold inverted and the walk failed three steps downstream from the miss; it now reads the chevron after every press and leads with the new claim that an effect you ADD arrives with its settings on screen."
+    },
+    {
+      "t": "2026-09-14T13:30:21.213Z",
+      "note": "Verified: Scripts/test.sh green (6477 tests). Walks run on a probe built from this tree: dock-picked-first, layers-list-follows-pick, effects-room-for-the-one-you-opened, panel-start-margin, glow-effect, border-effect, effects-open-into-view, effects-fit-one-open, effect-row-is-a-small-pane, effect-style, effect-colour, effects-say-their-reach, effects-remembered all ok; and separately dock-fits-the-window, dock-component-first, panel-controls, panel-says-less, appearance-list, appearance-list-min, appearance-effects, inspector-reach, inspector-reach-laptop, panel-reach, panel-start-narrow, panel-section-drag, panel-name, layers-hold-their-place, measure-parts, panel-reads-the-marquee, selection-effects all ok. A full sweep is requested rather than run, since the dock order changed for every walk that reads the panel."
+    },
+    {
+      "t": "2026-09-14T13:30:21.258Z",
+      "note": "left rough: effects-open-into-view-walk needed a reveal step and half a second before its first press, because adding an effect now scrolls the Effects list and a press aimed at a list still travelling lands on the row that has slid into its place. That is how the harness drives a scroller, not a product defect, and reveal-then-press is the pattern the other walks already use, so no task filed."
+    },
+    {
+      "t": "2026-09-14T13:30:21.304Z",
+      "note": "Audit: queue/audits/2026-09-14-dock-one-rule.json, with three real screen captures (Screen Recording granted this run)."
     }
   ],
-  "started": "2026-09-08T10:47:13.019Z"
+  "started": "2026-09-14T12:55:55.856Z"
 }

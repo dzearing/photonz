@@ -1252,6 +1252,26 @@ final class EditorState {
         }
     }
 
+    /// The plus has just added an effect. The settings that came with it are as
+    /// new to the panel as the ones a chevron opens, so they get the same two
+    /// things: the room the Effects list keeps for the effect being worked on,
+    /// and a scroll to put them on screen.
+    ///
+    /// Without this, adding a second effect to a short window showed its
+    /// heading and left its Color, Kind, Size, Softness and Opacity below the
+    /// bottom edge of the list, with nothing scrolling to them: you had added
+    /// something and there was nothing to set on it.
+    ///
+    /// Called AFTER the add, because a row is known by its PLACE and the place
+    /// does not exist until the effect does. The new one is the last of its
+    /// kind: a countable effect is appended to the list, and a pinned one (a
+    /// blur) is the only one of its kind there can be.
+    func revealAddedEffect(_ kind: EffectKind) {
+        guard let row = layerEffectRows.last(where: { $0.kind == kind }) else { return }
+        effectToReveal = row.id
+        openedEffectRow = row.id
+    }
+
     /// The panel has dealt with the reveal, whether or not it had to move.
     func effectRevealHandled() { effectToReveal = nil }
 

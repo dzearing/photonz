@@ -349,11 +349,11 @@ struct CollapsibleSection<Content: View>: View {
         VStack(spacing: 0) {
             LinearGradient(colors: [.black.opacity(0), .black],
                            startPoint: .top, endPoint: .bottom)
-                .frame(height: overflow.above ? InspectorPanel.bodyEdgeFade : 0)
+                .frame(height: overflow.above ? DockMetrics.bodyEdgeFade : 0)
             Rectangle()
             LinearGradient(colors: [.black, .black.opacity(0)],
                            startPoint: .top, endPoint: .bottom)
-                .frame(height: overflow.below ? InspectorPanel.bodyEdgeFade : 0)
+                .frame(height: overflow.below ? DockMetrics.bodyEdgeFade : 0)
         }
     }
 
@@ -382,7 +382,7 @@ struct CollapsibleSection<Content: View>: View {
     /// behind the content it is given for.
     @ViewBuilder private var boundedBody: some View {
         let measured = content()
-            .padding(.bottom, InspectorPanel.bodyBottomPadding)
+            .padding(.bottom, DockMetrics.bodyBottomPadding)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                 onBodyHeight?($0)
             }
@@ -442,7 +442,7 @@ struct CollapsibleSection<Content: View>: View {
         .panelEdgePadding()
         .padding(.vertical, 8)
         // A floor, not a fixed height: a header whose words grow still grows.
-        .frame(minHeight: InspectorPanel.headerRowHeight)
+        .frame(minHeight: DockMetrics.headerRowHeight)
         .contentShape(Rectangle())
         .gesture(headerGesture)
         .panelHelp("Drag to reorder • click to collapse")

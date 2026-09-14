@@ -118,7 +118,11 @@ extension EditorState {
         // The rows below the new one are about to shift a place, and a fold is
         // known by its place (`foldedEffectRows`).
         forgetEffectFolds()
+        let kind = document?.effectStyle(id: styleID)?.effect.kind
         perform { _ = $0.useEffectStyle(layerIDs: ids, styleID: styleID) }
+        // A saved effect arriving is an effect arriving: same reveal as the
+        // plus's own kinds above.
+        if let kind { revealAddedEffect(kind) }
     }
 
     /// Unlink: the effect stays exactly as it is, it just becomes the layer's

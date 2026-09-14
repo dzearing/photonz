@@ -192,6 +192,13 @@ struct LayerRowDropDelegate: DropDelegate {
 /// and nothing is drawn from it, so nothing should redraw because of it.
 @MainActor final class LayerListScroll {
     var offset: CGFloat = 0
+    /// How tall the scrolling area is RIGHT NOW, which is not the same as the
+    /// height the pass that noticed a pick was drawn at: picking something can
+    /// bring a section into the dock, and the dock shares its height out again
+    /// underneath the list. Kept here rather than in `@State` for the same
+    /// reason the offset is — it is written on every layout pass and nothing
+    /// draws from it.
+    var viewport: CGFloat = 0
 }
 
 
@@ -214,6 +221,15 @@ struct LayersListView: View {
     @State private var scroll = LayerListScroll()
     /// What the list is told to scroll to, when a pick asks it to follow.
     @State private var scrollPosition = ScrollPosition()
+    /// The reveal the list is still settling into, held only for the beat after
+    /// a pick while the dock finishes sharing out its height. Nil the rest of
+    /// the time, so a grab bar dragged ten seconds later never drags an old
+    /// pick back into view with it.
+    @State private var settlingReveal: EditorState.LayersListReveal?
+    /// How many reveals the list has been asked for, so the beat above knows
+    /// whether it is still the newest one: click three rows quickly and only
+    /// the third is still settling.
+    @State private var revealPass = 0
     @FocusState private var renameFieldFocused: Bool
 
     /// The layer area's max height (user-resizable, persisted). Beyond this the
@@ -349,7 +365,44 @@ struct LayersListView: View {
         // all when it is already there.
         .onChange(of: editorState.layersListReveal) { _, request in
             guard let request else { return }
-            follow(request, displays: displays, viewport: viewport)
+            revealPass &+= 1
+            let pass = revealPass
+            settlingReveal = request
+            // Next turn, and at whatever height the list has by then. The pass
+            // that carries the pick is the same pass the dock re-budgets in,
+            // so the height this pass was drawn at is the height the list is
+            // about to stop having.
+            DispatchQueue.main.async {
+                follow(request, displays: displays, viewport: scroll.viewport)
+            }
+            // Let go of it once the dock has stopped moving. A beat, not a
+            // frame: the dock builds a section that has just appeared a pass
+            // after the click and shares its height out again in the pass after
+            // that (`PanelSectionArrival`).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                guard revealPass == pass else { return }
+                settlingReveal = nil
+            }
+        }
+        // ...and again at the new height, for as long as the pick is still
+        // settling. A reveal is worked out from how tall the list IS, and a
+        // pick can change that in the very same pass: what you picked brings
+        // its own section into the dock, the dock shares its height out again,
+        // and the list is left shorter than the reveal reckoned with. Aimed at
+        // a list 23pt taller than the one it got, the row it brought in landed
+        // just past the bottom edge — visibly wrong, and the kind of near miss
+        // nobody can explain from a capture. `follow` does nothing when the row
+        // is already whole on screen, so in the ordinary case this costs a
+        // comparison.
+        .onChange(of: viewport, initial: true) { _, height in
+            scroll.viewport = height
+            guard let request = settlingReveal else { return }
+            // Next turn, not this one: a scroll already in flight swallows a
+            // second one asked for beside it, and the list is left at the
+            // height that asked first.
+            DispatchQueue.main.async {
+                follow(request, displays: displays, viewport: scroll.viewport)
+            }
         }
         .onChange(of: editorState.layerAwaitingRename) { _, id in
             guard let id, editorState.panelRows.contains(where: { $0.id == id }),

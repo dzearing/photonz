@@ -45,12 +45,23 @@
     },
     {
       "do": "wait",
-      "seconds": 0.8
+      "seconds": 1.0,
+      "comment": "A full second: the effect you just added is brought into view, and the list is still travelling at eight tenths."
     },
     {
       "do": "describe",
       "stage": "1-border-and-shadow",
-      "note": "a box with a Border and a Shadow in a window too short to hold both open: the Effects list scrolls inside itself"
+      "note": "a box with a Border and a Shadow in a window too short to hold both open: the Effects list scrolls inside itself, and it is showing the Shadow, which is the one just added"
+    },
+    {
+      "comment": "Bring the Border's chevron back into reach first, and let the list stop moving: the effect just added has carried the Border off the top of the list, and a press aimed at a list still travelling lands on the row that has slid into its place.",
+      "do": "reveal",
+      "control": "Twist",
+      "in": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
     },
     {
       "do": "press",

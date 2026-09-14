@@ -1,0 +1,28 @@
+{
+  "feature": "The right hand panel has one rule: what you picked sits at the top",
+  "epic": "ui-building",
+  "summary": "Click anything and its own settings are the first thing under the layers list, with Appearance and Effects under them. Nothing scrolls to get there any more, so the layers list you clicked in never leaves, and an effect you add arrives with its settings on screen instead of below the cut.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to turn on. Open any screenshot in a laptop sized window (about 1200 by 720) and mark it up until the layers list is full, which is where the panel runs out of room and the rule starts doing work.",
+  "try": [
+    { "do": "Draw two or three rectangles, type a label with the text tool, and draw one measurement, so the panel has more in it than fits." },
+    { "do": "Click the label in the layers list.", "shot": "2026-09-14-dock-one-rule-text.png" },
+    { "do": "Click the measurement, then the label again, then a plain rectangle, without scrolling the panel yourself." },
+    { "do": "Draw an arrow and click it.", "shot": "2026-09-14-dock-one-rule-arrow.png" },
+    { "do": "With the arrow still picked, press the plus on the Effects header and choose Shadow.", "shot": "2026-09-14-dock-one-rule-added-effect.png" },
+    { "do": "Press the chevron on the Border above it, then press it again." },
+    { "do": "Click three layer rows quickly, one after another." }
+  ],
+  "evaluate": [
+    "When you click a layer, is the thing you wanted to change already under your eyes, or do you still reach for the scroll wheel?",
+    "The layers list is squeezed to about three rows to pay for this. Is three rows enough to move around a marked up screenshot, or does the list need to be the thing that wins?",
+    "Picking a plain rectangle moves nothing at all, because it has no section of its own. Does that read as steady, or as the panel having ignored you?",
+    "Adding an effect now scrolls the Effects list to the effect you added. Does that feel like the app following you, or like the panel jumping?",
+    "Clicking three rows fast: does the panel stay still enough to read, now that nothing scrolls for a pick?"
+  ],
+  "rough": [
+    "The layers list pays for all of this. On a 720pt window with a marked up screenshot it is squeezed to its floor, three rows, whenever the panel is over-subscribed. That is the trade the chosen answer makes and it is visible in the first screenshot.",
+    "An arrow no longer has a section of its own. Its caption, head and thickness moved into Appearance on 2026-09-09, so picking one moves nothing, exactly like a plain rectangle. The walk still claimed an Arrow section and was failing on it for days; the claim is now that Appearance is whole on screen.",
+    "The release called current keeps the old behaviour: its panel still scrolls itself to a pick, because its sections are in the old order and without the scroll a piece of text would have its settings below the bottom edge. That code goes the day Next is promoted.",
+    "A click aimed at the Effects list within a moment of adding an effect can land on the row that has slid into place, because the list is still travelling. A person waiting for it to stop is fine; it is only fast scripted clicking that catches it."
+  ]
+}

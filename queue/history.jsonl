@@ -3263,3 +3263,11 @@
 {"t":"2026-09-14T12:54:48.097Z","ev":"task_resequenced","id":"find-out-what-a-big-marquee-really-costs-to-cut","from":130,"to":120}
 {"t":"2026-09-14T12:54:56.140Z","ev":"triage","summary":"2026-09-14: open 83 -> 73. Merged 10 (3 panel-scroll twins folded into picking-a-text-layer-leaves-its-settings-below-t, 4 near-twin pairs folded into their keepers, 3 retired because their bug no longer reproduces after rerunning corner-radius-rounds-walk, text-style-walk and text-style-arming-walk, all ok). Moved 4 (3 down to p3: a capability, a doc scrub, a speculative perf measurement; 1 up to p2: the clamped-control rule that four p2 tasks are waiting on). Reset 0, nothing left in_progress. Groomed: every open task has an epic, a plain goal and acceptance; every priority renumbered to clean steps of 10. Reproduced all four sweep failures on their own: three are real and one (panel-start-margin-walk) is a sweep flake."}
 {"t":"2026-09-14T12:55:41.693Z","ev":"digest","file":"2026-09-14.md"}
+{"t":"2026-09-14T12:55:55.859Z","ev":"task_started","id":"picking-a-text-layer-leaves-its-settings-below-t","title":"The right hand panel has one settled rule for what you see when you pick something","priority":"p2-normal"}
+{"t":"2026-09-14T13:30:21.030Z","ev":"task_note","id":"picking-a-text-layer-leaves-its-settings-below-t"}
+{"t":"2026-09-14T13:30:21.076Z","ev":"task_note","id":"picking-a-text-layer-leaves-its-settings-below-t"}
+{"t":"2026-09-14T13:30:21.122Z","ev":"task_note","id":"picking-a-text-layer-leaves-its-settings-below-t"}
+{"t":"2026-09-14T13:30:21.168Z","ev":"task_note","id":"picking-a-text-layer-leaves-its-settings-below-t"}
+{"t":"2026-09-14T13:30:21.215Z","ev":"task_note","id":"picking-a-text-layer-leaves-its-settings-below-t"}
+{"t":"2026-09-14T13:30:21.260Z","ev":"task_note","id":"picking-a-text-layer-leaves-its-settings-below-t"}
+{"t":"2026-09-14T13:30:21.306Z","ev":"task_note","id":"picking-a-text-layer-leaves-its-settings-below-t"}

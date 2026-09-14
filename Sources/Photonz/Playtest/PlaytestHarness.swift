@@ -6311,12 +6311,12 @@ private final class Run {
             // ...and what it last did about the section a PICK brought up: the
             // reveal that keeps a click on a layer from leaving that layer's
             // own settings below the fold.
-            "pickReveal": InspectorLayoutProbe.shared.pickReveal ?? "none yet",
             // The rows of the layers list a person can see WHOLE, in order.
             // The list shows five rows of however many the document has, so
             // "the layer you just picked is one of these" is the whole claim
             // the list following a pick has to keep true.
             "layerRowsInView": LayersListProbe.shared.rowsInView,
+            "layerList": LayersListProbe.shared.measurements,
             // ...and what the last pick did about it: which rows it was asked
             // for, where the list was, and where it went.
             "layerReveal": LayersListProbe.shared.lastReveal ?? "none yet",

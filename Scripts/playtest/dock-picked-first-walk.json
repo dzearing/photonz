@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/dock-picked-first",
-  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a zoom callout in turn, and read the dock's own offsets back rather than trusting a picture. The claim, one waitFor per selection so the walk FAILS rather than reports: the section named after the thing you picked is whole on screen without anyone scrolling. One exception, stated in the steps: a plain rectangle no longer HAS a section of its own since the parts list took its one row, so what it claims is that the section its settings did move into is on screen. A measurement claims the whole section like everything else, and then opens the Details fold to prove the numbers that fold away are one click from where they were.",
+  "seed": "A screenshot open in a laptop window (1200 by 720), marked up until the layers list has grown to its full height, which is what a document looks like after ten minutes of work. Pick a rectangle, a piece of text, a measurement and a zoom callout in turn, and read the dock's own offsets back rather than trusting a picture. The claim, one waitFor per selection so the walk FAILS rather than reports: the section named after the thing you picked is whole on screen without anyone scrolling. Two of them have no section of their own any more: a plain rectangle lost its one row to the parts list, and an arrow's caption, head and thickness followed on 2026-09-09, so what those two claim is that the section their settings DID move into, Appearance, is whole on screen. A measurement claims the whole section like everything else, and then opens the Details fold to prove the numbers that fold away are one click from where they were.",
   "setup": { "forget": ["panel", "tools", "shapes", "text", "measure", "color"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1200, "height": 720 },
@@ -58,6 +58,7 @@
     { "do": "selectRow", "row": "Text" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "waitFor", "condition": "sectionInView", "value": "Text", "timeout": 4 },
+    { "comment": "...and the layers list you clicked in is still all there. Nothing scrolled, so the next row you want is under your hand where you left it.", "do": "waitFor", "condition": "sectionInView", "value": "Layers", "timeout": 4 },
     { "do": "describe", "stage": "2-text", "note": "the same for a piece of text, whose own section is the tallest of the three that can fit." },
     { "do": "panel", "stage": "2-text" },
     { "do": "snapshot", "name": "dock-picked-first-2-text" },
@@ -87,8 +88,9 @@
 
     { "do": "selectRow", "row": "Arrow" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "waitFor", "condition": "sectionInView", "value": "Arrow", "timeout": 4 },
-    { "do": "describe", "stage": "5-arrow", "note": "an arrow is the one shape that still has a section of its own, because it carries a caption and a head the parts list does not hold. Whole on screen too." },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Appearance", "timeout": 4 },
+    { "do": "waitFor", "condition": "sectionInView", "value": "Layers", "timeout": 4 },
+    { "do": "describe", "stage": "5-arrow", "note": "an arrow's caption, head and thickness moved into Appearance with every other shape setting on 2026-09-09, so an arrow is now in the same case as the rectangle above: nothing of its own to show, and Appearance whole on screen under the layers list without anybody scrolling." },
     { "do": "panel", "stage": "5-arrow" },
     { "do": "snapshot", "name": "dock-picked-first-5-arrow" }
   ]

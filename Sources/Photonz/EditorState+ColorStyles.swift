@@ -466,6 +466,9 @@ extension EditorState {
         // known by its place (`foldedEffectRows`).
         forgetEffectFolds()
         perform { _ = $0.addEffect(kind, layerIDs: ids) }
+        // ...and the one that just arrived is the one you are working on, so
+        // the list keeps room for it and the panel puts it on screen.
+        revealAddedEffect(kind.kind)
         rememberStyleDefault(of: ids)
     }
 

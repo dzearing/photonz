@@ -33,35 +33,6 @@ extension Color {
     }
 }
 
-/// What the dock has measured of itself, which is everything `DockHeightBudget`
-/// needs to decide who gives up room.
-///
-/// A value, and held in `@State` on purpose, unlike the drag and reveal scratch
-/// next to it: those remember numbers nothing draws, while these numbers decide
-/// how tall the sections are, so a change to one has to reach the next pass.
-/// Nothing here depends on the heights the budget hands out — a body is
-/// measured INSIDE its scroller, and the layers list reports what it would be
-/// rather than what it got — so there is no loop between the two.
-struct DockBudgetScratch: Equatable {
-    /// How tall the dock's scrolling area is, nil until it has been laid out.
-    var viewportHeight: CGFloat?
-    var headers: [InspectorSectionID: CGFloat] = [:]
-    /// What each body would like to be. For a list section this is the
-    /// scrollable part alone.
-    var bodies: [InspectorSectionID: CGFloat] = [:]
-    /// The part of a list section's body that does NOT scroll with the list:
-    /// the layers list's count line and grab bar.
-    var listExtras: [InspectorSectionID: CGFloat] = [:]
-    /// The panes a list section is made of, for the lists that are stacks of
-    /// small panes rather than stacks of rows. Only Effects reports these, and
-    /// they decide its floor: see `DockHeightBudget.paneListFloor`.
-    var listPanes: [InspectorSectionID: [DockHeightBudget.Block]] = [:]
-    /// Which of those panes you just opened, by its place in the list. That is
-    /// the one the floor pays to draw whole; nil means nobody has said, and the
-    /// first open pane stands in.
-    var listFocus: [InspectorSectionID: Int] = [:]
-}
-
 // MARK: - Docked inspector panel
 
 /// The full-height, docked right-side inspector (10.5). Holds collapsible,
@@ -78,55 +49,6 @@ struct InspectorPanel: View {
     /// What the dock remembers about its own sections between launches, named
     /// so a scripted walk that rearranges them can put them back.
     static let sectionOrderKey = "inspector.sectionOrder"
-    /// One section header's row: the height `CollapsibleSection` pins its
-    /// header to. A 13 pt semibold title in 8 pt of padding each side.
-    static let headerRowHeight: CGFloat = 32
-    /// The dock's own padding above its first section.
-    static let listTopPadding: CGFloat = 6
-    /// How deep the fade is at the edge of a body the dock has shortened: the
-    /// cue that there is more of it past the cut.
-    static let bodyEdgeFade: CGFloat = 14
-    /// The breathing room under every section body, inside the part the dock
-    /// may shorten. A floor has to pay for it too, or a body drawn at exactly
-    /// its floor is six points short of its own content and fades an edge that
-    /// has nothing past it.
-    static let bodyBottomPadding: CGFloat = 6
-    /// How much of the NEXT thing a shortened body keeps on screen. Deeper than
-    /// the fade, so what shows through it is a heading somebody can read the
-    /// top of rather than a smudge, and it is the difference between a cut that
-    /// says "there is more" and one that says "that is all".
-    static let bodyPeek: CGFloat = bodyEdgeFade + 8
-    /// The hairline under each section, which the dock pays for as surely as
-    /// it pays for the header.
-    static let sectionDividerHeight: CGFloat = 1
-    /// The sections whose body is a LIST, and so may be shortened and scroll
-    /// inside itself when the dock is over-subscribed.
-    ///
-    /// This is the whole of the list-versus-form judgment, in one place. A list
-    /// is as long as the document happens to make it — however many layers,
-    /// parts, measurements or shelf tiles there are — so nobody designed its
-    /// height and shortening it costs a scroll you were going to do anyway. A
-    /// FORM (Text, Position & Size, Effects, Arrange) is a set of controls
-    /// somebody chose: shortening it compresses nothing, it just hides controls
-    /// behind a second scroller, which is the same hunt one level deeper. So
-    /// forms are paid first, at full height, and the lists share what is left.
-    ///
-    /// Which of Appearance and Effects is the list flipped with the split
-    /// (`next-shape-parts`, 2026-09-07). Appearance became a FORM — opacity,
-    /// fill, outline, corner radius, four rows somebody designed — and Effects
-    /// became the list, as long as whatever you added to it. Left the other way
-    /// round, two shadows squeezed Appearance until its Width and Corner Radius
-    /// rows were scrolled out of sight, which is the opposite of what the dock
-    /// is for.
-    static var scrollingSections: Set<InspectorSectionID> {
-        var sections: Set<InspectorSectionID> = [.layers, .measurements, .library]
-        sections.insert(Experiments.shared.shapePartsEnabled ? .effects : .color)
-        return sections
-    }
-    /// How short a list may be squeezed before the dock stops asking: about
-    /// three rows. Under that a list stops reading as a list, and a dock that
-    /// scrolls a little is better than six peepholes.
-    static let listFloor: CGFloat = 112
     static let sectionOrderVersionKey = "inspector.sectionOrder.version"
     static let collapsedKey = "inspector.collapsed"
     /// Effects joined the Color section instead of trailing every per-kind one.
@@ -142,6 +64,12 @@ struct InspectorPanel: View {
     /// shape IS, then what you have added to it, both within reach without
     /// scrolling, because they are the two people touch on every layer.
     private static let orderVersionLookUnderLayers = 4
+    /// ...and then the section named after the thing you picked rose above
+    /// THEM, so it is the first thing under the layers list. This is the order
+    /// half of the one dock rule in `InspectorDockLayout.swift`: the user chose
+    /// it on 2026-09-13 over a panel that scrolled itself to each pick, and it
+    /// is why there is no longer any reveal on selection at all.
+    private static let orderVersionPickedUnderLayers = 5
     /// The sections named after the thing you have picked, in the order they
     /// sit in. One list, so the migration and the rule stay the same sentence.
     private static let pickedSections: [InspectorSectionID] =
@@ -179,7 +107,7 @@ struct InspectorPanel: View {
         let _ = arrivalPass // the catch-up pass reads its own trigger
         // How tall each list section may be drawn, so that the forms under it
         // stay where they are instead of being carried off the bottom.
-        let ceilings = dockCeilings(sections)
+        let ceilings = layout.ceilings(for: sections)
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -240,7 +168,7 @@ struct InspectorPanel: View {
                             if drag.section == nil { dragScratch.frames[id] = frame }
                             guard id == .library else { return }
                             reveal.libraryFrame = frame
-                            if reveal.isPending { applyLibraryReveal(proxy) }
+                            if reveal.isPending { revealer(proxy).applyLibrary() }
                         }
                         // A section in your hand is off the surface: it wears a
                         // card and a shadow, and it draws over its neighbours.
@@ -261,7 +189,7 @@ struct InspectorPanel: View {
                                 delegate: SectionFileDrop(item: id, editorState: editorState))
                     }
                 }
-                .padding(.vertical, InspectorPanel.listTopPadding)
+                .padding(.vertical, DockMetrics.listTopPadding)
                 // NO implicit animation on the section SET (10.7). Animating
                 // section insert/remove forces the whole .regularMaterial panel to
                 // re-blur and an NSColorWell to animate in/out every frame for the
@@ -303,21 +231,26 @@ struct InspectorPanel: View {
             // The app opened the Library for you: put it where you can see it.
             // On appear too, because showing the shelf opens the dock as well,
             // and then this panel is born with the request already waiting.
-            .onChange(of: editorState.pendingLibraryReveal) { requestLibraryReveal(proxy) }
-            .onAppear { requestLibraryReveal(proxy) }
-            // You opened an effect: put the settings that just appeared where
-            // you can see them.
+            .onChange(of: editorState.pendingLibraryReveal) { revealer(proxy).requestLibrary() }
+            .onAppear { revealer(proxy).requestLibrary() }
+            // You opened an effect, or added one: put the settings that just
+            // appeared where you can see them. This is the LAST reveal the dock
+            // has, and picking something is deliberately not one of them — the
+            // order puts what you picked under the layers list, so there is
+            // nothing to scroll to. See `InspectorDockLayout.swift`.
             .onChange(of: editorState.effectToReveal) { _, id in
                 guard let id else { return }
-                DispatchQueue.main.asyncAfter(deadline: .now() + Self.effectRevealDelay) {
-                    applyEffectReveal(proxy, for: id)
+                let delay = InspectorDockReveal.effectRevealDelay
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    revealer(proxy).applyEffect(id)
                 }
             }
-            // You picked something: put the section named after it where you
-            // can see it. Both stores, because a plain click and a shift click
-            // are the same act as far as the panel is concerned.
-            .onChange(of: editorState.selectedLayerID) { requestPickedReveal(proxy) }
-            .onChange(of: editorState.multiSelectedLayerIDs) { requestPickedReveal(proxy) }
+            // ...and, in the release whose order still leaves a pick's own
+            // section below Appearance and Effects, the pick itself. Both
+            // stores, because a plain click and a shift click are the same act
+            // as far as the panel is concerned. A no-op in Next.
+            .onChange(of: editorState.selectedLayerID) { revealer(proxy).requestPick() }
+            .onChange(of: editorState.multiSelectedLayerIDs) { revealer(proxy).requestPick() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial)
@@ -355,237 +288,30 @@ struct InspectorPanel: View {
             sections: sections)
     }
 
-    // MARK: Sharing out the height the dock has
+    // MARK: Sharing out the height the dock has, and revealing
 
-    /// How tall each list section may be drawn, given what the forms in the
-    /// dock cost and how tall the dock is.
-    ///
-    /// A section is absent from the result when it may be drawn whole, which is
-    /// every case where the panel fits, so the common dock is exactly the dock
-    /// it always was — no extra scrollers, no frames pinned to a measurement
-    /// taken a pass ago.
-    private func dockCeilings(_ sections: [InspectorSectionID]) -> [InspectorSectionID: CGFloat] {
-        // The dock's own padding above the first section and below the last is
-        // room no section can have.
-        let room = budget.viewportHeight.map { $0 - 2 * InspectorPanel.listTopPadding }
-        let groups = sections.map { id -> DockHeightBudget.Group in
-            let header = budget.headers[id] ?? InspectorPanel.headerRowHeight
-            let open = !isCollapsed(id)
-            let body = open ? (budget.bodies[id] ?? 0) : 0
-            let scrolls = open && InspectorPanel.scrollingSections.contains(id)
-            // A list pays for the chrome that does not scroll with it up
-            // front; a form pays for its whole body up front, because none of
-            // it may be taken away.
-            let paid = scrolls ? (budget.listExtras[id] ?? 0) : body
-            return DockHeightBudget.Group(key: id.rawValue,
-                                          fixed: header + InspectorPanel.sectionDividerHeight + paid,
-                                          flexible: scrolls ? body : 0,
-                                          floor: squeezeFloor(for: id, room: room))
-        }
-        let heights = DockHeightBudget.flexibleHeights(groups, viewport: room)
-        var ceilings: [InspectorSectionID: CGFloat] = [:]
-        for id in sections {
-            let natural = budget.bodies[id] ?? 0
-            defer {
-                // What the budget did to this section, in numbers a scripted
-                // walk can read back: "Effects was drawn 129 tall and its open
-                // Border needs 129" is a claim, and a capture is not.
-                if heights[id.rawValue] != nil {
-                    recordInspectorListRoom(id, natural: natural,
-                                            drawn: ceilings[id] ?? natural,
-                                            panes: budget.listPanes[id] ?? [],
-                                            focus: budget.listFocus[id],
-                                            spacing: EffectsListInspector.paneSpacing,
-                                            topInset: EffectsListInspector.listInset,
-                                            bottomInset: EffectsListInspector.listInset
-                                                + InspectorPanel.bodyBottomPadding,
-                                            peek: InspectorPanel.bodyPeek,
-                                            room: room)
-                }
-            }
-            guard let height = heights[id.rawValue],
-                  // Only when it is actually being shortened. A section given
-                  // exactly its own height gains nothing from a scroller.
-                  height < natural - PanelAreaResize.tolerance else { continue }
-            ceilings[id] = height
-        }
-        return ceilings
+    /// The dock's height arithmetic, which lives in `InspectorDockLayout.swift`
+    /// along with the one rule the whole panel follows. Rebuilt each pass from
+    /// what the dock has measured of itself; it holds no state of its own.
+    private var layout: InspectorDockLayout {
+        InspectorDockLayout(budget: budget, collapsed: isCollapsed)
     }
 
-    /// How short a list section may be squeezed.
-    ///
-    /// Three rows for a list of rows, which is the ordinary case: layers,
-    /// measurements, the Library shelf. A list of PANES asks for more, because
-    /// a pane cut across the middle shows half a slider rather than most of a
-    /// row — see `DockHeightBudget.paneListFloor`, and the Border the user was
-    /// handed sliced in two on 2026-09-08. Which pane it pays for is the one
-    /// you just opened, so opening the second of two effects in a short window
-    /// makes room for the second rather than for the first.
-    private func squeezeFloor(for id: InspectorSectionID, room: CGFloat?) -> CGFloat {
-        guard let panes = budget.listPanes[id], !panes.isEmpty else {
-            return InspectorPanel.listFloor
-        }
-        return DockHeightBudget.paneListFloor(
-            panes,
-            focus: budget.listFocus[id],
-            spacing: EffectsListInspector.paneSpacing,
-            topInset: EffectsListInspector.listInset,
-            bottomInset: EffectsListInspector.listInset + InspectorPanel.bodyBottomPadding,
-            peek: InspectorPanel.bodyPeek,
-            base: InspectorPanel.listFloor,
-            viewport: room)
-    }
-
-    // MARK: Bringing the Library into view
-
-    /// The app has opened the Library shelf (View ▸ Show Library, or a command
-    /// that fills it, like making a component). Bring it into view.
-    ///
-    /// A shelf already on screen must not move: pressing the same menu item
-    /// twice should not make the dock jump. `DockReveal` makes that call, from
-    /// the measured frame, once layout has one.
-    private func requestLibraryReveal(_ proxy: ScrollViewProxy) {
-        guard editorState.pendingLibraryReveal,
-              Experiments.shared.libraryEnabled, editorState.isLibraryVisible else { return }
-        // A collapsed shelf scrolled into view is a header and nothing else,
-        // which is not "you can see it". Instantly, without the collapse
-        // spring, so the reveal scrolls to a height that has stopped moving.
-        expand(.library)
-        reveal.isPending = true
-        // The section may have appeared with this very state change, in which
-        // case the measurement above lands first and this finds nothing left to
-        // do. When it was already there and stationary, this is the only path.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { applyLibraryReveal(proxy) }
-    }
-
-    private func applyLibraryReveal(_ proxy: ScrollViewProxy) {
-        guard reveal.isPending, let frame = reveal.libraryFrame else { return }
-        let action = DockReveal.action(sectionTop: frame.minY,
-                                       sectionHeight: frame.height,
-                                       viewportHeight: reveal.viewportHeight)
-        reveal.isPending = false
-        editorState.libraryRevealHandled()
-        guard action != .none else { return }
-        withAnimation(.easeInOut(duration: 0.28)) {
-            proxy.scrollTo(InspectorSectionID.library, anchor: action == .top ? .top : .bottom)
-        }
-    }
-
-    // MARK: Bringing an opened effect into view
-
-    /// How long to wait before scrolling to an effect that has just been
-    /// opened: a shade longer than the fold's own spring, so the pane is
-    /// measured at the height it has settled at rather than partway through
-    /// growing into it.
-    private static let effectRevealDelay = 0.24
-
-    /// An effect's settings have just appeared. Bring the whole pane on screen,
-    /// and only if it is not already there.
-    ///
-    /// The pane is measured in the dock's visible area rather than in the
-    /// Effects list, because the list can be inside a scroller of its own when
-    /// the panel is over-subscribed: an effect can be perfectly placed in its
-    /// list and still be somewhere nobody can see. One `scrollTo` covers both,
-    /// since the pane is identified in the list SwiftUI is scrolling either
-    /// way.
-    private func applyEffectReveal(_ proxy: ScrollViewProxy, for id: String) {
-        // A second chevron pressed while this one was waiting: that press has
-        // its own wait running, and it is measured from ITS fold rather than
-        // from this one, so this turn is simply given up.
-        guard editorState.effectToReveal == id else { return }
-        editorState.effectRevealHandled()
-        guard let frame = reveal.effectFrames[id],
-              let here = reveal.room(for: .effects) else { return }
-        // Where it stands now. Already all there and nothing moves: pressing a
-        // chevron on an effect you can see must never make the panel jump.
-        guard DockReveal.action(sectionTop: frame.minY - here.top,
-                                sectionHeight: frame.height,
-                                viewportHeight: here.height) != .none else {
-            recordEffectReveal(id, frame: frame, room: here.height, action: .none)
-            return
-        }
-        // Something has to move, so the dock takes its turn first: an Effects
-        // list hanging past the bottom of the panel is room the effect could
-        // have had, and gaining it is why the list has to be asked second,
-        // against the room it will have rather than the room it has.
-        let dock = DockReveal.action(sectionTop: reveal.sectionFrames[.effects]?.minY ?? 0,
-                                     sectionHeight: reveal.sectionFrames[.effects]?.height ?? 0,
-                                     viewportHeight: reveal.viewportHeight)
-        let shift = reveal.shift(of: .effects, doing: dock)
-        guard let room = reveal.room(for: .effects, shiftedBy: shift) else { return }
-        let action = DockReveal.action(sectionTop: frame.minY + shift - room.top,
-                                       sectionHeight: frame.height,
-                                       viewportHeight: room.height)
-        recordEffectReveal(id, frame: frame, room: room.height, action: action)
-        withAnimation(.easeInOut(duration: 0.24)) {
-            if dock != .none {
-                proxy.scrollTo(InspectorSectionID.effects, anchor: dock == .top ? .top : .bottom)
-            }
-            if action != .none {
-                proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
-            }
-        }
-    }
-
-    // MARK: Bringing what you just picked into view
-
-    /// How long to wait after a pick before scrolling to the section it brought
-    /// up. A section that has just appeared is built a pass after the click
-    /// (see `PanelSectionArrival`) and the lists above it settle to their new
-    /// heights in the pass after that, so a reveal measured any sooner is
-    /// measuring a dock that is still moving.
-    private static let pickRevealDelay = 0.24
-
-    /// You clicked a layer — in the list or on the canvas. Bring the section
-    /// named after it into view, so the settings for the thing you just picked
-    /// are the ones you can see.
-    ///
-    /// Only the pick's OWN section: the dock is routinely taller than the panel
-    /// (a marked-up screenshot runs about 1100pt in a 690pt panel), so
-    /// something is always off screen, and the one thing that must not be is
-    /// what you just clicked. Everything general — Appearance, Effects,
-    /// Position & Size — keeps whatever place the reader left it in.
-    private func requestPickedReveal(_ proxy: ScrollViewProxy) {
-        reveal.pickPass &+= 1
-        let pass = reveal.pickPass
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pickRevealDelay) {
-            guard reveal.pickPass == pass else { return }
-            applyPickedReveal(proxy)
-        }
-    }
-
-    private func applyPickedReveal(_ proxy: ScrollViewProxy) {
-        // The Library shelf asked first and is mid-flight; two scrollers
-        // fighting over the same dock is worse than either one losing.
-        guard !reveal.isPending else { return }
-        guard let id = pickedSection, let frame = reveal.sectionFrames[id] else { return }
-        let action = DockReveal.action(sectionTop: frame.minY,
-                                       sectionHeight: frame.height,
-                                       viewportHeight: reveal.viewportHeight)
-        recordPickedReveal(sectionTitle(id), frame: frame,
-                           viewport: reveal.viewportHeight, action: action)
-        // Already all there: picking a second piece of text while its section
-        // is under your eyes must not make the dock twitch.
-        guard action != .none else { return }
-        withAnimation(.easeInOut(duration: 0.28)) {
-            proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
-        }
+    /// The two things the app still brings into view for you: the Library shelf
+    /// and an effect whose settings have just appeared. A PICK is not one of
+    /// them — the order puts what you picked on screen, so nothing has to move.
+    private func revealer(_ proxy: ScrollViewProxy) -> InspectorDockReveal {
+        InspectorDockReveal(scratch: reveal, editorState: editorState,
+                            proxy: proxy, expand: expand,
+                            pickedSection: { pickedSection })
     }
 
     /// The section named after what is picked, or nil when what is picked has
-    /// none of its own.
+    /// none of its own. Read ONLY by the release that still scrolls to a pick;
+    /// Next's order puts it under the layers list instead.
     ///
-    /// A plain rectangle is the nil case and it is the ordinary one: since the
-    /// parts list landed, everything a rectangle owns is a row inside
-    /// Appearance, which sits high in the dock and needs no help. Only the
-    /// kinds that still carry a section of their own — a piece of text, a
-    /// measurement, a zoom callout, an arrow's head and caption, a collage —
-    /// are worth moving the dock for.
-    ///
-    /// The Canvas section is deliberately NOT one of them. Clicking empty space
-    /// is how you put something down, not how you ask about the canvas, and a
-    /// dock that jumped every time you deselected would be jumping most of the
-    /// time.
+    /// The Canvas section is deliberately not one of them. Clicking empty space
+    /// is how you put something down, not how you ask about the canvas.
     private var pickedSection: InspectorSectionID? {
         let available = availableSections
         return Self.pickedSections.first { $0 != .canvas && available.contains($0) }
@@ -1068,6 +794,16 @@ struct InspectorPanel: View {
                 after: InspectorSectionID.layers.rawValue, in: merged)
             orderVersion = Self.orderVersionLookUnderLayers
         }
+        // What you picked sits at the top: above Appearance and Effects, which
+        // the move before this one had just put under Layers. Next only, for
+        // the same reason as that one — it is the Appearance/Effects split that
+        // makes this stack short enough to stand.
+        if Experiments.shared.shapePartsEnabled, orderVersion < Self.orderVersionPickedUnderLayers {
+            merged = PanelSectionOrder.moving(Self.pickedSections.map(\.rawValue),
+                                              after: InspectorSectionID.layers.rawValue,
+                                              in: merged)
+            orderVersion = Self.orderVersionPickedUnderLayers
+        }
         let ids = merged.compactMap { InspectorSectionID(rawValue: $0) }
         if ids != order { order = ids }
     }
@@ -1258,56 +994,6 @@ private struct SectionDrag: Equatable {
 @MainActor private final class SectionDragScratch {
     var frames: [InspectorSectionID: CGRect] = [:]
     var escapeWatch: Any?
-}
-
-@MainActor private final class DockRevealScratch {
-    var libraryFrame: CGRect?
-    var viewportHeight: CGFloat = 0
-    var isPending = false
-    /// How many picks the dock has seen. A reveal waits a beat for the section
-    /// it is about to scroll to to finish being laid out, and this is how the
-    /// wait knows it is still the newest one: click three rows quickly and only
-    /// the third moves the dock.
-    var pickPass = 0
-    /// Where each effect in the Effects list is sitting, by
-    /// `LayerEffectRow.id`, in the dock's visible area. Written on every scroll
-    /// tick and read only when an effect has just been opened.
-    var effectFrames: [String: CGRect] = [:]
-    /// Where each section's body is drawn, in the same coordinates.
-    var bodyFrames: [InspectorSectionID: CGRect] = [:]
-    /// ...and each whole section, header and all, which is what the dock's own
-    /// scroller moves.
-    var sectionFrames: [InspectorSectionID: CGRect] = [:]
-
-    /// The band of the dock a thing inside `section` can be seen in: what the
-    /// section is drawing, less whatever of that has scrolled off the dock.
-    ///
-    /// The two are different whenever the dock is over-subscribed, and that
-    /// difference is the whole reason this exists: an effect can have 255pt of
-    /// settings and 153pt of list to show them in, and a reveal that measured
-    /// itself against the dock would scroll the effect's heading off the top
-    /// to line its foot up with a bottom edge nobody can see.
-    func room(for section: InspectorSectionID, shiftedBy shift: CGFloat = 0)
-        -> (top: CGFloat, height: CGFloat)? {
-        guard viewportHeight > 0 else { return nil }
-        guard let body = bodyFrames[section] else { return (0, viewportHeight) }
-        let top = max(body.minY + shift, 0)
-        let bottom = min(body.maxY + shift, viewportHeight)
-        guard bottom > top else { return nil }
-        return (top, bottom - top)
-    }
-
-    /// How far the dock would carry `section` if it scrolled to it: the number
-    /// the reveal needs to work out what room the section will have AFTER the
-    /// dock has moved, rather than the room it has now.
-    func shift(of section: InspectorSectionID, doing action: DockReveal.Action) -> CGFloat {
-        guard let frame = sectionFrames[section] else { return 0 }
-        return switch action {
-        case .none: 0
-        case .top: -frame.minY
-        case .bottom: viewportHeight - frame.maxY
-        }
-    }
 }
 
 /// Which dock sections have actually been built, so a brand new one can wait a

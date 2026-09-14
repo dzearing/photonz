@@ -48,6 +48,14 @@ import SwiftUI
             viewportHeight: viewport) == .none
     }
 
+    /// The list's own numbers, so a walk that says a row is off the bottom can
+    /// say by how much rather than only that it is.
+    var measurements: String {
+        func points(_ value: CGFloat) -> String { "\(Int(value.rounded()))" }
+        return "\(rowNames.count) rows of \(points(rowHeight))pt, "
+            + "list \(points(viewport))pt, scrolled to \(points(offset))pt"
+    }
+
     /// The rows a person can see whole, in order, which is the line a walk
     /// reads back.
     var rowsInView: [String] {
