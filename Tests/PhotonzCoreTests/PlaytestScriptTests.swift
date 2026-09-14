@@ -2145,4 +2145,57 @@ struct PlaytestScriptTests {
         """
         #expect(throws: (any Error).self) { try PlaytestScript.decode(Data(json.utf8)) }
     }
+
+    // MARK: - The colours a path came out wearing
+
+    @Test("An expectPath step can claim the two colours the path came out in")
+    func expectPathNamesTheColours() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPath", "fill": "#2D7FF9", "ink": "#2D7FF9" } ] }
+        """)
+        guard case .expectPath(_, _, _, _, _, _, let fill, let ink, _) = script.steps[0] else {
+            Issue.record("expectPath"); return
+        }
+        #expect(fill == "#2D7FF9")
+        #expect(ink == "#2D7FF9")
+    }
+
+    /// An open path has no inside, and saying so is a real claim: it is the
+    /// difference between a line and a shape.
+    @Test("An expectPath step can claim a path has no inside at all")
+    func expectPathCanClaimNoFill() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPath", "fill": "none" } ] }
+        """)
+        guard case .expectPath(_, _, _, _, _, _, let fill, _, _) = script.steps[0] else {
+            Issue.record("expectPath"); return
+        }
+        #expect(fill == "none")
+    }
+
+    /// A typo in a colour is a walk that passes for the wrong reason, so the
+    /// script is refused when it is read.
+    @Test("A colour that is not a colour is refused when the script is read")
+    func expectPathRefusesANonColour() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectPath", "fill": "blue" } ] }
+            """)
+        }
+        // "none" is a fill nobody has, not an outline nobody has: a path is
+        // always drawn in something.
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectPath", "ink": "none" } ] }
+            """)
+        }
+    }
+
+    @Test("A colour on its own is enough of a claim for expectPath")
+    func aColourIsEnoughOfAClaim() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPath", "ink": "#FF3B30" } ] }
+        """)
+        #expect(script.steps[0].name == "expectPath")
+    }
 }

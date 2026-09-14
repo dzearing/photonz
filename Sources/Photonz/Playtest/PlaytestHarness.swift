@@ -1107,10 +1107,11 @@ private final class Run {
             note(number, step.name, try checkMeasures(count), state: describe())
 
         case .expectPath(let layerName, let anchors, let closed, let curves, let smooth,
-                         let width, let anchorAt):
+                         let width, let fill, let ink, let anchorAt):
             note(number, step.name,
                  try checkPath(layerName, anchors: anchors, closed: closed, curves: curves,
-                               smooth: smooth, width: width, anchorAt: anchorAt),
+                               smooth: smooth, width: width, fill: fill, ink: ink,
+                               anchorAt: anchorAt),
                  state: describe())
 
         case .expectLayers(let atLeast, let atMost):
@@ -2973,6 +2974,7 @@ private final class Run {
     /// read off a picture (`PlaytestStep.expectPath`).
     private func checkPath(_ layerName: String?, anchors: Int?, closed: Bool?,
                            curves: Int?, smooth: Int?, width: CGFloat?,
+                           fill: String?, ink: String?,
                            anchorAt: PlaytestAnchorClaim?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -3014,6 +3016,24 @@ private final class Run {
         if let width, content.strokeWidth != width {
             throw Failure(description: "\(shape) — not the \(DocumentUnit.text(width)) claimed")
         }
+        // The two colours it came out wearing. Asked of the document because a
+        // picture cannot settle them: the offscreen render resolves colour
+        // differently from the screen, and "blue-ish" is not the claim — the
+        // claim is that it is the blue the tool bar was armed with.
+        let wearing = "\(shape), inside "
+            + (content.fill.map { $0.hex } ?? "none") + ", outline \(content.paint.hex)"
+        if let ink, !Self.sameColour(content.paint.hex, ink) {
+            throw Failure(description: "\(wearing) — the walk claimed its outline would be \(ink)")
+        }
+        if let fill {
+            let has = content.fill.map { $0.hex }
+            let matches = fill.caseInsensitiveCompare("none") == .orderedSame
+                ? has == nil
+                : has.map { Self.sameColour($0, fill) } ?? false
+            guard matches else {
+                throw Failure(description: "\(wearing) — the walk claimed its inside would be \(fill)")
+            }
+        }
         let bends = content.anchors.filter { $0.kind == .smooth }.count
         if let smooth, bends != smooth {
             throw Failure(description: "\(shape), \(bends) of them smooth — not the "
@@ -3037,7 +3057,13 @@ private final class Run {
                     + "\(short(wanted)) claimed")
             }
         }
-        return shape + ", as claimed"
+        return (fill == nil && ink == nil ? shape : wearing) + ", as claimed"
+    }
+
+    /// Whether two colours written down are the same colour, whatever case the
+    /// hex was typed in.
+    private static func sameColour(_ a: String, _ b: String) -> Bool {
+        a.caseInsensitiveCompare(b) == .orderedSame
     }
 
     /// What an open caption field is doing, checked rather than photographed.

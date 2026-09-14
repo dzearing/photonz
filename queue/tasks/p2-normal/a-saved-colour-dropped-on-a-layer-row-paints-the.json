@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:13:00.774Z",
-  "updated": "2026-09-14T22:59:58.243Z",
+  "updated": "2026-09-14T23:00:18.450Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-saved-style-can-be-dropped-on-a-row-in-the-lay, which shipped the TEXT STYLE half on 2026-09-09. The two do not share a target resolution and the task file said to split them if they did not.\n\nWhat is already there to build on. The layers row is now a drop target for the app own pasteboard types: Sources/Photonz/LayersPanel.swift, LayerRowDropDelegate, which reads TextStyleDrag.payloadInFlight() first and falls through to the row and file paths. ColorDrag.payloadInFlight() is the colour twin and already exists. The row mark and the one line under the list are StyleRowDrop / StyleRowMarking (Sources/PhotonzCore/StyleRowMarking.swift) plus StyleRowDropNote in LayersPanel.swift, and both are written around TextStyleDrop.Answer, so a colour answer either needs the same shape or the mark needs to carry either kind.\n\nThe hard part is not the plumbing, it is WHICH part a colour lands on. ColorDrop.Target is built around a named part (Fill, Outline, Shadow) that a swatch row supplies; a layer row supplies none. Candidate rule: the first colour row the inspector would show for that layer, which is Text for text and Fill for a shape. That is a product judgment about a silent choice among several parts, so open a decision on it before building rather than guessing, and write the options in terms of what the line under the list would say.",
@@ -85,7 +85,12 @@
     {
       "t": "2026-09-14T22:59:58.242Z",
       "note": "Second adversarial pass, on the built thing, from the real screen captures the walk took (Screen Recording is granted, so these are the window as a person sees it). What works: the ring and the sentence arrive on the frame the pointer reaches the row, the accent plate for a yes and the dark plate with red dashes for a no are readable at a glance, and the refusals name the layer rather than the rule. One thing I changed away from the plan: nothing is armed for the next shape. A swatch drop arms the tool, but the row you aim at is not necessarily the row you have picked, so a tool quietly taking the colour of a layer somebody never selected is a surprise; the colour still joins the recents. LEFT ROUGH, below the follow-up bar and recorded here rather than filed: (1) the one line sits at the foot of the layers list and covers a word of the Canvas row underneath while a tile is in the air — transient, inherited from the text style drop which put the line there, and nothing is lost; (2) a saved colour turns out to be offered for every kind of colour row, so Brand saved off a fill lands on text wearing its name rather than only its colour — that is the existing behaviour of colorStyles(for:) on a swatch and changing it is a separate product question; (3) an arrow's head keeps its old colour when the shaft is repainted, which the decision named as the known cost of this rule and which the sentence warns about by saying Line."
+    },
+    {
+      "t": "2026-09-14T23:00:18.448Z",
+      "note": "A saved colour let go on a row in the layers list now paints that layer's main colour, named before you let go: Fill on a box, Text on writing, Line on an arrow, Border on a picture wearing a ring, and a plain refusal in words for a layer with no colour. Core rule and one-mutation apply in Sources/PhotonzCore/ColorRowDrop.swift (29 tests written first), app wiring in EditorState+ColorRowDrop.swift and LayerRowDropDelegate, behind the existing next-color-drag flag so Current is untouched. Verified by Scripts/test.sh (6557 green) and a new 82-step walk, Scripts/playtest/colour-onto-a-layer-row-walk.json, driving all seven cases with real screen captures; audit at queue/audits/2026-09-14-colour-onto-a-layer-row.json. Committed as 498f396c and pushed."
     }
   ],
-  "started": "2026-09-14T22:33:31.503Z"
+  "started": "2026-09-14T22:33:31.503Z",
+  "completed": "2026-09-14T23:00:18.449Z"
 }

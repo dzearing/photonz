@@ -3337,3 +3337,9 @@
 {"t":"2026-09-14T22:59:50.532Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
 {"t":"2026-09-14T22:59:54.705Z","ev":"task_note","id":"a-saved-colour-dropped-on-a-layer-row-paints-the"}
 {"t":"2026-09-14T22:59:58.244Z","ev":"task_note","id":"a-saved-colour-dropped-on-a-layer-row-paints-the"}
+{"t":"2026-09-14T23:00:18.451Z","ev":"task_done","id":"a-saved-colour-dropped-on-a-layer-row-paints-the","from":"in_progress","note":"A saved colour let go on a row in the layers list now paints that layer's main colour, named before you let go: Fill on a box, Text on writing, Line on an arrow, Border on a picture wearing a ring, and a plain refusal in words for a layer with no colour. Core rule and one-mutation apply in Sources/PhotonzCore/ColorRowDrop.swift (29 tests written first), app wiring in EditorState+ColorRowDrop.swift and LayerRowDropDelegate, behind the existing next-color-drag flag so Current is untouched. Verified by Scripts/test.sh (6557 green) and a new 82-step walk, Scripts/playtest/colour-onto-a-layer-row-walk.json, driving all seven cases with real screen captures; audit at queue/audits/2026-09-14-colour-onto-a-layer-row.json. Committed as 498f396c and pushed."}
+{"t":"2026-09-14T23:01:15.626Z","ev":"task_started","id":"the-pen-arms-its-colour-from-the-tool-bar-like-e","title":"The Pen arms its colour from the tool bar like every other drawing tool","priority":"p2-normal"}
+{"t":"2026-09-14T23:17:43.382Z","ev":"task_created","id":"a-path-the-pen-draws-arrives-with-an-edge-you-ca","priority":"p2-normal","title":"A path the Pen draws arrives with an edge you cannot see"}
+{"t":"2026-09-14T23:17:48.355Z","ev":"task_note","id":"a-line-drawn-with-the-pen-can-be-made-thicker-or"}
+{"t":"2026-09-14T23:17:48.399Z","ev":"task_note","id":"a-path-the-pen-draws-arrives-with-an-edge-you-ca"}
+{"t":"2026-09-14T23:18:35.375Z","ev":"task_note","id":"the-pen-arms-its-colour-from-the-tool-bar-like-e"}

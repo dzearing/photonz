@@ -94,6 +94,15 @@ public struct PenSession: Equatable, Sendable {
     /// the line under your hand the same weight as the line that lands.
     public var startingStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
 
+    /// The ink the line comes out in, set by the canvas from what the Pen is
+    /// armed with on the tool bar (`AnnotationStyles.paint(for:)`).
+    ///
+    /// One paint for the whole path, edge and inside alike: a path is one ink,
+    /// the line while it is open and the shape once it closes. Read at the same
+    /// moment as the weight above and held for the whole drawing, so the colour
+    /// under your hand is the colour that lands.
+    public var startingPaint: Paint = Paint(hex: PathContent.defaultColorHex)
+
     /// The press in progress, nil between clicks.
     private var press: Press?
 
@@ -415,8 +424,9 @@ public struct PenSession: Equatable, Sendable {
     /// how a panel ends up with a row that does nothing.
     private func content(_ anchors: [PathAnchor], closed: Bool) -> PathContent {
         PathContent(anchors: anchors, isClosed: closed,
+                    paint: startingPaint,
                     strokeWidth: startingStrokeWidth,
-                    fill: closed ? Paint(hex: PathContent.defaultColorHex) : nil)
+                    fill: closed ? startingPaint : nil)
     }
 
     /// The layer a finished path becomes, boxed round the shape it covers and

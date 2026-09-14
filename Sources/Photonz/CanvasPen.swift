@@ -188,6 +188,10 @@ extension CanvasNSView {
         // line per click.
         if startingAPath {
             penSession.startingStrokeWidth = startingPathStrokeWidth(drawnAt: p, in: document)
+            // ...and the ink, from the swatch on the tool bar, for the same
+            // reason and at the same moment: one path is one colour, so the
+            // whole drawing wears what the Pen was armed with when it started.
+            penSession.startingPaint = penPaint
         }
         penSession.press(at: p, constrained: event.modifierFlags.contains(.shift),
                          breaking: event.modifierFlags.contains(.option),

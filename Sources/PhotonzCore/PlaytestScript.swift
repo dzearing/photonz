@@ -1455,8 +1455,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// picture cannot settle: a 2 point line and a 4 point line on a canvas at
     /// 3200% are both simply "a red line", and telling them apart means
     /// counting pixels off a screenshot (`IconStrokeWeight`).
+    /// `fill` and `ink` are the two colours the path came out wearing: the
+    /// inside it paints once it closes, and the outline it is drawn in. They
+    /// are what a walk about ARMING a colour has to claim — a screenshot of a
+    /// blue triangle proves it is blue-ish, not that it is the blue the tool
+    /// bar was set to, and an offscreen render resolves colours differently
+    /// again. `fill: "none"` claims a path with no inside at all.
     case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?,
-                    smooth: Int?, width: CGFloat?, anchorAt: PlaytestAnchorClaim?)
+                    smooth: Int?, width: CGFloat?, fill: String?, ink: String?,
+                    anchorAt: PlaytestAnchorClaim?)
     /// How many layers the document must hold right now, counting the ones
     /// inside groups.
     ///
@@ -1978,13 +1985,24 @@ public enum PlaytestStep: Sendable, Equatable {
             if let width, width < 0 {
                 throw f.invalid("width", "a line's weight is zero or more, not \(width)")
             }
+            let fill = try f.optionalString("fill")
+            let ink = try f.optionalString("ink")
+            for (field, value) in [("fill", fill), ("ink", ink)] {
+                guard let value else { continue }
+                guard Self.isPathColourClaim(value, allowingNone: field == "fill") else {
+                    throw f.invalid(field, "a colour is a hex like \"#2D7FF9\""
+                        + (field == "fill" ? ", or \"none\" for a path with no inside" : "")
+                        + ", not \"\(value)\"")
+                }
+            }
             guard anchors != nil || closed != nil || curves != nil || smooth != nil
-                    || width != nil || anchorAt != nil else {
+                    || width != nil || fill != nil || ink != nil || anchorAt != nil else {
                 throw f.invalid("anchors", "expectPath has to claim something about the path: "
                     + "\"anchors\" for how many points it has, \"closed\" for whether it joined "
                     + "back up, \"curves\" for how many of its runs are curved, \"smooth\" for "
                     + "how many of its points are smooth bends, \"width\" for the weight its "
-                    + "line came out at, or \"anchor\" and \"near\" for "
+                    + "line came out at, \"fill\" or \"ink\" for the colours it came out "
+                    + "wearing, or \"anchor\" and \"near\" for "
                     + "where one point ended up")
             }
             for (field, value) in [("anchors", anchors), ("curves", curves), ("smooth", smooth)] {
@@ -1996,7 +2014,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectPath(layer: try f.optionalString("layer"),
                                anchors: anchors.map { Int($0) }, closed: closed,
                                curves: curves.map { Int($0) }, smooth: smooth.map { Int($0) },
-                               width: width.map { CGFloat($0) }, anchorAt: anchorAt)
+                               width: width.map { CGFloat($0) }, fill: fill, ink: ink,
+                               anchorAt: anchorAt)
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")
@@ -2189,5 +2208,16 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             return value
         }
+    }
+}
+
+extension PlaytestStep {
+    /// Whether a colour a walk claimed is one the app could ever answer with:
+    /// a hex the picker writes, or the word "none" where a missing colour is a
+    /// real answer. A typo here is a walk that passes for the wrong reason, so
+    /// it is refused when the script is read rather than at step time.
+    static func isPathColourClaim(_ value: String, allowingNone: Bool) -> Bool {
+        if allowingNone, value.caseInsensitiveCompare("none") == .orderedSame { return true }
+        return RGBA(hex: value) != nil
     }
 }

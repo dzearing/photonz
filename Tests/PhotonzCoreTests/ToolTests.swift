@@ -484,7 +484,7 @@ struct ToolBarLayoutTests {
     /// the frame put none there, so they get no swatches at all.
     @Test func onlyPaintingToolsCarryColour() {
         let painting: Set<Tool> = [.arrow, .line, .rectangle, .ellipse,
-                                   .highlight, .text, .fill]
+                                   .highlight, .text, .fill, .pen]
         for tool in Tool.allCases {
             #expect(tool.paints == painting.contains(tool))
             #expect((tool.colorControl == .hidden) == !painting.contains(tool))
@@ -509,6 +509,9 @@ struct ToolBarLayoutTests {
         #expect(Tool.highlight.colorControl == .toolColor)
         #expect(Tool.text.colorControl == .toolColor)
         #expect(Tool.fill.colorControl == .foregroundBackground)
+        // A path is one ink: it is the line when it is open and the shape when
+        // it closes, so the Pen wears the same single swatch a stroke does.
+        #expect(Tool.pen.colorControl == .toolColor)
     }
 
     /// Every tool that draws by dragging paints, so a new annotation tool

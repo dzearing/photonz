@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:15:17.594Z",
-  "updated": "2026-09-14T12:54:43.866Z",
+  "updated": "2026-09-14T23:18:35.374Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-13-pen-draws-a-path.json: 'The Pen has no colour capsule on the tool bar: a new path is always the redline red until you repaint it in the Appearance panel. Every other drawing tool arms its colour from the bar.'\n\nCopy what the Rectangle and Ellipse tools already do rather than inventing anything; this is a gap in one tool, not a new idea. Sources/Photonz/CanvasPen.swift, behind FeatureCatalog.penFlag (\"next-pen\").\n\nRelated and NOT part of this: a closed path arrives filled and outlined the same red so its outline is invisible against its own fill. That is the same bug a new rectangle has and it is owned by a-shape-s-border-arrives-the-same-colour-as-its.",
@@ -38,6 +38,51 @@
     {
       "t": "2026-09-14T12:54:43.865Z",
       "note": "seq 70 -> 80"
+    },
+    {
+      "t": "2026-09-14T23:01:15.624Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "Adversarial review before building. The task asks for a capsule 'in the same place and the same size as the other drawing tools'. The two candidate shapes are the box tool's fill-over-border PAIR and the stroke tools' single swatch. Went with the SINGLE swatch: a path is one ink (the line while it is open, the shape once it closes), so a pair would be two controls setting what is really one colour, and the border half would open a Width slider that fights the frame-derived weight a path already arrives at (IconStrokeWeight). It is also the shortest version that delivers the whole value in the goal: choose a colour, draw a piece, choose, draw. Tool.pen.colorControl = .toolColor drops it straight into the existing styleButton, which is why nothing new was invented on the bar."
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "Second finding from that review, left deliberately: with the Pen in hand and a path picked (the Pen stays in hand and keeps its selection), the bar's swatch arms the NEXT path rather than repainting the picked one. Every other tool's swatch repaints what is picked. Arming is what the acceptance asks for and what the Pen's stay-in-hand loop wants, but it is the one place the bar behaves differently, so it is an evaluate line in the audit for the user to rule on rather than a decision card."
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "Built. PhotonzCore: Tool.pen.colorControl is .toolColor (Tools.swift); AnnotationStyles gained a pen ink bucket beside the per-shape ones, routed through paint(for:)/setPaint(_:for:)/colorHex(for:)/setColorHex(_:for:), Codable and written only once the Pen has been armed so untouched prefs are byte-identical; PenSession.startingPaint carries it into content(_:closed:) for both the outline and the fill of a closed path. App: EditorState.armedPenPaint reads it, EditorCanvasSurface -> CanvasView.penPaint -> CanvasNSView.penPaint, and penMouseDown arms the session at the first anchor beside startingStrokeWidth. The bar itself needed no new view: .toolColor already renders styleButton with the one picker, the playtest name and the drag handle."
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "The swatch's tooltip said 'Annotation Style' under the Pen, which draws a path rather than an annotation. It now says 'Path Color' (EditorView.styleButtonTip). The pen flag's description in FeatureCatalog gained a sentence about the swatch."
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "Harness: expectPath grew fill and ink claims (PlaytestScript + PlaytestHarness.checkPath), because a walk about ARMING a colour cannot prove anything from a picture: a screenshot of a blue triangle says blue-ish, not 'the blue the bar was set to'. fill: \"none\" claims a path with no inside. Colours are validated when the script is read, so a typo is a refused walk rather than a walk that passes for the wrong reason. Four parsing tests cover it."
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "Verified. 6572 core tests green (Scripts/test.sh). New walk Scripts/playtest/pen-arms-its-colour-walk.json passes, run four times on its own, all ok. It checks: the Color control is on the bar under the Pen; its tooltip reads Path Color; the toolBar reading for the arrow and for the Pen are identical (Color group x 650, width 52, height 48, same centre line), which is acceptance item 1 as a number rather than a picture; the closed path lands inside #2D7FF9 outline #2D7FF9; the path after it is still #2D7FF9 with no inside; and the rectangle tool still holds its own #FF3B30. Also green: all 5 pen walks, 3 toolbar walks, 5 path walks, 10 walks in the 'pen' sweep."
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "Follow-up filed: a-path-the-pen-draws-arrives-with-an-edge-you-ca (p2-normal) — a closed path arrives filled AND outlined the same colour, so its 4px edge is invisible and the shape reaches 2px past every point clicked. This is the 'related and NOT part of this' note in this task's own notes; the task that owned it (a-shape-s-border-arrives-the-same-colour-as-its) is done and fixed only the box case, so nothing open covered it. Reproduced with the walk output, not read off the code. Cross-linked with a-line-drawn-with-the-pen-can-be-made-thicker-or."
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "Left rough, in the log rather than filed: the Pen cannot hold a saved colour by NAME the way the box tool can — toolStyleWelcome returns .neverWearsNames for any tool with no annotationShape, so a saved colour dropped on the Pen's swatch lands as a plain colour and arms the tool. Nothing is dead (ColorDrop only sets `brings` when the welcome is .wearsIt, so there is no drop that silently does nothing), and no open task wants it yet; it is an audit evaluate line instead. Also left rough: the Pen's popover holds only the picker, with no Width row, because a path's weight comes from the frame it is drawn on."
+    },
+    {
+      "t": "2026-09-14T23:17:58.862909Z",
+      "note": "Audit: queue/audits/2026-09-14-pen-arms-its-colour.json, with two real window captures (Screen Recording granted on this machine)."
+    },
+    {
+      "t": "2026-09-14T23:18:35.373Z",
+      "note": "Fixed in passing, one line: Scripts/playtest/panel-says-less-walk.json had no \"out\", and Scripts/playtest.sh defaults an absent out to \"out\" beside the script, so every run of it wrote screenshots into Scripts/playtest/out/ inside the repo. That folder was sitting untracked in git status at the start of this task and would have been committed by the next runner that ran 'git add -A'. It is the only one of the 421 walks missing the field; it now writes to /tmp like the rest, and it still passes. The already-written Scripts/playtest/out/ folder is left alone, untracked, for whoever wants to delete it: it is another session's output, not mine."
     }
-  ]
+  ],
+  "started": "2026-09-14T23:01:15.623Z"
 }

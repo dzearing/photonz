@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T10:59:17.706Z",
-  "updated": "2026-09-14T12:54:43.936Z",
+  "updated": "2026-09-14T23:17:48.354Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe, 2026-09-14, current main plus the icon stroke weight change. Walk: blank 1600x1100, tool pen, three clicks, Return, tool select, then {\"do\":\"expect\",\"field\":\"Thickness\",\"present\":true}. It fails with: 'step 11 (expect): no field called \"Thickness\" is in the panel; the ones that are: X, Y, W, H, A, Opacity, Blending, X, Y, W, H, A'. The panel dump for the same moment lists exactly three things under Appearance: Opacity, Blending, Color.\n\nWhy: the Thickness row is built by AnnotationInspector from EditorState.shapeSelection, and ShapeSelection (Sources/PhotonzCore/ContentSelection.swift:169) holds AnnotationContent members only, so a .path layer is never in it. PhotonzDocument.shapeSelection skips it the same way. The plumbing under the row already understands paths: Layer.outlineWidth and Layer.outlinePaint both answer for a path (Sources/PhotonzCore/OutlineWidth.swift:40 and :47), and Layer.drawsItsOwnOutline returns true for one. What is missing is Layer.hasOutlineThickness (OutlineWidth.swift, guards on annotation) and Layer.setOutlineWidth (Sources/PhotonzCore/ComponentInstances-adjacent ComponentNumberKnob.swift:204, same guard), plus getting paths into the selection the row reads.\n\nThe cap and join task, a-drawn-line-has-round-ends-and-round-corners-or, assumes this row exists: its Try it step says 'turn its outline up to 8' on a path drawn with the Pen, which cannot be done today. Doing this one first makes that one possible.\n\nNext release only. Found while shipping a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei, which made the weight a path ARRIVES at sensible on an icon frame but could not make it changeable afterwards.",
@@ -40,6 +40,10 @@
     {
       "t": "2026-09-14T12:54:43.935Z",
       "note": "seq 72 -> 90"
+    },
+    {
+      "t": "2026-09-14T23:17:48.353Z",
+      "note": "Meets a-path-the-pen-draws-arrives-with-an-edge-you-ca, filed 2026-09-14: that one is about what a closed path ARRIVES with (today a 4px outline in exactly its own fill colour, so invisible), this one is about changing the weight afterwards. Whoever picks either up should read the other; if the arriving rule lands first, this row starts at 0 on a closed path."
     }
   ]
 }

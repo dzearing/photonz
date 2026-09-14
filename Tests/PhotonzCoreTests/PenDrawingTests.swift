@@ -643,6 +643,74 @@ struct PenDrawingTests {
         #expect(session.finish()?.strokeWidth == 2)
     }
 
+    // MARK: The ink the path comes out in
+
+    @Test func aPathComesOutInTheInkTheToolWasArmedWith() {
+        // The Pen carries a colour on the tool bar like every other drawing
+        // tool, and what the bar is holding is what the next path arrives
+        // wearing — the preview under the hand and the path that lands alike.
+        var session = PenSession()
+        session.startingPaint = Paint(hex: "#2D7FF9")
+        _ = click(&session, 0, 0)
+        _ = click(&session, 20, 0)
+        #expect(session.previewPath?.paint.hex == "#2D7FF9")
+        session.press(at: CGPoint(x: 10, y: 20), constrained: false, zoom: 1)
+        #expect(session.livePath?.paint.hex == "#2D7FF9")
+        _ = session.release()
+        #expect(session.finish()?.paint.hex == "#2D7FF9")
+    }
+
+    @Test func aClosedPathIsFilledWithTheInkItWasArmedWith() {
+        // A closed path is a shape, and the inside is the part of it the eye
+        // reads first, so it takes the armed colour too.
+        var session = PenSession()
+        session.startingPaint = Paint(hex: "#00A870")
+        _ = click(&session, 0, 0)
+        _ = click(&session, 40, 0)
+        _ = click(&session, 40, 40)
+        session.pointer = CGPoint(x: 0, y: 0)
+        let closed = click(&session, 0, 0)
+        guard case .closed(let content) = closed else {
+            Issue.record("the click on the first anchor did not close the path")
+            return
+        }
+        #expect(content.isClosed)
+        #expect(content.fill?.hex == "#00A870")
+        #expect(content.paint.hex == "#00A870")
+    }
+
+    @Test func anOpenPathStillHasNoInsideHoweverItIsArmed() {
+        // Arming a colour does not give a line an inside: an open path is a
+        // line, and a fill on it would be a setting for something not drawn.
+        var session = PenSession()
+        session.startingPaint = Paint(hex: "#2D7FF9")
+        _ = click(&session, 0, 0)
+        _ = click(&session, 20, 0)
+        #expect(session.finish()?.fill == nil)
+    }
+
+    @Test func aPathCanBeArmedWithAGradient() {
+        // The whole paint rides, not the flat colour it starts on, so a Pen
+        // armed with a ramp draws a ramp exactly as a box tool does.
+        var session = PenSession()
+        var ramp = Paint(hex: "#2D7FF9")
+        ramp.becoming(.linear)
+        session.startingPaint = ramp
+        _ = click(&session, 0, 0)
+        _ = click(&session, 20, 0)
+        #expect(session.finish()?.paint.isGradient == true)
+    }
+
+    @Test func aFreshSessionDrawsInTheOrdinaryInk() {
+        // Nothing said otherwise, so nothing changes: the redline red every
+        // shape in the app has always started in.
+        var session = PenSession()
+        #expect(session.startingPaint == Paint(hex: PathContent.defaultColorHex))
+        _ = click(&session, 0, 0)
+        _ = click(&session, 20, 0)
+        #expect(session.finish()?.paint.hex == PathContent.defaultColorHex)
+    }
+
     @Test func aFreshSessionDrawsAtTheOrdinaryWeight() {
         // Nothing said otherwise, so nothing changes: a path on a screen is the
         // four points every shape in the app has always started at.

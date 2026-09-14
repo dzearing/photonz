@@ -1,0 +1,28 @@
+{
+  "feature": "The Pen arms its colour from the tool bar",
+  "epic": "icon-vector",
+  "summary": "The Pen now carries a colour swatch on the tool bar like every other drawing tool, so you choose what the next path will be before you draw it instead of drawing it red and repainting it in the panel. The colour sticks, so a run of shapes in one colour is one choice.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Pen flag (Draw any shape with the Pen) is on by default.",
+  "try": [
+    { "do": "Press P to pick up the Pen." },
+    { "do": "Click the round swatch in the glass capsule on the bottom bar, just right of the tools.", "shot": "2026-09-14-pen-colour-picker.png" },
+    { "do": "Pick a blue in the picker, then press Escape to close it." },
+    { "do": "Click three points on the canvas, then click the first point again to close the shape.", "shot": "2026-09-14-pen-colour-drawn.png" },
+    { "do": "Without changing anything, draw a second shape and press Return to finish it open." },
+    { "do": "Press R for the rectangle tool and look at the bar." },
+    { "do": "Press P again and hover the swatch." }
+  ],
+  "evaluate": [
+    "Is the swatch where your hand already goes, or did you look for it somewhere else first?",
+    "After picking blue, did you expect the triangle you had ALREADY drawn to turn blue too? Right now it does not: the swatch arms the next path, and the one on screen is repainted from the Appearance panel.",
+    "Drawing an icon in five colours means five trips to that swatch. Is that the loop you want, or should the colours you keep using be closer to hand?",
+    "The shape arrives filled AND outlined the same colour, so it has a 4pt edge you cannot see. Should a path arrive as a plain fill instead, the way a box now does?",
+    "Does the Pen's swatch popover feel bare next to the box tool's, or is one colour the right amount for a path?"
+  ],
+  "rough": [
+    "A path still arrives with a 4pt outline in the same colour as its fill, so the edge is invisible and the shape is 2pt bigger all round than the points you clicked. The box tool stopped doing this on 2026-09-14; the Pen was never taught the same rule. Filed as its own task.",
+    "With the Pen in hand and a path picked, the bar's swatch arms the NEXT path and leaves the picked one alone. Every other tool's swatch repaints what is picked, so this is the one place the bar behaves differently, and it is only visible because the Pen stays in hand after it draws.",
+    "The Pen cannot hold a saved colour by name the way the box tool can: a colour dropped on its swatch lands as a plain colour. Nothing is broken, but an icon set built on named colours would want it.",
+    "Screenshots here are real window captures from the probe, not offscreen renders."
+  ]
+}

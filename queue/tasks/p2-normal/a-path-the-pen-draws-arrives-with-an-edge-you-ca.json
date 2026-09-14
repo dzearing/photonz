@@ -1,0 +1,32 @@
+{
+  "id": "a-path-the-pen-draws-arrives-with-an-edge-you-ca",
+  "title": "A path the Pen draws arrives with an edge you cannot see",
+  "goal": "Draw a closed shape with the Pen and it comes out filled and outlined in exactly the same colour, so the outline is invisible and the shape sits two points bigger all round than the points you clicked. The box tool stopped doing this in September: a box now arrives as a plain fill, and the first edge you ask for comes in an ink that reads against what is behind it. The Pen was never taught the same rule.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2670,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T23:17:43.378Z",
+  "updated": "2026-09-14T23:17:48.398Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on the probe at 2026-09-14 while giving the Pen its colour capsule.\n\nCommand:\n  Scripts/playtest.sh Scripts/playtest/pen-arms-its-colour-walk.json\n\nOutput (log.json, the expectPath step):\n  Path: 3 anchors, closed, 0 curved runs, 4 px thick, inside #2D7FF9, outline #2D7FF9, as claimed\n\nThe screen capture pen-colour-5-drawn-sc.png in that run shows the triangle with no visible edge at all. The 4px centred stroke means the painted shape reaches 2px past each clicked point, which matters on a 24px icon grid.\n\nThe rule for boxes is PhotonzCore/BorderInk.swift, reached through AnnotationStyles.arrivingStyle(forShape:); it was settled by the user on 2026-09-13 and shipped by a-shape-s-border-arrives-the-same-colour-as-its (done 2026-09-14). A path does not go through it: PenSession.content(_:closed:) in Sources/PhotonzCore/PenDrawing.swift builds PathContent with strokeWidth: startingStrokeWidth and fill: startingPaint, both the armed ink. Deciding whether a closed path arrives with no edge at all is the same decision the box already made, so it is probably a straight application of the same rule rather than a new one; the open-path case must keep its stroke, since a line IS its stroke.\n\nEvery pen walk currently claims 4 px thick and would need teaching.",
+  "acceptance": [
+    "A closed path drawn with the Pen arrives as a fill with no line round it, so its edges land exactly on the points that were clicked",
+    "Asking a path for an edge afterwards gives it one that reads against its own fill, the way a box already does",
+    "An OPEN path is unaffected: it is a line, so it keeps the weight it comes out at",
+    "A walk draws a closed path and checks it has no outline, and draws an open one and checks it still does"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T23:17:43.380Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T23:17:48.397Z",
+      "note": "Meets a-line-drawn-with-the-pen-can-be-made-thicker-or: that task adds the Thickness row in Appearance for a picked path, this one changes what a freshly drawn one arrives with. Not a duplicate, but they touch the same property and are cheaper together."
+    }
+  ]
+}

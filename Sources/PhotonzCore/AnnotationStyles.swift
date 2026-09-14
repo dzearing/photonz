@@ -19,6 +19,17 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// no Accent here" — and no document to ask. So the name rides along.
     private var heldStyleNames: [String: String] = [:]
 
+    /// The ink the PEN is armed with: what the next path comes out in, inside
+    /// and edge alike.
+    ///
+    /// It sits beside the per-shape buckets rather than in one of them because
+    /// a path is not a sixth `AnnotationShape` (`VectorPath.swift`): it has as
+    /// many points as it likes, where an annotation is a two-point mark. What
+    /// it shares with them is the thing this type is for — a drawing tool
+    /// remembers its own colour, so arming the Pen blue never repaints the
+    /// boxes and painting a box never repaints the Pen.
+    private var penInk: Paint = Paint(hex: PathContent.defaultColorHex)
+
     public init() {
         var shapes: [String: ShapeDefaults] = [:]
         for shape in AnnotationShape.allCases {
@@ -30,6 +41,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case shapes
         case heldColorStyleNames
+        case penPaint
         // Legacy single-bucket keys (pre per-shape); migrated on decode.
         case strokeColorHex, highlightColorHex, strokeWidth, arrowheadScale
     }
@@ -40,6 +52,8 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         // sentences fall back to saying "the saved color it was holding".
         heldStyleNames = try c.decodeIfPresent([String: String].self,
                                                forKey: .heldColorStyleNames) ?? [:]
+        penInk = try c.decodeIfPresent(Paint.self, forKey: .penPaint)
+            ?? Paint(hex: PathContent.defaultColorHex)
         if let decoded = try c.decodeIfPresent([String: ShapeDefaults].self, forKey: .shapes) {
             var shapes = decoded
             // Backfill any shape added after the prefs were written.
@@ -73,6 +87,11 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         // never met a saved colour write exactly what they always wrote.
         if !heldStyleNames.isEmpty {
             try c.encode(heldStyleNames, forKey: .heldColorStyleNames)
+        }
+        // Nothing at all until the Pen has been armed, so prefs that have never
+        // met it write exactly what they always wrote.
+        if penInk != Paint(hex: PathContent.defaultColorHex) {
+            try c.encode(penInk, forKey: .penPaint)
         }
     }
 
@@ -364,6 +383,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     // MARK: - Tool-keyed convenience (nil for non-annotation tools)
 
     public func colorHex(for tool: Tool) -> String? {
+        if tool == .pen { return penInk.hex }
         guard let shape = tool.annotationShape else { return nil }
         return colorHex(forShape: shape)
     }
@@ -384,6 +404,11 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     /// Routes a swatch pick to the bucket the active tool draws from.
     public mutating func setColorHex(_ hex: String, for tool: Tool) {
+        if tool == .pen {
+            penInk.hex = hex
+            penInk.kind = .solid
+            return
+        }
         guard let shape = tool.annotationShape else { return }
         setColorHex(hex, forShape: shape)
     }
@@ -391,12 +416,20 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// What the tool in your hand is armed with, gradient and all; nil for a
     /// tool that draws no shape.
     public func paint(for tool: Tool) -> Paint? {
+        // The Pen draws no annotation, so it has no shape bucket — but it is a
+        // drawing tool with a swatch on the bar, and this is what that swatch
+        // is showing (`Tool.colorControl`).
+        if tool == .pen { return penInk }
         guard let shape = tool.annotationShape else { return nil }
         return paint(forShape: shape)
     }
 
     /// Arms the tool in your hand. Ignored by a tool that draws no shape.
     public mutating func setPaint(_ paint: Paint, for tool: Tool) {
+        if tool == .pen {
+            penInk = paint
+            return
+        }
         guard let shape = tool.annotationShape else { return }
         setPaint(paint, forShape: shape)
     }

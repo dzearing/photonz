@@ -142,8 +142,12 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         // A box has two tones, an interior and a border, so it gets both.
         case .rectangle, .ellipse: .fillAndBorder
-        // A stroke, a highlight or a run of type has one colour.
-        case .arrow, .line, .highlight, .text: .toolColor
+        // A stroke, a highlight or a run of type has one colour. So does a
+        // path: it is the line while it is open and the shape once it closes,
+        // and both are drawn in the one ink the Pen is armed with, so the Pen
+        // wears the same single swatch rather than a pair that would be two
+        // places to set what is really one colour.
+        case .arrow, .line, .highlight, .text, .pen: .toolColor
         // The bucket paints from the foreground/background pair, and it is the
         // only tool that does, so the pair lives with it.
         case .fill: .foregroundBackground
@@ -151,12 +155,8 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // colour on the picture. The frame tool draws its own fixed grey.
         // A lens puts no colour on the picture either: it shows the colours
         // already there, changed.
-        // The Pen puts colour on the picture, but not from here yet: a path
-        // arrives wearing what a new box wears and is repainted from the
-        // Appearance panel, so a capsule here would be a second place to set
-        // the same two colours with nothing behind it.
         case .select, .crop, .zoomCallout, .lens, .measure,
-             .rectSelect, .ellipseSelect, .wand, .frame, .pen: .hidden
+             .rectSelect, .ellipseSelect, .wand, .frame: .hidden
         }
     }
 

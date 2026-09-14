@@ -2080,9 +2080,7 @@ struct EditorView: View {
             }
             .frame(width: heldName == nil ? 28 : 42, height: 28)
         }
-        .toolTip(heldName.map { "Using \($0)" }
-                 ?? (editorState.activeTool == .text ? "Text Style" : "Annotation Style"),
-                 key: "S")
+        .toolTip(heldName.map { "Using \($0)" } ?? styleButtonTip, key: "S")
         .keyboardShortcut("s", modifiers: [])
         // The bar's swatch answers to the same word every swatch in the panel
         // does, told apart by where it lives rather than by a row it does not
@@ -2117,6 +2115,20 @@ struct EditorView: View {
         })
         .popover(isPresented: editorState.colorWellBinding(toolStyleWellKey), arrowEdge: .top) {
             stylePopover
+        }
+    }
+
+    /// What the one swatch says it is for, when it is not holding a name.
+    ///
+    /// Each tool names the thing it is about to draw, because that is what the
+    /// swatch decides. The Pen draws a PATH rather than an annotation, and its
+    /// popover holds one row: the colour that path comes out in, inside and
+    /// edge alike.
+    private var styleButtonTip: String {
+        switch editorState.activeTool {
+        case .text: "Text Style"
+        case .pen: "Path Color"
+        default: "Annotation Style"
         }
     }
 

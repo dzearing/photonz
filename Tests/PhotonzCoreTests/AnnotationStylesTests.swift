@@ -352,4 +352,65 @@ struct AnnotationStylesRememberingTests {
             #expect(styles.arrivingStyle(forShape: shape).borderEffects.count == 1)
         }
     }
+
+    // MARK: - The ink the Pen is armed with
+
+    /// The Pen carries a colour on the bar like every other drawing tool, so
+    /// the next path comes out in what was chosen BEFORE it was drawn rather
+    /// than in the redline red every time.
+    @Test func thePenRemembersTheColourItWasArmedWith() {
+        var styles = AnnotationStyles()
+        #expect(styles.paint(for: .pen) == Paint(hex: PathContent.defaultColorHex))
+        styles.setPaint(Paint(hex: "#2D7FF9"), for: .pen)
+        #expect(styles.paint(for: .pen) == Paint(hex: "#2D7FF9"))
+        #expect(styles.colorHex(for: .pen) == "#2D7FF9")
+    }
+
+    /// The Pen's ink is its OWN, the way every shape's is: arming it must not
+    /// repaint the boxes, and painting a box must not repaint the Pen.
+    @Test func thePenSInkIsItsOwn() {
+        var styles = AnnotationStyles()
+        styles.setPaint(Paint(hex: "#2D7FF9"), for: .pen)
+        for tool in [Tool.rectangle, .ellipse, .line, .arrow] {
+            #expect(styles.colorHex(for: tool) == "#FF3B30")
+        }
+        styles.setColorHex("#00A870", for: .rectangle)
+        #expect(styles.colorHex(for: .pen) == "#2D7FF9")
+    }
+
+    /// A gradient arms the Pen the way it arms a box, so the whole paint rides
+    /// rather than the flat colour it starts on.
+    @Test func thePenCanBeArmedWithAGradient() {
+        var styles = AnnotationStyles()
+        var ramp = Paint(hex: "#2D7FF9")
+        ramp.becoming(.linear)
+        styles.setPaint(ramp, for: .pen)
+        #expect(styles.paint(for: .pen)?.isGradient == true)
+    }
+
+    /// What the Pen is holding survives a relaunch, because the whole point of
+    /// arming a tool is that the NEXT path comes out that colour too.
+    @Test func thePenSInkSurvivesARelaunch() throws {
+        var styles = AnnotationStyles()
+        styles.setPaint(Paint(hex: "#2D7FF9"), for: .pen)
+        let data = try JSONEncoder().encode(styles)
+        let reopened = try JSONDecoder().decode(AnnotationStyles.self, from: data)
+        #expect(reopened.colorHex(for: .pen) == "#2D7FF9")
+    }
+
+    /// Prefs that have never met the Pen write exactly what they always wrote,
+    /// so an app rolled back reads them unchanged.
+    @Test func anUnarmedPenAddsNothingToPrefs() throws {
+        let data = try JSONEncoder().encode(AnnotationStyles())
+        let text = String(decoding: data, as: UTF8.self)
+        #expect(!text.contains("penPaint"))
+        let reopened = try JSONDecoder().decode(AnnotationStyles.self, from: data)
+        #expect(reopened.colorHex(for: .pen) == PathContent.defaultColorHex)
+    }
+
+    /// The Pen draws no annotation, so it still has no annotation CONTENT: the
+    /// colour it holds is a path's, not a two-point mark's.
+    @Test func thePenStillDrawsNoAnnotation() {
+        #expect(AnnotationStyles().content(for: .pen) == nil)
+    }
 }

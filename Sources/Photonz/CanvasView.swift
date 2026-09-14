@@ -160,6 +160,10 @@ struct CanvasView: NSViewRepresentable {
     let onFrameCreate: (CGPoint, CGPoint) -> Void
     /// A finished lens drag (Next, `next-lens`): the box a lens lands in.
     let onLensCreate: (CGPoint, CGPoint) -> Void
+    /// The ink the Pen is armed with on the tool bar, echoed from EditorState
+    /// so the path under your hand is drawn in the colour the one that lands
+    /// will wear (`EditorState.armedPenPaint`).
+    var penPaint: Paint = Paint(hex: PathContent.defaultColorHex)
     /// A path finished with the Pen (Next, `next-pen`), in document
     /// coordinates: one layer, one undo step.
     let onPathCommit: (PathContent) -> Void
@@ -293,6 +297,7 @@ struct CanvasView: NSViewRepresentable {
     }
 
     private func update(_ view: CanvasNSView) {
+        view.penPaint = penPaint
         view.onViewSizeChange = onViewSizeChange
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
@@ -915,6 +920,10 @@ final class CanvasNSView: NSView {
     /// Arrow tool still in hand; mouse-up decides whether it was a click (hand
     /// back to Select) or a drag (the next arrow).
     var pressClosedCaptionField = false
+    /// What the Pen is armed with, echoed from EditorState. Read as the first
+    /// anchor goes down; see `PenSession.startingPaint`.
+    var penPaint: Paint = Paint(hex: PathContent.defaultColorHex)
+
     /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.
     var annotationContent: AnnotationContent?

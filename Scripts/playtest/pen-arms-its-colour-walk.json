@@ -1,0 +1,75 @@
+{
+  "out": "/tmp/photonz-playtest/pen-arms-its-colour",
+  "setup": {
+    "forget": [
+      "color",
+      "shapes"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-arrow", "note": "the arrow's capsule, for the Pen's to be compared against: one swatch in the Color group on the bottom row" },
+    { "do": "toolBar", "stage": "arrow" },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Color", "in": "Toolbar", "present": true },
+    { "do": "expect", "tooltip": "Color", "in": "Toolbar", "reads": "Path Color" },
+    { "do": "describe", "stage": "2-pen", "note": "the Pen wears the same one swatch in the same Color group: toolbar-pen.json says where it sits and how big it is, against toolbar-arrow.json above" },
+    { "do": "toolBar", "stage": "pen" },
+    { "do": "snapshot", "name": "pen-colour-1-capsule" },
+
+    { "do": "press", "control": "Color", "in": "Toolbar" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-picker", "note": "the swatch opens the one colour picker every colour row in the app opens, not a second one" },
+    { "do": "snapshot", "name": "pen-colour-2-picker" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "paintToolColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-armed", "note": "a plain blue picked in that picker: toolPaint is #2D7FF9 and nothing has been drawn yet" },
+    { "do": "snapshot", "name": "pen-colour-3-armed" },
+
+    { "do": "click", "at": [250, 500] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [450, 500] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [350, 300] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "move", "at": [252, 502] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-preview", "note": "the shape under the hand is already the armed blue, so what is on screen while you draw is what lands" },
+    { "do": "snapshot", "name": "pen-colour-4-preview" },
+
+    { "do": "click", "at": [252, 502] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true, "fill": "#2D7FF9", "ink": "#2D7FF9" },
+    { "do": "describe", "stage": "6-drawn", "note": "the triangle arrived in the colour the bar was set to, rather than the redline red" },
+    { "do": "render", "name": "pen-colour-5-drawn" },
+    { "do": "snapshot", "name": "pen-colour-5-drawn" },
+
+    { "do": "click", "at": [600, 480] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [780, 480] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [780, 320] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": false, "ink": "#2D7FF9", "fill": "none" },
+    { "do": "describe", "stage": "7-remembered", "note": "the path AFTER that one is the same blue: the bar holds the colour rather than spending it, and an open path is still a line with no inside" },
+    { "do": "expectLayers", "count": 3 },
+    { "do": "snapshot", "name": "pen-colour-6-remembered" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "8-boxes-untouched", "note": "the box tool is still holding its own red: arming the Pen repainted nothing else" },
+    { "do": "snapshot", "name": "pen-colour-7-boxes-untouched" }
+  ]
+}

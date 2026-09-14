@@ -38,6 +38,17 @@ extension EditorState {
         finishCreating(layer.id, tool: .pen)
     }
 
+    /// The ink the Pen is armed with on the tool bar: what the next path comes
+    /// out in, edge and inside alike.
+    ///
+    /// The canvas reads it as the first anchor goes down, so the line under
+    /// your hand is the line that lands. It is a preference rather than part of
+    /// the picture, which is why it lives with the other tools' remembered
+    /// colours and not in the document.
+    var armedPenPaint: Paint {
+        annotationStyles.paint(for: .pen) ?? Paint(hex: PathContent.defaultColorHex)
+    }
+
     /// The line on the chip under the canvas while the Pen is in hand. Live
     /// state, never in the document.
     var penHintText: String {
