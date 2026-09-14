@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:45:27.408Z",
-  "updated": "2026-09-14T21:00:21.779Z",
+  "updated": "2026-09-14T21:00:38.034Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED on its decision card: this adds an answer to a visible control, driven by parity rather than by an ask, and the 2026-09-02 loupe rule says those get a card first.\n\nThe evidence, read on 2026-09-09: Sources/PhotonzCore/LayerPlacement.swift:232 stepsOutOfTheFlow returns true for the surface and for a piece told to stretch along the flow, and nothing else. isSurface is horizontal == .stretch && vertical == .stretch (line 156), and the surface is placed once at the end and drawn behind everything (Sources/PhotonzCore/GroupFlow.swift:356). So the machinery for a piece that is not in the line already exists and has exactly one member.\n\nIf the answer is yes, the build is most likely a second role next to the surface rather than a new system: Sources/PhotonzCore/SurfaceCommand.swift is the command shape to copy, Sources/Photonz/PlacementInspector.swift is where the control lives, and queue/audits/2026-09-08-surface-role.json records how the surface answer was landed and what it costs.\n\nThe workaround that exists today (wrap the card in a group that arranges nothing) is why this is p2 and not p1.",
@@ -65,7 +65,12 @@
     {
       "t": "2026-09-14T21:00:21.778Z",
       "note": "Asked for a sweep: the change is in GroupFlow's shared measuring and resolving, which every arranged group in every walk goes through. The surface, stack and layout walks (15 of them) all pass on their own."
+    },
+    {
+      "t": "2026-09-14T21:00:38.032Z",
+      "note": "The Layout section's Role row has a third answer, In front of the rest, with Layer > In Front of the Rest beside it. A piece that takes it leaves the line, the row closes over it and stops measuring it, it comes to the front of its group, its X and Y come back to life, and a resize carries it by its own Horizontal and Vertical rules. Rides the existing next-auto-layout flag. Core in FloatingPiece.swift, GroupFlow, SurfaceCommand/PieceRole; 19 new tests, whole suite 6534 green; walked live on the probe with real captures in queue/audits/2026-09-14-piece-in-front.json."
     }
   ],
-  "started": "2026-09-14T20:44:26.505Z"
+  "started": "2026-09-14T20:44:26.505Z",
+  "completed": "2026-09-14T21:00:38.033Z"
 }
