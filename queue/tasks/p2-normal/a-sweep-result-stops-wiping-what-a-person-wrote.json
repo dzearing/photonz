@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:15:22.696Z",
-  "updated": "2026-09-13T16:15:57.940Z",
+  "updated": "2026-09-14T01:41:46.954Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced from git history, 2026-09-13. queue/bin/sweep-report.mjs:47 does q.saveTask({ ...open, notes }) with a freshly built notes string, so the whole field is replaced.\n\nThe evidence is in the working tree: git diff queue/tasks/p2-normal/walks-that-fail-in-the-full-sweep.json shows the 07:45 note that began 'TRIAGED 2026-09-13 07:45 by the manager pass' and named which task owns each of six walks being replaced wholesale by the 16:12Z sweep's list.\n\nThe log entries appendLog writes survive, so the history is not lost, but nobody reads a log of thirty lines to find a triage; the notes are what a runner reads.\n\nSimplest shape that works: put the machine's block between two markers and only ever replace what is between them. Whatever the shape, the acceptance above is the bar.",
@@ -28,6 +28,52 @@
     {
       "t": "2026-09-13T16:15:57.939Z",
       "note": "seq 2550 -> 6"
+    },
+    {
+      "t": "2026-09-14T01:37:54.412Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T01:40:14.497Z",
+      "note": "Reproduced first, in a throwaway queue: filed the standing task from one sweep result, appended a TRIAGED paragraph by hand, ran a second result, and the paragraph was gone. sweep-report.mjs did q.saveTask({ ...open, notes }) with a freshly built string."
+    },
+    {
+      "t": "2026-09-14T01:40:14.498Z",
+      "note": "Adversarial review of the idea before building. Markers only work if a person can see where the line is, so I checked the dashboard first: task notes render in a <p> that already carries white-space:pre-wrap, so line breaks survive and the end marker reads as its own line. Legacy notes are the real risk, since the live task has no markers in it and a naive rollout would eat its first triage too, so the old machine block is recognised by the shape it was built with (opens 'Last sweep ', closes with the 'Sweep asked for by:' paragraph) and anything after it is treated as a person's. Notes that were never machine-made are treated as entirely a person's."
+    },
+    {
+      "t": "2026-09-14T01:40:14.499Z",
+      "note": "Shortest version that delivers the value: the sweep owns one marked block, everything below the end marker is carried across untouched. No new file format, no second field, nothing for a runner to learn."
+    },
+    {
+      "t": "2026-09-14T01:40:14.500Z",
+      "note": "Built queue/bin/sweep-notes.mjs (markers, humanPart, previousFailures, machineBlock, mergeNotes, ownersOfWalks) and pointed sweep-report.mjs at it. The block now also names which failures another open task already covers, and which walks stopped failing since the last sweep (a sweep that was cut short claims nothing, because the walks it never reached are unknown rather than passing)."
+    },
+    {
+      "t": "2026-09-14T01:40:14.501Z",
+      "note": "queue/bin/sweep-notes-drill.mjs, 25 checks: all pass, and the three end-to-end ones fail against the old sweep-report.mjs."
+    },
+    {
+      "t": "2026-09-14T01:41:46.905Z",
+      "note": "Verified on the live dashboard: opened the standing task in the browser, expanded Working detail, and the block reads as lines (the notes paragraph already carries white-space:pre-wrap), with the end marker on its own line and the hand-written paragraph under it. Screenshot in queue/audits/2026-09-13-sweep-keeps-hand-written-triage.png."
+    },
+    {
+      "t": "2026-09-14T01:41:46.906Z",
+      "note": "Migrated the live standing task: its notes now carry the markers, the ownership list (which reproduced the manager pass's triage on its own: border and glow to adding-an-effect-leaves-every-one-of-its-setting, dock to picking-a-plain-shape-leaves-the-panel-parked-on) and a hand-written paragraph below the line."
+    },
+    {
+      "t": "2026-09-14T01:41:46.907Z",
+      "note": "Scripts/test.sh green, 6378 tests in 516 suites. churn-drill, audit-index-drill and decision-drill green too."
+    },
+    {
+      "t": "2026-09-14T01:41:46.908Z",
+      "note": "Rough edge filed: ownersOfWalks matches the walk name anywhere in another task's text, so a passing mention can claim a walk (dock-picked-first-walk came out owned by two tasks, only one really about it). Follow-up a-task-says-which-failing-walk-it-owns-instead-o at p3-low."
+    },
+    {
+      "t": "2026-09-14T01:41:46.952Z",
+      "note": "A sweep now rewrites only the block between two markers in the standing failing-walks task; anything below the end marker is carried across untouched, and notes written before the markers are migrated rather than eaten. The block also says which failures another open task already covers and which walks stopped failing (a cut-short sweep claims nothing). queue/bin/sweep-notes.mjs + sweep-report.mjs; new sweep-notes-drill.mjs, 25 checks, 3 of them fail on the old code; Scripts/test.sh 6378 green; verified end to end over a copy of the real queue and on the live dashboard. Live task migrated. Audit: queue/audits/2026-09-13-sweep-keeps-hand-written-triage.json. Shipped in e1a935a0."
     }
-  ]
+  ],
+  "started": "2026-09-14T01:37:54.411Z",
+  "completed": "2026-09-14T01:41:46.953Z"
 }
