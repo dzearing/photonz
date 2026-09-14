@@ -147,9 +147,17 @@ extension EditorState {
     }
 
     /// Merge one specific layer into the layer directly below it (the panel's
-    /// context menu, which acts on the clicked row, not the selection).
+    /// context menu). Right clicking a MEMBER of the multi-selection merges the
+    /// whole selection into one, exactly as ⌘E does, because the row menu acts
+    /// on the selection whenever the row you clicked is part of it
+    /// (`rowMenuTargets`). A row outside the selection merges on its own.
     func mergeDown(id: UUID) {
-        guard let document, let idx = document.index(of: id), idx > 0 else { return }
+        guard let document else { return }
+        if multiSelectedLayerIDs.contains(id), multiSelectedLayerIDs.count >= 2 {
+            mergeLayers(ids: document.layers.filter { multiSelectedLayerIDs.contains($0.id) }.map(\.id))
+            return
+        }
+        guard let idx = document.index(of: id), idx > 0 else { return }
         mergeLayers(ids: [document.layers[idx - 1].id, id])
     }
 

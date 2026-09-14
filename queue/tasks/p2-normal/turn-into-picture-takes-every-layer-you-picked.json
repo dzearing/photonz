@@ -1,0 +1,29 @@
+{
+  "id": "turn-into-picture-takes-every-layer-you-picked",
+  "title": "Turn Into Picture takes every layer you picked",
+  "goal": "Pick three shapes, right click one, and Turn Into Picture flattens only the one you clicked while the other two stay shapes. The same is true of Turn Into Path, Separate into Layers and Turn into Text. Everything else in that menu already treats the rows you picked as one thing, so these four should too: the command should run over every picked layer, in one undo step.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2660,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T03:34:28.834Z",
+  "updated": "2026-09-14T03:34:28.837Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-13 while adding Group and Ungroup to the layer row menu. Evidence: the row menu in Sources/Photonz/LayersRow.swift calls editorState.rasterizeLayer(id:), turnLayerIntoPath(id:), separateIntoLayers(id:) and turnIntoText(id:), none of which consult multiSelectedLayerIDs, while duplicateLayer(id:), deleteLayer(id:), restack(id:_:), mergeDown(id:), toggleLayerVisibility(id:) and toggleLayerLock(id:) all route through the whole selection when the clicked row is a member. The shared rule is EditorState.rowMenuTargets(_:) in Sources/Photonz/EditorState+Layout.swift; these four just need to read it. Separate into Layers and Turn into Text are only offered on a picture, so batching them matters less than the two Turn Into commands; do those first.",
+  "acceptance": [
+    "With three shapes picked, Turn Into Picture on one of them turns all three into pictures in one undo step",
+    "Turn Into Path over a selection does the same, and layers in the selection that have no outline to find are left alone rather than failing the whole command",
+    "One undo takes the whole batch back",
+    "A row outside the selection still acts on that row alone, which is the rule in docs/design/layers.md",
+    "A playtest walk picks two shapes, right clicks one and turns both into pictures"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T03:34:28.836Z",
+      "note": "created (manual)"
+    }
+  ]
+}

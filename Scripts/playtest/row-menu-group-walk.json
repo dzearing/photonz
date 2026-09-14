@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/row-menu-group",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "what-this-proves", "note": "Group used to live only in the Layer menu and on Command G. This walk picks two layer rows, right clicks one of them and makes a group out of both from the row menu, then takes it apart again from the same menu. It also right clicks a row that is NOT in the selection, where Group has nothing to make a group out of and so is not offered." },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 80], "to": [300, 200], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [340, 80], "to": [520, 200], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [560, 80], "to": [740, 200], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panel", "stage": "1-three-rows" },
+
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "selectRow", "row": "Rectangle 2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-two-picked", "note": "two rows picked, the way a person picks the things they want held together" },
+
+    { "do": "rightClick", "on": "Rectangle 2", "shot": "row-menu-group-1-menu" },
+    { "do": "describe", "stage": "3-menu-over-a-selection", "note": "the menu on a picked row carries Group and Ungroup beside the arrange commands, with Command G printed against Group" },
+
+    { "do": "rightClick", "on": "Rectangle 3" },
+    { "do": "describe", "stage": "4-menu-outside-the-selection", "note": "the same menu on the row that was NOT picked: it is about that one row, and one row on its own has nothing to group, so no Group row" },
+
+    { "do": "rightClick", "on": "Rectangle 2", "choose": "Group" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "5-grouped" },
+    { "do": "describe", "stage": "5-grouped", "note": "both picked rows went into one group; the row that was not picked stayed where it was" },
+    { "do": "snapshot", "name": "row-menu-group-2-grouped" },
+
+    { "do": "rightClick", "on": "Group", "choose": "Ungroup" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "panel", "stage": "6-ungrouped" },
+    { "do": "describe", "stage": "6-ungrouped", "note": "Ungroup out of the same menu put the two rectangles back loose" },
+
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "selectRow", "row": "Rectangle 2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "rightClick", "on": "Rectangle 2", "choose": "Merge Down" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "panel", "stage": "7-merged" },
+    { "do": "describe", "stage": "7-merged", "note": "Merge Down out of the row menu used to take only the row it came from. On a picked row it now merges the whole selection into one, the same thing Command E does, so two of the three rectangles became one picture layer and the third is untouched." }
+  ]
+}

@@ -24,6 +24,19 @@ extension EditorState {
 
     var hasLayerSelection: Bool { !actionableLayerIDs.isEmpty }
 
+    /// What a LAYER ROW's context menu acts on: the whole selection when the
+    /// row you right clicked is part of it, else that row on its own.
+    ///
+    /// One rule for the whole menu. A row menu hangs off a row, so the row you
+    /// aimed at is always in what it touches; but right clicking one of three
+    /// rows you just picked is how a person says "these three", so a member
+    /// brings the rest with it. Duplicate, Delete, the arrange commands, the
+    /// eye, the lock, Merge Down and Group all read this, so no two rows of the
+    /// same menu disagree about what "this" means.
+    func rowMenuTargets(_ id: UUID) -> Set<UUID> {
+        multiSelectedLayerIDs.contains(id) ? multiSelectedLayerIDs : [id]
+    }
+
     /// Whether Layers > Delete Layer would take anything: false while every
     /// layer picked is locked, so the row greys out and the app says no before
     /// the press rather than deleting and leaving you to notice.
@@ -207,23 +220,44 @@ extension EditorState {
     // MARK: - Groups (Next flag `next-layer-groups`)
 
     /// Whether Layer ▸ Group would do anything.
-    var canGroupSelection: Bool {
-        guard Experiments.shared.layerGroupsEnabled, let document else { return false }
-        return document.canGroup(ids: actionableLayerIDs)
-    }
+    var canGroupSelection: Bool { canGroup(ids: actionableLayerIDs) }
 
     /// Whether Layer ▸ Ungroup would do anything.
-    var canUngroupSelection: Bool {
+    var canUngroupSelection: Bool { canUngroup(ids: actionableLayerIDs) }
+
+    /// Whether the layer row menu's Group row has something to make a group
+    /// out of. It takes two, so a row outside the selection never offers it —
+    /// the same rule the rest of that menu follows, where a command a row
+    /// cannot take is absent rather than dimmed.
+    func canGroupRow(id: UUID) -> Bool { canGroup(ids: rowMenuTargets(id)) }
+
+    /// Whether the layer row menu's Ungroup row has a group to take apart.
+    func canUngroupRow(id: UUID) -> Bool { canUngroup(ids: rowMenuTargets(id)) }
+
+    /// The layer row menu's Group: the whole selection when the clicked row is
+    /// in it, else that row alone (which never groups, so the row is absent).
+    func groupRow(id: UUID) { group(ids: rowMenuTargets(id)) }
+
+    /// The layer row menu's Ungroup, on the same targets as Group.
+    func ungroupRow(id: UUID) { ungroup(ids: rowMenuTargets(id)) }
+
+    private func canGroup(ids: Set<UUID>) -> Bool {
         guard Experiments.shared.layerGroupsEnabled, let document else { return false }
-        return document.canUngroup(ids: actionableLayerIDs)
+        return document.canGroup(ids: ids)
+    }
+
+    private func canUngroup(ids: Set<UUID>) -> Bool {
+        guard Experiments.shared.layerGroupsEnabled, let document else { return false }
+        return document.canUngroup(ids: ids)
     }
 
     /// Layer ▸ Group (⌘G): wraps the selection in a new group, in one undo
     /// step, and selects the group — so the very next drag moves the whole
     /// thing, which is the reason you pressed it.
-    func groupSelection() {
-        guard canGroupSelection else { return }
-        let ids = actionableLayerIDs
+    func groupSelection() { group(ids: actionableLayerIDs) }
+
+    private func group(ids: Set<UUID>) {
+        guard canGroup(ids: ids) else { return }
         discardDragPreview()
         var madeID: UUID?
         perform { document in
@@ -239,9 +273,10 @@ extension EditorState {
     /// Layer ▸ Ungroup (⇧⌘G): takes the selected groups apart in one undo
     /// step, leaving the pieces exactly where they were and selected, so you
     /// can carry straight on with them.
-    func ungroupSelection() {
-        guard canUngroupSelection else { return }
-        let ids = actionableLayerIDs
+    func ungroupSelection() { ungroup(ids: actionableLayerIDs) }
+
+    private func ungroup(ids: Set<UUID>) {
+        guard canUngroup(ids: ids) else { return }
         discardDragPreview()
         // Anything selected that was not a group stays selected alongside the
         // pieces that just came out.

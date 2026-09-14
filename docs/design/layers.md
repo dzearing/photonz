@@ -42,8 +42,34 @@ Result: blurred background with a sharp focal cutout, fully non-destructive.
 Layer menu + per-row context menu share: **New Layer via Copy ⌘J** (promotes
 the marquee if present, else duplicates), Duplicate ⌘D, **Merge Down ⌘E**
 (Export moved to ⇧⌘E), Bring to Front **⌘⇧]** / Forward **⌘]** / Backward
-**⌘[** / to Back **⌘⇧[**, Delete ⌘⌫; the context menu adds Rename/Hide/Lock
-and acts on the clicked row. Details:
+**⌘[** / to Back **⌘⇧[**, Delete ⌘⌫; the context menu adds Rename/Hide/Lock.
+
+### What a layer row's context menu acts on (2026-09-13)
+
+**One rule for the whole menu: the row you right clicked, or the whole
+multi-selection when that row is part of it** (`EditorState.rowMenuTargets`).
+A row menu hangs off a row, so the row you aimed at is always in what it
+touches; right clicking one of three rows you just picked is how a person says
+"these three", so a member brings the rest with it. Duplicate, Delete, the four
+arrange commands, the eye, the lock, Merge Down and Group/Ungroup all read the
+same targets, so no two rows of one menu disagree about what "this" means.
+Right clicking a row that is NOT in the selection leaves the selection alone
+and acts on that row: the menu is about the row it came out of.
+
+A command a row cannot take is **absent, not dimmed** — the menu should never
+carry a dead row whose reason has to be hunted for. That is why Group is
+missing on a row outside the selection: grouping takes two siblings, so one row
+on its own has nothing to group. (The Layer MENU dims the same command instead,
+because a menu bar menu is always there and has to say the command exists.)
+
+Commands in the row menu that are single-row **by nature**: Rename, Select
+Pixels (one layer's transparency), Bring into View and Make … Fit (they read
+that row's own out-of-view mark). Make Component, Detach Instance and Add
+Version only appear on a row that is already selected, and act on the
+selection. Turn Into Path, Turn Into Picture, Separate into Layers and Turn
+into Text still act on the clicked row alone even inside a selection.
+
+Details:
 
 - **Merge Down** composites ONLY the participants (selected layer + the one
   below, or the whole multi-selection) over transparency — temp document →

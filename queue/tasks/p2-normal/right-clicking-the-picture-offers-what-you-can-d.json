@@ -1,0 +1,29 @@
+{
+  "id": "right-clicking-the-picture-offers-what-you-can-d",
+  "title": "Right clicking the picture offers what you can do with it",
+  "goal": "Right clicking a layer row gives you a menu of things to do with that layer, but right clicking the same thing on the picture itself gives you nothing at all. Someone who has just drawn two boxes and wants to hold them together looks at the boxes, not at the list on the right. Give the canvas a menu for whatever is under the pointer, carrying the commands that already exist for it.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2650,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T03:34:24.928Z",
+  "updated": "2026-09-14T03:34:24.931Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while adding Group to the layer row menu on 2026-09-13. Today only LayersRow, EffectsListInspector and MeasurementsListView carry a .contextMenu; CanvasView has none. The row menu is Sources/Photonz/LayersRow.swift `menu`, and what it acts on is EditorState.rowMenuTargets(_:) (docs/design/layers.md, \"What a layer row context menu acts on\"). A canvas menu wants the same targets rule with the hit-tested layer standing in for the clicked row. Open question worth deciding before building: whether right clicking something not in the selection should pick it first, which is what most editors do on canvas even where they do not do it in a list.",
+  "acceptance": [
+    "Right clicking a layer on the canvas raises a menu",
+    "With several layers picked, right clicking one of them offers Group and does the same thing Command G does",
+    "The menu carries the same commands for the same thing as the layer row menu, under the same names and with the same shortcuts printed",
+    "Right clicking empty canvas offers what makes sense there rather than an empty menu or a menu about nothing",
+    "A playtest walk right clicks a layer on the canvas and groups two layers from the menu it gets"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T03:34:24.930Z",
+      "note": "created (manual)"
+    }
+  ]
+}

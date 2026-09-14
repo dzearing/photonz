@@ -1,0 +1,27 @@
+{
+  "feature": "Group from the layer row menu",
+  "epic": "ui-building",
+  "summary": "Pick two layers, right click one of them, and Group is right there with Command G printed beside it. Ungroup sits in the same place on a group. Both act on everything you picked, not just the row under the pointer.",
+  "setup": "Photonz Dev, Experiments window, release Next. Layer groups are on by default there.",
+  "try": [
+    { "do": "Draw three rectangles on a blank canvas." },
+    { "do": "Click the top rectangle's row in the Layers list, then Command click the row under it, so two rows are highlighted." },
+    { "do": "Right click either of the two highlighted rows.", "shot": "2026-09-13-row-menu-group-1-menu.png" },
+    { "do": "Pick Group.", "shot": "2026-09-13-row-menu-group-2-grouped.png" },
+    { "do": "Right click the third rectangle's row, the one you never picked, and read the menu." },
+    { "do": "Right click the new Group row and pick Ungroup." },
+    { "do": "Pick two rows again, right click one and pick Merge Down." }
+  ],
+  "evaluate": [
+    "Is Group where your hand went looking for it, sitting above Bring to Front?",
+    "Right clicking a row you did NOT pick acts on that row alone and the selection stays where it was. Is that what you expected, or should the right click have taken the selection over to the row you clicked, the way the Finder does?",
+    "Group is simply missing on a row you did not pick, because one layer has nothing to group. Is missing better than a greyed out row there?",
+    "Does Command G printed beside Group actually teach you the shortcut, or is it noise in a menu that is already long?",
+    "Merge Down on a picked row now merges everything you picked into one, where it used to merge only the clicked row. Is that the merge you wanted?"
+  ],
+  "rough": [
+    "Turn Into Path, Turn Into Picture, Separate into Layers and Turn into Text are the last commands in that menu that still act on the clicked row alone even when several rows are picked. Filed as \"Turn Into Picture takes every layer you picked\".",
+    "There is still no menu at all when you right click the picture itself, which is the other place a person reaches for Group. Filed as \"Right clicking the picture offers what you can do with it\".",
+    "The rule chosen for a row outside the selection is the one the app already settled when the Layers menu learned to act on many rows: the menu acts on the row you clicked, and on the whole selection only when that row is part of it. It is now written down in docs/design/layers.md and every command in the menu obeys it. The alternative, letting a right click move the selection onto the row it landed on, would need the right click intercepted before the menu opens and would change how every row in the app behaves, so it is a question for you rather than a thing to guess at."
+  ]
+}

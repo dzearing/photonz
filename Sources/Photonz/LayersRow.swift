@@ -386,6 +386,21 @@ struct LayersRow: View, Equatable {
             Button("Turn into Text") { editorState.turnIntoText(id: id) }
         }
         Divider()
+        // Group and Ungroup, on Photoshop's keys, directly above the arrange
+        // commands so the structure commands sit together, which is the order
+        // the Layer menu already uses. They act on the whole selection when the
+        // row you right clicked is part of it, so picking three rows and right
+        // clicking one of them makes one group of the three; on a row outside
+        // the selection there is nothing to group, and a row that cannot act is
+        // absent rather than dimmed, like everything else in this menu.
+        if editorState.canGroupRow(id: id) {
+            Button("Group") { editorState.groupRow(id: id) }
+                .keyboardShortcut("g", modifiers: .command)
+        }
+        if editorState.canUngroupRow(id: id) {
+            Button("Ungroup") { editorState.ungroupRow(id: id) }
+                .keyboardShortcut("g", modifiers: [.command, .shift])
+        }
         Button("Bring to Front") { editorState.bringLayerToFront(id: id) }
             .keyboardShortcut("]", modifiers: [.command, .shift])
         Button("Bring Forward") { editorState.bringLayerForward(id: id) }

@@ -9,12 +9,12 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T01:39:34.117Z",
+  "updated": "2026-09-14T03:26:21.452Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-13T20:35:30Z: 397 of 404 walks passed in 77 minutes.\n\nFailing walks (7): border-effect-walk, contents-for-several-walk, copies-share-choice-walk, dock-picked-first-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk\n\nAlready named by another open task, so read that one before re-diagnosing (3):\n  border-effect-walk -> adding-an-effect-leaves-every-one-of-its-setting\n  dock-picked-first-walk -> picking-a-plain-shape-leaves-the-panel-parked-on, picking-a-text-layer-leaves-its-settings-below-t\n  glow-effect-walk -> adding-an-effect-leaves-every-one-of-its-setting\n\nThis task owns the other 4: contents-for-several-walk, copies-share-choice-walk, label-fills-a-row-walk, readout-fields-walk\n\nFull output: queue/sweep/2026-09-13-121855.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: turn-a-rectangle-into-a-path-and-pull-its-points: Turn Into Path changed three things on the shared composite path: a ring round a PATH layer now follows the outline instead of the layer box (DocumentRenderer.pathSilhouette, and the mask cache key grew), PathContent.strokeOutset rounds up so an odd-width path stroke lands on the pixel grid, and GradientPainter.stroke now sets the line cap for a FLAT paint, which changes every open path from butt caps to the round ones it was asking for. The path, pen, border, corner and svg walks were run here and pass (border-effect-walk fails, but it was already failing in the 18:20Z sweep).\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T03:26:21Z: 404 of 406 walks passed in 82 minutes.\n\nFailing walks (2): contents-for-several-walk, dock-picked-first-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  dock-picked-first-walk -> picking-a-plain-shape-leaves-the-panel-parked-on, picking-a-text-layer-leaves-its-settings-below-t, a-task-says-which-failing-walk-it-owns-instead-o\n\nThis task owns the other 1: contents-for-several-walk\n\nStopped failing since the last sweep (5): border-effect-walk, copies-share-choice-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk\n\nFull output: queue/sweep/2026-09-13-190416.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-new-frame-can-be-an-icon-size-and-an-icon-is-s: Playtest can now reach controls inside a sheet (panelWindows gained the attached sheet), which touches every walk that opens one; and New Frame moves the camera to a frame made from a picked size under next-icon-frames\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
   "acceptance": [
     "A fresh sweep is asked for after two-effect-walks-fail-now-and-then-because-a-pre lands, with queue/bin/sweep.sh request",
     "contents-for-several-walk either passes or is rewritten to match what the app does now, and passes twice on its own",
@@ -94,6 +94,10 @@
     {
       "t": "2026-09-14T01:39:34.116Z",
       "note": "notes now keep a hand-written part below the sweep block (a-sweep-result-stops-wiping-what-a-person-wrote)"
+    },
+    {
+      "t": "2026-09-14T03:26:21.451Z",
+      "note": "sweep 2026-09-14T03:26:21Z: 2 failing (contents-for-several-walk, dock-picked-first-walk); stopped failing: border-effect-walk, copies-share-choice-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk"
     }
   ]
 }
