@@ -5,11 +5,11 @@
   "epic": "",
   "priority": "p2-normal",
   "seq": 15,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:07:05.695Z",
-  "updated": "2026-09-14T14:07:15.584Z",
+  "updated": "2026-09-14T15:37:40.296Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-14 with a screenshot of a wide capture in the history strip: \"if an image is larger than a reasonable ratio, say 2.5:1 or 3:1, we should crop it. And also, we should avoid stretching an image beyond its natural size, when its smaller than the rectangle we place it in. see how this image is both stretched and quite wide.\"\n\nBOTH SYMPTOMS COME FROM ONE LINE, confirmed by reading. Sources/Photonz/CaptureThumbnailView.swift:25-27:\n\n    Image(decorative: image, scale: 1)\n        .resizable()\n        .aspectRatio(contentMode: .fit)\n        .modifier(SizeModifier(fixedHeight: fixedHeight))\n\nand SizeModifier at :111 applies .frame(height: fixedHeight) for the strip. The history strip passes fixedHeight: 100 and minWidth: 96 (Sources/Photonz/HistoryOverlay.swift:212). `.resizable()` means the image is scaled to whatever frame it is handed, in BOTH directions: a 2000 by 200 capture becomes a thousand points wide at a hundred tall, and a 60 by 30 capture is blown up to a hundred tall. The first is the sliver, the second is the softness. Nothing caps the ratio and nothing stops an upscale.\n\nThe app already solved the OTHER end of this and it is worth reading before writing anything: the `minWidth` parameter exists, and its comment at CaptureThumbnailView.swift:12 says it is a \"floor on the tile width so extreme aspect ratios (a 5px-wide image) still present a real hover/tap target instead of a sliver\". So the tall-and-narrow extreme was capped by padding the tile out. The wide extreme was never capped. Whatever is built here should read as the same idea applied to the other end, not a second unrelated rule.\n\nShape of the fix: past the ratio cap the tile wants contentMode .fill with a width ceiling and a clip, rather than .fit; under natural size it wants no resizing at all. Both are decisions about the SIZE to draw at, so put that decision in PhotonzCore as a small tested function taking the capture's size and the tile's bounds and giving back what to draw and whether to crop, and leave the view thin. That is also the only way the acceptance tests above can exist.\n\nTRAP, and it will bite silently: captures are 2x. `Image(decorative: image, scale: 1)` declares the bitmap at scale 1, so a Retina capture of a 100 by 50 point region arrives as a 200 by 100 CGImage and SwiftUI treats it as 200 by 100 POINTS. So \"never bigger than its natural size\" has to be answered in one unit consistently, and if the pixel count is used as the natural size then every Retina capture is allowed to draw at twice the size it should. Decide, write it down, and put a 2x capture in the tests.\n\nThe crop rule needs a stated anchor. A wide capture cropped from the centre loses both ends; cropped from the leading edge it keeps the start, which for a screenshot of a window or a bar is usually the recognisable part. Pick one, say why in the audit, and check it against a real wide capture of a toolbar rather than against a gradient.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
@@ -34,6 +34,31 @@
     {
       "t": "2026-09-14T14:07:15.583Z",
       "note": "seq 2640 -> 15"
+    },
+    {
+      "t": "2026-09-14T15:23:13.403Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T15:24:59.278Z",
+      "note": "REPRODUCED with a real walk (Scripts/playtest/history-thumbnail-shapes-walk.json, five fixture captures in the strip at once, probe Screen Recording granted so the numbers come off a real -sc.png). Measured tile widths at the strip's 100pt row height:\n  2400x300 @72dpi  -> drawn 800x100pt   (should be 250x100, cropped to 2.5:1)\n  1200x800 @72dpi  -> drawn 150x100pt   (correct, must not move)\n  60x30   @72dpi   -> drawn 200x100pt   (3.3x UPSCALE; should be 60x30)\n  120x60  @144dpi  -> drawn 200x100pt   (natural size is 60x30pt; 3.3x upscale in points, 6.7x in device pixels)\n  40x600  @72dpi   -> drawn 7x100pt, tile padded to the 96pt floor (a hairline; nothing legible)\nBefore shot: /tmp/photonz-playtest/history-thumbnail-shapes/1-all-shapes-sc.png"
+    },
+    {
+      "t": "2026-09-14T15:37:40.166Z",
+      "note": "AFTER, same walk, same six fixtures, measured off the real -sc.png:\n  wide recording 1600x300  535x100 -> 250x100 (cropped 2.5:1, leading edge kept, play badge centred on the crop, 0:03 pill bottom-right)\n  40x600 tall               6x100  -> 40x100 (top crop; the 96pt hit-target floor still pads the slot around it)\n  120x60 @144dpi          200x100  -> 60x30  (natural point size, 1:1 device pixels on a Retina display)\n  60x30  @72dpi           200x100  -> 60x30\n  1200x800                148x100  -> 148x100 (unchanged, as required)\n  2400x300 wide           800x100  -> 250x100\nEight tiles now fit in the strip where six did. Audit + before/after/focused shots: queue/audits/2026-09-14-history-thumbnails.json."
+    },
+    {
+      "t": "2026-09-14T15:37:40.211Z",
+      "note": "DECISIONS made rather than blocked on, none of which have a second defensible answer:\n  Ratio cap 2.5:1 (the report offered 2.5 or 3). At the strip's 100pt row that is a 250pt tile, wide enough to read and narrow enough that several in a row still fit.\n  Crop anchor is the LEADING edge for wide and the TOP for tall. A wide capture is nearly always a bar or a window, and its start carries the title, the logo and the first controls. Checked against a fixture with a distinct block at its leading edge and buttons at its trailing edge, so which end survived is visible in the shot, not asserted.\n  Natural size is measured in POINTS. The PNG DPI the app already writes (72 x scale, CaptureStore.writePNG) is read back through the existing DisplayScale, so a 2x capture is its point size, not its pixel count. Without this every Retina capture would have been allowed to draw twice as big.\n  The small capture keeps the 100pt-tall SLOT and sits centred in it, so the row does not go ragged; only the picture shrinks. That is the reporter's own framing (\"smaller than the rectangle we place it in\")."
+    },
+    {
+      "t": "2026-09-14T15:37:40.253Z",
+      "note": "SCOPE, two places the task file pointed somewhere that no longer exists or was wrong:\n  The Quick Access card was deleted in June 2026 (docs/progress/log.md 2026-06-21), so the acceptance item about it has no surface. What DOES have the same bug is the capture toast (ToastController), a fixed 196x124 box with contentMode .fit: a wide capture shrank to a 196x24 sliver in it and a tiny one was blown up to 196x98. The sizing rule is now shared (CaptureThumbnailImage) and the toast goes through it, which is that acceptance item in substance.\n  The Library's Media shelf draws captures too but does NOT have this bug: it uses scaledToFill in a fixed 44pt well, which crops rather than stretches (LibraryPanel.swift:486).\n  Both symptoms are one file's worth of change plus a tested PhotonzCore type; CaptureThumbnailView is shared code, not forked into Next, so Current and Next both have the fix and the porting rule is satisfied by construction."
+    },
+    {
+      "t": "2026-09-14T15:37:40.295Z",
+      "note": "left rough (below the follow-up bar, recorded here rather than filed):\n  The fade marking a cropped edge is a soft darkening, so it is close to invisible on a dark screenshot. Raised as an evaluate question in the audit instead, since it is the user's call whether a thumbnail needs to say it is cropped at all.\n  There is no way to drive a capture toast from a playtest walk, so the toast half was proved by the tested sizing rule and a build rather than by a picture. The ordinary case is unchanged by arithmetic (2880x1800 @2x still fills the box at 196x122.5, pinned in ThumbnailFitTests.toastBox).\n  A recording reports pixelScale 1, because an MP4 carries no DPI tag. Harmless today (a poster frame is always far bigger than a tile) but a recording under 250x100 points would draw at twice its size. Not reproducible with any real recording.\n  The Library Media shelf upscales a tiny capture to fill its 44pt well. Different design (a grid of equal wells, where a gap would look broken), so it was left alone.\n  Filed separately, with a reproduction: a-playtest-walk-leaves-its-pictures-in-the-repo."
     }
-  ]
+  ],
+  "started": "2026-09-14T15:23:13.402Z"
 }

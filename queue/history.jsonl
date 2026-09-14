@@ -3298,3 +3298,10 @@
 {"t":"2026-09-14T15:20:44.339Z","ev":"task_note","id":"say-where-animating-an-icon-and-editing-a-video"}
 {"t":"2026-09-14T15:22:27.570Z","ev":"task_note","id":"say-where-animating-an-icon-and-editing-a-video"}
 {"t":"2026-09-14T15:22:36.794Z","ev":"task_blocked","id":"say-where-animating-an-icon-and-editing-a-video","from":"in_progress","note":"Study delivered and a decision card is open for the user. The side-by-side is at docs/design/mocks/pages/time-compare.html (Icons > Animation vs video: the same job?), the long form at docs/design/animation-vs-video.md, the audit at queue/audits/2026-09-14-animation-vs-video.json. The answer: three shared controls, five surfaces that only look shared, and a ruler they cannot share because an icon repeats and a video finishes. Recommendation is to build motion as a property of a layer with no ruler at all. Waiting only on which of the four options the user picks; option d retires this task."}
+{"t":"2026-09-14T15:23:13.405Z","ev":"task_started","id":"a-capture-in-the-history-strip-is-never-stretche","title":"A capture in the history strip is never stretched and never a mile wide","priority":"p2-normal"}
+{"t":"2026-09-14T15:24:59.280Z","ev":"task_note","id":"a-capture-in-the-history-strip-is-never-stretche"}
+{"t":"2026-09-14T15:37:30.973Z","ev":"task_created","id":"a-playtest-walk-leaves-its-pictures-in-the-repo","priority":"p2-normal","title":"A playtest walk leaves its pictures in the repo instead of the scratch folder"}
+{"t":"2026-09-14T15:37:40.168Z","ev":"task_note","id":"a-capture-in-the-history-strip-is-never-stretche"}
+{"t":"2026-09-14T15:37:40.213Z","ev":"task_note","id":"a-capture-in-the-history-strip-is-never-stretche"}
+{"t":"2026-09-14T15:37:40.255Z","ev":"task_note","id":"a-capture-in-the-history-strip-is-never-stretche"}
+{"t":"2026-09-14T15:37:40.297Z","ev":"task_note","id":"a-capture-in-the-history-strip-is-never-stretche"}

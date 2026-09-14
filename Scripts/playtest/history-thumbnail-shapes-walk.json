@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/history-thumbnail-shapes",
+  "setup": {
+    "captures": [
+      "fixtures/thumbnail-shapes/Shape 1 wide 2400x300.png",
+      "fixtures/thumbnail-shapes/Shape 2 ordinary 1200x800.png",
+      "fixtures/thumbnail-shapes/Shape 3 tiny 60x30.png",
+      "fixtures/thumbnail-shapes/Shape 4 tiny 2x 120x60.png",
+      "fixtures/thumbnail-shapes/Shape 5 tall 40x600.png",
+      "fixtures/thumbnail-shapes/Shape 6 wide recording 1600x300.mp4"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 800, "canvasHeight": 600, "width": 1100, "height": 800 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "what-this-proves", "note": "The history strip holds every shape at once: a very wide capture, an ordinary one, a tiny 1x one, a tiny 2x (Retina) one, a tall narrow one, and a wide recording. No tile may be drawn bigger than the picture really is, and none may run on past two and a half to one. The fixtures are made by fixtures/thumbnail-shapes/make-shapes.swift; each one has a block at its leading edge and buttons at its trailing edge, so which end a crop kept is visible." },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
+    { "do": "wait", "seconds": 2.5 },
+    { "do": "snapshot", "name": "1-all-shapes", "window": "Capture History" },
+
+    { "do": "describe", "stage": "focus-a-tiny-tile", "note": "Arrow along to a tiny capture: the accent ring has to sit on the picture, not on the empty hit target around it." },
+    { "do": "appKey", "key": "right" },
+    { "do": "appKey", "key": "right" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-tiny-focused", "window": "Capture History" }
+  ]
+}

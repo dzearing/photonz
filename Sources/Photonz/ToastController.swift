@@ -371,6 +371,10 @@ private struct ToastView: View {
         .animation(.easeOut(duration: 0.14), value: hovering)
     }
 
+    /// The box the toast gives a capture. The picture is centred in it at
+    /// whatever size `ThumbnailFit` allows, so the box never changes shape.
+    private static let thumbnailSize = CGSize(width: 196, height: 124)
+
     /// The capture's thumbnail, read live from the store: screenshots show
     /// immediately; a recording's poster frame pops in when its async generation
     /// lands (a placeholder holds the slot until then). Recordings get the same
@@ -378,14 +382,11 @@ private struct ToastView: View {
     private var thumbnail: some View {
         Group {
             if let entry, let image = store.image(for: entry) {
-                Image(decorative: image, scale: 1)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .overlay {
-                        if entry.kind == .video {
-                            VideoBadgeOverlay(duration: store.duration(for: entry))
-                        }
-                    }
+                // Same two rules as a history tile: a very wide capture is
+                // cropped rather than squeezed into a sliver inside this box,
+                // and a small one is shown at its own size rather than blown up.
+                CaptureThumbnailImage(entry: entry, store: store, image: image,
+                                      available: Self.thumbnailSize, cornerRadius: 10)
             } else {
                 ZStack {
                     Rectangle().fill(.quaternary)
@@ -393,11 +394,11 @@ private struct ToastView: View {
                         .font(.system(size: 28))
                         .foregroundStyle(.secondary)
                 }
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.12)))
             }
         }
-        .frame(width: 196, height: 124)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.12)))
+        .frame(width: Self.thumbnailSize.width, height: Self.thumbnailSize.height)
     }
 
     /// The always-visible way into the editor (`ToastEditAction.always`): a

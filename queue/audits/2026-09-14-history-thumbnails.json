@@ -1,0 +1,29 @@
+{
+  "feature": "A capture in the history strip is never stretched and never a mile wide",
+  "epic": "",
+  "summary": "The capture history strip stops lying about the shape of a picture. A very wide capture is cropped to two and a half to one instead of running on for most of the strip, and a capture smaller than the row is drawn at the size it really is instead of being blown up soft. The same two rules now hold for the capture toast.",
+  "setup": "Photonz Dev, capture history (Capture > Show History, or shift-command-H). Nothing to turn on: the rules apply to every tile. To see all the shapes at once, run Scripts/playtest.sh Scripts/playtest/history-thumbnail-shapes-walk.json, which lends the strip six fixture captures and takes them back afterwards.",
+  "try": [
+    { "do": "Press shift-command-H to drop the history strip down.", "shot": "2026-09-14-history-thumbnails-2-after.png" },
+    { "do": "Find a very wide capture (a nav bar, a table header, a full-width toolbar). It should be a 2.5:1 tile keeping the LEFT end of the picture, with its right edge fading out." },
+    { "do": "Compare that against the same strip before the change.", "shot": "2026-09-14-history-thumbnails-1-before.png" },
+    { "do": "Find a small capture, something like a 60 by 30 badge. It should be a small crisp chip in the middle of the row, not a blurry tile filling the whole row height." },
+    { "do": "Hover that small chip. The action buttons should still appear under it, and the whole slot around it should still be clickable." },
+    { "do": "Arrow along to it with the left and right keys. The accent ring should hug the picture, not a box of empty space around it.", "shot": "2026-09-14-history-thumbnails-3-focused.png" },
+    { "do": "Find a very tall narrow capture. It should now show the TOP of the picture at a readable width, with its bottom edge fading out, instead of a hairline." },
+    { "do": "Find a recording. The play badge should sit in the middle of the cropped tile and the duration pill in its bottom right corner." }
+  ],
+  "evaluate": [
+    "Is 2.5:1 the right stopping point for a wide capture, or would 3:1 still read as one picture rather than a band?",
+    "A wide capture keeps its LEFT end on the theory that the start of a bar is what you recognise it by. Does that hold for the wide things you actually capture, or do you look for the right end?",
+    "A small capture is now a small chip floating in the row. Is that honest and fine, or does it read as broken next to full-height neighbours?",
+    "The cut edge of a cropped tile fades out. Did you notice that at all, and does a thumbnail even need to say it is cropped?",
+    "Tall narrow captures are now cropped from the top too, which is more than was asked for. Better, or would you rather they stayed whole and tiny?"
+  ],
+  "rough": [
+    "The fade that marks a cropped edge is a soft darkening, so on a dark screenshot it is close to invisible. It reads on light captures and disappears on dark ones, which is not a great way to say something.",
+    "Tall captures being cropped from the top is a deliberate extension beyond what was reported. The report was only about wide captures and about blowing small ones up. The sliver a tall capture used to draw was so thin nothing was legible in it, and one rule at both ends is simpler than a rule at one end and a workaround at the other, but it is a visible change you did not ask for and it is easy to put back.",
+    "The capture toast now obeys the same rules, but there is no way to drive a toast from a playtest walk, so that half was proved by the tested sizing rule and a build rather than by a picture. The common case (an ordinary screenshot filling the 196 by 124 box) is unchanged by arithmetic.",
+    "A recording reports a scale of 1, because an MP4 carries no DPI tag the way a PNG does. That is harmless today (a poster frame is always far bigger than a tile, so the never-upscale rule never fires on one) but a tiny recording would be drawn twice the size it should be."
+  ]
+}

@@ -210,6 +210,7 @@ private struct HistoryOverlayCell: View {
     var body: some View {
         VStack(spacing: 6) {
             CaptureThumbnailView(entry: entry, store: store, fixedHeight: 100, minWidth: 96,
+                                 ringed: focused || highlighted,
                                  onActivate: entry.kind == .video ? {
                                      coordinator.openRecording(entry.url)
                                      coordinator.hideHistory()
@@ -219,12 +220,9 @@ private struct HistoryOverlayCell: View {
                                  onDoubleClick: entry.kind == .video ? nil : {
                                      coordinator.editCapture(entry.url)
                                  })
-                .overlay {
-                    if focused || highlighted {
-                        RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(Color.accentColor, lineWidth: 3)
-                    }
-                }
+                // The ring itself is drawn on the picture inside the tile (see
+                // `ringed`); the glow here follows whatever the tile drew, so a
+                // small capture gets a glow its own size rather than a box.
                 .shadow(color: (focused || highlighted) ? Color.accentColor.opacity(0.55) : .clear,
                         radius: (focused || highlighted) ? 8 : 0)
                 .animation(.easeOut(duration: 0.2), value: focused)

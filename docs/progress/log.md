@@ -2,6 +2,53 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-14 — a capture in the history strip is never stretched and never a mile wide
+
+The reported bug: a very wide capture ran on for most of the history strip, and
+a small capture was blown up past its real size so it looked soft. Both came
+from one line, `Image(...).resizable().aspectRatio(contentMode: .fit)` in a
+frame with a fixed height and a free width.
+
+**Reproduced first, with numbers.** A new walk
+(`Scripts/playtest/history-thumbnail-shapes-walk.json`) lends the capture folder
+six fixtures — very wide, ordinary, tiny 1x, tiny 2x, tall narrow, and a wide
+recording — opens the strip, and takes a real screen capture of it. Measured off
+that shot at the strip's 100pt row height, before and after:
+
+| capture | before | after |
+| --- | --- | --- |
+| 2400x300 @72dpi | 800x100 | 250x100 |
+| 1600x300 recording | 535x100 | 250x100 |
+| 1200x800 @72dpi | 148x100 | 148x100 |
+| 120x60 @144dpi | 200x100 | 60x30 |
+| 60x30 @72dpi | 200x100 | 60x30 |
+| 40x600 @72dpi | 6x100 | 40x100 |
+
+Eight tiles now fit where six did.
+
+**`ThumbnailFit` (PhotonzCore, 13 tests, written first)** makes both decisions:
+crop to a 2.5:1 ratio cap anchored at the leading edge (top, for tall), then
+scale down to fit, never up. The never-upscale ceiling is the picture's POINT
+size, read from the PNG DPI the app already writes and through the existing
+`DisplayScale`, so a 2x capture is not silently allowed to draw twice as big.
+
+**One rule, everywhere a capture is shown small.** `CaptureThumbnailImage` is
+the shared view; the history tiles and the capture toast both go through it. The
+toast (a fixed 196x124 box with `.fit`) had the identical bug — the Quick Access
+card the task pointed at was deleted in June 2026. The accent ring moved onto
+the picture, so a small capture gets a ring its own size rather than a box of
+empty space. The cropped edge fades out. `CaptureStore` now answers
+`pixelScale(for:)` and keeps the cropped bitmap, so a hover does not re-crop.
+
+**Next:** the audit (`queue/audits/2026-09-14-history-thumbnails.json`) asks the
+user five things, the sharpest being whether tall captures should be cropped at
+all — that half is more than was reported, done because the sliver a tall
+capture drew was too thin to read, and it is one line to put back.
+
+**Open question:** the fade marking a cropped edge is invisible on a dark
+screenshot. Whether a thumbnail needs to say it is cropped at all is in the
+audit rather than guessed at.
+
 ## 2026-09-12 — released v0.15.0
 
 Cut from `c9c3c45c`, three weeks and 535 completed tasks after v0.14.0 (1143

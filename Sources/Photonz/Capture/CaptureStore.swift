@@ -28,6 +28,14 @@ final class CaptureStore {
     private var imageCache: [URL: CGImage] = [:]
     private var durations: [URL: TimeInterval] = [:]
     private var posterLoading: Set<URL> = []
+    /// Each capture's backing scale (2 for a Retina screenshot). Resolved once
+    /// per file and never observed: it is always worked out in the same pass as
+    /// the image itself, so nothing is waiting on it.
+    @ObservationIgnored private var scaleCache: [URL: CGFloat] = [:]
+    /// The last cropped thumbnail made for each capture, so a tile that redraws
+    /// (hover, selection, the strip scrolling) hands SwiftUI the SAME image
+    /// object instead of a fresh one every pass, which would re-upload it.
+    @ObservationIgnored private var cropCache: [URL: (crop: CGRect, image: CGImage)] = [:]
     /// Media-file fingerprint each cached poster/duration was derived from, so
     /// saving a trim in the video editor (which rewrites the file) refreshes the
     /// thumbnail and duration pill.
@@ -75,6 +83,8 @@ final class CaptureStore {
         let live = Set(sorted.map(\.url))
         imageCache = imageCache.filter { live.contains($0.key) }
         durations = durations.filter { live.contains($0.key) }
+        scaleCache = scaleCache.filter { live.contains($0.key) }
+        cropCache = cropCache.filter { live.contains($0.key) }
 
         // Drop video caches whose media file changed (a save in the video
         // editor commits the trim into it), so the poster and duration
@@ -85,6 +95,7 @@ final class CaptureStore {
                 mediaStamps[entry.url] = stamp
                 imageCache[entry.url] = nil
                 durations[entry.url] = nil
+                cropCache[entry.url] = nil
             }
         }
         mediaStamps = mediaStamps.filter { live.contains($0.key) }
@@ -115,7 +126,11 @@ final class CaptureStore {
         // Match by file name: the URL `contentsOfDirectory` yields can differ
         // (percent-encoding, symlink resolution) from our constructed one.
         let entry = entries.first { $0.fileName == url.lastPathComponent }
-        if let entry { imageCache[entry.url] = image }
+        if let entry {
+            imageCache[entry.url] = image
+            scaleCache[entry.url] = max(1, scale)
+            cropCache[entry.url] = nil
+        }
         return entry
     }
 
@@ -139,6 +154,8 @@ final class CaptureStore {
         guard entries.contains(where: { $0.url == url }) else { return }
         writePNG(image, to: url, scale: scale)
         imageCache[url] = image
+        scaleCache[url] = max(1, scale)
+        cropCache[url] = nil
         reload()
     }
 
@@ -152,6 +169,8 @@ final class CaptureStore {
         trashSidecar(for: entry.url)
         imageCache[entry.url] = nil
         durations[entry.url] = nil
+        scaleCache[entry.url] = nil
+        cropCache[entry.url] = nil
         reload()
     }
 
@@ -163,6 +182,8 @@ final class CaptureStore {
         }
         imageCache.removeAll()
         durations.removeAll()
+        scaleCache.removeAll()
+        cropCache.removeAll()
         reload()
     }
 
@@ -192,6 +213,42 @@ final class CaptureStore {
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
         imageCache[entry.url] = image
         return image
+    }
+
+    /// The part of a capture a tile is showing, as its own image. The whole
+    /// picture comes back unchanged when `crop` covers it, and a real crop is
+    /// remembered so the identical tile drawn again is the identical object.
+    func thumbnail(for entry: CaptureEntry, cropped crop: CGRect) -> CGImage? {
+        guard let full = image(for: entry) else { return nil }
+        let whole = CGRect(x: 0, y: 0, width: CGFloat(full.width), height: CGFloat(full.height))
+        guard crop != whole else { return full }
+        if let cached = cropCache[entry.url], cached.crop == crop { return cached.image }
+        guard let cropped = full.cropping(to: crop) else { return full }
+        cropCache[entry.url] = (crop, cropped)
+        return cropped
+    }
+
+    /// The capture's backing scale: 2 for a Retina screenshot, 1 for an ordinary
+    /// picture. Read from the PNG's DPI, which `writePNG` embeds as 72 x scale.
+    ///
+    /// A thumbnail needs this because a bitmap's pixel count is NOT the size of
+    /// the picture: a 2x capture of a 60x30 point region is a 120x60 bitmap, and
+    /// drawing it at 120x60 points is already twice the size the person saw.
+    ///
+    /// A recording has no such tag and reports 1. That is safe rather than
+    /// merely convenient: a poster frame is always far bigger than a tile, so
+    /// the never-upscale rule never has to decide anything about it.
+    func pixelScale(for entry: CaptureEntry) -> CGFloat {
+        if let cached = scaleCache[entry.url] { return cached }
+        var scale: CGFloat = 1
+        if entry.kind != .video,
+           let source = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
+           let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+           let dpi = props[kCGImagePropertyDPIWidth] as? Double {
+            scale = DisplayScale.pixelScale(forDPI: dpi)
+        }
+        scaleCache[entry.url] = scale
+        return scale
     }
 
     /// Recording length, loaded lazily alongside the poster.
