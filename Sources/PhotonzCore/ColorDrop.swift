@@ -55,8 +55,12 @@ public enum ColorDrop {
         /// What this swatch paints, in its row's own words: "Fill", "Outline",
         /// "Shadow". The sentence the swatch says is built out of it.
         public var part: String
-        /// What the swatch is wearing right now.
-        public var wearing: Paint
+        /// What the swatch is wearing right now. Nil when there is no ONE
+        /// colour to compare the arriving one against: a row that says Mixed,
+        /// a crowd of layers painted two different colours, a part that is not
+        /// there at all. Nil is not "black": it means the no-op refusal has
+        /// nothing to fire on, because a drop plainly changes something.
+        public var wearing: Paint?
         /// The saved colour it is wearing, by name, when it wears one. A drop
         /// takes the swatch off it, and says so before it does.
         public var styleName: String?
@@ -89,7 +93,7 @@ public enum ColorDrop {
         /// can Text or a border.
         public var acceptsGradient: Bool
 
-        public init(part: String, wearing: Paint, styleName: String? = nil,
+        public init(part: String, wearing: Paint?, styleName: String? = nil,
                     styleID: UUID? = nil, reaches: Int = 1, isSource: Bool = false,
                     isAbsent: Bool = false,
                     acceptsGradient: Bool = false,
@@ -168,7 +172,8 @@ public enum ColorDrop {
         // that lights up and writes an undo step is worse than one that says
         // so. Wearing a SAVED colour is different: letting go there still
         // takes it off the name, whatever colour the name stands for today.
-        if !target.isAbsent, target.styleName == nil, landing.draws(sameAs: target.wearing) {
+        if !target.isAbsent, target.styleName == nil, let worn = target.wearing,
+           landing.draws(sameAs: worn) {
             return Answer(landing: nil, note: "\(opening(target.part)) is already this colour.")
         }
         let result = Landing(paint: landing, flattened: flattens,

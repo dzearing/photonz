@@ -113,7 +113,10 @@ struct ColorSwatchDrag: ViewModifier {
     private func target(for payload: ColorDrag.Payload) -> ColorDrop.Target {
         let worn = style()
         return ColorDrop.Target(part: part,
-                                wearing: paint() ?? Paint(hex: "#FFFFFF"),
+                                // Nil while the row says Mixed: there is no one
+                                // colour the arriving one could be the same as,
+                                // so the no-op refusal has nothing to fire on.
+                                wearing: paint(),
                                 styleName: worn?.name,
                                 styleID: worn?.id,
                                 reaches: paint() == nil ? 1 : reaches(),

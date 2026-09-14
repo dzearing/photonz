@@ -4345,8 +4345,16 @@ private final class Run {
             throw Failure(description: "the tile \"\(name)\" cannot be picked up")
         }
         let board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "style")
+        // Both, because a row takes both kinds of tile and each reads its own
+        // payload off the DRAG pasteboard, which a walk cannot start. Standing
+        // in for both is safe: each reader looks for its own type on the board
+        // and a board carrying a colour is nothing to the text style reader.
         TextStyleDrag.playtestPasteboard = board
-        defer { TextStyleDrag.playtestPasteboard = nil }
+        ColorDrag.playtestPasteboard = board
+        defer {
+            TextStyleDrag.playtestPasteboard = nil
+            ColorDrag.playtestPasteboard = nil
+        }
         let frame = destination.convert(destination.bounds, to: nil)
         let windowPoint = CGPoint(x: frame.midX, y: frame.midY)
         guard let dropView = PlaytestPanelDrag.destination(at: windowPoint, in: content,
@@ -4362,7 +4370,7 @@ private final class Run {
         }
         // The line the panel is saying about this drag, read while it is still
         // in the air: it is the whole of what a refusal owes somebody.
-        let sentence = editor?.layerRowStyleDrop?.answer.note
+        let sentence = editor?.layerRowStyleDrop?.note
         var held = ""
         if let hold {
             try snapshot(content, name: hold)

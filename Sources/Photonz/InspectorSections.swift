@@ -225,7 +225,7 @@ struct StyleRowDropNote: View {
     @ViewBuilder
     var body: some View {
         if let drop {
-            Text(drop.answer.note)
+            Text(drop.note)
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)

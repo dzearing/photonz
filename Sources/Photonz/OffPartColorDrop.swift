@@ -62,11 +62,9 @@ struct OffPartColorDrop: ViewModifier {
             dropping: payload.paint, bringing: payload.style,
             on: ColorDrop.Target(
                 part: row.title,
-                // What the part would come back at if the switch were flipped
-                // instead. It is never compared against the colour arriving —
-                // an absent part is not WEARING anything — so this is only
-                // here to keep the value honest.
-                wearing: target.flatMap { editorState.selectionPaint($0) } ?? Paint(hex: "#000000"),
+                // Nothing: an absent part is not WEARING anything, so there
+                // is nothing for the arriving colour to be compared against.
+                wearing: nil,
                 reaches: row.switchIDs.count,
                 isAbsent: true,
                 acceptsGradient: target?.acceptsGradient ?? false,
@@ -135,8 +133,9 @@ struct OffEffectColorDrop: ViewModifier {
             dropping: payload.paint, bringing: payload.style,
             on: ColorDrop.Target(
                 part: row.title,
-                wearing: target.flatMap { editorState.selectionPaint($0) }
-                    ?? Paint(hex: "#000000"),
+                // Nothing, for the same reason the part above has nothing:
+                // an effect that is switched off is not wearing a colour.
+                wearing: nil,
                 reaches: row.switchIDs.count,
                 isAbsent: true,
                 acceptsGradient: false,

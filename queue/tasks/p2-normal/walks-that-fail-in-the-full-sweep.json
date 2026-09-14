@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T22:27:44.944Z",
+  "updated": "2026-09-14T22:59:50.531Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
@@ -158,6 +158,10 @@
     {
       "t": "2026-09-14T22:27:44.943Z",
       "note": "sweep 2026-09-14T22:27:44Z: 5 failing (icon-stroke-weight-walk, layers-lazy-rows-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk)"
+    },
+    {
+      "t": "2026-09-14T22:59:50.530Z",
+      "note": "measure-row-menu-walk still fails on its own as of 2026-09-14 22:xx, and it is not the colour-row-drop work: `Scripts/playtest.sh Scripts/playtest/measure-row-menu-walk.json --no-build` stops at step 13 with \"Height is not where a person could right click it: it is off the window, or the dock has scrolled it far enough that the panel's edge cuts across it. Scroll to it with a scrollPanel step first.\" So it is a real reproduction rather than a flake: the measurement's parts list has grown past the panel edge and the walk needs a scrollPanel step, or the dock needs to bring the row into view."
     }
   ]
 }

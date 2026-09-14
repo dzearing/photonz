@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:13:00.774Z",
-  "updated": "2026-09-14T12:54:43.795Z",
+  "updated": "2026-09-14T22:59:58.243Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-saved-style-can-be-dropped-on-a-row-in-the-lay, which shipped the TEXT STYLE half on 2026-09-09. The two do not share a target resolution and the task file said to split them if they did not.\n\nWhat is already there to build on. The layers row is now a drop target for the app own pasteboard types: Sources/Photonz/LayersPanel.swift, LayerRowDropDelegate, which reads TextStyleDrag.payloadInFlight() first and falls through to the row and file paths. ColorDrag.payloadInFlight() is the colour twin and already exists. The row mark and the one line under the list are StyleRowDrop / StyleRowMarking (Sources/PhotonzCore/StyleRowMarking.swift) plus StyleRowDropNote in LayersPanel.swift, and both are written around TextStyleDrop.Answer, so a colour answer either needs the same shape or the mark needs to carry either kind.\n\nThe hard part is not the plumbing, it is WHICH part a colour lands on. ColorDrop.Target is built around a named part (Fill, Outline, Shadow) that a swatch row supplies; a layer row supplies none. Candidate rule: the first colour row the inspector would show for that layer, which is Text for text and Fill for a shape. That is a product judgment about a silent choice among several parts, so open a decision on it before building rather than guessing, and write the options in terms of what the line under the list would say.",
@@ -69,7 +69,23 @@
     {
       "t": "2026-09-14T12:54:43.794Z",
       "note": "seq 60 -> 70"
+    },
+    {
+      "t": "2026-09-14T22:33:31.504Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T22:35:31.538Z",
+      "note": "Decision resolved on 2026-09-13: \"Its main colour, named before you let go\". Second adversarial pass, now on the answer rather than the question. (1) The whole affordance is the line under the list: nothing about a layer row says it takes a colour, so the sentence naming the part BEFORE the drop is the feature, not decoration. The text style half proved the line works. (2) The rule resolves to one lookup that already exists: the first row of layerPartRows is the part the inspector leads with, so the list and the panel can never disagree about what a layer's main colour is. Fill for a box or a frame, Line for an arrow or a line, Text for words, Caliper for a measurement. (3) The two gaps the task named: a picture or a plain group wearing a Border has no parts row at all, so the Border in the Effects list is the fallback; one with no ring has no colour anywhere and must refuse in words. (4) Nothing to build for the sentence itself: ColorDrop.answer already writes \"Paints Fill with Brand.\", \"Turns Fill on, painted with Brand.\" and the already-that-colour refusal, so the row reuses the swatch's own answer rather than growing a second voice. (5) One real model gap found: ColorDrop.Target.wearing is a non-optional Paint, and two of the three places that build one already fake it (Paint(hex:\"#000000\") with a comment apologising for it). A crowd of rows that disagree about what they wear has nothing honest to put there, and the fake white a Mixed swatch passes today makes a white colour dropped on Mixed refuse as a no-op. Making wearing optional is the smallest honest fix and it is what the crowd case needs."
+    },
+    {
+      "t": "2026-09-14T22:59:54.703Z",
+      "note": "Built and verified. CORE: Sources/PhotonzCore/ColorRowDrop.swift is the whole rule — PhotonzDocument.colorRowDrop works out the layer's main colour (first row of layerPartRows, falling through to the Border in the Effects list, refusing when there is neither), builds the same ColorDrop.Target a swatch builds and reads the same ColorDrop.answer back, so the list's sentence is the swatch's sentence; PhotonzDocument.paint(_:) lands it in ONE mutation (turnOnPart for an absent part, setPaint otherwise, then bindColorStyle for a name). 29 tests in Tests/PhotonzCoreTests/ColorRowDropTests.swift, written first. APP: EditorState+ColorRowDrop.swift, plus .color joining LayerRowDropDelegate.takes with its own branch in dropEntered/dropUpdated/performDrop (LayersListView.swift), gated on the existing next-color-drag flag so Current is untouched. StyleRowDrop now carries lands+note rather than a TextStyleDrop.Answer, with an init per kind, so one mark serves both tiles; sayTextStyleRowDrop/endTextStyleRowDrop renamed to sayStyleRowDrop/endStyleRowDrop for the same reason. WALK: Scripts/playtest/colour-onto-a-layer-row-walk.json, 82 steps, all seven cases green — Paints Fill with Brand, Fill is already Brand, Paints Text with Brand, Text is locked so it cannot be painted, Background has no colour to paint, Paints Border with Brand once it wears a ring, Paints Fill on both of them with Brand for a picked crowd. Scripts/test.sh 6557 tests green; colour (14), text-style (6), drop (7) and row- (33) walk fragments all green apart from measure-row-menu-walk, which the last sweep already had failing and which is folded into walks-that-fail-in-the-full-sweep with its reproduction."
+    },
+    {
+      "t": "2026-09-14T22:59:58.242Z",
+      "note": "Second adversarial pass, on the built thing, from the real screen captures the walk took (Screen Recording is granted, so these are the window as a person sees it). What works: the ring and the sentence arrive on the frame the pointer reaches the row, the accent plate for a yes and the dark plate with red dashes for a no are readable at a glance, and the refusals name the layer rather than the rule. One thing I changed away from the plan: nothing is armed for the next shape. A swatch drop arms the tool, but the row you aim at is not necessarily the row you have picked, so a tool quietly taking the colour of a layer somebody never selected is a surprise; the colour still joins the recents. LEFT ROUGH, below the follow-up bar and recorded here rather than filed: (1) the one line sits at the foot of the layers list and covers a word of the Canvas row underneath while a tile is in the air — transient, inherited from the text style drop which put the line there, and nothing is lost; (2) a saved colour turns out to be offered for every kind of colour row, so Brand saved off a fill lands on text wearing its name rather than only its colour — that is the existing behaviour of colorStyles(for:) on a swatch and changing it is a separate product question; (3) an arrow's head keeps its old colour when the shaft is repainted, which the decision named as the known cost of this rule and which the sentence warns about by saying Line."
     }
   ],
-  "started": "2026-09-12T14:29:32.382Z"
+  "started": "2026-09-14T22:33:31.503Z"
 }

@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:02:12.215Z",
-  "updated": "2026-09-14T22:33:01.676Z",
+  "updated": "2026-09-14T22:33:18.139Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-12 design review. Evidence: queue/audits/2026-09-12-corner-over-a-group.json, both of its last two rough notes, where Corner Radius over a group has a floor of 18 that only a tooltip explains, and a pill's slider switches itself off silently.\n\nThe existing rule is UX-PATTERNS.md section 4, \"A control that cannot act\", written 2026-09-04 after six fixes answered the same question six ways. It is a good rule and it holds; it just stops one row short. Its own field row already settles the look of a number you cannot type and says \"Never a hover tip alone\", so the shape of the answer is there to follow.\n\nThis serves the design-system epic, which is staged next, so it sits at p3 rather than taking a place ahead of focus work. The concrete case is fixed under a-slider-says-where-its-track-starts-when-someth at p2 without waiting for this.",
@@ -77,7 +77,12 @@
     {
       "t": "2026-09-14T22:33:01.675Z",
       "note": "Epic check: this serves design-system, staged 'next' rather than 'now'. Kept rather than dropped because two OPEN tasks were explicitly waiting on it (a-slider-says-where-its-track-starts-when-someth, whose own acceptance says the answer must come from this rule rather than be invented, and a-measurement-offers-a-corner-radius-it-has-noth), and both serve epics staged now. That is the 'foundational work earns its place by unblocking the feature in focus' case, and the goal already named it."
+    },
+    {
+      "t": "2026-09-14T22:33:18.137Z",
+      "note": "UX-PATTERNS section 4 gains 'A control that can only act over part of its range' (doc to v1.9), a 0b gate before the cannot-act ladder, a row in the ladder's table, and an audit gate in section 9. It sorts the three lookalikes (nothing to act on gets no row, a range merely wider than the subject gets nothing, only a clamped range gets the treatment) and answers all four cases it was written from, each cited to its audit. Drawn as .slider.clamped in shared/components/slider.css with a three-state specimen at pages/comp-sliders.html block 05, verified in the browser in both themes with the geometry measured. No app code touched; the answer is logged into both tasks that were waiting on it. Scripts/test.sh green (6534 tests). Audit: queue/audits/2026-09-14-clamped-range-rule.json. Commit 3f5cf064, pushed."
     }
   ],
-  "started": "2026-09-14T22:27:45.111Z"
+  "started": "2026-09-14T22:27:45.111Z",
+  "completed": "2026-09-14T22:33:18.138Z"
 }

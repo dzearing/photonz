@@ -1,21 +1,41 @@
 import Foundation
 
-/// A saved text style being held over one row in the layers list: which row,
-/// what letting go there would do, and which layers it would reach.
+/// Something saved being held over one row in the layers list: which row, what
+/// letting go there would do, and which layers it would reach.
+///
+/// Either kind of tile, because a row answers for both and the list draws one
+/// mark: a saved text style sets the words, a saved colour paints the layer's
+/// main colour. What the row draws is the same either way — a ring and one
+/// sentence — so the mark carries the ANSWER in the two terms the list uses
+/// rather than which kind of thing is in the air, and neither `TextStyleDrop`
+/// nor `ColorDrop` has to know the other exists.
 public struct StyleRowDrop: Equatable, Sendable {
     public var rowID: UUID
-    public var answer: TextStyleDrop.Answer
+    /// Whether the row lights up, which is also whether letting go there does
+    /// anything at all.
+    public var lands: Bool
+    /// The one line the list says: what letting go would do, or why it would do
+    /// nothing. Written either way round, so a row that stays dark is never a
+    /// mystery.
+    public var note: String
     public var layerIDs: [UUID]
 
-    public init(rowID: UUID, answer: TextStyleDrop.Answer, layerIDs: [UUID]) {
+    public init(rowID: UUID, lands: Bool, note: String, layerIDs: [UUID]) {
         self.rowID = rowID
-        self.answer = answer
+        self.lands = lands
+        self.note = note
         self.layerIDs = layerIDs
     }
 
-    /// Whether the row lights up, which is also whether letting go there does
-    /// anything at all.
-    public var lands: Bool { answer.lands }
+    /// A saved text style over the row.
+    public init(rowID: UUID, answer: TextStyleDrop.Answer, layerIDs: [UUID]) {
+        self.init(rowID: rowID, lands: answer.lands, note: answer.note, layerIDs: layerIDs)
+    }
+
+    /// A colour over the row.
+    public init(rowID: UUID, answer: ColorDrop.Answer, layerIDs: [UUID]) {
+        self.init(rowID: rowID, lands: answer.lightsUp, note: answer.note, layerIDs: layerIDs)
+    }
 }
 
 /// The mark ONE row wears while a style is held over it, and the rules that

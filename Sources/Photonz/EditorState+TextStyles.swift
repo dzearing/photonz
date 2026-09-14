@@ -341,14 +341,18 @@ extension EditorState {
     /// The row under the pointer says what letting go on it would do. Called on
     /// every frame of a drag, so an unchanged answer only pushes the deadline
     /// that takes the mark away out.
-    func sayTextStyleRowDrop(_ drop: StyleRowDrop) {
+    ///
+    /// Not only a text style: a saved colour raises the same mark, because the
+    /// row draws one ring and the list says one line whichever kind of tile is
+    /// overhead (`EditorState+ColorRowDrop`).
+    func sayStyleRowDrop(_ drop: StyleRowDrop) {
         styleRowMarking.say(drop, at: CACurrentMediaTime())
         publishStyleRowDrop()
         startPanelDropWatch()
     }
 
-    /// The style has left this row, or landed on it.
-    func endTextStyleRowDrop(from rowID: UUID) {
+    /// The tile has left this row, or landed on it.
+    func endStyleRowDrop(from rowID: UUID) {
         styleRowMarking.end(from: rowID)
         publishStyleRowDrop()
     }
@@ -367,7 +371,7 @@ extension EditorState {
     @discardableResult
     func dropTextStyle(_ style: TextStyleDrop.SavedStyle, onRow id: UUID) -> Bool {
         let drop = textStyleRowDrop(style, onRow: id)
-        endTextStyleRowDrop(from: id)
+        endStyleRowDrop(from: id)
         guard drop.lands, !drop.layerIDs.isEmpty else { return false }
         dropTextStyle(styleID: style.id, onLayers: drop.layerIDs)
         return true

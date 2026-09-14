@@ -1,0 +1,27 @@
+{
+  "feature": "A saved colour dropped on a layer row",
+  "epic": "ui-components",
+  "summary": "A colour tile can now be let go on a row in the layers list, and it paints that layer's main colour: the Fill of a box, the Text of a piece of writing, the Border of a picture that wears a ring. The line under the list names the part before you let go, so you never find out afterwards which part it chose. Before this, aiming a colour at a row did nothing and said nothing about why, while a text style tile landed happily on the same row.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags on by default.",
+  "try": [
+    { "do": "Draw a rectangle, then click a second time somewhere empty so nothing is selected." },
+    { "do": "Pick the box, open the Fill row's colour, and choose any colour you like." },
+    { "do": "Drag the Fill swatch onto the Library shelf and name the colour Brand." },
+    { "do": "Click empty canvas so nothing is selected, then drag the Brand tile over the box's row in the layers list and hold it there. Read the line under the list before letting go.", "shot": "2026-09-14-colour-onto-a-layer-row-1.png" },
+    { "do": "Let go. Press Command Z once." },
+    { "do": "Hold the same tile over a row for a piece of text, and then over the Background row.", "shot": "2026-09-14-colour-onto-a-layer-row-2.png" },
+    { "do": "Select two boxes, then hold the tile over one of their rows and read what it says it will reach." }
+  ],
+  "evaluate": [
+    "Does the line under the list tell you which part will be painted early enough to change your mind?",
+    "Is painting a layer you have NOT selected, without losing what you had picked, worth the gesture to you?",
+    "An arrow takes the colour on its shaft and keeps its old head colour. Does that read as a choice the line warned you about, or as a half-finished drop?",
+    "Is the refusal on a picture with no ring the right answer, or would you rather a colour on it added a ring?",
+    "Aiming at one row of a multiple selection paints every picked layer that leads with the same part. Is that what you expected, or did you mean the one row under the pointer?"
+  ],
+  "rough": [
+    "The line sits at the foot of the layers list, over the Canvas row underneath it, so a word or two of that row is hidden while a tile is in the air. It is the same line the text style drop already used, so this is inherited rather than new.",
+    "Saved colours turn out to be offered for every kind of colour row, so a colour saved off a box's fill lands on a piece of text wearing its name. That is what the app already does on a swatch, and nothing here changed it.",
+    "Nothing is armed for the next shape you draw. A swatch drop arms the tool; this one deliberately does not, because the row you aimed at is not necessarily the row you have picked."
+  ]
+}

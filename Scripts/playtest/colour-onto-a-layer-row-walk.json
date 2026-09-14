@@ -1,0 +1,132 @@
+{
+  "out": "/tmp/photonz-playtest/colour-onto-a-layer-row",
+  "seed": "A saved colour let go on a ROW in the layers list. The list already took a saved text style on a row and refused a colour with nothing said about why. It refused because a row is not a colour well: a well is labelled with the one thing it paints, and a row carries only the layer's name. The rule the user chose on 2026-09-13 is the layer's MAIN colour, named before you let go. This walk saves a colour called Brand off a box, then carries the tile onto rows: the box it came from, the same row twice, a piece of text, a locked row, a picture with no colour at all, that same picture once it wears a ring, and a crowd of picked rows, checking the ring the row wears and the line the list says in each place.",
+  "setup": {
+    "forget": ["panel", "color", "shapes", "tools", "text"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1000, "canvasHeight": 640, "width": 1440, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [180, 180], "to": [480, 340], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "showMediaShelf" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "dragColor", "from": "@fill", "onto": "Library", "expect": "takes" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "type", "text": "Brand" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [180, 460] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+
+    { "do": "click", "at": [840, 560] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-nothing-picked", "note": "nothing picked, so every drop below is AIMED at a row rather than steered by a selection" },
+    { "do": "snapshot", "name": "1-shelf-and-list" },
+
+    {
+      "do": "dragTile", "tile": "Brand", "onto": "Rectangle",
+      "expect": "takes", "says": "Paints Fill with Brand",
+      "hold": "2-over-a-box-row"
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "2-fill-wears-brand", "note": "THE TEST: the box was never selected and was never touched on the picture, and its Fill now wears Brand — the part the line named before the pointer was let go" },
+    { "do": "snapshot", "name": "2-painted-by-a-row-drop" },
+    { "do": "render", "name": "2-canvas" },
+
+    {
+      "do": "dragTile", "tile": "Brand", "onto": "Rectangle",
+      "expect": "refuses", "says": "Fill is already Brand",
+      "hold": "3-already-wearing-it"
+    },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "4-undone", "note": "ONE undo puts the row drop back, the box painted by hand again and wearing no name" },
+    { "do": "render", "name": "4-canvas" },
+
+    {
+      "do": "dragTile", "tile": "Brand", "onto": "Text",
+      "expect": "takes", "says": "Paints Text with Brand",
+      "hold": "5-over-a-text-row"
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "5-text-took-the-colour", "note": "words lead with Text rather than Fill, so the same tile on this row paints something else entirely — and the line said which before the pointer was let go" },
+    { "do": "render", "name": "5-canvas" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "press", "control": "Lock", "in": "Text" },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "dragTile", "tile": "Brand", "onto": "Text",
+      "expect": "refuses", "says": "is locked",
+      "hold": "6-over-a-locked-row"
+    },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Lock", "in": "Text" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "press", "control": "Lock", "in": "Background", "comment": "A blank document's picture arrives locked, and a locked row refuses every tile; unlocked, it is the one row in the app with no colour at all." },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "dragTile", "tile": "Brand", "onto": "Background",
+      "expect": "refuses", "says": "has no colour to paint",
+      "hold": "7-over-a-picture"
+    },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "7-nothing-to-paint", "note": "a picture with no ring has no colour anywhere, so the row stays dark and says why rather than doing nothing in silence" },
+
+    { "do": "selectRow", "row": "Background" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "@border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [840, 560] },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "dragTile", "tile": "Brand", "onto": "Background",
+      "expect": "takes", "says": "Paints Border with Brand",
+      "hold": "8-over-a-picture-with-a-ring"
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "8-the-ring-took-it", "note": "the same picture, now wearing a ring: its only colour lives in the Effects list rather than in the parts list, and the drop names it Border and paints it" },
+    { "do": "render", "name": "8-canvas" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [560, 180], "to": [860, 340], "steps": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Rectangle 2" },
+    { "do": "selectRow", "row": "Rectangle", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "dragTile", "tile": "Brand", "onto": "Rectangle",
+      "expect": "takes", "says": "Paints Fill on both of them with Brand",
+      "hold": "9-over-two-picked-rows"
+    },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "9-a-crowd", "note": "aiming at a row that is part of what you have picked reaches every picked layer leading with the same part, the same rule the text style row drop follows" },
+    { "do": "render", "name": "9-canvas" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "10-undone", "note": "and one undo puts the crowd back too, in one step" },
+    { "do": "render", "name": "10-canvas" }
+  ]
+}

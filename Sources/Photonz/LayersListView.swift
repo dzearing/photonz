@@ -31,10 +31,11 @@ struct LayerCanvasRowHeightKey: PreferenceKey {
 /// layer keeps its place on the canvas.
 struct LayerRowDropDelegate: DropDelegate {
     /// Everything a layer row answers for: a saved text style off the Library
-    /// shelf, a picture arriving from outside, and a row being carried up or
-    /// down the list. Named as kinds, so the day a row takes a fourth thing it
-    /// is named here and nowhere else (`DragCargo`).
-    static let takes: [DragCargo.Kind] = [.textStyle, .file, .layerRow]
+    /// shelf, a saved colour off the same shelf or out of any colour well, a
+    /// picture arriving from outside, and a row being carried up or down the
+    /// list. Named as kinds, so the day a row takes a fifth thing it is named
+    /// here and nowhere else (`DragCargo`).
+    static let takes: [DragCargo.Kind] = [.textStyle, .color, .file, .layerRow]
 
     /// The types those kinds travel as, which is what the row registers for.
     /// Registration is not gated on the styles switches: a row registers for
@@ -77,6 +78,7 @@ struct LayerRowDropDelegate: DropDelegate {
     private func cargo(_ info: DropInfo) -> DragCargo? {
         var takes = Self.takes
         if !Experiments.shared.textStyleDragEnabled { takes.removeAll { $0 == .textStyle } }
+        if !Experiments.shared.colorDragEnabled { takes.removeAll { $0 == .color } }
         return DragCargo.inFlight(info, among: takes, rowInHand: dragging)
     }
 
@@ -86,7 +88,17 @@ struct LayerRowDropDelegate: DropDelegate {
     /// what this was built to stop.
     private func offerStyle(_ style: TextStyleDrop.SavedStyle) -> DropOperation {
         let drop = editorState.textStyleRowDrop(style, onRow: row.id)
-        editorState.sayTextStyleRowDrop(drop)
+        editorState.sayStyleRowDrop(drop)
+        return drop.lands ? .copy : .forbidden
+    }
+
+    /// The same, for a colour: which part of this layer it would paint, said
+    /// out loud before the pointer is let go, because a row carries only the
+    /// layer's name and a colour that landed silently on one of several parts
+    /// would be a guess somebody else made (`EditorState+ColorRowDrop`).
+    private func offerColor(_ payload: ColorDrag.Payload) -> DropOperation {
+        let drop = editorState.colorRowDrop(payload, onRow: row.id)
+        editorState.sayStyleRowDrop(drop)
         return drop.lands ? .copy : .forbidden
     }
 
@@ -94,6 +106,8 @@ struct LayerRowDropDelegate: DropDelegate {
         switch cargo(info) {
         case .textStyle(let style):
             _ = offerStyle(style)
+        case .color(let payload):
+            _ = offerColor(payload)
         case .layerRow:
             editorState.sayLayerRowLanding(proposal(info))
         default:
@@ -105,6 +119,8 @@ struct LayerRowDropDelegate: DropDelegate {
         switch cargo(info) {
         case .textStyle(let style):
             return DropProposal(operation: offerStyle(style))
+        case .color(let payload):
+            return DropProposal(operation: offerColor(payload))
         case .layerRow:
             let proposed = proposal(info)
             // Said on every frame even when it has not changed, because each
@@ -123,10 +139,10 @@ struct LayerRowDropDelegate: DropDelegate {
     }
 
     func dropExited(info: DropInfo) {
-        // Said either way: a style that left this row for the next one has
+        // Said either way: a tile that left this row for the next one has
         // already spoken for the new row, and this goodbye is ignored, which is
         // what stops the ring blinking off at every row edge.
-        editorState.endTextStyleRowDrop(from: row.id)
+        editorState.endStyleRowDrop(from: row.id)
         switch cargo(info) {
         case .layerRow:
             // The row is still in the hand — the drag is only off THIS row — so
@@ -143,6 +159,8 @@ struct LayerRowDropDelegate: DropDelegate {
         switch cargo(info) {
         case .textStyle(let style):
             return editorState.dropTextStyle(style, onRow: row.id)
+        case .color(let payload):
+            return editorState.dropColor(payload, onRow: row.id)
         case .layerRow:
             defer { editorState.letGoOfLayerRow() }
             guard let drop = proposal(info) else { return false }
@@ -167,12 +185,12 @@ struct LayerRowDropDelegate: DropDelegate {
     /// answers the pointer the same thing.
     ///
     /// A row takes plain text as well as files, because that is how a row being
-    /// reordered travels — so this is also where every OTHER thing the app
-    /// carries around lands: a colour off a swatch, a saved colour off the
-    /// Library shelf, words dragged out of a field. None of them is a file, and
-    /// the panel says nothing at all about them. The pointer still shows the
-    /// no-entry sign, because a colour does not belong on a layer row either.
-    /// The day it does, `.color` joins `takes` above and gets its own branch.
+    /// reordered travels — so this is also where anything else the app carries
+    /// around lands: words dragged out of a field, a payload nothing claims.
+    /// None of them is a file, the panel says nothing about them, and the
+    /// pointer shows the no-entry sign. A colour used to end up here too, and
+    /// does not any more: it is `.color` in `takes` above, with its own
+    /// branch.
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
         guard FileDrop.isAboutAFile(info) else { return .forbidden }
