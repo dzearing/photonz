@@ -1117,6 +1117,10 @@ private final class Run {
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
                  state: describe())
 
+        case .expectRegion(let reads, let present):
+            note(number, step.name, try checkRegion(reads: reads, present: present),
+                 state: describe())
+
         case .expectCaption(let aligned, let caret, let outline):
             note(number, step.name,
                  try checkCaption(aligned: aligned, caret: caret, outline: outline),
@@ -2930,6 +2934,37 @@ private final class Run {
         let range = [atLeast.map { "at least \($0)" }, atMost.map { "at most \($0)" }]
             .compactMap { $0 }.joined(separator: " and ")
         return "\(count) \(plural(count)) in the document, \(range), as claimed"
+    }
+
+    /// Where the marquee is, spelled exactly as `describe` spells it, so a
+    /// walk can claim the outline it drew is still up.
+    ///
+    /// Nothing else can: the ants are four dashed lines in a picture, and the
+    /// log line nobody reads back is how an outline thrown away by a tool key
+    /// went unnoticed for a week (2026-09-08).
+    private func checkRegion(reads: String?, present: Bool?) throws -> String {
+        let editor = try requireEditor()
+        let found = editor.selection.map { region -> String in
+            let box = region.path.boundingBoxOfPath
+            return "\(Int(box.minX)),\(Int(box.minY)) \(Int(box.width))x\(Int(box.height))"
+        }
+        if let present {
+            if present, found == nil {
+                throw Failure(description: "there is no marquee on the canvas, and the walk claims there is one")
+            }
+            if !present, let found {
+                throw Failure(description: "the marquee is still up at \(found), and the walk claims there is none")
+            }
+        }
+        if let reads {
+            guard let found else {
+                throw Failure(description: "there is no marquee on the canvas, and the walk claims one reading \(reads)")
+            }
+            guard found == reads else {
+                throw Failure(description: "the marquee reads \(found), not the \(reads) claimed")
+            }
+        }
+        return found.map { "the marquee reads \($0), as claimed" } ?? "no marquee, as claimed"
     }
 
     /// What the path the Pen drew is made of, asked of the document rather than

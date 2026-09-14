@@ -1,0 +1,26 @@
+{
+  "feature": "A marquee you drew stays up whatever tool you pick",
+  "epic": "measure-redline",
+  "summary": "An outline you draw with the marquee tool now survives every tool change, the way it does in Photoshop. Picking up the rectangle, the measure tool or the text tool used to throw it away for good, with nothing to bring it back.",
+  "setup": "Photonz Dev, release Next, blank document. Nothing to switch on.",
+  "try": [
+    { "do": "Press M and drag a box in the middle of the canvas." },
+    { "do": "Press R for the rectangle tool. The outline stays where it is, and the panel keeps showing its X, Y, W and H under Selection.", "shot": "2026-09-14-marquee-survives-a-tool-swap-1.png" },
+    { "do": "Press I for the measure tool, then T for text. The outline is still there each time." },
+    { "do": "Press M again. The outline is exactly where you left it, ready to use." },
+    { "do": "Press R and drag a shape somewhere else. The new shape gets its blue outline and handles while the marquee keeps its own dashes.", "shot": "2026-09-14-marquee-survives-a-tool-swap-2.png" },
+    { "do": "Press Command Z once. It takes back the shape you just drew and leaves the outline alone." },
+    { "do": "Press Escape. That is now how you let the outline go, along with a click on bare canvas." }
+  ],
+  "evaluate": [
+    "With a paint tool in hand, do the dashes read as a leftover landmark, or do they look like they are about to do something to your next stroke?",
+    "Is Escape the press you would reach for to get rid of the outline, now that a tool key no longer does it?",
+    "Keeping the Selection numbers in the panel while you draw: useful for lining the next thing up, or clutter?",
+    "Pressing Escape with a paint tool in hand now clears the outline first and hands you the pointer on the second press. Is one press too many?"
+  ],
+  "rough": [
+    "Delete now belongs to the outline rather than the shape you just drew. Marquee a region, draw a rectangle, press Delete, and the app refuses with 'Cannot delete a piece' instead of removing the rectangle. It says so out loud and offers Turn Into Picture, and it is the same rule the app has always had for a live marquee, but the flow reaches it far more often now.",
+    "Cropping still lets the outline go. The picture moves to a new origin under a crop, and an outline from the old canvas would be pointing at whatever slid under it, so the app drops it. That is the rule for any canvas-size change, crop and resize alike, and it predates this change.",
+    "The mock was not the guide here: the behaviour came from the decision you answered on 2026-09-13 ('It stays up')."
+  ]
+}

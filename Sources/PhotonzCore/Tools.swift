@@ -115,11 +115,16 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         self == .rectSelect || self == .ellipseSelect
     }
 
-    /// Whether switching TO this tool keeps the current selection region.
-    /// The selection family obviously keeps it; the fill bucket keeps it
-    /// because filling the region is why you made one. Drawing/crop/text
-    /// tools clear it — stale ants would read as interactive there.
-    public var preservesSelectionRegion: Bool {
+    /// Whether switching TO this tool keeps the LAYER selection.
+    /// The selection family keeps it, and so does the fill bucket, because
+    /// both act on the layer you picked. A drawing, crop or text tool drops
+    /// it: its handles are select-mode chrome and would read as interactive.
+    ///
+    /// The marquee REGION is deliberately NOT gated on the tool. It survives
+    /// every tool change, the way it does in Photoshop, so an outline you
+    /// placed by hand is never thrown away by a stray tool key (decided
+    /// 2026-09-13, "It stays up"). Only a click on bare canvas or ⎋ clears it.
+    public var preservesLayerSelection: Bool {
         self == .select || self == .fill || isRegionSelectionTool
     }
 

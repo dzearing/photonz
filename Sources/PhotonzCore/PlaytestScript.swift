@@ -1422,6 +1422,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// Where the marquee is right now, or that there is none.
+    ///
+    /// The outline is the one thing on the canvas a walk cannot photograph a
+    /// claim about: `describe` writes it into the log and nothing reads it
+    /// back, so a marquee thrown away by a stray tool key passed every walk
+    /// that watched it for a week (2026-09-08). `reads` is the outline's box
+    /// exactly as the log spells it, "400,300 200x100"; `present` claims only
+    /// whether there is one at all, and `false` is the useful half.
+    case expectRegion(reads: String?, present: Bool?)
     /// What the path the Pen just drew is actually made of: how many anchors it
     /// has, whether it closed, and how many of its runs are curves.
     ///
@@ -1621,7 +1630,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeSVG",
     ]
@@ -1670,6 +1679,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
         case .expectLayers: "expectLayers"
         case .expectCaption: "expectCaption"
@@ -1989,6 +1999,15 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
             self = .expectMeasures(count: Int(howMany))
+        case "expectRegion":
+            let reads = try f.optionalString("reads")
+            let present = fields["present"] as? Bool
+            guard reads != nil || present != nil else {
+                throw f.invalid("reads", "expectRegion has to claim something: "
+                    + "\"reads\" for the outline's box, spelled the way the log spells it "
+                    + "(\"400,300 200x100\"), or \"present\": false for no outline at all")
+            }
+            self = .expectRegion(reads: reads, present: present)
         case "expectLayers":
             let count = try f.optionalNumber("count")
             let atLeast = try f.optionalNumber("atLeast") ?? count

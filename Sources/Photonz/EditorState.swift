@@ -1948,23 +1948,22 @@ final class EditorState {
         // The Pen's chip opens on its first line every time the tool is picked
         // up, whatever the last path it drew had got to.
         penHint = tool == .pen ? PenSession.hint(for: PenSession()) : nil
-        // Drawing tools own the pointer; select-mode chrome (marquee ants,
-        // layer handles) would read as interactive when it isn't. The
-        // selection REGION survives within the selection family + fill
-        // (Photoshop keeps the ants up; filling the region needs it).
-        if !tool.preservesSelectionRegion {
-            selection = nil
-        } else if tool.isRegionSelectionTool, selection != nil {
+        // The marquee REGION outlives every tool change (decided 2026-09-13,
+        // "It stays up"): an outline you placed by hand is yours until you
+        // clear it, with a click on bare canvas or ⎋, and picking up a
+        // rectangle by mistake used to throw it away with no way back.
+        // Photoshop has kept the ants up across every tool for thirty years.
+        if tool.isRegionSelectionTool, selection != nil {
             // Picking up a region tool makes any live selection a PIXEL
             // region: an arrow-made marquee carried into M must move pixels
             // on drag, erase on ⌫, etc. — the tool in hand declares intent.
             selectionTargetsPixels = true
         }
-        // The LAYER selection also survives into the selection family + fill:
+        // The LAYER selection survives into the selection family + fill:
         // it's the target of region ops (fill/⌫/move bake into the selected
         // layer). Its handles are select-mode chrome and hide meanwhile —
         // the canvas gates them on the active tool.
-        if !tool.preservesSelectionRegion {
+        if !tool.preservesLayerSelection {
             selectedLayerID = nil
         }
     }

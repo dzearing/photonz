@@ -1524,6 +1524,42 @@ struct PlaytestScriptTests {
         #expect(layers.isEmpty)
     }
 
+    @Test("An expectRegion step claims where the marquee is")
+    func expectRegionClaimsTheOutline() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectRegion", "reads": "400,300 200x100" } ] }
+        """)
+        guard case .expectRegion(let reads, let present) = script.steps[0] else {
+            Issue.record("expectRegion"); return
+        }
+        #expect(reads == "400,300 200x100")
+        #expect(present == nil)
+        #expect(script.steps[0].name == "expectRegion")
+        #expect(PlaytestStep.names.contains("expectRegion"))
+    }
+
+    /// "There is no outline" is the other half of the claim, and the half this
+    /// step was written for: a marquee thrown away by a tool key used to be
+    /// invisible to every walk.
+    @Test func expectRegionCanClaimThereIsNone() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectRegion", "present": false } ] }
+        """)
+        guard case .expectRegion(let reads, let present) = script.steps[0] else {
+            Issue.record("expectRegion"); return
+        }
+        #expect(reads == nil)
+        #expect(present == false)
+    }
+
+    @Test func expectRegionHasToClaimSomething() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectRegion" } ] }
+            """)
+        }
+    }
+
     @Test func expectPickedHasToSayWhichLayers() {
         #expect(throws: PlaytestScriptError.self) {
             _ = try decode("""

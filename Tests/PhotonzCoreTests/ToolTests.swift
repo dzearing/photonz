@@ -54,19 +54,22 @@ struct ToolTests {
         }
     }
 
-    /// The selection region survives switching within the selection family
-    /// (Photoshop keeps the ants up) and the fill bucket (fill-the-region is
-    /// the point of making one); drawing/crop/text tools still clear it.
-    @Test func selectionRegionSurvivesTheSelectionFamilyAndFill() {
-        #expect(Tool.select.preservesSelectionRegion)
-        #expect(Tool.rectSelect.preservesSelectionRegion)
-        #expect(Tool.ellipseSelect.preservesSelectionRegion)
-        #expect(Tool.wand.preservesSelectionRegion)
-        #expect(Tool.fill.preservesSelectionRegion)
-        #expect(!Tool.crop.preservesSelectionRegion)
-        #expect(!Tool.rectangle.preservesSelectionRegion)
-        #expect(!Tool.text.preservesSelectionRegion)
-        #expect(!Tool.measure.preservesSelectionRegion)
+    /// The LAYER selection survives switching within the selection family and
+    /// the fill bucket, because those act on the picked layer; a drawing, crop
+    /// or text tool drops it, since its handles are select-mode chrome.
+    ///
+    /// The marquee REGION is not on this list any more: it now survives every
+    /// tool, so no tool has to be asked (decided 2026-09-13, "It stays up").
+    @Test func layerSelectionSurvivesTheSelectionFamilyAndFill() {
+        #expect(Tool.select.preservesLayerSelection)
+        #expect(Tool.rectSelect.preservesLayerSelection)
+        #expect(Tool.ellipseSelect.preservesLayerSelection)
+        #expect(Tool.wand.preservesLayerSelection)
+        #expect(Tool.fill.preservesLayerSelection)
+        #expect(!Tool.crop.preservesLayerSelection)
+        #expect(!Tool.rectangle.preservesLayerSelection)
+        #expect(!Tool.text.preservesLayerSelection)
+        #expect(!Tool.measure.preservesLayerSelection)
     }
 }
 

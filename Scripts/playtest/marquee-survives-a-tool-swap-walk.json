@@ -1,0 +1,57 @@
+{
+  "out": "/tmp/photonz-playtest/marquee-survives-a-tool-swap",
+  "setup": { "forget": ["grid", "tools"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "drag", "from": [400, 300], "to": [600, 400], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-drawn", "note": "a marquee drawn" },
+    { "do": "expectRegion", "reads": "400,300 200x100" },
+    { "do": "snapshot", "name": "1-drawn" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-rectangle-in-hand", "note": "picked the rectangle tool: the outline stays up" },
+    { "do": "expectRegion", "reads": "400,300 200x100" },
+    { "do": "snapshot", "name": "2-rectangle-in-hand" },
+
+    { "do": "tool", "tool": "measure" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-measure-in-hand", "note": "picked the measure tool: the outline stays up" },
+    { "do": "expectRegion", "reads": "400,300 200x100" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "4-text-in-hand", "note": "picked the text tool: the outline stays up" },
+    { "do": "expectRegion", "reads": "400,300 200x100" },
+
+    { "do": "tool", "tool": "rectSelect" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-back-to-marquee", "note": "back on the marquee tool: the outline is exactly where it was" },
+    { "do": "expectRegion", "reads": "400,300 200x100" },
+    { "do": "snapshot", "name": "5-back-to-marquee" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [640, 480], "to": [760, 560], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-painted-with-marquee-up", "note": "painted a rectangle with the outline up" },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "expectRegion", "reads": "400,300 200x100" },
+    { "do": "snapshot", "name": "6-painted-with-marquee-up" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-undo-the-paint", "note": "one undo takes the PICTURE edit back and leaves the outline alone" },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "expectRegion", "reads": "400,300 200x100" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "8-escape-clears", "note": "escape is how you let the outline go" },
+    { "do": "expectRegion", "present": false },
+    { "do": "render", "name": "9-final-render" }
+  ]
+}
