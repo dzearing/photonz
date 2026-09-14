@@ -14774,7 +14774,16 @@ launch, because which release the probe runs is a remembered setting that no
 walk declares; and `"forget": ["all"]` is the one word for a walk that wants a
 machine that has never run Photonz.
 
-**Verified.** Scripts/test.sh green, 6378 tests. RESULTS-PLACEHOLDER
+**Verified, and honestly.** Scripts/test.sh green, 6378 tests. Five clean runs
+in a row for text-style (6/6) and style swatch (16/16), and ten clean runs of
+effects-say-their-reach-walk. `border effects panel` ran 33/33 five times and
+then failed once on the sixth; `layers` ran 8/8 five times with one earlier run
+failing two walks, one of them a walk that never finished at all (185s, no
+done.json), which is a saturated machine rather than the panel. So the two
+five-in-a-row acceptance items for those batches are NOT met: the flake is much
+rarer, not gone. Filed as `a walk still answers differently when the machine is
+loaded` with the numbers. Walk time is unchanged at 12s average, so the waiting
+costs nothing when the panel is already still.
 
 **Next / open.** 225 of the 405 walks still declare nothing to forget and
 inherit whatever the last walk left on the machine; filed as

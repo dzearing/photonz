@@ -1,0 +1,43 @@
+{
+  "feature": "A walk waits for the panel instead of racing it",
+  "epic": "unmanned-loop",
+  "summary": "Scripted walks used to fail in a sweep and pass on their own a minute later, because they read or pressed the right hand panel while it was still being built. A press now behaves like a person: it waits for the control to arrive, scrolls to it if the dock has it below the fold, and only clicks once the panel has stopped moving.",
+  "setup": "Nothing to install and nothing to switch on. This is the harness the loop checks the app with, so the way to try it is to run walks. Scripts/build-app.sh --probe once, then the commands below with --no-build. Each walk is about ten seconds.",
+  "try": [
+    {
+      "do": "Run Scripts/playtest.sh Scripts/playtest/border-effect-walk.json --no-build. It passes; it failed every sweep for the last three days."
+    },
+    {
+      "do": "Open /tmp/photonz-playtest/border-effect/log.json and find step 30. It says \"scrolled 46pt to reach it\": that is the press doing what a person would have done."
+    },
+    {
+      "do": "Look at 6-shadow-inner-sc.png in the same folder, the real capture of the panel the walk had to scroll down inside.",
+      "shot": "2026-09-13-walk-waits-for-the-panel-1.png"
+    },
+    {
+      "do": "Run Scripts/playtest-all.sh --no-build effect. Thirteen walks, all pass; two of them were failing before."
+    },
+    {
+      "do": "Run Scripts/playtest.sh Scripts/playtest/effects-room-for-the-one-you-opened-walk.json --no-build five times over. It used to answer differently about one run in six."
+    },
+    {
+      "do": "Break something on purpose: copy a walk, change a control name to one that does not exist, and run it. It still fails, with the same sentence, about two seconds later."
+    }
+  ],
+  "evaluate": [
+    "A press now scrolls to its target by itself. Is that right, or would you rather a walk failed and made someone write the scroll down, so a panel that has grown too tall to fit is news rather than absorbed?",
+    "The press says \"scrolled 46pt to reach it\" in the log and nowhere else. Is a log line enough of a warning, or should a walk that had to scroll say so more loudly?",
+    "Two seconds is how long a step keeps looking before it gives up. Does a walk that is genuinely broken now take too long to tell you, across a 400 walk sweep?",
+    "The probe is pinned to the Next release at every launch now. Is pinning right, or should a walk be able to ask for Current and say so in its own file?",
+    "225 of the 405 walks still start from whatever the last walk left on the machine. Is that worth a task of its own now, or does it wait until it actually bites again?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so the picture here is a real capture of the running app rather than an offscreen render.",
+    "It is not gone, it is rarer. Five clean runs in a row for text-style and style swatch, ten for effects-say-their-reach-walk, and then border effects panel failed once on its sixth run and layers had one run at 6 of 8. Both remaining misses came in runs where the machine was saturated, and one of those runs has a walk that never finished at all, 185s with no result. Filed as `a walk still answers differently when the machine is loaded` with the numbers and the lead worth following.",
+    "Half of what the task called a race was not one. border-effect-walk needed the panel scrolled 46pt at step 30 and had needed it every run since the Effects list grew a section. It was a walk that had gone stale, failing deterministically, and reading it as a flake is what kept it at the top of the queue for three days.",
+    "The leak half is smaller than the sweep evidence suggested. Every walk already puts back every setting it touched, pass or fail, so the ORDER of walks in a sweep does not change their answers. What is left is the baseline: a walk only forgets what it names, and 225 of them name nothing, so they inherit whatever the machine was last left in. `\"forget\": [\"all\"]` now says that in one word and a follow-up task carries it to the walks, because flipping 225 of them needs a full sweep to verify and a runner cannot run one.",
+    "One thing the harness could not see at all: which release the probe is running is a setting like any other, so a probe left on Current ran every walk afterwards against a different right hand panel while reporting pass and fail as confidently as ever. It is pinned now, but nothing stops a person switching it in the Experiments window mid-sweep.",
+    "A walk that asserts something is ABSENT does not get the same patience treatment, so `expect present: false` can still pass because the control has not been built yet rather than because it is gone. No walk has failed that way yet, which is exactly why it is easy to forget.",
+    "The `reveal` step is now redundant for 20 walks that use it. They were left alone rather than swept, since a step that says out loud \"this needed scrolling to\" is still worth having where that is the point of the walk."
+  ]
+}
