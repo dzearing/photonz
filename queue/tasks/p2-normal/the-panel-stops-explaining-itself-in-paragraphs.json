@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 9.1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:31.708Z",
-  "updated": "2026-09-14T08:18:21.477Z",
+  "updated": "2026-09-14T08:19:08.353Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, from a real window capture taken by the loop on 2026-09-13, queue/audits/2026-09-13-building-ui-5-spaced-evenly.png, with three layers selected. Three grey paragraphs, seven lines between them:\n- Sources/Photonz/PartsInspector.swift:178, \"3 layers. What you set here reaches every one of them, in one step, unless a row says underneath how many it reaches.\"\n- Sources/Photonz/EffectsListInspector.swift:98, \"Nothing added yet. Use the plus above for a shadow, a glow, a border or a blur.\"\n- Sources/Photonz/ArrangeInspector.swift:60, \"3 layers line up with each other, not with the picture.\"\n\nWhy this is a card and not just a task. It has now been raised by two manager passes in a row (2026-09-09 threaded it as six lines on a copy's panel) and it cuts directly against a shipped decision: \"Room says what it will do\" deliberately PUT TWO OF THESE SENTENCES BACK on 2026-09-08. So somebody has to say which way it goes rather than a runner quietly reversing a choice the user made.\n\nThe room this is competing for is measured: the task two-panel-walks-are-failing-on-main counted 1,090 points of sections trying to fit a 688 point dock. Three walks (border-effect, glow-effect, label-fills-a-row) fail today because the control they want has been scrolled out of reach, so this is not only a taste question.\n\nNot the same thing as the section ordering cards. Those ask which section comes first; this asks how much each section is allowed to say once it gets there.\n\nQueue-driven app work targets the Next release, but these are shared files, so say in the audit what Current looks like afterwards.",
@@ -107,7 +107,16 @@
     {
       "t": "2026-09-14T08:18:21.476Z",
       "note": "Adversarial review of the BUILT thing, on the real app. (a) The single-layer case is the best of it: four numbers, no line, nothing to read. (b) The one honest loss is px, written up in the audit rather than quietly accepted. (c) I checked the empty Effects line on a real box with its Border taken off rather than trusting the code path: one line, reads right. (d) Current was worth checking: it still had TWO reach paragraphs (Color and Shadow) that Next never shows, from code paths the Next-only flags hide. Trimmed those too, which is the whole reason acceptance asked for it."
+    },
+    {
+      "t": "2026-09-14T08:19:08.305Z",
+      "note": "Asked for a full sweep (queue/bin/sweep.sh request) rather than running one: LayerGeometrySelection.caption is drawn by every selection and SelectionStyleNotes is shared by three sections, so this is a change the whole set should see. Ran about 70 walks by hand instead, listed above."
+    },
+    {
+      "t": "2026-09-14T08:19:08.351Z",
+      "note": "Shipped in d7e9c5e8 on main. Rule written into UX-PATTERNS §4 as 'How much a section may say' (v1.8): a section says at most one short line, and only when it tells you something you cannot work out from what is on screen. Every grey section line in the panel visited and dropped, shortened or kept, with the verdict for each in this log. Measured with the panel's own section probe at 1280x900, three layers picked: Next 1,044pt -> 892pt of sections in an 868pt viewport (152 back, and Position & Size's heading now on screen without scrolling), Current 762pt -> 692pt. Nothing deleted without a home: the origin, the degrees, the effect kinds and the spacing limit were already word for word on hover tips, the unit and the arrow keys moved to tips, and what Arrange lines up against moved to the section header. 6,434 tests green; about 70 walks run green; the two that fail were already failing and are folded into the tasks that own them. Audit queue/audits/2026-09-14-panel-says-less.json with four real window captures, including before and after of the same three layer selection."
     }
   ],
-  "started": "2026-09-14T07:16:08.783Z"
+  "started": "2026-09-14T07:16:08.783Z",
+  "completed": "2026-09-14T08:19:08.352Z"
 }
