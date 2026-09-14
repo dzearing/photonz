@@ -12,6 +12,23 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 
 **Delight and ease are acceptance criteria.** A feature that works but is clumsy is not done.
 
+## Never leave the machine loaded
+
+The machine you run on is the user's. Anything you start, you finish.
+
+- **Never spawn an unbounded spin loop.** A runner testing the perf gate once
+  ran `for i in {1..10}; do (while :; do :; done) & done` to simulate a slow
+  machine, then cleaned up with `BURNERS=$(jobs -p); kill $BURNERS`. In a
+  non-interactive shell that substitution runs in a subshell that cannot see the
+  parent's jobs, so it killed nothing: ten cores stayed pegged for 41 hours
+  until the user noticed. If you need to load the machine, bound it
+  (`timeout 60 ...`), capture each child's `$!` rather than `jobs -p`, and
+  **verify** with `pgrep` after killing.
+- **Check before you finish.** `ps ax -o pid,ppid,pcpu,etime,command | awk '$3>50'`
+  before you close a task. Anything of yours still in there is yours to kill.
+- The loop reaps orphans between tasks (`queue/bin/reap-runaways.sh`), but that
+  is a backstop and it only fires after your task ends. Do not rely on it.
+
 ## Hard rules
 
 - **`dist/Photonz Dev.app` is the user's app. Never build, sign, kill or relaunch it.** That is the exact app they playtest with. Replacing the binary ends their session, and because a screen-capture client that changes on disk must be re-authorized, it also makes macOS demand the Screen Recording permission again. That has already happened to them once. `Scripts/build-app.sh` now refuses to rebuild it while `queue/playtest.lock` exists, but no script can stop you from killing it by hand, so never write `pkill -f "Photonz Dev"` or `open "dist/Photonz Dev.app"` at all.

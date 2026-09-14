@@ -171,6 +171,21 @@ refresh_dev_app() { # $1 = git rev before the task ran
     || echo "[go-loop] $(date +%T) dev app refresh failed; see the log" | tee -a "$LOG"
 }
 
+# Kill anything a runner left spinning on the user's machine. A runner testing
+# the perf gate once spawned ten CPU burners on purpose and cleaned up with
+# `kill $(jobs -p)`, which is empty in a non-interactive shell: ten cores were
+# pegged for 41 hours until the user noticed and asked us never to leave the
+# machine like that. The runner prompt now forbids it, and this is the part that
+# does not rely on a runner reading anything. See queue/bin/reap-runaways.sh for
+# the tests it applies; a live Bash call never matches one.
+reap_runaways() {
+  [[ -x queue/bin/reap-runaways.sh ]] || return 0
+  local out
+  out=$(queue/bin/reap-runaways.sh 2>/dev/null) || return 0
+  [[ -n "$out" ]] && echo "[go-loop] $(date +%T) $out" | tee -a "$LOG"
+  return 0
+}
+
 # The full walk sweep, run BETWEEN tasks. A runner cannot run it: 322 walks is
 # about 52 minutes and a runner's background work is terminated at 600s, which
 # is how eight of the twenty recorded runner failures happened (2026-09-07
@@ -406,6 +421,11 @@ TASK FILE: $TASK_FILE"
   Q guard >> "$LOG" 2>&1
   # Runners push their own commits; this catches anything they left behind.
   [[ $SANDBOX == 0 ]] && { git push -q origin main >> "$LOG" 2>&1 || true; }
+
+  # ...and this catches anything they left RUNNING. Unconditional: a runner that
+  # failed or was killed is likelier to have leaked a process than one that
+  # finished cleanly.
+  reap_runaways
 
   if [[ "$OUTCOME" == "ok" ]]; then
     [[ -n "$REV_BEFORE" ]] && refresh_dev_app "$REV_BEFORE"
