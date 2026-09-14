@@ -1106,7 +1106,11 @@ private final class Run {
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
             if let row {
-                target = try panelScrollTarget(row)
+                // Kept looking, like a press. The layers list builds its rows
+                // lazily, so the row a walk wants to scroll from can be a
+                // moment behind the step that asked for it
+                // (layers-lazy-rows-walk, 2026-09-09 and again 2026-09-13).
+                target = try await patiently { try self.panelScrollTarget(row) }
             } else if let any = rows.first {
                 target = any
             } else {
@@ -1116,8 +1120,24 @@ private final class Run {
             ViewBuildMeter.shared.reset()
             MainThreadMeter.shared.install()
             MainThreadMeter.shared.reset()
-            let moved = try scroll(from: target, by: by)
+            // In rounds, not one turn. A lazily built list only has as much
+            // length as it has built, so one big turn stops at a content size
+            // that is still growing: the walk that scrolls a hundred and
+            // twenty layers by -4000 landed a third of the way down about one
+            // run in three, and the step after it, looking for the row at the
+            // bottom, found no such row. Each round asks for what is left, and
+            // it stops as soon as a round moves nothing.
+            var moved = try scroll(from: target, by: by)
             await sleep(0.4)
+            var left = by - Self.distance(scrolled: moved, asked: by)
+            for _ in 0..<5 where abs(left) > 1 {
+                let again = try scroll(from: panelScrollTarget(target), by: left)
+                let delivered = Self.distance(scrolled: again, asked: left)
+                await sleep(0.3)
+                guard abs(delivered) > 1 else { break }
+                moved += ", then " + again
+                left -= delivered
+            }
             let after = try panelTargets().filter { $0.kind == .row }.map(\.name)
             let arrived = after.filter { !before.contains($0) }
             note(number, step.name,
@@ -2015,6 +2035,22 @@ private final class Run {
     /// buttons once a second layer is picked and an Arrange section arrives —
     /// can be reached no other way, because the layers list is not the list it
     /// is in.
+    /// The same row, looked up again after a scroll: the view a lazily built
+    /// list hands back is not the one it handed back before.
+    private func panelScrollTarget(_ was: PanelTargetView) throws -> PanelTargetView {
+        (try? panelScrollTarget(was.name)) ?? was
+    }
+
+    /// How far a scroll really went, out of what it was asked for. `scroll`
+    /// reports in words for the log; this reads the number back out of it, and
+    /// gives up and claims the whole ask when it cannot, so an unreadable
+    /// report ends the rounds rather than repeating them.
+    private static func distance(scrolled report: String, asked: Double) -> Double {
+        guard let match = report.firstMatch(of: /(-?[0-9]+(?:\.[0-9]+)?)pt/) else { return asked }
+        let size = Double(match.1) ?? abs(asked)
+        return asked < 0 ? -abs(size) : abs(size)
+    }
+
     private func panelScrollTarget(_ name: String) throws -> PanelTargetView {
         let all = try panelTargets()
         if let steady = all.first(where: { PlaytestSteadyName.matches(name, steady: $0.steady) }) {
