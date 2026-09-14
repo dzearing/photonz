@@ -1,0 +1,29 @@
+{
+  "id": "a-line-drawn-with-the-pen-can-be-made-thicker-or",
+  "title": "A line drawn with the Pen can be made thicker or thinner",
+  "goal": "Draw a shape with the Pen and there is nowhere in the app to change how thick its line is. Pick the shape and the panel offers its colour, its opacity and its blending, and nothing else, so the weight it arrived at is the weight it keeps. Every other shape in the app has a Thickness row right there; a drawn path should have the same one.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2710,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T10:59:17.706Z",
+  "updated": "2026-09-14T10:59:17.709Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on the probe, 2026-09-14, current main plus the icon stroke weight change. Walk: blank 1600x1100, tool pen, three clicks, Return, tool select, then {\"do\":\"expect\",\"field\":\"Thickness\",\"present\":true}. It fails with: 'step 11 (expect): no field called \"Thickness\" is in the panel; the ones that are: X, Y, W, H, A, Opacity, Blending, X, Y, W, H, A'. The panel dump for the same moment lists exactly three things under Appearance: Opacity, Blending, Color.\n\nWhy: the Thickness row is built by AnnotationInspector from EditorState.shapeSelection, and ShapeSelection (Sources/PhotonzCore/ContentSelection.swift:169) holds AnnotationContent members only, so a .path layer is never in it. PhotonzDocument.shapeSelection skips it the same way. The plumbing under the row already understands paths: Layer.outlineWidth and Layer.outlinePaint both answer for a path (Sources/PhotonzCore/OutlineWidth.swift:40 and :47), and Layer.drawsItsOwnOutline returns true for one. What is missing is Layer.hasOutlineThickness (OutlineWidth.swift, guards on annotation) and Layer.setOutlineWidth (Sources/PhotonzCore/ComponentInstances-adjacent ComponentNumberKnob.swift:204, same guard), plus getting paths into the selection the row reads.\n\nThe cap and join task, a-drawn-line-has-round-ends-and-round-corners-or, assumes this row exists: its Try it step says 'turn its outline up to 8' on a path drawn with the Pen, which cannot be done today. Doing this one first makes that one possible.\n\nNext release only. Found while shipping a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei, which made the weight a path ARRIVES at sensible on an icon frame but could not make it changeable afterwards.",
+  "acceptance": [
+    "Picking a path drawn with the Pen shows a Thickness row in Appearance, beside its colour, exactly as picking a line does",
+    "Pulling it changes the line on the canvas live and lands as one undo step, and several paths picked together take one pull",
+    "The row reads the weight the path actually has, including the thinner weight a path drawn on an icon frame arrives at",
+    "A walk drives it and claims the number, with expectPath width",
+    "Anything left rough is filed as a follow-up task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T10:59:17.708Z",
+      "note": "created (manual)"
+    }
+  ]
+}

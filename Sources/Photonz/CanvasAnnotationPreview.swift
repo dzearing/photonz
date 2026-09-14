@@ -78,9 +78,18 @@ extension CanvasNSView {
             clearAnnotationPreview()
             return
         }
-        displayAnnotationPreview(content: content, docStart: drag.anchor,
-                                 docEnd: drag.end(constrained: constrained, shape: content.shape),
-                                 style: annotationStyle)
+        let end = drag.end(constrained: constrained, shape: content.shape)
+        // The draft wears the weight the shape will LAND at, which on an icon
+        // frame is thinner than what the tool is armed with
+        // (`IconStrokeWeight`). Drawn from the same rule as the commit, and
+        // from the same point — the middle of the box being dragged, which is
+        // what decides the frame the shape joins — so nothing jumps on release.
+        let started = startingOutline(content, style: annotationStyle,
+                                      drawnAt: CGPoint(x: (drag.anchor.x + end.x) / 2,
+                                                       y: (drag.anchor.y + end.y) / 2),
+                                      in: document)
+        displayAnnotationPreview(content: started.content, docStart: drag.anchor,
+                                 docEnd: end, style: started.style)
     }
 
     /// In-flight endpoint drag: preview the selected layer's content with the

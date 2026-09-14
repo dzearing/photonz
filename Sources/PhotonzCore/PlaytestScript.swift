@@ -1413,8 +1413,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `layer` names which path to ask when there is more than one; the last
     /// path in the document is the one meant when it is left off, because a
     /// walk that just drew one is asking about the one it drew.
+    ///
+    /// `width` is the weight the line came out at, which is the other thing a
+    /// picture cannot settle: a 2 point line and a 4 point line on a canvas at
+    /// 3200% are both simply "a red line", and telling them apart means
+    /// counting pixels off a screenshot (`IconStrokeWeight`).
     case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?,
-                    smooth: Int?, anchorAt: PlaytestAnchorClaim?)
+                    smooth: Int?, width: CGFloat?, anchorAt: PlaytestAnchorClaim?)
     /// How many layers the document must hold right now, counting the ones
     /// inside groups.
     ///
@@ -1930,12 +1935,17 @@ public enum PlaytestStep: Sendable, Equatable {
                 anchorAt = PlaytestAnchorClaim(index: Int(index), near: try f.point("near"),
                                                within: try f.optionalNumber("within") ?? 8)
             }
+            let width = try f.optionalNumber("width")
+            if let width, width < 0 {
+                throw f.invalid("width", "a line's weight is zero or more, not \(width)")
+            }
             guard anchors != nil || closed != nil || curves != nil || smooth != nil
-                    || anchorAt != nil else {
+                    || width != nil || anchorAt != nil else {
                 throw f.invalid("anchors", "expectPath has to claim something about the path: "
                     + "\"anchors\" for how many points it has, \"closed\" for whether it joined "
                     + "back up, \"curves\" for how many of its runs are curved, \"smooth\" for "
-                    + "how many of its points are smooth bends, or \"anchor\" and \"near\" for "
+                    + "how many of its points are smooth bends, \"width\" for the weight its "
+                    + "line came out at, or \"anchor\" and \"near\" for "
                     + "where one point ended up")
             }
             for (field, value) in [("anchors", anchors), ("curves", curves), ("smooth", smooth)] {
@@ -1947,7 +1957,7 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectPath(layer: try f.optionalString("layer"),
                                anchors: anchors.map { Int($0) }, closed: closed,
                                curves: curves.map { Int($0) }, smooth: smooth.map { Int($0) },
-                               anchorAt: anchorAt)
+                               width: width.map { CGFloat($0) }, anchorAt: anchorAt)
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

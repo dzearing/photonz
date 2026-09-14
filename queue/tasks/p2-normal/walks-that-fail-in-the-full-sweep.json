@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T09:43:21.943Z",
+  "updated": "2026-09-14T10:45:46.379Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
@@ -114,6 +114,10 @@
     {
       "t": "2026-09-14T09:43:21.942Z",
       "note": "sweep 2026-09-14T09:43:21Z: 4 failing (dock-picked-first-walk, effects-open-into-view-walk, layers-lazy-rows-walk, layers-list-follows-pick-walk); stopped failing: contents-for-several-walk"
+    },
+    {
+      "t": "2026-09-14T10:45:46.378Z",
+      "note": "effects-open-into-view-walk and effects-room-for-the-one-you-opened-walk alternate pass/fail on the SAME build, and the cause is in the walks rather than in timing. Both press the Border twist TWICE in a row (steps 8 and 10 of effects-room-for-the-one-you-opened-walk), which returns the row to whatever state it started in, and the probe keeps that state between runs. So each run leaves the next one with the opposite answer. Reproduced on clean main, same build, three runs in a row: ok, failed, ok. Command: Scripts/playtest.sh Scripts/playtest/effects-room-for-the-one-you-opened-walk.json --no-build. Failure: 'step 32 (expect): the control called \"Twist\" in \"Border\" reads \"Border, shut\", not \"Border, open\"'. The fix these two want is a known starting state rather than another wait: neither walk declares what it needs in setup, and there is no forget word for which effect rows are open. Found while running the walks for a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei; that task's change is not involved (it only moves stroke weights on icon frames, and these walks use no frames at all)."
     }
   ]
 }

@@ -624,4 +624,32 @@ struct PenDrawingTests {
         let placed = session.anchors[1].point
         #expect(abs(placed.x - placed.y) < 0.001)
     }
+
+    // MARK: The weight the line comes out at
+
+    @Test func aPathTakesTheWeightTheCanvasWasSetTo() {
+        // The canvas sets this once, from the frame the first anchor lands on,
+        // so a path drawn on a 24 pixel icon arrives at a weight the icon
+        // survives (`IconStrokeWeight`). Everything the session hands back
+        // wears it: the preview under the hand and the path that lands.
+        var session = PenSession()
+        session.startingStrokeWidth = 2
+        _ = click(&session, 0, 0)
+        _ = click(&session, 20, 0)
+        #expect(session.previewPath?.strokeWidth == 2)
+        session.press(at: CGPoint(x: 10, y: 20), constrained: false, zoom: 1)
+        #expect(session.livePath?.strokeWidth == 2)
+        _ = session.release()
+        #expect(session.finish()?.strokeWidth == 2)
+    }
+
+    @Test func aFreshSessionDrawsAtTheOrdinaryWeight() {
+        // Nothing said otherwise, so nothing changes: a path on a screen is the
+        // four points every shape in the app has always started at.
+        var session = PenSession()
+        #expect(session.startingStrokeWidth == PathContent.defaultStrokeWidth)
+        _ = click(&session, 0, 0)
+        _ = click(&session, 20, 0)
+        #expect(session.finish()?.strokeWidth == PathContent.defaultStrokeWidth)
+    }
 }

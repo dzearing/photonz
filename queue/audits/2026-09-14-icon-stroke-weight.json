@@ -1,0 +1,28 @@
+{
+  "feature": "A line starts at a weight the icon survives",
+  "epic": "icon-grid",
+  "summary": "Draw anything on an icon frame and its line now arrives at a weight that reads at that size: one point on a 16, two on a 24 or a 32, three on a 48. It used to arrive at four whatever it was drawn on, which on a 24 pixel frame is a sixth of the whole canvas, so the first mark anybody made on an icon was a blob. Drawing on a screen is unchanged, and the weight is a starting value the panel can still change.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Make a frame the size of an icon, which is on by default.",
+  "try": [
+    { "do": "Layer, New Frame, pick 24 under Icons, press Add Frame." },
+    { "do": "Press P and click three corners inside the frame, then press Return.", "shot": "2026-09-14-icon-stroke-weight-pen.png" },
+    { "do": "Look at the row of small previews in the top left: the drawing at 16 and at 24." },
+    { "do": "Press L and drag a line across the frame, then press V and read Thickness in Appearance." },
+    { "do": "Pull Thickness to 5, then draw another line on the same frame and read Thickness again.", "shot": "2026-09-14-icon-stroke-weight-repicked.png" },
+    { "do": "Layer, New Frame, pick Desktop, press Add Frame, press R and drag a box on it." },
+    { "do": "Read the Border row's Width for that box." }
+  ],
+  "evaluate": [
+    "Two points on a 24 pixel frame: is that the weight you would have reached for, or would you rather it started finer?",
+    "One point on a 16 pixel frame draws a hairline. At the zoom the frame opens at, can you tell it is there?",
+    "After you pull Thickness to 5, the next shape on the same icon frame comes out at 5 rather than being thinned back. Is that what you expect, or should the frame keep having the last word?",
+    "An app icon frame at 512 still starts at four points. Does that feel too fine for a canvas that big?",
+    "Did anything change weight between the shape you were dragging and the shape that landed?"
+  ],
+  "rough": [
+    "A line drawn with the Pen cannot be made thicker or thinner anywhere in the app: picking a path shows its colour, its opacity and its blending and no Thickness row at all. So on a path the starting weight is the only weight. Filed as a-line-drawn-with-the-pen-can-be-made-thicker-or.",
+    "The rule stops the moment you pick a weight of your own, which also means it stops for every frame, not only the one you picked it on. Set a line to 5 on an icon and a line drawn on a Desktop frame afterwards is 5 too. That is how the app has always remembered widths; it is only more visible now.",
+    "A 512 app icon frame is left at four points, because the rule is only allowed to make a line thinner, never thicker. A sixteenth of 512 would be 32 points of stroke nobody asked for, but four on a 512 canvas is very fine, so the right answer there may be neither.",
+    "The Border row's Width slider still runs 0 to 20 on a 24 pixel canvas, where only the first few steps mean anything. Measured on the real window, its track is about 205 points long, so one whole point of line is still about 10 points of travel, which is a comfortable target. Left as a note rather than filed."
+  ]
+}

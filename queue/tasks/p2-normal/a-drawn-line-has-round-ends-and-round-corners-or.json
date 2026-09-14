@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:19.680Z",
-  "updated": "2026-09-13T14:13:53.018Z",
+  "updated": "2026-09-14T10:59:20.662Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-13T14:13:19.682Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T10:59:20.661Z",
+      "note": "Blocked in practice until a-line-drawn-with-the-pen-can-be-made-thicker-or lands: this task's Try it says 'draw an open path with the Pen, turn its outline up to 8', and a path has no thickness control anywhere in the app today. Reproduced 2026-09-14 on the probe: pen, three clicks, Return, pick it, and {\"do\":\"expect\",\"field\":\"Thickness\",\"present\":true} fails with 'no field called \"Thickness\" is in the panel; the ones that are: X, Y, W, H, A, Opacity, Blending, X, Y, W, H, A'. The cause is the same one: ShapeSelection holds annotations only, so a path reaches none of the shape rows. Whoever picks this up gets the ends and corners rows for free once the path is in that selection."
     }
   ]
 }

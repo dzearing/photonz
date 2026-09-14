@@ -1075,10 +1075,10 @@ private final class Run {
             note(number, step.name, try checkMeasures(count), state: describe())
 
         case .expectPath(let layerName, let anchors, let closed, let curves, let smooth,
-                         let anchorAt):
+                         let width, let anchorAt):
             note(number, step.name,
                  try checkPath(layerName, anchors: anchors, closed: closed, curves: curves,
-                               smooth: smooth, anchorAt: anchorAt),
+                               smooth: smooth, width: width, anchorAt: anchorAt),
                  state: describe())
 
         case .expectLayers(let atLeast, let atMost):
@@ -2894,7 +2894,7 @@ private final class Run {
     /// What the path the Pen drew is made of, asked of the document rather than
     /// read off a picture (`PlaytestStep.expectPath`).
     private func checkPath(_ layerName: String?, anchors: Int?, closed: Bool?,
-                           curves: Int?, smooth: Int?,
+                           curves: Int?, smooth: Int?, width: CGFloat?,
                            anchorAt: PlaytestAnchorClaim?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -2922,6 +2922,7 @@ private final class Run {
             + (content.anchors.count == 1 ? "anchor" : "anchors")
             + ", \(content.isClosed ? "closed" : "open"), \(curved) curved "
             + (curved == 1 ? "run" : "runs")
+            + ", \(DocumentUnit.text(content.strokeWidth)) thick"
         if let anchors, content.anchors.count != anchors {
             throw Failure(description: "\(shape) — not the \(anchors) claimed")
         }
@@ -2931,6 +2932,9 @@ private final class Run {
         }
         if let curves, curved != curves {
             throw Failure(description: "\(shape) — not the \(curves) curved claimed")
+        }
+        if let width, content.strokeWidth != width {
+            throw Failure(description: "\(shape) — not the \(DocumentUnit.text(width)) claimed")
         }
         let bends = content.anchors.filter { $0.kind == .smooth }.count
         if let smooth, bends != smooth {

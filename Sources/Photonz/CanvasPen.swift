@@ -181,6 +181,14 @@ extension CanvasNSView {
         guard tool == .pen, let viewport else { return false }
         let startingAPath = !penSession.isDrawing
         penSession.grid = canvasNudgeGrid
+        // The weight the whole path comes out at, read once from the frame the
+        // FIRST anchor lands on: four points of line is a sixth of a 24 pixel
+        // icon frame (`IconStrokeWeight`). Once, because the press below lets
+        // go of what was picked, and because a path is one line rather than one
+        // line per click.
+        if startingAPath {
+            penSession.startingStrokeWidth = startingPathStrokeWidth(drawnAt: p, in: document)
+        }
         penSession.press(at: p, constrained: event.modifierFlags.contains(.shift),
                          breaking: event.modifierFlags.contains(.option),
                          free: event.modifierFlags.contains(.command),

@@ -84,6 +84,16 @@ public struct PenSession: Equatable, Sendable {
     /// preview point there and then rather than at the next mouse move.
     public var free: Bool = false
 
+    /// The weight the line comes out at, set by the canvas from the frame the
+    /// path is being drawn on (`IconStrokeWeight`).
+    ///
+    /// Set ONCE, as the first anchor goes down, and held for the whole path:
+    /// the first press lets go of whatever was picked, so anything re-read
+    /// halfway through a drawing would answer differently from one click to the
+    /// next. Everything the session hands back wears it, which is what keeps
+    /// the line under your hand the same weight as the line that lands.
+    public var startingStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
+
     /// The press in progress, nil between clicks.
     private var press: Press?
 
@@ -405,6 +415,7 @@ public struct PenSession: Equatable, Sendable {
     /// how a panel ends up with a row that does nothing.
     private func content(_ anchors: [PathAnchor], closed: Bool) -> PathContent {
         PathContent(anchors: anchors, isClosed: closed,
+                    strokeWidth: startingStrokeWidth,
                     fill: closed ? Paint(hex: PathContent.defaultColorHex) : nil)
     }
 

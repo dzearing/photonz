@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 9.3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T05:21:07.440Z",
-  "updated": "2026-09-14T05:22:04.508Z",
+  "updated": "2026-09-14T10:59:37.201252Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: PathContent.defaultStrokeWidth = 4 (Sources/PhotonzCore/VectorPath.swift:292) and AnnotationContent.init(shape:strokeWidth: CGFloat = 4 ...) (Sources/PhotonzCore/Layer.swift:223) are both unconditional. PenDrawing.content(_:closed:) (Sources/PhotonzCore/PenDrawing.swift:406) passes no strokeWidth, so a freshly drawn path takes the 4. Nothing in Sources/Photonz reads the frame size when picking a weight: grepping strokeWidth for frame or icon returns nothing. Icon presets are 16/24/32/48/64/512 at Sources/PhotonzCore/Frames.swift:46, so 4 is a quarter of the smallest.\n\nConfirmed in the running app, not just in the source: queue/audits/2026-09-13-icon-frames-drawn.png is a real window capture of a 24 pixel icon frame at 3200 percent with a 14 by 14 ellipse on it, and the Effects panel in that shot reads Border, Position Inside, Width 4 px on a shape 14 pixels across. The Width slider in that same shot runs 0 to 20 (Sources/Photonz/LayerEffectsInspector.swift:52), so on a 24 pixel canvas the range is nearly the whole frame and the useful part of it is the first two steps; the range wants the same treatment as the default.\n\nWhat was verified how: the manager read the constants and the call site and then read that capture, it did not run the app itself. The running-app half comes from queue/audits/2026-09-13-icon-frames.json, last rough item, written by the runner that shipped the icon frames: 'A shape drawn in a 24 pixel frame gets the app's ordinary 4 pixel default border, which at icon scale is a sixth of the whole canvas.' Reproduce it yourself before changing anything.\n\nShape: put the rule in PhotonzCore as a pure function from frame size to a starting weight, with tests, and let the app layer ask it. Flag: next-icon-frames, the one the icon sizes already ship behind.",
@@ -29,6 +29,39 @@
     {
       "t": "2026-09-14T05:22:04.507Z",
       "note": "seq 2670 -> 9.3"
+    },
+    {
+      "t": "2026-09-14T10:21:44.895Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T10:59:37.201252Z",
+      "note": "Reproduced first, as the task asked. Walk: New Frame, Icons 24, Add Frame, P, three clicks, Return. The path came out 4 px on a 24 px canvas and the 16 and 24 previews in the top left showed a red blob. Rectangle and ellipse arrived with a 4 px Border, line with 4 px Thickness."
+    },
+    {
+      "t": "2026-09-14T10:59:37.201252Z",
+      "note": "Adversarial review before building. (1) The mock/task wording says 'on an icon frame', so the rule is scoped to a frame that is square and 512 or under, which is the same test the icon preview strip already uses; a 200x40 button frame keeps its ordinary weight. (2) The rule may only ever make a line THINNER, so a 512 app icon is not handed 32 px of stroke. (3) It applies only while the tool still holds the stock 4, otherwise a weight the user picked would be undone every time they drew, which is a lock rather than a starting value. (4) A selection-derived 'frame you are working in' was rejected: the Pen's first press deselects (CanvasPen.penMouseDown), so the answer would change halfway through a path. The rule reads the frame under the POINT instead, which is the same question addLayerDrawnOnFrame asks, so the weight and the frame a shape joins can never disagree."
+    },
+    {
+      "t": "2026-09-14T10:59:37.201252Z",
+      "note": "Shipped. Rule: Sources/PhotonzCore/IconStrokeWeight.swift, a sixteenth of the frame rounded to whole pixels, floor 1, capped by the armed width (16->1, 24->2, 32->2, 48->3, 64->4, 512->4). PhotonzDocument.iconFrameSize(under:), startingStrokeWidth(armed:drawnAt:) and startingOutline(content:style:drawnAt:) beside it. Release gate in Sources/Photonz/StartingStrokeWidth.swift on Experiments.shared.iconFramesEnabled, which is next-only, so Current is untouched. Four call sites: EditorState.addAnnotation (commit), EditorState.addPath (commit), CanvasPen.penMouseDown (sets PenSession.startingStrokeWidth once, on the first anchor), CanvasAnnotationPreview.refreshAnnotationPreview (the draft). Preview and commit go through the same rule from the same point, so nothing jumps on release."
+    },
+    {
+      "t": "2026-09-14T10:59:37.201252Z",
+      "note": "Verified in the running app, not only in tests. New walk Scripts/playtest/icon-stroke-weight-walk.json drives the whole acceptance list and claims the numbers: pen path width 2 (expectPath gained a width claim), rectangle and ellipse Border Width 2 px, line Thickness 2 px, Thickness pulled to 3 and the NEXT line on the same frame still 3, and a box on a Desktop frame 4 px. A mid-drag hold snapshot shows the draft already at 2 px. Proved the width claim really bites by claiming 4 and watching it fail: 'Path: 3 anchors, open, 0 curved runs, 2 px thick - not the 4 px claimed'. Scripts/test.sh green, 6467 tests. Walks run: icon (3), pen (7), shape (9), border (7), frame (9), all pass."
+    },
+    {
+      "t": "2026-09-14T10:59:37.201252Z",
+      "note": "Adversarial review of the built thing. The 2 px 7 reads as a line at 16 and at 24 in the preview strip, which is the thing that was broken. Two roughnesses that are real and are in the audit: a Pen path has no Thickness control anywhere, so on a path the starting weight is the only weight (filed as a-line-drawn-with-the-pen-can-be-made-thicker-or, reproduced with a failing expect step); and a picked weight now carries to every frame rather than only the one it was picked on, which is how the app has always remembered widths."
+    },
+    {
+      "t": "2026-09-14T10:59:37.201252Z",
+      "note": "Left rough, not filed: the Border Width slider still runs 0 to 20 on a 24 px canvas. Measured the real window rather than assuming - the track is about 205 pt, so one whole point of line is about 10 pt of travel, a comfortable target. Not worth a task on its own; if the range is ever revisited the 512 end is the weaker half. Also left rough: a 512 app icon frame keeps the ordinary 4 px, deliberately, because the rule may only thin."
+    },
+    {
+      "t": "2026-09-14T10:59:37.201252Z",
+      "note": "Not mine, but confirmed and folded into walks-that-fail-in-the-full-sweep: effects-open-into-view-walk and effects-room-for-the-one-you-opened-walk alternate pass/fail on the SAME build because each presses the Border twist twice, returning the row to whatever state it started in, and the probe keeps that state between runs. Reproduced on clean main, three runs: ok, failed, ok."
     }
-  ]
+  ],
+  "started": "2026-09-14T10:21:44.894Z"
 }

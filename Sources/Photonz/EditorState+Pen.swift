@@ -24,6 +24,15 @@ extension EditorState {
     /// away, for when the icon is finished.
     func addPath(_ content: PathContent) {
         guard content.anchors.count >= 2 else { return }
+        // The canvas already drew it at this weight, read from the frame the
+        // first anchor landed on; asked again here from the frame the finished
+        // path actually JOINS, which is the one `addLayerDrawnOnFrame` is about
+        // to hand it to. The same answer every ordinary time, and the right one
+        // for a path that wandered onto a different canvas on its way round.
+        var content = content
+        content.strokeWidth = startingPathStrokeWidth(
+            armed: content.strokeWidth,
+            drawnAt: CGPoint(x: content.bounds.midX, y: content.bounds.midY))
         let layer = PenSession.layer(from: content)
         perform { $0.addLayerDrawnOnFrame(layer) }
         finishCreating(layer.id, tool: .pen)

@@ -18,11 +18,22 @@ extension EditorState {
     @discardableResult
     func addAnnotation(from start: CGPoint, to end: CGPoint) -> Layer? {
         guard let shape = activeTool.annotationShape,
-              let content = activeAnnotationContent else { return nil }
-        var layer = AnnotationBuilder.layer(content: content, from: start, to: end)
+              var content = activeAnnotationContent else { return nil }
         // Inherit this shape's last non-destructive effects (e.g. a drop shadow
         // added to the previous arrow carries to the next).
-        layer.style = annotationStyles.arrivingStyle(forShape: shape)
+        var style = annotationStyles.arrivingStyle(forShape: shape)
+        // ...and start its line at a weight the canvas it is landing on can
+        // carry. Four points of line is a sixth of a 24 pixel icon frame, so
+        // the first mark anybody made on an icon used to be a blob
+        // (`IconStrokeWeight`). The canvas draws its draft through the same
+        // rule, so nothing jumps on release.
+        let started = startingOutline(content, style: style,
+                                      drawnAt: CGPoint(x: (start.x + end.x) / 2,
+                                                       y: (start.y + end.y) / 2))
+        content = started.content
+        style = started.style
+        var layer = AnnotationBuilder.layer(content: content, from: start, to: end)
+        layer.style = style
         // ...and any SAVED colour the tool is holding, so the new shape wears
         // the name rather than a copy of it and still follows the name the day
         // it is edited. The document has the last word: a name it has never

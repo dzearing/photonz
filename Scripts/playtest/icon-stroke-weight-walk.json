@@ -1,0 +1,355 @@
+{
+  "out": "/tmp/photonz-playtest/icon-stroke-weight-walk",
+  "setup": {
+    "forget": [
+      "shapes",
+      "frames",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "24",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-frame",
+      "note": "a 24 x 24 icon frame, in the middle of the view"
+    },
+    {
+      "do": "tool",
+      "tool": "pen"
+    },
+    {
+      "do": "click",
+      "at": [
+        792,
+        544
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        806,
+        544
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        799,
+        556
+      ]
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": false,
+      "width": 2
+    },
+    {
+      "do": "describe",
+      "stage": "2-pen",
+      "note": "three corners with the Pen on a 24 pixel frame: the line arrives 2 points thick, so the shape reads as a line rather than filling the frame. It used to arrive at 4, a sixth of the whole icon."
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-stroke-2-pen"
+    },
+    {
+      "do": "render",
+      "name": "icon-stroke-2-pen-doc"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        792,
+        542
+      ],
+      "to": [
+        806,
+        556
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-rectangle",
+      "note": "a box on the same frame: its edge arrives at the same 2 points"
+    },
+    {
+      "do": "expect",
+      "field": "Width",
+      "reads": "2 px"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-stroke-3-rectangle"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        792,
+        542
+      ],
+      "to": [
+        806,
+        556
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-ellipse",
+      "note": "an oval too: every shape takes the frame's weight, not just the Pen"
+    },
+    {
+      "do": "expect",
+      "field": "Width",
+      "reads": "2 px"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "line"
+    },
+    {
+      "do": "describe",
+      "stage": "5-draft",
+      "note": "the draft under the hand is already the weight the line will LAND at, so nothing thickens on release"
+    },
+    {
+      "do": "drag",
+      "from": [
+        791,
+        550
+      ],
+      "to": [
+        809,
+        550
+      ],
+      "hold": "icon-stroke-5-line-draft",
+      "steps": 24
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-line",
+      "note": "a line, at the same 2 points, and its Thickness row is right there to change it"
+    },
+    {
+      "do": "expect",
+      "field": "Thickness",
+      "reads": "2 px"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-stroke-5-line"
+    },
+    {
+      "do": "action",
+      "action": "dragThicknessThin"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-repicked",
+      "note": "the weight is a starting value, not a lock: pulled to 3 it stays at 3"
+    },
+    {
+      "do": "expect",
+      "field": "Thickness",
+      "reads": "3 px"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-stroke-6-repicked"
+    },
+    {
+      "do": "tool",
+      "tool": "line"
+    },
+    {
+      "do": "drag",
+      "from": [
+        791,
+        558
+      ],
+      "to": [
+        809,
+        558
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-kept",
+      "note": "the NEXT line on the same icon frame comes out at the 3 that was picked, rather than being thinned back"
+    },
+    {
+      "do": "expect",
+      "field": "Thickness",
+      "reads": "3 px"
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "Desktop"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.4
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        300
+      ],
+      "to": [
+        900,
+        700
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-screen",
+      "note": "a box on a Desktop frame still starts at the four points every shape in the app has always started at"
+    },
+    {
+      "do": "expect",
+      "field": "Width",
+      "reads": "4 px"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-stroke-8-screen"
+    }
+  ]
+}
