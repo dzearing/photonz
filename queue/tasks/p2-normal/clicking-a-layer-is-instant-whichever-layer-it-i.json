@@ -1,0 +1,37 @@
+{
+  "id": "clicking-a-layer-is-instant-whichever-layer-it-i",
+  "title": "Clicking a layer is instant, whichever layer it is",
+  "goal": "In a document with two rows, clicking Canvas selects immediately but clicking Background has a lag you can feel. Two rows is as small as a document gets, so whatever is being done on the way is being done for no good reason. Find out where the time actually goes and make picking a layer feel instant.",
+  "epic": "",
+  "priority": "p2-normal",
+  "seq": 16,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T14:12:17.079Z",
+  "updated": "2026-09-14T14:12:27.644Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-14, with a screenshot of a two-row document: \"when i click canvas, it selects immediately. When I click background (switching from canvas to bg) it has a noticable lag. It seems like updating the layer windows might be potentially causing a perf issue. Profile where time is spent and see if we can optimize layer switching. This has been an issue before and still feels sluggish, so something is taking a lot of time.\"\n\nThey are right that it has been looked at before. The task 'a-layers-list-with-many-rows-costs-no-more-per-cl' is done and fixed the LIST: every row used to rebuild itself on each click. The remaining cost is therefore somewhere else, and the fact that it still bites on a TWO ROW document says it is not about the number of rows at all.\n\nTHE CLUE TO START FROM, and it should save most of the search: Canvas is fast and Background is slow, on the same document, one click apart. Canvas is a pseudo-selection - EditorState.isCanvasSelected, no layer selected at all - while Background is a real image layer. So the cost is in whatever only happens when a REAL layer becomes selected, and the difference between those two paths is the whole bug. Diff the two rather than profiling the world.\n\nWhat happens on selection change, read but NOT yet profiled, so treat these as places to look rather than as the answer. EditorState.swift:517, the didSet on selectedLayerID, is all cheap bookkeeping on the face of it: clearing multi-selection, resetting rowSelection, revealInLayersList, history.syncSelection(selectionSnapshot), and a pile of nil-ing out of half-typed names. Two of those are worth timing rather than eyeballing:\n- history?.syncSelection(selectionSnapshot) on every single click. Building a snapshot and touching the history stack per selection is the kind of thing that is free until it is not.\n- revealInLayersList, EditorState+LayersPanel.swift:132, which walks ancestors and, behind the layersFollowPick flag, writes a reveal token that makes the list animate. An animation on every pick is a re-layout on every pick.\nThe likelier suspect is downstream of all that: the dock rebuilding its sections for the newly picked layer. A picture layer brings Appearance, its parts, its colours and the Library section into play; the Canvas pseudo-selection brings almost nothing. Anything in those sections that reads pixels, builds a colour-style selection across the document, or makes a thumbnail is a candidate, and that is exactly the asymmetry the user is describing.\n\nProfile properly rather than by print statements: Instruments on the real app, with the two clicks isolated, or signposts around the selection path. Whatever is found, the deliverable is a NAMED cost with a number beside it, because the last attempt at this fixed a real thing and the symptom survived, which is what happens when the fix is aimed at a guess.\n\nDo not fix the feel by deferring the work to a later runloop turn unless that is genuinely the right answer and is argued for. Making the click return sooner while the panel settles a frame later is sometimes correct and sometimes just moving the jank somewhere harder to see; say which it is.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Profile it before changing anything, and put real numbers in the log: how long from the click to the panel being settled, for Canvas and for Background, on the same two-row document",
+    "Say where the time goes, with the top few costs named and measured, rather than a theory",
+    "The asymmetry is explained: Canvas and Background differ by something specific, and the report says what it is",
+    "After the change, picking either row lands within one frame at sixty hertz, measured the same way as before and reported side by side",
+    "It holds on a document with many layers as well as on two, and on a large capture as well as a small one, with both measured",
+    "No behaviour changes: the same panel sections open, the same row is revealed, undo and the selection snapshot are untouched, proved by the existing walks passing",
+    "A test or a recorded measurement guards the result, so the next person to slow this down finds out from a failure rather than from the user",
+    "Perf note in the commit, per CLAUDE.md, since this touches what happens on every click",
+    "Audit under queue/audits/ with the before and after numbers and the profile, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T14:12:17.081Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T14:12:27.643Z",
+      "note": "seq 2640 -> 16"
+    }
+  ]
+}
