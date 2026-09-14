@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · icon-animate-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* icon-animate-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, driven by the steps below. ONE scenario.
+
+     The argument this page makes, and the reason it does NOT look like the video
+     walkthroughs: what a person arrives with is a NAMED MOTION, not keyframes.
+     "Make the bell pulse." So motion is a property of the layer, picked from a
+     list, tuned with four numbers. The keys exist underneath and you can go and
+     move them, but you are not asked to author them to get the ordinary thing.
+
+     And the review surface is NOT a playhead. An icon animation is under a
+     second and it loops, so there is no frame worth finding: you watch it run at
+     the sizes it will really be used, and when it moves too fast to judge you
+     SLOW IT DOWN. That is why the preview lives on the real-size strip and the
+     only transport control is a pause and a speed.
+
+     Page-local CSS is the artboard, the glyph, the real-size strip and the
+     one-cycle strip in the dock. Everything else is the shared DS. */
+  #icon-animate-wt .win.shell{height:846px;min-height:0}
+  #icon-animate-wt .canvas{--artboard-glow:520px 360px}
+
+  /* ---------- THE ARTBOARD · a 24 unit icon template ---------- */
+  #icon-animate-wt .ia-board{position:relative;height:min(400px,72%);width:auto;aspect-ratio:1;
+    border-radius:var(--r4);background:var(--panel);border:1px solid var(--line-strong);
+    box-shadow:0 26px 56px -20px rgba(0,0,0,.5);color:var(--ink)}
+  #icon-animate-wt .ia-board svg.art{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+  #icon-animate-wt #iaMinorPat path{stroke:var(--line)}
+  #icon-animate-wt .ia-live{fill:none;stroke:var(--accent);stroke-width:.05;stroke-dasharray:.42 .3;opacity:.55}
+  #icon-animate-wt .ia-glyph{fill:none;stroke:currentColor;stroke-width:1.75;
+    stroke-linecap:round;stroke-linejoin:round}
+  /* the transform origin the motion turns around, shown only while it matters */
+  #icon-animate-wt .ia-origin{fill:none;stroke:var(--comp);stroke-width:.09}
+  #icon-animate-wt .ia-origin circle.ia-dot{fill:var(--comp);stroke:none}
+
+  /* ---------- THE MOTION ITSELF · real CSS, so the page actually moves ------- */
+  /* One cycle, normalised 0 → 100%, which is exactly the shape an exported
+     animation has. --ia-dur and --ia-amt are what the dock's controls set. */
+  @keyframes iaPulse{
+    0%  {transform:scale(1)}
+    50% {transform:scale(var(--ia-amt,1.15))}
+    100%{transform:scale(1)}
+  }
+  #icon-animate-wt .ia-anim{transform-box:fill-box;transform-origin:50% 50%;
+    animation:iaPulse var(--ia-dur,.6s) var(--ia-ease,linear) infinite;
+    animation-play-state:paused}
+  #icon-animate-wt .ia-play .ia-anim{animation-play-state:running}
+  /* the HTML copies on the real-size strip run the same cycle */
+  #icon-animate-wt .ia-sz svg{animation:iaPulse var(--ia-dur,.6s) var(--ia-ease,linear) infinite;
+    animation-play-state:paused}
+  #icon-animate-wt .ia-play .ia-sz svg{animation-play-state:running}
+  @media (prefers-reduced-motion:reduce){
+    #icon-animate-wt .ia-anim,#icon-animate-wt .ia-sz svg{animation:none}
+  }
+
+  /* ---------- REAL SIZE · the preview IS the review ---------- */
+  #icon-animate-wt .ia-sizes{position:absolute;left:var(--s4);top:var(--s4);z-index:6;
+    display:flex;flex-direction:column;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    border-radius:var(--r3);background:var(--glass-2);border:1px solid var(--edge-lo);
+    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+  #icon-animate-wt .ia-szhead{display:flex;align-items:center;gap:var(--s2)}
+  #icon-animate-wt .ia-szhead .ia-t{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:660;color:var(--faint);margin-right:auto}
+  #icon-animate-wt .ia-szrow{display:flex;align-items:flex-end;gap:var(--pad-sm)}
+  #icon-animate-wt .ia-sz{display:flex;flex-direction:column;align-items:center;gap:5px}
+  #icon-animate-wt .ia-sz .px{display:grid;place-items:center;border-radius:7px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--ink);overflow:hidden}
+  #icon-animate-wt .ia-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
+  #icon-animate-wt .ia-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
+  /* the 16px copy is the one that tells the truth about a small motion */
+  #icon-animate-wt .ia-sz.flag .n{color:var(--warn);font-weight:660}
+
+  /* ---------- THE ONE-CYCLE STRIP · in the dock, not across the window -------
+     It is 0 → 100% of ONE cycle, never seconds, because that is what an icon
+     animation is and what it exports as. */
+  #icon-animate-wt .ia-cyc{position:relative;height:26px;margin:var(--s2) 0 5px;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:6px}
+  #icon-animate-wt .ia-cyc .ia-kd{position:absolute;top:50%;width:9px;height:9px;background:var(--comp);
+    border:1px solid var(--panel);border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
+  #icon-animate-wt .ia-cyc .ia-kseg{position:absolute;top:50%;height:2px;border-radius:2px;
+    background:var(--comp);opacity:.4;transform:translateY(-50%)}
+  #icon-animate-wt .ia-cycax{display:flex;justify-content:space-between;
+    font-family:var(--mono);font-size:9px;color:var(--faint)}
+  #icon-animate-wt .ia-cyc .ia-head{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:2px;
+    background:var(--accent);left:0;animation:iaHead var(--ia-dur,.6s) linear infinite;
+    animation-play-state:paused}
+  #icon-animate-wt .ia-play .ia-cyc .ia-head{animation-play-state:running}
+  @keyframes iaHead{from{left:0}to{left:100%}}
+  @media (prefers-reduced-motion:reduce){#icon-animate-wt .ia-cyc .ia-head{animation:none}}
+
+  /* the ONE selection, declared rather than drawn (selection.js). It is on
+     screen while you are choosing the layer and goes away once the motion
+     starts, because a static ring around a shape that is scaling reads as
+     broken rather than as bounds. */
+  #icon-animate-wt .ia-selbox{position:absolute;left:16.7%;top:12.5%;width:66.6%;height:75%;pointer-events:none;z-index:5}
+
+  /* the preview button shows what clicking it DOES, and it is driven by the
+     same class the motion is, so a step that starts the motion can never
+     leave a play triangle sitting over something that is already running. */
+  #icon-animate-wt .ia-icpause{display:none}
+  #icon-animate-wt .ia-play .ia-icpause{display:block}
+  #icon-animate-wt .ia-play .ia-icplay{display:none}
+
+  /* ---------- WHAT THE APP HAS NO ANSWER FOR · said out loud ---------- */
+  #icon-animate-wt .ia-gap{display:flex;gap:var(--pad-sm);align-items:flex-start;
+    padding:var(--pad-sm) var(--pad);border-radius:var(--r3);margin:0 0 var(--gap);
+    background:color-mix(in srgb,var(--warn) 9%,transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 34%,transparent)}
+  #icon-animate-wt .ia-gap .ic{color:var(--warn);flex:none;margin-top:1px}
+  #icon-animate-wt .ia-gap p{margin:0;font-size:12.5px;line-height:1.55;color:var(--dim)}
+  #icon-animate-wt .ia-gap b{color:var(--ink);font-weight:600}
+
+  /* the library tile that shows the set this glyph belongs to */
+  #icon-animate-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
+    color:var(--ink);aspect-ratio:16/10}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="icon-animate-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Make an icon pulse</h2><span class="k">· usage clickthrough · one scenario</span></div>
+
+  <p class="pglead">One job: the <b>notification bell</b> is already drawn, and it should pulse when something new arrives.
+    The interesting part is what this <b>is not</b>. There is no playhead, no ruler in seconds and no track list, because
+    an icon animation is six hundred milliseconds long and it repeats: there is no frame worth finding. Motion is a
+    <b>property of the layer</b>, picked by name and tuned with four numbers, and the review is the glyph <b>running at
+    the sizes it will really be used</b>, slowed down when it moves too fast to judge. Nine real clicks on ONE screen,
+    which never re-renders below.</p>
+
+  <div class="ia-gap">
+    <i class="ic sm ic-warning"></i>
+    <p><b>The app has no answer for any of this yet.</b> PhotonzCore has no notion of time, no keyframes and no motion on
+      a layer, the video editor is a separate surface with its own state rather than a time model a layer document could
+      borrow, and nothing exports SVG at all, animated or still. Everything below is a proposal about what the surface
+      should be, drawn so it can be argued with before it is built.</p>
+  </div>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtAnim">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell" id="iaWin" data-shell="notification-bell · 24 × 24 · SVG" data-ws="ui"
+           data-status='<span id="chipMotion">no motion</span> · <span id="chipCycle">still</span>'>
+
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Motion</div>
+          <div class="menuitem"><i class="ic ic-loop"></i> Add motion… <span class="sc">⇧⌘M</span></div>
+          <div class="menuitem"><i class="ic ic-keyframe"></i> Open the keys <span class="sc">⌥⌘K</span></div>
+          <div class="menuitem"><i class="ic ic-pause"></i> Pause the preview <span class="sc">Space</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        </div>
+
+          <div class="cnv">
+            <div class="canvas">
+
+              <!-- ===== THE ARTBOARD · 24 user units ===== -->
+              <div class="ia-board" id="iaBoard">
+                <svg class="art" viewBox="0 0 24 24" aria-label="Icon artboard, 24 by 24 units">
+                  <defs>
+                    <pattern id="iaMinorPat" width="1" height="1" patternUnits="userSpaceOnUse">
+                      <path d="M0 0H1M0 0V1" fill="none" stroke="currentColor" stroke-width=".03"/>
+                    </pattern>
+                  </defs>
+                  <rect x="0" y="0" width="24" height="24" fill="url(#iaMinorPat)"/>
+                  <rect class="ia-live" x="2" y="2" width="20" height="20" rx=".4"/>
+
+                  <!-- the glyph. The motion class is added by a step, so the
+                       artboard shows the still drawing until motion exists. -->
+                  <g id="iaGlyph">
+                    <path class="ia-glyph" d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/>
+                    <path class="ia-glyph" d="M9.9 17.9q2.1 2.5 4.2 0"/>
+                  </g>
+
+                  <!-- the point the scale turns around, shown when it is in play -->
+                  <g id="iaOrigin" class="ia-origin wt-off">
+                    <circle cx="12" cy="12" r="1.1"/>
+                    <circle class="ia-dot" cx="12" cy="12" r=".25"/>
+                    <path d="M12 9.6V14.4M9.6 12H14.4"/>
+                  </g>
+                </svg>
+                <span class="ia-selbox wt-off" id="iaSel" data-sel-frame="Bell &#183; 16 &#215; 18"></span>
+                <div class="cnv-hint wt-off" id="iaHint" style="bottom:-15px">Motion runs while you work. Space pauses it.</div>
+              </div>
+
+              <!-- REAL SIZE · the preview IS the review, so the transport lives here -->
+              <div class="ia-sizes" id="iaSizes">
+                <div class="ia-szhead">
+                  <span class="ia-t">Real size</span>
+                  <button class="btn ghost icon sm" id="btnPlay" title="Play the preview (Space)"><i class="ic sm ic-play ia-icplay"></i><i class="ic sm ic-pause ia-icpause"></i></button>
+                  <span class="select sm" id="selSpeed" tabindex="0" role="button" title="Preview speed"><span class="lead" id="spdVal">1×</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                </div>
+                <div class="ia-szrow">
+                  <span class="ia-sz" id="sz16">
+                    <span class="px" style="width:26px;height:26px">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/><path d="M9.9 17.9q2.1 2.5 4.2 0"/>
+                      </svg>
+                    </span><span class="n">16</span>
+                  </span>
+                  <span class="ia-sz">
+                    <span class="px" style="width:34px;height:34px">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/><path d="M9.9 17.9q2.1 2.5 4.2 0"/>
+                      </svg>
+                    </span><span class="n">24</span>
+                  </span>
+                  <span class="ia-sz">
+                    <span class="px inv" style="width:42px;height:42px">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/><path d="M9.9 17.9q2.1 2.5 4.2 0"/>
+                      </svg>
+                    </span><span class="n">32</span>
+                  </span>
+                  <span class="ia-sz">
+                    <span class="px" style="width:58px;height:58px">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/><path d="M9.9 17.9q2.1 2.5 4.2 0"/>
+                      </svg>
+                    </span><span class="n">48</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · the vector / UI inventory, unchanged by motion -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tRect" title="Rectangle (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool" id="tEllipse" title="Ellipse (O)"><i class="ic sm ic-circle"></i></button>
+                <button class="tool" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tNode" title="Edit nodes (A)"><i class="ic sm ic-node"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (I)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="100" max="1600" value="1600" aria-label="Zoom">
+                <span class="val zval">1600%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
+                <div class="menuitem"><i class="ic ic-node"></i> Edit nodes <span class="sc">A</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">I</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⇧⌘H or the menu-bar icon) -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#9a5cff,#4c6fff)"></span>
+                    <span class="cap"><span class="nm">bell-reference</span><span class="ago">11 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#3ecf8e)"></span>
+                    <span class="cap"><span class="nm">notification-spec</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="240" data-max="440"></div>
+
+          <!-- THE RIGHT DOCK -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCnt">1</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow" id="lrBell"><i class="ic ic-bezier"></i><span class="nm">Bell</span>
+                  <i class="ic sm ic-loop wt-off" id="lrBellMot" title="This layer has motion"></i>
+                  <i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="360"></div>
+
+            <!-- PROPERTIES · where motion lives, beside the geometry it moves -->
+            <div class="dgrp" id="gProps">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer</div>
+
+                <div id="propsShape" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Geometry <span class="mut">units</span></div>
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">X</span><input id="pX" value="4" aria-label="X"></span>
+                      <span class="stepper sm"><span class="k">Y</span><input id="pY" value="3" aria-label="Y"></span>
+                      <span class="stepper sm"><span class="k">W</span><input id="pW" value="16" aria-label="Width"></span>
+                      <span class="stepper sm"><span class="k">H</span><input id="pH" value="18" aria-label="Height"></span>
+                    </div>
+                  </div>
+
+                  <!-- THE PROPOSAL · motion is one row on the layer, not a mode -->
+                  <div class="section">
+                    <div class="sec-h">Motion <span class="mut" id="pMotMut">none</span></div>
+                    <div class="irow"><span class="rl">Motion</span>
+                      <span class="select" id="selMotion" tabindex="0" role="button"><span class="lead" id="motKind">None</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <p class="note" id="motNote">Motion is a property of this layer, the same way its stroke is. There is no mode to enter.</p>
+
+                    <div id="secTiming" class="wt-off">
+                      <div class="irow"><span class="rl">Grows to</span>
+                        <span class="stepper sm" style="width:100%"><span class="k">%</span><input id="pAmt" value="115" aria-label="Grows to"></span>
+                      </div>
+                      <div class="irow"><span class="rl">Over</span>
+                        <span class="stepper sm" style="width:100%"><span class="k">s</span><input id="pDur" value="0.6" aria-label="Duration in seconds"></span>
+                      </div>
+                      <div class="irow" style="grid-template-columns:1fr"><span class="rl">Easing</span>
+                        <span class="seg pseg" role="group" aria-label="Easing">
+                          <button class="on" id="easLin">Linear</button>
+                          <button id="easInOut">Ease in-out</button>
+                          <button id="easSpring">Spring</button>
+                        </span>
+                      </div>
+                      <div class="irow"><span class="rl">Repeat</span>
+                        <span class="select" id="selRepeat" tabindex="0" role="button"><span class="lead" id="repVal">3 times</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      </div>
+                      <div class="irow"><span class="rl">Around</span>
+                        <span class="select" id="selOrigin" tabindex="0" role="button"><span class="lead" id="oriVal">Its center</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      </div>
+                      <p class="note" id="timNote">Four numbers describe the whole thing, and none of them is a time on a ruler.</p>
+                    </div>
+                  </div>
+
+                  <!-- THE ESCAPE HATCH · the keys, on one cycle, in percent -->
+                  <div class="section wt-off" id="secCycle">
+                    <div class="sec-h">One cycle <span class="mut" id="pCycMut">3 keys</span></div>
+                    <div class="ia-cyc" id="iaCyc">
+                      <span class="ia-kseg" style="left:4%;width:92%"></span>
+                      <span class="ia-kd" style="left:4%"></span>
+                      <span class="ia-kd" id="kdMid" style="left:50%"></span>
+                      <span class="ia-kd" style="left:96%"></span>
+                      <span class="ia-head"></span>
+                    </div>
+                    <div class="ia-cycax"><span>0%</span><span id="cycMidLb">50%</span><span>100%</span></div>
+                    <p class="note" id="cycNote">Here is the escape hatch, and notice what it is measured in. The keys sit at <b>percentages of one cycle</b>, not at seconds, because a loop that repeats has no absolute time to sit on. Drag the middle key and the pulse peaks late; change Over and every key keeps its place.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="420"></div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg">
+                    <button class="on" data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button data-scope="systems" data-scope-name="Systems">Systems</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search the set" aria-label="Search the set"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile sel" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/><path d="M9.9 17.9q2.1 2.5 4.2 0"/></svg></span><span class="cap"><span class="nm">notification-bell</span><span class="mt">24 × 24</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.4v15.2M6.4 10 12 4.4 17.6 10"/></svg></span><span class="cap"><span class="nm">upload</span><span class="mt">24 × 24</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Glyph frame</span><span class="mt">24 × 24</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div style="padding:0 var(--pad-sm)">
+                    <div class="styrow"><span class="sw" style="background:#0c0e14"></span><span class="nm">Glyph / stroke 1.75</span><span class="use">200 uses</span></div>
+                    <div class="styrow" id="styPulse"><span class="sw" style="background:#9a5cff"></span><span class="nm">Motion / attention pulse</span><span class="use">1 use</span></div>
+                  </div>
+                  <p class="note" style="padding:var(--gap-sm) var(--pad-sm) 0">A motion saved as a style is the reason the list of named motions is not a gimmick: the set's own pulse becomes a thing every glyph can wear, and changing it changes them all.</p>
+                </div>
+                <div data-scope-body="systems" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <!-- the named motions. A list, because "make it pulse" is what people
+               arrive with; Custom is how you get to keys from nothing. -->
+          <div class="popover menu pop" id="motMenu" style="position:absolute;right:var(--s4);top:264px;width:238px;z-index:11">
+            <div class="mlabel">Attention</div>
+            <div class="menuitem" id="miPulse"><i class="ic ic-loop"></i> Pulse</div>
+            <div class="menuitem"><i class="ic ic-refresh"></i> Wiggle</div>
+            <div class="menuitem"><i class="ic ic-arrow-up"></i> Bounce</div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Continuous</div>
+            <div class="menuitem"><i class="ic ic-rotate-right"></i> Spin</div>
+            <div class="menuitem"><i class="ic ic-opacity"></i> Breathe</div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-keyframe"></i> Custom…</div>
+          </div>
+
+          <div class="popover menu pop" id="repMenu" style="position:absolute;right:var(--s4);top:432px;width:206px;z-index:11">
+            <div class="menuitem">Once</div>
+            <div class="menuitem">3 times</div>
+            <div class="menuitem" id="miForever"><i class="ic ic-loop"></i> Forever</div>
+          </div>
+
+          <div class="popover menu pop" id="spdMenu" style="position:absolute;left:var(--s4);top:76px;width:180px;z-index:11">
+            <div class="menuitem">1×</div>
+            <div class="menuitem" id="miQuarter">0.25× · slow</div>
+            <div class="menuitem">0.1× · very slow</div>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:120px;width:238px;z-index:11">
+            <div class="menuitem"><i class="ic ic-loop"></i> Add motion… <span class="sc">⇧⌘M</span></div>
+            <div class="menuitem"><i class="ic ic-copy"></i> Copy motion</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save motion as a style</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:236px;z-index:11">
+            <div class="menuitem"><i class="ic ic-plus"></i> Add drawing to the set <span class="sc">⇧⌘A</span></div>
+            <div class="menuitem"><i class="ic ic-import"></i> Import glyphs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Select the glyph"
+          data-cue="#lrBell" data-cue-label="Click the Bell layer" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell" data-show="#iaSel,#propsShape" data-hide="#propsEmpty"
+          data-set="#propKind=Glyph">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Bell</b> layer</p>
+          <p class="wt-where">the Layers group, at the top of the dock</p>
+          <p class="wt-res">Properties fills in with this layer's <b>Geometry</b> and, right under it, a <b>Motion</b> section that currently says <b>None</b>. That is the whole claim of this page: a glyph that can move is not a different kind of document, it is a layer with one more property.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Open the list of motions"
+          data-cue="#selMotion" data-cue-label="Click the Motion row" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell" data-show="#iaSel,#propsShape" data-hide="#propsEmpty"
+          data-pop="#motMenu" data-set="#propKind=Glyph">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do">the <b>Motion</b> row</p>
+          <p class="wt-where">Properties, in the Motion section</p>
+          <p class="wt-res">a short list of <b>named motions</b> opens: Pulse, Wiggle, Bounce, Spin, Breathe, and Custom at the bottom. Nobody arrives wanting to author keys. They arrive wanting the bell to pulse, so the list is the front door and keys are the room behind it.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Give it a pulse"
+          data-cue="#miPulse" data-cue-label="Click Pulse" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell" data-pop="#motMenu"
+          data-show="#propsShape,#secTiming,#lrBellMot,#iaHint" data-hide="#iaSel,#propsEmpty"
+          data-class="#iaGlyph=ia-anim|#iaWin=ia-play"
+          data-set="#propKind=Glyph|#motKind=Pulse|#pMotMut=pulse|#chipMotion=pulse|#chipCycle=0.6s · 3×|#motNote=Pulse is a scale that goes out and comes back. Five named motions cover almost everything an icon is asked to do, and Custom is the door to the rest.">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>Pulse</b></p>
+          <p class="wt-where">the motion list</p>
+          <p class="wt-res">the bell <b>starts pulsing immediately</b>, on the artboard and on all four copies in the Real size card, and it keeps running while you carry on working. Timing controls appear under the Motion row, and the layer picks up a small loop mark so the Layers list tells you which glyphs move.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Slow it down"
+          data-cue="#pDur" data-cue-label="Type 0.9 in Over" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell"
+          data-show="#propsShape,#secTiming,#lrBellMot,#iaHint" data-hide="#iaSel,#propsEmpty"
+          data-class="#iaGlyph=ia-anim|#iaWin=ia-play"
+          data-css="#iaWin=--ia-dur:0.9s"
+          data-set="#propKind=Glyph|#motKind=Pulse|#pMotMut=pulse|#pDur=0.9|#chipMotion=pulse|#chipCycle=0.9s · 3×">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>0.9</b> in the <b>Over</b> field</p>
+          <p class="wt-where">Properties, under Motion</p>
+          <p class="wt-res">one pass now takes nine tenths of a second instead of six. The change lands on the running preview as you type, so the number and the thing it describes are never out of step. This is the whole of "editing the timing": there is no ruler to drag a key along.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Give it some weight"
+          data-cue="#easInOut" data-cue-label="Click Ease in-out" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell"
+          data-show="#propsShape,#secTiming,#lrBellMot,#iaHint" data-hide="#iaSel,#propsEmpty"
+          data-class="#iaGlyph=ia-anim|#iaWin=ia-play"
+          data-activate="#easInOut"
+          data-css="#iaWin=--ia-dur:0.9s;--ia-ease:cubic-bezier(.4,0,.2,1)"
+          data-set="#propKind=Glyph|#motKind=Pulse|#pMotMut=pulse|#pDur=0.9|#chipMotion=pulse|#chipCycle=0.9s · 3×|#timNote=Three named curves, not a bezier editor: at this length nobody can tell a hand-drawn curve from the standard one.">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>Ease in-out</b></p>
+          <p class="wt-where">the Easing row</p>
+          <p class="wt-res">the pulse stops growing at a flat rate. It leans out, holds at the top, and settles back, which is what makes it read as a heartbeat rather than a machine. Three named curves, no bezier editor: at nine hundred milliseconds nobody can see the difference between a hand-drawn curve and the standard one.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Make it repeat for as long as there is something new"
+          data-cue="#selRepeat" data-cue-label="Click Repeat, choose Forever" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell" data-pop="#repMenu"
+          data-show="#propsShape,#secTiming,#lrBellMot,#iaHint" data-hide="#iaSel,#propsEmpty"
+          data-class="#iaGlyph=ia-anim|#iaWin=ia-play"
+          data-css="#iaWin=--ia-dur:0.9s;--ia-ease:cubic-bezier(.4,0,.2,1)"
+          data-activate="#easInOut"
+          data-set="#propKind=Glyph|#motKind=Pulse|#pMotMut=pulse|#pDur=0.9|#repVal=Forever|#chipMotion=pulse|#chipCycle=0.9s · forever">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the <b>Repeat</b> row, and choose <b>Forever</b></p>
+          <p class="wt-where">Properties, under Motion</p>
+          <p class="wt-res">the pulse stops counting passes. <b>Forever</b> is the honest word for what a notification badge does, and it is also the thing a timeline cannot draw: there is no end to put on a ruler. Repeat being a property rather than a length of track is not a shortcut, it is the correct shape.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Slow the preview down to judge it"
+          data-cue="#selSpeed" data-cue-label="Click 1×, choose 0.25×" data-cue-place="bottom"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell" data-pop="#spdMenu"
+          data-show="#propsShape,#secTiming,#lrBellMot,#iaHint,#iaOrigin" data-hide="#iaSel,#propsEmpty"
+          data-class="#iaGlyph=ia-anim|#iaWin=ia-play"
+          data-css="#iaWin=--ia-dur:3.6s;--ia-ease:cubic-bezier(.4,0,.2,1)"
+          data-activate="#easInOut"
+          data-set="#propKind=Glyph|#motKind=Pulse|#pMotMut=pulse|#pDur=0.9|#repVal=Forever|#spdVal=0.25×|#chipMotion=pulse|#chipCycle=0.9s · forever · 0.25×">
+        <div class="wt-cap comp">
+          <span class="wt-n">7</span>
+          <p class="wt-do"><b>0.25×</b></p>
+          <p class="wt-where">the speed control on the <b>Real size</b> card</p>
+          <p class="wt-res">everything runs at a quarter rate so you can actually see the shape of it, and the point the scale turns around appears on the artboard while you watch. <b>This is what replaces scrubbing.</b> You cannot usefully drag a playhead through nine hundred milliseconds; you slow the loop until your eye can keep up.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Check it at the size it will really be"
+          data-cue="#sz16" data-cue-label="Look at the 16 point copy" data-cue-place="bottom"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell"
+          data-show="#propsShape,#secTiming,#secCycle,#lrBellMot,#iaHint" data-hide="#iaSel,#propsEmpty,#iaOrigin"
+          data-class="#iaGlyph=ia-anim|#iaWin=ia-play|#sz16=flag"
+          data-css="#iaWin=--ia-dur:0.9s;--ia-ease:cubic-bezier(.4,0,.2,1);--ia-amt:1.24"
+          data-activate="#easInOut"
+          data-set="#propKind=Glyph|#motKind=Pulse|#pMotMut=pulse|#pDur=0.9|#pAmt=124|#repVal=Forever|#spdVal=1×|#chipMotion=pulse|#chipCycle=0.9s · forever">
+        <div class="wt-cap comp">
+          <span class="wt-n">8</span>
+          <p class="wt-do">at the <b>16</b> copy, and push <b>Grows to</b> from 115 to <b>124</b></p>
+          <p class="wt-where">the Real size card, and the Motion section</p>
+          <p class="wt-res">at 16 points a 15% pulse is two and a half pixels of travel, which is a shimmer rather than a pulse. At 48 it was fine. <b>This is the review an icon needs and a video timeline cannot give you</b>: the same motion is right at one size and invisible at another, and only the copies tell you. The keys underneath are there if you want them, sitting at <b>0%, 50% and 100% of one cycle</b>.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Look underneath at the keys"
+          data-cue="#kdMid" data-cue-label="Drag the middle key to 62%" data-cue-place="top"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrBell"
+          data-show="#propsShape,#secTiming,#secCycle,#lrBellMot,#iaHint" data-hide="#iaSel,#propsEmpty,#iaOrigin"
+          data-class="#iaGlyph=ia-anim|#iaWin=ia-play|#sz16=flag"
+          data-css="#iaWin=--ia-dur:0.9s;--ia-ease:cubic-bezier(.4,0,.2,1);--ia-amt:1.24|#kdMid=left:62%|#cycMidLb=opacity:1"
+          data-activate="#easInOut"
+          data-set="#propKind=Glyph|#motKind=Pulse (edited)|#pMotMut=custom|#pDur=0.9|#pAmt=124|#repVal=Forever|#spdVal=1&#215;|#cycMidLb=62%|#chipMotion=custom|#chipCycle=0.9s · forever">
+        <div class="wt-cap comp">
+          <span class="wt-n">9</span>
+          <p class="wt-do" data-verb="Drag">the <b>middle key</b> along the cycle, from 50% to <b>62%</b></p>
+          <p class="wt-where">Properties, in the <b>One cycle</b> section</p>
+          <p class="wt-res">the bell now grows slowly and snaps back, because the peak sits late in the cycle. Look at what that strip is measured in: <b>percent of one cycle</b>, not seconds. A loop that repeats forever has no absolute time to sit on, which is the deepest difference between this and a video document and the reason the two cannot share one ruler. Changing <b>Over</b> from here on stretches the whole cycle and every key keeps its place.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the still bell"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Motion is <b>a property of a layer</b>, picked by name and described by four numbers, and the keys are an escape hatch rather than the front door. Nothing about this needs a mode, a second editor, or a document that knows what time it is.</p></div>
+    <div class="c"><div class="lab g2">What this deliberately is not</div><p>No playhead, no ruler in seconds, no track list, no transport. An icon animation is shorter than a second and it repeats, so there is <b>no frame worth finding</b>. The one time-ish object on the page is the cycle strip, and it is measured in <b>percent of a cycle</b>, which is what a looping animation actually is and what it exports as.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Motion saved as a <b>style</b> is the part that would make a set feel designed rather than assembled: one attention pulse the whole family shares, changed in one place. The Styles scope in the Library already has the shape for it.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Is the named list the right front door, or does it quietly become a wall of forty presets nobody reads? The alternative is <b>no list at all</b>: change the glyph, and the app records the change as a key, exactly the way <button class="link" data-target="video-move-wt">Move a graphic</button> does. That is more powerful and it is a worse answer to "make it pulse".</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch and the easing seg stay live when a
+     person clicks them directly. The walkthrough drives the same state
+     declaratively. */
+  (function () {
+    var root = document.getElementById('icon-animate-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () { bs.forEach(function (x) { x.classList.toggle('on', x === b); }); });
+      });
+    });
+    /* the pause button really pauses, because a preview you cannot stop is the
+       first thing anyone complains about */
+    var play = root.querySelector('#btnPlay');
+    if (play) {
+      play.addEventListener('click', function () {
+        var win = root.querySelector('#iaWin');
+        var running = win.classList.toggle('ia-play');
+        /* tooltip.js moved `title` into `data-tip` and removed it, so the
+           label has to be updated where it now lives. */
+        var label = running ? 'Pause the preview|Space' : 'Play the preview|Space';
+        if (play.hasAttribute('data-tip')) play.setAttribute('data-tip', label);
+        else play.title = running ? 'Pause the preview (Space)' : 'Play the preview (Space)';
+        play.setAttribute('aria-label', running ? 'Pause the preview' : 'Play the preview');
+      });
+    }
+  })();
+</script>
+</body>
+</html>

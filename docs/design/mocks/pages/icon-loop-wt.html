@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz &#183; icon-loop-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* icon-loop-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, driven by the steps below. ONE scenario.
+
+     This page exists to hold the case a timeline cannot draw. A spinner has no
+     end. It is not a four second animation that happens to repeat, it is one
+     turn plus the word FOREVER, and a ruler with a last frame on it is simply
+     the wrong instrument. So the whole flow is: pick the part that moves, pick
+     Spin, say how long one turn takes.
+
+     It also carries the mistake everybody makes once. A rotation turns around a
+     point, and the obvious default (the moving shape's own center) is the wrong
+     one for an arc: the arc orbits instead of spinning. The app should have an
+     opinion about that, and the page shows it having one.
+
+     Page-local CSS is the artboard, the spinner artwork and the loop check.
+     Everything else is the shared DS. */
+  #icon-loop-wt .win.shell{height:846px;min-height:0}
+  #icon-loop-wt .canvas{--artboard-glow:520px 360px}
+
+  /* ---------- THE ARTBOARD · a 24 unit icon template ---------- */
+  #icon-loop-wt .il-board{position:relative;height:min(400px,72%);width:auto;aspect-ratio:1;
+    border-radius:var(--r4);background:var(--panel);border:1px solid var(--line-strong);
+    box-shadow:0 26px 56px -20px rgba(0,0,0,.5);color:var(--ink)}
+  #icon-loop-wt .il-board svg.art{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+  #icon-loop-wt #ilMinorPat path{stroke:var(--line)}
+  #icon-loop-wt .il-live{fill:none;stroke:var(--accent);stroke-width:.05;stroke-dasharray:.42 .3;opacity:.55}
+  #icon-loop-wt .il-glyph{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round}
+  #icon-loop-wt .il-track{opacity:.22}
+  #icon-loop-wt .il-origin{fill:none;stroke:var(--comp);stroke-width:.09}
+  #icon-loop-wt .il-origin circle.il-dot{fill:var(--comp);stroke:none}
+
+  /* ---------- THE MOTION · real CSS, so the page actually turns ----------
+     ONE set of keyframes, TWO origins, and the difference between them is the
+     whole of step 3. fill-box turns the arc around the arc; view-box turns it
+     around the middle of the 24 unit artboard, which is what a spinner means. */
+  @keyframes ilTurn{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  #icon-loop-wt .il-anim{transform-box:fill-box;transform-origin:50% 50%;
+    animation:ilTurn var(--il-dur,1.2s) var(--il-ease,linear) infinite;animation-play-state:paused}
+  #icon-loop-wt .il-anim.il-true{transform-box:view-box;transform-origin:50% 50%}
+  #icon-loop-wt .il-play .il-anim{animation-play-state:running}
+  #icon-loop-wt .il-sz svg{animation:ilTurn var(--il-dur,1.2s) var(--il-ease,linear) infinite;
+    animation-play-state:paused}
+  #icon-loop-wt .il-play .il-sz svg{animation-play-state:running}
+  @media (prefers-reduced-motion:reduce){
+    #icon-loop-wt .il-anim,#icon-loop-wt .il-sz svg{animation:none}
+  }
+
+  /* ---------- REAL SIZE · the preview IS the review ---------- */
+  #icon-loop-wt .il-sizes{position:absolute;left:var(--s4);top:var(--s4);z-index:6;
+    display:flex;flex-direction:column;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    border-radius:var(--r3);background:var(--glass-2);border:1px solid var(--edge-lo);
+    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+  #icon-loop-wt .il-szhead{display:flex;align-items:center;gap:var(--s2)}
+  #icon-loop-wt .il-szhead .il-t{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:660;color:var(--faint);margin-right:auto}
+  #icon-loop-wt .il-szrow{display:flex;align-items:flex-end;gap:var(--pad-sm)}
+  #icon-loop-wt .il-sz{display:flex;flex-direction:column;align-items:center;gap:5px}
+  #icon-loop-wt .il-sz .px{display:grid;place-items:center;border-radius:7px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--ink);overflow:hidden}
+  #icon-loop-wt .il-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
+  #icon-loop-wt .il-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
+
+  /* ---------- ONE TURN · percent of a cycle, never seconds on a ruler ------ */
+  #icon-loop-wt .il-cyc{position:relative;height:26px;margin:var(--s2) 0 5px;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:6px}
+  #icon-loop-wt .il-cyc .il-kd{position:absolute;top:50%;width:9px;height:9px;background:var(--comp);
+    border:1px solid var(--panel);border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
+  #icon-loop-wt .il-cyc .il-kseg{position:absolute;top:50%;height:2px;border-radius:2px;
+    background:var(--comp);opacity:.4;transform:translateY(-50%)}
+  #icon-loop-wt .il-cyc .il-head{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:2px;
+    background:var(--accent);left:0;animation:ilHead var(--il-dur,1.2s) linear infinite;
+    animation-play-state:paused}
+  #icon-loop-wt .il-play .il-cyc .il-head{animation-play-state:running}
+  @keyframes ilHead{from{left:0}to{left:100%}}
+  @media (prefers-reduced-motion:reduce){#icon-loop-wt .il-cyc .il-head{animation:none}}
+  #icon-loop-wt .il-cycax{display:flex;justify-content:space-between;
+    font-family:var(--mono);font-size:9px;color:var(--faint)}
+  #icon-loop-wt .il-ok{color:var(--good);font-weight:640}
+
+  /* an inline caution inside a panel section · the app having an opinion */
+  #icon-loop-wt .il-caution{display:flex;gap:var(--gap-sm);align-items:flex-start;margin-top:var(--s2);
+    padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r2);
+    background:color-mix(in srgb,var(--warn) 10%,transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 36%,transparent)}
+  #icon-loop-wt .il-caution .ic{color:var(--warn);flex:none;margin-top:1px}
+  #icon-loop-wt .il-caution p{margin:0;font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #icon-loop-wt .il-caution b{color:var(--ink);font-weight:600}
+
+  /* the ONE selection, declared rather than drawn (selection.js). It is on
+     screen while you are choosing the layer and goes away once the motion
+     starts, because a static ring around a shape that is scaling reads as
+     broken rather than as bounds. */
+  #icon-loop-wt .il-selbox{position:absolute;left:50%;top:16.7%;width:33.3%;height:33.3%;pointer-events:none;z-index:5}
+
+  /* the preview button shows what clicking it DOES, and it is driven by the
+     same class the motion is, so a step that starts the motion can never
+     leave a play triangle sitting over something that is already running. */
+  #icon-loop-wt .il-icpause{display:none}
+  #icon-loop-wt .il-play .il-icpause{display:block}
+  #icon-loop-wt .il-play .il-icplay{display:none}
+
+  /* ---------- WHAT THE APP HAS NO ANSWER FOR · said out loud ---------- */
+  #icon-loop-wt .il-gap{display:flex;gap:var(--pad-sm);align-items:flex-start;
+    padding:var(--pad-sm) var(--pad);border-radius:var(--r3);margin:0 0 var(--gap);
+    background:color-mix(in srgb,var(--warn) 9%,transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 34%,transparent)}
+  #icon-loop-wt .il-gap .ic{color:var(--warn);flex:none;margin-top:1px}
+  #icon-loop-wt .il-gap p{margin:0;font-size:12.5px;line-height:1.55;color:var(--dim)}
+  #icon-loop-wt .il-gap b{color:var(--ink);font-weight:600}
+
+  #icon-loop-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
+    color:var(--ink);aspect-ratio:16/10}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="icon-loop-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Build a spinner that never stops</h2><span class="k">&#183; usage clickthrough &#183; one scenario</span></div>
+
+  <p class="pglead">One job: the loading spinner should turn, for as long as the thing it is waiting on takes.
+    This is the case a timeline <b>cannot draw</b>. A spinner is not a four second animation that happens to repeat, it is
+    <b>one turn plus the word forever</b>, and a ruler with a last frame on it is the wrong instrument for it. The flow is
+    three decisions: which part moves, what it does, and how long one turn takes. On the way it runs into the mistake
+    everybody makes once, which is that a rotation needs a point to turn around and the obvious default is the wrong one.
+    Eight real clicks on ONE screen, which never re-renders below.</p>
+
+  <div class="il-gap">
+    <i class="ic sm ic-warning"></i>
+    <p><b>The app has no answer for any of this yet.</b> There is no motion on a layer, no repeat, no transform origin you
+      can choose, and no SVG export of any kind. Everything below is a proposal, drawn so it can be argued with before it
+      is built.</p>
+  </div>
+
+  <div class="wt" id="wtLoop">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell" id="ilWin" data-shell="loading-spinner &#183; 24 &#215; 24 &#183; SVG" data-ws="ui"
+           data-status='<span id="chipMotion">no motion</span> &#183; <span id="chipCycle">still</span>'>
+
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Motion</div>
+          <div class="menuitem"><i class="ic ic-loop"></i> Add motion&#8230; <span class="sc">&#8679;&#8984;M</span></div>
+          <div class="menuitem"><i class="ic ic-aperture"></i> Turn around the artboard center</div>
+          <div class="menuitem"><i class="ic ic-pause"></i> Pause the preview <span class="sc">Space</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">&#8997;&#8984;L</span></div>
+        </div>
+
+          <div class="cnv">
+            <div class="canvas">
+
+              <div class="il-board" id="ilBoard">
+                <svg class="art" viewBox="0 0 24 24" aria-label="Icon artboard, 24 by 24 units">
+                  <defs>
+                    <pattern id="ilMinorPat" width="1" height="1" patternUnits="userSpaceOnUse">
+                      <path d="M0 0H1M0 0V1" fill="none" stroke="currentColor" stroke-width=".03"/>
+                    </pattern>
+                  </defs>
+                  <rect x="0" y="0" width="24" height="24" fill="url(#ilMinorPat)"/>
+                  <rect class="il-live" x="2" y="2" width="20" height="20" rx=".4"/>
+
+                  <circle id="ilTrack" class="il-glyph il-track" cx="12" cy="12" r="8"/>
+                  <path id="ilArc" class="il-glyph" d="M12 4a8 8 0 0 1 8 8"/>
+
+                  <g id="ilOrigin" class="il-origin wt-off">
+                    <circle cx="12" cy="12" r="1.1"/>
+                    <circle class="il-dot" cx="12" cy="12" r=".25"/>
+                    <path d="M12 9.6V14.4M9.6 12H14.4"/>
+                  </g>
+                </svg>
+                <span class="il-selbox wt-off" id="ilSel" data-sel-frame="Arc &#183; 8 &#215; 8"></span>
+                <div class="cnv-hint wt-off" id="ilHint" style="bottom:-15px">The arc turns. The track behind it does not.</div>
+              </div>
+
+              <div class="il-sizes" id="ilSizes">
+                <div class="il-szhead">
+                  <span class="il-t">Real size</span>
+                  <button class="btn ghost icon sm" id="btnPlay" title="Play the preview (Space)"><i class="ic sm ic-play il-icplay"></i><i class="ic sm ic-pause il-icpause"></i></button>
+                  <span class="select sm" id="selSpeed" tabindex="0" role="button" title="Preview speed"><span class="lead" id="spdVal">1&#215;</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                </div>
+                <div class="il-szrow">
+                  <span class="il-sz" id="sz16">
+                    <span class="px" style="width:26px;height:26px">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8" opacity=".22"/><path d="M12 4a8 8 0 0 1 8 8"/></svg>
+                    </span><span class="n">16</span>
+                  </span>
+                  <span class="il-sz">
+                    <span class="px" style="width:34px;height:34px">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8" opacity=".22"/><path d="M12 4a8 8 0 0 1 8 8"/></svg>
+                    </span><span class="n">24</span>
+                  </span>
+                  <span class="il-sz">
+                    <span class="px inv" style="width:42px;height:42px">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8" opacity=".22"/><path d="M12 4a8 8 0 0 1 8 8"/></svg>
+                    </span><span class="n">32</span>
+                  </span>
+                  <span class="il-sz">
+                    <span class="px" style="width:58px;height:58px">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8" opacity=".22"/><path d="M12 4a8 8 0 0 1 8 8"/></svg>
+                    </span><span class="n">48</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (&#8997;&#8984;L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tRect" title="Rectangle (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool" id="tEllipse" title="Ellipse (O)"><i class="ic sm ic-circle"></i></button>
+                <button class="tool" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tNode" title="Edit nodes (A)"><i class="ic sm ic-node"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (I)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="100" max="1600" value="1600" aria-label="Zoom">
+                <span class="val zval">1600%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
+                <div class="menuitem"><i class="ic ic-node"></i> Edit nodes <span class="sc">A</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">I</span></div>
+              </div>
+            </div>
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#4c6fff,#9a5cff)"></span>
+                    <span class="cap"><span class="nm">spinner-reference</span><span class="ago">20 minutes ago</span></span>
+                    <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button><button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button><button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button></span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>
+                    <span class="cap"><span class="nm">loading-states</span><span class="ago">3 days ago</span></span>
+                    <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button><button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button><button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="240" data-max="440"></div>
+
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCnt">2</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow" id="lrArc"><i class="ic ic-bezier"></i><span class="nm">Arc</span>
+                  <i class="ic sm ic-loop wt-off" id="lrArcMot" title="This layer has motion"></i>
+                  <i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrTrack"><i class="ic ic-circle"></i><span class="nm">Track</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="360"></div>
+
+            <div class="dgrp" id="gProps">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer</div>
+
+                <div id="propsShape" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Geometry <span class="mut">units</span></div>
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">X</span><input id="pX" value="4" aria-label="X"></span>
+                      <span class="stepper sm"><span class="k">Y</span><input id="pY" value="4" aria-label="Y"></span>
+                      <span class="stepper sm"><span class="k">W</span><input id="pW" value="8" aria-label="Width"></span>
+                      <span class="stepper sm"><span class="k">H</span><input id="pH" value="8" aria-label="Height"></span>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <div class="sec-h">Motion <span class="mut" id="pMotMut">none</span></div>
+                    <div class="irow"><span class="rl">Motion</span>
+                      <span class="select" id="selMotion" tabindex="0" role="button"><span class="lead" id="motKind">None</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <p class="note" id="motNote">Motion sits on the layer, not on the document. That is what lets one part of a two-part glyph move while the other stays put.</p>
+
+                    <div id="secTiming" class="wt-off">
+                      <div class="irow"><span class="rl">Per turn</span>
+                        <span class="stepper sm" style="width:100%"><span class="k">s</span><input id="pDur" value="1.2" aria-label="Seconds per turn"></span>
+                      </div>
+                      <div class="irow" style="grid-template-columns:1fr"><span class="rl">Easing</span>
+                        <span class="seg pseg" role="group" aria-label="Easing">
+                          <button class="on" id="easLin">Linear</button>
+                          <button id="easInOut">Ease in-out</button>
+                          <button id="easSpring">Spring</button>
+                        </span>
+                      </div>
+                      <div class="irow"><span class="rl">Repeat</span>
+                        <span class="select" id="selRepeat" tabindex="0" role="button"><span class="lead" id="repVal">Forever</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      </div>
+                      <div class="irow"><span class="rl">Around</span>
+                        <span class="select" id="selOrigin" tabindex="0" role="button"><span class="lead" id="oriVal">Its own center</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      </div>
+                      <p class="note" id="timNote">Spin arrives already set to <b>Forever</b> and <b>Linear</b>, because that is what a spinner is. Neither is locked: they are just the answer you would have picked.</p>
+                      <div class="il-caution wt-off" id="easeWarn">
+                        <i class="ic sm ic-warning"></i>
+                        <p><b>Easing fights a loop that never ends.</b> The turn slows to a stop at 100% and starts again from nothing, so it hesitates once every turn. Easing is for a motion that begins and finishes.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="section wt-off" id="secCycle">
+                    <div class="sec-h">One turn <span class="mut" id="pCycMut">2 keys</span></div>
+                    <div class="il-cyc" id="ilCyc">
+                      <span class="il-kseg" style="left:4%;width:92%"></span>
+                      <span class="il-kd" style="left:4%"></span>
+                      <span class="il-kd" style="left:96%"></span>
+                      <span class="il-head"></span>
+                    </div>
+                    <div class="il-cycax"><span>0&#176;</span><span>180&#176;</span><span>360&#176;</span></div>
+                    <div class="irow"><span class="rl">Loop check</span><span class="field" style="width:100%"><span class="v il-ok" id="pSeam">Ends where it starts</span></span></div>
+                    <p class="note" id="cycNote">Two keys and nothing between them to decide. Because the last key is the first key turned all the way round, there is no visible seam, which is the one thing a repeating animation has to get right and the one thing nobody checks by eye.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="420"></div>
+
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg">
+                    <button class="on" data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button data-scope="systems" data-scope-name="Systems">Systems</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search the set" aria-label="Search the set"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile sel" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8" opacity=".22"/><path d="M12 4a8 8 0 0 1 8 8"/></svg></span><span class="cap"><span class="nm">loading-spinner</span><span class="mt">24 &#215; 24</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.8 9.8 17.6 19 8.4"/></svg></span><span class="cap"><span class="nm">check</span><span class="mt">24 &#215; 24</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Glyph frame</span><span class="mt">24 &#215; 24</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div style="padding:0 var(--pad-sm)">
+                    <div class="styrow"><span class="sw" style="background:#0c0e14"></span><span class="nm">Glyph / stroke 1.75</span><span class="use">200 uses</span></div>
+                    <div class="styrow"><span class="sw" style="background:#9a5cff"></span><span class="nm">Motion / steady turn</span><span class="use">1 use</span></div>
+                  </div>
+                  <p class="note" style="padding:var(--gap-sm) var(--pad-sm) 0">One turn saved as a style is how every busy indicator in a product ends up turning at the same rate, which is a thing people notice without being able to say why.</p>
+                </div>
+                <div data-scope-body="systems" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="motMenu" style="position:absolute;right:var(--s4);top:264px;width:238px;z-index:11">
+            <div class="mlabel">Attention</div>
+            <div class="menuitem"><i class="ic ic-loop"></i> Pulse</div>
+            <div class="menuitem"><i class="ic ic-refresh"></i> Wiggle</div>
+            <div class="menuitem"><i class="ic ic-arrow-up"></i> Bounce</div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Continuous</div>
+            <div class="menuitem" id="miSpin"><i class="ic ic-rotate-right"></i> Spin</div>
+            <div class="menuitem"><i class="ic ic-opacity"></i> Breathe</div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-keyframe"></i> Custom&#8230;</div>
+          </div>
+
+          <div class="popover menu pop" id="oriMenu" style="position:absolute;right:var(--s4);top:452px;width:232px;z-index:11">
+            <div class="menuitem">Its own center</div>
+            <div class="menuitem" id="miArtCenter"><i class="ic ic-aperture"></i> The artboard center</div>
+            <div class="menuitem"><i class="ic ic-cursor"></i> A point you pick&#8230;</div>
+          </div>
+
+          <div class="popover menu pop" id="spdMenu" style="position:absolute;left:var(--s4);top:76px;width:180px;z-index:11">
+            <div class="menuitem">1&#215;</div>
+            <div class="menuitem">0.25&#215; &#183; slow</div>
+            <div class="menuitem">0.1&#215; &#183; very slow</div>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:120px;width:238px;z-index:11">
+            <div class="menuitem"><i class="ic ic-loop"></i> Add motion&#8230; <span class="sc">&#8679;&#8984;M</span></div>
+            <div class="menuitem"><i class="ic ic-copy"></i> Copy motion</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save motion as a style</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:236px;z-index:11">
+            <div class="menuitem"><i class="ic ic-plus"></i> Add drawing to the set <span class="sc">&#8679;&#8984;A</span></div>
+            <div class="menuitem"><i class="ic ic-import"></i> Import glyphs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Pick the part that moves"
+          data-cue="#lrArc" data-cue-label="Click the Arc layer" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrArc" data-show="#ilSel,#propsShape" data-hide="#propsEmpty"
+          data-set="#propKind=Glyph">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Arc</b> layer</p>
+          <p class="wt-where">the Layers group, at the top of the dock</p>
+          <p class="wt-res">Properties fills in for the arc alone, and the faint <b>Track</b> behind it stays unselected. A spinner is two shapes where only one of them moves, so the first decision is not "animate this icon", it is <b>which part</b>.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Make it spin"
+          data-cue="#selMotion" data-cue-label="Click the Motion row" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrArc" data-pop="#motMenu"
+          data-show="#ilSel,#propsShape" data-hide="#propsEmpty"
+          data-set="#propKind=Glyph">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do">the <b>Motion</b> row</p>
+          <p class="wt-where">Properties, in the Motion section</p>
+          <p class="wt-res">the same short list of named motions opens as on every other glyph, and <b>Spin</b> is under <b>Continuous</b> rather than <b>Attention</b>. That split is the only place the app says out loud that some motions end and some do not.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="And it goes wrong in the ordinary way"
+          data-cue="#miSpin" data-cue-label="Click Spin" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrArc" data-pop="#motMenu"
+          data-show="#propsShape,#secTiming,#lrArcMot,#ilHint" data-hide="#ilSel,#propsEmpty"
+          data-class="#ilArc=il-anim|#ilWin=il-play"
+          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#chipMotion=spin|#chipCycle=1.2s &#183; forever|#motNote=Spin arrives with Repeat already on Forever, because a spinner with a count is not a spinner.">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>Spin</b></p>
+          <p class="wt-where">the motion list, under Continuous</p>
+          <p class="wt-res">the arc starts turning and <b>it is wrong</b>. It swings around its own middle and orbits the artboard instead of spinning in place, because the obvious default for "turn this shape" is the shape's own center and an arc's center is not the circle's center. Everyone meets this once. The fix is one row down.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Give it the right point to turn around"
+          data-cue="#selOrigin" data-cue-label="Click Around, choose The artboard center" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrArc" data-pop="#oriMenu"
+          data-show="#propsShape,#secTiming,#lrArcMot,#ilHint,#ilOrigin" data-hide="#ilSel,#propsEmpty"
+          data-class="#ilArc=il-anim il-true|#ilWin=il-play"
+          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#chipMotion=spin|#chipCycle=1.2s &#183; forever|#timNote=The point it turns around is drawn on the artboard while you are choosing it, so this is a thing you see rather than a thing you work out.">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do">the <b>Around</b> row, and choose <b>The artboard center</b></p>
+          <p class="wt-where">Properties, under Motion</p>
+          <p class="wt-res">the orbit becomes a spin. A crosshair appears at 12, 12 while you are choosing, so the point it turns around is something you <b>see</b> rather than something you deduce from the wobble. This row is the difference between the mock being honest and the mock being pretty.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Set how long one turn takes"
+          data-cue="#pDur" data-cue-label="Type 0.9 in Per turn" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrArc"
+          data-show="#propsShape,#secTiming,#lrArcMot,#ilHint" data-hide="#ilSel,#propsEmpty"
+          data-class="#ilArc=il-anim il-true|#ilWin=il-play"
+          data-css="#ilWin=--il-dur:0.9s"
+          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#pDur=0.9|#chipMotion=spin|#chipCycle=0.9s &#183; forever">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>0.9</b> in the <b>Per turn</b> field</p>
+          <p class="wt-where">Properties, under Motion</p>
+          <p class="wt-res">the whole of the timing, in one field. Notice the label: <b>per turn</b>, not duration, because the thing has no duration. The preview changes rate as you type rather than after you commit, which is what makes a number this subjective possible to pick at all.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Try to ease it, and be told why not"
+          data-cue="#easInOut" data-cue-label="Click Ease in-out" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrArc" data-activate="#easInOut"
+          data-show="#propsShape,#secTiming,#lrArcMot,#ilHint,#easeWarn" data-hide="#ilSel,#propsEmpty"
+          data-class="#ilArc=il-anim il-true|#ilWin=il-play"
+          data-css="#ilWin=--il-dur:0.9s;--il-ease:cubic-bezier(.4,0,.2,1)"
+          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#pDur=0.9|#chipMotion=spin|#chipCycle=0.9s &#183; forever">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do"><b>Ease in-out</b></p>
+          <p class="wt-where">the Easing row</p>
+          <p class="wt-res">the turn now hesitates once every pass, and the panel says why <b>underneath the control that caused it</b> rather than in a dialog you have to dismiss. Easing describes something that starts and finishes; on a loop with no end it just puts a stutter at the seam. Nothing is blocked: you can leave it this way if that is what you meant.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Put it back"
+          data-cue="#easLin" data-cue-label="Click Linear" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrArc" data-activate="#easLin"
+          data-show="#propsShape,#secTiming,#secCycle,#lrArcMot,#ilHint" data-hide="#ilSel,#propsEmpty,#easeWarn"
+          data-class="#ilArc=il-anim il-true|#ilWin=il-play"
+          data-css="#ilWin=--il-dur:0.9s;--il-ease:linear"
+          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#pDur=0.9|#chipMotion=spin|#chipCycle=0.9s &#183; forever">
+        <div class="wt-cap comp">
+          <span class="wt-n">7</span>
+          <p class="wt-do"><b>Linear</b></p>
+          <p class="wt-where">the Easing row</p>
+          <p class="wt-res">the stutter goes and the caution goes with it. A <b>One turn</b> section is now showing what the motion actually is: two keys, 0&#176; and 360&#176;, and a <b>loop check</b> that says it ends where it starts. That check is the only thing a repeating animation must get right, and it is the thing nobody catches by eye.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Watch it at the size it will really be"
+          data-cue="#sz16" data-cue-label="Look at the 16 point copy" data-cue-place="bottom"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-select="#lrArc" data-activate="#easLin"
+          data-show="#propsShape,#secTiming,#secCycle,#lrArcMot,#ilHint" data-hide="#ilSel,#propsEmpty,#easeWarn,#ilOrigin"
+          data-class="#ilArc=il-anim il-true|#ilWin=il-play"
+          data-css="#ilWin=--il-dur:0.9s;--il-ease:linear"
+          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#pDur=0.9|#chipMotion=spin|#chipCycle=0.9s &#183; forever">
+        <div class="wt-cap comp">
+          <span class="wt-n">8</span>
+          <p class="wt-do">at the <b>16</b> copy, turning at the same rate as the 48</p>
+          <p class="wt-where">the Real size card</p>
+          <p class="wt-res">a spinner is the one motion that survives being small, because the eye reads the sweep rather than the distance. Compare that with the pulse on <button class="link" data-target="icon-animate-wt">Make an icon pulse</button>, which vanished at 16 and had to be made bigger. <b>Nothing in this flow had an end, a ruler or a playhead in it</b>, and nothing was missing.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the still spinner"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A continuous motion is <b>one cycle and the word forever</b>. There is no duration to give it and no last frame to draw, so a timeline has nothing to measure. Two fields and a named motion cover the whole thing.</p></div>
+    <div class="c"><div class="lab g2">The part worth arguing about</div><p>The <b>Around</b> row. A rotation needs a point, the sensible-looking default is wrong for arcs, crescents and hands, and you only find out by watching it wobble. Showing the crosshair while you choose turns a puzzle into a glance.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>The <b>loop check</b> could do more than confirm the ends match. It could catch the real seam bugs: a value that drifts a fraction each pass, a motion whose duration is not a multiple of a sibling's so two spinners slowly fall out of step.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should easing on a forever loop be a <b>caution</b>, as drawn here, or should the app simply not offer it? Cautions that are always right get ignored; controls that are quietly missing get reported as bugs.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch and single-choice segmented controls
+     stay live when a person clicks them directly. The walkthrough drives the
+     same state declaratively. */
+  (function () {
+    var root = document.getElementById('icon-loop-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () { bs.forEach(function (x) { x.classList.toggle('on', x === b); }); });
+      });
+    });
+    /* the pause button really pauses: a preview you cannot stop is the first
+       thing anyone complains about */
+    var play = root.querySelector('#btnPlay');
+    if (play) {
+      play.addEventListener('click', function () {
+        var win = root.querySelector('#ilWin');
+        var running = win.classList.toggle('il-play');
+        /* tooltip.js moved `title` into `data-tip` and removed it, so the
+           label has to be updated where it now lives. */
+        var label = running ? 'Pause the preview|Space' : 'Play the preview|Space';
+        if (play.hasAttribute('data-tip')) play.setAttribute('data-tip', label);
+        else play.title = running ? 'Pause the preview (Space)' : 'Play the preview (Space)';
+        play.setAttribute('aria-label', running ? 'Pause the preview' : 'Play the preview');
+      });
+    }
+  })();
+</script>
+</body>
+</html>

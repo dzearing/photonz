@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.611Z",
-  "updated": "2026-09-14T14:04:11.862Z",
+  "updated": "2026-09-14T15:14:43.953Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon"
   ],
@@ -37,6 +37,10 @@
     {
       "t": "2026-09-14T14:04:11.862Z",
       "note": "deps set: mock first, then compare, then decide"
+    },
+    {
+      "t": "2026-09-14T15:14:43.952Z",
+      "note": "The five animation clickthroughs are built and pushed: icon-animate-wt, icon-loop-wt, icon-states-wt, icon-drawon-wt, icon-export-anim-wt, all in the Icons group of the mock index. You have something to compare now.\n\nThree things to carry into the comparison, found while drawing them:\n\n1) They overlap in exactly ONE place, and it is narrower than it looks. Icon keys are PERCENTAGES OF A CYCLE (0%, 50%, 100%) because a loop that repeats has no absolute time to sit on, and that is also literally what a CSS keyframe and a SMIL keyTimes are. Video keys are ABSOLUTE SECONDS on a document with a last frame. Those are not the same ruler and cannot share one.\n\n2) Three of the four scenarios have no time axis at all. A spinner is one turn plus the word forever, so a ruler with an end cannot draw it. A toggle is two drawings and a crossing. Only the draw-on badge has an order in it, and two shapes in order came out as a two row list with numbers, not a track.\n\n3) The consolidation worth having is probably NOT icons with video. It is icon states with COMPONENT VARIANTS: the same named list, the same differs-in-this-state count, the same crossing duration. Built separately they will drift. See icon-states-wt and pages/ui-variants.\n\nAND THE GAP THIS STUDY LEAVES, which the comparison should decide: no page shows a WHOLE SET animating together, and that is exactly where the two row order list breaks down and a real timeline starts to earn its place. If the answer is a timeline, that is the case that proves it. Please widen this task to answer it rather than filing a near-twin."
     }
   ]
 }

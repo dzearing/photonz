@@ -1,0 +1,31 @@
+{
+  "feature": "How somebody actually animates an icon",
+  "epic": "icon-svg",
+  "summary": "There are now five clickthroughs for animating an icon, sitting beside the ten video ones so the two can be argued about. They deliberately do not look like the video flows: no playhead, no ruler in seconds, no track list, because an icon animation is under a second and repeats, so there is no frame worth finding.",
+  "setup": "Design dashboard at http://127.0.0.1:8791. Nothing to build and nothing in the app changed. Open the left rail, Usage clickthroughs, Icons. The five new pages are marked new. Every page moves for real, so the motion in each screenshot is the motion the page is describing.",
+  "try": [
+    { "do": "Open Icons and click Make an icon pulse, then step through it. Motion is a property of the layer, picked by name.", "shot": "2026-09-14-icon-animate-1.png" },
+    { "do": "On step 7 of that page, set the preview to 0.25x. That is what replaces scrubbing." },
+    { "do": "Open Build a spinner that never stops and go to step 3, where it is deliberately wrong: the arc orbits instead of spinning because it turns around its own centre. Step 4 fixes it.", "shot": "2026-09-14-icon-loop-1.png" },
+    { "do": "Open Animate a toggle between two states. Two artboards, one crossing, no time axis at all. Step 6 is the hole: an SVG cannot feel a tap.", "shot": "2026-09-14-icon-states-1.png" },
+    { "do": "Open Draw a checkmark on and watch step 6, where the check starts 80ms before the ring closes. This is the only flow with an order in it.", "shot": "2026-09-14-icon-drawon-1.png" },
+    { "do": "Open Hand the animated icon over. The sheet asks where the file is going before it asks for a format, then says what survives the trip.", "shot": "2026-09-14-icon-export-1.png" },
+    { "do": "On any of the five, press the pause button on the Real size card, then narrow the browser to about 980 points." }
+  ],
+  "evaluate": [
+    "Is a named motion list the right front door, or would you rather change the glyph and have the app record a key the way Move a graphic does?",
+    "Does watching the icon loop at 16, 24, 32 and 48 tell you more than a playhead would, or do you miss being able to stop on a pose?",
+    "The spinner page spends two steps on the point a rotation turns around. Is that worth two steps, or is it a bug the app should just not have?",
+    "The toggle page says icon states are the same idea as component variants. Do you agree, and should they be one feature?",
+    "The draw-on page answers and then what happens with a two row list instead of a timeline. At what number of shapes does that stop being enough for you?",
+    "Should the export sheet change the format for you when the destination cannot carry it, or only warn?"
+  ],
+  "rough": [
+    "Five pages and 37 steps is a lot to read before forming a view. The next task in this set compares them with the video flows, which is where the summary belongs, but if you want the short version now it is: they overlap in one place only, a document with a duration and keyframes, and icons do not need that document.",
+    "No page shows a whole SET animating together, which is exactly where a two row order list would break down and a real timeline would start to earn its place. That is the strongest argument for a timeline and it is the one thing this study does not picture.",
+    "The one cycle strip on the pulse page is the closest thing here to a timeline and it is a hedge. If the comparison decides icons want a track, that strip is the seed of it.",
+    "The list of five named motions (Pulse, Wiggle, Bounce, Spin, Breathe) is invented rather than researched. Presets lists grow.",
+    "On the toggle page, the full explanation of why a tap cannot be exported needs the Properties panel scrolled down; only the short version, needs the host, is visible next to the control.",
+    "These screenshots are browser captures of the mock pages, not captures of the Photonz app, because this task changes nothing under Sources and there is no app surface to photograph."
+  ]
+}

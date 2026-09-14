@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz &#183; icon-export-anim-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* icon-export-anim-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
+     screen, rendered once, driven by the steps below. ONE scenario.
+
+     Getting an animated icon out is not a format picker, it is a question about
+     WHERE IT IS GOING, and the honest answer differs enormously between one
+     destination and the next. The same animated SVG runs perfectly on a web
+     page, is thrown away by a design tool, and is stripped by a README. A
+     format list alone cannot tell you that, so this sheet asks for the
+     destination first and then says what survives the trip.
+
+     Nothing here is invented to look clever. Every constraint on this page is a
+     real one: a picture in an img tag runs its own CSS and SMIL but gets no
+     events and loads nothing external, which is exactly why the toggle from
+     "Animate a toggle between two states" cannot be handed over whole.
+
+     Page-local CSS is the export sheet, the survives/does not list and the size
+     comparison. Everything else is the shared DS. */
+  #icon-export-anim-wt .win.shell{height:846px;min-height:0}
+  #icon-export-anim-wt .canvas{--artboard-glow:520px 360px}
+
+  #icon-export-anim-wt .iex-board{position:relative;height:min(340px,62%);width:auto;aspect-ratio:1;
+    border-radius:var(--r4);background:var(--panel);border:1px solid var(--line-strong);
+    box-shadow:0 26px 56px -20px rgba(0,0,0,.5);color:var(--ink)}
+  #icon-export-anim-wt .iex-board svg.art{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #icon-export-anim-wt #iexMinorPat path{stroke:var(--line)}
+  #icon-export-anim-wt .iex-live{fill:none;stroke:var(--accent);stroke-width:.05;stroke-dasharray:.42 .3;opacity:.55}
+  #icon-export-anim-wt .iex-glyph{fill:none;stroke:currentColor;stroke-width:1.75;
+    stroke-linecap:round;stroke-linejoin:round}
+
+  @keyframes iexPulse{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+  #icon-export-anim-wt .iex-anim{transform-box:view-box;transform-origin:50% 50%;
+    animation:iexPulse .9s cubic-bezier(.4,0,.2,1) infinite;animation-play-state:paused}
+  #icon-export-anim-wt .iex-prev svg{animation:iexPulse .9s cubic-bezier(.4,0,.2,1) infinite;
+    animation-play-state:paused}
+  #icon-export-anim-wt .iex-play .iex-anim,#icon-export-anim-wt .iex-play .iex-prev svg{animation-play-state:running}
+  @media (prefers-reduced-motion:reduce){
+    #icon-export-anim-wt .iex-anim,#icon-export-anim-wt .iex-prev svg{animation:none}
+  }
+
+  /* ---------- THE EXPORT SHEET · one decision about this document ---------- */
+  #icon-export-anim-wt .iex-grid{display:grid;grid-template-columns:190px 1fr;gap:var(--gap)}
+  #icon-export-anim-wt .iex-prev{position:relative;display:grid;place-items:center;
+    border-radius:var(--r3);background:var(--panel-2);border:1px solid var(--line);
+    min-height:172px;color:var(--ink)}
+  #icon-export-anim-wt .iex-prev .iex-tag{position:absolute;left:9px;top:8px;font-size:9px;
+    letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+  #icon-export-anim-wt .iex-prev .iex-fn{position:absolute;left:9px;right:9px;bottom:8px;
+    font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis}
+  #icon-export-anim-wt .iex-col{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #icon-export-anim-wt .iex-eyebrow{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:660;color:var(--faint)}
+
+  /* what survives the trip · the point of the whole sheet */
+  #icon-export-anim-wt .iex-surv{display:flex;flex-direction:column;gap:3px;
+    padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r2);
+    background:var(--panel-2);border:1px solid var(--line)}
+  #icon-export-anim-wt .iex-srow{display:grid;grid-template-columns:15px 1fr auto;align-items:center;
+    gap:var(--gap-sm);font-size:11.5px;color:var(--dim)}
+  #icon-export-anim-wt .iex-srow .ic{width:13px;height:13px}
+  #icon-export-anim-wt .iex-srow.yes .ic{color:var(--good)}
+  #icon-export-anim-wt .iex-srow.no .ic{color:var(--crit)}
+  #icon-export-anim-wt .iex-srow.no .nm{color:var(--faint);text-decoration:line-through;
+    text-decoration-color:color-mix(in srgb,var(--crit) 60%,transparent)}
+  #icon-export-anim-wt .iex-srow .nm{color:var(--ink)}
+  #icon-export-anim-wt .iex-srow .why{font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+
+  /* the size argument, which is the quiet reason to stay vector */
+  #icon-export-anim-wt .iex-size{display:flex;align-items:center;gap:var(--gap-sm);
+    font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+  #icon-export-anim-wt .iex-size b{color:var(--good);font-weight:660}
+  #icon-export-anim-wt .iex-size s{color:var(--faint);opacity:.8}
+
+  #icon-export-anim-wt .iex-caution{display:flex;gap:var(--gap-sm);align-items:flex-start;
+    padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r2);
+    background:color-mix(in srgb,var(--warn) 10%,transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 36%,transparent)}
+  #icon-export-anim-wt .iex-caution .ic{color:var(--warn);flex:none;margin-top:1px}
+  #icon-export-anim-wt .iex-caution p{margin:0;font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #icon-export-anim-wt .iex-caution b{color:var(--ink);font-weight:600}
+
+  #icon-export-anim-wt .iex-gap{display:flex;gap:var(--pad-sm);align-items:flex-start;
+    padding:var(--pad-sm) var(--pad);border-radius:var(--r3);margin:0 0 var(--gap);
+    background:color-mix(in srgb,var(--warn) 9%,transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 34%,transparent)}
+  #icon-export-anim-wt .iex-gap .ic{color:var(--warn);flex:none;margin-top:1px}
+  #icon-export-anim-wt .iex-gap p{margin:0;font-size:12.5px;line-height:1.55;color:var(--dim)}
+  #icon-export-anim-wt .iex-gap b{color:var(--ink);font-weight:600}
+
+  #icon-export-anim-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
+    color:var(--ink);aspect-ratio:16/10}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="icon-export-anim-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Hand the animated icon over</h2><span class="k">&#183; usage clickthrough &#183; one scenario</span></div>
+
+  <p class="pglead">One job: the bell pulses, and now somebody else needs the file.
+    Getting an animated icon out is <b>not a format picker</b>. The same animated SVG runs perfectly on a web page,
+    is thrown away the moment a design tool imports it, and is stripped out of a README before anyone sees it. A list of
+    formats cannot tell you any of that, so this sheet asks <b>where it is going</b> first and then says, in plain words,
+    <b>what survives the trip</b>. Six real clicks on ONE screen, which never re-renders below.</p>
+
+  <div class="iex-gap">
+    <i class="ic sm ic-warning"></i>
+    <p><b>Photonz exports no SVG at all today</b>, animated or still, so all of this is a proposal. The constraints it
+      describes are real ones though, not invented for the mock: a picture in an image tag runs its own CSS and SMIL but
+      receives no clicks and loads nothing from outside itself, which is exactly why the toggle from
+      <button class="link" data-target="icon-states-wt">Animate a toggle between two states</button> cannot be handed over whole.</p>
+  </div>
+
+  <div class="wt" id="wtExport">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell" id="iexWin" data-shell="notification-bell &#183; 24 &#215; 24 &#183; SVG" data-ws="ui"
+           data-status='<span id="chipMotion">pulse &#183; forever</span>'>
+
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Document</div>
+          <div class="menuitem" id="miExport"><i class="ic ic-export"></i> Export&#8230; <span class="sc">&#8679;&#8984;E</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy as SVG <span class="sc">&#8997;&#8984;C</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">&#8997;&#8984;L</span></div>
+        </div>
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="iex-board" id="iexBoard">
+                <svg class="art" viewBox="0 0 24 24" aria-label="Icon artboard, 24 by 24 units">
+                  <defs>
+                    <pattern id="iexMinorPat" width="1" height="1" patternUnits="userSpaceOnUse">
+                      <path d="M0 0H1M0 0V1" fill="none" stroke="currentColor" stroke-width=".03"/>
+                    </pattern>
+                  </defs>
+                  <rect x="0" y="0" width="24" height="24" fill="url(#iexMinorPat)"/>
+                  <rect class="iex-live" x="2" y="2" width="20" height="20" rx=".4"/>
+                  <g id="iexGlyph" class="iex-anim">
+                    <path class="iex-glyph" d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/>
+                    <path class="iex-glyph" d="M9.9 17.9q2.1 2.5 4.2 0"/>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (&#8997;&#8984;L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tRect" title="Rectangle (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool" id="tEllipse" title="Ellipse (O)"><i class="ic sm ic-circle"></i></button>
+                <button class="tool" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tNode" title="Edit nodes (A)"><i class="ic sm ic-node"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (I)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="100" max="1600" value="1600" aria-label="Zoom">
+                <span class="val zval">1600%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
+                <div class="menuitem"><i class="ic ic-node"></i> Edit nodes <span class="sc">A</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">I</span></div>
+              </div>
+            </div>
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#9a5cff,#4c6fff)"></span>
+                    <span class="cap"><span class="nm">bell-reference</span><span class="ago">26 minutes ago</span></span>
+                    <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button><button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button><button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button></span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">handoff-notes</span><span class="ago">yesterday</span></span>
+                    <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button><button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button><button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="240" data-max="440"></div>
+
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">1</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow sel" id="lrBell"><i class="ic ic-bezier"></i><span class="nm">Bell</span>
+                  <i class="ic sm ic-loop" title="This layer has motion"></i>
+                  <i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="360"></div>
+
+            <div class="dgrp" id="gProps">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Glyph</span></div>
+              <div class="dgrp-b">
+                <div class="section">
+                  <div class="sec-h">Motion <span class="mut">pulse</span></div>
+                  <div class="irow"><span class="rl">Motion</span>
+                    <span class="select" tabindex="0" role="button"><span class="lead">Pulse</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                  </div>
+                  <div class="irow"><span class="rl">Over</span><span class="field" style="width:100%"><span class="k">s</span><span class="v">0.9</span></span></div>
+                  <div class="irow"><span class="rl">Repeat</span><span class="field" style="width:100%"><span class="v">Forever</span></span></div>
+                  <p class="note">Built on <button class="link" data-target="icon-animate-wt">Make an icon pulse</button>. This page picks the glyph up where that one left it and gets it out of the app.</p>
+                </div>
+                <div class="section">
+                  <div class="sec-h">Hand-off <span class="mut">2 saved</span></div>
+                  <div class="actstack">
+                    <button class="btn secondary sm block" id="btnExport"><i class="ic sm ic-export"></i> Export&#8230;</button>
+                    <button class="btn ghost sm block"><i class="ic sm ic-copy"></i> Copy as SVG</button>
+                  </div>
+                  <p class="note">Copying as SVG puts the whole file, animation and all, on the clipboard. For a glyph this size that is often the entire hand-off.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="420"></div>
+
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg">
+                    <button class="on" data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button data-scope="systems" data-scope-name="Systems">Systems</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search the set" aria-label="Search the set"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile sel" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/><path d="M9.9 17.9q2.1 2.5 4.2 0"/></svg></span><span class="cap"><span class="nm">notification-bell</span><span class="mt">animated</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8" opacity=".22"/><path d="M12 4a8 8 0 0 1 8 8"/></svg></span><span class="cap"><span class="nm">loading-spinner</span><span class="mt">animated</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Glyph frame</span><span class="mt">24 &#215; 24</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div style="padding:0 var(--pad-sm)">
+                    <div class="styrow"><span class="sw" style="background:#0c0e14"></span><span class="nm">Glyph / stroke 1.75</span><span class="use">200 uses</span></div>
+                    <div class="styrow"><span class="sw" style="background:#9a5cff"></span><span class="nm">Motion / attention pulse</span><span class="use">3 uses</span></div>
+                  </div>
+                  
+                </div>
+                <div data-scope-body="systems" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:120px;width:238px;z-index:11">
+            <div class="menuitem"><i class="ic ic-export"></i> Export&#8230; <span class="sc">&#8679;&#8984;E</span></div>
+            <div class="menuitem"><i class="ic ic-copy"></i> Copy as SVG</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:236px;z-index:11">
+            <div class="menuitem"><i class="ic ic-plus"></i> Add drawing to the set <span class="sc">&#8679;&#8984;A</span></div>
+            <div class="menuitem"><i class="ic ic-import"></i> Import glyphs</div>
+          </div>
+        </div>
+
+        <!-- THE EXPORT SHEET · one decision about THIS document, hinged to the
+             top of the window it belongs to -->
+        <div class="dlg-scrim wt-off" id="exScrim">
+          <!-- the destination list belongs to the sheet, so it is positioned
+               inside the scrim and sits directly under its own control -->
+          <div class="popover menu pop" id="destMenu" style="position:absolute;left:calc(50% - 78px);top:100px;width:290px;z-index:30">
+            <div class="menuitem" id="miWeb"><i class="ic ic-window"></i> A web page</div>
+            <div class="menuitem" id="miReadme"><i class="ic ic-document"></i> A README on a code host</div>
+            <div class="menuitem"><i class="ic ic-component"></i> A design tool</div>
+            <div class="menuitem"><i class="ic ic-display"></i> An app bundle</div>
+          </div>
+          <div class="dlg sheet wide" role="dialog" aria-label="Export notification-bell">
+            <div class="dlg-h"><i class="ic ic-export"></i><b>Export notification-bell</b></div>
+            <div class="dlg-b">
+              <div class="iex-grid">
+                <div class="iex-prev">
+                  <span class="iex-tag">preview &#183; what ships</span>
+                  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.6 16.2h12.8l-1.2-2.7V9.4a5.2 5.2 0 0 0-10.4 0v4.1L5.6 16.2Z"/><path d="M9.9 17.9q2.1 2.5 4.2 0"/></svg>
+                  <span class="iex-fn" id="exFn">notification-bell.svg</span>
+                </div>
+
+                <div class="iex-col">
+                  <div>
+                    <div class="iex-eyebrow">Where it is going</div>
+                    <span class="select block" id="selDest" tabindex="0" role="button" style="margin-top:5px">
+                      <span class="lead" id="destVal">Choose a destination</span><span class="car"><i class="ic xs ic-chevron-down"></i></span>
+                    </span>
+                  </div>
+
+                  <div>
+                    <div class="iex-eyebrow">Format</div>
+                    <span class="seg pseg" role="group" aria-label="Format" style="margin-top:5px;width:100%">
+                      <button class="on" id="fmtSvg">Animated SVG</button>
+                      <button id="fmtLottie">Lottie</button>
+                      <button id="fmtVideo">Video</button>
+                      <button id="fmtStill">Still</button>
+                    </span>
+                  </div>
+
+                  <div class="iex-surv" id="exSurv">
+                    <div class="iex-srow yes"><i class="ic sm ic-check"></i><span class="nm">The motion</span><span class="why" id="whyMotion">runs in the file</span></div>
+                    <div class="iex-srow yes"><i class="ic sm ic-check"></i><span class="nm">Repeating forever</span><span class="why">no last frame needed</span></div>
+                    <div class="iex-srow yes"><i class="ic sm ic-check"></i><span class="nm">Sharp at every size</span><span class="why">still vector</span></div>
+                    <div class="iex-srow yes" id="srowColor"><i class="ic sm ic-check"></i><span class="nm">Follows the text colour</span><span class="why">currentColor kept</span></div>
+                    <div class="iex-srow no"><i class="ic sm ic-x"></i><span class="nm">Reacting to a tap</span><span class="why">the host does that</span></div>
+                  </div>
+
+                  <div class="iex-caution wt-off" id="destWarn">
+                    <i class="ic sm ic-warning"></i>
+                    <p><b>A README strips this out.</b> Code hosting sanitises uploaded SVG, so the animation is removed and
+                      often the whole picture with it. For a README, ship a <b>short video</b> and keep the SVG for the product.</p>
+                  </div>
+
+                  <div class="iex-size" id="exSize">
+                    <span>Animated SVG <b>1.2 KB</b></span>
+                    <span>&#183;</span>
+                    <span>the same thing as a GIF <s>74 KB</s></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="dlg-f">
+              <button class="btn ghost" data-dialog-close>Cancel</button>
+              <button class="btn primary" id="btnDoExport"><i class="ic ic-export"></i> Export</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Ask to export it"
+          data-cue="#btnExport" data-cue-label="Click Export" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-class="#iexWin=iex-play">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do"><b>Export</b>, or press <code>&#8679;&#8984;E</code></p>
+          <p class="wt-where">Properties, in the <b>Hand-off</b> section</p>
+          <p class="wt-res">the bell is pulsing on the artboard and has been since you gave it motion. Export sits with the document, not in a menu you have to go hunting for, because handing an icon over is something people do ten times a day rather than once.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="The sheet asks the useful question first"
+          data-cue="#selDest" data-cue-label="Click Where it is going" data-cue-place="bottom"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-class="#iexWin=iex-play|#exScrim=on" data-show="#exScrim">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do">the <b>Where it is going</b> row</p>
+          <p class="wt-where">the export sheet, at the top of the right column</p>
+          <p class="wt-res">the first thing the sheet asks for is <b>not the format</b>. It asks where the file is going, because that is the question that actually decides what happens to the animation, and because most people know their destination and do not know their formats. The preview beside it is running the real motion, not a still.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Say it is going on a web page"
+          data-cue="#miWeb" data-cue-label="Click A web page" data-cue-place="right"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-class="#iexWin=iex-play|#exScrim=on" data-show="#exScrim" data-pop="#destMenu"
+          data-set="#destVal=A web page">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>A web page</b></p>
+          <p class="wt-where">the destination list</p>
+          <p class="wt-res">four honest destinations, and they behave completely differently. A web page is the good case: an animated SVG dropped into an image tag <b>runs its own animation</b>, stays sharp at every size, and still follows the surrounding text colour.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Read what survives, and what does not"
+          data-cue="#exSurv" data-cue-label="Read the survives list" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-class="#iexWin=iex-play|#exScrim=on" data-show="#exScrim"
+          data-set="#destVal=A web page">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do">at the <b>four ticks and one cross</b></p>
+          <p class="wt-where">the middle of the sheet</p>
+          <p class="wt-res">the motion, the forever, the sharpness and the colour all make it. <b>Reacting to a tap does not</b>, because a picture in an image tag receives no clicks, and the sheet says so here rather than letting somebody discover it in review. That one crossed-out line is the most useful thing on this screen.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Change your mind about where it is going"
+          data-cue="#miReadme" data-cue-label="Click A README on a code host" data-cue-place="right"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-class="#iexWin=iex-play|#exScrim=on|#fmtVideo=on|#fmtSvg=-on" data-show="#exScrim,#destWarn" data-pop="#destMenu"
+          data-set="#destVal=A README on a code host|#exFn=notification-bell.mp4|#whyMotion=as frames, not vector">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>A README on a code host</b></p>
+          <p class="wt-where">the destination list</p>
+          <p class="wt-res">the sheet <b>changes its own answer</b>. Code hosts sanitise uploaded SVG, so the animation would be stripped and often the picture with it. The format quietly moves to <b>Video</b>, the file name changes to match, and a plain sentence says why. This is a format picker knowing something about the world, which is the whole reason to ask about the destination at all.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Go back, and notice the size"
+          data-cue="#btnDoExport" data-cue-label="Click Export" data-cue-place="top"
+          data-open="#gLayers,#gProps" data-collapse="#gLibrary"
+          data-class="#iexWin=iex-play|#exScrim=on" data-show="#exScrim" data-hide="#destWarn"
+          data-set="#destVal=A web page|#exFn=notification-bell.svg|#whyMotion=runs in the file">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do"><b>Export</b></p>
+          <p class="wt-where">the bottom right of the sheet</p>
+          <p class="wt-res">back on the good path, and look at the line under the list: the animated SVG is <b>1.2 KB</b> and the same motion as a GIF is <b>74 KB</b>, sixty times bigger and blurry at every size but one. Nobody asks for that comparison and everybody is pleased to see it. The file lands, and the pulse arrives with it.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Close the sheet"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Export asks <b>where it is going</b> before it asks what format, because the destination is the thing that decides whether the animation survives, and it is the thing the person already knows.</p></div>
+    <div class="c"><div class="lab g2">The line that earns the screen</div><p><b>Reacting to a tap does not survive.</b> Saying that at export time, next to four things that do, is worth more than any amount of format detail. The rule it comes from is real: a picture in an image tag runs its own animation but receives no events and loads nothing external.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>The preview could show the icon <b>where it is going</b> rather than on a neutral square: on a page, in a dark toolbar, beside a line of text at 14 points. That is the only way to catch an icon that is right on the artboard and wrong in place.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should the sheet <b>change the format for you</b> when the destination cannot carry it, as drawn here, or only warn? Choosing for people is kind right up until it overrides something they set deliberately.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch and single-choice segmented controls
+     stay live when a person clicks them directly. The walkthrough drives the
+     same state declaratively. */
+  (function () {
+    var root = document.getElementById('icon-export-anim-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () { bs.forEach(function (x) { x.classList.toggle('on', x === b); }); });
+      });
+    });
+    /* the pause button really pauses: a preview you cannot stop is the first
+       thing anyone complains about */
+    var play = root.querySelector('#btnPlay');
+    if (play) {
+      play.addEventListener('click', function () {
+        var win = root.querySelector('#iexWin');
+        var running = win.classList.toggle('iex-play');
+        play.setAttribute('aria-pressed', running ? 'false' : 'true');
+        play.title = running ? 'Pause the preview (Space)' : 'Play the preview (Space)';
+        play.innerHTML = running ? '<i class="ic sm ic-play"></i>' : '<i class="ic sm ic-pause"></i>';
+      });
+    }
+  })();
+</script>
+</body>
+</html>

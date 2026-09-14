@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz &#183; icon-states-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* icon-states-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, driven by the steps below. ONE scenario.
+
+     This is the case with NO TIME AXIS IN IT AT ALL. A toggle is two drawings
+     and a crossing. You are not authoring motion over a duration, you are
+     saying what the icon looks like when it is off, what it looks like when it
+     is on, and how long the change takes. So the canvas holds TWO artboards
+     side by side, neither of which ever animates, and the crossing is shown in
+     the preview where it belongs.
+
+     If that sounds familiar it is because it IS familiar: it is a component
+     with variants, which the app already has a shape for. The consolidation
+     worth noticing is not between icons and video, it is between icon states
+     and component states.
+
+     It is also the flow with the biggest hole in it, and the page says so: an
+     SVG on its own cannot respond to a tap.
+
+     Page-local CSS is the two artboards, the bookmark artwork and the crossing
+     preview. Everything else is the shared DS. */
+  #icon-states-wt .win.shell{height:846px;min-height:0}
+  #icon-states-wt .canvas{--artboard-glow:620px 340px}
+
+  /* ---------- TWO ARTBOARDS · the states themselves, which never move ------ */
+  #icon-states-wt .ist-pair{display:flex;align-items:center;justify-content:center;
+    gap:var(--s5);width:100%;padding:0 var(--s5)}
+  #icon-states-wt .ist-col{display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm)}
+  #icon-states-wt .ist-board{position:relative;width:min(252px,30vw);aspect-ratio:1;
+    border-radius:var(--r4);background:var(--panel);border:1px solid var(--line-strong);
+    box-shadow:0 26px 56px -20px rgba(0,0,0,.5);color:var(--ink)}
+  #icon-states-wt .ist-board.ist-sel{border-color:var(--accent);
+    box-shadow:0 26px 56px -20px rgba(0,0,0,.5),0 0 0 2px color-mix(in srgb,var(--accent) 46%,transparent)}
+  #icon-states-wt .ist-board svg.art{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #icon-states-wt #istMinorPat path{stroke:var(--line)}
+  #icon-states-wt .ist-live{fill:none;stroke:var(--accent);stroke-width:.05;stroke-dasharray:.42 .3;opacity:.5}
+  #icon-states-wt .ist-glyph{fill:none;stroke:currentColor;stroke-width:1.75;
+    stroke-linecap:round;stroke-linejoin:round}
+  #icon-states-wt .ist-glyph.ist-filled{fill:currentColor}
+  #icon-states-wt .ist-cap{display:flex;align-items:center;gap:var(--s2);font-size:11.5px;color:var(--dim)}
+  #icon-states-wt .ist-cap b{color:var(--ink);font-weight:620}
+  #icon-states-wt .ist-cap .ist-def{font-size:9px;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--faint);border:1px solid var(--line);border-radius:999px;padding:1px 7px}
+
+  /* the crossing, drawn between the two boards · it carries its own number */
+  #icon-states-wt .ist-cross{display:flex;flex-direction:column;align-items:center;gap:5px;
+    color:var(--comp);flex:none}
+  #icon-states-wt .ist-cross .ist-lb{font-family:var(--mono);font-size:10px;font-weight:640;
+    color:var(--comp);white-space:nowrap}
+  #icon-states-wt .ist-cross svg{display:block}
+  #icon-states-wt .ist-cross path{fill:none;stroke:var(--comp);stroke-width:1.4;
+    stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- THE CROSSING · only the preview ever animates ---------- */
+  @keyframes istCross{
+    0%,34%  {opacity:0}
+    42%     {opacity:1}
+    84%,100%{opacity:0}
+  }
+  @keyframes istPop{
+    0%,34%  {transform:scale(1)}
+    44%     {transform:scale(var(--ist-pop,1.14))}
+    56%,100%{transform:scale(1)}
+  }
+  #icon-states-wt .ist-sz .ist-on{opacity:0;animation:istCross var(--ist-loop,2s) linear infinite;
+    animation-play-state:paused}
+  #icon-states-wt .ist-sz svg{animation:istPop var(--ist-loop,2s) var(--ist-ease,linear) infinite;
+    animation-play-state:paused;transform-origin:50% 60%}
+  #icon-states-wt .ist-play .ist-sz .ist-on,
+  #icon-states-wt .ist-play .ist-sz svg{animation-play-state:running}
+  @media (prefers-reduced-motion:reduce){
+    #icon-states-wt .ist-sz .ist-on,#icon-states-wt .ist-sz svg{animation:none}
+  }
+
+  /* ---------- REAL SIZE · the only place the crossing is shown ---------- */
+  #icon-states-wt .ist-sizes{position:absolute;left:var(--s4);top:var(--s4);z-index:6;
+    display:flex;flex-direction:column;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    border-radius:var(--r3);background:var(--glass-2);border:1px solid var(--edge-lo);
+    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+  #icon-states-wt .ist-szhead{display:flex;align-items:center;gap:var(--s2)}
+  #icon-states-wt .ist-szhead .ist-t{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:660;color:var(--faint);margin-right:auto}
+  #icon-states-wt .ist-szrow{display:flex;align-items:flex-end;gap:var(--pad-sm)}
+  #icon-states-wt .ist-sz{display:flex;flex-direction:column;align-items:center;gap:5px}
+  #icon-states-wt .ist-sz .px{position:relative;display:grid;place-items:center;border-radius:7px;
+    background:var(--panel-2);border:1px solid var(--line);color:var(--ink);overflow:hidden}
+  #icon-states-wt .ist-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
+  #icon-states-wt .ist-sz .px>svg{position:absolute}
+  #icon-states-wt .ist-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
+
+  /* the States panel group · a list of named states, not a track */
+  #icon-states-wt .ist-srow{display:flex;align-items:center;gap:var(--gap-sm);
+    padding:6px var(--pad-sm);border-radius:var(--r2);cursor:pointer;font-size:12px;color:var(--dim)}
+  #icon-states-wt .ist-srow .nm{flex:1;color:var(--ink);font-weight:560}
+  #icon-states-wt .ist-srow .df{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  #icon-states-wt .ist-srow.sel{background:var(--state-sel);color:var(--state-sel-ink)}
+  #icon-states-wt .ist-srow.sel .nm{color:var(--state-sel-ink)}
+  #icon-states-wt .ist-sw{width:13px;height:13px;border-radius:4px;flex:none;
+    border:1px solid var(--line-strong);background:var(--panel-2)}
+  #icon-states-wt .ist-sw.on{background:currentColor;border-color:transparent;color:var(--ink)}
+
+  #icon-states-wt .ist-caution{display:flex;gap:var(--gap-sm);align-items:flex-start;margin-top:var(--s2);
+    padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r2);
+    background:color-mix(in srgb,var(--warn) 10%,transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 36%,transparent)}
+  #icon-states-wt .ist-caution .ic{color:var(--warn);flex:none;margin-top:1px}
+  #icon-states-wt .ist-caution p{margin:0;font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #icon-states-wt .ist-caution b{color:var(--ink);font-weight:600}
+
+  /* the ONE selection, declared rather than drawn (selection.js). It is on
+     screen while you are choosing the layer and goes away once the motion
+     starts, because a static ring around a shape that is moving reads as
+     broken rather than as bounds. */
+  #icon-states-wt .ist-selbox{position:absolute;left:24%;top:14.6%;width:49.6%;height:70.8%;pointer-events:none;z-index:5}
+
+  /* the preview button shows what clicking it DOES, and it is driven by the
+     same class the motion is, so a step that starts the motion can never
+     leave a play triangle sitting over something that is already running. */
+  #icon-states-wt .ist-icpause{display:none}
+  #icon-states-wt .ist-play .ist-icpause{display:block}
+  #icon-states-wt .ist-play .ist-icplay{display:none}
+
+  #icon-states-wt .ist-gap{display:flex;gap:var(--pad-sm);align-items:flex-start;
+    padding:var(--pad-sm) var(--pad);border-radius:var(--r3);margin:0 0 var(--gap);
+    background:color-mix(in srgb,var(--warn) 9%,transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 34%,transparent)}
+  #icon-states-wt .ist-gap .ic{color:var(--warn);flex:none;margin-top:1px}
+  #icon-states-wt .ist-gap p{margin:0;font-size:12.5px;line-height:1.55;color:var(--dim)}
+  #icon-states-wt .ist-gap b{color:var(--ink);font-weight:600}
+
+  #icon-states-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
+    color:var(--ink);aspect-ratio:16/10}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="icon-states-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Animate a toggle between two states</h2><span class="k">&#183; usage clickthrough &#183; one scenario</span></div>
+
+  <p class="pglead">One job: the <b>bookmark</b> should fill in when you save something, and empty out when you unsave it.
+    This flow has <b>no time axis in it at all</b>. You are not authoring motion over a duration, you are saying what the
+    icon looks like when it is off, what it looks like when it is on, and how long the change between them takes. So the
+    canvas holds <b>two artboards</b>, neither of which ever moves, and the crossing is shown in the preview where it
+    belongs. It is also the flow with the biggest hole in it, because an SVG on its own cannot feel a tap, and the page
+    says so rather than drawing a control that would have to be invented. Seven real clicks on ONE screen, which never
+    re-renders below.</p>
+
+  <div class="ist-gap">
+    <i class="ic sm ic-warning"></i>
+    <p><b>The app has no answer for any of this yet.</b> A layer has no states, there is no transition between two
+      drawings of the same thing, and nothing exports SVG. The nearest thing that does exist is <b>component variants</b>,
+      which is the argument this page is really making: icon states and component states are the same idea and should not
+      be built twice.</p>
+  </div>
+
+  <div class="wt" id="wtStates">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell" id="istWin" data-shell="bookmark &#183; 24 &#215; 24 &#183; SVG" data-ws="ui"
+           data-status='<span id="chipStates">1 state</span> &#183; <span id="chipCross">no crossing</span>'>
+
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">States</div>
+          <div class="menuitem"><i class="ic ic-layer-add"></i> Add a state&#8230; <span class="sc">&#8679;&#8984;N</span></div>
+          <div class="menuitem"><i class="ic ic-transition"></i> Edit the crossing</div>
+          <div class="menuitem"><i class="ic ic-pause"></i> Pause the preview <span class="sc">Space</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">&#8997;&#8984;L</span></div>
+        </div>
+
+          <div class="cnv">
+            <div class="canvas">
+              <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+                <defs>
+                  <pattern id="istMinorPat" width="1" height="1" patternUnits="userSpaceOnUse">
+                    <path d="M0 0H1M0 0V1" fill="none" stroke="currentColor" stroke-width=".03"/>
+                  </pattern>
+                </defs>
+              </svg>
+
+              <div class="ist-pair">
+          <div class="ist-col">
+            <div class="ist-board ist-sel" id="istBoardOff">
+              <svg class="art" viewBox="0 0 24 24" aria-label="The off state, 24 by 24 units">
+                <rect x="0" y="0" width="24" height="24" fill="url(#istMinorPat)"/>
+                <rect class="ist-live" x="2" y="2" width="20" height="20" rx=".4"/>
+                <path class="ist-glyph" id="istGlyphOff" d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/>
+              </svg>
+              <span class="ist-selbox wt-off" id="istSel" data-sel-frame="Bookmark &#183; 12 &#215; 17"></span>
+            </div>
+            <div class="ist-cap"><b>Off</b><span class="ist-def">default</span></div>
+          </div>
+
+                <div class="ist-cross wt-off" id="istCross">
+                  <span class="ist-lb" id="istCrossLb">0.22s &#183; ease out</span>
+                  <svg width="58" height="16" viewBox="0 0 58 16" aria-hidden="true">
+                    <path d="M2 8h50M46 3l6 5-6 5"/>
+                  </svg>
+                  <span class="ist-lb" style="opacity:.7">crossing</span>
+                </div>
+
+          <div class="ist-col wt-off" id="istColOn">
+            <div class="ist-board" id="istBoardOn">
+              <svg class="art" viewBox="0 0 24 24" aria-label="The on state, 24 by 24 units">
+                <rect x="0" y="0" width="24" height="24" fill="url(#istMinorPat)"/>
+                <rect class="ist-live" x="2" y="2" width="20" height="20" rx=".4"/>
+                <path class="ist-glyph ist-filled" id="istGlyphOn" d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/>
+              </svg>
+            </div>
+            <div class="ist-cap"><b>On</b></div>
+          </div>
+              </div>
+
+              <div class="ist-sizes" id="istSizes">
+                <div class="ist-szhead">
+                  <span class="ist-t">Real size &#183; crossing</span>
+                  <button class="btn ghost icon sm" id="btnPlay" title="Play the preview (Space)"><i class="ic sm ic-play ist-icplay"></i><i class="ic sm ic-pause ist-icpause"></i></button>
+                  <span class="select sm" id="selSpeed" tabindex="0" role="button" title="Preview speed"><span class="lead" id="spdVal">1&#215;</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                </div>
+                <div class="ist-szrow">
+                  <span class="ist-sz" id="sz16">
+                    <span class="px" style="width:26px;height:26px">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg>
+                      <svg class="ist-on" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg>
+                    </span><span class="n">16</span>
+                  </span>
+                  <span class="ist-sz">
+                    <span class="px" style="width:34px;height:34px">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg>
+                      <svg class="ist-on" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg>
+                    </span><span class="n">24</span>
+                  </span>
+                  <span class="ist-sz">
+                    <span class="px inv" style="width:42px;height:42px">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg>
+                      <svg class="ist-on" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg>
+                    </span><span class="n">32</span>
+                  </span>
+                  <span class="ist-sz">
+                    <span class="px" style="width:58px;height:58px">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg>
+                      <svg class="ist-on" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg>
+                    </span><span class="n">48</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (&#8997;&#8984;L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tRect" title="Rectangle (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool" id="tEllipse" title="Ellipse (O)"><i class="ic sm ic-circle"></i></button>
+                <button class="tool" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tNode" title="Edit nodes (A)"><i class="ic sm ic-node"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (I)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="100" max="1600" value="1600" aria-label="Zoom">
+                <span class="val zval">1600%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
+                <div class="menuitem"><i class="ic ic-node"></i> Edit nodes <span class="sc">A</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">I</span></div>
+              </div>
+            </div>
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#9a5cff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">toggle-spec</span><span class="ago">8 minutes ago</span></span>
+                    <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button><button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button><button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button></span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#4c6fff)"></span>
+                    <span class="cap"><span class="nm">saved-states</span><span class="ago">yesterday</span></span>
+                    <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button><button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button><button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="240" data-max="440"></div>
+
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCnt">1</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow" id="lrMark"><i class="ic ic-bezier"></i><span class="nm">Bookmark</span>
+                  <i class="ic sm ic-transition wt-off" id="lrMarkSt" title="This layer has states"></i>
+                  <i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="360"></div>
+
+            <!-- STATES · a short named list, which is what a toggle is -->
+            <div class="dgrp" id="gStates">
+              <div class="dgrp-h"><span class="ttl">States</span><span class="cnt" id="stateCnt">1</span>
+                <button class="btn ghost icon sm" id="btnAddState" title="Add a state"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="ist-srow sel" id="stOff"><span class="ist-sw"></span><span class="nm">Off</span><span class="df">default</span></div>
+                <div class="ist-srow wt-off" id="stOn"><span class="ist-sw on"></span><span class="nm">On</span><span class="df" id="stOnDiff">no difference</span></div>
+                <p class="note" id="stNote">One state, so there is nothing to cross between yet. A state is a whole drawing of this icon, not a layer of it.</p>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="420"></div>
+
+            <div class="dgrp" id="gProps">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer</div>
+
+                <div id="propsShape" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Appearance <span class="mut" id="pStateMut">in Off</span></div>
+                    <div class="irow"><span class="rl">Fill</span>
+                      <span class="select" id="selFill" tabindex="0" role="button"><span class="lead" id="pFill">None</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <div class="irow"><span class="rl">Stroke</span><span class="field" style="width:100%"><span class="k">w</span><span class="v">1.75</span></span></div>
+                    <p class="note" id="apNote">Everything in this section belongs to the state named above it. Change a value here and you have described that state, not the icon.</p>
+                  </div>
+
+                  <div class="section wt-off" id="secCross">
+                    <div class="sec-h">Crossing <span class="mut" id="pCrossMut">Off &#8594; On</span></div>
+                    <div class="irow"><span class="rl">Takes</span>
+                      <span class="stepper sm" style="width:100%"><span class="k">s</span><input id="pDur" value="0.22" aria-label="Seconds"></span>
+                    </div>
+                    <div class="irow" style="grid-template-columns:1fr"><span class="rl">Easing</span>
+                      <span class="seg pseg" role="group" aria-label="Easing">
+                        <button class="on" id="easLin">Linear</button>
+                        <button id="easOut">Ease out</button>
+                        <button id="easSpring">Spring</button>
+                      </span>
+                    </div>
+                    <div class="irow"><span class="rl">Overshoot</span>
+                      <span class="stepper sm" style="width:100%"><span class="k">%</span><input id="pPop" value="0" aria-label="Overshoot"></span>
+                    </div>
+                    <p class="note" id="crNote">One crossing serves both directions. If going back should feel different from going forward, that is a second crossing, and most toggles do not want one.</p>
+                  </div>
+
+                  <div class="section wt-off" id="secTrigger">
+                    <div class="sec-h">Happens on <span class="mut" id="pTrigMut">nothing yet</span></div>
+                    <div class="irow"><span class="rl">Trigger</span>
+                      <span class="select" id="selTrig" tabindex="0" role="button"><span class="lead" id="pTrig">Nothing &#183; the host decides</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <div class="ist-caution wt-off" id="trigWarn">
+                      <i class="ic sm ic-warning"></i>
+                      <p><b>An SVG file cannot feel a tap.</b> A picture dropped into an <code>img</code> tag has no events, so a
+                        tap-driven toggle can only be handed over as <b>two states plus a class to swap</b>, and whoever
+                        receives it does the swapping. The app can hand over the crossing; it cannot hand over the tap.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="420"></div>
+
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg">
+                    <button class="on" data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button data-scope="systems" data-scope-name="Systems">Systems</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search the set" aria-label="Search the set"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile sel" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.4h10a1 1 0 0 1 1 1v14.2l-6-4.3-6 4.3V5.4a1 1 0 0 1 1-1Z"/></svg></span><span class="cap"><span class="nm">bookmark</span><span class="mt">2 states</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.8 14.3 9.6l5.3.7-3.8 3.7.9 5.2-4.7-2.5-4.7 2.5.9-5.2-3.8-3.7 5.3-.7Z"/></svg></span><span class="cap"><span class="nm">star</span><span class="mt">2 states</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Glyph frame</span><span class="mt">24 &#215; 24</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div style="padding:0 var(--pad-sm)">
+                    <div class="styrow"><span class="sw" style="background:#0c0e14"></span><span class="nm">Glyph / stroke 1.75</span><span class="use">200 uses</span></div>
+                    <div class="styrow"><span class="sw" style="background:#9a5cff"></span><span class="nm">Motion / toggle crossing</span><span class="use">2 uses</span></div>
+                  </div>
+                  <p class="note" style="padding:var(--gap-sm) var(--pad-sm) 0">A crossing saved as a style is why every toggle in a product snaps at the same rate. It is the same list the Components scope uses for variants, which is the whole point: this is not a new idea, it is an idea the app already needs.</p>
+                </div>
+                <div data-scope-body="systems" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gStates" title="States"><i class="ic sm ic-transition"></i><span class="lb">States</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="fillMenu" style="position:absolute;right:var(--s4);top:404px;width:216px;z-index:11">
+            <div class="menuitem">None</div>
+            <div class="menuitem" id="miFillInk"><i class="ic ic-fill"></i> Same as the stroke</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Pick a color&#8230;</div>
+          </div>
+
+          <div class="popover menu pop" id="trigMenu" style="position:absolute;right:404px;bottom:150px;width:266px;z-index:11">
+            <div class="menuitem">Nothing &#183; the host decides</div>
+            <div class="menuitem" id="miTap"><i class="ic ic-cursor"></i> On tap</div>
+            <div class="menuitem"><i class="ic ic-hand"></i> On hover</div>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:120px;width:238px;z-index:11">
+            <div class="menuitem"><i class="ic ic-layer-add"></i> Add a state&#8230; <span class="sc">&#8679;&#8984;N</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Promote to a component</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save crossing as a style</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:236px;z-index:11">
+            <div class="menuitem"><i class="ic ic-plus"></i> Add drawing to the set <span class="sc">&#8679;&#8984;A</span></div>
+            <div class="menuitem"><i class="ic ic-import"></i> Import glyphs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Select the glyph"
+          data-cue="#lrMark" data-cue-label="Click the Bookmark layer" data-cue-place="left"
+          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-select="#lrMark" data-show="#istSel,#propsShape" data-hide="#propsEmpty"
+          data-set="#propKind=Glyph">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Bookmark</b> layer</p>
+          <p class="wt-where">the Layers group, at the top of the dock</p>
+          <p class="wt-res">Properties shows this glyph's <b>Appearance</b>, and the header above it says <b>in Off</b>. There is already exactly one state and it is the drawing you have: nothing has been added, the panel is just naming what was always true.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Add the second state"
+          data-cue="#btnAddState" data-cue-label="Click + on the States group" data-cue-place="left"
+          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-select="#lrMark" data-select-class="sel"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt" data-hide="#istSel,#propsEmpty"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=-ist-filled"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#pStateMut=in On|#stOnDiff=no difference|#stNote=A new state starts as a copy of the one you were in, so it can only ever differ on purpose.">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do">the <b>+</b> on the <b>States</b> group, and name it <b>On</b></p>
+          <p class="wt-where">the States group header</p>
+          <p class="wt-res">a <b>second artboard</b> appears beside the first, identical to it, and the panel now lists two states. The new one starts as a copy on purpose, so it can only ever differ where you make it differ. Nothing on screen is a track or a ruler: a toggle is two drawings.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Draw what On looks like"
+          data-cue="#selFill" data-cue-label="Click Fill, choose Same as the stroke" data-cue-place="left"
+          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-select="#lrMark" data-pop="#fillMenu"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt" data-hide="#istSel,#propsEmpty"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#apNote=The fill changed in On and nothing changed in Off, because you were standing in On when you changed it. That is the whole rule.">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do">the <b>Fill</b> row, and choose <b>Same as the stroke</b></p>
+          <p class="wt-where">Properties, under Appearance</p>
+          <p class="wt-res">the right-hand artboard fills in and the left one does not, because you were standing in <b>On</b> when you changed it. The States list now reads <b>1 difference</b>, which is the honest count of what separates the two drawings and the thing you check when a toggle starts behaving oddly.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Say how long the change takes"
+          data-cue="#pDur" data-cue-label="Type 0.22 in Takes" data-cue-place="left"
+          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-select="#lrMark"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#secCross,#istCross" data-hide="#istSel,#propsEmpty"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play"
+          data-css="#istWin=--ist-loop:2s"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22s|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#pDur=0.22|#istCrossLb=0.22s &#183; linear">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>0.22</b> in the <b>Takes</b> field</p>
+          <p class="wt-where">Properties, in the new <b>Crossing</b> section</p>
+          <p class="wt-res">the number lands on the <b>arrow between the two artboards</b>, and the preview starts crossing back and forth at that rate. That arrow is the entire animation. There are no keys, because with two states and one duration there is nothing left to say.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Give it a snap"
+          data-cue="#easOut" data-cue-label="Click Ease out, then set Overshoot to 14" data-cue-place="left"
+          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-select="#lrMark" data-activate="#easOut"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#secCross,#istCross" data-hide="#istSel,#propsEmpty"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play"
+          data-css="#istWin=--ist-loop:2s;--ist-ease:cubic-bezier(.2,.9,.3,1.4);--ist-pop:1.16"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22s &#183; ease out|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#pDur=0.22|#pPop=14|#istCrossLb=0.22s &#183; ease out|#crNote=Overshoot is the only piece of taste in the whole flow. Fourteen percent is the difference between a toggle that acknowledges you and one that just changes colour.">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>Ease out</b>, then <b>14</b> in <b>Overshoot</b></p>
+          <p class="wt-where">Properties, in the Crossing section</p>
+          <p class="wt-res">the bookmark now swells slightly past full size and settles, which is the difference between a toggle that acknowledges you and one that merely changes colour. Those two controls are the only place taste enters this flow, and they are the two a person will actually fiddle with.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Ask for it to happen on a tap"
+          data-cue="#selTrig" data-cue-label="Click Trigger, choose On tap" data-cue-place="left"
+          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-select="#lrMark" data-activate="#easOut" data-pop="#trigMenu"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#secCross,#istCross,#secTrigger,#trigWarn" data-hide="#istSel,#propsEmpty"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play"
+          data-css="#istWin=--ist-loop:2s;--ist-ease:cubic-bezier(.2,.9,.3,1.4);--ist-pop:1.16"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22s &#183; ease out|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#pDur=0.22|#pPop=14|#pTrig=On tap|#pTrigMut=needs the host|#istCrossLb=0.22s &#183; ease out">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the <b>Trigger</b> row, and choose <b>On tap</b></p>
+          <p class="wt-where">Properties, under <b>Happens on</b></p>
+          <p class="wt-res"><b>This is the hole, and the app says so instead of pretending.</b> A picture dropped into an image tag has no events, so a tap-driven toggle can only be handed over as two states plus a class for the host to swap. Photonz can hand over the crossing; it cannot hand over the tap. Saying that here beats letting somebody discover it after the export.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Watch the crossing at real size"
+          data-cue="#sz16" data-cue-label="Look at the 16 point copy" data-cue-place="bottom"
+          data-open="#gLayers,#gStates,#gProps" data-collapse="#gLibrary"
+          data-select="#lrMark" data-activate="#easOut"
+          data-show="#propsShape,#stOn,#istColOn,#lrMarkSt,#secCross,#istCross,#secTrigger,#trigWarn" data-hide="#istSel,#propsEmpty"
+          data-class="#stOff=-sel|#stOn=sel|#istBoardOff=-ist-sel|#istBoardOn=ist-sel|#istGlyphOn=ist-filled|#istWin=ist-play"
+          data-css="#istWin=--ist-loop:1.6s;--ist-ease:cubic-bezier(.2,.9,.3,1.4);--ist-pop:1.16"
+          data-set="#propKind=Glyph|#stateCnt=2|#chipStates=2 states|#chipCross=0.22s &#183; ease out|#pStateMut=in On|#pFill=Same as the stroke|#stOnDiff=1 difference|#pDur=0.22|#pPop=14|#pTrig=On tap|#pTrigMut=needs the host|#istCrossLb=0.22s &#183; ease out">
+        <div class="wt-cap comp">
+          <span class="wt-n">7</span>
+          <p class="wt-do">at the <b>16</b> copy, crossing back and forth</p>
+          <p class="wt-where">the Real size card</p>
+          <p class="wt-res">the two artboards never moved, and they should not: they are the drawings. <b>Only the preview animates</b>, which is what keeps the states editable while the crossing is running. At 16 the fill carries the whole message and the overshoot is barely visible, which is an argument for leaning on colour rather than on scale in small toggles.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to one state"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A toggle is <b>two drawings and a crossing</b>. No keys, no cycle, no duration to lay out, because with two states and one number there is nothing left to describe. The artboards are the states and they never animate; the preview is the only thing that moves.</p></div>
+    <div class="c"><div class="lab g2">The consolidation worth having</div><p>This is <b>component variants</b> wearing an icon's clothes. The same list, the same "differs in this state" count, the same crossing. If the app builds icon states and component states separately it will have built the same feature twice and they will drift. See <button class="link" data-target="ui-variants">Variants &amp; properties</button>.</p></div>
+    <div class="c"><div class="lab g2">What is missing, plainly</div><p>The <b>trigger</b>. An SVG in an image tag has no events, so the tap belongs to whoever receives the file. The app can export the two states and the crossing; it cannot export the tap, and any mock that draws a working On tap control is lying.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should a crossing be <b>one number for both directions</b>, as drawn, or two? On is usually meant to feel quicker than off. Two numbers is more truthful and it doubles the controls on a surface whose whole appeal is that it has almost none.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch and single-choice segmented controls
+     stay live when a person clicks them directly. The walkthrough drives the
+     same state declaratively. */
+  (function () {
+    var root = document.getElementById('icon-states-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () { bs.forEach(function (x) { x.classList.toggle('on', x === b); }); });
+      });
+    });
+    /* the pause button really pauses: a preview you cannot stop is the first
+       thing anyone complains about */
+    var play = root.querySelector('#btnPlay');
+    if (play) {
+      play.addEventListener('click', function () {
+        var win = root.querySelector('#istWin');
+        var running = win.classList.toggle('ist-play');
+        /* tooltip.js moved `title` into `data-tip` and removed it, so the
+           label has to be updated where it now lives. */
+        var label = running ? 'Pause the preview|Space' : 'Play the preview|Space';
+        if (play.hasAttribute('data-tip')) play.setAttribute('data-tip', label);
+        else play.title = running ? 'Pause the preview (Space)' : 'Play the preview (Space)';
+        play.setAttribute('aria-label', running ? 'Pause the preview' : 'Play the preview');
+      });
+    }
+  })();
+</script>
+</body>
+</html>
