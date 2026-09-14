@@ -185,27 +185,38 @@ struct PlacementInspector: View {
 
     /// The one row that says whether this piece is being arranged at all.
     ///
-    /// Two answers, each named before it is picked, in the words the list at
+    /// Three answers, each named before it is picked, in the words the list at
     /// the foot of the section already uses about a piece that is one. And it
     /// is ONE step: being the surface is stretching both ways, so setting the
     /// two directions in turn was two undo steps and a moment spent being
     /// something else — and inside a stack it could not be done from here at
     /// all, because the stack owns the direction it runs and so never offered
     /// the second Stretch.
+    ///
+    /// The third answer is the same step out of the line in the opposite
+    /// direction: out, and in FRONT, where a notification dot on the corner of
+    /// a card lives (`FloatingPiece.swift`). It belongs on this row and not in
+    /// a section of its own precisely because it is not a second idea: there is
+    /// one question here, is this piece in the line, and now it has both
+    /// answers to no.
     @ViewBuilder
     private func surfaceRow() -> some View {
         let command = editorState.surfaceCommand
         if !command.layers.isEmpty {
             row("Role") {
                 Menu {
-                    Button(ResolvedPlacement.arrangedTitle) {
-                        editorState.setSurface(ids: command.layers, false)
+                    Button(PieceRole.arranged.title) {
+                        editorState.setPieceRole(ids: command.layers, .arranged)
                     }
-                    Button(ResolvedPlacement.surfaceTitle) {
-                        editorState.setSurface(ids: command.layers, true)
+                    Button(PieceRole.surface.title) {
+                        editorState.setPieceRole(ids: command.layers, .surface)
+                    }
+                    Button(PieceRole.inFront.title) {
+                        editorState.setPieceRole(ids: command.layers, .inFront)
                     }
                 } label: {
-                    menuLabel(surfaceTitle(command), following: !command.isOn,
+                    menuLabel(command.role.title,
+                              following: command.role == .arranged,
                               isMixed: command.isMixed)
                 }
                 .menuStyle(.borderlessButton)
@@ -215,15 +226,6 @@ struct PlacementInspector: View {
             }
             .panelHelp(command.help)
         }
-    }
-
-    /// What the Role row reads now: one of the two answers, or the one word for
-    /// a selection where some are the surface and some are not.
-    private func surfaceTitle(_ command: SurfaceCommand) -> String {
-        if command.isMixed { return PlacementSelection.mixedText }
-        if command.isOn { return ResolvedPlacement.surfaceTitle }
-        return command.isSpanning ? ResolvedPlacement.spanningTitle
-                                  : ResolvedPlacement.arrangedTitle
     }
 
     /// Who these rows are about, in the words of what is holding them.
@@ -310,6 +312,14 @@ struct PlacementInspector: View {
         // unsaid, its rows read like any other layer's while it is doing
         // something else entirely, and the Stretch that puts it there looks
         // like a leftover worth clearing.
+        // Out of the line the other way. Said first because a floating piece
+        // may be stretched both ways as well, and what it IS doing then is
+        // being in front, not being the surface.
+        if arranges, resolved.floats {
+            return "Placed by hand, in front of the rest, with the others arranged as though "
+                + "it were not there. Horizontal and Vertical say which edges it holds when "
+                + "the group is resized."
+        }
         if arranges, resolved.isSurface {
             // The Role row right above names it, so this says the one thing the
             // name does not: what being it looks like.

@@ -3314,3 +3314,9 @@
 {"t":"2026-09-14T19:14:44.065Z","ev":"task_note","id":"a-shape-s-border-arrives-the-same-colour-as-its"}
 {"t":"2026-09-14T19:14:44.108Z","ev":"task_note","id":"a-shape-s-border-arrives-the-same-colour-as-its"}
 {"t":"2026-09-14T19:14:49.550Z","ev":"task_done","id":"a-shape-s-border-arrives-the-same-colour-as-its","from":"in_progress","note":"A shape arrives with no edge until you ask for one, and the edge you ask for reads. PhotonzCore/BorderInk.swift holds the rule; the plus, the panel's Width and the toolbar's Border switch all give a first ring an ink chosen by contrast against the fill, and switching Fill off still leaves the outline. Verified on the probe: new border-reads-as-a-border-walk shows a flat box, then a 2 px graphite ring on red, then the next box wearing the same ring; 6515 core tests green; 24 border/outline/effect/colour/parts walks repaired and passing. Audit: queue/audits/2026-09-14-border-reads-as-a-border.json."}
+{"t":"2026-09-14T20:44:26.393Z","ev":"sweep_pass","walks":418,"passed":414,"failed":4,"seconds":5257,"complete":true}
+{"t":"2026-09-14T20:44:26.508Z","ev":"task_started","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a","title":"A badge can sit on the corner of a card inside a row that arranges itself","priority":"p2-normal"}
+{"t":"2026-09-14T20:46:31.476Z","ev":"task_note","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a"}
+{"t":"2026-09-14T21:00:21.691Z","ev":"task_note","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a"}
+{"t":"2026-09-14T21:00:21.736Z","ev":"task_note","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a"}
+{"t":"2026-09-14T21:00:21.780Z","ev":"task_note","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a"}

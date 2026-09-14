@@ -3605,3 +3605,53 @@ Still rough: the piece's own panel (click into a copy) shows the copy's knobs
 but not the type it was given, and a style let go on a copy's ROW in the layers
 list is still refused, because a row names the copy rather than which words
 inside it.
+
+## Landed: a piece can step out of the line and sit in front (Next, `next-auto-layout`, 2026-09-14)
+
+A row or a column arranges everything in it, and until now it made exactly one
+exception: the surface, which is painted to the group's own edges and is always
+BEHIND. A notification dot on the corner of a card, or a New ribbon over the top
+of one, wants the same step out of the line and the opposite depth. The only way
+to get it was to wrap the card in a second group that arranges nothing, which
+works and leaves a group in the layers list that nobody can see on the canvas.
+
+**So the Role row has a third answer.** The same row, one line further down:
+
+- **One of the pieces** — arranged like everything else.
+- **Surface behind the rest** — painted to the group's own edges, behind them.
+- **In front of the rest** — out of the line, placed by hand, in front of them.
+
+It belongs on that row and not in a section of its own because it is not a
+second idea. There is one question here, is this piece in the line, and now it
+has both answers to no. Layer ▸ **In Front of the Rest** is the same act with a
+tick, directly under Surface Behind the Rest for the same reason.
+
+**What taking it does, all in one undo step.** The piece leaves the line, so the
+row closes over it and stops measuring it: a badge hanging past the corner of a
+card no longer pushes the card's edge out to meet it. It stops taking the room
+the row had left over, if it was. It comes to the front of its group, because a
+row called In Front of the Rest that left the badge under the card would be a
+lie. And its X and Y come back to life, which no other piece in a stack has,
+because being where you put it is the whole point of it.
+
+**A resize carries it by its own two rules.** Horizontal and Vertical stay live
+for a piece out of the line, and they say which edges it holds: the near edge
+holds it still, the far edge moves it the whole of whatever the box grew, the
+middle moves it half. That is the same arithmetic the placement rules already do
+everywhere else, said about a piece nobody is arranging. Stretch keeps its usual
+meaning and comes out in front: a full-bleed overlay is the one thing it can be.
+
+**The one number written down.** The flow re-runs after every edit and only ever
+sees the box as it is now, so a card that grows a line taller has no way to tell
+a badge pinned to its bottom corner how far to come down. `FloatingPiece` keeps
+the size of the box the piece was last placed in, and the answer is a
+subtraction. A box that did not change leaves the piece exactly where the drag
+put it.
+
+**Where the answer is not.** Only inside a group that arranges its contents, the
+same as the surface: off a line there is nothing to step out of, so everything
+is already placed by hand and the word would mean nothing.
+
+Read by `SurfaceCommand` and `PieceRole` in the core, placed by `GroupFlow`.
+Tested in `FloatingPieceTests`, walked by
+`Scripts/playtest/badge-on-a-corner-walk.json`.

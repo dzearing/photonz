@@ -1995,6 +1995,8 @@ private final class Run {
                 editor.toggleFillsTheFlow()
             case .makeSelectionTheSurface:
                 editor.toggleSurface()
+            case .floatSelectionInFront:
+                editor.toggleFloating()
             case .alignWordsLeft:
                 if let id = editor.selectedLayerID {
                     editor.setTextAlignment(layerID: id, TextAlign.left)

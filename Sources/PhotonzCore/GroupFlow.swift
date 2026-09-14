@@ -115,7 +115,8 @@ enum GroupFlow {
         // worked out from the words rather than from the last answer.
         let children = children.contains { $0.wrappedByItsContainer == true }
             ? children.map(\.textUnwrapped) : children
-        let rules = resolving(children, contentPlacement, onAScreen: onAScreen)
+        let rules = resolving(children, contentPlacement, onAScreen: onAScreen,
+                              arranges: layout.arranges)
         // Width first, because how wide this group is allowed to be is what
         // decides where the words break, and where the words break is what
         // decides how tall it comes out.
@@ -145,6 +146,13 @@ enum GroupFlow {
                                     contentPlacement: contentPlacement,
                                     bounds: bounds, onAScreen: onAScreen))
         for index in out.indices where rules[index].stepsOutOfTheFlow(of: layout) {
+            // The third way out of the line is not painted to anything: it was
+            // put where it is by hand and it stays there, and all the box does
+            // is carry it when the box itself changes size.
+            guard !rules[index].floats else {
+                out[index] = floated(out[index], rule: rules[index], box: box.size)
+                continue
+            }
             let content = out[index].contentBounds
             let x = span(size: content.width, start: 0, extent: box.width,
                          rule: rules[index].horizontal.span)
@@ -326,11 +334,17 @@ enum GroupFlow {
 
     /// What each child does on each axis, once its own rule and the group's
     /// default have been put together.
+    ///
+    /// `arranges` is the group's own answer to whether there is a LINE here at
+    /// all, and it is the only thing that lets a piece be out of one: a group
+    /// that closes around its contents already leaves everything where it was
+    /// put, so being told to float there would change nothing and say nothing.
     private static func resolving(_ children: [Layer], _ contentPlacement: LayerPlacement?,
-                                  onAScreen: Bool) -> [ResolvedPlacement] {
+                                  onAScreen: Bool, arranges: Bool = false) -> [ResolvedPlacement] {
         children.map { child in
-            let resolved = LayerPlacement.resolving(child: child.placement,
+            var resolved = LayerPlacement.resolving(child: child.placement,
                                                     container: contentPlacement)
+            resolved.floats = arranges && child.floatsInFront
             return onAScreen ? resolved.onAScreen : resolved
         }
     }
@@ -429,7 +443,8 @@ enum GroupFlow {
     static func size(of children: [Layer], layout: GroupLayout,
                      contentPlacement: LayerPlacement?, bounds: Bounds,
                      onAScreen: Bool, held: Bool = true) -> CGSize {
-        let rules = resolving(children, contentPlacement, onAScreen: onAScreen)
+        let rules = resolving(children, contentPlacement, onAScreen: onAScreen,
+                              arranges: layout.arranges)
         let padding = layout.usedPadding
         // A stack and a grid flow from their own corner, so the room at the
         // near edge is already in where the contents start and only the far
@@ -470,9 +485,17 @@ enum GroupFlow {
     /// off exactly the set that decided the size.
     private static func measuring(_ children: [Layer], _ rules: [ResolvedPlacement],
                                   horizontal: Bool) -> [Int] {
-        let taking = children.indices
+        // A piece placed by hand in front of the rest is measured by nobody:
+        // that is what "the others arrange themselves as though it were not
+        // there" means, and it is what lets a badge hang past the corner of a
+        // card without pushing the card's own edge out to meet it. Where every
+        // piece is one there is nothing else to go on, so they are measured
+        // after all and the group keeps a box.
+        let placed = children.indices.filter { !rules[$0].floats }
+        let pool = placed.isEmpty ? Array(children.indices) : placed
+        let taking = pool
             .filter { horizontal ? rules[$0].horizontal != .stretch : rules[$0].vertical != .stretch }
-        return taking.isEmpty ? Array(children.indices) : taking
+        return taking.isEmpty ? pool : taking
     }
 
     /// Where the contents begin on one axis, and how much room they take.
@@ -653,6 +676,64 @@ enum GroupFlow {
         var out = layer
         out.frame = layer.frame.offsetBy(dx: box.minX - current.minX, dy: box.minY - current.minY)
         return out
+    }
+
+    // MARK: - A piece placed by hand, in front of the rest
+
+    /// One floating piece after a pass: exactly where it was, unless the box
+    /// around it changed size, in which case its own Horizontal and Vertical
+    /// rules say how far it travels (`FloatingPiece.swift`).
+    ///
+    /// Nothing is placed here in the sense the rest of this file places things.
+    /// The piece's position is the position somebody dragged it to, and the box
+    /// is only ever consulted as a DIFFERENCE: a badge holding the right edge
+    /// of a card moves the whole of what the card grew, one holding the middle
+    /// moves half of it, one holding the left edge does not move at all. That
+    /// is the same arithmetic the placement rules already do on a resize, said
+    /// about a piece nobody is arranging.
+    ///
+    /// Stretch is the exception and keeps its usual meaning: painted right
+    /// across the box, which here comes out in FRONT of everything rather than
+    /// behind it. A full-bleed overlay is the one thing it can be.
+    private static func floated(_ layer: Layer, rule: ResolvedPlacement,
+                                box: CGSize) -> Layer {
+        let content = layer.contentBounds
+        let was = layer.floating?.placedIn
+        var target = content
+        if rule.horizontal == .stretch {
+            target.origin.x = 0
+            target.size.width = box.width
+        } else if let was, was.width != box.width {
+            target.origin.x = content.minX + carried(rule.horizontal.span,
+                                                     by: box.width - was.width)
+        }
+        if rule.vertical == .stretch {
+            target.origin.y = 0
+            target.size.height = box.height
+        } else if let was, was.height != box.height {
+            target.origin.y = content.minY + carried(rule.vertical.span,
+                                                     by: box.height - was.height)
+        }
+        var out = target == content
+            ? layer
+            : moved(layer, to: target, fillingHeight: rule.vertical == .stretch)
+        // The size the piece has just been placed against, so the NEXT pass can
+        // tell a box that changed from one that did not. Written even where
+        // nothing moved: the first pass after a piece starts floating has
+        // nothing to carry it from, and this is where it learns.
+        out.floating?.placedIn = box
+        return out
+    }
+
+    /// How far a piece holding one edge travels when the box around it changes
+    /// by `growth`. The near edge holds it still, the middle takes half, the
+    /// far edge takes all of it.
+    private static func carried(_ rule: PlacementSpan, by growth: CGFloat) -> CGFloat {
+        switch rule {
+        case .trailing: growth
+        case .center: growth / 2
+        case .scale, .leading, .stretch: 0
+        }
     }
 
     // MARK: - The maths

@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T09:45:27.408Z",
-  "updated": "2026-09-13T13:03:40.969Z",
+  "updated": "2026-09-14T21:00:21.779Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED on its decision card: this adds an answer to a visible control, driven by parity rather than by an ask, and the 2026-09-02 loupe rule says those get a card first.\n\nThe evidence, read on 2026-09-09: Sources/PhotonzCore/LayerPlacement.swift:232 stepsOutOfTheFlow returns true for the surface and for a piece told to stretch along the flow, and nothing else. isSurface is horizontal == .stretch && vertical == .stretch (line 156), and the surface is placed once at the end and drawn behind everything (Sources/PhotonzCore/GroupFlow.swift:356). So the machinery for a piece that is not in the line already exists and has exactly one member.\n\nIf the answer is yes, the build is most likely a second role next to the surface rather than a new system: Sources/PhotonzCore/SurfaceCommand.swift is the command shape to copy, Sources/Photonz/PlacementInspector.swift is where the control lives, and queue/audits/2026-09-08-surface-role.json records how the surface answer was landed and what it costs.\n\nThe workaround that exists today (wrap the card in a group that arranges nothing) is why this is p2 and not p1.",
@@ -45,6 +45,27 @@
     {
       "t": "2026-09-13T13:03:40.968Z",
       "note": "decision \"Inside a row or a column that arranges itself, should one piece be able to step out of the line and be placed by hand?\" resolved: A piece can step out and float in front"
+    },
+    {
+      "t": "2026-09-14T20:44:26.506Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T20:46:31.474Z",
+      "note": "Adversarial review before building. (1) Discoverability: nothing on the canvas suggests a piece can leave the line, so the answer goes in the Role row that already carries 'Surface behind the rest' — anyone who found that finds this, and the two read as one idea with two directions. (2) Real gap the mock never considered: a piece inside a stack has canMove false and dead X/Y, so 'placed by hand' is meaningless until move is live for it. That is in scope. (3) Cut: no separate section, no z-order control, no offset editor. (4) Shortest version that delivers it: out of the line, not measured by the box, stays where you drag it, drawn in front, and the Horizontal/Vertical rows already live for an out-of-flow piece say which corner it holds on a resize. (5) Left to the user in the audit: whether dragging a piece into a corner should pin that corner on its own rather than you picking Right and Bottom."
+    },
+    {
+      "t": "2026-09-14T21:00:21.689Z",
+      "note": "Built and verified on the real app. The Role row in Layout now has a third answer, In front of the rest, beside One of the pieces and Surface behind the rest, with Layer > In Front of the Rest as the same act with a tick. Taking it: the piece leaves the line, the row stops measuring it, it stops filling the flow, it comes to the front of its group, and its X and Y come back to life. A resize carries it by its own Horizontal and Vertical rules (near edge holds, far edge moves it all, middle moves it half), using the box size recorded in the new FloatingPiece. Core: FloatingPiece.swift, LayerPlacement (ResolvedPlacement.floats), GroupFlow (resolving/measuring/floated), SurfaceCommand (PieceRole), LayerGeometry (canMove). 19 new tests in FloatingPieceTests; whole suite 6534 green. Walked live in Scripts/playtest/badge-on-a-corner-walk.json with Screen Recording granted, so the audit carries real captures."
+    },
+    {
+      "t": "2026-09-14T21:00:21.734Z",
+      "note": "Review of the built thing, on the real app. What is still rough is written into queue/audits/2026-09-14-piece-in-front.json and none of it earned a task: the corner not holding itself is the evaluate question the user answers rather than a defect, discoverability is exactly the surface answer's and unchanged by it, and the group outline no longer containing an overhanging badge is what a badge on a corner is for. Left rough, second sighting: picking the Role row with SEVERAL pieces selected applies the answer to all of them, which is as unwanted here as the 2026-09-08 surface audit said it was there. Not filed: it does what it was asked, one undo puts it back, and no open task covers it, so it is recorded here for the next pass in this area."
+    },
+    {
+      "t": "2026-09-14T21:00:21.778Z",
+      "note": "Asked for a sweep: the change is in GroupFlow's shared measuring and resolving, which every arranged group in every walk goes through. The surface, stack and layout walks (15 of them) all pass on their own."
     }
-  ]
+  ],
+  "started": "2026-09-14T20:44:26.505Z"
 }

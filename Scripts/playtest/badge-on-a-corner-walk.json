@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/badge-on-a-corner",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [80, 120], "to": [260, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 120], "to": [480, 260], "steps": 8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [520, 120], "to": [552, 152], "steps": 6 },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [170, 190] },
+    { "do": "click", "at": [390, 190], "modifiers": ["shift"] },
+    { "do": "click", "at": [536, 136], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "stackSelection" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "stepIntoSelection" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [536, 136] },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.5 },
+
+    {
+      "do": "describe",
+      "stage": "1-in-the-line",
+      "note": "the dot is the third thing in a row of three, pushing the row 72 points wider than the two cards need. Layout must show a Role row reading One of the pieces"
+    },
+    { "do": "panelMenu", "menu": "One of the pieces", "in": "Role", "shot": "badge-1b-menu" },
+    { "do": "snapshot", "name": "badge-1-in-the-line" },
+
+    { "do": "action", "action": "floatSelectionInFront" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "2-out-of-the-line",
+      "note": "the row has closed over the dot: it is exactly the two cards and the gap between them, and the dot has not moved. Role reads In front of the rest and X and Y are live numbers again"
+    },
+    { "do": "snapshot", "name": "badge-2-out-of-the-line" },
+
+    { "do": "drag", "from": [536, 136], "to": [244, 128], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "do": "describe",
+      "stage": "3-on-the-corner",
+      "note": "the dot has been dragged onto the top right corner of the first card and stayed there, in front of it, with the row still exactly two cards wide"
+    },
+    { "do": "snapshot", "name": "badge-3-on-the-corner" },
+    { "do": "menus", "stage": "layer-menu-in-front", "menu": "Layer" }
+  ]
+}

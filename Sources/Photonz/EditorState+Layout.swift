@@ -548,6 +548,39 @@ extension EditorState {
         perform { $0.setSurface(ids: ids, isSurface) }
     }
 
+    /// One pick on the Role row: whichever of the three answers was taken, in
+    /// ONE undo step however many pieces it reached.
+    ///
+    /// The three cannot be set independently — a piece cannot be behind
+    /// everything and in front of it at once — so they are set through one
+    /// place rather than two switches the panel has to keep in step.
+    func setPieceRole(ids: [UUID], _ role: PieceRole) {
+        guard !ids.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            switch role {
+            case .surface:
+                document.setSurface(ids: ids, true)
+            case .inFront:
+                document.setFloating(ids: ids, true)
+            default:
+                document.setSurface(ids: ids, false)
+                document.setFloating(ids: ids, false)
+            }
+        }
+    }
+
+    /// Layer ▸ In Front of the Rest: the same act from the menu.
+    ///
+    /// A selection where some float and some do not turns them all ON, exactly
+    /// as the surface row does: the tick is only there when every one of them
+    /// is it, so the first press always makes the selection agree.
+    func toggleFloating() {
+        let command = surfaceCommand
+        guard command.isEnabled, !command.layers.isEmpty else { return }
+        setPieceRole(ids: command.layers, command.isFloating ? .arranged : .inFront)
+    }
+
     /// Layer ▸ Surface Behind the Rest: the same act from the menu.
     ///
     /// A selection where some are the surface and some are not turns them all

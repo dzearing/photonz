@@ -58,6 +58,10 @@ public struct SurfaceCommand: Hashable, Sendable {
     /// behind everything in it. Not an answer on offer, a state to read back,
     /// and picking either answer takes them out of it.
     public var isSpanning: Bool = false
+    /// Whether every piece it reaches has been taken out of the line and placed
+    /// by hand, in front of the rest (`FloatingPiece.swift`). The third answer
+    /// on the same row, and the mirror of `isOn`.
+    public var isFloating: Bool = false
     /// Whether the picked pieces disagree: one is the surface and the next is
     /// not. The panel row says Mixed rather than picking one of them to be
     /// wrong about, the way every other row in the dock does.
@@ -71,12 +75,23 @@ public struct SurfaceCommand: Hashable, Sendable {
     /// what pressing it does where it is not.
     public var help: String { reason ?? Self.makesSurfaceReason }
 
+    /// What the row READS: one of the three answers, the fourth state a piece
+    /// arrives in by being stretched the way its stack runs, or the one word
+    /// for a selection that disagrees.
+    public var role: PieceRole {
+        if isMixed { return .mixed }
+        if isOn { return .surface }
+        if isFloating { return .inFront }
+        return isSpanning ? .spanning : .arranged
+    }
+
     public init(layers: [UUID], isOn: Bool, isMixed: Bool = false, isSpanning: Bool = false,
-                isEnabled: Bool, reason: String?) {
+                isFloating: Bool = false, isEnabled: Bool, reason: String?) {
         self.layers = layers
         self.isOn = isOn
         self.isMixed = isMixed
         self.isSpanning = isSpanning
+        self.isFloating = isFloating
         self.isEnabled = isEnabled
         self.reason = reason
     }
@@ -106,8 +121,14 @@ extension PhotonzDocument {
         let surfaces = selection.layers.map {
             layer(id: $0)?.resolvedPlacement(in: container).isSurface == true
         }
+        let floating = selection.layers.map { layer(id: $0)?.floatsInFront == true }
         let isOn = surfaces.allSatisfy { $0 }
-        let isMixed = !isOn && surfaces.contains(true)
+        let isFloating = floating.allSatisfy { $0 }
+        // Disagreement on EITHER answer is a mixed row: one piece behind the
+        // rest and the next one in the line is no more one answer than one in
+        // front and one in the line.
+        let isMixed = (!isOn && surfaces.contains(true))
+            || (!isFloating && floating.contains(true))
         guard container.group?.layout?.arranges == true else {
             // Off an arrangement the row has nothing to say, even about a piece
             // that happens to be stretched both ways: with nothing being
@@ -126,12 +147,13 @@ extension PhotonzDocument {
         // Stretched the way the stack runs and not the surface: the row says
         // that instead of calling it one of the pieces, which is the one thing
         // the line under the rows says it is not.
-        let spans = !isOn && !isMixed && selection.layers.allSatisfy {
+        let spans = !isOn && !isMixed && !isFloating && selection.layers.allSatisfy {
             layer(id: $0)?.resolvedPlacement(in: container)
                 .stepsOutOfTheFlow(of: container.group?.layout) == true
         }
         return SurfaceCommand(layers: selection.layers, isOn: isOn, isMixed: isMixed,
-                              isSpanning: spans, isEnabled: true, reason: nil)
+                              isSpanning: spans, isFloating: isFloating, isEnabled: true,
+                              reason: nil)
     }
 
     /// Make every picked piece the surface behind the rest, or hand it back to
@@ -153,6 +175,10 @@ extension PhotonzDocument {
             if isSurface, layer(id: id)?.fillsTheFlow == true {
                 setFillsTheFlow(id: id, false)
             }
+            // Behind everything and in front of everything are two answers to
+            // one question, so taking one puts the other down
+            // (`FloatingPiece.swift`).
+            if isSurface { setFloating(ids: [id], false) }
             setPlacement(id: id, horizontal: isSurface ? .stretch : nil)
             setPlacement(id: id, vertical: isSurface ? .stretch : nil)
         }

@@ -581,9 +581,14 @@ public struct LayerGeometryEditing: Hashable, Sendable {
             return
         }
         if let owningLayout {
-            canMove = false
-            let spans = layer.resolvedPlacement(in: container).stepsOutOfTheFlow(of: owningLayout)
+            let placing = layer.resolvedPlacement(in: container)
+            // One exception, and it is the whole point of it: a piece taken out
+            // of the line and placed by hand keeps its X and Y, because being
+            // where you put it is what it is for (`FloatingPiece.swift`).
+            canMove = placing.floats
+            let spans = !placing.floats && placing.stepsOutOfTheFlow(of: owningLayout)
             moveReason = switch owningLayout.kind {
+            case _ where placing.floats: nil
             case _ where spans: Self.spanningReason
             case .grid: Self.griddedReason
             case .stack: Self.stackedReason

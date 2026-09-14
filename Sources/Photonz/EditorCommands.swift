@@ -547,6 +547,16 @@ struct EditorCommands: Commands {
                                      set: { _ in editor?.toggleSurface() }))
                 .disabled(!surface.isEnabled)
                 .help(surface.help)
+                // The same step out of the line, the opposite depth: out, and
+                // in FRONT, which is where a badge on the corner of a card
+                // lives (`FloatingPiece.swift`). Directly under the surface so
+                // the pair reads as one idea with two directions, and a tick
+                // for the same reason the row above has one.
+                Toggle(FloatingCommand.menuTitle,
+                       isOn: Binding(get: { surface.isFloating },
+                                     set: { _ in editor?.toggleFloating() }))
+                .disabled(!surface.isEnabled)
+                .help(surface.reason ?? FloatingCommand.reason)
             }
             // Frames sit with the structure commands, because a frame IS a
             // group with a size. Neither row takes a key: F already picks the

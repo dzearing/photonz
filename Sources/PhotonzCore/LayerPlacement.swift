@@ -121,13 +121,29 @@ public struct ResolvedPlacement: Hashable, Sendable {
     /// True when the horizontal answer came from the container, not the piece.
     public var followsHorizontal: Bool
     public var followsVertical: Bool
+    /// Whether this piece has been taken OUT of the line its group arranges and
+    /// left where somebody put it, in front of the rest.
+    ///
+    /// The other half of the surface. Stretching both ways says "be the size of
+    /// the box", which is the one thing a piece being arranged cannot be, so it
+    /// steps out and is painted behind everything. A badge on the corner of a
+    /// card wants the same step out and the opposite depth, and nothing about
+    /// its size can say so — a notification dot is 16 points wide whichever way
+    /// it is behaving — so this is a thing a piece is TOLD rather than a thing
+    /// read off its two directions (`FloatingPiece.swift`).
+    ///
+    /// Only ever true inside a group that arranges its contents. Off one there
+    /// is no line to step out of, so everything is already placed by hand and
+    /// the word would mean nothing.
+    public var floats: Bool
 
     public init(horizontal: HorizontalPlacement, vertical: VerticalPlacement,
-                followsHorizontal: Bool, followsVertical: Bool) {
+                followsHorizontal: Bool, followsVertical: Bool, floats: Bool = false) {
         self.horizontal = horizontal
         self.vertical = vertical
         self.followsHorizontal = followsHorizontal
         self.followsVertical = followsVertical
+        self.floats = floats
     }
 }
 
@@ -153,7 +169,11 @@ extension ResolvedPlacement {
     /// be the thing that decides how big the box is. So it steps out of the
     /// arrangement, is measured by nobody, and is painted to the container's
     /// own edges — which is exactly what a button's fill is.
-    public var isSurface: Bool { horizontal == .stretch && vertical == .stretch }
+    ///
+    /// A piece told to float is never it, however it is stretched: it has
+    /// already been taken out of the line the other way, and behind everything
+    /// and in front of everything are two answers to one question.
+    public var isSurface: Bool { !floats && horizontal == .stretch && vertical == .stretch }
 
     /// What the surface is CALLED, everywhere the app has to name it: the list
     /// of pieces at the foot of Layout, the caption on the piece's own rows,
@@ -175,15 +195,21 @@ extension ResolvedPlacement {
     /// that already explains it.
     public static let spanningTitle = "Spans the group"
 
+    /// The third answer on that menu, and the mirror of the surface: out of the
+    /// line the same way, and in front of everything instead of behind it. The
+    /// two are deliberately one sentence apart, because they are one idea with
+    /// two directions and a person reading either should hear the other.
+    public static let inFrontTitle = "In front of the rest"
+
     /// Whether picking `choice` across would leave this piece stretched both
     /// ways, and so the surface behind everything the group arranges.
     public func becomesSurface(horizontal choice: HorizontalPlacement) -> Bool {
-        choice == .stretch && vertical == .stretch
+        !floats && choice == .stretch && vertical == .stretch
     }
 
     /// The same question down.
     public func becomesSurface(vertical choice: VerticalPlacement) -> Bool {
-        choice == .stretch && horizontal == .stretch
+        !floats && choice == .stretch && horizontal == .stretch
     }
 
     /// How a placement menu offers `choice` to THIS piece: the word for the
@@ -230,6 +256,9 @@ extension ResolvedPlacement {
     /// but the surface steps out of one; a group that arranges nothing has no
     /// flow to step out of in the first place.
     public func stepsOutOfTheFlow(of arrangement: GroupLayout?) -> Bool {
+        // Told to, rather than worked out from a size: the third way out of the
+        // line, and the only one that comes out in FRONT.
+        if floats { return true }
         if isSurface { return true }
         guard let arrangement, arrangement.kind == .stack else { return false }
         return arrangement.flowsHorizontally ? horizontal == .stretch : vertical == .stretch
@@ -295,8 +324,12 @@ extension Layer {
     /// How this layer behaves when the group holding it is resized, resolved
     /// against that group's default.
     public func resolvedPlacement(in container: Layer?) -> ResolvedPlacement {
-        let resolved = LayerPlacement.resolving(child: placement,
+        var resolved = LayerPlacement.resolving(child: placement,
                                                 container: container?.group?.contentPlacement)
+        // Only inside something that arranges: off a line there is nothing to
+        // step out of, so a flag left on a piece from a group that used to be a
+        // stack says nothing until it is one again.
+        resolved.floats = floatsInFront && container?.group?.layout?.arranges == true
         return container?.placesItsContents == true ? resolved.onAScreen : resolved
     }
 

@@ -1,0 +1,31 @@
+{
+  "feature": "A piece in front of the line",
+  "epic": "ui-layout",
+  "summary": "Inside a row, a column or a grid that arranges its own contents, one piece can now be taken out of the line and left where you drag it, in front of the rest. That is what a notification dot on the corner of a card needs, and until now the only way to get it was to wrap the card in a second group that arranges nothing.",
+  "setup": "Photonz Dev, release Next. It rides the flag auto layout is already on, next-auto-layout, so there is nothing new to switch on.",
+  "try": [
+    { "do": "Draw two big rectangles side by side and one small one to the right of them." },
+    { "do": "Select all three and press Control Command G to make them a row." },
+    { "do": "Double click the small one to pick it inside the row." },
+    { "do": "Open the Role menu at the top of the Layout section and read the three answers.", "shot": "2026-09-14-badge-in-front-menu.png" },
+    { "do": "Pick In front of the rest, and watch the row close over it while it stays where it was.", "shot": "2026-09-14-badge-in-front-2.png" },
+    { "do": "Drag the small one onto the top right corner of the first card. It stays there and sits in front of it.", "shot": "2026-09-14-badge-in-front-3.png" },
+    { "do": "Set Horizontal to Right and Vertical to Top, then give the row a Width in the Layout section and drag that number up: the badge travels with the right edge." },
+    { "do": "Press Command Z to put it back in the line." }
+  ],
+  "evaluate": [
+    "Is In front of the rest the right name beside Surface behind the rest, or would something like Floats on top read plainer?",
+    "When you drag a piece into a corner, should it hold that corner on its own, or is picking Right and Top yourself the right amount of control?",
+    "The badge keeps its own X and Y while everything else in the row has none. Does that read as a privilege you granted it, or as the panel being inconsistent?",
+    "The row's own dotted outline no longer contains the badge hanging past it. Does that look broken or correct?",
+    "Would you rather reach this by dragging a piece out of the line with a key held, instead of picking it in the panel?"
+  ],
+  "rough": [
+    "Screen Recording was granted, so all three pictures are real captures of the window rather than offscreen renders.",
+    "The corner does not hold itself. A badge dragged to the top right still reads Horizontal Left, so widening the group leaves it behind until you set Right. That was the decision card's own suggested softening and it is a row you set rather than something worked out for you, which is the evaluate question above.",
+    "Nothing on the canvas hints the role exists. You find it in the Layout section's Role row or under the Layer menu, the same as the surface answer beside it.",
+    "Picking In front of the rest with several pieces selected floats all of them, each keeping its own spot. Allowed for the same reason the surface row allows it, and no more wanted here than it is there.",
+    "A floating piece hanging past the group's box is not clipped, which is what a badge on a corner wants, but it does mean the group's selection outline stops containing everything you can see inside it.",
+    "In the pictures the badge is crimson only because the walk paints it. Left the shape colour it was drawn, it is the same vermilion as the card and you cannot see it at all."
+  ]
+}

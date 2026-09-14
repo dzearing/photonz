@@ -1467,6 +1467,13 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// the room a row has left over"). Nil is every piece that has never been
     /// told to, which is every piece in every document written before this.
     public var flowFill: FlowFill?
+    /// Set where this piece has been taken out of the line its group arranges
+    /// and placed by hand, in front of the rest: a notification dot on the
+    /// corner of a card, a New ribbon over the top of one
+    /// (`FloatingPiece.swift`). Nil is every piece that is still one of the
+    /// pieces being arranged, which is every piece in every document written
+    /// before this.
+    public var floating: FloatingPiece?
 
     /// Set where this label's width is not a width somebody chose but the room
     /// the container had left for it: the words outgrew a box with a width of
@@ -1531,6 +1538,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          isVisible: isVisible, isLocked: false,
                          colorStyleBindings: colorStyleBindings, placement: placement,
                          flowFill: flowFill)
+        copy.floating = floating
         copy.wrappedByItsContainer = wrappedByItsContainer
         copy.heightChosenByHand = heightChosenByHand
         copy.textStyleID = textStyleID
@@ -1559,6 +1567,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
                          isVisible: isVisible, isLocked: isLocked,
                          colorStyleBindings: colorStyleBindings, placement: placement,
                          flowFill: flowFill)
+        copy.floating = floating
         copy.wrappedByItsContainer = wrappedByItsContainer
         copy.heightChosenByHand = heightChosenByHand
         copy.textStyleID = textStyleID
