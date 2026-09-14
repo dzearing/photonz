@@ -358,6 +358,14 @@ extension Experiments {
         layerGroupsEnabled && isEnabled(FeatureCatalog.framesFlag)
     }
 
+    /// `next-icon-frames`: whether the size lists offer the icon sizes, and
+    /// whether a frame made from a picked size brings the camera with it. An
+    /// icon size is a frame size, so this needs frames: with them off there is
+    /// no size list to put the icons in and the switch reads as off.
+    var iconFramesEnabled: Bool {
+        framesEnabled && isEnabled(FeatureCatalog.iconFramesFlag)
+    }
+
     /// `next-library`: whether the right dock offers the Library shelf and the
     /// View menu its Show Library row. The Library exists to hold reusable
     /// pieces, and the first of those is a group you promote, so this needs

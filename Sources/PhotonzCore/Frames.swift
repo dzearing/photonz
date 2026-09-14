@@ -15,17 +15,21 @@ public struct FramePreset: Hashable, Sendable, Identifiable {
     /// from `size`, so a label and a size can never disagree.
     public let title: String
     public let size: CGSize
+    /// Which half of the list this belongs in.
+    public let group: FramePresetGroup
 
-    public init(id: String, title: String, size: CGSize) {
+    public init(id: String, title: String, size: CGSize,
+                group: FramePresetGroup = .screens) {
         self.id = id
         self.title = title
         self.size = size
+        self.group = group
     }
 
-    /// The sizes offered, deliberately short: the surfaces interfaces actually
-    /// get built for, biggest to smallest, with the desktop first because that
-    /// is what most screens in this app start life as.
-    public static let all: [FramePreset] = [
+    /// The screens interfaces actually get built for, biggest to smallest, with
+    /// the desktop first because that is what most screens in this app start
+    /// life as.
+    public static let screens: [FramePreset] = [
         FramePreset(id: "desktop", title: "Desktop", size: CGSize(width: 1440, height: 1024)),
         FramePreset(id: "laptop", title: "Laptop", size: CGSize(width: 1280, height: 800)),
         FramePreset(id: "tablet", title: "Tablet", size: CGSize(width: 1024, height: 768)),
@@ -33,13 +37,47 @@ public struct FramePreset: Hashable, Sendable, Identifiable {
         FramePreset(id: "square", title: "Square", size: CGSize(width: 1000, height: 1000)),
     ]
 
+    /// The sizes icons are actually drawn at. Square, every one of them, and
+    /// small enough that the smallest is a twentieth of the smallest screen —
+    /// which is the whole reason they are a group of their own rather than six
+    /// more rows on the end of the screens.
+    ///
+    /// 16 to 64 is interface iconography, 512 is the app icon.
+    public static let icons: [FramePreset] = [16, 24, 32, 48, 64, 512].map { side in
+        FramePreset(id: "icon-\(side)", title: "Icon",
+                    size: CGSize(width: CGFloat(side), height: CGFloat(side)),
+                    group: .icons)
+    }
+
+    /// Every size offered, screens first.
+    public static let all: [FramePreset] = screens + icons
+
+    /// The sizes one surface offers: the screens always, the icons only where
+    /// the release has them switched on (`next-icon-frames`).
+    public static func all(includingIcons: Bool) -> [FramePreset] {
+        includingIcons ? all : screens
+    }
+
     /// What the dialog opens on, so Return alone makes a frame.
-    public static let `default` = all[3]
+    public static let `default` = screens[3]
 
     /// The preset a size matches exactly, or nil for a size nobody offered —
     /// which is what makes the menu able to say "Custom" truthfully.
     public static func matching(_ size: CGSize) -> FramePreset? {
         all.first { $0.size == size }
+    }
+
+    /// A size in words: "1440 × 1024". One place, so the dialog, the inspector
+    /// and the tests can never print it three different ways.
+    public static func sizeText(_ size: CGSize) -> String {
+        "\(Int(size.width.rounded())) × \(Int(size.height.rounded()))"
+    }
+
+    /// What a menu row says for this preset: a screen is known by its name, an
+    /// icon by its size. "Icon 24" beside "24 × 24" is the same sentence twice,
+    /// and the number is the half that matters.
+    public var menuTitle: String {
+        group == .icons ? Self.sizeText(size) : title
     }
 
     /// The smallest and largest side a frame may have. The floor keeps a frame
@@ -61,6 +99,22 @@ public struct FramePreset: Hashable, Sendable, Identifiable {
     private static func clamp(_ side: CGFloat) -> CGFloat {
         guard side.isFinite else { return minimumSide }
         return min(max(side.rounded(), minimumSide), maximumSide)
+    }
+}
+
+/// What a frame size is FOR. The two answers are far enough apart that one flat
+/// list of them reads as a wall of numbers: a screen is named ("Desktop"), and
+/// an icon is known only by how many pixels across it is.
+public enum FramePresetGroup: String, Hashable, Sendable, CaseIterable {
+    case screens
+    case icons
+
+    /// The heading the group sits under.
+    public var title: String {
+        switch self {
+        case .screens: "Screens"
+        case .icons: "Icons"
+        }
     }
 }
 

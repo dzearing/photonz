@@ -27,6 +27,10 @@ extension EditorState {
     /// Whether the frame rows and the frame tool exist at all.
     var framesEnabled: Bool { Experiments.shared.framesEnabled }
 
+    /// Whether the size lists offer the icon sizes, and whether a frame made
+    /// from a picked size brings the camera with it (`next-icon-frames`).
+    var iconFramesEnabled: Bool { Experiments.shared.iconFramesEnabled }
+
     /// Whether Layer ▸ Frame Selection would do anything: one unlocked layer
     /// is enough, because putting a single thing on a screen of its own is a
     /// normal way to start.
@@ -95,7 +99,16 @@ extension EditorState {
                              height: viewport.viewSize.height / viewport.zoom)
                 .intersection(canvas)
         }
-        addFrame(at: document.placementForNewFrame(size: size, visible: visible), size: size)
+        let origin = document.placementForNewFrame(size: size, visible: visible)
+        addFrame(at: origin, size: size)
+        // You picked a size rather than drawing one, so there is nothing on
+        // screen yet that says where the frame went or how big it is. The
+        // camera goes and gets it, and a frame too small to draw in is opened
+        // up until it is not (`Viewport.framing`). A frame you could already
+        // work in does not move it at all.
+        if iconFramesEnabled {
+            frameInView(CGRect(origin: origin, size: size))
+        }
     }
 
     /// Layer ▸ Frame Selection: puts a frame around what is selected, fitted

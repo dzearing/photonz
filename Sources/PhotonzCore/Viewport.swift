@@ -147,6 +147,39 @@ public struct Viewport: Equatable, Sendable {
         return revealing(pair, padding: padding)
     }
 
+    /// The camera a frame you just ASKED FOR deserves: that frame on screen, at
+    /// a scale you could draw in.
+    ///
+    /// A frame made from a size you picked has no gesture behind it — you did
+    /// not drag it out, so there is nothing on screen that already shows you
+    /// where it went or how big it is. A 16 pixel icon frame dropped on a
+    /// 1440 point canvas is a speck, and at that point the app has technically
+    /// done what you asked and given you nothing to work with.
+    ///
+    /// So: a frame that already lands at least `minimumSide` view points across
+    /// is only revealed, exactly as `revealing` would, because a second desktop
+    /// screen must not re-aim a camera that was fine. A smaller one is zoomed up
+    /// until it fills the room and centred, and the zoom lands on a WHOLE
+    /// multiple whenever it is above 1:1, so an icon's pixels stay square
+    /// instead of shimmering on a fractional scale.
+    public func framing(_ rect: CGRect, padding: CGFloat = 48,
+                        minimumSide: CGFloat = 240) -> Viewport {
+        guard !rect.isNull, !rect.isInfinite, rect.width > 0, rect.height > 0, zoom > 0,
+              viewSize.width > 0, viewSize.height > 0 else { return self }
+        guard min(rect.width, rect.height) * zoom < minimumSide else { return revealing(rect) }
+        let room = CGSize(width: max(1, viewSize.width - padding * 2),
+                          height: max(1, viewSize.height - padding * 2))
+        var wanted = min(room.width / rect.width, room.height / rect.height)
+        if wanted >= 2 { wanted = wanted.rounded(.down) }
+        wanted = min(max(wanted, Self.minZoom), Self.maxZoom)
+        guard wanted > zoom else { return revealing(rect) }
+        var next = self
+        next.zoom = wanted
+        next.origin = CGPoint(x: viewSize.width / 2 - rect.midX * wanted,
+                              y: viewSize.height / 2 - rect.midY * wanted)
+        return next.clamped()
+    }
+
     /// Adopts a new view size, keeping the document point at the view center fixed.
     public func resized(viewSize newSize: CGSize) -> Viewport {
         let centerDoc = documentPoint(fromView: CGPoint(x: viewSize.width / 2, y: viewSize.height / 2))

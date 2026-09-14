@@ -2313,6 +2313,18 @@ final class EditorState {
         self.viewport = revealed
     }
 
+    /// Aims the camera at a frame that was just MADE from a picked size
+    /// (`Viewport.framing`): the frame on screen, at a scale you could draw in.
+    /// A frame already big enough to work in does not move the camera at all,
+    /// so this is `bringIntoView` plus the one case that one refuses, which is
+    /// magnifying something small.
+    func frameInView(_ box: CGRect) {
+        guard let viewport else { return }
+        let framed = viewport.framing(box)
+        guard framed != viewport else { return }
+        self.viewport = framed
+    }
+
     private func zoomTowardCenter(_ newZoom: CGFloat) {
         guard let viewport else { return }
         let center = CGPoint(x: viewport.viewSize.width / 2, y: viewport.viewSize.height / 2)

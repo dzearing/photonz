@@ -1993,7 +1993,12 @@ private final class Run {
             other !== host && other.isVisible
                 && (other.parent === host || host.childWindows?.contains(other) == true)
         }
-        return [host] + attached
+        // A sheet is on top of the window, not a child of it, so it fell
+        // outside this list and everything a sheet showed was unreachable: a
+        // walk could photograph the New Frame sizes and never pick one. Its
+        // named controls read exactly like the panel's.
+        let sheet = host.attachedSheet.map { [$0] } ?? []
+        return [host] + attached + sheet
     }
 
     /// Every named thing the panel and whatever is open above it are showing

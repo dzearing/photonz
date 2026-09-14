@@ -7,6 +7,12 @@ import SwiftUI
 /// It opens on the size you made last, so Return alone gives you another screen
 /// the same size, and the frame lands in the middle of what you are looking at
 /// rather than at some corner you would have to go find.
+///
+/// With `next-icon-frames` on there is a second group under the screens: the
+/// sizes icons are drawn at. They are a row of small buttons rather than six
+/// more rows of numbers, because six rows that each say the same word and a
+/// different number is exactly the wall of numbers a short list exists to
+/// avoid.
 struct NewFrameDialog: View {
     @Environment(EditorState.self) private var editorState
     @Environment(\.dismiss) private var dismiss
@@ -25,12 +31,15 @@ struct NewFrameDialog: View {
                 .font(.headline)
 
             VStack(spacing: 0) {
-                ForEach(FramePreset.all) { preset in
+                ForEach(FramePreset.screens) { preset in
                     row(id: preset.id, title: preset.title,
-                        detail: Self.dimensions(preset.size)) {
-                        width = Double(preset.size.width)
-                        height = Double(preset.size.height)
+                        detail: FramePreset.sizeText(preset.size)) {
+                        take(preset.size)
                     }
+                    Divider().opacity(0.4)
+                }
+                if editorState.iconFramesEnabled {
+                    iconSizes
                     Divider().opacity(0.4)
                 }
                 row(id: Self.customID, title: "Custom", detail: nil) {}
@@ -51,12 +60,14 @@ struct NewFrameDialog: View {
                 Spacer()
                 Button("Cancel", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)
+                    .playtestControl("Cancel", detail: "New Frame")
                 Button("Add Frame") {
                     editorState.addFrameInView(size: chosenSize)
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(!FramePreset.isValid(chosenSize))
+                .playtestControl("Add Frame", detail: "New Frame")
             }
         }
         .padding(20)
@@ -70,8 +81,52 @@ struct NewFrameDialog: View {
         }
     }
 
+    /// The icon group: a heading and the six sizes side by side, each one a
+    /// square the width of its neighbours so the strip reads as one control
+    /// rather than six loose buttons.
+    private var iconSizes: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Icons")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack(spacing: 4) {
+                ForEach(FramePreset.icons) { preset in
+                    chip(preset)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .playtestField("Icons")
+    }
+
+    private func chip(_ preset: FramePreset) -> some View {
+        let isSelected = selection == preset.id
+        return Button {
+            selection = preset.id
+            take(preset.size)
+        } label: {
+            Text(verbatim: "\(Int(preset.size.width))")
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(isSelected ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 5)
+                .background(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary.opacity(0.5)),
+                            in: .rect(cornerRadius: 6))
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .help("A \(FramePreset.sizeText(preset.size)) canvas to draw an icon on")
+        .playtestControl("\(Int(preset.size.width))", detail: FramePreset.sizeText(preset.size))
+    }
+
     private var chosenSize: CGSize {
         CGSize(width: width, height: height)
+    }
+
+    private func take(_ size: CGSize) {
+        width = Double(size.width)
+        height = Double(size.height)
     }
 
     private func row(id: String, title: String, detail: String?,
@@ -98,10 +153,7 @@ struct NewFrameDialog: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-    }
-
-    private static func dimensions(_ size: CGSize) -> String {
-        "\(Int(size.width)) × \(Int(size.height))"
+        .playtestControl(title, detail: detail ?? "")
     }
 
     private func field(_ label: String, _ value: Binding<Double>) -> some View {

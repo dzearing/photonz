@@ -1,0 +1,50 @@
+{
+  "out": "/tmp/photonz-playtest/icon-frame-walk",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "1-sheet", "note": "New Frame: the five screens, then an Icons strip with the six sizes icons are drawn at" },
+    { "do": "snapshot", "name": "icon-frame-1-sheet" },
+    { "do": "panel", "stage": "1-sheet" },
+
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-picked", "note": "24 is picked; the screen rows have all let go of their dots" },
+    { "do": "snapshot", "name": "icon-frame-2-picked" },
+
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-made", "note": "a 24 x 24 frame, in the middle of the view, at a zoom you can draw at" },
+    { "do": "snapshot", "name": "icon-frame-3-made" },
+    { "do": "expectLayers", "count": 2 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [792, 542], "to": [806, 556] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-drawn", "note": "a 14 px dot drawn inside the 24 px frame joins it, the way a card joins a screen" },
+    { "do": "snapshot", "name": "icon-frame-4-drawn" },
+    { "do": "render", "name": "icon-frame-4-drawn-doc" },
+
+    { "do": "click", "at": [810, 560] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panel", "stage": "5-frame-panel" },
+    { "do": "describe", "stage": "5-frame-panel", "note": "the frame picked: its Size menu reads 24 x 24" },
+    { "do": "snapshot", "name": "icon-frame-5-frame-panel" },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "6-reopened", "note": "the sheet opens on the size made last, so 24 is still the one lit" },
+    { "do": "snapshot", "name": "icon-frame-6-reopened" },
+    { "do": "press", "control": "512", "in": "Icons" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "7-app-icon", "note": "a 512 canvas beside the 24: the camera pulled BACK to hold it rather than magnifying it" },
+    { "do": "snapshot", "name": "icon-frame-7-app-icon" },
+    { "do": "render", "name": "icon-frame-7-app-icon-doc" },
+    { "do": "expectLayers", "count": 4 }
+  ]
+}

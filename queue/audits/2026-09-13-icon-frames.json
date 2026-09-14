@@ -1,0 +1,46 @@
+{
+  "feature": "A frame can be the size of an icon",
+  "epic": "icon-grid",
+  "summary": "New Frame now offers the sizes icons are drawn at, 16 through 512, under the five screens. Pick one and the canvas takes you there at a zoom you can actually draw at, so a 24 pixel icon opens as a square the size of your hand instead of a speck.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Make a frame the size of an icon\" and it is on by default.",
+  "try": [
+    {
+      "do": "Open a blank document, then choose Layer and New Frame.",
+      "shot": "2026-09-13-icon-frames-sizes.png"
+    },
+    {
+      "do": "Click 24 in the Icons row, then Add Frame."
+    },
+    {
+      "do": "Draw an ellipse inside the frame you land on.",
+      "shot": "2026-09-13-icon-frames-drawn.png"
+    },
+    {
+      "do": "Click the empty white beside the ellipse to pick the frame, and read the Size row in the panel."
+    },
+    {
+      "do": "Choose Layer and New Frame again, and notice 24 is still the one lit."
+    },
+    {
+      "do": "Click 512 and Add Frame.",
+      "shot": "2026-09-13-icon-frames-app-icon.png"
+    },
+    {
+      "do": "Open the Experiments window, turn \"Make a frame the size of an icon\" off, and open New Frame again: the five screens are back and the Icons row is gone."
+    }
+  ],
+  "evaluate": [
+    "Landing at 3200% for a 24 pixel canvas: is that where you wanted to be, or would you rather arrive further out and zoom in yourself?",
+    "The icon sizes are a row of buttons and the screens are a list of rows. Does that read at a glance, or should the icons be rows like everything else?",
+    "The screens have no heading and the icons do. Does the asymmetry bother you?",
+    "Is 16, 24, 32, 48, 64, 512 the right six, or is something you actually draw at missing?",
+    "Drawing a 14 pixel dot at 3200%, did the canvas feel precise or slippery?"
+  ],
+  "rough": [
+    "The camera only moves for New Frame. Pressing F and clicking once also drops a frame at the last size picked, and that one leaves the camera where it was, so a 24 pixel frame dropped that way really is a speck. It felt wrong to move the canvas under a tool you are holding, but it is a real inconsistency.",
+    "A second frame is placed to the RIGHT of the ones already there, and past a point that is off the canvas, which the camera cannot scroll to. Reproduced with two plain Desktop screens, so it has nothing to do with icon sizes; filed as \"A second screen lands where the canvas cannot follow it\".",
+    "Nothing about the icon here knows it is an icon: no keylines, no live area, no snapping to whole pixels, no preview at size. That was deliberate, the task was narrowed to the canvas alone, but the mock at docs/design/mocks/pages/icon-draw-wt.html is mostly about the grid, so what shipped is the floor of that page and not the page.",
+    "Where the mock was not followed: it draws a 24 unit artboard with a 20 by 20 live area and calls that the icon canvas. A frame here is just 24 by 24 pixels with nothing drawn on it. The live area is part of the keylines slice, not this one.",
+    "A shape drawn in a 24 pixel frame gets the app's ordinary 4 pixel default border, which at icon scale is a sixth of the whole canvas. Not changed here, but somebody drawing icons will meet it immediately."
+  ]
+}

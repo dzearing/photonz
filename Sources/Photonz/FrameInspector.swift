@@ -34,11 +34,14 @@ struct FrameInspector: View {
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 8)
                 Menu {
-                    ForEach(FramePreset.all) { preset in
-                        Button {
-                            editorState.setFrameSize(id: layer.id, size: preset.size)
-                        } label: {
-                            Text("\(preset.title)  \(Self.dimensions(preset.size))")
+                    ForEach(FramePreset.screens) { preset in
+                        sizeButton(preset)
+                    }
+                    if editorState.iconFramesEnabled {
+                        Section("Icons") {
+                            ForEach(FramePreset.icons) { preset in
+                                sizeButton(preset)
+                            }
                         }
                     }
                 } label: {
@@ -68,14 +71,26 @@ struct FrameInspector: View {
         .id(layer.id)
     }
 
+    /// One size in the menu. A screen is known by its name with the numbers
+    /// beside it; an icon is known by its size alone, because "Icon 24" next
+    /// to "24 × 24" is the same sentence twice.
+    private func sizeButton(_ preset: FramePreset) -> some View {
+        Button {
+            editorState.setFrameSize(id: layer.id, size: preset.size)
+        } label: {
+            Text(preset.group == .icons
+                 ? preset.menuTitle
+                 : "\(preset.title)  \(FramePreset.sizeText(preset.size))")
+        }
+    }
+
     /// The preset's name when the size is one, the numbers when it is not, so
     /// the menu never claims a screen the frame is not.
     private var currentSizeLabel: String {
-        if let preset = FramePreset.matching(size) { return preset.title }
-        return Self.dimensions(size)
+        FramePreset.matching(size)?.menuTitle ?? Self.dimensions(size)
     }
 
     private static func dimensions(_ size: CGSize) -> String {
-        "\(Int(size.width.rounded())) × \(Int(size.height.rounded()))"
+        FramePreset.sizeText(size)
     }
 }
