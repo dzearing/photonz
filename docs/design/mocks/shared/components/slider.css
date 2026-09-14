@@ -163,6 +163,43 @@
   opacity:.9;
 }
 
+/* clamped — part of the range belongs to something else (UX-PATTERNS §4, "A
+   control that can only act over part of its range"). A group whose contents
+   are already rounded 18 has no radius below 18 to give: the control WORKS, it
+   just starts at 18. The refused stretch is drawn SPENT, and the fill starts at
+   the wall rather than at the end of the track, so the fill measures what YOU
+   added rather than what was already there. A knob resting on the wall
+   therefore shows no fill at all, which is the whole difference between it and
+   a slider nobody has touched. Never combine with .off: dimming says broken or
+   waiting, and this one works.
+
+   --p0 is the wall, on the same 0..1 scale as --p. Add .spent when the wall is
+   the whole range (a pill has nothing left to round): the groove is spent end
+   to end, the thumb stops taking the pointer, and the row still answers a
+   click, which is where the reason goes. */
+.slider.clamped{
+  --p0:0;
+  --sl-x0:calc(var(--sl-tw) / 2 + var(--p0) * (100% - var(--sl-tw)));
+}
+.slider.clamped .sl-fill{left:var(--sl-x0)}
+.slider.clamped .sl-spent{
+  position:absolute;top:0;bottom:0;left:0;
+  right:calc(100% - var(--sl-x0));
+  border-radius:999px;
+  /* Three materials, read left to right: given, yours, empty. The spent
+     stretch is FILLED, so it never reads as empty groove, but in neutral ink
+     rather than the accent, so it never reads as something you did. The
+     keyline keeps the wall crisp at the moment the fill is zero wide. */
+  background:color-mix(in srgb, var(--ink) 34%, var(--line-strong));
+  box-shadow:inset -1px 0 0 var(--panel);
+  transition:right .12s ease;
+}
+/* spent end to end: the wall is at the thumb's centre, half a thumb short of
+   the groove's end, so carry it to the end rather than leaving a live sliver
+   under the pill. */
+.slider.clamped.spent .sl-spent{right:0;box-shadow:none}
+.slider.clamped.spent > input[type=range]{pointer-events:none;cursor:default}
+
 /* range — two values, fill BETWEEN them. No native input (a range input has
    one value); slider.js drives the nearer thumb on pointerdown. */
 .slider.range{--p2:1;--sl-x2:calc(var(--sl-tw) / 2 + var(--p2) * (100% - var(--sl-tw)))}

@@ -9,12 +9,12 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T20:44:26.339Z",
+  "updated": "2026-09-14T22:27:44.944Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T20:44:26Z: 414 of 418 walks passed in 88 minutes.\n\nFailing walks (4): icon-stroke-weight-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk\n\nFull output: queue/sweep/2026-09-14-121649.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-shape-s-border-arrives-the-same-colour-as-its: A shape now arrives with no border at all (the resolved decision 'no edge until you ask for one'), which changes what every freshly drawn box and oval looks like and what its Effects list holds. I ran and repaired the 24 walks that touch borders, outlines, effects, parts, corners and colours, but any walk that draws a box and photographs it is in range.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T22:27:44Z: 414 of 419 walks passed in 86 minutes.\n\nFailing walks (5): icon-stroke-weight-walk, layers-lazy-rows-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk\n\nFull output: queue/sweep/2026-09-14-140138.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-badge-can-sit-on-the-corner-of-a-card-inside-a: Changed shared auto-layout flow code (GroupFlow measuring/resolving and the out-of-the-flow pass) to add a third piece role; the surface, stack and layout walks all pass but every arranged group in every walk goes through the code I touched.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
   "acceptance": [
     "A fresh sweep is asked for after two-effect-walks-fail-now-and-then-because-a-pre lands, with queue/bin/sweep.sh request",
     "contents-for-several-walk either passes or is rewritten to match what the app does now, and passes twice on its own",
@@ -154,6 +154,10 @@
     {
       "t": "2026-09-14T20:44:26.338Z",
       "note": "sweep 2026-09-14T20:44:26Z: 4 failing (icon-stroke-weight-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk)"
+    },
+    {
+      "t": "2026-09-14T22:27:44.943Z",
+      "note": "sweep 2026-09-14T22:27:44Z: 5 failing (icon-stroke-weight-walk, layers-lazy-rows-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk)"
     }
   ]
 }

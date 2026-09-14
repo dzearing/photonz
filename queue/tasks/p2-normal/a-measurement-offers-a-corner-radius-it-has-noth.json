@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-09T14:39:42.635Z",
-  "updated": "2026-09-14T12:54:44.561Z",
+  "updated": "2026-09-14T22:32:54.500Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on the probe on 2026-09-09 while building a-measurement-s-parts-live-in-appearance-like-ev, and visible in every screenshot of that audit: queue/audits/2026-09-09-measure-parts-1-panel-sc.png shows Corner Radius 0 px under Chip Text on a picked measurement. Reproduce with Scripts/playtest.sh Scripts/playtest/measure-parts-walk.json and look at measure-parts-1-panel-sc.png. Not caused by that work: the row comes from EditorState.corneredRadiusSelection, which calls document.cornerRadiusSelection(layerIDs:cornersOnly:true) and evidently counts a measure layer as cornered. The fix belongs in whatever cornersOnly tests, in PhotonzCore, with a test first.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-14T12:54:44.560Z",
       "note": "seq 150 -> 180"
+    },
+    {
+      "t": "2026-09-14T22:32:54.499Z",
+      "note": "UX-PATTERNS section 4 now sorts your case explicitly (v1.9, 2026-09-14, 'A control that can only act over part of its range'). A measurement is 'nothing to act on', not a clamped control: there is no true number to report at any value, the way an arrow has no width. The answer is no row at all, which is what this task already says, and it comes from the ladder's field row rather than being a one-off. Do NOT draw it as a spent or clamped slider: that treatment is only for a range something else is refusing you, and nothing refuses you here."
     }
   ]
 }

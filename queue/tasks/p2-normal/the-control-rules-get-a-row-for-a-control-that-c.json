@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:02:12.215Z",
-  "updated": "2026-09-14T12:54:43.656Z",
+  "updated": "2026-09-14T22:33:01.676Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-12 design review. Evidence: queue/audits/2026-09-12-corner-over-a-group.json, both of its last two rough notes, where Corner Radius over a group has a floor of 18 that only a tooltip explains, and a pill's slider switches itself off silently.\n\nThe existing rule is UX-PATTERNS.md section 4, \"A control that cannot act\", written 2026-09-04 after six fixes answered the same question six ways. It is a good rule and it holds; it just stops one row short. Its own field row already settles the look of a number you cannot type and says \"Never a hover tip alone\", so the shape of the answer is there to follow.\n\nThis serves the design-system epic, which is staged next, so it sits at p3 rather than taking a place ahead of focus work. The concrete case is fixed under a-slider-says-where-its-track-starts-when-someth at p2 without waiting for this.",
@@ -49,6 +49,35 @@
     {
       "t": "2026-09-14T12:54:43.655Z",
       "note": "seq 45 -> 50"
+    },
+    {
+      "t": "2026-09-14T22:27:45.112Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T22:33:01.465Z",
+      "note": "ADVERSARIAL REVIEW, before writing. The mock-and-audit evidence pointed at one answer (a clamped slider needs a marker) and that answer is wrong for two of the four cases, so the rule leads with sorting rather than with drawing. (a) A measurement's Corner Radius is not clamped at all: there is no true number at any value, so it is the ladder's existing field row and the answer is no row. Treating it as clamped would have put a spent track on a control nothing is refusing. (b) Border Width 0 to 20 on a 24 pixel icon is not clamped either: every value is reachable and does what it says. The icon audit already measured it at about 205 points of track, so one point of width is about 10 points of travel, which is a comfortable target, and the rule's answer there is LEAVE IT ALONE. Decorating it would have been pure noise. (c) The group audit's own third rough note records trying to remove the row and calls it the mistake, so 'take it away' is ruled out by evidence rather than by taste. Only two of the four cases are actually this rule."
+    },
+    {
+      "t": "2026-09-14T22:33:01.508Z",
+      "note": "ADVERSARIAL REVIEW, after drawing. First specimen build used the page's default slrow and a 20 percent ink wash: at 64 points of track you could not see the thing the specimen exists to show, and the wash was too faint to tell from the empty groove. Rebuilt with .slrow.stack (200 points of track) and the spent stretch drawn as a SOLID neutral segment rather than a wash, so a clamped slider reads as three materials left to right: given, yours, empty. Verified in the browser at 127.0.0.1:8791 in both themes, no console errors, and the measured geometry agrees with the rule (wall at 60.4 of 200, fill 0.2 wide at the wall, 62.1 when pulled past, 200 when spent end to end)."
+    },
+    {
+      "t": "2026-09-14T22:33:01.550Z",
+      "note": "left rough: comp-sliders block 03 still opens 'Four, each solving a problem the plain slider gets wrong', and .clamped is arguably a fifth. It sits in its own block 05 with its own name, so nothing is mislabelled, and rewording a specimen intro is not something a person would notice. Not filed."
+    },
+    {
+      "t": "2026-09-14T22:33:01.592Z",
+      "note": "left rough: the comp-sliders page intro carries an em dash ('the variants a photo editor actually needs — a fill that grows'), which the copy rule forbids. Pre-existing, not mine, and a wording nit in a specimen intro rather than something a person is stopped by. Not filed."
+    },
+    {
+      "t": "2026-09-14T22:33:01.633Z",
+      "note": "No sweep requested: this task changed no app code and no walk, only docs, mock CSS and one mock page. Scripts/test.sh run anyway per the repo rule: 6534 tests in 531 suites, all passing, 79s."
+    },
+    {
+      "t": "2026-09-14T22:33:01.675Z",
+      "note": "Epic check: this serves design-system, staged 'next' rather than 'now'. Kept rather than dropped because two OPEN tasks were explicitly waiting on it (a-slider-says-where-its-track-starts-when-someth, whose own acceptance says the answer must come from this rule rather than be invented, and a-measurement-offers-a-corner-radius-it-has-noth), and both serve epics staged now. That is the 'foundational work earns its place by unblocking the feature in focus' case, and the goal already named it."
     }
-  ]
+  ],
+  "started": "2026-09-14T22:27:45.111Z"
 }

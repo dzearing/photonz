@@ -1,6 +1,17 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.8. §4 gains "How much a section may say", the budget the line under
+**Status: v1.9. §4 gains "A control that can only act over part of its range",
+the row the ladder never had: a control that works, and simply does not reach
+everywhere, is neither dimmed nor removed. The refused stretch of its track is
+drawn spent and its fill starts at the wall, so a knob resting on a floor of 18
+stops looking like a knob at nothing, and a range spent to nothing stops looking
+like a slider nobody has touched. Written 2026-09-14 from four surfaces that met
+the same wall in a week and answered it four ways, and it sorts the three things
+that look alike: nothing to act on gets no row, a range merely wider than the
+subject uses gets no wall, and only a range something else clamps gets this
+treatment. `.slider.clamped` draws it in a mock. One audit gate in §9 to match.
+No behaviour changed, and the shipped cases the rule names as wrong were left
+filed rather than quietly fixed. v1.8: §4 gains "How much a section may say", the budget the line under
 a section never had: at most one short line, and only when it says something you
 cannot work out from what is already on screen. Written 2026-09-14 from the
 decision "How much should the right hand panel explain itself in words?",
@@ -855,6 +866,13 @@ shipped was to make Stretch fill the height, and it is the best of the six. Ask
 this first, every time, and only go down the ladder once the answer is a real
 constraint you can name in a sentence.
 
+**0b. Does it really not act, or does it act over less than you expected?** A
+slider with a floor under it works; it just never goes below the floor. Every
+row of the table below is about a control that cannot act AT ALL, so putting a
+clamped one through it produces a wrong answer with confidence: dim a control
+that works, or take away one doing real work. Sort it out here, against **A
+control that can only act over part of its range** below, before you read on.
+
 **Then answer by what kind of control it is**, because that, not the feature, is
 what decides:
 
@@ -864,6 +882,7 @@ what decides:
 | **A chooser whose value is decided elsewhere** | a menu, a segmented row, a toggle, where something above has already answered the question | **Replaced by the answer, in the same row.** Show the value in plain words and name who owns it. Keep the row in its place and its column so the section still reads as a set of settings. |
 | **A field that still has a number to report** | a width, a height, a position the layer really has, that you cannot type | **Keeps the number, read only.** A number you can read is worth more than an empty box, even when it is not yours to set. It must not look like something the keyboard will accept. A field with nothing true to report is the one that stays blank: a line or a caliper has no width of its own, so a number there would be about nothing you drew. |
 | **A bare affordance** | a resize handle, a rotate knob, a drag target: something with no label, grabbed rather than read | **Removed.** There is nowhere on a handle to say why it refuses, and a handle you can see but not drag teaches the wrong thing about the state that froze it. Take it away and make sure the state itself is visible somewhere with words, such as the padlock on the layer's row. Only the grabs go: the frame that says what is selected stays, because that answers a different question. |
+| **A control with a range that something else clamps** | a slider or a stepper that works, but not across all of it: a floor under it, a ceiling over it, or nothing left to give | **Stays, and the stretch of range that is not yours is drawn spent.** The fill measures what you added past the wall, so a knob resting on the wall reads as a knob against a wall rather than a knob at nothing. Never dimmed, because it works, and never removed, because it does real work. Full rules in "A control that can only act over part of its range" below. |
 | **A key press** | a shortcut with nothing on screen to dim: ⌥⌫, an arrow key, ⌘X aimed at a marquee | **Either the canvas notice says so, or something already on screen does and the key stays quiet.** Which one it is has a test, below, and it is not a judgment call. A key cannot be dimmed, so the answer that works for a button is not available to it, and a key that changes nothing and says nothing reads as an app that has stopped listening. |
 
 #### What a number you cannot type looks like
@@ -975,6 +994,113 @@ decided is broken is a reason nobody reads.
   the first half, and the tip carries the rest.
 - **A chooser replaced by its answer**: the words in the row are the first half,
   already on screen, and the tip adds what to do.
+
+#### A control that can only act over part of its range
+
+Written 2026-09-14 after four surfaces met the same wall in a week and each
+answered it its own way. Evidence: audit `2026-09-12-corner-over-a-group`, its
+last two rough notes, and audit `2026-09-14-icon-stroke-weight`, its fourth.
+
+The ladder above answers a control that **cannot act**. None of its rows fit a
+control that acts perfectly well and simply does not reach everywhere, which is
+what Corner Radius over a group rounded 18 is: it works, from the first nudge,
+just never below 18. Dimming it is a lie, because it works. Replacing it with
+its answer throws away a control doing real work. Taking it away is worse, and
+that is not a guess: the group audit's own third rough note records trying
+exactly that and calls it the mistake, because "hiding the row would have taken
+away a working control". So this is its own row, not a rung of that ladder.
+
+**Sort it first. Three things look alike and only one of them is this.**
+
+| What you are looking at | The tell | The answer |
+| --- | --- | --- |
+| **Nothing to act on** | there is no true number to report at any value. A caliper has no corners, the way an arrow has no width | **No row at all.** This is the ladder's field row, already decided. Never a slider pinned at nought standing in for a property the layer does not have |
+| **A range wider than the subject uses** | nothing is stopping you. Every value is reachable and does what it says, and most of them are merely silly here: Border Width running 0 to 20 on a 24 pixel icon | **Not this rule.** Nothing is refused, so nothing is drawn spent. Measure the travel before you call it a problem (below) |
+| **A range something else has clamped** | there is a wall, you can name in one sentence what put it there, and the values behind it are refused: Corner Radius over a group whose contents are rounded 18 | **This rule.** Keep the control and draw the wall |
+
+**Draw the wall. Three rules, and they hold for a floor, a ceiling, or both.**
+
+- **The refused stretch of track is drawn spent**, from that end of the track to
+  the wall: the groove one shade down, no fill in it, a hairline at the wall,
+  and no thumb travel into it. It reads as range that exists and is not yours,
+  which is the true thing, and it is on screen the whole time with nothing
+  hovered. That is the acceptance this row exists to meet.
+- **The fill starts at the wall, not at the end of the track.** The fill
+  measures what YOU added past what was already there. A knob resting on a floor
+  of 18 therefore shows no fill at all, which is exactly right: you have added
+  nothing yet. This is the fix for the thing the audit named, that "the knob at
+  the far left reading 18 looks exactly like the old knob at the far left
+  reading 0". It no longer does. The old one had a live empty track in front of
+  it; this one has a spent one.
+- **A range clamped to nothing is the whole track spent**, thumb at the wall,
+  and the thumb stops taking the pointer while the row still answers a click. A
+  pill has nothing left to round. Silently switching the slider off was the
+  fourth rough note, because a switched-off slider looks the same as one you
+  have not grabbed yet. A wholly spent groove does not. **Do not dim the row
+  instead:** dimming says broken or waiting, and this one has simply been spent.
+
+**The number beside it keeps its box.** A clamped slider's field still takes the
+keyboard, because typing a number and watching it settle to the wall is how a
+person learns where the wall is. Type 5 against a floor of 18 and it lands on 18
+and says why, in the line under the section, the ANSWER register in **The line
+under a section** above. Settling in silence is the one thing it must not do.
+
+**The words.** The wall on the track is the "who owns this" half, on screen with
+no pointer on it, which is exactly the allowance **Where the explanation goes**
+already makes for one control among live siblings. The rest is the ordinary §4
+sentence, who owns this and the one thing to do, and it arrives two ways:
+
+- **Clicking the row answers**, in the line under the section. The whole row is
+  the target, spent track included, the way the whole slot of a number you
+  cannot type is. Never a hover tip alone.
+- **The hover tip carries the same sentence**, from the same constant, for
+  somebody whose pointer is already resting there.
+
+*("What is inside this is already rounded 18 px. Round the contents less to take
+it lower." Owner named with the noun on screen, one thing to do, one constant in
+PhotonzCore, per **The wording** above.)*
+
+**Drawing the wall is what buys back the section's line.** The budget in **How
+much a section may say** grants a line to a limit, "because none of those can be
+seen". Once the wall is on the track it CAN be seen, so a clamped control does
+not also get a permanent caption saying it. Draw the wall or write the line,
+never both, and prefer the wall: it survives the section being scrolled past and
+costs no height.
+
+**When the range is merely too wide, fix the range, never the chrome.** Measure
+it on the real window before calling it anything: what decides it is how much
+travel one meaningful step costs. The icon border case was measured at about 205
+points of track for 0 to 20, so one whole point of width is about 10 points of
+travel, which is a comfortable target, and the honest answer there is to leave
+it alone. Only when a meaningful step is too small to hit does the range itself
+scale to the subject, and it does that quietly: no spent track, no sentence,
+because nothing is being refused.
+
+**Drawing one in a mock: `.slider.clamped`**, in `shared/components/slider.css`,
+added 2026-09-14. `--p0` is where the wall sits, on the same 0 to 1 scale `--p`
+already uses; the spent stretch and the start of the fill both come off that one
+number so they cannot disagree. Add `.spent` when the wall is the whole range.
+Specimen and rules: `pages/comp-sliders.html`, block **05**.
+
+```html
+<span class="slider clamped" style="--p0:.28;--p:.28">…</span>          <!-- floor, nothing added yet -->
+<span class="slider clamped" style="--p0:.28;--p:.62">…</span>          <!-- floor, pulled past it -->
+<span class="slider clamped spent" style="--p0:1;--p:1">…</span>        <!-- nothing left to give -->
+```
+
+**The four cases it was taken from, answered.**
+
+| The case | Which row | What it gets |
+| --- | --- | --- |
+| Corner Radius over a group whose contents are rounded 18 | clamped | track spent from 0 to 18, fill starting at 18, click or hover saying what is inside is already rounded 18 px |
+| Corner Radius on a pill, nothing left to round | clamped to nothing | the whole track spent, thumb at the wall, row still answers a click. Not dimmed, and never mistakable for untouched |
+| Corner Radius on a measurement, no corners at all | nothing to act on | no row. The ladder's field row settled this already: a caliper has no radius the way an arrow has no width |
+| Border Width 0 to 20 on a 24 pixel icon frame | range wider than the subject uses | nothing. Nothing refuses you, and one point of width costs about 10 points of travel, which is a fine target. Left alone on purpose, and that is the rule's answer rather than an omission |
+
+**No behaviour changed when this was written.** The first three cases are open
+work and stay open, in `a-slider-says-where-its-track-starts-when-someth` and
+`a-measurement-offers-a-corner-radius-it-has-noth`, both of which were waiting
+for this row and can now be built from it without inventing anything.
 
 #### What a key press says when it cannot act
 
@@ -1214,6 +1340,13 @@ Every editor/scenario page must satisfy:
 - [ ] **Nothing inert without an answer** (§4): every control that cannot act
       is dimmed, replaced by its answer, or gone per its kind, and the "who owns
       this" half of its reason is on screen rather than only on hover.
+- [ ] **A clamped range shows its wall** (§4): a slider or stepper that works
+      over only part of its range draws the refused stretch of track as spent,
+      starts its fill at the wall, and is neither dimmed nor removed. A range
+      spent to nothing reads as spent, never as a slider nobody has touched. A
+      control with nothing to act on has no row at all, and a range that is
+      merely wider than the subject uses draws no wall, because nothing refuses
+      you.
 - [ ] **No key press refuses in silence** (§4): a key that cannot do what it was
       aimed at, while the command behind it is perfectly able to act, says so on
       the canvas notice, verdict first, and names the way out. A key whose whole

@@ -1,0 +1,27 @@
+{
+  "feature": "A control that can only act over part of its range",
+  "epic": "design-system",
+  "summary": "The written rules now settle what a control looks like when it works but does not reach everywhere, like Corner Radius over a group that will not go below the 18 its contents already carry. The refused stretch of track is drawn as already given, in neutral ink, and your own fill starts at the wall, so a knob resting on a floor of 18 stops looking like a knob at nothing. Four surfaces had been inventing their own answer to this.",
+  "setup": "Nothing to install. This is a rule plus the piece that draws it in a mock. The dashboard is at http://127.0.0.1:8791. No app behaviour changed.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/index.html#comp-sliders and scroll to block 05, A range something else has clamped.", "shot": "2026-09-14-clamped-range-rule-specimen.png" },
+    { "do": "Read the three sliders left to right: at the wall, pulled past it, nothing left to give." },
+    { "do": "Compare the first one with any plain slider higher up the page, and decide whether you can tell them apart at a glance." },
+    { "do": "Look at the middle one: grey for what the contents already gave, blue for the 22 points you added, dark for what is left." },
+    { "do": "Look at the third one and decide whether a wholly grey track reads as spent rather than as untouched." },
+    { "do": "Open docs/design/mocks/shared/UX-PATTERNS.md and read section 4, A control that can only act over part of its range, starting at the three lookalikes table." },
+    { "do": "Read the last table of that section, where the four cases it was written from are each given their answer." }
+  ],
+  "evaluate": [
+    "The refused stretch is drawn as filled, in grey, rather than as empty groove. Does filled read as given to you, or does it read as a value somebody set?",
+    "In the dark theme the given stretch is lighter than the empty groove. Does brighter for not yours sit wrong with you?",
+    "Corner Radius on a pill keeps its row with the whole track spent rather than disappearing. Would you rather the row went away?",
+    "The rule says the Border Width slider on a 24 pixel icon is fine as it is, because nothing refuses you there and one point of width is about 10 points of travel. Do you agree that one is not a bug?",
+    "The rule lets drawing the wall replace the explanatory line under the section. Is seeing it on the track enough, or do you want the words too?"
+  ],
+  "rough": [
+    "No screenshot of the Photonz window here, and no playtest walk. This task changed no app code, so there was nothing in the app to capture. The picture is a real browser screenshot of the real specimen page, not an offscreen render and not a Photonz capture.",
+    "The look is settled in a mock, not on the real panel. The app's groove and panel colours are not the mock's, so the grey for a given stretch will need looking at once the slider task builds it, particularly in the light theme where it sits close to the empty groove.",
+    "The rule assumes a wall you can name in one sentence. A control clamped by two things at once, a floor from the contents and a ceiling from the box, gets one spent stretch at each end and two owners, and the rule does not say which sentence wins. Left open until something actually has both."
+  ]
+}

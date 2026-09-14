@@ -27,6 +27,12 @@
     sl.dataset.pzSlider = '1';
     var track = ensure(sl, 'sl-track');
     if (!track.querySelector('.sl-fill')) { var f = document.createElement('i'); f.className = 'sl-fill'; track.appendChild(f); }
+    /* .clamped needs one more child: the stretch of range something else
+       already spent. It goes BEFORE the fill so the fill's rounded end draws
+       over the wall rather than under it. See slider.css. */
+    if (sl.classList.contains('clamped') && !track.querySelector('.sl-spent')) {
+      var sp = document.createElement('i'); sp.className = 'sl-spent'; track.insertBefore(sp, track.firstChild);
+    }
     ensure(sl, 'sl-thumb');
     var input = sl.querySelector('input[type=range]');
     var row = sl.closest('.slrow');

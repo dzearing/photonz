@@ -153,7 +153,45 @@
       </div>
     </div>
 
-    <!-- 5 · THE FAMILY -->
+    <!-- 5 · CLAMPED -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad col">
+              <span class="slrow stack"><span class="rl">Corner Radius</span><span class="slider clamped" style="--p0:.28" data-unit=" px"><input type="range" min="0" max="64" value="18" aria-label="Corner Radius"><span class="sl-bub"></span></span><span class="num">18 px</span></span>
+            </span>
+            <span class="docsp-l"><b>At the wall</b> .clamped</span>
+            <p class="docsp-d">The group's contents are already rounded 18, so 0 to 18 is not yours. It is drawn spent and the fill starts at the wall, so a knob sitting there shows <i>no fill</i>: you have added nothing yet.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="slrow stack"><span class="rl">Corner Radius</span><span class="slider clamped" style="--p0:.28" data-unit=" px"><input type="range" min="0" max="64" value="40" aria-label="Corner Radius pulled"><span class="sl-bub"></span></span><span class="num">40 px</span></span>
+            </span>
+            <span class="docsp-l"><b>Pulled past it</b></span>
+            <p class="docsp-d">The fill is the 22 points you added, not the 40 that are there. That is the reading the wall buys: what is already the case, and what you did on top of it, told apart.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="slrow stack"><span class="rl">Corner Radius</span><span class="slider clamped spent" style="--p0:1" data-unit=" px"><input type="range" min="0" max="64" value="64" aria-label="Corner Radius spent"><span class="sl-bub"></span></span><span class="num">64 px</span></span>
+            </span>
+            <span class="docsp-l"><b>Nothing left to give</b> .spent</span>
+            <p class="docsp-d">A pill is already as round as its box goes. The whole groove is spent, which is the one thing a switched-off slider could never say: that one looks exactly like a slider you have not grabbed yet.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">05</div><h3 class="docname">A range something else has clamped</h3>
+        <p class="docrule">A control that <b>works, and simply does not reach everywhere</b> is neither dimmed nor removed: dimming says broken, removing takes away a control doing real work. The refused stretch is drawn spent and the fill starts at the wall. Full rule and the three lookalikes it has to be sorted from: UX-PATTERNS §4, <b>A control that can only act over part of its range</b>.</p>
+        <div class="docdd">
+          <span class="do">Let the number beside it keep its box. Typing 5 against a floor of 18 lands on 18 and says why.</span>
+          <span class="no">Dim it, hide it, or let it settle to the wall in silence.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>--p0</code> is the wall on the same 0..1 scale as <code>--p</code>; the spent stretch and the start of the fill both come off it, so they cannot disagree. The reason is one constant beside the state that causes it, said by the line under the section on a click and by the hover tip.</p>
+      </div>
+    </div>
+
+    <!-- 6 · THE FAMILY -->
     <div class="docblk">
       <div class="docspec">
         <div class="docgrid n3">
@@ -183,7 +221,7 @@
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">05</div><h3 class="docname">The rest of the family</h3>
+        <div class="docnum">06</div><h3 class="docname">The rest of the family</h3>
         <p class="docrule">Three relatives that look like sliders and are not. The rule for telling them apart: a slider has <b>one value on a bounded scale</b>. A dial is angular, a scrubber is a position in time with marks on it, and a ramp holds a list of objects.</p>
         <div class="docdd">
           <span class="do">Use a dial only for angles. Everything else is a slider.</span>
@@ -193,9 +231,9 @@
       </div>
     </div>
 
-    <!-- 6 · IN THE API -->
+    <!-- 7 · IN THE API -->
     <div class="doccard">
-      <div class="dochead"><span class="docnum">06</span><h3>In the API</h3><span class="k">the schema picks the control</span></div>
+      <div class="dochead"><span class="docnum">07</span><h3>In the API</h3><span class="k">the schema picks the control</span></div>
       <div class="docbody">
         <table class="doctbl">
           <thead><tr><th>Property shape</th><th>Control</th><th>Why</th><th>Command</th></tr></thead>

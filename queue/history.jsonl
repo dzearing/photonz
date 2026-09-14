@@ -3321,3 +3321,13 @@
 {"t":"2026-09-14T21:00:21.736Z","ev":"task_note","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a"}
 {"t":"2026-09-14T21:00:21.780Z","ev":"task_note","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a"}
 {"t":"2026-09-14T21:00:38.035Z","ev":"task_done","id":"a-badge-can-sit-on-the-corner-of-a-card-inside-a","from":"in_progress","note":"The Layout section's Role row has a third answer, In front of the rest, with Layer > In Front of the Rest beside it. A piece that takes it leaves the line, the row closes over it and stops measuring it, it comes to the front of its group, its X and Y come back to life, and a resize carries it by its own Horizontal and Vertical rules. Rides the existing next-auto-layout flag. Core in FloatingPiece.swift, GroupFlow, SurfaceCommand/PieceRole; 19 new tests, whole suite 6534 green; walked live on the probe with real captures in queue/audits/2026-09-14-piece-in-front.json."}
+{"t":"2026-09-14T22:27:44.998Z","ev":"sweep_pass","walks":419,"passed":414,"failed":5,"seconds":5166,"complete":true}
+{"t":"2026-09-14T22:27:45.114Z","ev":"task_started","id":"the-control-rules-get-a-row-for-a-control-that-c","title":"The control rules get a row for a control that can only act over part of its range","priority":"p2-normal"}
+{"t":"2026-09-14T22:32:54.457Z","ev":"task_note","id":"a-slider-says-where-its-track-starts-when-someth"}
+{"t":"2026-09-14T22:32:54.501Z","ev":"task_note","id":"a-measurement-offers-a-corner-radius-it-has-noth"}
+{"t":"2026-09-14T22:33:01.467Z","ev":"task_note","id":"the-control-rules-get-a-row-for-a-control-that-c"}
+{"t":"2026-09-14T22:33:01.510Z","ev":"task_note","id":"the-control-rules-get-a-row-for-a-control-that-c"}
+{"t":"2026-09-14T22:33:01.552Z","ev":"task_note","id":"the-control-rules-get-a-row-for-a-control-that-c"}
+{"t":"2026-09-14T22:33:01.594Z","ev":"task_note","id":"the-control-rules-get-a-row-for-a-control-that-c"}
+{"t":"2026-09-14T22:33:01.635Z","ev":"task_note","id":"the-control-rules-get-a-row-for-a-control-that-c"}
+{"t":"2026-09-14T22:33:01.677Z","ev":"task_note","id":"the-control-rules-get-a-row-for-a-control-that-c"}
