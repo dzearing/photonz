@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-13T16:15:46.157Z",
+  "updated": "2026-09-14T04:57:15.550Z",
   "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -47,49 +47,6 @@
           "id": "ui-prototyping",
           "title": "Click-through prototyping",
           "note": "",
-          "stage": "later",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "measure-redline",
-      "title": "Make Photonz the best UX redlining tool",
-      "note": "The primary real-world use: capture a screenshot, measure it, hand off a spec. Everything here ships in the Next release.",
-      "stage": "now",
-      "children": [
-        {
-          "id": "hover-measure",
-          "title": "Hover to measure: instant size and gap readouts",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "epic-uehjr1",
-          "title": "Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool.",
-          "note": "Finished. Arrow captions landed and were audited on 2026-09-04; sent back to later on 2026-09-04 by the manager pass.",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "measurements-panel",
-          "title": "Measurements panel: a list you can name, filter, and export",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "alignment-checks",
-          "title": "Alignment checking",
-          "note": "Finished. The decision resolved on 2026-08-22 and every alignment-checks task is done; sent back to later on 2026-09-04 by the manager pass.",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "spec-export",
-          "title": "Spec export: copy a clean spec list from a capture",
-          "note": "Finished. Copy a spec list, copy one measurement, and the picture-plus-spec handoff all landed and were audited; sent back to later on 2026-09-04 by the manager pass.",
           "stage": "later",
           "children": []
         }
@@ -240,36 +197,86 @@
       ]
     },
     {
-      "id": "image-editing",
-      "title": "Make Photonz the best tool for image editing",
-      "note": "Non-destructive photo work that feels native: every adjustment is a layer, nothing bakes in.",
+      "id": "video-editing",
+      "title": "Make Photonz the best tool for creating and editing video",
+      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it.",
       "stage": "later",
       "children": [
         {
-          "id": "image-retouch",
-          "title": "Retouching: heal, clone, and dodge/burn",
+          "id": "video-cutting",
+          "title": "Cutting and arranging: blade, trim, and place clips with confidence",
           "note": "",
           "stage": "later",
           "children": []
         },
         {
-          "id": "image-grading",
-          "title": "Color grading with curves, levels, and looks",
+          "id": "video-transitions-motion",
+          "title": "Transitions and motion: keyframes, zooms, and freezes that feel direct",
           "note": "",
           "stage": "later",
           "children": []
         },
         {
-          "id": "image-masking",
-          "title": "Masking and background removal",
+          "id": "video-titles-graphics",
+          "title": "Titles, captions, and graphics on the timeline",
           "note": "",
           "stage": "later",
           "children": []
         },
         {
-          "id": "image-paint",
-          "title": "Drawing and painting with real brushes",
+          "id": "video-audio",
+          "title": "Audio you can see and shape",
           "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "video-share",
+          "title": "Fast, predictable export and share",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "measure-redline",
+      "title": "Make Photonz the best UX redlining tool",
+      "note": "The primary real-world use: capture a screenshot, measure it, hand off a spec. Everything here ships in the Next release.",
+      "stage": "now",
+      "children": [
+        {
+          "id": "hover-measure",
+          "title": "Hover to measure: instant size and gap readouts",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "epic-uehjr1",
+          "title": "Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool.",
+          "note": "Finished. Arrow captions landed and were audited on 2026-09-04; sent back to later on 2026-09-04 by the manager pass.",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "measurements-panel",
+          "title": "Measurements panel: a list you can name, filter, and export",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "alignment-checks",
+          "title": "Alignment checking",
+          "note": "Finished. The decision resolved on 2026-08-22 and every alignment-checks task is done; sent back to later on 2026-09-04 by the manager pass.",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "spec-export",
+          "title": "Spec export: copy a clean spec list from a capture",
+          "note": "Finished. Copy a spec list, copy one measurement, and the picture-plus-spec handoff all landed and were audited; sent back to later on 2026-09-04 by the manager pass.",
           "stage": "later",
           "children": []
         }
@@ -312,6 +319,42 @@
       ]
     },
     {
+      "id": "image-editing",
+      "title": "Make Photonz the best tool for image editing",
+      "note": "Non-destructive photo work that feels native: every adjustment is a layer, nothing bakes in.",
+      "stage": "later",
+      "children": [
+        {
+          "id": "image-retouch",
+          "title": "Retouching: heal, clone, and dodge/burn",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "image-grading",
+          "title": "Color grading with curves, levels, and looks",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "image-masking",
+          "title": "Masking and background removal",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "image-paint",
+          "title": "Drawing and painting with real brushes",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
       "id": "local-model",
       "title": "Easy local model driving for UX exploration",
       "note": "A local model (for example Qwen via an on-device runtime) drives generate/variations/edit scenarios from inside Photonz: no account, no network, one-time setup. The agent automation mocks (Prompt to design, Generate variations, Agent-assisted edit) define the experience.",
@@ -341,49 +384,6 @@
         {
           "id": "local-edit",
           "title": "Model-assisted edits through the same command API",
-          "note": "",
-          "stage": "later",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "video-editing",
-      "title": "Make Photonz the best tool for creating and editing video",
-      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it.",
-      "stage": "later",
-      "children": [
-        {
-          "id": "video-cutting",
-          "title": "Cutting and arranging: blade, trim, and place clips with confidence",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "video-transitions-motion",
-          "title": "Transitions and motion: keyframes, zooms, and freezes that feel direct",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "video-titles-graphics",
-          "title": "Titles, captions, and graphics on the timeline",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "video-audio",
-          "title": "Audio you can see and shape",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "video-share",
-          "title": "Fast, predictable export and share",
           "note": "",
           "stage": "later",
           "children": []

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 280,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T12:21:46.712Z",
-  "updated": "2026-09-13T12:29:07.614Z",
+  "updated": "2026-09-14T05:21:58.406Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-12 with Scripts/playtest/style-users-walk.json (run it with --no-build). The walk paints one rectangle, saves its fill as the style Accent, groups it with a second rectangle, makes a component and drops one copy. The style then reads 4 colors use this and Select What Uses This picks Rectangle, Rectangle 2, Rectangle, Rectangle 2 - the originals two children and the copys two pieces. See /tmp/photonz-playtest/style-users/styleusers-4-selected-sc.png and the earlier capture at /tmp/photonz-playtest/style-piece/stylepiece-5-typed-sc.png, which shows the list reading 4 layers selected over two visible rows.\\n\\nThe numbers themselves are honest: Position & Size shows over that mixed selection (the section is only taken away when a piece is picked ON ITS OWN, InspectorPanel.swift:791), and typing 900 into X moved the original with the copy following, so nothing on screen ended up saying two different things. This is about what the selection LOOKS like, not about a wrong number. Found while answering find-out-whether-position-and-size-takes-numbers.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-13T12:29:07.613Z",
       "note": "seq 2460 -> 280"
+    },
+    {
+      "t": "2026-09-14T05:21:58.405Z",
+      "note": "It is a question about what the list should say rather than an investigation, so it is on a card instead of a runner slot."
     }
   ]
 }

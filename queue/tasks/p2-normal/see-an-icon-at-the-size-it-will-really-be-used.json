@@ -4,12 +4,12 @@
   "goal": "An icon is the only thing in this app that is drawn at one size and looked at at another, and the whole discipline is about what survives the shrink. While you draw in an icon frame, show the same drawing small, at the sizes it will really be used, so you find out it falls apart at 16 pixels while you can still do something about it.",
   "epic": "icon-grid",
   "priority": "p2-normal",
-  "seq": 2540,
-  "status": "blocked",
+  "seq": 9.2,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:40:44.990Z",
-  "updated": "2026-09-13T16:40:55.433Z",
+  "updated": "2026-09-14T05:22:04.463Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-new-frame-can-be-an-icon-size-and-an-icon-is-s on 2026-09-13 by the manager pass. That task now ships the icon sizes on their own; this one is the previews.\n\nIt is filed BLOCKED behind a decision card on purpose. Nobody asked for it: the user asked for a Pen that draws polygons and beziers and for SVG export, and the previews strip is a new readout the loop invented from the icon-grid epic title. A capture loupe was built the same way on 2026-09-02 and rejected on sight. Do not start this until the card is answered.\n\nIf it is approved: where the previews go should follow docs/design/mocks/shared/UX-PATTERNS.md rather than being invented, and the mocks that cover it are docs/design/mocks/pages/icon-draw-wt.html and the iconography reference. Say in the audit where the mock was followed and where it was not. The small sizes must be drawn the way the system would draw them, not smoothly shrunk, or the preview hides the exact problem it exists to show.",
@@ -29,6 +29,14 @@
     {
       "t": "2026-09-13T16:40:55.431Z",
       "note": "waiting on the decision card: nobody asked for a previews strip, so it is asked before it is built"
+    },
+    {
+      "t": "2026-09-14T04:50:19.730Z",
+      "note": "decision \"While you draw an icon, should the app show it small beside you?\" resolved: A row of small previews"
+    },
+    {
+      "t": "2026-09-14T05:22:04.462Z",
+      "note": "seq 2540 -> 9.2"
     }
   ]
 }

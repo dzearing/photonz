@@ -1,0 +1,53 @@
+{
+  "id": "find-out-what-corner-radius-should-say-over-a-gr-pick-a-group-holding-a-rounded-b",
+  "taskId": "find-out-what-corner-radius-should-say-over-a-gr",
+  "question": "Pick a group holding a rounded box and the panel says Corner Radius 0 while what you see is round. What should it say?",
+  "context": "A group has no paint of its own; its corner radius clips what is inside it, and it starts at 0. So the panel is telling the truth and still looks wrong.",
+  "options": [
+    {
+      "id": "says",
+      "label": "The row says what it clips",
+      "summary": "The number stays 0, because 0 is the truth about the group's own mask, and the row says in a few words that it rounds the group rather than the things inside it. Turn it up and the contents get clipped to that curve, which is what it has always done.",
+      "pros": [
+        "Nothing on screen is a lie",
+        "The control keeps doing the one thing it does, and now says so",
+        "No row that comes and goes as you move things about"
+      ],
+      "cons": [
+        "One more line of small text in a panel that already has too many"
+      ],
+      "mitigation": "It reads as part of the row rather than a paragraph under it, so it costs a label rather than a sentence."
+    },
+    {
+      "id": "hide",
+      "label": "Take the row away when nothing can show it",
+      "summary": "A group that paints nothing to its own edges has no visible corners, so the Corner Radius row is not offered at all. Put a background on the group and the row comes back.",
+      "pros": [
+        "The panel only offers knobs that would change what you see",
+        "Matches how the panel already hides the spacing knobs when nothing can show them"
+      ],
+      "cons": [
+        "The row appears and disappears as you move the contents around, which is its own kind of confusing",
+        "You cannot pre-round a group before you fill it"
+      ],
+      "mitigation": "The test is on the group's own paint rather than on where its contents happen to sit, so it only changes when you add or remove a background."
+    },
+    {
+      "id": "keep",
+      "label": "Leave it alone",
+      "summary": "Corner Radius over a group goes on reading 0 with no explanation. It is the honest number for the group's own mask and anyone who turns it up sees immediately what it does.",
+      "pros": [
+        "Nothing to build",
+        "No new words in the panel"
+      ],
+      "cons": [
+        "It goes on looking wrong every time somebody picks a rounded group"
+      ],
+      "mitigation": "Nothing: this is the state today.",
+      "declines": true
+    }
+  ],
+  "recommended": "says",
+  "status": "pending",
+  "created": "2026-09-14T05:21:42.833Z"
+}

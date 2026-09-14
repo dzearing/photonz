@@ -1,0 +1,34 @@
+{
+  "id": "an-icon-frame-shows-the-space-an-icon-has-to-liv",
+  "title": "An icon frame shows the space an icon has to live inside",
+  "goal": "Open a 24 pixel icon frame today and it is a blank square like any other frame. What makes a set of icons look like a set is that every one of them sits inside the same margin and lines up on the same handful of lines. Draw that margin and those lines on an icon frame, on top of the picture and never into it, so while you draw you can see whether what you made sits where the rest of the set sits.",
+  "epic": "icon-grid",
+  "priority": "p2-normal",
+  "seq": 9.4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T05:21:14.625Z",
+  "updated": "2026-09-14T05:22:04.554Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The icon-grid epic names keylines and this is the half of it nobody has built: queue/audits/2026-09-13-icon-frames.json says plainly 'Nothing about the icon here knows it is an icon: no keylines, no live area, no snapping to whole pixels, no preview at size', and that the frames slice was narrowed on purpose. The preview half is already its own task (see-an-icon-at-the-size-it-will-really-be-used, answered on a card as the strip option), so this task is the live area and the lines only.\n\nReference: docs/design/mocks/pages/icon-draw-wt.html draws a 24 unit artboard with a 20 by 20 live area and calls that the icon canvas. Icon presets are Sources/PhotonzCore/Frames.swift:46 (16/24/32/48/64/512); the grid overlay the Pen already snaps to is the nearest existing drawing code to copy from. Flag: next-icon-frames.\n\nWhich keylines beyond the live area (a circle, a square, a wide and a tall rectangle, the classic four) is a visual judgment. Build the live area, and if the keyline set is not obvious once you are looking at it, ship the live area and open a decision for the rest rather than guessing a grid.",
+  "acceptance": [
+    "An icon frame shows a live area inset from its edge, scaled to the frame, so a 24 pixel frame reads as a 20 by 20 live area.",
+    "The guides are drawn over the picture: exporting the icon, copying it, or rendering it gives back the artwork alone with no guides in it.",
+    "There is one obvious way to turn them off and back on, and the choice sticks between frames.",
+    "Try it: New Frame, Icons, 24. The margin and the lines are there before you draw anything, and an SVG exported from that frame contains only what you drew.",
+    "Anything left rough is filed as a follow-up task.",
+    "Audit written under queue/audits/."
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T05:21:14.627Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-14T05:22:04.553Z",
+      "note": "seq 2680 -> 9.4"
+    }
+  ]
+}

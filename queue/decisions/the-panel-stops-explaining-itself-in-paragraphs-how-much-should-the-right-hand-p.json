@@ -67,6 +67,11 @@
     }
   ],
   "recommended": "trim",
-  "status": "pending",
-  "created": "2026-09-13T14:13:39.472Z"
+  "status": "resolved",
+  "created": "2026-09-13T14:13:39.472Z",
+  "answer": {
+    "choice": "trim",
+    "note": "",
+    "resolved": "2026-09-14T04:51:02.079Z"
+  }
 }

@@ -4,12 +4,12 @@
   "goal": "Pick three layers and the right hand panel prints seven lines of small grey prose at you: one under Appearance, one under Effects, one under Arrange. They are well written and each one made sense on its own day, but together they push the controls down a panel that already cannot fit its sections, and somebody reads them once and never again. Settle how much the panel is allowed to say, and make every section obey it.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 69,
-  "status": "blocked",
+  "seq": 9.1,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:31.708Z",
-  "updated": "2026-09-13T14:13:53.018Z",
+  "updated": "2026-09-14T05:22:04.417Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, from a real window capture taken by the loop on 2026-09-13, queue/audits/2026-09-13-building-ui-5-spaced-evenly.png, with three layers selected. Three grey paragraphs, seven lines between them:\n- Sources/Photonz/PartsInspector.swift:178, \"3 layers. What you set here reaches every one of them, in one step, unless a row says underneath how many it reaches.\"\n- Sources/Photonz/EffectsListInspector.swift:98, \"Nothing added yet. Use the plus above for a shadow, a glow, a border or a blur.\"\n- Sources/Photonz/ArrangeInspector.swift:60, \"3 layers line up with each other, not with the picture.\"\n\nWhy this is a card and not just a task. It has now been raised by two manager passes in a row (2026-09-09 threaded it as six lines on a copy's panel) and it cuts directly against a shipped decision: \"Room says what it will do\" deliberately PUT TWO OF THESE SENTENCES BACK on 2026-09-08. So somebody has to say which way it goes rather than a runner quietly reversing a choice the user made.\n\nThe room this is competing for is measured: the task two-panel-walks-are-failing-on-main counted 1,090 points of sections trying to fit a 688 point dock. Three walks (border-effect, glow-effect, label-fills-a-row) fail today because the control they want has been scrolled out of reach, so this is not only a taste question.\n\nNot the same thing as the section ordering cards. Those ask which section comes first; this asks how much each section is allowed to say once it gets there.\n\nQueue-driven app work targets the Next release, but these are shared files, so say in the audit what Current looks like afterwards.",
@@ -31,6 +31,14 @@
     {
       "t": "2026-09-13T14:13:49.240Z",
       "note": "waiting on the card about how much the panel may explain itself"
+    },
+    {
+      "t": "2026-09-14T04:51:02.096Z",
+      "note": "decision \"How much should the right hand panel explain itself in words?\" resolved: One short line, and only when it earns it"
+    },
+    {
+      "t": "2026-09-14T05:22:04.416Z",
+      "note": "seq 69 -> 9.1"
     }
   ]
 }

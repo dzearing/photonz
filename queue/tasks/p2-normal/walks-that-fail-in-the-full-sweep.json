@@ -9,12 +9,12 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T03:26:21.452Z",
+  "updated": "2026-09-14T05:18:56.989Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T03:26:21Z: 404 of 406 walks passed in 82 minutes.\n\nFailing walks (2): contents-for-several-walk, dock-picked-first-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  dock-picked-first-walk -> picking-a-plain-shape-leaves-the-panel-parked-on, picking-a-text-layer-leaves-its-settings-below-t, a-task-says-which-failing-walk-it-owns-instead-o\n\nThis task owns the other 1: contents-for-several-walk\n\nStopped failing since the last sweep (5): border-effect-walk, copies-share-choice-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk\n\nFull output: queue/sweep/2026-09-13-190416.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-new-frame-can-be-an-icon-size-and-an-icon-is-s: Playtest can now reach controls inside a sheet (panelWindows gained the attached sheet), which touches every walk that opens one; and New Frame moves the camera to a frame made from a picked size under next-icon-frames\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T05:18:56Z: 405 of 408 walks passed in 82 minutes.\n\nFailing walks (3): contents-for-several-walk, dock-picked-first-walk, layers-lazy-rows-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  dock-picked-first-walk -> picking-a-plain-shape-leaves-the-panel-parked-on, picking-a-text-layer-leaves-its-settings-below-t, a-task-says-which-failing-walk-it-owns-instead-o\n  layers-lazy-rows-walk -> a-walk-still-answers-differently-when-the-machin\n\nThis task owns the other 1: contents-for-several-walk\n\nFull output: queue/sweep/2026-09-13-205706.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: picking-a-layer-brings-its-row-into-view: the layers list now scrolls to the layer you pick, which changes which rows the lazy stack has built; any walk that picks one layer and then claims a distant row is built could need a scroll step, the way separate-into-layers-walk did\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
   "acceptance": [
     "A fresh sweep is asked for after two-effect-walks-fail-now-and-then-because-a-pre lands, with queue/bin/sweep.sh request",
     "contents-for-several-walk either passes or is rewritten to match what the app does now, and passes twice on its own",
@@ -98,6 +98,10 @@
     {
       "t": "2026-09-14T03:26:21.451Z",
       "note": "sweep 2026-09-14T03:26:21Z: 2 failing (contents-for-several-walk, dock-picked-first-walk); stopped failing: border-effect-walk, copies-share-choice-walk, glow-effect-walk, label-fills-a-row-walk, readout-fields-walk"
+    },
+    {
+      "t": "2026-09-14T05:18:56.988Z",
+      "note": "sweep 2026-09-14T05:18:56Z: 3 failing (contents-for-several-walk, dock-picked-first-walk, layers-lazy-rows-walk)"
     }
   ]
 }

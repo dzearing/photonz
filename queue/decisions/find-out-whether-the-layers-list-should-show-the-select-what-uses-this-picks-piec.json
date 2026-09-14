@@ -1,0 +1,66 @@
+{
+  "id": "find-out-whether-the-layers-list-should-show-the-select-what-uses-this-picks-piec",
+  "taskId": "find-out-whether-the-layers-list-should-show-the",
+  "question": "Select What Uses This picks pieces inside copies, so the Layers list says four selected over two rows. What should it say?",
+  "context": "The four is honest and the edits it makes are correct. The question is whether a selection that reaches inside copies should say so, count only what it shows, or not reach in at all.",
+  "options": [
+    {
+      "id": "says",
+      "label": "Say how many are inside copies",
+      "summary": "The count stays honest at four and the list adds a short line saying two of them are pieces inside copies. You can see at a glance that the button reached further than the rows in front of you.",
+      "pros": [
+        "The number and the rows stop disagreeing without either of them lying",
+        "You learn that copies were touched, which is the thing worth knowing",
+        "Nothing about which layers get picked changes"
+      ],
+      "cons": [
+        "One more line in the Layers list"
+      ],
+      "mitigation": "It only appears when the selection actually reaches inside a copy, so most of the time the list looks exactly as it does now."
+    },
+    {
+      "id": "rows",
+      "label": "Count only the rows you can see",
+      "summary": "The list says two, matching the two rows in front of you. The pieces inside copies are still picked and still change when you edit, you just are not told about them.",
+      "pros": [
+        "The number always matches what is on screen",
+        "Nothing new in the list"
+      ],
+      "cons": [
+        "Editing now changes things the app never mentioned",
+        "A copy quietly repainting is the kind of surprise that is hard to undo confidently"
+      ],
+      "mitigation": "Undo takes the whole edit back including the copies, so nothing is unrecoverable."
+    },
+    {
+      "id": "visible",
+      "label": "Only pick what has a row",
+      "summary": "Select What Uses This reaches only as far as the layers you can see rows for. Copies keep the style but are left out of the selection, and the button says so.",
+      "pros": [
+        "What is picked and what is shown are the same set, always",
+        "No editing anything you cannot see"
+      ],
+      "cons": [
+        "The button stops doing the thing it is for: finding everywhere a style is used",
+        "Changing a colour everywhere now takes a trip into each copy"
+      ],
+      "mitigation": "The style itself can still be edited in one place, which repaints every user including the copies."
+    },
+    {
+      "id": "keep",
+      "label": "Leave it alone",
+      "summary": "The list goes on saying four layers selected over two rows. It has not caused a wrong number anywhere else and the edits it makes are correct.",
+      "pros": [
+        "Nothing to build"
+      ],
+      "cons": [
+        "The one place the app counts something you cannot see stays unexplained"
+      ],
+      "mitigation": "Nothing: this is the state today.",
+      "declines": true
+    }
+  ],
+  "recommended": "says",
+  "status": "pending",
+  "created": "2026-09-14T05:21:53.206Z"
+}

@@ -1,0 +1,51 @@
+{
+  "id": "cut-a-recording-into-pieces-and-drop-the-piece-y-you-moved-video-editing-up-the-l",
+  "taskId": "cut-a-recording-into-pieces-and-drop-the-piece-y",
+  "question": "You moved video editing up the list this morning, above redlining. Should the loop start building it?",
+  "context": "This morning you dragged video editing up four places in the objectives and redlining down five. Stages did not change, so the loop cannot tell whether that was a change of plan or a tidy-up.",
+  "options": [
+    {
+      "id": "video",
+      "label": "Start video now",
+      "summary": "The loop starts building video editing in the app, beginning with cutting a recording into pieces and dropping the ones you do not want. Redlining polish and icon work keep going around it, but video gets a share of every day.",
+      "pros": [
+        "A screen recording can be tidied without recording it again, which is the thing the trim handles cannot do",
+        "The recording, trim and export plumbing already exists, so the first slice is a real feature rather than groundwork"
+      ],
+      "cons": [
+        "Icons and the panel work move slower while video takes slots"
+      ],
+      "mitigation": "Video takes one slice at a time and each one ships behind its own switch, so it can be stopped after the first if it is not what you wanted."
+    },
+    {
+      "id": "mocks",
+      "label": "Sketch video first",
+      "summary": "Before any app code, the loop hardens the video clickthroughs so you can click through cutting, transitions and titles as pictures and say what is right, and only then does it build.",
+      "pros": [
+        "You see the whole shape of video editing before any of it is built",
+        "Cheap to change your mind"
+      ],
+      "cons": [
+        "Nothing in the app changes for a while, and there are already fourteen video sketches sitting there"
+      ],
+      "mitigation": "The sketches already exist, so this is a hardening pass rather than a study from nothing."
+    },
+    {
+      "id": "order",
+      "label": "Ordering only, leave video alone",
+      "summary": "The move in the objectives list was about what matters eventually, not about what to build next. The loop keeps going on building UI, icons and redlining, and video waits.",
+      "pros": [
+        "The focus stays on one thing",
+        "No half-built video surface to maintain"
+      ],
+      "cons": [
+        "Recordings stay trimmable only from the ends"
+      ],
+      "mitigation": "Nothing is lost: the sketches and the trim editor stay where they are and video can start any time.",
+      "declines": true
+    }
+  ],
+  "recommended": "video",
+  "status": "pending",
+  "created": "2026-09-14T05:21:25.999Z"
+}
