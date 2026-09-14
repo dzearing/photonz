@@ -4,12 +4,12 @@
   "goal": "Most icons are not drawn point by point, they are built: a circle with a smaller circle cut out of it is a ring, two rounded rectangles joined are a chat bubble. Let somebody pick two or more shapes and combine them, joining their outlines, cutting the top one out of the one below, keeping only where they overlap, or keeping everything except the overlap. The result is one editable shape, not a picture of one.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 66,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:07.274Z",
-  "updated": "2026-09-13T14:13:53.018Z",
+  "updated": "2026-09-14T12:54:44.212Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -33,6 +33,14 @@
     {
       "t": "2026-09-13T14:13:07.276Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:47.399Z",
+      "note": "seq 66 -> 100"
+    },
+    {
+      "t": "2026-09-14T12:54:44.211Z",
+      "note": "seq 100 -> 130"
     }
   ]
 }

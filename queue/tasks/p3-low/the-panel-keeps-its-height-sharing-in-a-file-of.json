@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 50,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:54:02.606Z",
-  "updated": "2026-09-12T12:02:46.321Z",
+  "updated": "2026-09-14T12:53:17.265Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/InspectorPanel.swift, 1,310 lines after the 2026-09-09 split. The blocker is that the budget and reveal code reads the view own @State and @AppStorage, so moving it to an extension in another file means widening those properties or lifting them into a small observable holder. That is a rewrite rather than a move, which is why the split task stopped short of it. DockBudgetScratch, DockRevealScratch, DockArrivals and SectionDragScratch are already separate reference types and are the natural place to land it.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-12T12:02:46.320Z",
       "note": "seq 1310 -> 50"
+    },
+    {
+      "t": "2026-09-14T12:53:17.264Z",
+      "note": "folded into picking-a-text-layer-leaves-its-settings-below-t: the panel rule rewrites those routines anyway, so the split rides along rather than standing as its own task"
     }
   ]
 }

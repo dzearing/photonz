@@ -4,12 +4,12 @@
   "goal": "When a guide step talks about the whole picture rather than about one control, its card is drawn across the top middle of the picture, on top of whatever is there. Somebody reading \"the two left closed up on their own\" cannot see the two that are left. The card should find clear space, or the picture should shift out from under it.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 470,
+  "seq": 460,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:18:03.546Z",
-  "updated": "2026-09-13T12:34:20.472Z",
+  "updated": "2026-09-14T12:54:46.467Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe 2026-09-13 while building the Building UI track.\n\nCommand: Scripts/playtest.sh Scripts/playtest/tutorial-let-a-screen-arrange-itself-walk.json\nEvidence: the first run of that walk, with the sample screen at (200, 40), put the callout for the final step squarely over the top card of the two remaining. Screenshot kept at queue/audits/2026-09-13-tutorials-building-ui-callout-over-the-picture.png.\n\nWhy it happens: TutorialCalloutLayout.place tries above, below, leading and trailing; the canvas fills the window bar the panel, so no side has room, and it falls through to insideSurface (TutorialCallout.swift:158), which puts the card at anchor.minY + gap, centred. At the size a tutorial window opens at that band reaches about 113 points down the page and about 320 points across its middle.\n\nWorked around in the Building UI samples by starting every screen below TutorialSampleScreen.calloutSkirt (120) and asking the lining-up guide to sweep from the LEFT rather than from above. That is a guide knowing about a callout, which is backwards.\n\nWorth considering: insideSurface could pick the quietest quarter of the canvas (the renderer already knows where the layers are), or a step could name a rectangle of the picture as its anchor so the card sits beside THAT rather than beside the whole canvas.",
@@ -30,6 +30,14 @@
     {
       "t": "2026-09-13T12:34:20.471Z",
       "note": "seq 480 -> 470"
+    },
+    {
+      "t": "2026-09-14T12:53:49.713Z",
+      "note": "seq 470 -> 430"
+    },
+    {
+      "t": "2026-09-14T12:54:46.464Z",
+      "note": "seq 430 -> 460"
     }
   ]
 }

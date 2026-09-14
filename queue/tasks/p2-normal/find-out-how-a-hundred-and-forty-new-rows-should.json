@@ -4,12 +4,12 @@
   "goal": "Separating a whole screenshot can put well over a hundred layers into the list at once, and the panel shows about five rows at a time. Scrolling a list that long to find the one label you wanted is the moment the feature stops feeling like a gift. Work out what should happen instead, try it, and come back with a recommendation: grouped by where the pieces sat on the page, collapsed under the thing they came from, filtered, searchable, or something else.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 500,
+  "seq": 490,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:50.902Z",
-  "updated": "2026-09-13T12:34:20.504Z",
+  "updated": "2026-09-14T12:54:46.672Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Asked as an open question by audit 2026-09-13-separate-whole-screenshot: \"A hundred and forty two rows called Text 1 to Text 142 is a long list even with thumbnails. Is that usable as it stands, or does a separation this size need the list grouped by where the pieces were on the page?\" and in its rough notes: \"The limit keeps 500 rows from happening but does not make 142 pleasant. At the window size in these pictures the layers list shows about five rows at a time.\"\n\nPairs with a-text-layer-s-row-says-the-words-that-are-in-it, which fixes what the rows are CALLED. This one is about how many of them there are. Do that one first if both are open: a hundred rows with real words on them may be a different problem from a hundred rows called Text N.\n\nSeparate already nests (audit 2026-09-13-separate-hierarchy), so some of the shape may already be there.",
@@ -32,6 +32,14 @@
     {
       "t": "2026-09-13T12:34:20.503Z",
       "note": "seq 510 -> 500"
+    },
+    {
+      "t": "2026-09-14T12:53:49.923Z",
+      "note": "seq 500 -> 460"
+    },
+    {
+      "t": "2026-09-14T12:54:46.671Z",
+      "note": "seq 460 -> 490"
     }
   ]
 }

@@ -1,15 +1,15 @@
 {
   "id": "an-oval-s-outside-border-meets-the-oval-cleanly",
-  "title": "An oval's outside border meets the oval cleanly",
+  "title": "An oval's border follows the oval, not an oval inset inside it",
   "goal": "Put an outside border on an oval and a faint trace of the background still shows between the border and the oval, round the diagonals. Everywhere else a border now meets what is on either side of it with nothing showing through; the oval is the one shape left out.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 140,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-09T16:28:47.801Z",
-  "updated": "2026-09-13T12:29:07.448Z",
+  "updated": "2026-09-14T12:54:44.700Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left over from the border seam fix (BorderSeamRenderTests, the ovalBordersStayClean case, which allows up to 24 pixels at under 70/255 for .outside only). An oval's ring is drawn as a STROKE ridden round the oval rather than as two ovals inset from each other, because the shape draws its own edge the same way (DocumentRenderer.ellipseRing, and the comment there explains why). A stroke's inner boundary is the oval walked inwards by half the width, which on a stretched oval is not itself an oval: it misses the oval inset by the width by up to a twentieth of the width round the diagonals. So the ring genuinely does not reach the shape's edge there, and laid() cannot close a gap that is really in the geometry. Worth trying: derive the ring's inner and outer silhouettes by FILLING and CLEAR-STROKING the same mid-oval path in drawEllipseRing, so the masks match the drawn band exactly, and then check whether the residual is the mask arithmetic or the offset-curve geometry.",
@@ -17,7 +17,10 @@
     "Sample the pixels along the inside of an outside border on a stretched oval and record how much background each carries, before and after",
     "No pixel between an oval's outside border and its fill carries any of the background colour, checked by sampling at one hundred percent and at several zooms",
     "An oval's border still lands exactly where the oval's own drawn edge lands, so a border on top of a shape's outline stays one line and not two",
-    "Pixel tests in PhotonzRender cover the oval's outside border, written before the change"
+    "Pixel tests in PhotonzRender cover the oval's outside border, written before the change",
+    "A border on a 2:1 oval sits the same distance from the curve all the way round, checked by sampling the rendered pixels rather than by eye",
+    "A circle is unchanged, byte for byte, because it was already right",
+    "Turning an oval into a path leaves the picture identical, which it does not quite do today"
   ],
   "log": [
     {
@@ -31,6 +34,18 @@
     {
       "t": "2026-09-13T12:29:07.447Z",
       "note": "seq 210 -> 140"
+    },
+    {
+      "t": "2026-09-14T12:53:30.669Z",
+      "note": "Folded in from an-oval-s-own-border-hugs-the-oval-not-the-box-r (dropped as a near-twin): a border on an ellipse is drawn as a second oval inset inside the first, which is only right on a circle. On a 2:1 oval the line drifts by a fraction of a pixel along the flanks, so the ring is not parallel to the shape. That is the same geometry as the background showing through on the diagonals: both go away if the border follows the offset curve the way a border on a path already does. Extra acceptance carried across: a circle is unchanged byte for byte, and turning an oval into a path leaves the picture identical, which it does not quite do today."
+    },
+    {
+      "t": "2026-09-14T12:53:47.896Z",
+      "note": "seq 140 -> 170"
+    },
+    {
+      "t": "2026-09-14T12:54:44.699Z",
+      "note": "seq 170 -> 200"
     }
   ]
 }

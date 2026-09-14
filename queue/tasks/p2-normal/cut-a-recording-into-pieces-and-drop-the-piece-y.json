@@ -4,12 +4,12 @@
   "goal": "Record something today and you get one clip with a start handle and an end handle. You can shorten it from either end and that is all: if the bit you want to lose is in the middle, you record it again. Let a person put a cut in the middle of a recording, get two pieces out of it, and throw one away, so a screen recording can be tidied without starting over.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 2690,
+  "seq": 600,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T05:21:21.119Z",
-  "updated": "2026-09-14T05:21:32.590Z",
+  "updated": "2026-09-14T12:54:47.468Z",
   "deps": [],
   "blockedBy": [],
   "notes": "BLOCKED ON A CARD ON PURPOSE: the video epic is staged later and this task exists so the question of whether video starts now has something to attach to. Do not build it until the card is answered.\n\nWhat exists today: PhotonzCore has Recording.swift and VideoEdit.swift (VideoTrim, in and out points, clamping, push semantics, VideoCrop), and the app has VideoEditorState, VideoEditorView, TrimTimeline and PlaybackScrubber. AppCoordinator.openRecording opens a recording in that editor; copyRecording exports mp4 or gif through the trim and crop. So one clip with two handles is real and shipped; a list of pieces is not, and the model change is the substance of the work.\n\nMock: docs/design/mocks/pages/video-cut-wt.html. Keep the cut list in PhotonzCore as a value type with tests (a recording plus an ordered list of kept ranges), the way VideoTrim already is, and leave the AVFoundation plumbing app-side.",
@@ -29,6 +29,18 @@
     {
       "t": "2026-09-14T05:21:32.588Z",
       "note": "Waiting on the card asking whether video work starts now; the video epic is staged later, so nothing is built until it is answered."
+    },
+    {
+      "t": "2026-09-14T12:53:39.979Z",
+      "note": "TRIAGE 2026-09-14: the video-editing epic is staged later, which normally means this is dropped rather than parked. It is kept because it is blocked on the card asking you whether video work starts now, and dropping it would take that question off the dashboard before you have answered it. If the answer is no, this goes with it."
+    },
+    {
+      "t": "2026-09-14T12:53:50.776Z",
+      "note": "seq 2690 -> 580"
+    },
+    {
+      "t": "2026-09-14T12:54:47.467Z",
+      "note": "seq 580 -> 600"
     }
   ]
 }

@@ -3,13 +3,13 @@
   "title": "Find out what a big marquee really costs to cut in the shipping build",
   "goal": "Cutting a piece onto its own layer is quick for the size of marquee anybody actually draws, but nobody has measured what happens when the marquee is enormous: half of a photograph from a real camera. Find out whether it lands instantly or whether you can feel it, and make it instant if you can feel it.",
   "epic": "ui-building",
-  "priority": "p2-normal",
-  "seq": 2700,
+  "priority": "p3-low",
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T05:44:04.772Z",
-  "updated": "2026-09-14T05:44:04.775Z",
+  "updated": "2026-09-14T12:54:48.096Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the New Layer via Cut task on 2026-09-14. Everything measured so far was in a DEBUG test build, where Swift tight loops run many times slower than the release build the app ships, so the numbers below are an upper bound and not the answer.\n\nDebug numbers on a 4000x3000 picture, after the optimisations that landed with the feature:\n  small 200x120 marquee   81 ms\n  ellipse over half of it  1179 ms   (mask 197, read 42, spots 641, decide 157, middle 86, trimmed 85, extracted 3, patched 5)\n\nSmartCut.cut is the entry point (Sources/PhotonzRender/SmartCut.swift). The cost is inherently O(marquee area) because the mask has to be rasterised, so this is about the constant, not the shape of the algorithm. The three parts worth looking at are PatchRingWalk.spots (the edge pass over the mask), SmartCut.mask, and the fact that PatchDecision.decide and PatchDecision.middle each take their own median of the same ring, so the guessed path medians twice.\n\nTo measure the release build: swift test -c release --filter <bench>, or time it inside the probe app, which is already built with -c release. Do NOT report debug numbers as the answer: that is what this task exists to correct.",
@@ -22,6 +22,22 @@
     {
       "t": "2026-09-14T05:44:04.774Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:39.888Z",
+      "note": "priority p2-normal -> p3-low"
+    },
+    {
+      "t": "2026-09-14T12:53:39.933Z",
+      "note": "TRIAGE 2026-09-14: moved to p3. Nobody has reported it feeling slow, and the audit for cut-to-own-layer measured the sizes people actually draw. This is a measurement we should have, not a defect we know about, so it waits behind things that are broken."
+    },
+    {
+      "t": "2026-09-14T12:53:51.482Z",
+      "note": "seq 2700 -> 130"
+    },
+    {
+      "t": "2026-09-14T12:54:48.095Z",
+      "note": "seq 130 -> 120"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Most icons people use every day are drawn as lines rather than filled shapes, and what makes them look like a set is that every line ends in the same shape and every corner turns the same way. Photonz can set how thick an outline is and whether it sits inside or outside the shape, but not what its ends and corners look like, so a line drawing comes out with hard chopped ends. Give an outline those two settings.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 68,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:19.680Z",
-  "updated": "2026-09-14T10:59:20.662Z",
+  "updated": "2026-09-14T12:54:44.281Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -36,6 +36,14 @@
     {
       "t": "2026-09-14T10:59:20.661Z",
       "note": "Blocked in practice until a-line-drawn-with-the-pen-can-be-made-thicker-or lands: this task's Try it says 'draw an open path with the Pen, turn its outline up to 8', and a path has no thickness control anywhere in the app today. Reproduced 2026-09-14 on the probe: pen, three clicks, Return, pick it, and {\"do\":\"expect\",\"field\":\"Thickness\",\"present\":true} fails with 'no field called \"Thickness\" is in the panel; the ones that are: X, Y, W, H, A, Opacity, Blending, X, Y, W, H, A'. The cause is the same one: ShapeSelection holds annotations only, so a path reaches none of the shape rows. Whoever picks this up gets the ends and corners rows for free once the path is in that selection."
+    },
+    {
+      "t": "2026-09-14T12:53:47.469Z",
+      "note": "seq 68 -> 110"
+    },
+    {
+      "t": "2026-09-14T12:54:44.280Z",
+      "note": "seq 110 -> 140"
     }
   ]
 }

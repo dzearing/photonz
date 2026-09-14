@@ -4,12 +4,12 @@
   "goal": "Draw an icon on a blank canvas and export it as SVG and the file is mostly a bitmap: the white background the canvas starts with is a picture layer, so it gets embedded whole, making a small icon a file of tens of kilobytes with a photograph in it. A flat colour is a rectangle, so write it as one, and let an icon leave as pure shapes.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 2580,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T18:41:40.209Z",
-  "updated": "2026-09-13T18:41:40.212Z",
+  "updated": "2026-09-14T12:54:44.005Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, from the walk that shipped with the SVG export task: Scripts/playtest/svg-export-walk.json writes /tmp/photonz-playtest/svg-export-walk/svg-export-3-icon.svg, and its log line reads 17270 bytes, every layer as shapes, of which about 17000 is the white background as base64 PNG. Two ways to tell a flat picture: ask the ImageStore for the bitmap and check every pixel is the same colour (cheap enough on export, and PixelField/BoxSweep already do this kind of scan), or catch it earlier where a blank canvas is made (BlankCanvas.swift) and give the document a flat background that is not a bitmap at all. The second is the better answer and the bigger change.",
@@ -23,6 +23,22 @@
     {
       "t": "2026-09-13T18:41:40.211Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:50.345Z",
+      "note": "seq 2580 -> 520"
+    },
+    {
+      "t": "2026-09-14T12:54:43.429Z",
+      "note": "seq 520 -> 74"
+    },
+    {
+      "t": "2026-09-14T12:54:43.521Z",
+      "note": "TRIAGE 2026-09-14: moved up beside the pen tasks. The user asked for SVG export so icons drawn in the app can be handed over. Export landed, but an icon drawn on a blank canvas comes out as a file with a base64 bitmap of the white background inside it, which is the one thing that stops the file being handable. It is the last step of the ask rather than a polish item."
+    },
+    {
+      "t": "2026-09-14T12:54:44.004Z",
+      "note": "seq 74 -> 100"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "When the walk sweep lists its failures, it now says which of them another open task is already working on. It works that out by looking for the walk name anywhere in the other task, so a task that mentions a walk only in passing can be listed as owning it, and a runner can skip a walk nobody is actually fixing. Make that a thing a task says about itself rather than something guessed from its text.",
   "epic": "unmanned-loop",
   "priority": "p3-low",
-  "seq": 1310,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-14T01:40:04.878Z",
-  "updated": "2026-09-14T01:40:04.881Z",
+  "updated": "2026-09-14T12:54:48.026Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Added by a-sweep-result-stops-wiping-what-a-person-wrote on 2026-09-13. ownersOfWalks in queue/bin/sweep-notes.mjs joins title, goal, notes and acceptance and does a substring match on the walk name. Real example from the 20:35Z sweep: dock-picked-first-walk came out owned by two tasks, picking-a-plain-shape-leaves-the-panel-parked-on and picking-a-text-layer-leaves-its-settings-below-t, and only the first is really about it. A declared field (walks: [\"...\"]) on the task, with the text match kept as a fallback, is the obvious shape.",
@@ -23,6 +23,18 @@
     {
       "t": "2026-09-14T01:40:04.880Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:47.048Z",
+      "note": "TRIAGE 2026-09-14, seen live: the sweep block in walks-that-fail-in-the-full-sweep currently reads \"dock-picked-first-walk -> picking-a-plain-shape-leaves-the-panel-parked-on, picking-a-text-layer-leaves-its-settings-below-t, a-task-says-which-failing-walk-it-owns-instead-o\". This task is listed as an owner of that walk purely because its goal uses the walk name as an example. That is exactly the failure it describes, and it means a runner reading the block can decide a real failure belongs to somebody else."
+    },
+    {
+      "t": "2026-09-14T12:53:51.415Z",
+      "note": "seq 1310 -> 120"
+    },
+    {
+      "t": "2026-09-14T12:54:48.025Z",
+      "note": "seq 120 -> 110"
     }
   ]
 }

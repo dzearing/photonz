@@ -4,12 +4,12 @@
   "goal": "Double clicking a piece of text on the canvas opens it for typing, and that works when the text sits on its own. When the same text is inside a group - a button and its label, which is what Separate into Layers now makes - repeated double clicks seem to pick the group and then the label and then stop, without ever opening the words to type. Find out whether that is real for a person or only for a scripted click, and fix it if it is real.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 460,
+  "seq": 450,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T11:55:53.256Z",
-  "updated": "2026-09-13T12:34:20.461Z",
+  "updated": "2026-09-14T12:54:46.396Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while writing Scripts/playtest/separate-turn-into-text-walk.json on 2026-09-13. Reproduced in the walk only, which is why this is filed as something to look into rather than as a bug.\n\nWhat was run: the walk separated the settings-pane fixture, turned run Text 9 (the words Save Changes, white on the blue button) into a text layer inside group Box 4, then did tool select and three `click count 2` steps at document (360, 792) with waits between, then `type`.\n\nWhat it printed, every time:\n  [41 type] FAILED: no text field has the keyboard (first responder is CanvasNSView)\n\nThe same walk, double clicking a TOP LEVEL text layer (the heading at document (146, 85)) opens the editor on the first double click and types fine - that is the shipped walk today.\n\nThe code is Sources/Photonz/CanvasPointerDrags.swift:234: a double click always DESCENDS while `groupAwareDescent` returns a step, and only once it returns nil does the `case .text = hit.content` branch at :255 open the editor. The question is whether descent keeps returning a step for a child that is already picked, or whether the harness synthesises clicks in a way that never reaches the second branch.",
@@ -29,6 +29,14 @@
     {
       "t": "2026-09-13T12:34:20.460Z",
       "note": "seq 470 -> 460"
+    },
+    {
+      "t": "2026-09-14T12:53:49.643Z",
+      "note": "seq 460 -> 420"
+    },
+    {
+      "t": "2026-09-14T12:54:46.395Z",
+      "note": "seq 420 -> 450"
     }
   ]
 }

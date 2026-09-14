@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 2600,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T19:11:11.716Z",
-  "updated": "2026-09-13T19:11:11.719Z",
+  "updated": "2026-09-14T12:53:30.810Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen on the probe on 2026-09-13 in Scripts/playtest/turn-into-a-path-walk.json: after the turn the row still reads Rectangle while the canvas chip reads Path, and the row menu no longer offers Turn Into Path because there is nothing left to turn. Screenshot: queue/audits/2026-09-13-turn-into-a-path-turned-sc.png.\n\nNot fixed in the task that found it because it is a judgment call with two defensible answers: Photoshop and Figma both KEEP the name, on the grounds that a layer is the thing you named rather than the thing it is made of, and renaming behind somebody is its own surprise. The distinguishing question is whether the app can tell a name somebody typed from a name it made up. LayerNaming.swift is where that would live, and PathBuilder.defaultName is Path.\n\nLayer.turnedIntoPath() in Sources/PhotonzCore/ShapeToPath.swift deliberately keeps name, id, slot, style, effects and transform; only the name is in question.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-13T19:11:11.718Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:30.809Z",
+      "note": "duplicate of a-text-layer-s-row-says-the-words-that-are-in-it, which is the same rule for what an unnamed row says; its four acceptance items were merged there"
     }
   ]
 }

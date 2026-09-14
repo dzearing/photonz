@@ -1,27 +1,41 @@
 {
   "id": "every-walk-says-what-it-wants-forgotten",
-  "title": "Every walk says what it wants forgotten",
+  "title": "A walk answers the same way every time, because it says what it wants forgotten",
   "goal": "Most scripted walks do not say what remembered settings they need cleared before they run, so they start from whatever the last walk on the machine happened to leave behind: the shape style, which panel sections are open, how wide the dock is. They pass or fail on history rather than on the app. Give each of them the one line that asks for a clean machine, so a walk means the same thing on any machine on any day.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 2620,
+  "seq": 560,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T23:39:04.437Z",
-  "updated": "2026-09-13T23:39:04.440Z",
+  "updated": "2026-09-14T12:54:47.165Z",
   "deps": [],
   "blockedBy": [],
   "notes": "225 of the 405 walks have no setup.forget block (counted 2026-09-13). `\"forget\": [\"all\"]` landed in the same commit as the press-settles work and expands to every PlaytestMemory area; see docs/design/playtest-harness.md, \"Where a walk starts from\".\n\nNOT done in that task on purpose: flipping 225 walks needs a full sweep to verify, and a runner cannot run one (322+ walks, ~52 min, past the 600s ceiling). Do it in batches the runner CAN verify -- add the line to one pattern of walks, run `Scripts/playtest-all.sh --no-build <pattern>`, and ask for a sweep at the end.\n\nThe risk to watch: forgetting `panel` resets whether the Library shelf is showing and how tall the layers list is, so a walk that quietly relied on the Library being open will start failing. That failure is the point -- it was relying on history -- but it needs fixing in the walk rather than reverting the line.",
   "acceptance": [
     "Every walk in Scripts/playtest either names what it wants forgotten or says \"all\"",
     "A full sweep passes with no new failures",
-    "Any walk that genuinely needs to inherit something says so in a comment"
+    "Any walk that genuinely needs to inherit something says so in a comment",
+    "Scripts/playtest-all.sh --no-build border effects panel passes five runs in a row",
+    "Scripts/playtest-all.sh --no-build layers passes five runs in a row"
   ],
   "log": [
     {
       "t": "2026-09-13T23:39:04.439Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:30.947Z",
+      "note": "Folded in from a-walk-still-answers-differently-when-the-machin (dropped as a near-twin): walks still disagree with themselves about one run in thirty, always when the machine is busy. This task is the fix for the biggest cause of that, a walk inheriting whatever the last walk left behind, so the proof belongs here. Extra acceptance carried across: Scripts/playtest-all.sh --no-build border effects panel passes five runs in a row, and the same for layers. Also worth reading: walks-that-fail-in-the-full-sweep logged on 2026-09-14 that effects-open-into-view-walk and effects-room-for-the-one-you-opened-walk alternate on the SAME build because both press the Border twist twice in a row, which is a walk bug rather than timing."
+    },
+    {
+      "t": "2026-09-14T12:53:50.486Z",
+      "note": "seq 2620 -> 540"
+    },
+    {
+      "t": "2026-09-14T12:54:47.164Z",
+      "note": "seq 540 -> 560"
     }
   ]
 }

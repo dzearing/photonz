@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 290,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-12T13:33:11.221Z",
-  "updated": "2026-09-13T12:34:20.269Z",
+  "updated": "2026-09-14T12:53:24.140Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on a CLEAN checkout of main (1c851abe, my own changes stashed), so it is not from the copy-own-text-style work: `git stash -u && Scripts/playtest-all.sh text-style-walk` -> `text-style-walk 18s FAILED step 58 (panelMenu): no menu called \"Size\" is in the window; the ones that are: 100% 58.0pt wide at x 869.0 says \"Choose a zoom level. Double click for actual size\"`. text-style-arming-walk fails the same way at its step 48. The other three text-style walks (drag, row-drop, comes-away) pass. Both failing steps come after a Save as Style, so the first thing to check is whether the selection or the Text section survives saving.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-13T12:34:20.268Z",
       "note": "seq 300 -> 290"
+    },
+    {
+      "t": "2026-09-14T12:53:24.139Z",
+      "note": "no longer reproduces: text-style-walk 22s ok and text-style-arming-walk 22s ok on 2026-09-14. The Size menu is there after a style is saved. Evidence recorded in walks-that-fail-in-the-full-sweep."
     }
   ]
 }

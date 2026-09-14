@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 400,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T02:12:00.478Z",
-  "updated": "2026-09-13T12:34:20.396Z",
+  "updated": "2026-09-14T12:53:30.900Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing the Redlining tutorials track (2026-09-13). TutorialLauncher.windows keys the window by GUIDE id; keying it by the sample the guide brings (TutorialSample) would give the three redlineScreen guides one window between them and the two measuredScreen guides another. Open question worth deciding first: arriving at guide two on a picture that already carries guide one measurements might be continuity or might be clutter, and a measuredScreen window that has been edited is not the list the panel guide was written for. Decide the behaviour before building it.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-13T12:34:20.395Z",
       "note": "seq 410 -> 400"
+    },
+    {
+      "t": "2026-09-14T12:53:30.899Z",
+      "note": "duplicate of the-tour-leaves-you-sitting-in-its-sample-pictur: both are the sample window lifecycle, and its two acceptance items were merged there"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Every drawing tool in Photonz carries a colour on the tool bar, so you choose what you are about to draw in before you draw it. The Pen does not: a path always arrives the redline red, and the only way to change it is to draw the shape, go to the Appearance panel and repaint it. For an icon, where several pieces are different colours, that is a trip to the panel for every piece.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 63,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:15:17.594Z",
-  "updated": "2026-09-13T16:15:58.026Z",
+  "updated": "2026-09-14T12:54:43.866Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-13-pen-draws-a-path.json: 'The Pen has no colour capsule on the tool bar: a new path is always the redline red until you repaint it in the Appearance panel. Every other drawing tool arms its colour from the bar.'\n\nCopy what the Rectangle and Ellipse tools already do rather than inventing anything; this is a gap in one tool, not a new idea. Sources/Photonz/CanvasPen.swift, behind FeatureCatalog.penFlag (\"next-pen\").\n\nRelated and NOT part of this: a closed path arrives filled and outlined the same red so its outline is invisible against its own fill. That is the same bug a new rectangle has and it is owned by a-shape-s-border-arrives-the-same-colour-as-its.",
@@ -30,6 +30,14 @@
     {
       "t": "2026-09-13T16:15:58.025Z",
       "note": "seq 2540 -> 63"
+    },
+    {
+      "t": "2026-09-14T12:53:47.187Z",
+      "note": "seq 63 -> 70"
+    },
+    {
+      "t": "2026-09-14T12:54:43.865Z",
+      "note": "seq 70 -> 80"
     }
   ]
 }

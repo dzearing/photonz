@@ -1,15 +1,15 @@
 {
   "id": "a-text-layer-s-row-says-the-words-that-are-in-it",
-  "title": "A text layer's row says the words that are in it",
+  "title": "A layer row nobody renamed says what the layer actually is",
   "goal": "Turn a picture of a label into real text and the layers row still says what it said before, and retyping the words on the canvas does not change it either. So a row reading General can hold the word Appearance, and a screenshot that has just been taken apart gives you rows called Text 1 to Text 142 when the app now knows exactly what each one says. A text layer should be named after its own words until somebody names it something else by hand.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 490,
+  "seq": 480,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:46.726Z",
-  "updated": "2026-09-13T12:34:20.493Z",
+  "updated": "2026-09-14T12:54:46.607Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review. Named in audit 2026-09-13-turn-into-text, rough note three: \"Retyping a label does not rename its layer. The row still says General after you have typed Appearance into it. That is how every text layer in the app already behaves, so it was left alone rather than changed here, but it looks wrong on a row this command just named after its words.\"\n\nThe same audit and 2026-09-13-separate-into-layers both call the naming the weakest part of Separate into Layers: \"a list of nine identical-looking names is not what a person would have written\". Turn into Text is the moment the app learns the characters, so it is the moment the name can stop being a number.\n\nNote the ordering: this does not need text recognition. It only needs the names to follow the words the app already has.",
@@ -19,7 +19,10 @@
     "A layer somebody renamed by hand keeps the name they gave it, and retyping the words does not take it away",
     "A run turned into text by Turn into Text takes its words as its name straight away, rather than keeping Text 9",
     "Renaming this way costs no extra undo step of its own",
-    "Audit under queue/audits/ showing the layers list before and after a separation, with real captures"
+    "Audit under queue/audits/ showing the layers list before and after a separation, with real captures",
+    "Turning an unnamed Rectangle into a path leaves a row called Path, and the same reading holds for an Ellipse and a Line",
+    "Turning a layer somebody renamed to Card into a path leaves it called Card",
+    "A rename that rides along with a shape change is part of the same single undo step, so one undo puts both back"
   ],
   "log": [
     {
@@ -33,6 +36,18 @@
     {
       "t": "2026-09-13T12:34:20.492Z",
       "note": "seq 500 -> 490"
+    },
+    {
+      "t": "2026-09-14T12:53:30.764Z",
+      "note": "Folded in from a-layer-that-stopped-being-a-rectangle-stops-bei (dropped as a near-twin): turn a rectangle into a path and the row still says Rectangle. It is the same rule this task is about, from the other end: a layer nobody has named by hand shows what it IS, and a layer somebody named keeps the name they gave it. Extra acceptance carried across: turning an unnamed Rectangle into a path leaves a row called Path; turning a layer renamed to Card leaves it called Card; the rename is part of the same single undo step as the shape change; the same reading holds for an Ellipse and a Line."
+    },
+    {
+      "t": "2026-09-14T12:53:49.852Z",
+      "note": "seq 490 -> 450"
+    },
+    {
+      "t": "2026-09-14T12:54:46.606Z",
+      "note": "seq 450 -> 480"
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 2630,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T01:37:10.004Z",
-  "updated": "2026-09-14T01:37:10.007Z",
+  "updated": "2026-09-14T12:53:30.993Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the press-waits-for-the-panel work (commits 406e7141, 6474d254, 3617e017 on 2026-09-13). That took the four-batch flake from seven failures a sweep to these:\n\n  text-style      6/6, five runs in a row\n  style swatch   16/16, five runs in a row\n  effects-say-their-reach-walk, 10 of 10 alone\n  border effects panel  33/33 five times, then 32/33 on the sixth\n  layers           8/8 five times, and one earlier run at 6/8\n\nThe two that still miss:\n\n  effects-room-for-the-one-you-opened-walk  step 32 (expect): the control called\n    \"Twist\" in \"Border\" reads \"Border, shut\", not \"Border, open\"\n  layers-lazy-rows-walk  step 270 (scrollPanel): nothing called \"Background\" is\n    in the panel to scroll from\n\nBoth pass on their own: the twist walk went 8 of 8 and the lazy rows walk 4 of 4\nstraight after the fixes. Both misses came in the SAME runs where the machine was\nsaturated, and one of those runs also has align-layers-walk at 185s with \"no\ndone.json\", which is a walk that never finished rather than one that failed.\n\nThe lead worth following: `settled()` in PlaytestHarness gives a press two seconds\nto see its control hold still AND the app go quiet, then presses anyway and writes\n\"never settled\" in the log. Every remaining miss should have that phrase in its\npress line. Check first: if it does, the budget is what is short under load, and\nthe question is whether to raise it or to make a press that never settled fail\nloudly instead of landing blind. If it does NOT, the miss is something else and\nthis is the wrong lead.\n\nAlso in scope and cheap: `playtest-all.sh` reports a walk that timed out as\n\"FAILED no done.json\", which reads like a broken walk rather than a hung one.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-14T01:37:10.006Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:30.992Z",
+      "note": "duplicate of every-walk-says-what-it-wants-forgotten, which is the fix for the leaked-state half of the same flake; its five-runs-in-a-row acceptance was merged there"
     }
   ]
 }

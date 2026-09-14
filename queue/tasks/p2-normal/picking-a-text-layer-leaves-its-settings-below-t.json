@@ -1,7 +1,7 @@
 {
   "id": "picking-a-text-layer-leaves-its-settings-below-t",
-  "title": "The panel has one settled rule for what you see when you pick something",
-  "goal": "Three different mechanisms now share one job in the right hand panel: the order the sections sit in, the panel scrolling itself to whatever you just picked, and the room the Effects list keeps for the effect you just opened. Each was built on its own, and together they decide what you can see. The symptom that filed this, picking a piece of text and finding its settings off the bottom, no longer happens, because the panel now scrolls itself. What is left is the question underneath it, which is yours to answer: should picking something move the panel at all, or should the sections be ordered so it never has to?",
+  "title": "The right hand panel has one settled rule for what you see when you pick something",
+  "goal": "You already answered how this should work: what you picked sits at the top. The settings for the thing you just clicked belong at the top of the right hand panel, directly under the layers list, with Appearance and Effects following under them, and a plain shape moves nothing because it has no section of its own. Today three separate mechanisms fight over that job: the order the sections sit in, the panel scrolling itself to whatever you just picked, and the room the Effects list keeps for the effect you just opened. Each was built on its own, so picking text can leave its settings off the bottom, picking a plain rectangle can leave the panel parked where the last pick left it, adding an effect can leave every one of its settings below the cut, and picking a row can scroll the layers list itself off the top. Make the three one rule, write it down, and let the panel follow it.",
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 10,
@@ -9,16 +9,19 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-08T09:45:45.773Z",
-  "updated": "2026-09-13T13:04:35.428Z",
+  "updated": "2026-09-14T12:53:14.753Z",
   "deps": [],
   "blockedBy": [],
   "notes": "TRIAGED 2026-09-09: the p1 bug this was filed as no longer reproduces, so it is a p2 open question now, not a critical bug.\n\nWhat I ran, on a clean tree at HEAD 7e1e4d6d with the probe rebuilt from that commit:\n  Scripts/playtest-all.sh dock-picked-first          -> 1 passed, 0 failed, 18s\n  Scripts/playtest-all.sh --no-build panel-controls  -> 1 passed, 0 failed, 16s\nBoth were also green on the earlier 05:02 probe, so this is not a build fluke.\n\nWhat fixed it: 7f65ae4d, Picking a layer brings its own section into view, audit queue/audits/2026-09-09-dock-picked-first-reveal.json. The panel now scrolls itself to the picked section. That is option scroll on this task's own decision card, shipped by a neighbouring task while the card was still pending, and unflagged. So the question was answered by the app rather than by the user.\n\nWhy the card still stands. The shipped scroll has a cost the audit names itself: the panel holds about 1030 points of sections in a 690 point window, so showing the Text section means the layers list goes off the top. You click a row and the list of rows leaves. Picking from the layers list is the main way anybody moves between layers while building UI, so a click that takes the list away is worth an answer rather than a default.\n\nIt also crosses a written rule. UX-PATTERNS section 3, Reveal: ambient changes never may, a selection moving, a document loading, a background update leave a shut header shut and do not scroll. A selection moving now scrolls the dock. Either the rule moves or the behaviour does; that scrub is filed separately.\n\nFolded in from two-panel-walks-are-failing-on-main, closed as done by the same pass: panel-controls-walk was fixed by 64ac9f3c, and a verified alternative to the scroll is in hand there, a v5 order migration moving the picked section above Effects, guarded by shapePartsEnabled, which makes the walk pass at 1200x720 with no self-scrolling at all.",
   "acceptance": [
-    "The user answers the decision card on where a picked thing's settings belong, and the answer is written into this task before any code is written",
-    "Whatever the answer, the panel does one thing rather than three: the rule is written down in the dock rules and the code follows it",
-    "Clicking a row in the layers list does not scroll that list off the top of the panel, so the next row you want is still where you are looking, or the answer says plainly why it must",
-    "dock-picked-first-walk and panel-controls-walk both still pass",
-    "audit written under queue/audits/"
+    "The answered rule is written into the dock rules in UX-PATTERNS and the code follows it: what you picked sits at the top, under the layers list, with Appearance and Effects under that",
+    "Picking a piece of text shows the whole Text section without anybody scrolling, on a 1200 by 720 window",
+    "Picking a plain rectangle straight after picking text leaves the panel showing a section that starts with its own heading, not a cut-off colour row",
+    "Adding an effect leaves that effect settings on screen, not below the bottom edge of the Effects list",
+    "Clicking a row in the layers list does not scroll that list off the top, so the next row you want is still under your hand",
+    "The height sharing arithmetic and the scroll-to-what-you-picked routines come out of the dock view into a file of their own, since all three are being rewritten anyway",
+    "All four panel walks pass on their own and in a sweep: dock-picked-first-walk, layers-list-follows-pick-walk, effects-room-for-the-one-you-opened-walk, panel-start-margin-walk",
+    "glow-effect-walk and border-effect-walk still pass"
   ],
   "log": [
     {
@@ -68,6 +71,26 @@
     {
       "t": "2026-09-13T13:04:35.427Z",
       "note": "decision \"When you pick something on the canvas, where should its settings appear in the right hand panel?\" resolved: What you picked sits at the top"
+    },
+    {
+      "t": "2026-09-14T12:53:03.143Z",
+      "note": "TRIAGE 2026-09-14, reproduced. Three of the four walks failing in the 12:47Z sweep are this one cluster, and all three fail on their own, not just under sweep load. Ran Scripts/playtest-all.sh --no-build dock-picked-first effects-room-for-the-one-you-opened layers-list-follows-pick panel-start-margin: dock-picked-first-walk FAILED step 73 (waitFor) sectionInView(\"Arrow\") did not happen within 4.0s; layers-list-follows-pick-walk FAILED step 91 (waitFor) layerRowInView(\"Rectangle\") did not happen within 3.0s; effects-room-for-the-one-you-opened-walk FAILED step 32 (expect) Twist in Border reads \"Border, shut\", not \"Border, open\"; panel-start-margin-walk ok. So panel-start-margin is a sweep flake and the other three are real."
+    },
+    {
+      "t": "2026-09-14T12:53:03.191Z",
+      "note": "The card is ANSWERED and has been since 2026-09-13T13:04Z: \"What you picked sits at the top\". The settings for the thing you just clicked move to the top of the panel, directly under the layers list, with Appearance and Effects following under them; a plain rectangle has no section of its own so nothing moves for it. That is the settled rule this task writes down and the code follows. No further card is needed."
+    },
+    {
+      "t": "2026-09-14T12:53:03.237Z",
+      "note": "Folded in from adding-an-effect-leaves-every-one-of-its-setting: adding a second effect shows only its heading, with Color, Kind, Size, Softness and Opacity all below the bottom edge of the Effects list and nothing scrolling to them. Opening an effect with its chevron already brings it into view, so adding one should too. That is the third of the three mechanisms this task names and it cannot be settled separately. Its walks: glow-effect-walk, border-effect-walk, effects-room-for-the-one-you-opened-walk."
+    },
+    {
+      "t": "2026-09-14T12:53:03.283Z",
+      "note": "Folded in from picking-a-plain-shape-leaves-the-panel-parked-on: click text or a zoom callout, then a plain rectangle, and the panel stays where the first pick left it, so the top of the panel is a colour row with no heading above it and the layers list is off the top. Under the answered rule this is exactly the case the card calls out (a rectangle has no section of its own, so nothing should move). Its walk is dock-picked-first-walk, which is the walk that has failed in every sweep for three days."
+    },
+    {
+      "t": "2026-09-14T12:53:03.329Z",
+      "note": "Folded in from the-panel-keeps-its-height-sharing-in-a-file-of: the height sharing arithmetic and the three scroll-to-what-you-picked routines still live inside the 1,310 line dock view. Doing this task means rewriting all three of them, so lift them into their own file while you are in there rather than leaving a separate refactor task standing."
     }
   ],
   "started": "2026-09-08T10:47:13.019Z"

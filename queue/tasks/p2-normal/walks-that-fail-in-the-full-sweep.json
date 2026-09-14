@@ -4,17 +4,17 @@
   "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 330,
+  "seq": 340,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T10:45:46.379Z",
+  "updated": "2026-09-14T12:54:45.627Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T09:43:21Z: 406 of 410 walks passed in 84 minutes.\n\nFailing walks (4): dock-picked-first-walk, effects-open-into-view-walk, layers-lazy-rows-walk, layers-list-follows-pick-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  dock-picked-first-walk -> picking-a-plain-shape-leaves-the-panel-parked-on, picking-a-text-layer-leaves-its-settings-below-t, a-task-says-which-failing-walk-it-owns-instead-o\n  layers-lazy-rows-walk -> a-walk-still-answers-differently-when-the-machin\n\nThis task owns the other 2: effects-open-into-view-walk, layers-list-follows-pick-walk\n\nStopped failing since the last sweep (1): contents-for-several-walk\n\nFull output: queue/sweep/2026-09-14-011931.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: the-panel-stops-explaining-itself-in-paragraphs: The panel prose rule (d7e9c5e8) touched every right hand panel section in both releases: LayerGeometrySelection.caption is now optional and nil in the ordinary case, the shared SelectionStyleNotes lost its caption argument, and nine sections changed what they print. Ran about 70 walks by hand (align, panel, layout, effect, dock, lens, blend, contents, canvas, text, inspector, reach, placement, colour, color, style, shadow) and all pass except the two already owned by open tasks, but a caption every selection draws is exactly the kind of change the whole set should see.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T12:47:20Z: 409 of 413 walks passed in 85 minutes.\n\nFailing walks (4): dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, layers-list-follows-pick-walk, panel-start-margin-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  dock-picked-first-walk -> picking-a-plain-shape-leaves-the-panel-parked-on, picking-a-text-layer-leaves-its-settings-below-t, a-task-says-which-failing-walk-it-owns-instead-o\n  effects-room-for-the-one-you-opened-walk -> a-walk-still-answers-differently-when-the-machin\n\nThis task owns the other 2: layers-list-follows-pick-walk, panel-start-margin-walk\n\nStopped failing since the last sweep (2): effects-open-into-view-walk, layers-lazy-rows-walk\n\nFull output: queue/sweep/2026-09-14-042230.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: an-icon-frame-shows-the-space-an-icon-has-to-liv: icon keylines added one parameter to the canvas view's apply path, which every walk goes through; 23 walks across icon, frames, columns and grid all pass, but the shared signature is worth the whole set\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
   "acceptance": [
     "A fresh sweep is asked for after two-effect-walks-fail-now-and-then-because-a-pre lands, with queue/bin/sweep.sh request",
     "contents-for-several-walk either passes or is rewritten to match what the app does now, and passes twice on its own",
@@ -118,6 +118,30 @@
     {
       "t": "2026-09-14T10:45:46.378Z",
       "note": "effects-open-into-view-walk and effects-room-for-the-one-you-opened-walk alternate pass/fail on the SAME build, and the cause is in the walks rather than in timing. Both press the Border twist TWICE in a row (steps 8 and 10 of effects-room-for-the-one-you-opened-walk), which returns the row to whatever state it started in, and the probe keeps that state between runs. So each run leaves the next one with the opposite answer. Reproduced on clean main, same build, three runs in a row: ok, failed, ok. Command: Scripts/playtest.sh Scripts/playtest/effects-room-for-the-one-you-opened-walk.json --no-build. Failure: 'step 32 (expect): the control called \"Twist\" in \"Border\" reads \"Border, shut\", not \"Border, open\"'. The fix these two want is a known starting state rather than another wait: neither walk declares what it needs in setup, and there is no forget word for which effect rows are open. Found while running the walks for a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei; that task's change is not involved (it only moves stroke weights on icon frames, and these walks use no frames at all)."
+    },
+    {
+      "t": "2026-09-14T12:47:21.074Z",
+      "note": "sweep 2026-09-14T12:47:20Z: 4 failing (dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, layers-list-follows-pick-walk, panel-start-margin-walk); stopped failing: effects-open-into-view-walk, layers-lazy-rows-walk"
+    },
+    {
+      "t": "2026-09-14T12:53:21.522Z",
+      "note": "TRIAGE 2026-09-14. Reran all four of the 12:47Z failures on their own with Scripts/playtest-all.sh --no-build: dock-picked-first-walk FAILED step 73 (waitFor) sectionInView(\"Arrow\") did not happen within 4.0s; layers-list-follows-pick-walk FAILED step 91 (waitFor) layerRowInView(\"Rectangle\") did not happen within 3.0s; effects-room-for-the-one-you-opened-walk FAILED step 32 (expect) Twist in Border reads \"Border, shut\", not \"Border, open\"; panel-start-margin-walk ok. So panel-start-margin-walk is a sweep flake, and the other three are real and reproducible on their own."
+    },
+    {
+      "t": "2026-09-14T12:53:21.568Z",
+      "note": "TRIAGE 2026-09-14: layers-list-follows-pick-walk is NOT this task any more. It is the same panel-scroll mechanism as dock-picked-first-walk and it is now named in the acceptance of picking-a-text-layer-leaves-its-settings-below-t, which owns the whole cluster. Worth saying plainly: that walk arrived yesterday with picking-a-layer-brings-its-row-into-view, marked done at 03:56Z, and it has failed in every sweep since and fails on its own. A walk that has never passed a sweep since the task that shipped it is a regression, not a flake."
+    },
+    {
+      "t": "2026-09-14T12:53:21.612Z",
+      "note": "TRIAGE 2026-09-14, three tasks retired against this one after rerunning their walks on the current build, all ok: corner-radius-rounds-walk 17s ok (the-colour-popover-never-opens-in-the-corner-rad), text-style-walk 22s ok and text-style-arming-walk 22s ok (saving-a-text-style-leaves-the-text-section-with), and text-style-arming-walk again on its own, status ok, which is the walk that drives clicking a style tile with nothing selected (a-style-tile-clicked-with-nothing-selected-shoul). contents-for-several-walk also passes, 29s ok. If any of them comes back, it comes back here."
+    },
+    {
+      "t": "2026-09-14T12:53:48.879Z",
+      "note": "seq 330 -> 310"
+    },
+    {
+      "t": "2026-09-14T12:54:45.626Z",
+      "note": "seq 310 -> 340"
     }
   ]
 }

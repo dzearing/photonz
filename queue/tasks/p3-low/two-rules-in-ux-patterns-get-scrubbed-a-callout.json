@@ -1,15 +1,15 @@
 {
   "id": "two-rules-in-ux-patterns-get-scrubbed-a-callout",
-  "title": "Two rules in UX-PATTERNS get scrubbed: a callout with nowhere to go, and a notice you have to act on",
+  "title": "Three rules in UX-PATTERNS get scrubbed, all bent by something that shipped this week",
   "goal": "Two written rules were bent this week, both because reality asked them a question they do not answer. Rewrite them so the next feature does not have to reason it out from scratch, and say in each what the app should do in the case that broke it.",
   "epic": "design-system",
   "priority": "p3-low",
-  "seq": 110,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T12:27:55.772Z",
-  "updated": "2026-09-13T12:29:07.965Z",
+  "updated": "2026-09-14T12:54:47.879Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-13 design review, two pieces of evidence.\n\nD14 (a callout never covers what it is talking about) and D16 (a guide draws over your work): audit 2026-09-13-tutorials-building-ui-track, rough note one. \"A step that talks about the whole picture draws its card ACROSS the picture. The canvas has no side with room for a card... Worked around by starting every screen 120 points down and by sweeping from the LEFT in the lining-up guide, which is a guide knowing about a callout, and that is backwards.\" D14 rule 2 says prefer the empty side; the failing case is that there is no empty side. The behaviour fix is filed as a-tutorial-card-about-the-picture-stops-covering; this is the rule half.\n\nSection 3, Modal and toast: it files a pill under transient confirmations (\"Saved\", \"42 instances updated\"). Separate into Layers uses that same pill to say 580 pieces are still in the picture and that running the command again takes the next batch, which is not a confirmation. Four audits on 2026-09-13 each asked whether the pill was enough. The behaviour fix is filed as what-separate-left-behind-is-still-there-after-t; this is the rule half.",
@@ -18,7 +18,10 @@
     "D14 and D16 say plainly which of the two a tutorial guide card is, since a guide card explains the picture and is therefore an annotation by D16 own test",
     "The Modal and toast part of section 3 says when a result may live only in a notice that fades, and what a command does instead when the result is something you are expected to act on later",
     "Each rewritten rule cites the case that forced it, the way every other rule in the document does",
-    "No rule is rewritten to describe what the app happens to do today where that is the thing that was wrong"
+    "No rule is rewritten to describe what the app happens to do today where that is the thing that was wrong",
+    "D16 says what a guide does when it has to share the canvas with the selection outline, which is not a guide and is not covered today, and the answer is a difference of kind rather than a different dash rhythm",
+    "D16 (or D14) gains a home for canvas chrome that is neither a guide nor an annotation, the icon previews strip being the case that found it, and says what gives way when two pieces of canvas chrome want the same corner",
+    "Each scrub cites the audit it came from, and anything already shipped that disagrees with the new wording is filed rather than quietly rewritten"
   ],
   "log": [
     {
@@ -28,6 +31,18 @@
     {
       "t": "2026-09-13T12:29:07.964Z",
       "note": "seq 2650 -> 110"
+    },
+    {
+      "t": "2026-09-14T12:53:51.271Z",
+      "note": "seq 110 -> 100"
+    },
+    {
+      "t": "2026-09-14T12:54:30.025Z",
+      "note": "DESIGN REVIEW 2026-09-14, two more D16 gaps found in the icon work, both worth scrubbing in the same pass. (1) D16 rule 3 says two guides that can be on at once must differ in KIND, not only in colour, but it says nothing about a guide sharing the canvas with the SELECTION outline, which is not a guide. The icon keyline margin ships as violet dashes and a new frame arrives selected, so the first thing anybody sees is two dashed rectangles side by side meaning different things, separated only by dash rhythm, which is a difference of degree and not of kind (audit queue/audits/2026-09-14-icon-keylines.json, third rough item). (2) The icon previews strip is canvas chrome that is neither a guide (it does not help you place anything) nor an annotation (it explains nothing in the picture), and it sits on top of the ruler, which D16 names as a guide. Nothing says where a third kind of canvas chrome lives or what gives way when two pieces of it want the same corner (audit queue/audits/2026-09-14-icon-previews.json, first rough item)."
+    },
+    {
+      "t": "2026-09-14T12:54:47.878Z",
+      "note": "seq 100 -> 90"
     }
   ]
 }

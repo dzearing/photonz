@@ -4,12 +4,12 @@
   "goal": "When you draw with the Pen on a grid, nothing on screen says which lines caught the point: it just lands on a crossing. Dragging a box lights the line it came to rest on, so the Pen should say the same thing the same way while the run to the pointer is being aimed.",
   "epic": "icon-grid",
   "priority": "p2-normal",
-  "seq": 2610,
+  "seq": 550,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T20:51:46.449Z",
-  "updated": "2026-09-13T20:51:46.452Z",
+  "updated": "2026-09-14T12:54:47.095Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left rough by a-pen-point-lands-on-the-grid-line-you-can-see (2026-09-13). The pen sets PenSession.grid from CanvasNSView.canvasNudgeGrid and quantizes in PenSession.place; the drag path lights lines through annotationGridSnap plus refreshGridSnapLines (CanvasView.swift around 1100). The judgement call that was made without the user: lighting two lines on every mouse move while the pen preview is already tracking felt like noise, so it was left out. The audit 2026-09-13-pen-on-the-grid.json asks the user directly.",
@@ -23,6 +23,14 @@
     {
       "t": "2026-09-13T20:51:46.451Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T12:53:50.416Z",
+      "note": "seq 2610 -> 530"
+    },
+    {
+      "t": "2026-09-14T12:54:47.094Z",
+      "note": "seq 530 -> 550"
     }
   ]
 }

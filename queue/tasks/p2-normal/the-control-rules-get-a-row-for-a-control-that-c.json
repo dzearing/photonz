@@ -1,0 +1,54 @@
+{
+  "id": "the-control-rules-get-a-row-for-a-control-that-c",
+  "title": "The control rules get a row for a control that can only act over part of its range",
+  "goal": "The written rules have one settled ladder for a control that cannot act at all: a command dims, a chooser is replaced by the answer, a field keeps its number read only, a bare handle is removed, a key press speaks on the canvas. There is no row for the control that keeps turning up: one that works fine, but only across part of its range, or that is offered over something it barely reaches. Four surfaces hit it in the last week and each invented its own answer, so this unblocks the focus directly: a-slider-says-where-its-track-starts-when-someth and a-measurement-offers-a-corner-radius-it-has-noth are both waiting to be told what the row should say, and the icon frames work keeps running into it too.",
+  "epic": "design-system",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-12T12:02:12.215Z",
+  "updated": "2026-09-14T12:54:43.656Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-09-12 design review. Evidence: queue/audits/2026-09-12-corner-over-a-group.json, both of its last two rough notes, where Corner Radius over a group has a floor of 18 that only a tooltip explains, and a pill's slider switches itself off silently.\n\nThe existing rule is UX-PATTERNS.md section 4, \"A control that cannot act\", written 2026-09-04 after six fixes answered the same question six ways. It is a good rule and it holds; it just stops one row short. Its own field row already settles the look of a number you cannot type and says \"Never a hover tip alone\", so the shape of the answer is there to follow.\n\nThis serves the design-system epic, which is staged next, so it sits at p3 rather than taking a place ahead of focus work. The concrete case is fixed under a-slider-says-where-its-track-starts-when-someth at p2 without waiting for this.",
+  "acceptance": [
+    "UX-PATTERNS section 4 gains a row for a control whose range is clamped by something else, saying what it must show without the pointer on it",
+    "The rule cites the case it was taken from and the audit it came out of",
+    "The audit gates in section 9 gain the matching check",
+    "No behaviour changes in this task; anything the new rule names as already wrong is filed rather than quietly fixed",
+    "The rule answers all four cases found so far: Corner Radius over a group whose contents are rounded 18 (a floor), Corner Radius on a pill with nothing left to round, Corner Radius on a measurement with no corners at all, and Border Width running 0 to 20 on a 24 pixel icon frame where only the first few steps mean anything",
+    "a-slider-says-where-its-track-starts-when-someth and a-measurement-offers-a-corner-radius-it-has-noth can both be built straight from the rule without inventing anything on the row"
+  ],
+  "log": [
+    {
+      "t": "2026-09-12T12:02:12.217Z",
+      "note": "created (triage)"
+    },
+    {
+      "t": "2026-09-12T12:02:46.356Z",
+      "note": "seq 1320 -> 60"
+    },
+    {
+      "t": "2026-09-14T12:53:50.988Z",
+      "note": "seq 60 -> 50"
+    },
+    {
+      "t": "2026-09-14T12:54:30.098Z",
+      "note": "priority p3-low -> p2-normal"
+    },
+    {
+      "t": "2026-09-14T12:54:30.145Z",
+      "note": "DESIGN REVIEW 2026-09-14: moved p3 to p2. It was sitting below the four p2 tasks that are waiting on its answer, which is backwards: a-slider-says-where-its-track-starts-when-someth says in its own acceptance that the answer must be drawn from the UX-PATTERNS section 4 rule rather than invented on the row, and that rule has no row for this case. Fourth instance found today: the Border Width slider still runs 0 to 20 on a 24 pixel icon frame, where only the first few steps mean anything (audit queue/audits/2026-09-14-icon-stroke-weight.json, fourth rough item)."
+    },
+    {
+      "t": "2026-09-14T12:54:43.338Z",
+      "note": "seq 50 -> 45"
+    },
+    {
+      "t": "2026-09-14T12:54:43.655Z",
+      "note": "seq 45 -> 50"
+    }
+  ]
+}
