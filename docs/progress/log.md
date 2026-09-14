@@ -15160,3 +15160,25 @@ and `action`, and a per-pass trace of the dock. New walks:
 `layer-pick-latency-walk`, `layer-pick-at-scale-walk`.
 
 **Next:** the follow-up above, then back to the focus (`ui-building`).
+
+## 2026-09-14 — A marquee you drew stays up whatever tool you pick
+
+Applied the decision the user answered on 2026-09-13 ("It stays up"): a
+selection region now survives every tool change. `EditorState.setTool` no
+longer clears it, and `Tool.preservesSelectionRegion` became
+`preservesLayerSelection`, since the only thing still gated on the tool is the
+layer pick and its handles. Escape and a click on bare canvas remain the ways
+to let an outline go; a canvas crop still drops it, because any canvas-size
+change does (`rerender`).
+
+New in the harness: an `expectRegion` step, so a walk can CLAIM where the
+marquee is instead of writing it into a log nobody reads back. That gap is why
+the original bug lived inside `undo-puts-back-the-marquee-walk` for a week
+without failing it. Both marquee walks now claim the outline at every stage,
+and `marquee-survives-a-tool-swap-walk` is new.
+
+Next: the audit (`queue/audits/2026-09-14-marquee-survives-a-tool-swap.json`)
+asks whether Escape is the press people reach for now, and whether Delete
+should belong to the outline or to the shape you just drew — with a marquee up,
+⌫ still refuses to remove a freshly drawn rectangle and explains why. A full
+walk sweep was requested for the shared-state change.
