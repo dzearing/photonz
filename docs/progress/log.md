@@ -15122,3 +15122,41 @@ line of app code exists: `one-set-of-easing-curves-named-the-same-way-ever`.
 
 **Next.** "Work out whether the app needs project types at all" picks this up
 and now carries this study's answer on that question.
+
+## 2026-09-14 — Picking a layer stops redrawing the whole window
+
+Task: `clicking-a-layer-is-instant-whichever-layer-it-i` (user report, two-row
+document, "clicking Background has a noticeable lag").
+
+**Root cause.** `EditorState.document` is not stored, it is `history?.current`,
+and every selection change wrote `history` — the picked layer rides the undo
+stack next to the marquee. So to SwiftUI a click on a layer row looked exactly
+like an edit to the picture: the one property every view in the window reads was
+written, `EditorView.body` re-ran, and the whole window was re-measured. The
+earlier attempt at this fixed the layers list, which was real but was not this.
+
+**Fixed.** The snapshot waits in an `@ObservationIgnored` field and reaches the
+stack at the moment the stack needs it (push, undo, redo, `recordSelectionChange`).
+The canvas and the icon preview strip moved into views of their own, because a
+read of the selection inside `EditorView.body` is a read by the whole window. A
+dock section leaving no longer writes its height on the way out, which was a
+whole wasted pass over the dock.
+
+**Numbers** (two rows, forty picks each way): Background 52.7 → 48.9ms, Canvas
+67.1 → 64.1ms, longest pass 30-35 → 19-22ms, editor body rebuilds 1 → 0, dock
+rebuilds 4 → 2. Picking Canvas is the *more* expensive of the two, so the
+reported asymmetry did not reproduce; both were several frames.
+
+**Not done.** It is still not within a frame. What is left is the dock
+re-measuring itself (~35ms; the same click with the panel shut costs 10-27ms),
+and in an eighteen-row list the list's follow-the-pick slide costs 107-160ms.
+Filed as `picking-a-layer-lands-within-a-frame-in-a-long-l` with the profile.
+
+**Tools that came out of it**, all probe-only: `expectBuilds` (a walk step that
+fails when a named view rebuilds more than allowed — a count, not a stopwatch),
+`EditorReadWatch` (says which of the editor's properties a step actually wrote;
+it is what found the bug), per-pick `mainBusy` and body counts on `selectRow`
+and `action`, and a per-pass trace of the dock. New walks:
+`layer-pick-latency-walk`, `layer-pick-at-scale-walk`.
+
+**Next:** the follow-up above, then back to the focus (`ui-building`).
