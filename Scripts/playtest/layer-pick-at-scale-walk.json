@@ -1,0 +1,375 @@
+{
+ "out": "/tmp/photonz-playtest/layer-pick-at-scale-walk",
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "The same claim as layer-pick-latency-walk, at scale: a big capture and a document with many layers. Picking a layer must still cost the dock and nothing else, whatever the picture weighs and however long the list is."
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "selectRow",
+   "row": "Background"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "big-capture",
+   "note": "1800x1400 capture, two rows"
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "selectRow",
+   "row": "Background"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    120,
+    140
+   ],
+   "to": [
+    180,
+    210
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    200,
+    140
+   ],
+   "to": [
+    260,
+    210
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    280,
+    140
+   ],
+   "to": [
+    340,
+    210
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    360,
+    140
+   ],
+   "to": [
+    420,
+    210
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    440,
+    140
+   ],
+   "to": [
+    500,
+    210
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    520,
+    140
+   ],
+   "to": [
+    580,
+    210
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    600,
+    140
+   ],
+   "to": [
+    660,
+    210
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    680,
+    140
+   ],
+   "to": [
+    740,
+    210
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    120,
+    260
+   ],
+   "to": [
+    180,
+    330
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    200,
+    260
+   ],
+   "to": [
+    260,
+    330
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    280,
+    260
+   ],
+   "to": [
+    340,
+    330
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    360,
+    260
+   ],
+   "to": [
+    420,
+    330
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    440,
+    260
+   ],
+   "to": [
+    500,
+    330
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    520,
+    260
+   ],
+   "to": [
+    580,
+    330
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    600,
+    260
+   ],
+   "to": [
+    660,
+    330
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    680,
+    260
+   ],
+   "to": [
+    740,
+    330
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "wait",
+   "seconds": 4.0
+  },
+  {
+   "do": "describe",
+   "stage": "many-layers",
+   "note": "the same capture with sixteen shapes on it: eighteen rows"
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle 9"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle 9"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "snapshot",
+   "name": "many"
+  }
+ ]
+}

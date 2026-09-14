@@ -280,6 +280,9 @@ struct LayersListView: View {
     /// this frame is a loop that shrinks itself — a smaller frame builds fewer
     /// rows, which reports a smaller height, which shrinks the frame again.
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.layersList)
+        #endif
         let displays = editorState.layerRows
         // The area is sized to every row a twist COULD reveal, not to the rows
         // showing right now, so opening a group scrolls inside the list rather

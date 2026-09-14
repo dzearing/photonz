@@ -1,0 +1,113 @@
+{
+ "out": "/tmp/photonz-playtest/layer-pick-latency-walk",
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "Picking a layer must cost the dock and nothing else. It used to cost the whole window: the picked layer rode into the undo stack, and every view in the editor is drawn from that stack, so one click re-ran the editor's body and re-measured every stack in it (2026-09-14). Each pick below reports what it cost on the main thread and then asserts that the editor's own body did not rebuild."
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "describe",
+   "stage": "warm",
+   "note": "One pick before the ones that are judged: the editor arms its panel animation and settles its first layout a beat after a document opens, and that is a cost of OPENING, not of picking."
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "selectRow",
+   "row": "Background"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "selectRow",
+   "row": "Background"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Background"
+   ]
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "expectPicked",
+   "layers": []
+  },
+  {
+   "do": "selectRow",
+   "row": "Background"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Background"
+   ]
+  },
+  {
+   "do": "snapshot",
+   "name": "picked"
+  }
+ ]
+}

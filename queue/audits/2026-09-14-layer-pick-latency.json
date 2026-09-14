@@ -1,0 +1,29 @@
+{
+  "feature": "Picking a layer costs the panel, not the whole window",
+  "epic": "ui-building",
+  "summary": "Clicking a layer row used to redraw and re-measure the entire editor window, because the layer you picked was written into the undo stack and every view in the window is drawn from that stack. It now only rebuilds the right hand panel. On a two row document the click's main thread cost dropped from about 53ms to about 20ms of settling work, and the tool bar, zoom bar and canvas no longer take part at all.",
+  "setup": "Photonz Dev, release Next. Nothing to turn on. Open any screenshot so the document has a Background row and a Canvas row.",
+  "try": [
+    { "do": "Open a screenshot, so the layers list shows Background above Canvas.", "shot": "2026-09-14-layer-pick-latency-1.png" },
+    { "do": "Click Canvas, then Background, then Canvas again, a few times over." },
+    { "do": "Say whether either direction feels slower than the other, and whether either feels instant." },
+    { "do": "Draw a dozen rectangles so the list is long enough to scroll." },
+    { "do": "Click a row near the top, then one near the bottom, back and forth." },
+    { "do": "Say whether the long list feels worse than the short one, and whether the list moving under you is part of why." },
+    { "do": "Press Command-Z a few times and check that each undo puts back the layer that was picked at the time." }
+  ],
+  "evaluate": [
+    "Does clicking Canvas and clicking Background now feel like the same act, or does one still lag?",
+    "Is a click on a two row document fast enough to call instant, or is it still a beat behind your finger?",
+    "In a list of eighteen rows, does the list sliding to follow your pick feel helpful, or does it feel like lag?",
+    "Does undo still put back the layer that was picked, every time?",
+    "Is there anywhere else in the app where clicking something makes the whole window flinch?"
+  ],
+  "rough": [
+    "It is faster but it is NOT within one frame. On a two row document a click still costs about 49ms on the main thread against a 16ms frame, and all of what is left is the right hand panel: with the panel closed the same click costs 10 to 27ms. That gap is the dock re-measuring itself, and it needs its own piece of work.",
+    "In a list of eighteen rows a click costs 107 to 160ms, far worse than the two row case, and it runs for over a hundred runloop turns, which is an animation: the list slides to follow what you picked even when the row was already on screen. That is the cost of a feature, not a bug, but at that price it is worth asking whether the slide should happen at all when the row is already visible.",
+    "Picking Canvas is consistently MORE expensive than picking Background, not less: 64ms against 49ms over forty measured clicks. The report said the opposite. Both are several frames, so both feel slow, but whatever makes Background feel worse is not the main thread work.",
+    "About a quarter of the remaining main thread time per click is SwiftUI recomputing accessibility focus over the whole view tree, twice per click. That is inside the framework and there is no switch for it; the only lever is giving it a smaller tree to walk.",
+    "The probe build now carries a diagnostic that says which of the editor's properties a step actually wrote (EditorReadWatch). It is what found this bug in an afternoon after two earlier attempts guessed. It lists the properties by hand, so renaming one breaks the probe build until the line is deleted."
+  ]
+}

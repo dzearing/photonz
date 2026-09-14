@@ -64,6 +64,9 @@ struct EditorView: View {
     @State private var canvasContentWidth: CGFloat = 0
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.editorBody)
+        #endif
         @Bindable var editorState = editorState
         GeometryReader { geo in
             let inspectorShown = editorState.isInspectorShown
@@ -276,154 +279,7 @@ struct EditorView: View {
     @ViewBuilder
     private var canvas: some View {
         if editorState.document != nil {
-            CanvasView(image: editorState.renderedImage,
-                       crispTile: editorState.crispTile,
-                       crispTileViewport: editorState.crispTileViewport,
-                       viewport: editorState.viewport,
-                       document: editorState.document,
-                       selection: editorState.selection,
-                       selectionTargetsPixels: editorState.selectionTargetsPixels,
-                       cropRect: editorState.cropRect,
-                       cropAspect: editorState.cropAspect,
-                       cropBounds: editorState.cropBounds,
-                       backgroundFillHex: editorState.backgroundFillHex,
-                       selectedLayerID: editorState.selectedLayerID,
-                       selectedLayerFrame: editorState.selectedLayerFrame,
-                       groupContext: editorState.groupContextID,
-                       multiSelectedLayerIDs: editorState.multiSelectedLayerIDs,
-                       dragPreview: editorState.dragPreview,
-                       tool: editorState.activeTool,
-                       captionCloseRequest: editorState.captionCloseRequest,
-                       annotationContent: editorState.activeAnnotationContent,
-                       calloutShape: editorState.calloutToolShape,
-                       annotationStyle: editorState.activeAnnotationStyle,
-                       textContent: editorState.activeTextContent,
-                       measureContent: editorState.measureStyleForActiveMode,
-                       measureToolMode: editorState.measureToolMode,
-                       measureCandidateLevel: editorState.measureCandidateLevel,
-                       measureSnapsToCenters: editorState.measureSnapsToCenters
-                           && Experiments.shared.measureCenterSnapEnabled,
-                       edgeMap: editorState.snappingEdgeMap,
-                       lumaField: editorState.measureLumaField,
-                       onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
-                       onViewportChange: { editorState.setViewport($0) },
-                       onSelectionChange: {
-                           editorState.setSelection($0, captureLayers: $1, inside: $2, run: $3)
-                       },
-                       onWandAt: { editorState.wandSelect(at: $0, mode: $1) },
-                       onDeleteRegion: { editorState.deleteRegion() },
-                       onRegionMoveBegin: { editorState.beginRegionMove(copy: $0) },
-                       onRegionMoveCommit: { editorState.commitRegionMove(delta: $0) },
-                       onRegionMoveCancel: { editorState.cancelRegionMove() },
-                       onCropRectChange: { editorState.setCropRect($0) },
-                       onCropCommit: { editorState.commitCrop() },
-                       onSelectLayer: { editorState.selectLayer($0) },
-                       onSelectLayerInGroup: { editorState.selectLayer($0, inGroup: $1) },
-                       onExtendSelection: { editorState.extendSelection(toLayer: $0) },
-                       onAddSweptLayers: { editorState.addSweptLayersToSelection(in: $0, inside: $1) },
-                       onRenameLayer: { editorState.renameLayer(id: $0, to: $1) },
-                       onRenameComponent: { editorState.renameComponent(componentID: $0, to: $1) },
-                       onRenameComponentVersion: {
-                           editorState.renameComponentVersion(componentID: $0, version: $1, to: $2)
-                       },
-                       onExitGroup: { editorState.exitGroupContext() },
-                       onClickedNothing: { editorState.clearLibraryPick() },
-                       onDragBegin: { editorState.beginLayerDrag(id: $0) },
-                       onFramePreview: { editorState.previewCanvasFrame(id: $0, frame: $1) },
-                       onFrameCommit: { editorState.commitCanvasFrame(id: $0, frame: $1) },
-                       onDropCommit: { editorState.commitCanvasDrop(id: $0, frame: $1) },
-                       onMoveSelectionPreview: { editorState.previewCanvasOrigins($0) },
-                       onMoveSelectionCommit: { editorState.commitCanvasOrigins($0, joiningScreens: $1) },
-                       onCopyDragPreview: { editorState.previewCopyDrag($0) },
-                       onCopyDragCommit: { editorState.commitCopyDrag($0) },
-                       onCopyDragCancel: { editorState.cancelCopyDrag() },
-                       onTransformPreview: { editorState.previewLayerTransform(id: $0, transform: $1) },
-                       onTransformCommit: { editorState.commitLayerTransform(id: $0, transform: $1) },
-                       onAnnotationCommit: { editorState.addAnnotation(from: $0, to: $1) },
-                       onAnnotationEndpointsCommit: { editorState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
-                       onZoomCalloutCommit: { editorState.addZoomCallout(from: $0, to: $1) },
-                       onFrameCreate: { editorState.addFrame(from: $0, to: $1) },
-                       onLensCreate: { editorState.addLens(from: $0, to: $1) },
-                       onPathCommit: { editorState.addPath($0) },
-                       onPenHintChange: { editorState.penHint = $0 },
-                       onPathPreview: { editorState.previewPath($0, $1) },
-                       onPathEditCommit: { editorState.commitPath($0, $1) },
-                       onPathEditHintChange: { editorState.pathEditHint = $0 },
-                       onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
-                       onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
-                       onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3, readout: $4) },
-                       onMeasureEndpointCancel: { editorState.cancelMeasureEndpointDrag() },
-                       onCornerRadiiPreview: { editorState.previewCornerRadii(ids: [$0], $1) },
-                       onCornerRadiiCommit: { editorState.commitCornerRadii(ids: [$0], $1) },
-                       onCaptionPlacePreview: { editorState.previewCaptionPlacement(id: $0, center: $1) },
-                       onCaptionPlaceCommit: { editorState.commitCaptionPlacement(id: $0, center: $1) },
-                       onCaptionPlaceCancel: { editorState.cancelCaptionPlacement() },
-                       onAlignmentCommit: { editorState.addAlignmentCheck(axis: $0, position: $1, span: $2) },
-                       onElementSizeCommit: { editorState.addElementSize($0, neighbors: $1) },
-                       onGapCommit: { editorState.addGapMeasure($0) },
-                       onCandidateLevelChange: { editorState.measureCandidateLevel = $0 },
-                       onToolChange: { editorState.setTool($0) },
-                       onTextEditBegin: { editorState.beginTextEdit(layerID: $0) },
-                       onWordingRefused: { editorState.refuseWordingEdit($0) },
-                       onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
-                       onTextCancel: { editorState.cancelTextEdit() },
-                       onCaptionEditBegin: { editorState.beginCaptionEdit(layerID: $0) },
-                       onCaptionCommit: {
-                           editorState.commitCaptionEdit(layerID: $0, string: $1,
-                                                         placement: $2, keepTool: $3)
-                       },
-                       onCaptionCancel: { editorState.cancelCaptionEdit() },
-                       onDeleteLayer: { editorState.deleteLayer(id: $0) },
-                       onDeleteLayers: { editorState.deleteLayers(ids: $0) },
-                       onDropImageURL: { editorState.addImageLayerOrOpen(at: $0, droppedAt: $1) },
-                       onDropComponent: { componentID, version, point in
-                           editorState.placeComponent(componentID: componentID, at: point,
-                                                      version: version)
-                       },
-                       onComponentDragMoved: { componentID, version, point in
-                           editorState.holdRoomForComponentDrag(componentID: componentID,
-                                                                version: version, at: point)
-                       },
-                       onComponentDragEnded: { editorState.releaseRoomForComponentDrag() },
-                       arrivingComponentDrawing: { componentID in
-                           editorState.sharedComponent(entryID: componentID.uuidString)?
-                               .drawings.first
-                       },
-                       onDropTextStyle: { styleID, layerIDs in
-                           editorState.dropTextStyle(styleID: styleID, onLayers: layerIDs)
-                       },
-                       onDropImageURLIntoCollage: { url, collageID, slot in
-                           editorState.dropImage(at: url, intoCollage: collageID, slot: slot)
-                       },
-                       onAbsorbLayerIntoCollage: { layerID, collageID, slot in
-                           editorState.absorbLayer(id: layerID, intoCollage: collageID, slot: slot)
-                       },
-                       onSwapCollageSlots: { collageID, from, to in
-                           editorState.swapCollageSlots(collageID: collageID, from, to)
-                       },
-                       isCanvasSelected: editorState.isCanvasSelected,
-                       canvasGrid: editorState.drawnCanvasGrid,
-                       iconKeylines: editorState.iconKeylinesShowing,
-                       canvasGridOrigin: editorState.canvasGridOrigin,
-                       canvasGuides: editorState.canvasGuides,
-                       gridAdjust: editorState.gridAdjustment?.origin,
-                       selectedGuideID: editorState.selectedGuideID,
-                       onGridOriginChange: { editorState.moveGridOrigin(to: $0) },
-                       onGridAdjustCommit: { editorState.commitGridAdjustment() },
-                       onGridAdjustCancel: { editorState.cancelGridAdjustment() },
-                       onGuidePin: { editorState.pinGuide($0) },
-                       onGuideSelect: { editorState.selectGuide($0) },
-                       onGuideMove: { editorState.moveSelectedGuide(to: $0) },
-                       onGuideDelete: { editorState.deleteSelectedGuide() },
-                       onCanvasResize: { size, anchor in
-                           editorState.setCanvasSize(to: size, anchor: anchor)
-                       },
-                       onFillAt: { point, hit, useBackground in
-                           editorState.fillLayer(at: point, hit: hit, useBackground: useBackground)
-                       },
-                       onFillSelected: { editorState.fillSelectedLayer(useBackground: $0) },
-                       onClearBackground: { editorState.clearBackgroundLayer() },
-                       onWindowChange: { editorState.canvasDidMoveToWindow($0) })
+            EditorCanvasSurface()
                 .overlay(alignment: .bottom) {
                     // One slot: the "Copied" notice and the Measure mode hint
                     // never stack. The notice wins while it is up.
@@ -461,14 +317,16 @@ struct EditorView: View {
                     // Top left because that is where the icon mock puts it and
                     // because every other piece of canvas chrome is elsewhere —
                     // the tools at the bottom, the panel toggle in the title bar.
-                    let tiles = editorState.iconPreviewTiles
-                    if !tiles.isEmpty { IconPreviewsStrip(tiles: tiles) }
+                    //
+                    // A view of its own because what it draws depends on WHAT
+                    // IS PICKED, and a read of the selection out here is a read
+                    // by the whole editor: see `IconPreviewsOverlay`.
+                    IconPreviewsOverlay()
                 }
                 .overlay(alignment: Self.alignment(for: editorState.measureLegendAnchor)) {
                     let entries = editorState.measureLegendEntries
                     if !entries.isEmpty { measureLegend(entries) }
                 }
-                .animation(.easeInOut(duration: 0.2), value: editorState.iconPreviewFrameID)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPenHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPathEditHint)

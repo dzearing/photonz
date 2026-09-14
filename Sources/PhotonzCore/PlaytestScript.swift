@@ -1394,6 +1394,21 @@ public enum PlaytestStep: Sendable, Equatable {
     /// An empty list is as much of the point as a full one: it says nothing
     /// should be picked here.
     case expectPicked(layers: [String])
+    /// How many times a named view may have built since the step before it.
+    ///
+    /// The guard for what a click COSTS, written as a count rather than as a
+    /// time: a stopwatch on a busy machine fails a walk that is fine and
+    /// passes one that is not, while "picking a layer rebuilt the whole editor"
+    /// is either true or it is not. The views that can be counted are the ones
+    /// the probe build meters (`ViewBuildMeter`): `editorBody`,
+    /// `inspectorPanel`, `layersList`, `layersRow`, `layerThumbnail`.
+    ///
+    /// Zero is the usual ceiling and the useful one: picking a layer must not
+    /// re-run the editor's own body, which is the canvas, the tool bar, the
+    /// zoom bar and the dock together. It did until 2026-09-14, because the
+    /// picked layer rode into the undo stack and the whole window is drawn
+    /// from that stack (`layer-pick-latency-walk`).
+    case expectBuilds(view: String, atMost: Int)
     /// How many measurements must be on the canvas right now.
     ///
     /// `expectPicked` asks what the app is holding; this asks what it has
@@ -1606,7 +1621,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeSVG",
     ]
@@ -1663,6 +1678,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectOneUnit: "expectOneUnit"
         case .expectOneNumberPerName: "expectOneNumberPerName"
         case .expectPicked: "expectPicked"
+        case .expectBuilds: "expectBuilds"
         case .scrollPanel: "scrollPanel"
         case .reveal: "reveal"
         case .describe: "describe"
@@ -2018,6 +2034,14 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectOneUnit
         case "expectOneNumberPerName":
             self = .expectOneNumberPerName
+        case "expectBuilds":
+            guard fields["view"] != nil else {
+                throw f.invalid("view", "expectBuilds has to name the view it is counting: editorBody, inspectorPanel, layersList, layersRow or layerThumbnail")
+            }
+            guard fields["atMost"] != nil else {
+                throw f.invalid("atMost", "expectBuilds has to say how many builds are allowed; \"atMost\": 0 is the usual one")
+            }
+            self = .expectBuilds(view: try f.string("view"), atMost: Int(try f.number("atMost")))
         case "expectPicked":
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")

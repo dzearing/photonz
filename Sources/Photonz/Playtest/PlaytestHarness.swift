@@ -1030,12 +1030,25 @@ private final class Run {
             }
             let click: RowClick = if modifiers.contains(.shift) { .extend }
                 else if modifiers.contains(.command) { .toggle } else { .plain }
+            // What picking a row costs, on the main thread, from the click to
+            // the panel standing still. The same pair of meters a real press
+            // carries, because this IS the press's handler: the walk that
+            // guards layer picking reads these two numbers
+            // (`layer-pick-latency-walk`).
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
+            EditorReadWatch.arm(editor)
+            EditorReadWatch.reset()
             editor.clickRow(match.id, click, in: editor.panelRows.map(\.id))
             await sleep(0.2)
             note(number, step.name,
                  "picked \"\(match.name)\" out of the layers list"
                     + (match.isLocked ? " (locked)" : "")
-                    + " with a \(click) click",
+                    + " with a \(click) click"
+                    + "; " + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
+                    + "; " + ViewBuildMeter.shared.traced
+                    + "; " + EditorReadWatch.report,
                  state: describe())
 
         case .press(let control, let row, let count, let modifiers, let across):
@@ -1066,6 +1079,25 @@ private final class Run {
                      try self.checkPanel(thing, named: named, inRow: inRow,
                                          reads: reads, present: present)
                  },
+                 state: describe())
+
+        case .expectBuilds(let view, let atMost):
+            guard let subject = ViewBuildMeter.Subject(rawValue: view) else {
+                throw Failure(description: "there is no view called \"\(view)\" to count; the ones "
+                    + "the probe counts are: "
+                    + ViewBuildMeter.Subject.allCases.map(\.rawValue).joined(separator: ", "))
+            }
+            let built = ViewBuildMeter.shared.count(subject)
+            guard built <= atMost else {
+                throw Failure(description: "\"\(view)\" built \(built) time\(built == 1 ? "" : "s") "
+                    + "since the step before this one, and this walk allows at most \(atMost). "
+                    + "Something the step just did is read by that view, so SwiftUI rebuilt it and "
+                    + "re-measured everything inside it. The whole count: "
+                    + ViewBuildMeter.shared.report)
+            }
+            note(number, step.name,
+                 "\"\(view)\" built \(built) time\(built == 1 ? "" : "s"), at most \(atMost) allowed; "
+                 + ViewBuildMeter.shared.report,
                  state: describe())
 
         case .expectPicked(let layers):
@@ -1489,6 +1521,11 @@ private final class Run {
             // ARRIVING: the number of layer rows the list builds when it comes
             // back on screen, which is the thing a lazy list is claiming.
             ViewBuildMeter.shared.reset()
+            // ...and the main thread with it, so an action that stands in for
+            // a click (`selectCanvas` is the Canvas row) carries the same cost
+            // reading a real press does.
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
             switch action {
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
@@ -1975,7 +2012,7 @@ private final class Run {
             }
             await sleep(0.2)
             let detail = (actionDetail.map { "\(action.rawValue) · \($0)" } ?? action.rawValue)
-                + "; " + ViewBuildMeter.shared.report
+                + "; " + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report
             actionDetail = nil
             note(number, step.name, detail, state: describe())
         }

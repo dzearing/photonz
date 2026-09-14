@@ -16,12 +16,21 @@ final class ViewBuildMeter {
     static let shared = ViewBuildMeter()
 
     /// The things worth counting. One case per list that claims to be lazy.
-    enum Subject: String {
+    enum Subject: String, CaseIterable {
         case layersRow
         /// Every time the layers list asks for a picture of a layer. The list
         /// asks only for the rows near the screen, and "near" is not something
         /// a screenshot can show either.
         case layerThumbnail
+        /// The whole editor's body: canvas, tool bar, zoom bar, dock, the lot.
+        /// Picking a layer must not run this. It used to, and re-measuring
+        /// every stack in the window is where the click's 50ms went
+        /// (`layer-pick-latency-walk`).
+        case editorBody
+        /// The dock's body: which sections exist and in what order.
+        case inspectorPanel
+        /// The layers list's body, which is one step under the dock's.
+        case layersList
     }
 
     private var counts: [Subject: Int] = [:]
@@ -32,7 +41,16 @@ final class ViewBuildMeter {
         counts[subject, default: 0] += 1
     }
 
-    func reset() { counts.removeAll() }
+    /// A line per pass, for the subjects where the COUNT is the question and
+    /// the answer is "why four". `report` keeps counting; this says what was
+    /// different about each one.
+    private var trace: [String] = []
+
+    func note(_ line: String) { if trace.count < 12 { trace.append(line) } }
+
+    var traced: String { trace.isEmpty ? "" : "passes: " + trace.joined(separator: " | ") }
+
+    func reset() { counts.removeAll(); trace.removeAll() }
 
     func count(_ subject: Subject) -> Int { counts[subject] ?? 0 }
 

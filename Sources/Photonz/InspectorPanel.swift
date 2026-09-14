@@ -98,6 +98,9 @@ struct InspectorPanel: View {
     @State private var budget = DockBudgetScratch()
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.inspectorPanel)
+        #endif
         // The sections the selection asks for, and the ones the dock may draw
         // this pass. They are the same list except in the pass right after a
         // click that brings new sections in, when the canvas gets the frame to
@@ -108,6 +111,13 @@ struct InspectorPanel: View {
         // How tall each list section may be drawn, so that the forms under it
         // stay where they are instead of being carried off the bottom.
         let ceilings = layout.ceilings(for: sections)
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.note(
+            "[\(sections.map(\.rawValue).joined(separator: ","))] arrival \(arrivalPass) "
+            + "viewport \(Int(budget.viewportHeight ?? -1)) "
+            + "headers \(budget.headers.map { "\($0.key.rawValue)=\(Int($0.value))" }.sorted().joined(separator: ",")) "
+            + "bodies \(budget.bodies.map { "\($0.key.rawValue)=\(Int($0.value))" }.sorted().joined(separator: ","))")
+        #endif
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -132,9 +142,9 @@ struct InspectorPanel: View {
                                 bodyCeiling: id == .layers ? nil : ceilings[id],
                                 onBodyHeight: { height in
                                     guard id != .layers else { return }
-                                    budget.bodies[id] = height
+                                    record(bodyHeight: height, for: id)
                                 },
-                                onHeaderHeight: { budget.headers[id] = $0 },
+                                onHeaderHeight: { record(headerHeight: $0, for: id) },
                                 onBodyFrame: { reveal.bodyFrames[id] = $0 }
                             ) {
                                 sectionContent(id, ceiling: ceilings[id])
@@ -289,6 +299,35 @@ struct InspectorPanel: View {
     }
 
     // MARK: Sharing out the height the dock has, and revealing
+
+    /// What a section has just measured itself to be, kept only while the dock
+    /// is actually drawing that section.
+    ///
+    /// The guard is a real cost, not tidiness. A section on its way out of the
+    /// dock measures itself one last time as it goes, at zero, and that write
+    /// used to land in `budget` — which is @State, so it redrew every section
+    /// still on screen and re-laid out the window, for a number nothing would
+    /// ever read again. It was one of the FOUR passes over the dock that one
+    /// click on a layer row cost: on a two row document, picking Background
+    /// drew the dock at [layers], then again at [layers] for nothing but
+    /// "canvas is 0 tall now", then at [layers, geometry], then once more with
+    /// geometry's real height (`layer-pick-latency-walk`, 2026-09-14).
+    ///
+    /// Nothing reads a departed section's entry — `DockHeightBudget` only ever
+    /// looks up the sections it was handed — so a stale one costs nothing and
+    /// is simply left where it is.
+    private func record(bodyHeight: CGFloat, for id: InspectorSectionID) {
+        guard orderedAvailableSections.contains(id) else { return }
+        guard budget.bodies[id] != bodyHeight else { return }
+        budget.bodies[id] = bodyHeight
+    }
+
+    /// The same, for the header row, which measures itself on the way out too.
+    private func record(headerHeight: CGFloat, for id: InspectorSectionID) {
+        guard orderedAvailableSections.contains(id) else { return }
+        guard budget.headers[id] != headerHeight else { return }
+        budget.headers[id] = headerHeight
+    }
 
     /// The dock's height arithmetic, which lives in `InspectorDockLayout.swift`
     /// along with the one rule the whole panel follows. Rebuilt each pass from

@@ -222,14 +222,14 @@ final class EditorState {
     /// outline that is really on screen; whether that write is a STEP of its
     /// own is `setSelection(recording:)`.
     var selection: SelectionRegion? {
-        didSet { history?.syncSelection(selectionSnapshot) }
+        didSet { noteSelectionForHistory() }
     }
     /// True when the region was made by a region tool (rect/ellipse/wand) —
     /// pixel semantics: ⌫ erases pixels, ⌘C copies the clipped composite,
     /// bucket fills the region. False for the arrow tool's marquee, which
     /// keeps its layer semantics (rubber-band capture, batch delete).
     private(set) var selectionTargetsPixels = false {
-        didSet { history?.syncSelection(selectionSnapshot) }
+        didSet { noteSelectionForHistory() }
     }
     /// The marquee as History stores it: the outline, what it means, and the
     /// layers picked with it, which travel together because they are one thing
@@ -237,6 +237,38 @@ final class EditorState {
     var selectionSnapshot: SelectionSnapshot {
         SelectionSnapshot(region: selection, targetsPixels: selectionTargetsPixels,
                           picked: LayerPick(primary: selectedLayerID, multi: multiSelectedLayerIDs))
+    }
+    /// The outline and the pick that the NEXT step on the stack should carry,
+    /// waiting here until the stack actually needs it.
+    ///
+    /// It used to go into `history` the instant anything was picked, and
+    /// `history` is the property `document` is computed from — so clicking a
+    /// row in the layers panel wrote the one thing EVERY view in the window
+    /// reads, and SwiftUI answered by re-running the editor's body and
+    /// re-measuring every stack in it. Measured on a two-row document on
+    /// 2026-09-14: about 48ms of main thread work for a click that changes an
+    /// outline, three frames at sixty hertz (`layer-pick-latency-walk`).
+    ///
+    /// Nothing that draws reads `history.selection`. Only the stack does, and
+    /// only when it is pushing a step or stepping over one. So the note waits
+    /// here, off the observed path, and is handed over at that moment instead.
+    @ObservationIgnored private var selectionAwaitingHistory: SelectionSnapshot?
+
+    /// Remembers what the selection is now, for the stack, without touching it.
+    private func noteSelectionForHistory() {
+        guard history != nil else { return }
+        selectionAwaitingHistory = selectionSnapshot
+    }
+
+    /// Hands the stack whatever the selection has done since it last looked.
+    ///
+    /// Called at every door into the stack, so a step, an undo and a redo all
+    /// still record the outline that is really on screen — which is the whole
+    /// promise the old eager write was keeping.
+    private func flushSelectionToHistory() {
+        guard let pending = selectionAwaitingHistory else { return }
+        selectionAwaitingHistory = nil
+        history?.syncSelection(pending)
     }
     /// Magic-wand color tolerance (Euclidean RGBA distance, 0–255 units).
     /// Persisted like the fill colors — a tuned tolerance outlives relaunch.
@@ -536,8 +568,9 @@ final class EditorState {
                 // Which layers are picked is part of the step the stack is
                 // about to push, so it follows the outline into History the
                 // same way. It is never a step of its OWN: clicking a row must
-                // not cost a press of ⌘Z (`SelectionSnapshot`).
-                history?.syncSelection(selectionSnapshot)
+                // not cost a press of ⌘Z (`SelectionSnapshot`). Noted rather
+                // than handed over — see `noteSelectionForHistory`.
+                noteSelectionForHistory()
                 // A guide step waiting on "pick a layer" moves on here, from
                 // the row or from the canvas, because both land in this one
                 // place (`TutorialController`).
@@ -587,7 +620,7 @@ final class EditorState {
                 isNamingTextStyle = false
                 namingEffectStyleRow = nil
                 forgetEffectFolds()
-                history?.syncSelection(selectionSnapshot)
+                noteSelectionForHistory()
                 // A guide step waiting on "pick a layer" moves on here as well
                 // as at `selectedLayerID`. A rubber band round two layers puts
                 // them HERE and leaves the single selection alone, so a step
@@ -1782,6 +1815,7 @@ final class EditorState {
         // marquee has to be recorded through all of them.
         defer {
             if recording, Experiments.shared.selectionUndoEnabled {
+                flushSelectionToHistory()
                 history?.recordSelectionChange(from: before, run: run)
             }
         }
@@ -2400,6 +2434,7 @@ final class EditorState {
     @discardableResult
     func applyOutsideHistory(_ update: (inout PhotonzDocument) -> Void) -> Bool {
         guard history != nil else { return false }
+        flushSelectionToHistory()
         return history!.applyOutsideHistory(update)
     }
 
@@ -2414,6 +2449,7 @@ final class EditorState {
         // The paste path re-arms this itself, right after its own edit lands.
         pasteToolReturn = nil
         let before = document
+        flushSelectionToHistory()
         let report = history?.perform(mutate) ?? EditReport()
         rerender()
         // Anything this edit changed about a component that follows the shared
@@ -2498,6 +2534,7 @@ final class EditorState {
         // of a person moving it and wrong of a restore: those didSets have
         // just overwritten the step's own snapshot with the half-restored one.
         // Putting it back last is what makes a second ⌘Z land where it should.
+        selectionAwaitingHistory = nil
         history?.syncSelection(snapshot)
     }
 
@@ -2509,6 +2546,7 @@ final class EditorState {
         let returning = pasteToolReturn
         let pastedWasThere = returning.map { document?.layer(id: $0.layer) != nil } ?? false
         let before = document
+        flushSelectionToHistory()
         history?.undo()
         restoreSelectionFromHistory()
         rerender()
@@ -2536,6 +2574,7 @@ final class EditorState {
         let returning = pasteToolReturn
         let pastedWasGone = returning.map { document?.layer(id: $0.layer) == nil } ?? false
         let before = document
+        flushSelectionToHistory()
         history?.redo()
         restoreSelectionFromHistory()
         rerender()

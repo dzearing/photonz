@@ -5,11 +5,11 @@
   "epic": "",
   "priority": "p2-normal",
   "seq": 16,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:12:17.079Z",
-  "updated": "2026-09-14T14:12:27.644Z",
+  "updated": "2026-09-14T16:18:40.623Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-14, with a screenshot of a two-row document: \"when i click canvas, it selects immediately. When I click background (switching from canvas to bg) it has a noticable lag. It seems like updating the layer windows might be potentially causing a perf issue. Profile where time is spent and see if we can optimize layer switching. This has been an issue before and still feels sluggish, so something is taking a lot of time.\"\n\nThey are right that it has been looked at before. The task 'a-layers-list-with-many-rows-costs-no-more-per-cl' is done and fixed the LIST: every row used to rebuild itself on each click. The remaining cost is therefore somewhere else, and the fact that it still bites on a TWO ROW document says it is not about the number of rows at all.\n\nTHE CLUE TO START FROM, and it should save most of the search: Canvas is fast and Background is slow, on the same document, one click apart. Canvas is a pseudo-selection - EditorState.isCanvasSelected, no layer selected at all - while Background is a real image layer. So the cost is in whatever only happens when a REAL layer becomes selected, and the difference between those two paths is the whole bug. Diff the two rather than profiling the world.\n\nWhat happens on selection change, read but NOT yet profiled, so treat these as places to look rather than as the answer. EditorState.swift:517, the didSet on selectedLayerID, is all cheap bookkeeping on the face of it: clearing multi-selection, resetting rowSelection, revealInLayersList, history.syncSelection(selectionSnapshot), and a pile of nil-ing out of half-typed names. Two of those are worth timing rather than eyeballing:\n- history?.syncSelection(selectionSnapshot) on every single click. Building a snapshot and touching the history stack per selection is the kind of thing that is free until it is not.\n- revealInLayersList, EditorState+LayersPanel.swift:132, which walks ancestors and, behind the layersFollowPick flag, writes a reveal token that makes the list animate. An animation on every pick is a re-layout on every pick.\nThe likelier suspect is downstream of all that: the dock rebuilding its sections for the newly picked layer. A picture layer brings Appearance, its parts, its colours and the Library section into play; the Canvas pseudo-selection brings almost nothing. Anything in those sections that reads pixels, builds a colour-style selection across the document, or makes a thumbnail is a candidate, and that is exactly the asymmetry the user is describing.\n\nProfile properly rather than by print statements: Instruments on the real app, with the two clicks isolated, or signposts around the selection path. Whatever is found, the deliverable is a NAMED cost with a number beside it, because the last attempt at this fixed a real thing and the symptom survived, which is what happens when the fix is aimed at a guess.\n\nDo not fix the feel by deferring the work to a later runloop turn unless that is genuinely the right answer and is argued for. Making the click return sooner while the panel settles a frame later is sometimes correct and sometimes just moving the jank somewhere harder to see; say which it is.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
@@ -32,6 +32,51 @@
     {
       "t": "2026-09-14T14:12:27.643Z",
       "note": "seq 2640 -> 16"
+    },
+    {
+      "t": "2026-09-14T15:38:24.359Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T16:18:24.380Z",
+      "note": "ADVERSARIAL REVIEW, before building. The task's own hypotheses (revealInLayersList, the dock's sections) were worth timing but the notes warned the last attempt fixed a real thing and the symptom survived, which is what happens when the fix is aimed at a guess. So the first act was to build a way to MEASURE a pick rather than to reason about one: the probe's selectRow and action steps now reset and report the main thread meter and the view build counters, so every pick in a walk carries its own cost. The second was to distrust the report's asymmetry until it was reproduced; it did not reproduce, and saying so is part of the answer."
+    },
+    {
+      "t": "2026-09-14T16:18:28.999Z",
+      "note": "PROFILE, before the change. Two row document (settings-pane-2x.png), probe build, forty measured picks each way. Picking Background: 52.7ms median main thread work (min 43.7, max 64.1). Picking Canvas: 67.1ms median (min 56.1, max 79.5). Both are three to four frames at sixty hertz. THE REPORTED ASYMMETRY DOES NOT REPRODUCE AND IT IS THE OTHER WAY ROUND: Canvas is consistently the MORE expensive of the two. Whatever makes Background feel worse is not main thread work; both are slow enough to feel."
+    },
+    {
+      "t": "2026-09-14T16:18:29.044Z",
+      "note": "WHERE THE TIME GOES. A 16s sample of the probe under a storm of picks, main thread, 10001 samples of which 4032 idle. 60% of the busy time is under __CFRunLoopDoObservers -> GraphHost.flushTransactions: SwiftUI re-running bodies and re-measuring layout. 39% is the display cycle flush, and a quarter of ALL busy time (about 1250 samples) is SwiftUI recomputing accessibility focus twice per pick (AccessibilityNode.updateFocus -> ViewRendererHost.focusResponder -> MultiViewResponder.visit), which walks the whole view tree. Counting bodies rather than guessing: one pick ran EditorView.body once, InspectorPanel.body FOUR times and LayersListView.body four times. One layer row rebuilt, so the earlier lazy-rows fix held."
+    },
+    {
+      "t": "2026-09-14T16:18:29.087Z",
+      "note": "WHAT THE DOCK COSTS, isolated. Same walk, with the panel toggled shut before the second half: a pick with the dock open costs 50-79ms, the same pick with it closed costs 10-27ms. So about two thirds of a click is the right hand panel, and the rest is the editor's own body."
+    },
+    {
+      "t": "2026-09-14T16:18:36.217Z",
+      "note": "ROOT CAUSE, and it is the one thing nobody had named. EditorState.document is not stored: it is 'history?.current'. And every selection change wrote history, because the picked layer rides the undo stack (history?.syncSelection(selectionSnapshot), four call sites). So to SwiftUI, clicking a layer row was indistinguishable from editing the picture: the property EVERY view in the window reads was written, EditorView.body re-ran, and SwiftUI re-measured every stack in the window - tool bar, zoom bar, canvas, dock. The task notes flagged syncSelection as worth timing; it was not the time IN it, it was what it invalidated. Found with a probe-only diagnostic (Sources/Photonz/Playtest/EditorReadWatch.swift) that arms one observation tracker per property the editor body reads and reports which ones a step actually wrote. It named ten, and 'document' was the one that mattered."
+    },
+    {
+      "t": "2026-09-14T16:18:36.261Z",
+      "note": "THE FIX, three parts, all in the app layer and all in shared code (no Current/Next fork here, so Next has it by construction). 1. EditorState holds the selection snapshot in an @ObservationIgnored field and hands it to the stack at the moment the stack needs it - before a step is pushed, before an undo, before a redo, before recordSelectionChange. Nothing that draws reads history.selection, so this is not deferring jank to a later turn; the write simply stops happening on the click path. Every door into the stack flushes, so a step still records the outline that is really on screen, which is the whole promise the eager write was keeping. 2. The canvas moved into its own view (EditorCanvasSurface) and the icon preview strip into its own (IconPreviewsOverlay): both read the selection, and a read of the selection in EditorView.body is a read by the whole window. 3. A dock section on its way out measured itself at zero as it left, and that write into @State cost an entire extra pass over every section still on screen plus a window re-layout, for a number nothing would ever read again; heights from sections the dock is not drawing are now ignored."
+    },
+    {
+      "t": "2026-09-14T16:18:36.301Z",
+      "note": "AFTER, measured the same way. Two rows: Background 48.9ms median (was 52.7), Canvas 64.1ms (was 67.1). Dock passes per pick 4 -> 2. EditorView.body rebuilds per pick 1 -> 0, which is the structural win and the thing the walk now asserts. Longest single pass for a Background pick 30-35ms -> 19-22ms. IT IS NOT WITHIN ONE FRAME and I am not going to claim it is: everything left is the dock re-measuring itself, worth about 35ms, and that is a piece of work of its own. Filed as picking-a-layer-lands-within-a-frame-in-a-long-l with the numbers, the profile and the tools."
+    },
+    {
+      "t": "2026-09-14T16:18:36.342Z",
+      "note": "AT SCALE (acceptance: many layers, large capture). Large capture, 1800x1400, two rows: 55-63ms, same as the small one, so the picture's size does not enter into it. Eighteen rows on that capture: 107-160ms per pick over 100-146 runloop passes with the list rebuilding 6-12 times and 19-28 rows rebuilding. The pass count says animation rather than layout: the list slides to follow the row you picked. So it does NOT hold at eighteen rows, and that is the honest answer to the acceptance item; it is the larger half of the follow-up task."
+    },
+    {
+      "t": "2026-09-14T16:18:40.578Z",
+      "note": "VERIFIED. Scripts/test.sh green: 6492 tests, 529 suites, including the render perf budget (12MP/10 layers, 6.8ms against 26ms). Walks: all 7 selection walks, all 4 undo walks (undo-hands-back-the-pick and undo-puts-back-the-marquee are the two that would catch the history change), all 21 layer walks. Two new walks: layer-pick-latency-walk (two rows, asserts the editor body does not rebuild on a pick) and layer-pick-at-scale-walk (1800x1400 capture, then eighteen rows, same assertion). The guard is a COUNT, not a stopwatch: a new playtest step 'expectBuilds' fails a walk when a named view built more times than allowed, so a machine under load cannot fail it and a fast machine cannot hide a regression. Core step decoding is TDD'd in PlaytestScriptTests."
+    },
+    {
+      "t": "2026-09-14T16:18:40.622Z",
+      "note": "LEFT ROUGH, below the follow-up bar. (a) The first pick after a document opens still rebuilds the editor body once; it is the editor arming its panel animation a beat after the document lands, a cost of opening rather than of picking, and the walk warms up past it and says why. (b) EditorReadWatch lists the editor's properties by hand, so renaming one breaks the probe build until that line goes; kept anyway because it is what found this bug after two attempts had guessed, and a broken probe build is caught by swift build in seconds. (c) InspectorPanel now logs one trace line per dock pass (sections, arrival, viewport, measured heights) into the walk log; probe-only and cheap, and it is how '4 passes' became 'pass two exists only to record that a departed section is zero tall'."
     }
-  ]
+  ],
+  "started": "2026-09-14T15:38:24.358Z"
 }

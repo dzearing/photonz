@@ -3305,3 +3305,16 @@
 {"t":"2026-09-14T15:37:40.213Z","ev":"task_note","id":"a-capture-in-the-history-strip-is-never-stretche"}
 {"t":"2026-09-14T15:37:40.255Z","ev":"task_note","id":"a-capture-in-the-history-strip-is-never-stretche"}
 {"t":"2026-09-14T15:37:40.297Z","ev":"task_note","id":"a-capture-in-the-history-strip-is-never-stretche"}
+{"t":"2026-09-14T15:38:07.429Z","ev":"task_done","id":"a-capture-in-the-history-strip-is-never-stretche","from":"in_progress","note":"A wide capture is now cropped to 2.5:1 keeping its leading edge, and no capture is ever drawn bigger than its real point size. ThumbnailFit in PhotonzCore makes both decisions (13 tests, written first); CaptureThumbnailImage is the one shared view, so the history tiles AND the capture toast obey it. Verified on the real app with a new walk (history-thumbnail-shapes-walk) that puts six shapes in the strip at once and takes a real screen capture: 2400x300 went 800x100 -> 250x100, a 120x60 Retina capture 200x100 -> 60x30, a 40x600 6x100 -> 40x100, and 1200x800 stayed 148x100. 6489 tests green, three history walks and the first-capture walk pass, pushed as ecd953e1. Audit: queue/audits/2026-09-14-history-thumbnails.json"}
+{"t":"2026-09-14T15:38:24.361Z","ev":"task_started","id":"clicking-a-layer-is-instant-whichever-layer-it-i","title":"Clicking a layer is instant, whichever layer it is","priority":"p2-normal"}
+{"t":"2026-09-14T16:18:21.559Z","ev":"task_created","id":"picking-a-layer-lands-within-a-frame-in-a-long-l","priority":"p2-normal","title":"Picking a layer lands within a frame, in a long list as well as a short one"}
+{"t":"2026-09-14T16:18:24.382Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:29.001Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:29.046Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:29.089Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:36.219Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:36.263Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:36.303Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:36.344Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:40.580Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}
+{"t":"2026-09-14T16:18:40.624Z","ev":"task_note","id":"clicking-a-layer-is-instant-whichever-layer-it-i"}

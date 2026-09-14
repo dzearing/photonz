@@ -1465,6 +1465,40 @@ struct PlaytestScriptTests {
     // came back, not that the layers came back PICKED. `expectPicked` is the
     // half that notices: it names every layer that must be picked, and fails
     // the run when the panel is holding anything else.
+    // Timing alone cannot guard how much a click costs: a machine under load
+    // fails a green walk and a fast one passes a broken build. What a click
+    // REBUILDS can be counted exactly, so that is what a walk asserts. Picking
+    // a layer must not re-run the editor's own body, which is the whole
+    // window's chrome (`layer-pick-latency-walk`).
+    @Test("An expectBuilds step names a view and the most times it may build")
+    func expectBuildsNamesTheViewAndTheCeiling() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectBuilds", "view": "editorBody", "atMost": 0 } ] }
+        """)
+        guard case .expectBuilds(let view, let atMost) = script.steps[0] else {
+            Issue.record("expectBuilds"); return
+        }
+        #expect(view == "editorBody")
+        #expect(atMost == 0)
+        #expect(script.steps[0].name == "expectBuilds")
+        #expect(PlaytestStep.names.contains("expectBuilds"))
+    }
+
+    /// Both halves are required: a ceiling with no view named is not a claim,
+    /// and a view with no ceiling is a reading rather than a check.
+    @Test func expectBuildsInsistsOnBothHalves() throws {
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectBuilds", "atMost": 0 } ] }
+            """)
+        }
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectBuilds", "view": "editorBody" } ] }
+            """)
+        }
+    }
+
     @Test("An expectPicked step names the layers that must be picked")
     func expectPickedNamesTheLayers() throws {
         let script = try decode("""
