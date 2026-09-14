@@ -1,0 +1,39 @@
+{
+  "id": "a-capture-in-the-history-strip-is-never-stretche",
+  "title": "A capture in the history strip is never stretched and never a mile wide",
+  "goal": "A very wide capture turns into a long sliver that takes over the history strip, and a small capture is blown up past the size it really is, so it looks soft and wrong. A tile should show a wide capture cropped to a sensible shape, and should never draw a small capture bigger than it actually is.",
+  "epic": "",
+  "priority": "p2-normal",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T14:07:05.695Z",
+  "updated": "2026-09-14T14:07:15.584Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-14 with a screenshot of a wide capture in the history strip: \"if an image is larger than a reasonable ratio, say 2.5:1 or 3:1, we should crop it. And also, we should avoid stretching an image beyond its natural size, when its smaller than the rectangle we place it in. see how this image is both stretched and quite wide.\"\n\nBOTH SYMPTOMS COME FROM ONE LINE, confirmed by reading. Sources/Photonz/CaptureThumbnailView.swift:25-27:\n\n    Image(decorative: image, scale: 1)\n        .resizable()\n        .aspectRatio(contentMode: .fit)\n        .modifier(SizeModifier(fixedHeight: fixedHeight))\n\nand SizeModifier at :111 applies .frame(height: fixedHeight) for the strip. The history strip passes fixedHeight: 100 and minWidth: 96 (Sources/Photonz/HistoryOverlay.swift:212). `.resizable()` means the image is scaled to whatever frame it is handed, in BOTH directions: a 2000 by 200 capture becomes a thousand points wide at a hundred tall, and a 60 by 30 capture is blown up to a hundred tall. The first is the sliver, the second is the softness. Nothing caps the ratio and nothing stops an upscale.\n\nThe app already solved the OTHER end of this and it is worth reading before writing anything: the `minWidth` parameter exists, and its comment at CaptureThumbnailView.swift:12 says it is a \"floor on the tile width so extreme aspect ratios (a 5px-wide image) still present a real hover/tap target instead of a sliver\". So the tall-and-narrow extreme was capped by padding the tile out. The wide extreme was never capped. Whatever is built here should read as the same idea applied to the other end, not a second unrelated rule.\n\nShape of the fix: past the ratio cap the tile wants contentMode .fill with a width ceiling and a clip, rather than .fit; under natural size it wants no resizing at all. Both are decisions about the SIZE to draw at, so put that decision in PhotonzCore as a small tested function taking the capture's size and the tile's bounds and giving back what to draw and whether to crop, and leave the view thin. That is also the only way the acceptance tests above can exist.\n\nTRAP, and it will bite silently: captures are 2x. `Image(decorative: image, scale: 1)` declares the bitmap at scale 1, so a Retina capture of a 100 by 50 point region arrives as a 200 by 100 CGImage and SwiftUI treats it as 200 by 100 POINTS. So \"never bigger than its natural size\" has to be answered in one unit consistently, and if the pixel count is used as the natural size then every Retina capture is allowed to draw at twice the size it should. Decide, write it down, and put a 2x capture in the tests.\n\nThe crop rule needs a stated anchor. A wide capture cropped from the centre loses both ends; cropped from the leading edge it keeps the start, which for a screenshot of a window or a bar is usually the recognisable part. Pick one, say why in the audit, and check it against a real wide capture of a toolbar rather than against a gradient.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Reproduce both first with real captures and record the numbers: the size of the capture, the size of the tile it produced, and what it should have been",
+    "A capture wider than about two and a half to one is shown cropped to that shape rather than running on, and the crop keeps the part of the picture a person would recognise it by",
+    "A capture smaller than the tile is drawn at its own size, centred, rather than blown up: no capture is ever drawn bigger than it really is",
+    "A capture that is neither of those is unchanged from today, so the ordinary case does not move",
+    "The tall and narrow end still works: the existing floor on tile width that keeps a sliver clickable is not broken by this",
+    "The same rules hold in the Quick Access card, which uses the same view with no fixed height and so has the same stretching problem",
+    "A cropped tile says it is cropped in some quiet way, or the audit argues why it does not need to",
+    "Videos and their poster frames get the same treatment, badge and duration pill still placed correctly on a cropped tile",
+    "Measured on a real 2x capture: what is drawn is what the numbers say, at both one hundred percent and on a Retina display",
+    "Tests for the sizing decision in PhotonzCore, covering a very wide capture, a tiny one, an ordinary one and a tall narrow one, written before the change",
+    "Audit under queue/audits/ with the strip before and after holding all four kinds at once, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T14:07:05.697Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T14:07:15.583Z",
+      "note": "seq 2640 -> 15"
+    }
+  ]
+}
