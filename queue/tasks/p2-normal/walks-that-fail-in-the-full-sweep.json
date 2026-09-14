@@ -9,12 +9,12 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T12:54:45.627Z",
+  "updated": "2026-09-14T14:59:22.144Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T12:47:20Z: 409 of 413 walks passed in 85 minutes.\n\nFailing walks (4): dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, layers-list-follows-pick-walk, panel-start-margin-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  dock-picked-first-walk -> picking-a-plain-shape-leaves-the-panel-parked-on, picking-a-text-layer-leaves-its-settings-below-t, a-task-says-which-failing-walk-it-owns-instead-o\n  effects-room-for-the-one-you-opened-walk -> a-walk-still-answers-differently-when-the-machin\n\nThis task owns the other 2: layers-list-follows-pick-walk, panel-start-margin-walk\n\nStopped failing since the last sweep (2): effects-open-into-view-walk, layers-lazy-rows-walk\n\nFull output: queue/sweep/2026-09-14-042230.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: an-icon-frame-shows-the-space-an-icon-has-to-liv: icon keylines added one parameter to the canvas view's apply path, which every walk goes through; 23 walks across icon, frames, columns and grid all pass, but the shared signature is worth the whole set\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T14:59:22Z: 410 of 413 walks passed in 88 minutes.\n\nFailing walks (3): effect-style-walk, layers-lazy-rows-walk, measure-row-menu-walk\n\nStopped failing since the last sweep (4): dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, layers-list-follows-pick-walk, panel-start-margin-walk\n\nFull output: queue/sweep/2026-09-14-063146.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: picking-a-text-layer-leaves-its-settings-below-t: the dock's section order changed for Next (what you picked now sits directly under Layers) and the pick-time scroll was removed, so every walk that reads the panel is affected\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
   "acceptance": [
     "A fresh sweep is asked for after two-effect-walks-fail-now-and-then-because-a-pre lands, with queue/bin/sweep.sh request",
     "contents-for-several-walk either passes or is rewritten to match what the app does now, and passes twice on its own",
@@ -142,6 +142,10 @@
     {
       "t": "2026-09-14T12:54:45.626Z",
       "note": "seq 310 -> 340"
+    },
+    {
+      "t": "2026-09-14T14:59:22.143Z",
+      "note": "sweep 2026-09-14T14:59:22Z: 3 failing (effect-style-walk, layers-lazy-rows-walk, measure-row-menu-walk); stopped failing: dock-picked-first-walk, effects-room-for-the-one-you-opened-walk, layers-list-follows-pick-walk, panel-start-margin-walk"
     }
   ]
 }

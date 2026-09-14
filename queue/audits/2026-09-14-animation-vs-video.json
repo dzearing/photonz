@@ -1,0 +1,28 @@
+{
+  "feature": "Animation and video: are they the same job?",
+  "epic": "icon-svg",
+  "summary": "The five animation clickthroughs and the ten video ones are now laid out beside each other, step for step, with a verdict on each row, so you can see where the two jobs are one experience instead of taking somebody's word for it. There is a recommendation on what to build first and a decision card waiting on your answer.",
+  "setup": "The design dashboard at http://127.0.0.1:8791. Icons group in the left nav, last entry: Animation vs video: the same job? No app build needed, this task changed nothing under Sources.",
+  "try": [
+    { "do": "Open Icons, then Animation vs video: the same job? in the left nav.", "shot": "2026-09-14-time-compare-1-verdict.png" },
+    { "do": "Read the eight-row side-by-side table top to bottom and check the verdict on each row against the two cells beside it." },
+    { "do": "Click any citation, for example icon-loop-wt step 5, to open the flow it came from, then come back." },
+    { "do": "Scroll to Three things that really are one thing and compare the two Easing controls quoted side by side.", "shot": "2026-09-14-time-compare-2-rulers.png" },
+    { "do": "Scroll to The ruler is the thing they cannot share and compare the two strips: one ends in a red cap, the other has a dashed edge and the words and again." },
+    { "do": "Scroll to The case that decides whether a strip earns its place and decide for yourself whether the six lanes beat the six-row list.", "shot": "2026-09-14-time-compare-3-multipart.png" },
+    { "do": "Read What to build first, then answer the decision card on the dashboard." }
+  ],
+  "evaluate": [
+    "Does the side-by-side change your mind about anything, or does it confirm what you already assumed?",
+    "Looking at the six-part logo drawn both ways: would you rather nudge those numbers in the list or drag those lanes?",
+    "The recommendation is to build the Motion section with no ruler at all and add lanes later only if somebody hits the wall. Is that too cautious?",
+    "The study says you do not need project types, because the two jobs already live in separate windows. Does that match what you were worried about when you asked?",
+    "The study claims the consolidation actually worth having is icon states with component variants, not icons with video. Is that worth a task of its own?"
+  ],
+  "rough": [
+    "The screenshots here are browser captures of the mock page, not captures of the app. This task changed nothing under Sources, so there was no build to photograph and no playtest walk to take a -sc.png from.",
+    "The third shared thing, the destination-first export sheet, is a proposal rather than a proved claim: it exists on the icon side and nowhere on the video side, so the video half of that pair is drawn by this page rather than quoted from a flow. The page says so in place rather than hiding it.",
+    "Four different easing vocabularies are live across six mock pages (Linear/Ease in-out/Spring, Linear/Ease out/Spring, Linear/Ease out/Ease in-out, Linear/Ease in-out). Nobody decided that, it is drift, and it will reach the app if one vocabulary is not settled before the Motion section is built.",
+    "The page is long. It has to carry eight comparison rows, three proof pairs, two rulers and two forms of the multi-part case, and every one of those is an acceptance item, but a first-time reader gets the answer in the first paragraph and the rest is evidence rather than argument."
+  ]
+}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.769Z",
-  "updated": "2026-09-14T14:04:11.863Z",
+  "updated": "2026-09-14T15:20:39.915Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon",
     "say-where-animating-an-icon-and-editing-a-video"
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-14T14:04:11.863Z",
       "note": "deps set: mock first, then compare, then decide"
+    },
+    {
+      "t": "2026-09-14T15:20:39.914Z",
+      "note": "Input from the comparison study that runs before this one (say-where-animating-an-icon-and-editing-a-video, page http://127.0.0.1:8791/index.html#time-compare).\n\nThe study's answer on project types, for you to agree with or argue against rather than inherit: NO types are needed to keep icon work and video work out of each other's way, because they already live in separate windows. Video is its own editor (VideoEditorState / VideoEditorView), not a lens on the layer document, so there is nothing to hide from anything.\n\nWhat the study says solves the real problem instead: the surface follows the DOCUMENT rather than a kind chosen up front. A document with a duration gets a transport; a document with a repeating motion gets a cycle strip; neither has to ask what you are making before you start. That is the same shape as the weaker version already in the app, where an icon FRAME knows it is an icon size and changes what a shape drawn in it looks like.\n\nThe case that would break this and is worth testing here: the day video DOES move into the layer document, one document could hold a 24 point icon and a fourteen second recording at once, and then the question comes back with teeth. Worth saying explicitly whichever way you answer."
     }
   ]
 }

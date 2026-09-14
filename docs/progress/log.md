@@ -15015,3 +15015,63 @@ study leaves: no page shows a whole SET animating together, which is exactly
 where a two row order list breaks down and a real timeline would start to earn
 its place. That is the case that would prove a timeline, and settling it is that
 task's job.
+
+## 2026-09-14 — Animating an icon and editing a video are not the same job
+
+The study that answers the user's question. Five animation clickthroughs and ten
+video ones are now laid out beside each other, step for step, on a new page in
+the Icons group of the mock index: **Animation vs video: the same job?**
+(`docs/design/mocks/pages/time-compare.html`). Every cell cites the flow and the
+step it was read from, and the citation opens that flow.
+
+**The answer.** They are one experience in three narrow places and two
+experiences everywhere else. The three: motion is a section on the selected
+layer and neither job has an animate mode; easing is a named curve on a segment;
+and a hand-off sheet that asks where the file is going before it asks for a
+format would serve both. The last of those is the weakest, and the page says so
+in place: it exists on the icon side and nowhere on the video side.
+
+**The crux.** An icon animation repeats and a video finishes, and every other
+difference falls out of that. Icon keys are percentages of one cycle where the
+last key IS the first key, which is literally what a CSS keyframe block and a
+SMIL `keyTimes` list are. Video keys are seconds on a document with a last
+frame. Three of the four icon scenarios have no end in them at all, so a ruler
+whose grammar is "this is where it stops" cannot draw them. The two rulers are
+drawn side by side on the page: one ends in a red cap, the other has a dashed
+edge and the words "and again".
+
+**The gap the previous study left, closed.** No page had shown a whole set
+animating together. It turns out a set does not animate together: icons fire on
+their own triggers wherever they end up. What does happen is ONE icon with
+several parts, so the page draws a six-part wordmark drawing itself on, as the
+six-row list the draw-on flow uses today and as six lanes on one cycle. The list
+stops being readable around four parts, so lanes are worth building, and worth
+building second, because they are a second view of numbers that already exist.
+
+**The bill, checked rather than assumed.** Video is a separate editor, not a
+document: `VideoEditorState`/`VideoEditorView`, one clip, and `VideoEdits` in
+PhotonzCore is an in point, an out point and a crop rectangle. There is no
+keyframe type anywhere in PhotonzCore or PhotonzRender. Sharing a timeline means
+first rewriting video into a multi-track document, before an icon can pulse, and
+the icon side gets nothing back from it.
+
+**Recommendation, open for the user to reject:** motion as a property of a
+layer with no ruler at all, the real-size preview strip as the review, animated
+SVG export with the destination-first sheet, and the cycle strip later only on
+evidence. No project type picker: the two jobs already live in separate windows.
+
+Decision card open with four options (the fourth declines the whole thing).
+Brief at `queue/decisions/say-where-animating-an-icon-and-editing-a-video-animating-an-icon-and-editing-a.md`,
+long form at `docs/design/animation-vs-video.md`, audit at
+`queue/audits/2026-09-14-animation-vs-video.json`. Nothing under `Sources/`
+changed.
+
+**Filed on the way out.** Four different easing vocabularies are live across six
+mock pages (Linear/Ease in-out/Spring, Linear/Ease out/Spring, Linear/Ease
+out/Ease in-out, Linear/Ease in-out), while the design language names exactly
+three curves in `tokens.css` and none of the six controls maps onto them. That
+is the cheapest of the three shared things and it has already drifted before a
+line of app code exists: `one-set-of-easing-curves-named-the-same-way-ever`.
+
+**Next.** "Work out whether the app needs project types at all" picks this up
+and now carries this study's answer on that question.

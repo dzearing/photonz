@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 18,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.611Z",
-  "updated": "2026-09-14T15:14:43.953Z",
+  "updated": "2026-09-14T15:22:36.793Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon"
   ],
@@ -23,7 +23,8 @@
     "The cost of consolidating is stated as plainly as the benefit, including what video would have to become: it is a separate single-clip editor today and sharing anything means it moves into the layer document",
     "It says what to build FIRST and why, in a way the user can accept or reject in one read",
     "A decision card is opened for the user with the real options and a recommendation, rather than the answer being taken for granted",
-    "Audit under queue/audits/ with the side-by-side, and anything rough filed as a follow-up"
+    "Audit under queue/audits/ with the side-by-side, and anything rough filed as a follow-up",
+    "When the decision comes back answered, the study part of this task is already finished: the only act left is to turn the chosen option into the tasks that build it, then set this done"
   ],
   "log": [
     {
@@ -41,6 +42,23 @@
     {
       "t": "2026-09-14T15:14:43.952Z",
       "note": "The five animation clickthroughs are built and pushed: icon-animate-wt, icon-loop-wt, icon-states-wt, icon-drawon-wt, icon-export-anim-wt, all in the Icons group of the mock index. You have something to compare now.\n\nThree things to carry into the comparison, found while drawing them:\n\n1) They overlap in exactly ONE place, and it is narrower than it looks. Icon keys are PERCENTAGES OF A CYCLE (0%, 50%, 100%) because a loop that repeats has no absolute time to sit on, and that is also literally what a CSS keyframe and a SMIL keyTimes are. Video keys are ABSOLUTE SECONDS on a document with a last frame. Those are not the same ruler and cannot share one.\n\n2) Three of the four scenarios have no time axis at all. A spinner is one turn plus the word forever, so a ruler with an end cannot draw it. A toggle is two drawings and a crossing. Only the draw-on badge has an order in it, and two shapes in order came out as a two row list with numbers, not a track.\n\n3) The consolidation worth having is probably NOT icons with video. It is icon states with COMPONENT VARIANTS: the same named list, the same differs-in-this-state count, the same crossing duration. Built separately they will drift. See icon-states-wt and pages/ui-variants.\n\nAND THE GAP THIS STUDY LEAVES, which the comparison should decide: no page shows a WHOLE SET animating together, and that is exactly where the two row order list breaks down and a real timeline starts to earn its place. If the answer is a timeline, that is the case that proves it. Please widen this task to answer it rather than filing a near-twin."
+    },
+    {
+      "t": "2026-09-14T15:15:38.398Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T15:20:44.337Z",
+      "note": "left rough, not filed:\n1) The screenshots in the audit are browser captures of the mock page, not app captures. This task changed nothing under Sources, so there was no build to photograph and no playtest walk to take a -sc.png from. No task: there is nothing to fix.\n2) The destination-first export sheet is the one 'these could be one thing' claim not proved on both sides: it exists on the icon side and nowhere on the video side, where all ten flows export with one button and no questions. A task to draw it on a video flow would serve the video-editing epic, which is staged later, so per the staging rule it is not filed. The page says so in place instead.\n3) The consolidation the study thinks is actually worth having, icon states with component variants (icon-states-wt vs ui-variants), is a design proposal rather than a defect, and speculative features get validated before they get built. It is an evaluate question on the audit so the user can turn it into a task if they want it.\n4) The page is long. Eight comparison rows, three proof pairs, two rulers and two forms of the multi-part case are each an acceptance item, so the length is the deliverable, but a reader gets the answer in the first paragraph and everything after it is evidence.\n\nFiled as its own task: one-set-of-easing-curves-named-the-same-way-ever (four different easing vocabularies live across six mock pages, reproduced with the exact grep and its output; the design language already names exactly three curves in tokens.css and none of the six controls maps onto them).\nFolded into an existing task: work-out-whether-the-app-needs-project-types-at now carries this study's answer on project types."
+    },
+    {
+      "t": "2026-09-14T15:22:27.568Z",
+      "note": "STUDY DELIVERED. All eight original acceptance items are met and verified; what remains is the user's answer.\n\nWhat shipped:\n- docs/design/mocks/pages/time-compare.html, registered in the Icons group of the mock index as 'Animation vs video: the same job?'. Eight jobs done both ways with a verdict on each row, every cell citing the flow and step it was read from as a clickable data-target. Three 'these really are one thing' claims each quoted twice at their real markup. The two rulers drawn side by side. The multi-part case drawn as both a six-row list and six lanes on one cycle, which closes the gap the mock task flagged.\n- docs/design/animation-vs-video.md, the long form.\n- queue/decisions/<this task>-animating-an-icon-and-editing-a.{json,md}, four options with a plain-language brief; option d is marked declines so a no retires this rather than handing it back approved. Recommendation is a.\n- queue/audits/2026-09-14-animation-vs-video.json plus three screenshots.\n- Progress log entry appended.\n\nAdversarial review, before building the page: the trap named in the notes was real and the page is shaped around avoiding it. The tidy answer here is 'both are documents with a duration, a playhead and keyframes, so build one timeline', and it survives only if you never write down what a spinner is. Three of the four icon scenarios have no end in them, so the page leads with the negative result and makes the reader look at two rulers rather than read a sentence about them. The one place the mocks WERE vague to make two things match is named on the page in place: the destination-first export sheet is drawn on the icon side and nowhere on the video side, so the video half of that pair is this page's proposal rather than a quotation, and it is labelled the weakest of the three.\n\nAdversarial review, on the built page: fixed two things found by using it. At narrow widths the Verdict column header was orphaned onto its own half-row, because it is the 4th CHILD of the grid and the media query had hidden :last-child, which is a different element. And 'repeats forever' parked inside the cycle strip covered the 100% key, which is the one key that block exists to point at, so it moved outside the strip where it also reads better: the cycle is one pass and the loop is what happens after it. Checked at 1280 and at 880 with no horizontal overflow, and the shell loads it with the nav entry active. All five mock gates pass (check-reserved, check-a11y-names, check-fieldwrap, check-states, check-selection, check-elevation, check-shortcuts).\n\nNo Sources/ change, so no swift build, no Scripts/test.sh and no walks were needed or run."
+    },
+    {
+      "t": "2026-09-14T15:22:36.791Z",
+      "note": "Study delivered and a decision card is open for the user. The side-by-side is at docs/design/mocks/pages/time-compare.html (Icons > Animation vs video: the same job?), the long form at docs/design/animation-vs-video.md, the audit at queue/audits/2026-09-14-animation-vs-video.json. The answer: three shared controls, five surfaces that only look shared, and a ruler they cannot share because an icon repeats and a video finishes. Recommendation is to build motion as a property of a layer with no ruler at all. Waiting only on which of the four options the user picks; option d retires this task."
     }
-  ]
+  ],
+  "started": "2026-09-14T15:15:38.397Z"
 }

@@ -1,0 +1,67 @@
+{
+  "id": "say-where-animating-an-icon-and-editing-a-video-animating-an-icon-and-editing-a",
+  "taskId": "say-where-animating-an-icon-and-editing-a-video",
+  "question": "Animating an icon and editing a video: one surface or two?",
+  "context": "Fifteen clickthroughs are now on the table, five for animating an icon and ten for editing a video, and they were compared step for step on a new page in the mock index: Icons, Animation vs video: the same job? They turn out to share three small things and disagree about everything in between, because an icon animation repeats and a video finishes. This decides whether icon animation gets its own simple surface now or waits for a shared timeline.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Motion is a property, no ruler",
+      "summary": "You select an icon layer and Properties grows a Motion section: pick a named motion like Pulse or Spin or Draw on, then set how much, how long one pass takes, which curve, and whether it repeats forever. There is no playhead, no ruler and no tracks anywhere. You judge it by watching it loop at every real size at once, slowed down to a quarter speed. Video stays the separate window it is today.",
+      "pros": [
+        "Every one of the four icon scenarios works this way with nothing left over",
+        "Nothing new to learn: it is the same Properties panel you already use for a stroke or a shadow",
+        "Shortest path to an icon that actually moves, and video still inherits the easing and the hand-off sheet later"
+      ],
+      "cons": [
+        "An icon with several parts that draw on in sequence gets only a numbered list to order them, and that stops being readable at about four parts"
+      ],
+      "mitigation": "The list and the lanes are two views of the same numbers, so the lanes can be added later without changing anything above them. The first time somebody animates four parts and cannot read the list, that is the evidence to build them."
+    },
+    {
+      "id": "b",
+      "label": "Motion is a property, and it opens into a cycle strip",
+      "summary": "Everything in the first option, plus the Motion section can open into a horizontal strip measured 0 to 100% of one cycle, with a lane per moving part. You see the overlap between parts instead of reading numbers. The strip has no right-hand end, because the motion repeats.",
+      "pros": [
+        "A six-part logo drawing itself on is readable at a glance instead of being twelve numbers to imagine",
+        "Anyone who has used a motion tool recognises it immediately"
+      ],
+      "cons": [
+        "More to build before the first icon can pulse",
+        "It looks enough like a video timeline that it will get asked to grow clips, audio and a last frame, which are the three things it must never have"
+      ],
+      "mitigation": "Ship it only after the Motion section, and keep the axis in percent with no end on it, so what it is not stays visible on screen."
+    },
+    {
+      "id": "c",
+      "label": "One timeline for icons and video",
+      "summary": "Animating an icon and editing a video use the same bottom dock: one ruler in seconds, one playhead you scrub, tracks for everything. Video stops being its own window and becomes layers on a document with a duration, the same document icons live in.",
+      "pros": [
+        "One surface to build and one to learn",
+        "A video and an animated graphic could sit in the same document"
+      ],
+      "cons": [
+        "A ruler with a last frame on it cannot express forever, and three of the four icon scenarios are forever: a spinner, a notification pulse, a toggle waiting for a tap",
+        "Video today is a single-clip trim and crop window, so this means rewriting the whole video feature into a multi-track document before a single icon can pulse"
+      ],
+      "mitigation": "None worth having. If this is the direction, the honest version is to finish video first and come back to icons after, which puts icon animation a long way out."
+    },
+    {
+      "id": "d",
+      "label": "Leave icons static for now",
+      "summary": "Do not build icon animation at all this cycle. Drawing on the grid, the pen, and clean SVG export carry on, and animated icons wait until something else is finished.",
+      "pros": [
+        "Keeps the whole focus on drawing and exporting icons, which is unfinished",
+        "Costs nothing and closes no doors"
+      ],
+      "cons": [
+        "An icon platform that cannot animate is not the thing the epic is named after, and the five animation clickthroughs were just drawn to answer this question"
+      ],
+      "mitigation": "The study and the mocks stay on file, so picking this up later starts from the same place rather than from nothing.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-14T15:19:49.412Z"
+}
