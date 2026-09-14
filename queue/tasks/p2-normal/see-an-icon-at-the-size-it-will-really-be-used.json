@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:40:44.990Z",
-  "updated": "2026-09-14T10:09:33.263Z",
+  "updated": "2026-09-14T10:21:10.599Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-new-frame-can-be-an-icon-size-and-an-icon-is-s on 2026-09-13 by the manager pass. That task now ships the icon sizes on their own; this one is the previews.\n\nIt is filed BLOCKED behind a decision card on purpose. Nobody asked for it: the user asked for a Pen that draws polygons and beziers and for SVG export, and the previews strip is a new readout the loop invented from the icon-grid epic title. A capture loupe was built the same way on 2026-09-02 and rejected on sight. Do not start this until the card is answered.\n\nIf it is approved: where the previews go should follow docs/design/mocks/shared/UX-PATTERNS.md rather than being invented, and the mocks that cover it are docs/design/mocks/pages/icon-draw-wt.html and the iconography reference. Say in the audit where the mock was followed and where it was not. The small sizes must be drawn the way the system would draw them, not smoothly shrunk, or the preview hides the exact problem it exists to show.",
@@ -57,6 +57,10 @@
     {
       "t": "2026-09-14T10:09:33.261Z",
       "note": "The icon previews strip shipped in Next behind next-icon-previews (on by default): working in an icon frame puts a row of the frame drawn at 16, 24, 32, 48 and 64 pixels in the top left of the canvas, redrawn as you draw, gone when you pick anything outside an icon frame. Each preview is the frame composited at that size by the same path Export takes, and the render tests compare it byte for byte against what exporting at that size writes, plus a hairline test that shows a one point line going from ink at 512 to nothing at 16. Sizes never exceed the frame's own side. Verified in the running probe with real screen captures (Scripts/playtest/icon-preview-walk.json); full suite green at 6447 tests; icon, frame and legend walks pass. Audit: queue/audits/2026-09-14-icon-previews.json. Filed on the way: the-canvas-draws-a-filled-shape-as-an-outline-wh (p1, reproduced on clean main)."
+    },
+    {
+      "t": "2026-09-14T10:21:10.598Z",
+      "note": "The hollow-ring disagreement noted in that task's audit rough list is fixed: the cause was the canvas, not the previews. DocumentRenderer.drawEllipseRing baked a blank silhouette for a filled oval whenever the box's pixel size rounded up, so the border's ring rubbed the fill out on the canvas while the previews (which go through the renderer) stayed right. See the-canvas-draws-a-filled-shape-as-an-outline-wh."
     }
   ],
   "started": "2026-09-14T09:43:22.134Z",

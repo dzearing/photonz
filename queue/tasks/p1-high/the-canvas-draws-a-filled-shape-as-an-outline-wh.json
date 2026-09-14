@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 270,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T10:00:57.928Z",
-  "updated": "2026-09-14T10:00:57.931Z",
+  "updated": "2026-09-14T10:21:10.554Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED ON CLEAN MAIN (my own branch stashed first, so nothing unreleased is involved).\n\nWalk (save as /tmp/ring.json, then `Scripts/playtest.sh /tmp/ring.json`):\n\n{\n  \"out\": \"/tmp/photonz-playtest/ring\",\n  \"setup\": { \"forget\": [\"shapes\", \"frames\"] },\n  \"steps\": [\n    { \"do\": \"blank\", \"canvasWidth\": 1600, \"canvasHeight\": 1100, \"width\": 1240, \"height\": 900 },\n    { \"do\": \"tool\", \"tool\": \"frame\" },\n    { \"do\": \"drag\", \"from\": [544, 294], \"to\": [1056, 806] },\n    { \"do\": \"tool\", \"tool\": \"ellipse\" },\n    { \"do\": \"drag\", \"from\": [620, 370], \"to\": [980, 730] },\n    { \"do\": \"tool\", \"tool\": \"select\" },\n    { \"do\": \"wait\", \"seconds\": 0.8 },\n    { \"do\": \"describe\", \"stage\": \"1-drawn\", \"note\": \"ellipse drawn inside the frame\" },\n    { \"do\": \"snapshot\", \"name\": \"ring-1-drawn\" },\n    { \"do\": \"render\", \"name\": \"ring-1-drawn-doc\" }\n  ]\n}\n\nWhat comes back: ring-1-drawn-sc.png (the window as a person sees it) has a red RING with white inside. ring-1-drawn-doc.png (the same document through the app own renderer, the picture Export writes) has a SOLID RED DISC. Same document, same instant, two different pictures. The layers panel thumbnail in the very same screenshot is a solid disc too, so the canvas is the odd one out.\n\nThe log for that step reports the layer as selectedColors [\"fill #FF3B30 x1\", \"border #FF3B30 x1\"], so the shape does carry a red fill and the canvas appears to be dropping it.\n\nNarrowing done, so nobody repeats it:\n- Not frames on their own: the same scene in a 1100x700 document (camera at 100%) draws a disc on the canvas, inside a frame and loose beside it.\n- Not zoom on its own: a 2400x1700 document (camera around 43%) draws discs, inside a frame and loose.\n- The failing case is the 1600x1100 document, where the camera sits at 75%. Zooming to fit and zooming in from there both keep the ring, so it is not a stale frame that a redraw clears.\n- Not the renderer in isolation: a unit test building the same document by hand and rendering it through render() and renderTile() at 0.43, 0.75 and 1.5 gets a filled disc from every one of them. So the shape the canvas is drawing is not the shape the document holds, and the next place to look is what the canvas hands the renderer (displayDocument / the crisp tile path in CanvasDisplay.swift), not the rasterizer.\n\nFound while building the icon previews strip (see-an-icon-at-the-size-it-will-really-be-used, audit 2026-09-14-icon-previews): the previews draw the frame through the renderer, so on that scene they show a disc while the canvas two inches away shows a ring, which reads as the previews being wrong when it is this.",
@@ -23,6 +23,51 @@
     {
       "t": "2026-09-14T10:00:57.930Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T10:09:57.605Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T10:21:10.140Z",
+      "note": "Reproduced on the probe first: the walk in the notes came back with ring-1-drawn-sc.png a hollow red ring and ring-1-drawn-doc.png a solid disc, same document, same instant."
+    },
+    {
+      "t": "2026-09-14T10:21:10.187Z",
+      "note": "THE CANVAS WAS LYING, not the export. The document says filled (Fill ticked, red swatch), the layers thumbnail is solid, and Export writes a solid disc. So the fix is at the source: the picture the canvas draws, not the picture it is compared against."
+    },
+    {
+      "t": "2026-09-14T10:21:10.233Z",
+      "note": "Root cause, in DocumentRenderer.drawEllipseRing. An inside border does not merely composite over the fill; it SHARES each pixel on the shape's edge with the paint underneath (laid), and to do that it needs the shape's own silhouette, baked by filledEllipse as 'a ring so wide nothing fits inside it'. drawEllipseRing chose between stroking a ring and filling solid by looking at the line the stroke would RIDE (bounds inset by width/2) rather than at the HOLE (bounds inset by width). Those disagree for every ring at least half as thick as the oval is narrow, and in that gap Core Graphics returns an EMPTY bitmap: stroking an oval with a line wider than the oval has room for folds the inner edge through itself and nothing is drawn. A blank silhouette says the shape covers nothing, so laid gave the ring every pixel and the fill kept none."
+    },
+    {
+      "t": "2026-09-14T10:21:10.279Z",
+      "note": "Why it looked random by zoom: the silhouette's bitmap is rounded to whole pixels, so it only left a sliver for the stroke to ride when the box's size rounded UP. A 360pt circle at 0.2 gives 70.4 -> 70 (fine), at 0.3 gives 105.6 -> 106 (broken). That is roughly half of all scales, which is why 1100x700 at 100% and 2400x1700 at 43% were fine while 1600x1100 at 75% was not."
+    },
+    {
+      "t": "2026-09-14T10:21:10.324Z",
+      "note": "Verified Core Graphics really does this, outside the app: a 152px square stroked as a 151.56 ring comes back alpha 0 everywhere, while 70px/70.4 and 176px/176 come back solid."
+    },
+    {
+      "t": "2026-09-14T10:21:10.370Z",
+      "note": "Fix: choose the solid branch by the hole. One predicate change in drawEllipseRing plus the comment saying why. Tests first: Tests/PhotonzRenderTests/FilledOvalRenderTests.swift, 5 tests over 24 scales covering export, the canvas's crisp tile, the icon previews, tile-vs-export agreement, and a border too thick to leave a hole. All five failed before the change and pass after."
+    },
+    {
+      "t": "2026-09-14T10:21:10.416Z",
+      "note": "Verified in the app: reran the walk from the notes, canvas and document render now agree on a solid disc and the icon preview chips 16/24/32 stopped showing rings. Reran the three scenes the notes said already agreed (1100x700 at 100%, 2400x1700 at 49%, loose shapes beside framed ones) and they still do, canvas and render both. Scripts/test.sh green: 6452 tests. Walks: border (7), outline (6), icon (2), all pass."
+    },
+    {
+      "t": "2026-09-14T10:21:10.462Z",
+      "note": "Audit written: queue/audits/2026-09-14-filled-shape-on-canvas.json with a real screen capture (Screen Recording was granted this run)."
+    },
+    {
+      "t": "2026-09-14T10:21:10.508Z",
+      "note": "left rough: the baked silhouette rounds to whole pixels, so on a fractional box it can stand up to a pixel wider than the box it speaks for. The pixel-sharing arithmetic clamps that to nothing visible, so it does not clear the follow-up bar, but it is the same function and worth knowing about if a hairline ever shows up there."
+    },
+    {
+      "t": "2026-09-14T10:21:10.553Z",
+      "note": "No new walk added: the failure is a renderer one and the unit tests cover 24 scales in a fraction of a second, where a walk would add ten seconds to a sweep that is already 52 minutes. No sweep requested."
     }
-  ]
+  ],
+  "started": "2026-09-14T10:09:57.604Z"
 }

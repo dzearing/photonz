@@ -3064,3 +3064,15 @@
 {"t":"2026-09-14T10:09:15.412Z","ev":"task_note","id":"see-an-icon-at-the-size-it-will-really-be-used"}
 {"t":"2026-09-14T10:09:17.931Z","ev":"task_note","id":"see-an-icon-at-the-size-it-will-really-be-used"}
 {"t":"2026-09-14T10:09:33.264Z","ev":"task_done","id":"see-an-icon-at-the-size-it-will-really-be-used","from":"in_progress","note":"The icon previews strip shipped in Next behind next-icon-previews (on by default): working in an icon frame puts a row of the frame drawn at 16, 24, 32, 48 and 64 pixels in the top left of the canvas, redrawn as you draw, gone when you pick anything outside an icon frame. Each preview is the frame composited at that size by the same path Export takes, and the render tests compare it byte for byte against what exporting at that size writes, plus a hairline test that shows a one point line going from ink at 512 to nothing at 16. Sizes never exceed the frame's own side. Verified in the running probe with real screen captures (Scripts/playtest/icon-preview-walk.json); full suite green at 6447 tests; icon, frame and legend walks pass. Audit: queue/audits/2026-09-14-icon-previews.json. Filed on the way: the-canvas-draws-a-filled-shape-as-an-outline-wh (p1, reproduced on clean main)."}
+{"t":"2026-09-14T10:09:57.607Z","ev":"task_started","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh","title":"The canvas draws a filled shape as an outline while the render fills it","priority":"p1-high"}
+{"t":"2026-09-14T10:21:10.142Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.189Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.235Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.281Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.326Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.372Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.418Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.464Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.510Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.555Z","ev":"task_note","id":"the-canvas-draws-a-filled-shape-as-an-outline-wh"}
+{"t":"2026-09-14T10:21:10.600Z","ev":"task_note","id":"see-an-icon-at-the-size-it-will-really-be-used"}

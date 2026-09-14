@@ -1656,8 +1656,24 @@ public final class DocumentRenderer: @unchecked Sendable {
         // edge, so the ink lands exactly between `bounds` and `bounds` inset by
         // the width. Pulled thicker than there is room for, there is no middle
         // left to ride and the oval is simply filled solid.
-        let path = bounds.insetBy(dx: width / 2, dy: width / 2)
-        if path.width > 0, path.height > 0 {
+        //
+        // Which of the two it is, is decided by the HOLE — `bounds` pulled in
+        // by the whole width — and NOT by the line the stroke would ride.
+        // Those two part company for every ring at least half as thick as the
+        // oval is narrow, and in that gap Core Graphics does not draw what the
+        // arithmetic says: stroking an oval with a line wider than the oval
+        // has room for makes an inner edge that folds through itself, and what
+        // comes back is an empty bitmap rather than a solid one. That is what
+        // rubbed the fill out of a red circle on the canvas while the same
+        // document exported as a solid disc (reported 2026-09-14): the fill's
+        // own silhouette is baked here, by asking for a ring nothing can fit
+        // inside (`filledEllipse`), and a box whose size rounded UP to a whole
+        // pixel left a sliver of middle for the stroke to ride — so the
+        // silhouette came back blank, and the border's ring took every pixel
+        // the fill should have kept (`laid`).
+        let hole = bounds.insetBy(dx: width, dy: width)
+        if hole.width > 0, hole.height > 0 {
+            let path = bounds.insetBy(dx: width / 2, dy: width / 2)
             context.setStrokeColor(white)
             context.setLineWidth(width)
             context.addEllipse(in: path)

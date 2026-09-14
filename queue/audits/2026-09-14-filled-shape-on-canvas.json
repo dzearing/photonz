@@ -1,0 +1,26 @@
+{
+  "feature": "A filled shape looks filled on the canvas",
+  "epic": "ui-building",
+  "summary": "A circle you fill with a colour now looks filled while you work on it, at every zoom and every document size. It used to come out as a hollow ring on the canvas on about half of them, while the picture the app exported, the layers panel thumbnail and the icon previews beside it all had it solid.",
+  "setup": "Photonz Dev, any release. Nothing to switch on: this is the renderer everything draws through.",
+  "try": [
+    { "do": "Open a new document 1600 by 1100. It opens at 75%, which is the zoom this went wrong at." },
+    { "do": "Press F and drag out a frame in the middle of it." },
+    { "do": "Press E and drag out a circle inside that frame.", "shot": "2026-09-14-filled-shape-1.png" },
+    { "do": "Check the circle is solid red, not a red outline with white inside." },
+    { "do": "Compare it with its row in the Layers panel: the thumbnail is solid too, and used to be the only one that was." },
+    { "do": "Look at the five icon preview chips in the top left: 16 through 64 are all solid discs." },
+    { "do": "Do the same in a 1100 by 700 document and a 2400 by 1700 one, one circle inside a frame and one loose beside it." }
+  ],
+  "evaluate": [
+    "At 75% on a 1600 by 1100 document, is the circle solid?",
+    "Does the circle on the canvas match its thumbnail in the Layers panel at every zoom you try?",
+    "In an icon frame, do the five preview chips agree with the canvas now?",
+    "Is there any other shape or size where the canvas still disagrees with what Export writes?"
+  ],
+  "rough": [
+    "The canvas was the one lying, not the export: the document always said filled, and the fix is in a silhouette the renderer bakes rather than in anything the document holds. Nothing on disk changes and no saved file needs anything done to it.",
+    "The same arithmetic drew a ring with a hole punched in it for any border at least half as thick as the shape is narrow. That is fixed by the same change and covered by a test, but the Border Width slider stops at 40, so you can only see it on a shape smaller than 80 points across.",
+    "Left rough on purpose: the baked silhouette is rounded to whole pixels, so on a box whose size is fractional it can be up to a pixel wider than the box it stands for. The pixel-sharing arithmetic clamps that away, so nothing shows on screen, but it is a smell in the same function."
+  ]
+}
