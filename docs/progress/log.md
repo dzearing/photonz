@@ -14982,3 +14982,36 @@ inside a squircle: one rule was preferred to two. Audit:
 make a round glyph and a boxy one look the same size — are filed as "An icon
 frame shows the shapes a set is drawn to" and blocked on a decision card, because
 which shapes belong on the frame is a look-at-it judgment rather than a guess.
+
+## 2026-09-14 — Animating an icon, drawn five ways
+
+The user asked whether making an animated SVG could share anything with editing
+a video, and there was no picture of the first half of that question: ten video
+clickthroughs, zero animation ones. Five now exist in the Icons group of the
+mock index — make an icon pulse, build a spinner that never stops, animate a
+toggle between two states, draw a checkmark on, hand the animated icon over.
+
+**What they say.** None of them carries a playhead, a ruler in seconds or a
+track list. An icon animation is under a second and it repeats, so there is no
+frame worth finding: motion is a property of the layer picked by name, and the
+review is the glyph running at 16, 24, 32 and 48, slowed down rather than
+scrubbed. Where an icon does have keys they sit at percentages of a cycle, which
+is what a repeating animation is and what it exports as; video keys sit at
+seconds on a document with an end. Three of the four scenarios have no time axis
+at all, and only the drawn-on badge has an order in it, which came out as a two
+row list with real numbers rather than as a track.
+
+Each page opens by saying the app has no answer for any of it yet — no time in
+PhotonzCore, no keyframes, no motion on a layer, no SVG export — and says out
+loud where a flow needs something that cannot exist, most sharply that an SVG in
+an image tag cannot feel a tap.
+
+Nothing under `Sources/` changed: this is a study. Audit at
+`queue/audits/2026-09-14-icon-animation-flows.json`.
+
+**Next.** "Say where animating an icon and editing a video are the same job"
+picks these up. It has been given the three structural findings and the gap this
+study leaves: no page shows a whole SET animating together, which is exactly
+where a two row order list breaks down and a real timeline would start to earn
+its place. That is the case that would prove a timeline, and settling it is that
+task's job.
