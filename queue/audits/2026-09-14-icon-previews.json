@@ -1,0 +1,31 @@
+{
+  "feature": "See an icon at the size it will really be used",
+  "epic": "icon-grid",
+  "summary": "Work inside an icon frame and a small row appears in the top left of the canvas showing that frame at 16, 24, 32, 48 and 64 pixels, redrawn as you draw. Each one is the picture exporting the frame at that size would write, so a line too thin to survive 16 pixels is missing from the 16 pixel preview while you can still thicken it.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"See an icon at the size it will be used\" and it is on by default. It needs \"Make a frame the size of an icon\", which is also on.",
+  "try": [
+    { "do": "Open a blank document, choose Layer and New Frame, click 512 in the Icons row, then Add Frame.", "shot": "2026-09-14-icon-previews-1.png" },
+    { "do": "Look at the top left of the canvas: five chips, 16 through 64, each an empty white square." },
+    { "do": "Press R and drag a block across the middle of the frame." },
+    { "do": "Press R again and drag a line about four points wide from the top of the frame to the bottom.", "shot": "2026-09-14-icon-previews-3.png" },
+    { "do": "Read the 64 chip, then the 16 chip: the line is there in one and gone in the other." },
+    { "do": "Click the empty canvas outside the frame. The row goes away." },
+    { "do": "Click back inside the frame. It comes back." },
+    { "do": "Make a 24 icon frame and notice its row is 16 and 24 only, never sizes bigger than the frame." }
+  ],
+  "evaluate": [
+    "Top left, over the picture: is that where you want the previews, or would you rather they sat in the right hand panel where nothing floats?",
+    "The row appears when you are in an icon frame and goes when you are not. Does that come and go too much while you work?",
+    "The previews land when a shape lands, not while you are still dragging it out. Is that soon enough, or do you want them following your hand?",
+    "Five sizes is a row about 300 points wide. Is that the right number, or would 16, 24 and 32 alone do the job in half the room?",
+    "An icon has to survive a dark background too. Should one of the chips be dark, the way the mock draws it?"
+  ],
+  "rough": [
+    "The row sits on top of the ruler along the top edge of the canvas. Every other piece of canvas chrome does the same, so it is consistent rather than wrong, but the ruler's first few hundred points are covered while the row is up.",
+    "While you drag a shape out, the previews hold the last picture and catch up when you let go. A shape being drawn is not in the document at all until then, so nothing could show it earlier without a lot more machinery; a shape being MOVED could be followed live and is not.",
+    "Found while testing, not caused by this and filed on its own as \"The canvas draws a filled shape as an outline while the render fills it\": on one scene a filled circle drawn in a frame shows as a hollow ring on the canvas while the app's own render of the same document fills it solid. The previews follow the render, so on that scene they disagree with the canvas two inches away and look wrong when they are not.",
+    "Where the mock was followed: docs/design/mocks/pages/icon-draw-wt.html draws this as a glass row at the top left with a chip per size and the number under it, and that is what shipped, down to the chip being the icon plus an even margin.",
+    "Where it was not: the mock draws one chip INVERTED as a dark-background check. That is a different question (does the icon work on dark) and it doubles the width of the row, so it was left out and is asked about above instead.",
+    "The previews are drawn with no smoothing, so on a retina screen you are looking at the icon's own pixels made square. That is the honest reading of a 16 pixel asset, but it is not what a 16 point icon looks like on a retina Mac, where the system would draw it at 32 pixels."
+  ]
+}

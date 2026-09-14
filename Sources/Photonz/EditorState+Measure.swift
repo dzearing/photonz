@@ -504,12 +504,15 @@ extension EditorState {
         // Nothing stands in a canvas corner any more: the panel toggle moved
         // into the window's title bar on 2026-09-06, so there is no corner
         // chrome to tuck under and the legend takes whichever corner it wins
-        // outright.
+        // outright — except the icon previews strip, which owns the top left
+        // while you are drawing in an icon frame (`next-icon-previews`) and is
+        // the one piece of corner chrome the legend still has to walk around.
+        let blocked = chrome + (iconPreviewsReservedRect.map { [$0] } ?? [])
         return PanelPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
                                           in: viewport.viewSize,
                                           inset: Self.measureLegendInset,
                                           avoiding: occupied,
-                                          blocked: chrome,
+                                          blocked: blocked,
                                           gap: EditorChromeLayout.toolBarStackGap)
     }
 

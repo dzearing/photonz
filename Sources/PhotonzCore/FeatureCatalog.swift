@@ -84,6 +84,8 @@ public enum FeatureCatalog {
 
     public static let iconFramesFlag = "next-icon-frames"
 
+    public static let iconPreviewsFlag = "next-icon-previews"
+
     public static let libraryFlag = "next-library"
 
     public static let componentsFlag = "next-components"
@@ -512,6 +514,15 @@ public enum FeatureCatalog {
                     name: iconFramesFlag,
                     title: "Make a frame the size of an icon",
                     description: "Every size New Frame offered was a screen, and the smallest of them was a thousand pixels across, so somebody sitting down to draw a 24 pixel glyph had nowhere to draw it. On, the size list grows an Icons group under the screens: 16, 24, 32, 48, 64 and 512, as a row of buttons rather than six more rows of numbers, and the frame\u{2019}s own Size menu in the panel offers the same sizes under their own heading. A frame made at one of them is an ordinary frame in every other way: it clips, it carries its name, it exports, and it holds what you draw on it. It is simply small. The canvas comes with it: a frame you picked a size for, rather than dragged out, arrives in the middle of the view at a zoom you can actually draw at, so a 16 pixel canvas opens as a square the size of your hand instead of a speck. That zoom lands on a whole multiple, so the pixels stay square. A frame that is already big enough to work in does not move the camera at all. Needs Build on a frame. Off means the size list is the five screens again and the camera stays where it was; an icon-sized frame already in a document keeps drawing either way.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: iconPreviewsFlag,
+                    title: "See an icon at the size it will be used",
+                    description: "An icon is the only thing in this app that is drawn at one size and looked at at another, and a line that reads beautifully on a 512 point canvas can be gone at 16. On, working in an icon frame puts a small row in the top left of the canvas: the same drawing at 16, 24, 32, 48 and 64 pixels, with the number under each one, redrawn as the picture changes. A frame is never shown bigger than it is drawn, so a 24 point frame shows 16 and 24 and nothing else, and the smallest frames still show themselves at true size, which is the one size a canvas at 3200% never shows you. Each preview is the frame COMPOSITED at that many pixels, the same picture exporting it at that size would write, rather than the big picture shrunk down: a smooth shrink averages a hairline into a plausible grey and hides the very thing the row exists to show. It takes no clicks, it never lands in an export, and it goes the moment you pick something that is not in an icon frame. Needs Make a frame the size of an icon. Off means the canvas exactly as it is today.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

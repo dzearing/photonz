@@ -1,0 +1,28 @@
+{
+  "id": "the-canvas-draws-a-filled-shape-as-an-outline-wh",
+  "title": "The canvas draws a filled shape as an outline while the render fills it",
+  "goal": "Draw a circle inside a frame and the canvas can show it as a red ring with nothing inside, while the picture the app exports has it filled solid. What you are looking at while you work is then not what you are going to get, and there is no hint on screen which of the two is the truth.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 270,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T10:00:57.928Z",
+  "updated": "2026-09-14T10:00:57.931Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED ON CLEAN MAIN (my own branch stashed first, so nothing unreleased is involved).\n\nWalk (save as /tmp/ring.json, then `Scripts/playtest.sh /tmp/ring.json`):\n\n{\n  \"out\": \"/tmp/photonz-playtest/ring\",\n  \"setup\": { \"forget\": [\"shapes\", \"frames\"] },\n  \"steps\": [\n    { \"do\": \"blank\", \"canvasWidth\": 1600, \"canvasHeight\": 1100, \"width\": 1240, \"height\": 900 },\n    { \"do\": \"tool\", \"tool\": \"frame\" },\n    { \"do\": \"drag\", \"from\": [544, 294], \"to\": [1056, 806] },\n    { \"do\": \"tool\", \"tool\": \"ellipse\" },\n    { \"do\": \"drag\", \"from\": [620, 370], \"to\": [980, 730] },\n    { \"do\": \"tool\", \"tool\": \"select\" },\n    { \"do\": \"wait\", \"seconds\": 0.8 },\n    { \"do\": \"describe\", \"stage\": \"1-drawn\", \"note\": \"ellipse drawn inside the frame\" },\n    { \"do\": \"snapshot\", \"name\": \"ring-1-drawn\" },\n    { \"do\": \"render\", \"name\": \"ring-1-drawn-doc\" }\n  ]\n}\n\nWhat comes back: ring-1-drawn-sc.png (the window as a person sees it) has a red RING with white inside. ring-1-drawn-doc.png (the same document through the app own renderer, the picture Export writes) has a SOLID RED DISC. Same document, same instant, two different pictures. The layers panel thumbnail in the very same screenshot is a solid disc too, so the canvas is the odd one out.\n\nThe log for that step reports the layer as selectedColors [\"fill #FF3B30 x1\", \"border #FF3B30 x1\"], so the shape does carry a red fill and the canvas appears to be dropping it.\n\nNarrowing done, so nobody repeats it:\n- Not frames on their own: the same scene in a 1100x700 document (camera at 100%) draws a disc on the canvas, inside a frame and loose beside it.\n- Not zoom on its own: a 2400x1700 document (camera around 43%) draws discs, inside a frame and loose.\n- The failing case is the 1600x1100 document, where the camera sits at 75%. Zooming to fit and zooming in from there both keep the ring, so it is not a stale frame that a redraw clears.\n- Not the renderer in isolation: a unit test building the same document by hand and rendering it through render() and renderTile() at 0.43, 0.75 and 1.5 gets a filled disc from every one of them. So the shape the canvas is drawing is not the shape the document holds, and the next place to look is what the canvas hands the renderer (displayDocument / the crisp tile path in CanvasDisplay.swift), not the rasterizer.\n\nFound while building the icon previews strip (see-an-icon-at-the-size-it-will-really-be-used, audit 2026-09-14-icon-previews): the previews draw the frame through the renderer, so on that scene they show a disc while the canvas two inches away shows a ring, which reads as the previews being wrong when it is this.",
+  "acceptance": [
+    "The walk in the notes produces a window screenshot and a document render that agree: both a filled disc, or both a ring.",
+    "Whichever of the two was wrong is fixed at the source rather than by making the other match it, and the task log says which one was lying.",
+    "A test covers it, so a canvas picture and a render of the same document cannot drift apart again unnoticed.",
+    "The three scenes in the notes that already agree (1100x700 at 100%, 2400x1700 at 43%, loose shapes) still agree afterwards."
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T10:00:57.930Z",
+      "note": "created (manual)"
+    }
+  ]
+}

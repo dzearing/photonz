@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 9.2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:40:44.990Z",
-  "updated": "2026-09-14T05:22:04.463Z",
+  "updated": "2026-09-14T10:09:17.930Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-new-frame-can-be-an-icon-size-and-an-icon-is-s on 2026-09-13 by the manager pass. That task now ships the icon sizes on their own; this one is the previews.\n\nIt is filed BLOCKED behind a decision card on purpose. Nobody asked for it: the user asked for a Pen that draws polygons and beziers and for SVG export, and the previews strip is a new readout the loop invented from the icon-grid epic title. A capture loupe was built the same way on 2026-09-02 and rejected on sight. Do not start this until the card is answered.\n\nIf it is approved: where the previews go should follow docs/design/mocks/shared/UX-PATTERNS.md rather than being invented, and the mocks that cover it are docs/design/mocks/pages/icon-draw-wt.html and the iconography reference. Say in the audit where the mock was followed and where it was not. The small sizes must be drawn the way the system would draw them, not smoothly shrunk, or the preview hides the exact problem it exists to show.",
@@ -37,6 +37,23 @@
     {
       "t": "2026-09-14T05:22:04.462Z",
       "note": "seq 2540 -> 9.2"
+    },
+    {
+      "t": "2026-09-14T09:43:22.137Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T09:45:12.263Z",
+      "note": "adversarial review before building. (1) The mock (icon-draw-wt.html .ig-sizes) puts a glass strip top-left of the canvas with a chip per size and the number under it; that survives review and is what the card approved, so the strip goes top-leading. (2) The mock also shows one chip INVERTED (dark) as a contrast check. Cut from v1: the card promised sizes, not a theme check, and a dark chip doubles the strip's width for a question nobody has asked yet. (3) Showing all five sizes on every icon frame is wrong: rendering a 24px frame at 64 is an upscale, not a size it will really be used at, and it would show a softness that does not exist. Rule: the preset sides at or below the frame's own side, plus the frame's own side when it is 64 or under. 512 frame -> 16/24/32/48/64; 24 frame -> 16/24; 16 frame -> 16. (4) Liveness: a NEW shape being dragged out is not in the document until mouse-up, so nothing can preview it mid-drag whatever we do. Previews therefore follow the document and land when the shape lands. Chasing in-flight drags would mean 5 renders per mouse move for the one case (moving an existing layer) it could help, against the acceptance item that says drawing must not slow down. Left as a question in the audit. (5) The strip is chrome and does not take clicks, same as the measure legend and the hint chips, so it can never eat a drag. It can sit over the picture at a high zoom; top-left is the least destructive corner and the measure legend will be taught to walk around it."
+    },
+    {
+      "t": "2026-09-14T10:09:15.410Z",
+      "note": "built and verified. (1) Flag: next-icon-previews, Next only, on by default, with the same kind of write-up every other flag has; the Experiments window builds its list from the catalogue, and IconPreviewTests.theFlag pins the entry, the title, the default and that Current never grows it. (2) The strip: IconPreviewsStrip.swift, top left of the canvas, a chip per size with the number under it, shown whenever what you have picked sits in an icon frame (the frame itself, or the shape you just drew in it). Verified in the running probe: Scripts/playtest/icon-preview-walk.json, five stages, real screen captures. (3) Which sizes: IconPreviews.sides is the interface sizes at or below the frame's own side, plus the frame's own side when it is 64 or under, so a 512 frame shows 16/24/32/48/64, a 24 frame shows 16 and 24 and nothing bigger than itself. (4) Cost: nothing at all when no icon frame is in hand (the tile list returns empty before it renders anything); a batch of five previews for a 512 frame holding ten shapes measured 6.6ms median, 8.1ms worst, and it runs off the main actor once per document change, cached against the frame's hash, never per redraw. (5) Pixels, not eyes: IconPreviewRenderTests compares a preview byte for byte against the picture Export writes for that frame at that size, shows it is not a smooth shrink of the big one, and shows a one point line going from ink at 512 to nothing at 16 while a thirty-two point shape survives. Full suite green, 6447 tests. Walks: icon (2), frame (9), legend (1), all pass."
+    },
+    {
+      "t": "2026-09-14T10:09:17.929Z",
+      "note": "left rough, not filed: the row sits over the top ruler in the corner it takes, which every other piece of canvas chrome does too; the previews hold still while a shape is being dragged and catch up when it lands, which cannot be helped for a shape being DRAWN (it is not in the document yet) but could be for one being moved; the previews are drawn with no smoothing, so on a retina screen they show the icon's own pixels made square rather than what macOS would draw at that point size. All three are asked about in the audit's evaluate list instead, so the answer comes from the user rather than from me guessing. Filed on its own: the canvas-versus-render disagreement found while testing (the-canvas-draws-a-filled-shape-as-an-outline-wh, p1, reproduced on clean main with my branch stashed)."
     }
-  ]
+  ],
+  "started": "2026-09-14T09:43:22.134Z"
 }

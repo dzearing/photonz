@@ -377,6 +377,13 @@ extension Experiments {
         framesEnabled && isEnabled(FeatureCatalog.iconFramesFlag)
     }
 
+    /// `next-icon-previews`: whether working in an icon frame puts the row of
+    /// small previews in the corner of the canvas. There is nothing to preview
+    /// without icon frames, so this needs them and reads as off without them.
+    var iconPreviewsEnabled: Bool {
+        iconFramesEnabled && isEnabled(FeatureCatalog.iconPreviewsFlag)
+    }
+
     /// `next-library`: whether the right dock offers the Library shelf and the
     /// View menu its Show Library row. The Library exists to hold reusable
     /// pieces, and the first of those is a group you promote, so this needs

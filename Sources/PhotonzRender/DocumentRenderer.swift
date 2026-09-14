@@ -688,6 +688,30 @@ public final class DocumentRenderer: @unchecked Sendable {
         return render(doc, store: store)
     }
 
+    /// One icon frame drawn at the size it will really be used
+    /// (`next-icon-previews`): `side` by `side` output pixels, the frame's
+    /// contents and nothing else.
+    ///
+    /// This is deliberately NOT `thumbnail(for:maxDimension:)`. That one draws
+    /// the layer at full size and resamples it down, which is the right answer
+    /// for a row in the layers list and the wrong one here: a smooth shrink
+    /// averages a hairline into a plausible grey and hides the exact thing the
+    /// previews strip exists to show. A preview is the same path Export takes
+    /// for one frame at a scale, so a line too thin to survive 16 pixels is
+    /// missing from the 16 pixel preview exactly as it would be missing from
+    /// the exported file.
+    ///
+    /// Nil for anything that is not a frame, and for a size nobody could draw.
+    public func iconPreview(for id: UUID, in document: PhotonzDocument, store: ImageStore,
+                            side: CGFloat) -> CGImage? {
+        guard side >= 1, side.isFinite, let scoped = document.frameDocument(id: id) else { return nil }
+        let widest = max(scoped.canvasSize.width, scoped.canvasSize.height)
+        guard widest >= 1 else { return nil }
+        let scale = side / widest
+        return scale == 1 ? render(scoped, store: store)
+                          : render(scoped, store: store, scale: scale)
+    }
+
     /// One layer rendered alone and downscaled for the layers panel. Renders
     /// the sprite at full size (so text/annotations rasterize at their true
     /// layout) and resamples with CoreGraphics. Never upscales.

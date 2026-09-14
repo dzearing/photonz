@@ -454,10 +454,20 @@ struct EditorView: View {
                         cropActionBar
                     }
                 }
+                .overlay(alignment: .topLeading) {
+                    // The icon previews (Next, `next-icon-previews`): the frame
+                    // you are drawing in, at the sizes it will really be used.
+                    // Top left because that is where the icon mock puts it and
+                    // because every other piece of canvas chrome is elsewhere —
+                    // the tools at the bottom, the panel toggle in the title bar.
+                    let tiles = editorState.iconPreviewTiles
+                    if !tiles.isEmpty { IconPreviewsStrip(tiles: tiles) }
+                }
                 .overlay(alignment: Self.alignment(for: editorState.measureLegendAnchor)) {
                     let entries = editorState.measureLegendEntries
                     if !entries.isEmpty { measureLegend(entries) }
                 }
+                .animation(.easeInOut(duration: 0.2), value: editorState.iconPreviewFrameID)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPenHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPathEditHint)

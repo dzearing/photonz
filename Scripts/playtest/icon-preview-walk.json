@@ -1,0 +1,160 @@
+{
+  "out": "/tmp/photonz-playtest/icon-preview-walk",
+  "setup": {
+    "forget": [
+      "shapes",
+      "frames"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "512",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "1-empty-strip",
+      "note": "a 512 icon frame, picked: the previews row is in the top left at 16, 24, 32, 48 and 64"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-preview-1-empty-strip"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        620,
+        370
+      ],
+      "to": [
+        980,
+        730
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-block",
+      "note": "a big block drawn in the frame shows up in every preview"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-preview-2-block"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        798,
+        330
+      ],
+      "to": [
+        802,
+        770
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-hairline",
+      "note": "a 4 point line added on top: plain at 64, gone by 16"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-preview-3-hairline"
+    },
+    {
+      "do": "render",
+      "name": "icon-preview-3-hairline-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        120,
+        120
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-away",
+      "note": "picking bare canvas puts the row away"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-preview-4-away"
+    },
+    {
+      "do": "click",
+      "at": [
+        640,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-back",
+      "note": "clicking back into the frame brings it back"
+    },
+    {
+      "do": "snapshot",
+      "name": "icon-preview-5-back"
+    }
+  ]
+}

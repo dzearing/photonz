@@ -1424,6 +1424,7 @@ final class EditorState {
         announcedColorStyleNotices = []
         thumbnailCache = [:]
         shelfThumbnails = [:]
+        iconPreviews = [:]
         dragPreviewGeneration += 1
         rerender()
         // Size the window to the image (100% when it fits, reduced only when a
@@ -1989,6 +1990,12 @@ final class EditorState {
     /// both lists at once.
     var shelfThumbnails: [ShelfPictureKey: (hash: Int, image: CGImage)] = [:]
     var shelfThumbnailsInFlight: Set<ShelfPictureKey> = []
+    /// The icon previews strip's pictures (`next-icon-previews`), keyed by the
+    /// frame and the size it is drawn at. Its own cache because these are not
+    /// shrunk pictures of a layer at all: each one is the frame composited at
+    /// that many pixels (`EditorState+IconPreviews.swift`).
+    var iconPreviews: [IconPreviewKey: (hash: Int, image: CGImage)] = [:]
+    var iconPreviewsInFlight: Set<IconPreviewKey> = []
 
     // MARK: - Layer selection & move
 
@@ -2558,6 +2565,7 @@ final class EditorState {
             paintPreview = nil
             thumbnailCache = [:]
             shelfThumbnails = [:]
+            iconPreviews = [:]
             return
         }
         // Thumbnails for layers that no longer exist are dead weight.
@@ -2566,6 +2574,7 @@ final class EditorState {
             thumbnailCache = thumbnailCache.filter { ids.contains($0.key) }
             let living = Set(document.layers.flatMap { $0.selfAndDescendants.map(\.id) })
             shelfThumbnails = shelfThumbnails.filter { living.contains($0.key.id) }
+            iconPreviews = iconPreviews.filter { living.contains($0.key.frameID) }
         }
         // Crop/resize/undo can change the canvas size; keep the camera in sync.
         if var vp = viewport, vp.documentSize != document.canvasSize {
