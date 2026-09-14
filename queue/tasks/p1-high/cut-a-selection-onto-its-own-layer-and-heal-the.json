@@ -1,0 +1,40 @@
+{
+  "id": "cut-a-selection-onto-its-own-layer-and-heal-the",
+  "title": "Cut a selection onto its own layer and heal the hole behind it",
+  "goal": "Draw a marquee round something in a picture, press one key, and that piece lifts onto a layer of its own while the space it came from fills in with the colour that was around it. You can then move the piece, and what it came off still looks whole. Today the closest thing copies the piece and leaves the original sitting underneath, so moving it shows the same thing twice.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 14,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T03:35:37.681Z",
+  "updated": "2026-09-14T03:35:37.727Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked for by the user on 2026-09-13: \"i want a special 'smart cut' feature, where i highlight something, i hit cmd-shift-x, and instead of cut, it move the selection to its own layer, leaving the hole in the source layer filled with the bg color which is intelligently derived from the edges.\"\n\nMOST OF THIS IS ALREADY BUILT. This is a command over machinery the auto-separate work landed on 2026-09-13, not new image processing:\n- PhotonzCore/PatchFill.swift is the whole intelligent-fill answer. PatchRing carries ring samples, and PatchDecision.decide returns a flat colour where the ring agrees (tolerance two levels out of 255, so the flat case is exact) or a fitted straight gradient where it ramps. Reuse it; do not write a second fill.\n- PatchRing is a bag of samples with u and v coordinates and knows NOTHING about shape, so a non-rectangular marquee only needs a ring builder that walks outside the selection path. The decision half is already shape-agnostic.\n- PhotonzRender/LayerSeparator.swift already cuts pieces out and patches behind them for the automatic case.\n- EditorState+Regions.swift deleteRegion already erases a region from a layer and tightens the frame to the surviving pixels; promoteSelectionToLayer already lifts a marquee onto a new layer. Smart cut is those two plus the patch, in ONE History.perform.\n\nTHE KEY, and this is worth settling before building. The user asked for Command Shift X, which is free in this app. But the app already has \"New Layer via Copy\" on Command J (EditorCommands.swift:410), which is Photoshop's exact key for Layer Via Copy, and Photoshop's SIBLING of that command is Layer Via Cut on Shift Command J, which is precisely this feature. Shift Command J is free. The user's standing preference is to default new keybindings to Photoshop's, and Command Shift X is Liquify in Photoshop. So the recommendation is to ship this as \"New Layer via Cut\" on Shift Command J, sitting directly under the New Layer via Copy row it is the twin of, and to say so to the user. Build it on the key the user asked for if they hold to it; either way it is one line, and the two must not both be bound.\n\nWhat this app adds over Photoshop's version, and the reason it is worth building: Photoshop's Layer Via Cut leaves a hole. This fills it from what was around it.\n\nThe case that needs a decision rather than a default: PatchDecision.decide returns nil when the surroundings justify nothing. Auto-separate answers that by SKIPPING the piece, which is right when the app chose the piece itself. Here the person chose it and pressed a key, so refusing to cut would be ignoring an instruction. Recommended: cut anyway, fill with the median of the ring, and say once that the fill was a guess. Record the choice in the audit.\n\nWhich layer it cuts from: the region already resolves a target (regionTargetID in EditorState+Regions.swift) and there is an existing refusal path (RegionSliceRefusal) for a marquee over something no piece can be taken out of. Use both rather than inventing a new answer, so this key refuses out loud exactly like Command X and Delete already do over the same marquee.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "One press on a marquee lifts what is inside it onto a new layer above, and the layer it came from fills in behind it",
+    "Moving the new layer reveals a filled background, not a hole and not a second copy of the piece, proved by sampling the pixels rather than by eye",
+    "The flat case is exact: a piece cut from a solid panel leaves that panel one colour where the piece was, byte for byte",
+    "A piece cut from an even gradient leaves a ramp that matches its surroundings",
+    "It works for a marquee that is not a rectangle: an ellipse, and a selection made with the wand",
+    "When the surroundings cannot justify a fill, it still cuts, because the person asked for it, and says plainly that the fill was a guess; say in the audit what it fills with in that case and why",
+    "The new layer is the size of the piece, not the size of the picture, and is selected afterwards so you can move it straight away",
+    "One undo step puts back the whole thing: the piece, the hole and the fill",
+    "The locked Background behaves sensibly and keeps the size of the picture, the exception it already has everywhere else",
+    "Tests in PhotonzCore and PhotonzRender over a fixture covering a flat surround, a gradient surround, a non-rectangular marquee and the case where the surround justifies nothing, written before the implementation",
+    "A playtest walk marquees a piece, cuts it, and drags the new layer clear to show the background behind it",
+    "Audit under queue/audits/ with before and after and a magnified patched edge, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T03:35:37.683Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-14T03:35:37.726Z",
+      "note": "seq 270 -> 14"
+    }
+  ]
+}
