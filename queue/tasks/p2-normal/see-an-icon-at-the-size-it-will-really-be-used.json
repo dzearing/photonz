@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 9.2,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:40:44.990Z",
-  "updated": "2026-09-14T10:09:17.930Z",
+  "updated": "2026-09-14T10:09:33.263Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-new-frame-can-be-an-icon-size-and-an-icon-is-s on 2026-09-13 by the manager pass. That task now ships the icon sizes on their own; this one is the previews.\n\nIt is filed BLOCKED behind a decision card on purpose. Nobody asked for it: the user asked for a Pen that draws polygons and beziers and for SVG export, and the previews strip is a new readout the loop invented from the icon-grid epic title. A capture loupe was built the same way on 2026-09-02 and rejected on sight. Do not start this until the card is answered.\n\nIf it is approved: where the previews go should follow docs/design/mocks/shared/UX-PATTERNS.md rather than being invented, and the mocks that cover it are docs/design/mocks/pages/icon-draw-wt.html and the iconography reference. Say in the audit where the mock was followed and where it was not. The small sizes must be drawn the way the system would draw them, not smoothly shrunk, or the preview hides the exact problem it exists to show.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-09-14T10:09:17.929Z",
       "note": "left rough, not filed: the row sits over the top ruler in the corner it takes, which every other piece of canvas chrome does too; the previews hold still while a shape is being dragged and catch up when it lands, which cannot be helped for a shape being DRAWN (it is not in the document yet) but could be for one being moved; the previews are drawn with no smoothing, so on a retina screen they show the icon's own pixels made square rather than what macOS would draw at that point size. All three are asked about in the audit's evaluate list instead, so the answer comes from the user rather than from me guessing. Filed on its own: the canvas-versus-render disagreement found while testing (the-canvas-draws-a-filled-shape-as-an-outline-wh, p1, reproduced on clean main with my branch stashed)."
+    },
+    {
+      "t": "2026-09-14T10:09:33.261Z",
+      "note": "The icon previews strip shipped in Next behind next-icon-previews (on by default): working in an icon frame puts a row of the frame drawn at 16, 24, 32, 48 and 64 pixels in the top left of the canvas, redrawn as you draw, gone when you pick anything outside an icon frame. Each preview is the frame composited at that size by the same path Export takes, and the render tests compare it byte for byte against what exporting at that size writes, plus a hairline test that shows a one point line going from ink at 512 to nothing at 16. Sizes never exceed the frame's own side. Verified in the running probe with real screen captures (Scripts/playtest/icon-preview-walk.json); full suite green at 6447 tests; icon, frame and legend walks pass. Audit: queue/audits/2026-09-14-icon-previews.json. Filed on the way: the-canvas-draws-a-filled-shape-as-an-outline-wh (p1, reproduced on clean main)."
     }
   ],
-  "started": "2026-09-14T09:43:22.134Z"
+  "started": "2026-09-14T09:43:22.134Z",
+  "completed": "2026-09-14T10:09:33.262Z"
 }
