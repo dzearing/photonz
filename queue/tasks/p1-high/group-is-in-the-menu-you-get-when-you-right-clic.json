@@ -1,0 +1,37 @@
+{
+  "id": "group-is-in-the-menu-you-get-when-you-right-clic",
+  "title": "Group is in the menu you get when you right click a layer",
+  "goal": "Pick two layers, right click one of them, and there is no way to group them. Grouping is in the Layer menu and on Command G, but the right click menu on a layer row is where a person looks for something to do with the layers they just picked, and it offers Duplicate, Merge Down and the ordering commands while leaving out the one that makes a group. Put Group and Ungroup there, acting on everything you have picked.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T02:56:13.020Z",
+  "updated": "2026-09-14T02:56:13.088Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-13: they picked two layers, right clicked, found no group option, and said \"i found group, but i expected group in the right click menu of a layer\".\n\nConfirmed by reading. Group and Ungroup exist and work: Sources/Photonz/EditorCommands.swift:475-483, in the Layer menu, on Photoshop's keys (Command G and Shift Command G), disabled through canGroupSelection and canUngroupSelection, behind Experiments.shared.layerGroupsEnabled. The layer row context menu is Sources/Photonz/LayersRow.swift:202 (.contextMenu { menu }) and its contents start around line 363: Duplicate, Select Pixels, Merge Down, Turn Into Path, Turn Into Picture, Separate into Layers, Turn into Text, then the four ordering commands. No Group, no Ungroup.\n\nTHE THING THAT MAKES THIS MORE THAN A COPY AND PASTE. Every button in that row menu passes the single row's `id` (duplicateLayer(id:), mergeDown(id:), bringLayerToFront(id:)), while Group acts on the SELECTION (groupSelection(), with no id). So the menu is built around one row and the command being added is not. That tension has already been settled once in this app: the shipped task 'duplicate-delete-layer-and-the-arrange-commands-i' made Duplicate, Delete Layer and the arrange commands in the Layers MENU act on every selected row. Read it and follow the same answer rather than inventing a second one, and check whether the ROW menu got the same treatment or was left behind, because from the code it looks like it was left behind.\n\nThe case to decide deliberately: right clicking a row that is not part of the current multi-selection. Every other editor does one of two things, and both are defensible: act on the selection and ignore the row you clicked, or change the selection to the clicked row first and then act. Pick one, write it in the dock rules, and make every command in that menu obey it, because the bug underneath this report is that a menu built for one row is being used on many.\n\nFlag behaviour is already decided and must be matched: the comment at EditorCommands.swift:473 says \"Flagged rows are absent, not greyed, so nobody hunts for why a dead row is there.\"\n\nWorth a look while in there: there is no context menu on the CANVAS at all (only LayersRow, EffectsListInspector and MeasurementsListView have one). Right clicking a selection on the picture is the other place a person would reach for Group. That is a bigger question than this task, so file it rather than growing this one.",
+  "acceptance": [
+    "Right clicking a layer row offers Group and Ungroup, and they do the same thing the Layer menu and Command G already do",
+    "With several rows picked, Group makes one group of all of them, not just the row that was clicked",
+    "Right clicking a row that is NOT part of the current selection does something predictable and stated: say in the audit which rule was chosen and why, and make the app follow it everywhere a row menu acts on a selection",
+    "Ungroup is offered only when what you picked can actually be ungrouped, and Group only when there is something to group",
+    "Where the flag is off, the rows are absent rather than greyed out, which is the rule the Layer menu already follows",
+    "The keyboard shortcuts are printed beside the rows, so the menu teaches Command G rather than hiding it",
+    "The same check is made for the other commands in that menu that act on a selection rather than one row, and any that still act on one row only are either fixed or filed",
+    "A playtest walk picks two rows, opens the row menu and groups them",
+    "Audit under queue/audits/ with the menu captured over a multi-selection, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T02:56:13.022Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-14T02:56:13.087Z",
+      "note": "seq 270 -> 12"
+    }
+  ]
+}
