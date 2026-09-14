@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 9.3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T05:21:07.440Z",
-  "updated": "2026-09-14T10:59:37.201252Z",
+  "updated": "2026-09-14T10:59:51.082Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: PathContent.defaultStrokeWidth = 4 (Sources/PhotonzCore/VectorPath.swift:292) and AnnotationContent.init(shape:strokeWidth: CGFloat = 4 ...) (Sources/PhotonzCore/Layer.swift:223) are both unconditional. PenDrawing.content(_:closed:) (Sources/PhotonzCore/PenDrawing.swift:406) passes no strokeWidth, so a freshly drawn path takes the 4. Nothing in Sources/Photonz reads the frame size when picking a weight: grepping strokeWidth for frame or icon returns nothing. Icon presets are 16/24/32/48/64/512 at Sources/PhotonzCore/Frames.swift:46, so 4 is a quarter of the smallest.\n\nConfirmed in the running app, not just in the source: queue/audits/2026-09-13-icon-frames-drawn.png is a real window capture of a 24 pixel icon frame at 3200 percent with a 14 by 14 ellipse on it, and the Effects panel in that shot reads Border, Position Inside, Width 4 px on a shape 14 pixels across. The Width slider in that same shot runs 0 to 20 (Sources/Photonz/LayerEffectsInspector.swift:52), so on a 24 pixel canvas the range is nearly the whole frame and the useful part of it is the first two steps; the range wants the same treatment as the default.\n\nWhat was verified how: the manager read the constants and the call site and then read that capture, it did not run the app itself. The running-app half comes from queue/audits/2026-09-13-icon-frames.json, last rough item, written by the runner that shipped the icon frames: 'A shape drawn in a 24 pixel frame gets the app's ordinary 4 pixel default border, which at icon scale is a sixth of the whole canvas.' Reproduce it yourself before changing anything.\n\nShape: put the rule in PhotonzCore as a pure function from frame size to a starting weight, with tests, and let the app layer ask it. Flag: next-icon-frames, the one the icon sizes already ship behind.",
@@ -61,7 +61,12 @@
     {
       "t": "2026-09-14T10:59:37.201252Z",
       "note": "Not mine, but confirmed and folded into walks-that-fail-in-the-full-sweep: effects-open-into-view-walk and effects-room-for-the-one-you-opened-walk alternate pass/fail on the SAME build because each presses the Border twist twice, returning the row to whatever state it started in, and the probe keeps that state between runs. Reproduced on clean main, three runs: ok, failed, ok."
+    },
+    {
+      "t": "2026-09-14T10:59:51.080Z",
+      "note": "A shape drawn on an icon frame now starts at a weight the icon survives: 1 point on a 16, 2 on a 24 or 32, 3 on a 48, and screens unchanged at 4. Rule is IconStrokeWeight in PhotonzCore (13 tests), gated on next-icon-frames, asked by the draft and by the commit from the same point so nothing jumps on release. Verified in the running app by Scripts/playtest/icon-stroke-weight-walk.json, which claims every number in the acceptance list including a Desktop frame still at 4 and a picked weight of 3 surviving the next shape. Scripts/test.sh green (6467). Audit: queue/audits/2026-09-14-icon-stroke-weight.json. Commit 18ce32d0."
     }
   ],
-  "started": "2026-09-14T10:21:44.894Z"
+  "started": "2026-09-14T10:21:44.894Z",
+  "completed": "2026-09-14T10:59:51.081Z"
 }
