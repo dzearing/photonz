@@ -1,0 +1,37 @@
+{
+  "feature": "A sweep keeps the triage somebody wrote",
+  "epic": "loop-robustness",
+  "summary": "The standing task for failing walks is where anyone writes down what each failing walk actually means, and every sweep used to replace all of it with a fresh list. The sweep now owns one marked block of that note and leaves everything below it alone, and the block itself says which failures another open task already covers and which walks have stopped failing.",
+  "setup": "The dashboard at http://127.0.0.1:8791. Nothing to turn on; this is queue behavior, not app behavior.",
+  "try": [
+    {
+      "do": "Open the Tasks tab and find 'Walks that fail in the full sweep'."
+    },
+    {
+      "do": "Open it and expand Working detail."
+    },
+    {
+      "do": "Read the first block: it names the seven failing walks, then says three of them are already named by another open task, then says which four this task owns.",
+      "shot": "2026-09-13-sweep-keeps-hand-written-triage.png"
+    },
+    {
+      "do": "Read the line that ends the block: write below this line and a sweep will keep it."
+    },
+    {
+      "do": "Read the paragraph below that line. That is the part a sweep no longer touches."
+    },
+    {
+      "do": "After the next sweep lands, open the task again: the block above the line should be the new result, the paragraph below it unchanged."
+    }
+  ],
+  "evaluate": [
+    "Is one marked block enough of a warning, or would you expect the sweep's part and your part to look different at a glance on the card?",
+    "Does 'already named by another open task' save you the work the manager pass did by hand on 2026-09-13?",
+    "Should a walk that stopped failing be said in the notes as it is now, or only in the task history?",
+    "Is the sweep's part in the right place at the top, or would you rather read what a person wrote first?"
+  ],
+  "rough": [
+    "A failure counts as owned by another task when that task's text mentions the walk name anywhere, so a task that only mentions a walk in passing can be listed as owning it. The note says to read that task before deciding a walk is not yours, and a follow-up is filed to make ownership something a task declares.",
+    "This is queue behavior rather than app behavior, so the picture with it is the dashboard rather than the app: it was verified with a drill, by running two sweep results over a copy of the real queue, and by opening the task on the live dashboard."
+  ]
+}

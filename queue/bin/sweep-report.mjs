@@ -5,12 +5,18 @@
 // fail several sweeps in a row. Filing a fresh task each time would bury the
 // queue in near-duplicates (queue-lib's addTask does not dedupe; it appends
 // -2, -3 to the id), so the first failing sweep files the task and every
-// later one appends its result to that task's log and rewrites its notes for
+// later one appends its result to that task's log and refreshes its notes for
 // as long as the task is still open.
+//
+// "Refreshes" and not "rewrites": the notes are also where a person writes
+// down what each failing walk MEANS, and until 2026-09-13 a sweep replaced all
+// of that with a fresh list. The sweep now owns only the block between the two
+// markers in sweep-notes.mjs and carries everything below them across.
 //
 //   queue/bin/sweep-report.mjs queue/sweep/latest.json
 import { readFileSync } from 'node:fs';
 import * as q from './queue-lib.mjs';
+import { mergeNotes, previousFailures, ownersOfWalks } from './sweep-notes.mjs';
 
 const TITLE = 'Walks that fail in the full sweep';
 
@@ -21,29 +27,20 @@ if (!result.failed?.length) {
 }
 
 const list = result.failed.join(', ');
-const asked = result.requests?.map((r) => `${r.by}: ${r.why}`).join('; ') || 'a scheduled sweep';
-const notes = [
-  result.complete === false
-    ? `Last sweep ${result.ended} DID NOT FINISH${result.timedOut ? ' (stopped on the clock)' : ''}: it reached ${result.walks} walks in ${Math.round(result.seconds / 60)} minutes, of which ${result.passed} passed. The walks it never reached are unknown, not passing.`
-    : `Last sweep ${result.ended}: ${result.passed} of ${result.walks} walks passed in ${Math.round(result.seconds / 60)} minutes.`,
-  ``,
-  `Failing walks (${result.failed.length}): ${list}`,
-  ``,
-  `Full output: ${result.log}. Re-run one of them on its own with`,
-  `Scripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.`,
-  `Do NOT run Scripts/playtest-all.sh yourself; ask for a sweep with`,
-  `queue/bin/sweep.sh request "<why>" and finish your task.`,
-  ``,
-  `Sweep asked for by: ${asked}`,
-].join('\n');
+const all = q.readAllTasks();
+const open = all.find((t) => t.title === TITLE && !['done', 'dropped'].includes(t.status));
 
-const open = q.readAllTasks().find(
-  (t) => t.title === TITLE && !['done', 'dropped'].includes(t.status),
-);
+// Which failures already belong to another open task, so the list itself says
+// which walks this task is actually meant to fix.
+const owners = ownersOfWalks(result.failed, all, open?.id);
 
 if (open) {
-  q.appendLog(open, `sweep ${result.ended}: ${result.failed.length} failing (${list})`);
-  q.saveTask({ ...open, notes });
+  const stopped = result.complete === false
+    ? []
+    : previousFailures(open.notes).filter((w) => !result.failed.includes(w));
+  const tail = stopped.length ? `; stopped failing: ${stopped.join(', ')}` : '';
+  q.appendLog(open, `sweep ${result.ended}: ${result.failed.length} failing (${list})${tail}`);
+  q.saveTask({ ...open, notes: mergeNotes(open.notes, result, owners) });
   console.log(`==> Updated the standing task ${open.id} with ${result.failed.length} failing walk(s).`);
 } else {
   const task = q.addTask({
@@ -57,11 +54,11 @@ if (open) {
     priority: 'p2-normal',
     area: 'queue',
     acceptance: [
-      'Every walk named in the notes either passes or is rewritten to match what the app does now',
+      'Every walk the sweep block names as this task\'s own either passes or is rewritten to match what the app does now',
       'Each one is run on its own and passes twice in a row',
       'Any walk that was wrong rather than broken says so in this task log',
     ],
-    notes,
+    notes: mergeNotes('', result, owners),
     source: 'sweep',
   });
   console.log(`==> Filed ${task.id} for ${result.failed.length} failing walk(s).`);

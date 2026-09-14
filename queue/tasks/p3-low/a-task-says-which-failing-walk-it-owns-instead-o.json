@@ -1,0 +1,28 @@
+{
+  "id": "a-task-says-which-failing-walk-it-owns-instead-o",
+  "title": "A task says which failing walk it owns instead of being guessed at",
+  "goal": "When the walk sweep lists its failures, it now says which of them another open task is already working on. It works that out by looking for the walk name anywhere in the other task, so a task that mentions a walk only in passing can be listed as owning it, and a runner can skip a walk nobody is actually fixing. Make that a thing a task says about itself rather than something guessed from its text.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1310,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-14T01:40:04.878Z",
+  "updated": "2026-09-14T01:40:04.881Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Added by a-sweep-result-stops-wiping-what-a-person-wrote on 2026-09-13. ownersOfWalks in queue/bin/sweep-notes.mjs joins title, goal, notes and acceptance and does a substring match on the walk name. Real example from the 20:35Z sweep: dock-picked-first-walk came out owned by two tasks, picking-a-plain-shape-leaves-the-panel-parked-on and picking-a-text-layer-leaves-its-settings-below-t, and only the first is really about it. A declared field (walks: [\"...\"]) on the task, with the text match kept as a fallback, is the obvious shape.",
+  "acceptance": [
+    "A task can name the walks it owns in a way the sweep reads directly, and the sweep prefers that over matching text",
+    "A walk named only in passing in another task is not listed as owned by it",
+    "The existing tasks that really do own a failing walk are updated to say so",
+    "queue/bin/sweep-notes-drill.mjs covers both cases and passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T01:40:04.880Z",
+      "note": "created (manual)"
+    }
+  ]
+}

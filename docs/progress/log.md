@@ -14791,3 +14791,52 @@ inherit whatever the last walk left on the machine; filed as
 and so is not a runner's job to finish in one go. `expect present: false` does
 not get the same patience, so it can still pass because a control has not been
 built yet rather than because it is gone.
+
+## 2026-09-13 — A sweep result stops wiping what a person wrote
+
+The standing task "Walks that fail in the full sweep" is the one place anyone
+writes down what each failing walk MEANS, and every sweep replaced all of it.
+On 2026-09-13 a manager pass spent a slot working out that six of twelve
+failing walks already had their own task with their own diagnosis, wrote that
+into the notes, and the 16:12Z sweep four hours later put a fresh list in its
+place. The task then told a runner to fix "the six walks named in the notes"
+over notes that named thirteen.
+
+**Reproduced before anything was written.** In a throwaway queue: file the
+standing task from one sweep result, append a TRIAGED paragraph by hand, run a
+second result, and the paragraph is gone. `sweep-report.mjs` did
+`q.saveTask({ ...open, notes })` with a freshly built string.
+
+**The fix.** New `queue/bin/sweep-notes.mjs` owns the two halves of that field.
+The sweep's part lives between two markers and only what is between them is
+ever replaced; anything below the end marker ("Write below this line and a
+sweep will keep it") is carried across untouched. Notes written before the
+markers existed are migrated rather than eaten: the old block is recognised by
+the shape it was built with, opening `Last sweep ` and closing with the
+`Sweep asked for by:` paragraph, and anything after that is a person's. Notes
+that were never machine-made are treated as entirely a person's.
+
+Two things the sweep now says that it never did. It names which of its failures
+another open task already covers, which is exactly the work the manager pass
+did by hand: run against the live queue it reproduced that triage on its own
+(border and glow to `adding-an-effect-leaves-every-one-of-its-setting`, dock to
+`picking-a-plain-shape-leaves-the-panel-parked-on`). And a walk that failed last
+time and passes now is SAID to have stopped failing rather than quietly
+dropping out of a list nobody diffed, in the notes and in the task log. A sweep
+that was cut short claims nothing stopped failing, because the walks it never
+reached are unknown rather than passing.
+
+**Verified.** New `queue/bin/sweep-notes-drill.mjs`, 25 checks, all passing and
+three of them failing against the old writer. End to end over a copy of the
+real queue: two sweep results, a hand-written paragraph in between, paragraph
+kept, list updated, five walks named as having stopped failing.
+`churn-drill`, `audit-index-drill`, `decision-drill` and `Scripts/test.sh`
+green. The live standing task is migrated and carries a hand-written paragraph
+below the line.
+
+**Rough, and filed.** A failure counts as owned by another task when that
+task's text mentions the walk name anywhere, so a passing mention can claim a
+walk (`dock-picked-first-walk` came out owned by two tasks and only one is
+really about it). Filed as
+`a-task-says-which-failing-walk-it-owns-instead-o` at p3-low: a task should
+declare the walks it owns, with the text match as a fallback.
