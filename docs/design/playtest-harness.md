@@ -701,6 +701,24 @@ across it; scrolled 46pt to reach it; mainBusy 68.9ms over 288 passes...
 that something needed scrolling to. It is no longer something a walk has to
 remember.
 
+A `scrollPanel` keeps looking for the row it scrolls FROM the same way, and it
+now scrolls in rounds rather than in one turn. A lazily built list only has as
+much length as it has built, so one big turn stops at a content size that is
+still growing: scrolling a hundred and twenty layers by -4000 landed about a
+third of the way down roughly one run in three.
+
+### Why the Add Effect plus went nameless
+
+The plus on the Effects header has no words on it, so a walk opens it by the
+name SwiftUI hands the underlying `NSPopUpButton` through `.accessibilityLabel`
+— which is what `PlaytestPanelMenu.title(of:)` reads. SwiftUI pushes that label
+onto the AppKit control as part of reconciling the representation, and the
+control exists before that happens. So for the first frames of a relayout the
+plus is genuinely there, right size, right tooltip, and answering to no name at
+all, which is how a walk came to be told there was no such menu in a window the
+menu was plainly in. Nothing is wrong with the button: the step just has to
+look again, which it now does.
+
 ## Where a walk starts from
 
 The probe keeps its settings between runs on purpose: that is what a person's

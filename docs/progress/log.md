@@ -14740,3 +14740,45 @@ case where there is nothing to ring, so a walk can now say so in its setup
 Next: the audit asks whether ringing a slot wearing a line while the card says
 "Press R for the rectangle" reads as helpful or as a mismatch, and whether the
 guide should hand over the rectangle the way it hands over the frame tool.
+
+## 2026-09-13 — A walk waits for the panel instead of racing it
+
+Scripted walks had been failing in a sweep and passing on their own a minute
+later for three days, and the last two sweeps each came back with seven
+failures nobody could tell from a real break. Task
+`two-effect-walks-fail-now-and-then-because-a-pre` owned both halves of it.
+
+**What it actually was, and one of the halves was not a race.**
+`border-effect-walk` needed the panel scrolled 46pt at step 30, and had needed
+it every run since the Effects list grew a section. It was a stale walk failing
+deterministically. Four of the seven sweep failures were that same sentence,
+"the control X is not where a person could click it".
+
+The genuine race was the `wait` step being half blind. `settle()` judges the
+editor finished from two signals, and one of them is a run loop meter that was
+only installed by the first `press` or `drag` in a walk. Every wait before that
+read `mainBusy 0.0ms over 0 passes` and went quiet after a tenth of a second
+however hard the app was working.
+
+**What landed.** A `press` now behaves like a person: it keeps looking for its
+control for up to two seconds, scrolls it into reach if the dock has it below
+the fold, and waits for the box to hold still AND the app to go quiet over the
+same stretch before the mouse events go out. `expect` and `panelMenu` keep
+looking the same way. The failure message is unchanged and it is still the LAST
+failure, so a control that has genuinely gone away still fails, two seconds
+later. The meter is installed from step zero, and a slice the run loop never
+came back in counts as busy rather than quiet.
+
+Also: `Scripts/probe-app.sh` pins `experiments.release` to `next` before every
+launch, because which release the probe runs is a remembered setting that no
+walk declares; and `"forget": ["all"]` is the one word for a walk that wants a
+machine that has never run Photonz.
+
+**Verified.** Scripts/test.sh green, 6378 tests. RESULTS-PLACEHOLDER
+
+**Next / open.** 225 of the 405 walks still declare nothing to forget and
+inherit whatever the last walk left on the machine; filed as
+`every-walk-says-what-it-wants-forgotten`, which needs a full sweep to verify
+and so is not a runner's job to finish in one go. `expect present: false` does
+not get the same patience, so it can still pass because a control has not been
+built yet rather than because it is gone.
