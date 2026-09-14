@@ -945,12 +945,6 @@ struct SelectionColorInspector: View {
             ForEach(slots, id: \.self) { slot in
                 row(slot)
             }
-            if let caption {
-                Text(caption)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
@@ -1013,15 +1007,6 @@ struct SelectionColorInspector: View {
             : "Turns the \(noun) on or off"
     }
 
-    /// Said only when the section is speaking for more than one layer. Over a
-    /// single layer every row means what it has always meant, and a sentence
-    /// explaining that is a sentence in the way.
-    private var caption: String? {
-        let count = editorState.colorStyleSelectionCount
-        guard count > 1 else { return nil }
-        return "\(count) layers. A color or a style picked here paints every one "
-            + "of them, in one step."
-    }
 }
 
 // MARK: - One tile on the Styles shelf

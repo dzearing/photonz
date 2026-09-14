@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T07:09:27.691Z",
+  "updated": "2026-09-14T07:51:34.444Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
@@ -106,6 +106,10 @@
     {
       "t": "2026-09-14T07:09:27.690Z",
       "note": "sweep 2026-09-14T07:09:27Z: 3 failing (contents-for-several-walk, dock-picked-first-walk, effects-open-into-view-walk); stopped failing: layers-lazy-rows-walk"
+    },
+    {
+      "t": "2026-09-14T07:51:34.443Z",
+      "note": "effects-open-into-view-walk, measured on 2026-09-14 while trimming the panel prose: it is FLAKY, not broken. Ran it 7 times on one build, 6 ok and 1 failed at step 12 (expect) with 'Twist in Border reads \"Border, open\", not \"Border, shut\"', so the fold at step 9 had not landed by the time the expect ran. A 0.8s wait between the press and the expect is what it has; the failing run was the first after a probe relaunch. Suggests the walk needs waitFor on the control reading rather than a fixed wait."
     }
   ]
 }

@@ -103,7 +103,11 @@ struct EmptyLayerBoxTests {
             LayerGeometrySelection.Member(id: layer.id, frame: layer.frame,
                                           editing: LayerGeometryEditing(layer: layer))
         ])
-        #expect(selection.caption == LayerGeometryEditing.nothingOnItReason)
+        // The short wording, because the line under a section gets one line
+        // (UX-PATTERNS §4, "How much a section may say"). The full sentence,
+        // which says what to do about it, is still the field's own hover tip.
+        #expect(selection.caption == LayerGeometryEditing.nothingOnItCaption)
+        #expect(selection.fixedReason(for: .width) == LayerGeometryEditing.nothingOnItReason)
     }
 
     @Test func aPaintedLayerStillTypesItsNumbers() {

@@ -14,6 +14,13 @@ import Testing
 /// describes a control that is not there. It used to promise "Up or down arrow
 /// steps by 1, Shift by 10" while three of the four numbers were plain text and
 /// only one of them stepped.
+///
+/// How MUCH it may say is the newer half of the same rule, §4 "How much a
+/// section may say" (2026-09-14), pinned by `PanelSaysLessTests`. That is why
+/// the expected strings here got so much shorter: the keyboard sentence this
+/// suite was written about is now on the fields' own hover tips, so the only
+/// way the caption can describe a control that is not there is by naming a
+/// number nothing takes.
 @Suite("The line under Position & Size")
 struct SectionCaptionRuleTests {
 
@@ -45,23 +52,24 @@ struct SectionCaptionRuleTests {
         return (row, Layer(name: "Stack", content: .group(content), frame: .zero), frame)
     }
 
-    @Test("Every number typeable keeps the caption it always had, plus the angle's unit")
+    @Test("Every number typeable, so there is nothing the section has to explain")
     func allFourStillPromiseStepping() {
         let frame = CGRect(x: 12, y: 34, width: 296, height: 118)
         let sel = LayerGeometrySelection([member(rectangle(frame), frame)])
-        #expect(sel.caption
-                == "\(LayerGeometry.unitSuffix) from the top left, A in degrees clockwise. "
-                + "Up or down arrow steps by 1, Shift by 10.")
+        #expect(LayerGeometryField.allCases.allSatisfy { sel.allows($0) })
+        #expect(sel.caption == nil)
     }
 
-    @Test("Only some numbers typeable, so the caption names the ones that step")
+    @Test("Only some numbers typeable, and the section still says nothing about the rest")
     func someTypeableNamesThem() {
         let (row, stack, frame) = rowInAStack()
         let sel = LayerGeometrySelection([member(row, frame, in: stack)])
         #expect(!sel.allows(.x) && !sel.allows(.y))
         #expect(sel.allows(.width) && sel.allows(.height))
-        #expect(sel.caption.contains("steps W, H and A by 1"))
-        #expect(sel.caption.contains("Shift by 10"))
+        // Which numbers step is shown by which fields are plain text, and each
+        // fixed one says its own reason on hover. Nothing for a line to add.
+        #expect(sel.caption == nil)
+        #expect(sel.fixedReason(for: .x) != nil)
     }
 
     @Test("No number typeable, so the caption stops promising a keyboard altogether")
@@ -75,9 +83,9 @@ struct SectionCaptionRuleTests {
         let stack = Layer(name: "Stack", content: .group(content), frame: .zero)
         let sel = LayerGeometrySelection([member(shape, frame, in: stack)])
         #expect(LayerGeometryField.allCases.allSatisfy { !sel.allows($0) })
-        #expect(!sel.caption.contains("arrow steps"))
-        #expect(!sel.caption.contains("Shift by 10"))
-        #expect(sel.caption.contains("Click one"))
+        #expect(sel.caption?.contains("arrow steps") == false)
+        #expect(sel.caption?.contains("Shift by 10") == false)
+        #expect(sel.caption?.contains("Click one") == true)
     }
 
     @Test("A locked selection still says the lock, which is its own answer")
@@ -86,28 +94,28 @@ struct SectionCaptionRuleTests {
         var layer = rectangle(frame)
         layer.isLocked = true
         let sel = LayerGeometrySelection([member(layer, frame)])
-        #expect(sel.caption == LayerGeometryEditing.lockedReason)
+        #expect(sel.caption == LayerGeometryEditing.lockedCaption)
+        // The long reason did not go anywhere: it is the field's own tip.
+        #expect(sel.fixedReason(for: .x) == LayerGeometryEditing.lockedReason)
     }
 
-    @Test("Several layers with only some numbers typeable name those numbers too")
+    @Test("Several layers with only some numbers typeable never name the rest")
     func severalLayersNameWhatSteps() {
         let (row, stack, frame) = rowInAStack()
         let (other, _, otherFrame) = rowInAStack()
         let sel = LayerGeometrySelection([member(row, frame, in: stack),
                                           member(other, otherFrame, in: stack)])
-        #expect(sel.caption.hasPrefix("2 layers, all at once."))
-        #expect(sel.caption.contains("W, H and A"))
-        #expect(!sel.caption.contains("every left edge"))
+        // X and Y are the stack's, so the line may not mention an edge: that is
+        // the rule this suite exists for, in the one line the budget leaves.
+        #expect(sel.caption == LayerGeometrySelection.eachOwnSizeAndAngle)
+        #expect(sel.caption?.contains("edge") == false)
     }
 
-    @Test("Several layers with all four typeable keep the caption they always had")
+    @Test("Several layers with all four typeable say the one thing you cannot see")
     func severalLayersUnchanged() {
         let a = CGRect(x: 0, y: 0, width: 120, height: 32)
         let b = CGRect(x: 0, y: 40, width: 120, height: 32)
         let sel = LayerGeometrySelection([member(rectangle(a), a), member(rectangle(b), b)])
-        #expect(sel.caption
-                == "2 layers, all at once. X sets every left edge, Y every top edge, "
-                + "W and H each layer's own size, A each layer's own angle. "
-                + "Arrow steps them all by 1, Shift by 10.")
+        #expect(sel.caption == "Each layer keeps its own size and angle.")
     }
 }

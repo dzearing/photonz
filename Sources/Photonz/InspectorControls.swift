@@ -13,23 +13,22 @@ func points(_ value: Double) -> String { DocumentUnit.text(CGFloat(value)) }
 /// there is no single copy for it to answer for.
 func soleLayerID(_ ids: [UUID]) -> UUID? { ids.count == 1 ? ids.first : nil }
 
-/// What a style section says out loud before anything is dragged, and after:
-/// how many layers it is talking to, and anything it is quietly skipping.
-func selectionCaption(_ count: Int, _ lead: String = "A slider here") -> String? {
-    guard count > 1 else { return nil }
-    return "\(count) layers. \(lead) changes every one of them, in one step."
-}
-
-/// The small print under a style section: what it skips, where the picked
-/// layers differ, and how many it speaks for. Said only when there is
-/// something to say — over one layer every row means what it always meant, and
-/// a sentence explaining that is a sentence in the way.
+/// The small print under a style section: what it skips and where the picked
+/// layers differ. Said only when there is something to say — over one layer
+/// every row means what it always meant, and a sentence explaining that is a
+/// sentence in the way.
+///
+/// It used to end with a caption counting the selection and promising that a
+/// slider reached all of it. That went on 2026-09-14 (UX-PATTERNS §4, "How much
+/// a section may say"): the Layers section already prints "3 layers selected"
+/// two sections above, and a change reaching everything you picked is what
+/// picking several things means. What is left here is the register the rule
+/// does NOT cap — a note that reports a condition, shown only while it holds.
 struct SelectionStyleNotes: View {
     let notes: [String?]
-    let caption: String?
 
     var body: some View {
-        let lines = (notes + [caption]).compactMap { $0 }
+        let lines = notes.compactMap { $0 }
         if !lines.isEmpty {
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(lines, id: \.self) { line in

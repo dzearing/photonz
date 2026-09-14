@@ -3034,3 +3034,24 @@
 {"t":"2026-09-14T07:15:37.801Z","ev":"task_note","id":"a-follow-up-has-a-bar-to-clear-before-it-becomes"}
 {"t":"2026-09-14T07:15:37.847Z","ev":"task_note","id":"a-follow-up-has-a-bar-to-clear-before-it-becomes"}
 {"t":"2026-09-14T07:15:54.093Z","ev":"task_done","id":"a-follow-up-has-a-bar-to-clear-before-it-becomes","from":"in_progress","note":"queue/bin/follow-up-bar.md is one shared bar, cat onto the runner, manager and digest prompts by go-loop.sh. A finding earns a task when a person would notice it and no open task covers it; anything actually broken clears it automatically; the rest goes in the finishing task's log. queue.mjs gained search (phrase first, then widened, and it says which) and log (fold into an existing task); add/addjson now print the open near-twins with fold-and-drop commands. Scripts/test.sh green 6426 tests; state-poll-drill +12 checks and four other queue drills green; dogfooded by filing a near-twin, being warned, folding and dropping it. Audit queue/audits/2026-09-14-follow-up-bar.json. Commit d75d5d5a, pushed."}
+{"t":"2026-09-14T07:16:08.450Z","ev":"loop_reloaded","from":"35fff4360b03","to":"8642cfcee50d"}
+{"t":"2026-09-14T07:16:08.559Z","ev":"loop_started","pid":80518}
+{"t":"2026-09-14T07:16:08.786Z","ev":"task_started","id":"the-panel-stops-explaining-itself-in-paragraphs","title":"The panel stops explaining itself in paragraphs","priority":"p2-normal"}
+{"t":"2026-09-14T07:18:18.858Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T07:18:18.904Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T07:18:18.949Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T07:18:18.995Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T07:18:19.040Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T07:51:34.445Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-14T07:51:34.492Z","ev":"task_note","id":"picking-a-plain-shape-leaves-the-panel-parked-on"}
+{"t":"2026-09-14T07:51:34.539Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:09.640Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:09.688Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:09.747Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:09.795Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:09.844Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:21.297Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:21.342Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:21.388Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:21.433Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}
+{"t":"2026-09-14T08:18:21.478Z","ev":"task_note","id":"the-panel-stops-explaining-itself-in-paragraphs"}

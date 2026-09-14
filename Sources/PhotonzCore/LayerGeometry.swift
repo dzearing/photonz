@@ -50,6 +50,26 @@ public enum LayerGeometryField: String, CaseIterable, Hashable, Sendable {
         self == .rotation ? LayerAngle.unitSuffix : ""
     }
 
+    /// The unit, for the field's own hover tip.
+    ///
+    /// The line under the section used to be the one place a length said what
+    /// unit it was in, which cost every selection a line of panel to say a word
+    /// that never changes. It moved here on 2026-09-14 (UX-PATTERNS §4, "How
+    /// much a section may say") rather than being dropped. The angle has none:
+    /// it wears its degree sign in the field, and its title already says
+    /// "in degrees".
+    public var unitNote: String? {
+        self == .rotation ? nil : "In \(LayerGeometry.unitSuffix)."
+    }
+
+    /// What the keyboard does in any of these fields, for the tip.
+    ///
+    /// Also moved off the line under the section on 2026-09-14. It is the same
+    /// sentence for every field that takes a number, which is exactly why it
+    /// was never worth a line of panel: it describes a control, and what a
+    /// control does belongs where the pointer already is.
+    public static let steppingNote = "Up or down arrow steps by 1, Shift by 10."
+
     /// Whether this field changes the layer's size (rather than its position).
     public var isSize: Bool { self == .width || self == .height }
 
@@ -267,11 +287,22 @@ public struct LayerGeometryEditing: Hashable, Sendable {
     /// dash rather than a position and a size that describe nothing.
     public static let nothingOnItReason = "There is nothing on this layer yet, so it has no position or size. Paint or fill something and its box will be whatever you put there."
 
+    /// The same, short enough to be the line under the section rather than a
+    /// paragraph in front of the controls (UX-PATTERNS §4, "How much a section
+    /// may say"). The long one above is still what the field's own tip says.
+    public static let nothingOnItCaption = "Nothing on this layer yet, so no box."
+
     /// Why nothing on a locked layer can be typed. All three of the things
     /// this section holds are named, because it is also the caption for a
     /// locked selection and a sentence that stopped at size would be the panel
     /// promising less than unlocking gives back.
     public static let lockedReason = "This layer is locked. Unlock it in the Layers list to change its position, size or angle."
+
+    /// The same as the line under the section. A lock is a control that is
+    /// missing, so it keeps its line; it does not get to keep three of them,
+    /// and the sentence naming all three things unlocking gives back is one
+    /// hover away on the fields themselves.
+    public static let lockedCaption = "Locked. Unlock it in the Layers list."
 
     /// The same, for a locked layer whose position was never its own anyway:
     /// a stack, a grid, or a group that closes around what is inside it

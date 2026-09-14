@@ -47,8 +47,7 @@ struct AnnotationInspector: View {
                           ? "Put all \(pinned.count) labels back where the app places them"
                           : "Put the label back where the app places it")
                 }
-                SelectionStyleNotes(notes: [selection.note],
-                                    caption: selectionCaption(selection.count))
+                SelectionStyleNotes(notes: [selection.note])
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 8)

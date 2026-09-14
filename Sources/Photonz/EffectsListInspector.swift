@@ -54,18 +54,6 @@ struct EffectsListInspector: View {
                                   onExtent: { panes[row.index] = $0 },
                                   onFrame: { onPaneFrame?(row.id, $0) })
                 }
-                if let caption {
-                    Text(caption)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        // Measured like an effect, and folded like one, so a
-                        // cut that lands on it shows its top rather than
-                        // ending the list on empty glass.
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
-                            panes[rows.count] = DockHeightBudget.Block(height: $0, isOpen: false)
-                        }
-                }
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -83,19 +71,25 @@ struct EffectsListInspector: View {
     /// effect that has since been removed, and where in that order the effect
     /// you just opened sits.
     private func report(_ rows: [LayerEffectRow]) {
-        let count = rows.count + (caption == nil ? 0 : 1)
+        let count = rows.count
         let focus = editorState.openedEffectRow.flatMap { id in
             rows.firstIndex { $0.id == id }
         }
         onPanes?((0..<count).compactMap { panes[$0] }, focus)
     }
 
-    /// What an untouched shape shows: one line saying what this list is for and
-    /// where the gesture is. An empty section with nothing in it at all reads as
-    /// broken, and the plus on the header is small enough to be missed the first
-    /// time.
+    /// What an untouched shape shows: ONE line saying where the gesture is. An
+    /// empty section with nothing in it at all reads as broken, and the plus on
+    /// the header is small enough to be missed the first time, so this is the
+    /// one case the budget keeps a line for (UX-PATTERNS §4, "How much a section
+    /// may say").
+    ///
+    /// It used to name all four kinds as well, which took a second line to say
+    /// something the plus's own hover tip already says word for word ("Add an
+    /// effect: a shadow, a glow, a border or a blur") and the menu itself lists
+    /// the moment you press it.
     private var empty: some View {
-        Text("Nothing added yet. Use the plus above for a shadow, a glow, a border or a blur.")
+        Text("Nothing yet. Add one with the plus above.")
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
@@ -103,12 +97,6 @@ struct EffectsListInspector: View {
             .panelStartProbe(.row, owner: "Effects empty")
     }
 
-    private var caption: String? {
-        let count = editorState.colorStyleSelectionCount
-        guard count > 1 else { return nil }
-        return "\(count) layers. Adding, removing or reordering here reaches "
-            + "every one of them, in one step."
-    }
 }
 
 /// One effect, drawn as a SMALL PANE: a chevron, a lit name, a grip, an eye, a

@@ -367,12 +367,13 @@ struct LayerGeometrySelectionTests {
 
     // MARK: The line under the fields
 
-    @Test("One layer's caption says what the numbers mean and how to step them")
+    /// One layer with four ordinary numbers spends no line at all now. What
+    /// that line used to say is on the fields' own tips; the rule and the rest
+    /// of its cases are `PanelSaysLessTests`.
+    @Test("One layer with ordinary numbers has no line under it")
     func oneLayerCaptionExplainsTheNumbers() {
         let frame = CGRect(x: 12, y: 34, width: 296, height: 118)
-        #expect(selection([frame]).caption
-                == "\(LayerGeometry.unitSuffix) from the top left, A in degrees clockwise. "
-                + "Up or down arrow steps by 1, Shift by 10.")
+        #expect(selection([frame]).caption == nil)
     }
 
     @Test("A locked layer's caption says it is locked, where you are already looking")
@@ -380,8 +381,8 @@ struct LayerGeometrySelectionTests {
         let frame = CGRect(x: 12, y: 34, width: 296, height: 118)
         let sel = LayerGeometrySelection([member(rectangle(frame, locked: true), frame)])
         #expect(sel.isLocked)
-        // The same sentence the hover tip gives, so the panel says one thing.
-        #expect(sel.caption == LayerGeometryEditing.lockedReason)
+        // The short wording; the hover tip still gives the long one.
+        #expect(sel.caption == LayerGeometryEditing.lockedCaption)
     }
 
     @Test("Unlocking the layer puts the ordinary caption straight back")
@@ -395,13 +396,12 @@ struct LayerGeometrySelectionTests {
         #expect(sel.caption == selection([frame]).caption)
     }
 
-    @Test("Several layers still say that one number lands on all of them")
+    @Test("Several layers say the one thing about them you cannot see")
     func manyLayersKeepTheirOwnCaption() {
         let sel = selection([CGRect(x: 0, y: 0, width: 120, height: 32),
                              CGRect(x: 0, y: 40, width: 120, height: 32)])
         #expect(!sel.isLocked)
-        #expect(sel.caption.hasPrefix("2 layers, all at once."))
-        #expect(sel.caption.contains("Shift by 10"))
+        #expect(sel.caption == LayerGeometrySelection.eachOwnSizeAndAngle)
     }
 
     @Test("A selection that is locked all the way through says so once, not per layer")
@@ -411,8 +411,7 @@ struct LayerGeometrySelectionTests {
         let sel = LayerGeometrySelection([member(rectangle(a, locked: true), a),
                                           member(rectangle(b, locked: true), b)])
         #expect(sel.isLocked)
-        #expect(sel.caption
-                == "2 locked layers. Unlock them in the Layers list to change their position, size or angle.")
+        #expect(sel.caption == LayerGeometrySelection.lockedSeveralCaption)
     }
 
     @Test("A locked row in a stack says both reasons in the caption, so unlocking is not oversold")
@@ -426,8 +425,10 @@ struct LayerGeometrySelectionTests {
             LayerGeometrySelection.Member(id: layer.id, frame: frame,
                                           editing: LayerGeometryEditing(layer: layer, in: stack))])
         #expect(sel.isLocked)
-        #expect(sel.caption == LayerGeometryEditing.lockedInsideReason(.stack))
-        #expect(sel.caption != LayerGeometryEditing.lockedReason)
+        // The short wording of "and the stack decides where it sits". The long
+        // one, which says which half unlocking gives back, is the X field's tip.
+        #expect(sel.caption == LayerGeometrySelection.lockedInsideOneCaption)
+        #expect(sel.fixedReason(for: .x) == LayerGeometryEditing.lockedInsideReason(.stack))
     }
 
     @Test("Two locked rows a stack owns say it once, in the plural")
@@ -443,9 +444,8 @@ struct LayerGeometrySelectionTests {
                                           editing: LayerGeometryEditing(layer: layer, in: stack))
         })
         #expect(sel.isLocked)
-        #expect(sel.caption.hasPrefix("2 locked layers,"))
-        #expect(sel.caption.contains("decides where they sit"))
-        #expect(sel.caption.contains("not their position"))
+        #expect(sel.caption == LayerGeometrySelection.lockedInsideCaption)
+        #expect(sel.fixedReason(for: .x) == LayerGeometryEditing.lockedInsideReason(.stack))
     }
 
     @Test("One locked layer among unlocked ones leaves the caption alone, because the fields still work")
@@ -455,7 +455,7 @@ struct LayerGeometrySelectionTests {
         let sel = LayerGeometrySelection([member(rectangle(a, locked: true), a),
                                           member(rectangle(b), b)])
         #expect(!sel.isLocked)
-        #expect(sel.caption.hasPrefix("2 layers, all at once."))
+        #expect(sel.caption == LayerGeometrySelection.eachOwnSizeAndAngle)
     }
 
     @Test("A layer a stack owns is not locked, and its caption promises only the keys that work")
@@ -473,19 +473,18 @@ struct LayerGeometrySelectionTests {
         // Not the lock's sentence: nothing here is locked. But not the free
         // layer's either — the stack decides X and Y, so an arrow key steps
         // only W and H and the caption says exactly that.
-        #expect(sel.caption != LayerGeometryEditing.lockedReason)
-        #expect(sel.caption == "\(LayerGeometry.unitSuffix) from the top left, A in degrees clockwise. "
-                + "Up or down arrow steps W, H and A by 1, Shift by 10.")
-        #expect(sel.caption != selection([frame]).caption)
+        #expect(sel.caption != LayerGeometryEditing.lockedCaption)
+        // One layer, so nothing to say: W, H and A still type, and which ones
+        // do is what the fields themselves show by being plain text or not.
+        #expect(sel.caption == nil)
     }
 
     @Test("Nothing selected reads as nothing, and the caption stays the plain one")
     func anEmptySelectionIsNotLocked() {
         let sel = LayerGeometrySelection([])
         #expect(!sel.isLocked)
-        // No layer, so nothing to say about degrees either: the plain line.
-        #expect(sel.caption == "\(LayerGeometry.unitSuffix) from the top left. "
-                + "Up or down arrow steps by 1, Shift by 10.")
+        // Nothing picked is an empty panel, which explains itself.
+        #expect(sel.caption == nil)
     }
 
     // MARK: - What a number reads as on screen

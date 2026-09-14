@@ -113,8 +113,7 @@ struct TextInspector: View {
                                             // Weight would cost text wearing a
                                             // name: said BEFORE the click.
                                             editorState.textStylesEnabled
-                                                ? editorState.textStyleSelection.unlinkNote : nil],
-                                    caption: selectionCaption(selection.count, "A change here"))
+                                                ? editorState.textStyleSelection.unlinkNote : nil])
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 8)

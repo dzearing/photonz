@@ -118,10 +118,10 @@ struct WandToolInspector: View {
                                   set: { editorState.wandTolerance = $0.rounded() }),
                    in: 0...128)
                 .controlSize(.small)
-            Text("How far a color may drift and still join the selection.")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
+                // What this slider does, on the slider. It was a line under the
+                // section, which is a line of panel spent describing a control
+                // (UX-PATTERNS §4, "How much a section may say", 2026-09-14).
+                .panelHelp("How far a color may drift and still join the selection")
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)

@@ -64,14 +64,7 @@ struct EffectsInspector: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            // "A slider here changes every one of them" is a promise Border
-            // cannot keep when a shape is picked with something that can take
-            // one, so in that case the caption claims only the rest.
-            SelectionStyleNotes(notes: [selection.note],
-                                caption: selectionCaption(
-                                    selection.count,
-                                    borders.count == selection.count || borders.isEmpty
-                                        ? "A slider here" : "Every other slider here"))
+            SelectionStyleNotes(notes: [selection.note])
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
@@ -234,27 +227,27 @@ struct ShadowInspector: View {
                                  format: { "\(Int(($0 * 100).rounded()))%" }) { style, v in
                     style.updateShadow(at: at) { $0.opacity = v }
                 }
-                SelectionStyleNotes(notes: [showsColor ? shadowColorNote(shadows, at: at) : nil],
-                                    caption: nil)
+                SelectionStyleNotes(notes: [showsColor ? shadowColorNote(shadows, at: at) : nil])
             }
         }
         .padding(.horizontal, inset ? 14 : 0)
         .padding(.vertical, inset ? 8 : 0)
     }
 
-    /// How many of the picked layers this section is talking to, in words,
-    /// and what the switch does with the rest.
+    /// Said only where this section reaches SOME of the picked layers, which is
+    /// the one thing about it nobody can see.
+    ///
+    /// It used to speak in all three cases, and the other two were the panel
+    /// counting the selection back at you ("3 layers. Switching this on shadows
+    /// every one of them") while the Layers section two above already printed
+    /// "3 layers selected". Dropped 2026-09-14 (UX-PATTERNS §4, "How much a
+    /// section may say"). What is left is a note reporting a condition, which
+    /// that rule does not cap.
     private func shadowReachNote(_ selection: LayerStyleSelection,
                                  _ shadows: LayerStyleSelection) -> String? {
         let picked = selection.count
         let shadowed = shadows.count
-        guard picked > 1 else { return nil }
-        if shadowed == 0 {
-            return "\(picked) layers. Switching this on shadows every one of them, in one step."
-        }
-        if shadowed == picked {
-            return "\(picked) layers. A slider here changes every one of them, in one step."
-        }
+        guard picked > 1, shadowed > 0, shadowed < picked else { return nil }
         let verb = shadowed == 1 ? "has" : "have"
         return "\(shadowed) of the \(picked) selected layers \(verb) a shadow. "
             + "The rows below change those; the switch gives the rest one too."

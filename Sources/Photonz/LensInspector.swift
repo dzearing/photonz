@@ -114,7 +114,8 @@ struct LensToolInspector: View {
                 .controlSize(.small)
                 .fixedSize()
                 .panelHelp("What the next lens you draw does to the picture underneath it. "
-                           + "A lens already on the canvas is switched in its own section.")
+                           + "A lens already on the canvas is switched in its own section. "
+                           + LensCopy.safety)
             }
             if let title = editorState.lensToolAdjustment.settingTitle {
                 VStack(alignment: .leading, spacing: 2) {
@@ -131,7 +132,10 @@ struct LensToolInspector: View {
                         .controlSize(.small)
                 }
             }
-            Text(LensCopy.safety)
+            // One line, because covering an address is the one thing here that
+            // is worth being sure about. The rest of it, that the saved
+            // document still holds the original, is on the Does picker's tip.
+            Text(LensCopy.safetyCaption)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -216,9 +216,12 @@ struct FixedMixingNote: View {
     var body: some View {
         let all = editorState.layerStyleSelection
         if !all.isEmpty, all.mixable.isEmpty {
+            // One short line: a highlighter has no Blending to set because
+            // mixing with the words under it is what makes it one. The full
+            // sentence used to take three lines to say that twice.
             Text(all.count == 1
-                 ? "A highlight always mixes with the words under it, which is what makes it a highlighter, so it has no Blending to set."
-                 : "Highlights always mix with the words under them, which is what makes them highlighters, so there is no Blending to set.")
+                 ? "A highlight always mixes, so it has no Blending."
+                 : "Highlights always mix, so they have no Blending.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)

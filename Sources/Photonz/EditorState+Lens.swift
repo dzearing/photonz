@@ -16,10 +16,17 @@ enum LensCopy {
     static let toolHelp = "Drag a box over anything to change what is underneath it: "
         + "blur an address, pixelate a name, grey out a region."
     /// Said once, where somebody hiding something can read it. Not a second
-    /// mechanism: export and copy already flatten.
+    /// mechanism: export and copy already flatten. This is the LONG wording,
+    /// which is what the Does picker says on hover.
     static let safety = "What you export or copy is flattened, so a pixelated "
         + "region really is gone from the picture that leaves the app. The saved "
         + "document still holds the original underneath, so you can change your mind."
+
+    /// The same as the line under the section: one short sentence carrying the
+    /// half somebody covering an address actually needs. That it is reversible
+    /// in the saved document is reassurance rather than safety, so it stays on
+    /// the tip above (UX-PATTERNS §4, "How much a section may say", 2026-09-14).
+    static let safetyCaption = "What you export is flattened, so this really hides it."
 }
 
 extension EditorState {

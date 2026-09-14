@@ -166,13 +166,6 @@ extension EditorState {
         return container.allows(alignment)
     }
 
-    /// Why half the row is dim, in plain words, or nil when none of it is. The
-    /// caption says this out loud as well as the hover tips: three grey buttons
-    /// with no reason beside them are a puzzle, and the answer is one clause.
-    var arrangeDeadAxisNote: String? {
-        arrangeDeadAxisReason(.left) ?? arrangeDeadAxisReason(.top)
-    }
-
     /// Why three of the buttons are dim, in plain words, or nil when they are
     /// not. Only a plain group can say this: it has no box of its own, so a
     /// piece that already spans everything else in it has nowhere to go.

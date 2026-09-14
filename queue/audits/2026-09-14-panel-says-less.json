@@ -1,0 +1,29 @@
+{
+  "feature": "The panel says less",
+  "epic": "ui-building",
+  "summary": "Pick three layers and the right hand panel shows controls instead of paragraphs. Seven lines of small grey prose became zero above Position & Size, which bought 152 points of panel back and put the last section's heading on screen without scrolling.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. The same rule is on in Current, which sees the shared sections (Position & Size, Color, Shadow, Blending, Canvas, the Lens, the wand).",
+  "try": [
+    { "do": "Draw three boxes with R, then drag a marquee round all three.", "shot": "2026-09-14-panel-says-less-after.png" },
+    { "do": "Read down the panel and count the grey lines. There should be none until Position & Size." },
+    { "do": "Compare it with how it looked before.", "shot": "2026-09-14-panel-says-less-before.png" },
+    { "do": "Hover the W field. The unit and the arrow keys are here now, not in a line under the section." },
+    { "do": "Draw one box and take its Border off with the cross on the row. Effects keeps one short line.", "shot": "2026-09-14-panel-says-less-effects-empty.png" },
+    { "do": "Group two boxes and double click into the group. Read the Arrange heading.", "shot": "2026-09-14-panel-says-less-arrange-header.png" },
+    { "do": "Switch to Current in the Experiments window and pick three boxes again.", "shot": "2026-09-14-panel-says-less-current.png" }
+  ],
+  "evaluate": [
+    "With three layers picked, does the panel now read as controls rather than as reading?",
+    "X, Y, W, H no longer say px anywhere you can see without hovering. In a redlining app, does that number need its unit on screen?",
+    "\"Arrange  in Group\" beside the heading: is that as clear as the sentence that used to sit under the buttons?",
+    "\"Nothing yet. Add one with the plus above.\" is all an empty Effects section says now. Is that enough to get you started the first time?",
+    "Anything you actually miss? The sentences that went were the ones counting your selection back at you, and the Layers section already prints \"3 layers selected\"."
+  ],
+  "rough": [
+    "The unit is the one thing that genuinely got harder to find. It was the opening words of the Position & Size line (\"px from the top left\") and it is now only on each field's hover tip. Everything else that went was already word for word on a tip: the origin, the degrees, the arrow keys, the four effect kinds, the lens safety sentence. Putting px in the fields themselves would cost no line at all, but it changes what a field shows while you type, so it is a separate decision rather than something to slip in here.",
+    "The budget is written as about forty characters and enforced by a test only for the Position & Size lines, where the strings live in PhotonzCore. The lines still written inline in the app layer are held to it by reading rather than by a test, so the next section that wants to explain itself can still write two lines and nothing will stop it.",
+    "I left the Layout section's \"Everything inside these groups follows this when they are resized\" at two lines. It is one fact and it is genuinely invisible, so it earns a line, but it does not fit on one and I could not shorten it without losing the \"unless a layer says otherwise\" half.",
+    "dock-picked-first-walk still fails, on this change and on main without it. It gets further with the change (step 41 to step 73), so some of what it was waiting for was sections not fitting and the rest is the section order question. Folded into picking-a-plain-shape-leaves-the-panel-parked-on rather than filed again.",
+    "effects-open-into-view-walk is flaky rather than broken: 6 of 7 runs pass on one build. Folded into walks-that-fail-in-the-full-sweep with the reproduction."
+  ]
+}

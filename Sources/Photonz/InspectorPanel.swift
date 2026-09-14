@@ -830,6 +830,19 @@ struct InspectorPanel: View {
             return AnyView(Text(scope.title)
                 .font(.caption)
                 .foregroundStyle(.secondary))
+        case .arrange:
+            // What these buttons line up AGAINST, when it is not the selection
+            // itself. That is the one thing about this section you cannot work
+            // out by looking at it, and beside the heading it costs no line of
+            // panel and is still said when the section is collapsed. It used to
+            // be a sentence underneath (UX-PATTERNS §4, "How much a section may
+            // say", 2026-09-14).
+            guard let reference = editorState.arrangeReferenceName else { return nil }
+            return AnyView(Text("in \(reference)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail))
         case .columns:
             // Whose columns these are, when they are not the picked thing's
             // own. Beside the title so a collapsed section says it too.

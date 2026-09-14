@@ -10,9 +10,17 @@ import SwiftUI
 /// scales: where do these sit against each other, and where does this one sit
 /// on the picture.
 ///
-/// Whatever the reference is, the caption says it and every button's hover tip
-/// repeats it, so a single layer with six live buttons is never a guess about
-/// what is about to move where.
+/// Whatever the reference is, every button's hover tip says it, and when it is
+/// NOT the selection itself the section header says it too, beside the heading
+/// where it costs no line of panel and survives the section being collapsed
+/// (`sectionAccessory` in `InspectorPanel.swift`). So a single layer with six
+/// live buttons is never a guess about what is about to move where.
+///
+/// There is no line under this section any more. It used to spend two on
+/// "3 layers line up with each other, not with the picture", which is what
+/// lining things up means everywhere, and on "Spacing evenly needs three
+/// layers", which the two dim buttons already say on hover. Dropped 2026-09-14
+/// (UX-PATTERNS §4, "How much a section may say").
 ///
 /// Eight buttons in two rows, in the order every design tool puts them: the
 /// three horizontal alignments, the three vertical ones, then spacing. Spacing
@@ -39,27 +47,9 @@ struct ArrangeInspector: View {
                 }
                 Spacer(minLength: 0)
             }
-            Text(caption)
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
-    }
-
-    private var caption: String {
-        if let reference = editorState.arrangeReferenceName {
-            // Why half the row is dim beats a note about spacing evenly, which
-            // the two dim buttons under it already explain on hover.
-            let rest = editorState.arrangeDeadAxisNote ?? "Spacing evenly needs three layers."
-            return "This layer lines up inside \(reference). \(rest)"
-        }
-        let count = editorState.arrangeableLayerCount
-        if editorState.canDistributeSelection {
-            return "\(count) layers line up with each other, not with the picture."
-        }
-        return "\(count) layers line up with each other. Spacing evenly needs three."
     }
 
     /// The button's hover tip: the command, and what it lines up against when

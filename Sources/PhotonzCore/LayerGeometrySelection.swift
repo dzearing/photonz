@@ -157,81 +157,98 @@ public struct LayerGeometrySelection: Hashable, Sendable {
         !members.isEmpty && members.allSatisfy(\.editing.isLocked)
     }
 
-    /// The line under the fields: what the numbers mean, in words.
+    /// The line under the fields, and MOST OF THE TIME there isn't one.
     ///
-    /// With one layer picked that is where the layer sits on the picture; with
-    /// several it has to say that a number lands on every one of them, and
-    /// which edge each letter is, or "type 24 into X" reads as a guess.
+    /// The rule is `docs/design/mocks/shared/UX-PATTERNS.md` §4, "How much a
+    /// section may say": a section says at most one short line, and only when
+    /// that line tells you something you cannot work out from what is already
+    /// on screen. Settled 2026-09-14 by the decision "How much should the right
+    /// hand panel explain itself in words?".
     ///
-    /// A locked selection gets neither, because both would be a lie: nothing
-    /// here takes a number and no arrow key steps anything. It says the lock
-    /// instead, in the same words the hover tip uses, so the reason is where
-    /// the eye already is rather than one hover away.
-    public var caption: String {
+    /// This line used to open with the unit and the origin and close with the
+    /// arrow keys, three or four lines of a panel that was already 176 points
+    /// over its own viewport — and every word of it was ALREADY on a hover tip.
+    /// `LayerGeometryField.title` has said "Distance from the left edge of the
+    /// canvas" and "Angle, in degrees, turning clockwise" the whole time, and
+    /// the unit and the keyboard moved to the tips with this change rather than
+    /// being deleted. So the ordinary case says nothing at all, and what is
+    /// left is the two things a pointer cannot ask for: a control that is
+    /// MISSING, and a way several layers behave that you cannot see.
+    public var caption: String? {
         // A layer with nothing painted on it has no numbers at all, so the
         // line says that rather than promising numbers somebody else worked
         // out. It comes first: a lock on a layer with no pixels is not what is
         // stopping you typing a width into it.
         if !members.isEmpty, members.allSatisfy(\.editing.hasNoBox) {
-            return count > 1 ? Self.nothingOnThemYet : LayerGeometryEditing.nothingOnItReason
+            return count > 1 ? Self.nothingOnThemYet : LayerGeometryEditing.nothingOnItCaption
         }
         if isLocked {
-            // The hover tip for X already says everything a locked layer has to
-            // say, including the half a stack or a grid owns rather than the
-            // lock, so the caption is that same sentence rather than a second
-            // wording of it.
+            // The SHORT wording of the lock. The long one, which names which
+            // half unlocking actually gives back, is what the X field's own tip
+            // says, so the full reason is one hover away instead of three lines
+            // of panel.
+            let heldByAContainer = members.allSatisfy(\.editing.containerOwnsPosition)
             guard count > 1 else {
-                return members[0].editing.fixedReason(for: .x) ?? LayerGeometryEditing.lockedReason
+                return heldByAContainer
+                    ? Self.lockedInsideOneCaption
+                    : LayerGeometryEditing.lockedCaption
             }
-            guard !members.allSatisfy(\.editing.containerOwnsPosition) else {
-                return "\(count) locked layers, all inside something that decides where they sit. "
-                    + "Unlocking them in the Layers list gives back their size and angle, "
-                    + "not their position."
-            }
-            return "\(count) locked layers. Unlock them in the Layers list to "
-                + "change their position, size or angle."
+            return heldByAContainer ? Self.lockedInsideCaption : Self.lockedSeveralCaption
         }
         // Only the numbers that actually take typing are described. A section
         // whose W and H are plain text because a stack decided them has no
         // arrow key to promise, and a caption that promises one anyway is the
         // panel describing a control that is not there.
         let typeable = LayerGeometryField.allCases.filter { allows($0) }
-        guard count > 1 else {
-            // The angle is the one number here that is not a length, so the
-            // line says its unit as soon as there is an angle on show. Where
-            // there is not — a group, an arrow — it says nothing about
-            // degrees, because there is nothing on the row to explain.
-            let where_ = reading(.rotation) == .empty
-                ? "\(LayerGeometry.unitSuffix) from the top left."
-                : "\(LayerGeometry.unitSuffix) from the top left, A in degrees clockwise."
-            // Nothing picked is not a panel full of numbers somebody else
-            // decided, it is an empty panel, so it keeps the plain caption.
-            guard !typeable.isEmpty || isEmpty else { return "\(where_) \(Self.workedOutForYou)" }
-            guard !typeable.isEmpty,
-                  typeable.count < LayerGeometryField.allCases.count else {
-                return "\(where_) Up or down arrow steps by 1, Shift by 10."
-            }
-            return "\(where_) Up or down arrow steps \(Self.letters(typeable)) by 1, Shift by 10."
+        // Nothing here takes a number and no lock is the reason, so the line
+        // stops being a caption and becomes the way out. A control that is
+        // missing is the one thing a hover tip cannot tell you about, because
+        // there is nothing to hover. Nothing PICKED is a different case: an
+        // empty panel explains itself by being empty.
+        guard !typeable.isEmpty || isEmpty else {
+            return count > 1 ? Self.workedOutForThem : Self.workedOutForYou
         }
-        let head = "\(count) layers, all at once."
-        guard !typeable.isEmpty else { return "\(head) \(Self.workedOutForThem)" }
-        guard typeable.count < LayerGeometryField.allCases.count else {
-            return "\(head) X sets every left edge, Y every top edge, "
-                + "W and H each layer's own size, A each layer's own angle. "
-                + "Arrow steps them all by 1, Shift by 10."
+        // One layer, ordinary numbers: the fields say what they are, the tips
+        // say the unit and the keyboard, and the section says nothing.
+        guard count > 1 else { return nil }
+        // Several layers, and the one thing about them you cannot see: W over
+        // three boxes gives each of them that width, it does not resize the
+        // three as one block. Said only about the numbers that are there.
+        switch (allows(.width) || allows(.height), allows(.rotation)) {
+        case (true, true): return Self.eachOwnSizeAndAngle
+        case (true, false): return Self.eachOwnSize
+        case (false, true): return Self.eachOwnAngle
+        case (false, false): return nil
         }
-        return "\(head) \(Self.letters(typeable)) land on every one of them. "
-            + "Arrow steps them by 1, Shift by 10."
     }
 
+    /// How long a line under a section may be: about one line at the panel's
+    /// default width, where small grey type runs to roughly forty characters.
+    /// Two facts will not fit, and that is the point — the second one belongs
+    /// in a hover tip.
+    public static let oneLineBudget = 48
+
     /// The same for several layers picked at once, all of them still empty.
-    static let nothingOnThemYet = "There is nothing on any of these layers yet, so they have no position or size. Paint or fill something and each box will be whatever you put there."
+    public static let nothingOnThemYet = "Nothing on these layers yet, so no box."
+
+    /// The short wording of a locked selection. `LayerGeometryEditing`
+    /// `lockedReason` and `lockedInsideReason` are the long ones, and they are
+    /// still what the fields' own tips say.
+    public static let lockedSeveralCaption = "Locked. Unlock them in the Layers list."
+    public static let lockedInsideOneCaption = "Locked, and held where something else puts it."
+    public static let lockedInsideCaption = "Locked, and held where something else puts them."
 
     /// What the line says when NONE of the four takes a number and no lock is
     /// the reason. There is no keyboard to describe, so it points at the thing
     /// that does answer: clicking one of them.
-    static let workedOutForYou = "These numbers are worked out for you. Click one to see what decides it."
-    static let workedOutForThem = "These numbers are worked out for them. Click one to see what decides it."
+    public static let workedOutForYou = "Worked out for you. Click one to see why."
+    public static let workedOutForThem = "Worked out for them. Click one to see why."
+
+    /// The one thing a selection of several layers does that you cannot see:
+    /// these numbers are each layer's own, not the box around all of them.
+    public static let eachOwnSizeAndAngle = "Each layer keeps its own size and angle."
+    public static let eachOwnSize = "Each layer keeps its own size."
+    public static let eachOwnAngle = "Each layer keeps its own angle."
 
     /// The field letters as a person would read them out: "W", "W and H",
     /// "X, Y and W".

@@ -213,20 +213,26 @@ struct LayerRotationFieldTests {
 
     // MARK: The line under the fields
 
-    @Test("The caption says degrees as soon as there is an angle on show")
+    /// The unit moved off the line under the section and onto the field's own
+    /// tip on 2026-09-14 (UX-PATTERNS §4, "How much a section may say"). It was
+    /// there all along: the angle's title has always read "Angle, in degrees,
+    /// turning clockwise", and the line was saying it a second time in the one
+    /// place it cost a line of panel.
+    @Test("The angle's unit is said on the angle, not in a line under the section")
     func captionNamesTheUnit() {
+        #expect(LayerGeometryField.rotation.title.contains("degrees"))
+        #expect(LayerGeometryField.rotation.title.contains("clockwise"))
         let turnable = one(rectangle(CGRect(x: 0, y: 0, width: 100, height: 50)))
-        #expect(turnable.caption.contains("A in degrees clockwise"))
-        // An arrow has no angle row to explain, so the line says nothing about it.
-        #expect(!one(arrow()).caption.contains("degrees"))
+        #expect(turnable.caption == nil)
+        #expect(one(arrow()).caption == nil)
     }
 
-    @Test("With several picked the line says the angle lands on each of them")
+    @Test("With several picked the line says the angle is each layer's own")
     func captionForSeveral() {
         let a = rectangle(CGRect(x: 0, y: 0, width: 100, height: 50))
         let b = rectangle(CGRect(x: 0, y: 0, width: 100, height: 50))
         let sel = LayerGeometrySelection([member(a), member(b)])
-        #expect(sel.caption.contains("A each layer's own angle"))
+        #expect(sel.caption == LayerGeometrySelection.eachOwnSizeAndAngle)
     }
 
     // MARK: Pasting a number back in

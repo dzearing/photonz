@@ -395,14 +395,14 @@ struct PlacementInspector: View {
             && (!flow.canSetVertical || selection.vertical.follows)
         if following {
             return isOnAScreen
-                ? "These are all following the screen. Pick something here to give every one of "
-                    + "them the same rule."
-                : "These are all following the group. Pick something here to give every one of "
-                    + "them the same rule."
+                ? "All following the screen. Pick to override."
+                : "All following the group. Pick to override."
         }
+        // Not following: every row already shows its own pick, so the only
+        // thing left to say is whose rule these beat, which nothing shows.
         return isOnAScreen
-            ? "One pick here reaches every one of them, and wins over the screen's rule."
-            : "One pick here reaches every one of them, and wins over the group's rule."
+            ? "These win over the screen's rule."
+            : "These win over the group's rule."
     }
 
     // MARK: - What everything inside these groups does
@@ -517,10 +517,10 @@ struct PlacementInspector: View {
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            // What one pick here does, said ONCE at the foot of the whole
-            // block rather than at the end of every caption in it: the rows
-            // above it are three sentences already, and reading the same
-            // promise three times is how a panel starts sounding anxious.
+            // The reach promise that used to sit here went on 2026-09-14
+            // (UX-PATTERNS §4, "How much a section may say"): one pick reaching
+            // everything picked is what picking several things means. What is
+            // left is the case where it is NOT true, which nobody can see.
             if contents.flowsDiffer {
                 // The one case where these rows reach some of the picked groups
                 // differently from the rest, said out loud rather than left for
@@ -531,14 +531,6 @@ struct PlacementInspector: View {
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
                     .playtestControl("Layout note", detail: contents.flowsDifferNote)
-            } else if contents.count > 1, !showsFollowCaption {
-                // The line above already carries this where it is there. This
-                // is the same promise for the arranged case, where it is not.
-                Text("One pick or one number here reaches every one of them, in one step "
-                     + "that one undo puts back.")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
             exceptions()
         }
@@ -552,11 +544,8 @@ struct PlacementInspector: View {
     /// The line under the Contents rows for a group that arranges nothing.
     private var contentsCaption: String {
         guard contents.count == 1, let one = contents.groups.first else {
-            // This is the last line of the block, so it carries the reach as
-            // well and the section does not need a paragraph of its own for it.
             return "Everything inside these \(contents.plural) follows this when they are "
-                + "resized, unless a layer says otherwise for itself. One pick here reaches "
-                + "every one of them."
+                + "resized, unless a layer says otherwise for itself."
         }
         return one.isFrame
             ? "Everything on this screen follows this when the screen is resized, "

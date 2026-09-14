@@ -21,10 +21,14 @@ struct CanvasInspector: View {
                 Button("Canvas Size…") { editorState.isCanvasSizeDialogPresented = true }
                     .controlSize(.small)
                     .panelHelp("Numeric resize with a content-anchor picker")
+                    // Where the room a typed number adds actually goes. Said
+                    // here rather than in a line under the section, because it
+                    // is a thing these controls do.
             }
-            Text("Drag the canvas edges to add or trim space; content stays put on the side you didn't move. Fields grow to the right/bottom.")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            // The three gestures this used to spell out are what dragging an
+            // edge obviously does; the one thing you cannot see is which side
+            // the room comes off, and that is on the fields' own tips now
+            // (UX-PATTERNS §4, "How much a section may say", 2026-09-14).
             newSpaceRow
             if Experiments.shared.canvasGridEnabled {
                 Divider().padding(.vertical, 2)
@@ -80,7 +84,14 @@ struct CanvasInspector: View {
 
     private func dimensionField(_ label: String, _ value: Binding<Double>) -> some View {
         HStack(spacing: 4) {
+            // Which side a typed number adds the room to. It was the closing
+            // clause of a three line paragraph under the section; it is a thing
+            // these two fields do, so it belongs on them (UX-PATTERNS §4, "How
+            // much a section may say", 2026-09-14).
             Text(label).font(.caption).foregroundStyle(.secondary)
+                .panelHelp(label == "W"
+                           ? "Canvas width. A bigger number adds the room on the right."
+                           : "Canvas height. A bigger number adds the room at the bottom.")
             TextField(label, value: value,
                       format: .number.precision(.fractionLength(0)).grouping(.never))
                 .textFieldStyle(.roundedBorder)
@@ -162,9 +173,14 @@ struct CollageInspector: View {
                         }
                     }
                 }
-                Text("Drop photos from the history or Finder into a cell; drag a photo layer onto a cell to absorb it; drag between cells to swap.")
+                // One line, because a grid of empty cells does not say it is a
+                // drop target. The other two gestures it used to spell out
+                // (absorbing a layer, swapping two cells) are discovered by
+                // dragging, which is the gesture this line has already taught.
+                Text("Drop photos from the history or Finder into a cell.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 8)

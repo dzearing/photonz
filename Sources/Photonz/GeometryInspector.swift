@@ -180,12 +180,18 @@ struct GeometryInspector: View {
                 Color.clear.frame(maxWidth: .infinity, maxHeight: 1)
             }
             .panelStartProbe(.row, owner: "Angle")
-            Text(said ?? selection.caption)
-                .font(.caption2)
-                .foregroundStyle(said == nil ? AnyShapeStyle(.tertiary)
-                                             : AnyShapeStyle(.secondary))
-                .fixedSize(horizontal: false, vertical: true)
-                .animation(.easeOut(duration: 0.12), value: said)
+            // Most of the time there is no line here at all: the caption is
+            // nil unless something is missing or several layers are behaving in
+            // a way you cannot see (UX-PATTERNS §4, "How much a section may
+            // say"). An ANSWER still takes the line whenever there is one.
+            if let line = said ?? selection.caption {
+                Text(line)
+                    .font(.caption2)
+                    .foregroundStyle(said == nil ? AnyShapeStyle(.tertiary)
+                                                 : AnyShapeStyle(.secondary))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .animation(.easeOut(duration: 0.12), value: said)
+            }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
@@ -259,8 +265,14 @@ struct GeometryInspector: View {
     private func help(_ field: LayerGeometryField,
                       _ selection: LayerGeometrySelection) -> String {
         if let reason = selection.fixedReason(for: field) { return reason }
-        guard let note = selection.note(for: field) else { return field.title }
-        return "\(field.title). \(note)"
+        // The unit and the keyboard used to be the opening and closing of the
+        // line under the section, where they cost every selection a line of
+        // panel to say two things that never change. They are here now
+        // (UX-PATTERNS §4, "How much a section may say"), which is where what a
+        // control does has always belonged.
+        let parts = [field.title, selection.note(for: field), field.unitNote,
+                     LayerGeometryField.steppingNote].compactMap { $0 }
+        return parts.map { $0.hasSuffix(".") ? $0 : $0 + "." }.joined(separator: " ")
     }
 }
 

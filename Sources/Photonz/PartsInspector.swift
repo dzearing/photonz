@@ -117,13 +117,6 @@ struct PartsInspector: View {
                     .panelStartProbe(.row, owner: "Rounding note")
             }
             ArrowLabelPlacementReset()
-            if let caption {
-                Text(caption)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .panelStartProbe(.row, owner: "Appearance note")
-            }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
@@ -162,22 +155,6 @@ struct PartsInspector: View {
         }
     }
 
-    /// Said only when the list is speaking for more than one layer. Over a
-    /// single one every row means what it looks like it means, and a sentence
-    /// explaining that is a sentence in the way.
-    ///
-    /// It used to promise that everything here reached every picked layer,
-    /// full stop. That stopped being true the day a row only some of them have
-    /// started showing its colour: the Fill row over five boxes where three
-    /// are filled paints those three, and says so in its own line two lines
-    /// above this one. So the promise names its own exception rather than
-    /// being contradicted by the row above it.
-    private var caption: String? {
-        let count = editorState.colorStyleSelectionCount
-        guard count > 1 else { return nil }
-        return "\(count) layers. What you set here reaches every one of them, "
-            + "in one step, unless a row says underneath how many it reaches."
-    }
 }
 
 /// One part: its name, its switch, its colour, and its settings underneath.

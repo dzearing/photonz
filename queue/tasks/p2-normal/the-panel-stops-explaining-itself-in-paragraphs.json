@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 9.1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:31.708Z",
-  "updated": "2026-09-14T05:22:04.417Z",
+  "updated": "2026-09-14T08:18:21.477Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, from a real window capture taken by the loop on 2026-09-13, queue/audits/2026-09-13-building-ui-5-spaced-evenly.png, with three layers selected. Three grey paragraphs, seven lines between them:\n- Sources/Photonz/PartsInspector.swift:178, \"3 layers. What you set here reaches every one of them, in one step, unless a row says underneath how many it reaches.\"\n- Sources/Photonz/EffectsListInspector.swift:98, \"Nothing added yet. Use the plus above for a shadow, a glow, a border or a blur.\"\n- Sources/Photonz/ArrangeInspector.swift:60, \"3 layers line up with each other, not with the picture.\"\n\nWhy this is a card and not just a task. It has now been raised by two manager passes in a row (2026-09-09 threaded it as six lines on a copy's panel) and it cuts directly against a shipped decision: \"Room says what it will do\" deliberately PUT TWO OF THESE SENTENCES BACK on 2026-09-08. So somebody has to say which way it goes rather than a runner quietly reversing a choice the user made.\n\nThe room this is competing for is measured: the task two-panel-walks-are-failing-on-main counted 1,090 points of sections trying to fit a 688 point dock. Three walks (border-effect, glow-effect, label-fills-a-row) fail today because the control they want has been scrolled out of reach, so this is not only a taste question.\n\nNot the same thing as the section ordering cards. Those ask which section comes first; this asks how much each section is allowed to say once it gets there.\n\nQueue-driven app work targets the Next release, but these are shared files, so say in the audit what Current looks like afterwards.",
@@ -39,6 +39,75 @@
     {
       "t": "2026-09-14T05:22:04.416Z",
       "note": "seq 69 -> 9.1"
+    },
+    {
+      "t": "2026-09-14T07:16:08.784Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T07:18:18.856Z",
+      "note": "Decision resolved 'trim': one short line per section, and only when it earns it. Building that, not blocking."
+    },
+    {
+      "t": "2026-09-14T07:18:18.902Z",
+      "note": "Adversarial review, before building. (1) Walked it as a first-timer: pick three boxes, the Layers section already prints '3 layers selected' (LayersListView.multiSelectionCount, landed 2026-09-02), then Appearance spends three lines saying '3 layers' again and promising the change reaches all three. The panel is spending its room on what is already on screen, while the one thing you genuinely cannot see, what Arrange lines up AGAINST, is the last line on the panel and below the fold in a short window. So the defect is not only length, it is that the obvious is loud and the non-obvious is buried."
+    },
+    {
+      "t": "2026-09-14T07:18:18.947Z",
+      "note": "(2) Tried to break the trim. The real risk is the Appearance caption naming its own exception ('unless a row says underneath how many it reaches'). Checked: the exceptions are separate per-row notes (PartsInspector row.reachNote:268, corners.note:100, instanceRoundingNote:113, EffectsListInspector row.reachNote:198) and are drawn whether or not the caption is there, so dropping the caption loses no exception. Same for 'Spacing evenly needs three layers' in Arrange: the two dim buttons already carry it on hover (ArrangeInspector.spaceButton panelHelp)."
+    },
+    {
+      "t": "2026-09-14T07:18:18.993Z",
+      "note": "(3) Shortest version that delivers the same value: a scope that is NOT the selection belongs beside the section heading, not under it. InspectorPanel.sectionAccessory already does exactly this for Columns ('whose columns these are... beside the title so a collapsed section says it too'). Arrange can use the same idiom for 'in Hero' and spend zero lines."
+    },
+    {
+      "t": "2026-09-14T07:18:19.038Z",
+      "note": "(4) Where the earlier answer was overtaken: decision the-panel-says-once... resolved 'c, leave the words alone' on 2026-09-07. The user has now answered 'trim' on this card with that history stated in the context, so this is their reversal, not a runner quietly undoing it."
+    },
+    {
+      "t": "2026-09-14T07:51:34.537Z",
+      "note": "Walk checks: align (4/4 ok), panel (20/20 ok, incl. the new panel-says-less-walk), layout (4/4 ok), effect (12/13; effects-open-into-view-walk is flaky, 6 of 7 passes, folded into walks-that-fail-in-the-full-sweep), lens ok, blend ok. dock-picked-first-walk fails on BOTH trees and gets further with this change (step 41 -> step 73); folded into picking-a-plain-shape-leaves-the-panel-parked-on rather than filed."
+    },
+    {
+      "t": "2026-09-14T08:18:09.638Z",
+      "note": "Measured, Next, three layers picked, 1280x900 (dockSections from the panel's own probe). BEFORE: Layers 6-186, Appearance 186-464, Effects 464-707, Arrange 707-856, Position & Size 856-1044, against an 868 viewport, so 1,044 points of sections and 176 over. AFTER: Layers 6-186, Appearance 186-409, Effects 409-628, Arrange 628-743, Position & Size 743-892, so 892 points and 24 over. Per section: Appearance 278->223 (-55), Effects 243->219 (-24), Arrange 149->115 (-34), Position & Size 188->149 (-39). 152 points back, and dockHeadersInView gained Position & Size, so the last section's heading is on screen without scrolling for the first time in this state."
+    },
+    {
+      "t": "2026-09-14T08:18:09.686Z",
+      "note": "Measured, Current, same three layers: Layers 6-274, Color 274-415, Effects 415-573, Annotation 573-657, Shadow 657-762 BEFORE; Color 274-379, Effects 379-537, Annotation 537-621, Shadow 621-692 AFTER. 762 -> 692, 70 points back. Current does not have the parts list, the Effects list, Arrange or Placement (all three flags are releases: [.next]), so what it sees is Position & Size, Color, Shadow, Blending, Canvas, the Lens and the wand. Checked by running a walk against a probe with experiments.release set to current, then set back to next."
+    },
+    {
+      "t": "2026-09-14T08:18:09.745Z",
+      "note": "Left rough, not filed: the budget is written as about forty characters but only TESTED for the Position & Size lines, because those strings live in PhotonzCore where a test can reach them. The lines still written inline in the app layer are held to it by reading. A shared PanelNote view with the length assertion in it would fix that; it is an agent-legibility problem rather than something a person hits, so it goes here rather than in the queue."
+    },
+    {
+      "t": "2026-09-14T08:18:09.793Z",
+      "note": "Left rough, not filed: the Layout section's 'Everything inside these groups follows this when they are resized, unless a layer says otherwise for itself' is still two lines. It is one invisible fact so it earns a line, and I could not get it to one without dropping the 'unless a layer says otherwise' half, which is the part that stops it being a lie."
+    },
+    {
+      "t": "2026-09-14T08:18:09.842Z",
+      "note": "Deliberately NOT filed: X, Y, W and H no longer show px anywhere without hovering, because the unit was the opening words of the old Position & Size line and its only other home is the fields' tips. Putting px in the fields themselves costs no panel room but changes what a field shows while you are typing in it, so it is a UX call rather than a cleanup. It is evaluate question 2 and rough item 1 of the audit, where the user's reaction files it with their answer already in it, instead of me filing my guess at what they want."
+    },
+    {
+      "t": "2026-09-14T08:18:21.295Z",
+      "note": "Every grey section line in the panel, visited. DROPPED (the panel counting your selection back at you, which the Layers section already prints as 'N layers selected'): PartsInspector Appearance caption; EffectsListInspector caption; ArrangeInspector caption; the shared selectionCaption() and its three call sites (Annotation, Shadow, Text); PlacementInspector's 'One pick or one number here reaches every one of them'; the reach clause on its contents caption and on manyCaption; ColorStylePanel's Color caption (Current); two of the three cases of shadowReachNote (Current); the Position & Size caption's whole ordinary case."
+    },
+    {
+      "t": "2026-09-14T08:18:21.340Z",
+      "note": "SHORTENED to one line: Effects empty ('Nothing yet. Add one with the plus above.'); the Blending highlight note; CanvasInspector's collage drop paragraph; the Lens safety sentence; the Position & Size locked, empty and worked-out-for-you lines. MOVED to a hover tip rather than deleted: the unit and the arrow keys (every geometry field), which side canvas W and H add room to, the wand Tolerance sentence, the long lens safety sentence, the long locked reasons. ALREADY on a tip word for word, so dropping them lost nothing: the origin and the degrees (LayerGeometryField.title), the four effect kinds (the plus's tip), 'Spacing evenly needs three layers' (the two dim buttons)."
+    },
+    {
+      "t": "2026-09-14T08:18:21.386Z",
+      "note": "KEPT, and the rule says why: every note that REPORTS A CONDITION rather than describing the panel. row.reachNote in the parts list and the effects list, borderReachNote, the partial case of shadowReachNote, corners.note, instanceRoundingNote, unlinkNote, legibilityNote, the Center-straddles-the-edge note, flowsDifferNote, FrameColumns followsPadding and its footnote, GeometryInspector's Answer register. Those are shown only while the condition holds, they are the only place that state is said, and §4 says the budget does not cap them."
+    },
+    {
+      "t": "2026-09-14T08:18:21.431Z",
+      "note": "MOVED TO THE HEADER instead of a line: what Arrange lines up against. InspectorPanel.sectionAccessory(.arrange) now prints 'in Group' / 'in Hero' beside the heading, the same idiom Columns and Library already use, so it costs no line and is still said when the section is collapsed. Verified in a real capture: queue/audits/2026-09-14-panel-says-less-arrange-header.png."
+    },
+    {
+      "t": "2026-09-14T08:18:21.476Z",
+      "note": "Adversarial review of the BUILT thing, on the real app. (a) The single-layer case is the best of it: four numbers, no line, nothing to read. (b) The one honest loss is px, written up in the audit rather than quietly accepted. (c) I checked the empty Effects line on a real box with its Border taken off rather than trusting the code path: one line, reads right. (d) Current was worth checking: it still had TWO reach paragraphs (Color and Shadow) that Next never shows, from code paths the Next-only flags hide. Trimmed those too, which is the whole reason acceptance asked for it."
     }
-  ]
+  ],
+  "started": "2026-09-14T07:16:08.783Z"
 }

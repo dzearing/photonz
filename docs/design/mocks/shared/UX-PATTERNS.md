@@ -1,6 +1,16 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v1.7. §4 gains "What a key press says when it cannot act", the row
+**Status: v1.8. §4 gains "How much a section may say", the budget the line under
+a section never had: at most one short line, and only when it says something you
+cannot work out from what is already on screen. Written 2026-09-14 from the
+decision "How much should the right hand panel explain itself in words?",
+answered "One short line, and only when it earns it", after picking three layers
+printed seven lines of grey prose ahead of the controls in a panel already 176
+points over its own viewport. It supersedes the 2026-09-07 answer that left the
+words alone, names where a cut sentence goes instead (the control's hover tip,
+or the section header), and says which register the budget does NOT cap: a note
+that reports a condition, shown only while that condition holds. v1.7: §4 gains
+"What a key press says when it cannot act", the row
 the ladder never had: a key has nothing to dim, so either the canvas notice says
 what it could not do and names the way out, or something already on screen does
 and the key stays quiet, and there is a test for which. §3's Modal and toast
@@ -701,16 +711,57 @@ a section** below for the rule the line follows.)*
   not go past 260 px.") and into what a typed number clamps to, so the panel
   stops handing the flow a number it already knows will come back.
 
+#### How much a section may say
+
+**A section says at most ONE short line, and only when it earns it.** Settled
+2026-09-14 by the decision "How much should the right hand panel explain itself
+in words?", answered "One short line, and only when it earns it". Before that,
+picking three layers printed seven lines of small grey prose before you reached
+a control, in a panel already carrying 1,044 points of sections in an 868 point
+viewport. The rule below is what every section is now held to, and what the next
+section that wants to explain itself has to obey.
+
+- **A line earns its place only when it says something you CANNOT work out from
+  what is already on screen.** That is the whole test. Apply it before writing
+  the sentence, not after.
+- **Never repeat what the panel already says.** The Layers section prints
+  "3 layers selected" whenever more than one is picked. So no section repeats
+  the count, and none promises that a change reaches everything picked: that is
+  what picking several things means, in this app and in every other one.
+- **Never describe a control.** What a slider, a field or a button does belongs
+  in its hover tip, where it costs no room and is one pointer away. Keyboard
+  stepping, units and ranges belong there too.
+- **A limit, a scope that is not the selection, or a control that is missing
+  DOES earn a line**, because none of those can be seen. Prefer the section
+  HEADER for a scope: a word beside the heading costs no line at all and
+  survives the section being collapsed (`sectionAccessory` in
+  `InspectorPanel.swift` already does this for Columns and Library).
+- **One sentence, one line.** About forty characters at the panel's default
+  width. Two facts will not fit, and that is the point: the second one belongs
+  in a hover tip.
+- **An empty section still says one short line**, because a section with
+  nothing in it at all reads as broken.
+- **A CONDITION the panel is in is not section prose, and this budget does not
+  cap it.** A row speaking for three of five layers, colours that disagree, a
+  number kept while its row is hidden: those are readouts of state, said by the
+  row they belong to and shown only while that state holds. `row.reachNote`,
+  `corners.note`, `unlinkNote`, `legibilityNote` are all this register and all
+  stay.
+- **Nothing is deleted without a home.** Where a sentence was the ONLY place a
+  limit or a scope was written down, it moves to the control's hover tip or to
+  the section header before the line goes.
+
 #### The line under a section
 
 One line, one voice, and it was doing three jobs with no shared rule before
 2026-09-08. Settled here so the fourth use of it does not invent a fourth
 answer.
 
-- **At rest it is the section's CAPTION**: what these controls mean, how many of
-  the picked things they reach, and how to work them. `caption`,
-  `shadowReachNote`, `borderReachNote`,
-  `ComponentKnobSelection.differentComponentsNote` are all this register.
+- **At rest it is the section's CAPTION**: what these controls mean and, where
+  it is not obvious, what they reach. `caption`, `shadowReachNote`,
+  `borderReachNote`, `ComponentKnobSelection.differentComponentsNote` are all
+  this register. How much it may say is the budget directly above; the register
+  rules below are about which message wins the line and how long it stays.
 - **The caption describes only controls that are actually there.** It promised
   "Up or down arrow steps by 1, Shift by 10" while three of the four numbers
   were plain text and only one of them stepped (audit
