@@ -1,0 +1,45 @@
+{
+  "out": "/tmp/photonz-playtest/icon-keylines-walk",
+  "setup": { "forget": ["shapes", "frames"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-empty", "note": "a 24 pixel icon frame with nothing drawn on it: the 20 x 20 live area and the two center lines are already there" },
+    { "do": "snapshot", "name": "icon-keylines-1-empty" },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [793, 543], "to": [807, 557] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-drawn", "note": "a 14 pixel circle drawn inside the 20 x 20 live area: the dashes stay on top of it" },
+    { "do": "snapshot", "name": "icon-keylines-2-drawn" },
+    { "do": "render", "name": "icon-keylines-2-drawn-doc" },
+    { "do": "writeSVG", "name": "icon-keylines-2-drawn" },
+
+    { "do": "action", "action": "hideIconKeylines" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-off", "note": "View, Show Icon Keylines off: the frame is a plain square again and the circle is untouched" },
+    { "do": "snapshot", "name": "icon-keylines-3-off" },
+
+    { "do": "action", "action": "showIconKeylines" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-back", "note": "back on, in the same place" },
+    { "do": "snapshot", "name": "icon-keylines-4-back" },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "Desktop" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.4 },
+    { "do": "describe", "stage": "5-screen", "note": "a desktop screen beside the icon: a screen is not an icon, so it draws no live area at all" },
+    { "do": "snapshot", "name": "icon-keylines-5-screen" },
+    { "do": "render", "name": "icon-keylines-5-screen-doc" }
+  ]
+}

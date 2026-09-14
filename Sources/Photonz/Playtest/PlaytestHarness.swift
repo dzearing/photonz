@@ -1889,6 +1889,10 @@ private final class Run {
             case .toggleGrid: editor.toggleCanvasGrid()
             case .showGrid: if !editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
             case .hideGrid: if editor.canvasGrid.isVisible { editor.toggleCanvasGrid() }
+            case .showIconKeylines:
+                if !editor.iconKeylinesShowing { editor.toggleIconKeylines() }
+            case .hideIconKeylines:
+                if editor.iconKeylinesShowing { editor.toggleIconKeylines() }
             case .adjustGrid: editor.beginGridAdjustment()
             case .showGridSettings: editor.showGridSettings()
             case .selectCanvas: editor.selectCanvas()
@@ -6341,6 +6345,7 @@ private final class Run {
             // answers "does the pull match the picture" for the OTHER thing a
             // person might call a grid.
             "columns": canvas?.playtestColumnReport ?? "no canvas",
+            "iconKeylines": canvas?.playtestIconKeylineReport ?? "no canvas",
             // The named colors in the document, and what each one paints, so a
             // walk can prove an edit to a style reached everything wearing it.
             "styles": (editor.document?.colorStyles ?? []).map {

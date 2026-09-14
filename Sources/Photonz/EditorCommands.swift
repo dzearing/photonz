@@ -818,6 +818,22 @@ struct EditorCommands: Commands {
                 .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false)
                           || (editor?.isAdjustingGrid ?? false))
             }
+            // The space an icon has to live inside (Next, `next-icon-frames`).
+            // Here rather than on Layer because it is the same kind of thing
+            // the grid above it is: how you like to draw, kept between
+            // launches, true of every icon frame at once. Nothing else shapes
+            // it, because the frame's size already says what the margin is.
+            //
+            // Dimmed when nothing in the document is the size an icon is drawn
+            // at: a tick beside a row that plainly changes nothing on screen
+            // is worse than a row that says there is nothing to change.
+            if Experiments.shared.iconFramesEnabled {
+                Divider()
+                Toggle(MenuToggleNames.iconKeylines, isOn: Binding(
+                    get: { editor?.iconKeylinesShowing ?? false },
+                    set: { _ in editor?.toggleIconKeylines() }))
+                .disabled(!hasDocument || !(editor?.hasIconFrames ?? false))
+            }
             Divider()
         }
         // There is no Help menu until this: macOS supplies a default one whose

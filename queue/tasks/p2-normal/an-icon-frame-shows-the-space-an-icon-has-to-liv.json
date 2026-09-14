@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 9.4,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T05:21:14.625Z",
-  "updated": "2026-09-14T05:22:04.554Z",
+  "updated": "2026-09-14T11:22:00.182Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The icon-grid epic names keylines and this is the half of it nobody has built: queue/audits/2026-09-13-icon-frames.json says plainly 'Nothing about the icon here knows it is an icon: no keylines, no live area, no snapping to whole pixels, no preview at size', and that the frames slice was narrowed on purpose. The preview half is already its own task (see-an-icon-at-the-size-it-will-really-be-used, answered on a card as the strip option), so this task is the live area and the lines only.\n\nReference: docs/design/mocks/pages/icon-draw-wt.html draws a 24 unit artboard with a 20 by 20 live area and calls that the icon canvas. Icon presets are Sources/PhotonzCore/Frames.swift:46 (16/24/32/48/64/512); the grid overlay the Pen already snaps to is the nearest existing drawing code to copy from. Flag: next-icon-frames.\n\nWhich keylines beyond the live area (a circle, a square, a wide and a tall rectangle, the classic four) is a visual judgment. Build the live area, and if the keyline set is not obvious once you are looking at it, ship the live area and open a decision for the rest rather than guessing a grid.",
@@ -29,6 +29,40 @@
     {
       "t": "2026-09-14T05:22:04.553Z",
       "note": "seq 2680 -> 9.4"
+    },
+    {
+      "t": "2026-09-14T11:00:14.211Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T11:01:54.673Z",
+      "note": "Adversarial review, before building. (1) The mock (icon-draw-wt.html) makes the keylines a GRID KIND: a Grid row in the panel whose value is 'Icon · 24 units', plus separate Keylines and Snap switches, plus snapping to keylines. Building that literally means a THIRD thing in this app called a grid, next to the canvas grid (a spacing, a view preference) and a screen's columns (a count and a gutter, saved with the document). docs already say the surest way to keep those two apart is that each keeps its own word and its own place; a third would undo that. Rejected. (2) The frame's SIZE already says everything the live area needs, so the shortest version has nothing to configure: any frame that is icon sized draws its own live area, automatically, the moment it exists. Nothing to learn, nothing to set, and it is there before you draw, which is what the task asks for. (3) Cut as decorative: the mock's dot pattern inside the live area, and its 24 unit minor/major ruling, which is the canvas grid's job and already exists. (4) The keyline SHAPES (the mock's 18x18 square and 17.2 circle) are the optical sizing contract and a real visual judgment, exactly as the task says: deferring those to a decision and shipping the live area plus the two center lines, which no icon grid disagrees about and which the mock itself leans on ('x = 12 is the artboard center line'). (5) Risk taken knowingly: a 512 app icon is not laid out on a 20/24 live area (a macOS squircle is nearer 80 percent), so one rule is slightly wrong there. One rule beats two; going in the audit's rough list."
+    },
+    {
+      "t": "2026-09-14T11:21:44.369Z",
+      "note": "Shipped. Core: Sources/PhotonzCore/IconKeylines.swift (margin = a twelfth of the frame on whole points, so 24 gives the 20x20 live area, 16 gives 14, 512 gives 426; the two center lines; nil for anything that is not icon shaped or is too small for a margin anybody can see) plus PhotonzDocument.hasIconFrames. 10 tests in Tests/PhotonzCoreTests/IconKeylineTests.swift, written first. App: CanvasIconKeylines.swift draws it as chrome on its own CALayer, IconKeylinesStore is the one preference behind it, View menu carries the single switch (MenuToggleNames.iconKeylines), and the playtest harness gained showIconKeylines/hideIconKeylines plus an iconKeylines report line. Walk: Scripts/playtest/icon-keylines-walk.json."
+    },
+    {
+      "t": "2026-09-14T11:21:44.417Z",
+      "note": "Adversarial review AFTER building, on the real app, and two things it changed. (1) The first version drew violet dashes alone and the center lines VANISHED the moment a shape was drawn across them, which is the one place a guide has to survive: checking your drawing against the margin is the whole feature. Added a wider casing stroke underneath in the opposite tone, invisible on the frame's own paint and what keeps the dashes readable over anything drawn on it. Confirmed in queue/audits/2026-09-14-icon-keylines-2-drawn.png. (2) A new icon frame arrives SELECTED, so the first thing anybody ever sees is these dashes beside the selection outline's, and at the first attempt the two fine even rhythms read as one system. The guides now use a long dash with a short gap, which separates them; still two dashed rectangles at once, and that is in the audit's rough list."
+    },
+    {
+      "t": "2026-09-14T11:21:44.463Z",
+      "note": "How each acceptance item was actually checked, not assumed. (1) Live area: unit tests for every icon size, and the real window at 3200% shows the inset square on a 24 frame. (2) Never in the picture: decoded both the document render and the exported SVG pixel by pixel, and neither carries a single violet pixel; the SVG holds two <image> tags and no vector elements at all, the 48x48 one being the frame at 2x with nothing but white and the red circle in it. (3) The switch sticks: the walk harness reports which remembered settings a walk changed on disk. A walk that makes NO frame and only hides the keylines is reported as changing the frames settings group; a walk that touches nothing is reported as leaving every setting as it found it. So the switch is written to the app settings rather than held in memory. (4) The margin is there before anything is drawn: first shot of the walk, an empty frame. Tests 6477 pass, 23 walks run (icon, frames, columns, grid-visible) all pass."
+    },
+    {
+      "t": "2026-09-14T11:21:44.511Z",
+      "note": "left rough, under the follow-up bar so not filed: a 512 app icon takes the same 20-out-of-24 proportion as every other size, while a macOS app icon is really laid out nearer 80 percent inside a squircle. One rule was preferred to two, and nobody drawing an app icon is stopped by it. Also left rough: an icon frame under 24 points on screen draws no guides at all rather than a smudge, which is right but happens without saying so."
+    },
+    {
+      "t": "2026-09-14T11:21:44.558Z",
+      "note": "Filed one follow-up, which is the one the task itself asked for: 'An icon frame shows the shapes a set is drawn to', with a decision card and a plain-language brief at queue/decisions/. The keyline SHAPES (the square and circle that make a round glyph and a boxy one look the same size) are a look-at-it judgment, so the card asks the user which set they want rather than guessing one. That task is blocked on the card; the option meaning do not build it carries declines so an answer of no retires it."
+    },
+    {
+      "t": "2026-09-14T11:22:00.180Z",
+      "note": "An icon frame draws the margin every glyph keeps inside plus its two center lines, automatically, from the frame's size alone: 24 reads as 20x20, 16 as 14x14. Core arithmetic in PhotonzCore/IconKeylines.swift with 10 tests written first; drawn as chrome in CanvasIconKeylines.swift; one preference switch on View, Show Icon Keylines. Verified: 6477 tests green, 23 walks pass, the document render AND an exported SVG both decoded and neither holds a guide pixel, and the switch proven to reach the app's settings rather than memory. Audit queue/audits/2026-09-14-icon-keylines.json with three real window captures. The keyline shapes are a follow-up on a decision card."
     }
-  ]
+  ],
+  "started": "2026-09-14T11:00:14.210Z",
+  "completed": "2026-09-14T11:22:00.181Z"
 }

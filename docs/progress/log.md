@@ -14927,3 +14927,58 @@ them rather than a bulk edit. Audit:
 **Next.** The daily digest already reports open-task counts per priority, so the
 effect is measured without a new task. If the queue is not under twenty in a
 week, the next lever is triage dropping harder, not another rule.
+
+## 2026-09-14 — An icon frame shows the space an icon has to live inside
+
+**What changed.** A frame made at an icon size is no longer a blank square. It
+draws the margin every glyph in a set has to keep its drawing inside, plus the
+two lines through its middle, before anything has been drawn on it. A 24 pixel
+frame reads as a 20 by 20 live area; the margin is a twelfth of the frame on
+whole points, so 16 gives 14 by 14 and 512 gives 426 by 426. There is nothing
+to configure: the frame's size already says what the margin is, so an icon frame
+draws its own the moment it exists. One switch, View ▸ Show Icon Keylines, is a
+preference rather than anything a document carries, so it holds across every
+frame and every launch.
+
+Chrome, never content. `IconKeylines` (PhotonzCore) is the arithmetic,
+`CanvasIconKeylines.swift` draws it on its own layer above the picture and below
+every piece of chrome, and the renderer knows nothing about any of it.
+
+**Where the mock was not followed.** `icon-draw-wt.html` makes the keylines a
+GRID KIND — a Grid row whose value is "Icon · 24 units", its own Keylines and
+Snap switches, snapping to keylines. Building that literally means a third thing
+in this app called a grid, beside the canvas grid and a screen's columns, and the
+design docs are explicit that the two are told apart by each keeping its own word
+and its own place. Rejected in favour of the shortest version that carries the
+value: the size decides, nothing to set. The mock's dot pattern and its 24 unit
+ruling were cut as decorative — the second is the canvas grid's job and already
+exists.
+
+**Verified.** `Scripts/test.sh` green, 6477 tests, ten of them new and written
+first. 23 walks run across icon, frames, columns and grid-visible, all pass, and
+`Scripts/playtest/icon-keylines-walk.json` is new. The "never in the picture"
+claim was checked rather than assumed: the document render and an exported SVG
+were both decoded and neither holds a single violet pixel, the SVG carrying two
+`<image>` tags and no vector elements at all. The switch's persistence was
+checked the same way — a walk that makes no frame and only hides the guides is
+reported by the harness as changing the frames settings group on disk, while a
+walk that touches nothing is reported as leaving every setting alone. A whole
+sweep was requested, since the change adds one parameter to the canvas's shared
+apply path.
+
+**Rough.** Two things came out of using it rather than reading it. The first
+version drew violet dashes alone and the center lines vanished the moment a
+shape was drawn across them, which is the one place a guide has to survive; they
+now carry a casing stroke underneath in the opposite tone. And a new icon frame
+arrives selected, so the first thing anybody sees is these dashes beside the
+selection outline's own, which at the first attempt read as one system; the
+guides now use a longer dash rhythm, though they are still two dashed rectangles
+at once. Nothing snaps to any of this yet. A 512 app icon takes the same
+proportion as every other size while a real macOS app icon is nearer 80 percent
+inside a squircle: one rule was preferred to two. Audit:
+`queue/audits/2026-09-14-icon-keylines.json`.
+
+**Next.** The shapes a set is really drawn to — the square and the circle that
+make a round glyph and a boxy one look the same size — are filed as "An icon
+frame shows the shapes a set is drawn to" and blocked on a decision card, because
+which shapes belong on the frame is a look-at-it judgment rather than a guess.

@@ -1,0 +1,51 @@
+{
+  "id": "an-icon-frame-shows-the-shapes-a-set-is-drawn-to-an-icon-frame-now-shows-the-marg",
+  "taskId": "an-icon-frame-shows-the-shapes-a-set-is-drawn-to",
+  "question": "An icon frame now shows the margin a glyph has to stay inside. Which shapes should it show as well?",
+  "context": "Shipped today: an icon frame draws a margin (20 by 20 inside a 24 pixel frame) and the two lines through its middle. The question is only what else goes on it. Full write-up in the brief.",
+  "options": [
+    {
+      "id": "four",
+      "label": "The classic four",
+      "summary": "A square, a circle, a wide rectangle and a tall one, all drawn inside the margin at once, in the same faint dashes. Whichever one your glyph is shaped like, its outline is already on the frame to draw against.",
+      "pros": [
+        "Covers every shape a glyph can be, so you never meet an icon the frame has no answer for",
+        "The set every mainstream icon library is built to, so an icon drawn here fits beside icons drawn anywhere else"
+      ],
+      "cons": [
+        "Four outlines stacked in one small square is a lot of dashes to look past while you draw"
+      ],
+      "mitigation": "They are the faintest thing on the canvas, they sit under everything you draw, and the one View menu switch takes all of them away at once."
+    },
+    {
+      "id": "two",
+      "label": "Just the square and the circle",
+      "summary": "Two shapes instead of four: the square a boxy glyph fills, and the slightly larger circle a round one fills. The pair that makes a round glyph and a square one look the same size.",
+      "pros": [
+        "Much quieter to draw against than four",
+        "It is the pair that carries almost all of the effect, since round against square is where sizes disagree most"
+      ],
+      "cons": [
+        "A long thin glyph, an arrow or a bar, has no outline of its own to aim at"
+      ],
+      "mitigation": "The margin is still there for those, and the two center lines already say where the middle is."
+    },
+    {
+      "id": "none",
+      "label": "Nothing more, the margin is enough",
+      "summary": "Leave the frame as it is now: the margin and the two center lines, nothing else. No extra shapes are built.",
+      "pros": [
+        "The quietest possible frame to draw on",
+        "Nothing more to learn or to switch off"
+      ],
+      "cons": [
+        "A round glyph drawn to the margin will keep looking smaller than a square one drawn to the same margin, and nothing on screen explains why"
+      ],
+      "mitigation": "",
+      "declines": true
+    }
+  ],
+  "recommended": "two",
+  "status": "pending",
+  "created": "2026-09-14T11:17:07.997Z"
+}

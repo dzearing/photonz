@@ -30,6 +30,12 @@ public enum MenuToggleNames {
     /// column that holds several.
     public static let panel = PanelCopy.menuItem
     public static let library = "Show Library"
+    /// The space an icon has to live inside, on any frame the size an icon is
+    /// drawn at (`next-icon-frames`). On the View menu with the grid, because
+    /// like the grid it is a view preference rather than anything a document
+    /// carries: one switch covers every icon frame in every window. Named for
+    /// the thing icon designers already call it.
+    public static let iconKeylines = "Show Icon Keylines"
 
     // MARK: Layer menu
 
@@ -52,7 +58,7 @@ public enum MenuToggleNames {
     /// Every on/off item in the app, so a test can hold them all to the same
     /// standard and a new one added without a name here shows up as a gap.
     public static let all: [String] = [
-        grid, snapToGrid, panel, library, showColumns, history,
+        grid, snapToGrid, panel, library, iconKeylines, showColumns, history,
         layerVisible, layerLocked,
     ]
 }

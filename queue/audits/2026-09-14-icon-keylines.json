@@ -1,0 +1,31 @@
+{
+  "feature": "An icon frame shows the space an icon has to live inside",
+  "epic": "icon-grid",
+  "summary": "Make a frame at an icon size and it is no longer a blank square: the margin every glyph in a set has to stay inside is drawn on it, with the two lines through its middle, before you draw anything. A 24 pixel frame reads as a 20 by 20 live area. The guides are drawn over your work and never into it.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"Make a frame the size of an icon\" and it is on by default. Nothing to switch on for the guides themselves.",
+  "try": [
+    { "do": "Open a blank document, choose Layer and New Frame, click 24 in the Icons row, then Add Frame.", "shot": "2026-09-14-icon-keylines-1-empty.png" },
+    { "do": "Look at the frame before drawing: a dashed square inset from the edge, and two dashed lines crossing in the middle." },
+    { "do": "Draw an ellipse that fills the dashed square.", "shot": "2026-09-14-icon-keylines-2-drawn.png" },
+    { "do": "Notice the dashes stay readable where they cross the shape you just drew." },
+    { "do": "Choose View and untick Show Icon Keylines.", "shot": "2026-09-14-icon-keylines-3-off.png" },
+    { "do": "Tick it again, then make a second icon frame at 48: it has the margin too, four pixels in instead of two." },
+    { "do": "Make a Desktop frame beside them: a screen draws no margin at all." },
+    { "do": "Export or copy the icon frame and look at what comes out: the artwork alone." }
+  ],
+  "evaluate": [
+    "A 24 pixel frame gives a 20 by 20 margin, and a 16 pixel one gives 14 by 14 rather than a fractional 13.3. Whole pixels or exact proportion, which do you want?",
+    "Does the margin read as a guide at a glance, or does it read as part of the selection sitting next to it?",
+    "Is violet the right ink, next to the canvas grid's grey and a screen's red columns?",
+    "The center lines run edge to edge of the frame rather than stopping at the margin. Right call?",
+    "Is one switch on the View menu enough, or did you look for this somewhere else first?"
+  ],
+  "rough": [
+    "The shapes a set is really drawn to, the square and the circle that make a round glyph and a boxy one look the same size, are not here. That was deliberate: which shapes belong on the frame is a look-at-it judgment, so it is a card for you to answer rather than a guess. Filed as \"An icon frame shows the shapes a set is drawn to\", blocked on that card.",
+    "A 512 app icon gets the same 20 out of 24 proportion as everything else, and a macOS app icon is really laid out nearer 80 percent with a squircle. One rule was preferred to two. Left in this task's log rather than filed: nobody drawing an app icon is stopped by it.",
+    "The margin is the same violet dashes whether or not the frame is selected, and a just made frame arrives selected, so the first thing anybody sees is these dashes right beside the selection's own. The dash rhythm was made deliberately longer than the selection's after seeing it, which separates them, but they are still two dashed rectangles at once.",
+    "Nothing snaps to any of this yet. The guides say where the drawing should go; they do not pull a drag there. That is the snapping half of the icon-grid epic and is not started.",
+    "An icon frame smaller than 24 points on screen draws nothing rather than a smudge, so zooming out until an icon is a speck takes the guides away. Correct, but it happens without saying so.",
+    "Screen Recording was granted for this run, so every shot above is the real window."
+  ]
+}

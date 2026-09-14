@@ -1,0 +1,32 @@
+{
+  "id": "an-icon-frame-shows-the-shapes-a-set-is-drawn-to",
+  "title": "An icon frame shows the shapes a set is drawn to",
+  "goal": "An icon frame now draws the margin every glyph keeps inside, and the two lines through its middle. What it does not draw is the handful of shapes a set uses to make things LOOK the same size even when they are not: a square glyph has to be a little smaller than a round one or the round one looks shrunken. Which of those shapes belong on the frame is a look-at-it judgment, so it is a card for the user rather than a guess.",
+  "epic": "icon-grid",
+  "priority": "p2-normal",
+  "seq": 2720,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T11:16:55.818Z",
+  "updated": "2026-09-14T11:17:15.592Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The live area and the center lines landed in Sources/PhotonzCore/IconKeylines.swift and Sources/Photonz/CanvasIconKeylines.swift; the shapes go in the same two files, as more entries on IconKeylineGuides and more subpaths on the same CGPath, so they inherit the casing, the ink and the switch for free. The mock (docs/design/mocks/pages/icon-draw-wt.html) draws an 18x18 square and a 17.2 circle inside a 24 unit artboard; Material Design uses 18x18 square, 20 circle, and 20x16 and 16x20 rectangles. Walk to extend: Scripts/playtest/icon-keylines-walk.json. Blocked on the decision card until the user answers.",
+  "acceptance": [
+    "The shapes the user picked on the card are drawn on every icon frame, scaled to the frame, in the same ink and dash as the live area.",
+    "They turn off and on with the same View menu switch the live area uses, not a second one.",
+    "They stay out of the picture: a render and an SVG export of the frame come back with the artwork alone.",
+    "Try it: New Frame, Icons, 24. Draw a circle that touches the circle shape and a square that touches the square one, and the two read as the same size."
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T11:16:55.820Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T11:17:15.590Z",
+      "note": "waiting on the card: which shapes beyond the margin an icon frame should draw"
+    }
+  ]
+}

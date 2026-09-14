@@ -230,6 +230,9 @@ struct CanvasView: NSViewRepresentable {
     let isCanvasSelected: Bool
     /// The canvas grid to draw, or nil for the canvas exactly as it was.
     let canvasGrid: CanvasGridSettings?
+    /// Whether an icon frame draws the space an icon has to live inside
+    /// (Next, `next-icon-frames`).
+    let iconKeylines: Bool
     /// Where the grid counts from, in document points. It comes from the
     /// DOCUMENT, or from the marker being held while the grid is adjusted.
     let canvasGridOrigin: CGPoint
@@ -282,7 +285,8 @@ struct CanvasView: NSViewRepresentable {
                    measureCandidateLevel: measureCandidateLevel,
                    measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
                    lumaField: lumaField, isCanvasSelected: isCanvasSelected,
-                   canvasGrid: canvasGrid, canvasGridOrigin: canvasGridOrigin,
+                   canvasGrid: canvasGrid, iconKeylines: iconKeylines,
+                   canvasGridOrigin: canvasGridOrigin,
                    canvasGuides: canvasGuides, selectedGuideID: selectedGuideID,
                    gridAdjust: gridAdjust)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
@@ -615,6 +619,14 @@ final class CanvasNSView: NSView {
     /// path holding every band of every screen showing them. See
     /// `CanvasColumnChrome.swift`.
     let columnChromeLayer = CAShapeLayer()
+    /// The space an icon has to live inside (Next, `next-icon-frames`): one
+    /// dashed sublayer per icon frame showing its live area and center lines.
+    /// See `CanvasIconKeylines.swift`.
+    let iconKeylineLayerGroup = CALayer()
+    /// Whether icon frames draw their guides, echoed from `EditorState`. A
+    /// view preference rather than anything a document carries, so one switch
+    /// covers every frame in every window.
+    var iconKeylines = false
     /// A frame's name, above its top left corner: one text sublayer per frame.
     let frameChromeLayer = CALayer()
     /// The hairline at every frame's edge, so a screen has a visible boundary
@@ -1614,6 +1626,13 @@ final class CanvasNSView: NSView {
         columnChromeLayer.strokeColor = nil
         columnChromeLayer.isHidden = true
         layer?.addSublayer(columnChromeLayer)
+
+        // The icon guides sit exactly where the column bands do, and for the
+        // same reason: over everything drawn, so the margin survives the white
+        // an icon frame paints itself, and under every piece of chrome, so a
+        // selection outline or a handle is never seen through a dash.
+        iconKeylineLayerGroup.isHidden = true
+        layer?.addSublayer(iconKeylineLayerGroup)
 
         // The grid sits on the canvas surface, and which side of the picture
         // that is depends on whether it is switched on over it: see

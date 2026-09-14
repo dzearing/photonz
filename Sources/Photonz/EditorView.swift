@@ -403,6 +403,7 @@ struct EditorView: View {
                        },
                        isCanvasSelected: editorState.isCanvasSelected,
                        canvasGrid: editorState.drawnCanvasGrid,
+                       iconKeylines: editorState.iconKeylinesShowing,
                        canvasGridOrigin: editorState.canvasGridOrigin,
                        canvasGuides: editorState.canvasGuides,
                        gridAdjust: editorState.gridAdjustment?.origin,

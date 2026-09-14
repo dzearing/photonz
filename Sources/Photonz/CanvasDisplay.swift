@@ -36,11 +36,13 @@ extension CanvasNSView {
                edgeMap: EdgeMap, lumaField: LumaField,
                isCanvasSelected: Bool,
                canvasGrid: CanvasGridSettings?,
+               iconKeylines: Bool,
                canvasGridOrigin: CGPoint,
                canvasGuides: [CanvasGuide],
                selectedGuideID: UUID?,
                gridAdjust: CGPoint?) {
         self.canvasGrid = canvasGrid
+        self.iconKeylines = iconKeylines
         self.canvasGridOrigin = canvasGridOrigin
         self.canvasGuides = canvasGuides
         self.selectedGuideID = selectedGuideID
@@ -814,6 +816,7 @@ extension CanvasNSView {
         cornerRadiusHandlesLayer.isHidden = true
         refreshGroupContextOutline()
         refreshColumnChrome()
+        refreshIconKeylineChrome()
         refreshFrameChrome()
         refreshComponentChrome()
         // Placing the grid's zero point: nothing on the canvas is selected, so

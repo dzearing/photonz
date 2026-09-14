@@ -242,7 +242,8 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// how often one of them is stronger, and whether it draws rows as well as
     /// columns.
     case grid
-    /// The size a new frame is offered at, which is the last one chosen.
+    /// The size a new frame is offered at, which is the last one chosen, and
+    /// whether an icon frame draws the space an icon has to live inside.
     case frames
     /// Which guides have been finished and where you stopped in any left part
     /// way. A walk that photographs the Tutorials window forgets this first, or
@@ -566,6 +567,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the grid on the way a person does — without touching the Canvas row,
     /// which is the whole point of the settings being reachable elsewhere.
     case toggleGrid
+    /// View ▸ Show Icon Keylines (Next, `next-icon-frames`): the space an icon
+    /// has to live inside, on every icon frame at once. Put them ON, or OFF,
+    /// whichever they already are, so a walk starts from something it can rely
+    /// on rather than from what the last walk left behind.
+    case showIconKeylines, hideIconKeylines
     /// Put the grid ON, or OFF, whichever it already is. `toggleGrid` flips,
     /// which leaves a walk's outcome depending on what the last walk left
     /// behind; these two make a starting point a walk can rely on.
