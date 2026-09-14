@@ -139,7 +139,7 @@ manager_pass() { # $1 = ready task count (for the log)
   banner "**Go loop** manager pass: assessing the app against the objectives and filing the next tasks"
   state busy
   touch "$MANAGER_STAMP"
-  run_runner "$(cat queue/bin/manager-prompt.md)"
+  run_runner "$(cat queue/bin/manager-prompt.md; echo; cat queue/bin/follow-up-bar.md)"
   local rc=$?
   record_exit - "$rc"
   # The objectives as they stand now are what this pass acted on, its own
@@ -342,7 +342,7 @@ while :; do
     Q busy "running daily digest + triage"
     banner "**Go loop** running daily digest + triage for $TODAY"
     state busy
-    run_runner "$(cat queue/bin/digest-prompt.md)"
+    run_runner "$(cat queue/bin/digest-prompt.md; echo; cat queue/bin/follow-up-bar.md)"
     DIGEST_EXIT=$?
     record_exit - "$DIGEST_EXIT"
     if [[ -n "$REASON" ]]; then
@@ -392,7 +392,7 @@ while :; do
   banner "**Go loop** working: $TASK_TITLE ($TASK_ID)"
   state busy
 
-  run_runner "$(cat queue/bin/runner-prompt.md)
+  run_runner "$(cat queue/bin/runner-prompt.md; echo; cat queue/bin/follow-up-bar.md)
 
 TASK FILE: $TASK_FILE"
   EXIT=$?

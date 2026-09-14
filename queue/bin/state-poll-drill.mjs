@@ -6,7 +6,10 @@
 // history, which was three megabytes a poll and got worse with every task ever
 // filed. This drill holds the poll to what a LIST needs, and holds the two
 // endpoints that make that possible honest: one task's own record, and search.
-// Run it after touching aggregateState, taskRow, readTaskDetail or searchTasks.
+// Run it after touching aggregateState, taskRow, readTaskDetail, searchTasks,
+// searchTaskRows or noteTask. The last three are also what the follow-up bar
+// stands on (queue/bin/follow-up-bar.md): a runner that cannot find the task
+// already covering its finding files a near-twin instead.
 //
 //   node queue/bin/state-poll-drill.mjs
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
@@ -88,6 +91,30 @@ check('a word in the checklist is found', lib.searchTasks('second thing').join()
 check('titles still match, and case does not matter', lib.searchTasks('A DONE TASK').join() === 'a-done-task');
 check('an empty query matches nothing rather than everything', lib.searchTasks('   ').length === 0);
 check('a word nobody wrote matches nothing', lib.searchTasks('zzzzz').length === 0);
+// The words somebody would search are the words of the problem, which almost
+// never sit next to each other in the record. Phrase first, then widen.
+check('words in any order find the task when the phrase does not', lib.searchTasks('parsnips goal plain').join() === 'a-real-task', lib.searchTasks('parsnips goal plain'));
+check('widening still needs every word', lib.searchTasks('parsnips zzzzz').length === 0);
+
+console.log('search rows, and folding a finding into the task that already covers it');
+const { rows: openRows } = lib.searchTaskRows('task');
+check('the default is the OPEN queue only', openRows.every((r) => r.status !== 'done' && r.status !== 'dropped') && openRows.some((r) => r.id === 'a-real-task'), openRows.map((r) => r.id).slice(0, 5));
+check('--all reads the finished ones too, for a regression', lib.searchTaskRows('A DONE TASK', { all: true }).rows.map((r) => r.id).join() === 'a-done-task');
+check('an exact match says it is exact', lib.searchTaskRows('parsnips').mode === 'exact');
+check('a widened match says so, so nobody reads coincidence as a hit', lib.searchTaskRows('parsnips plain goal').mode === 'widened', lib.searchTaskRows('parsnips plain goal').mode);
+check('a row carries what decides whether it covers your finding', (() => { const r = openRows.find((x) => x.id === 'a-real-task'); return r && r.title === 'A real task' && r.priority === 'p1-high' && r.epic === 'unmanned-loop' && r.goal === 'Plain language goal.'; })());
+check('rows come back in claim order, most urgent first', lib.PRIORITIES.indexOf(openRows[0].priority) <= lib.PRIORITIES.indexOf(openRows[openRows.length - 1].priority));
+const noted = lib.noteTask('a-parked-task', 'also happens in the effects panel');
+check('a folded finding lands in that task log and nothing else moves', noted.log[noted.log.length - 1].note === 'also happens in the effects panel' && noted.status === 'pending', noted.status);
+check('the note is on disk, and search can read it back', lib.searchTasks('effects panel').join() === 'a-parked-task');
+check('a near-twin with none of the same title words is still found', lib.similarTasks('parsnips in the plain language goal').some((r) => r.id === 'a-real-task'), lib.similarTasks('parsnips in the plain language goal'));
+check('a title about something else is not a near-twin', lib.similarTasks('export an animated svg from the timeline').length === 0, lib.similarTasks('export an animated svg from the timeline'));
+check('a near-twin check never offers a finished task to fold into', lib.similarTasks('a done task').every((r) => r.status !== 'done'));
+let refused = false;
+try { lib.noteTask('a-parked-task', '   '); } catch { refused = true; }
+check('an empty note is refused rather than written', refused);
+try { lib.noteTask('no-such-task', 'x'); refused = false; } catch { refused = true; }
+check('a note to a task that does not exist is an error', refused);
 
 rmSync(dir, { recursive: true, force: true });
 console.log(failures ? `\n${failures} check(s) failed` : '\nall checks passed');

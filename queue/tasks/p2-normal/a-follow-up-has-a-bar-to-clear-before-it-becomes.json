@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:39:55.277Z",
-  "updated": "2026-09-13T16:40:36.072Z",
+  "updated": "2026-09-14T07:15:37.846Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from the queue growth measured over the last seven days of queue/history.jsonl:\n  2026-09-06 created 52 done 58 dropped 2\n  2026-09-07 created 75 done 54 dropped 7\n  2026-09-08 created 48 done 67 dropped 3\n  2026-09-09 created 59 done 39 dropped 2\n  2026-09-12 created 52 done 23 dropped 3\n  2026-09-13 created 29 done 17 dropped 1\n  totals: created 315, done 258, dropped 18\nThe 2026-09-13 07:14 manager report read a narrower window and concluded the queue was draining; over a week it is not, it grows about 40 a week. That report also predicted this exact fix (\"if it is still above fifty in a week, the fix is a harder triage rule\").\n\nThe instruction that produces the inflow is the acceptance line every feature task carries, \"anything left rough is filed as a follow-up task\", which comes from queue/bin/manager-prompt.md and is echoed in queue/bin/runner-prompt.md. The change belongs in runner-prompt.md (the bar and the fold-first rule), and the same wording wants to reach the digest and triage prompt so the three agree.\n\nDeliberately NOT a cap on the number of follow-ups: a cap loses real findings silently. The bar plus a place to write the rest down keeps everything recoverable.\n\nEvidence that near-twins are real, from today's queue: walks-that-fail-in-the-full-sweep names twelve failing walks, and six of the twelve already have their own diagnosed open task with its own reproduction (border-effect and glow-effect under adding-an-effect-leaves-every-one-of-its-setting, corner-radius-rounds under the-colour-popover-never-opens-in-the-corner-rad, dock-picked-first under picking-a-plain-shape-leaves-the-panel-parked-on, layers-lazy-rows under two-effect-walks-fail-now-and-then-because-a-pre, turn-into-a-picture under undo-in-a-walk-cannot-use-the-command-z-chord).",
@@ -29,6 +29,27 @@
     {
       "t": "2026-09-13T16:40:36.071Z",
       "note": "seq 82 -> 9"
+    },
+    {
+      "t": "2026-09-14T07:09:27.875Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-14T07:10:29.336Z",
+      "note": "Added two things a runner needs before the bar can work: 'queue.mjs search' (open tasks by the words of the problem) and 'queue.mjs log' (fold a finding into an existing task, or record a rough edge on the task you are finishing)."
+    },
+    {
+      "t": "2026-09-14T07:15:37.753Z",
+      "note": "Adversarial review before building: a bar on filing is one line away from a bar on noticing, so 'anything actually broken clears the bar on its own' is written into the rule itself rather than implied. A cap was rejected (loses findings silently). The bar also had to cover loop findings, not only app ones, so it reads 'someone using the app, reading the dashboard, or running the loop'."
+    },
+    {
+      "t": "2026-09-14T07:15:37.799Z",
+      "note": "Shipped: queue/bin/follow-up-bar.md, cat onto all three prompts by go-loop.sh (manager line 142, digest 345, runner 395). runner-prompt, manager-prompt, digest-prompt and the intake skill now point at it instead of each carrying their own wording. queue.mjs gained search and log; addjson/add warn about near-twins. Scripts/test.sh green 6426; state-poll-drill and the four other queue drills green."
+    },
+    {
+      "t": "2026-09-14T07:15:37.845Z",
+      "note": "left rough (does not clear the bar, recorded here rather than filed, which is the rule dogfooding itself): about seventy already-filed tasks still carry the old acceptance line 'anything left rough is filed as a follow-up task'. Nobody using the app would notice, and triage rewrites tasks as it touches them. No task filed to measure the effect either: the daily digest already prints open-task counts per priority."
     }
-  ]
+  ],
+  "started": "2026-09-14T07:09:27.874Z"
 }

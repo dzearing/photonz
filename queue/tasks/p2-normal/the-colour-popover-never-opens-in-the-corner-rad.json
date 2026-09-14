@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-12T11:13:00.032Z",
-  "updated": "2026-09-13T12:29:07.578Z",
+  "updated": "2026-09-14T07:11:41.949Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pre-existing, NOT caused by the corner-over-a-group work: reproduced on a clean tree with that work git-stashed away, same failure both times.\n\nRun: Scripts/playtest.sh Scripts/playtest/corner-radius-rounds-walk.json\nOutput: done.json status failed, step 12 (press): no control called \"Shades 9\" is in the panel. The listed controls include Color (Border, Color) and Twist (Border, open), so the row is there and the walk found it at step 9; what is missing is anything called Shades N, so the popover the press was supposed to open is not contributing controls. Walk steps 9-11: press Color in Border, wait 0.8s, press \"Shades 9\".\n\nEither the popover needs longer than 0.8s, or presses on a popover no longer register its controls in the panel list. Check Scripts/playtest/corner-names-walk.json, which passes and also touches colour, for the pattern that still works.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-09-13T12:29:07.577Z",
       "note": "seq 340 -> 250"
+    },
+    {
+      "t": "2026-09-14T07:11:41.948Z",
+      "note": "Folded in from a test filing of the near-twin warning on 2026-09-14; nothing new to fix here, this line only records that the warning pointed at this task."
     }
   ]
 }

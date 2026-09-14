@@ -1,0 +1,30 @@
+{
+  "feature": "A follow-up has a bar to clear before it becomes a task",
+  "epic": "unmanned-loop",
+  "summary": "Every pass of the loop used to be told \"anything left rough is filed as a follow-up task\", and the queue grew about forty tasks a week on that one line, so a request from the user waited behind the loop's own homework. A follow-up now has to be something a person would notice and not already covered by an open task, the queue can be searched by the words of a problem rather than the words of a title, and everything that does not clear the bar is written into a task log instead of being lost.",
+  "setup": "Nothing to install or turn on. This is the queue tooling and the three prompts the loop runs on. Run the commands from the repo root; the dashboard is at http://127.0.0.1:8791.",
+  "try": [
+    { "do": "Run `node queue/bin/queue.mjs search \"corner radius popover\"` and read the three open tasks it finds, none of which carry that phrase." },
+    { "do": "Read the line above them that says the phrase matched nothing and the search widened, so a coincidence never reads as a hit." },
+    { "do": "Run `node queue/bin/queue.mjs search --all \"loupe\"` to see the same search reach done and dropped tasks, which is how a fixed-and-broken-again thing gets found." },
+    { "do": "Open the dashboard search box and type the same three words: it widens now too, where it used to answer nothing." },
+    { "do": "File a near-twin on purpose: `node queue/bin/queue.mjs addjson '{\"title\":\"The colour popover does not open over corner radius\",\"goal\":\"Trying the warning.\",\"epic\":\"unmanned-loop\",\"acceptance\":[\"x\"],\"priority\":\"p3-low\"}'` and read what it prints under the new id." },
+    { "do": "Follow its own advice: `node queue/bin/queue.mjs log the-colour-popover-never-opens-in-the-corner-rad \"<your finding>\"` then drop the one you just filed." },
+    { "do": "Read `queue/bin/follow-up-bar.md`, the whole bar in one page, which `go-loop.sh` now cats onto the runner, manager and digest prompts alike." }
+  ],
+  "evaluate": [
+    "Is the bar drawn in the right place: would anything you would personally want fixed fail to clear \"a person would notice it\"?",
+    "A finding that does not earn a task lands in the log of the task that found it. Is that recoverable enough, or does it feel like a drawer things go to die in?",
+    "The near-twin warning prints after the task is already filed, and asks the runner to fold and drop. Should it instead refuse to file until the runner says it looked?",
+    "Search now widens to any-order word matches when the phrase misses. Does the dashboard search box feel better or noisier for that?",
+    "The queue stands at about seventy ready today. If a week of this does not bring it under twenty, what would you want tried next?"
+  ],
+  "rough": [
+    "No screenshot: this change has no surface inside the app at all. It is the queue CLI, three prompt files and one shared page of rules, so the evidence is command output and the dashboard search box.",
+    "The bar is instructions, and instructions are not enforcement. The only mechanical part is the near-twin warning at filing time; a runner can still ignore it and file the twin. The measurement is already in the daily digest, which reports open-task counts per priority, so no new task was filed to watch it, per the bar itself.",
+    "\"A person would notice\" is a judgment call and a determined runner can argue anything past it. The fold-first half is the harder rule and catches the larger share, since near-twins were the measured problem: six of the twelve walks named in one open task already had their own diagnosed task.",
+    "Near-twin scoring is word overlap, not meaning. It found the real twin in every case tried, and it also offers a couple of unrelated tasks alongside. It is a prompt to go read them, never a verdict, but a runner in a hurry could read the noise and conclude the check is useless.",
+    "Widened search can be genuinely noisy for common words: \"queue size\" returns thirteen tasks that share only two ordinary words. It says it widened, which is the honest fix, not a quiet one.",
+    "The old acceptance line lives on in about seventy already-filed tasks that each still say \"anything left rough is filed as a follow-up task\". They were left alone rather than rewritten in bulk; triage rewrites them as it touches them."
+  ]
+}

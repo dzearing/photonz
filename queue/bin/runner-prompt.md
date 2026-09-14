@@ -64,7 +64,7 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 - All Photonz app work happens in the "next" release only (`Sources/Photonz/Releases/Next/` or behind flags scoped to next), unless the task file explicitly says `"release": "current"`. Never touch current-release behavior otherwise.
 - Follow the repo rules in `CLAUDE.md` (TDD for core modules, `Scripts/test.sh` green before commit, pure PhotonzCore, and so on).
 - Design-study work follows `docs/design/mocks/shared/AGENTS.md` and `docs/design/mocks/shared/UX-PATTERNS.md`. No em dashes in user-facing copy; say "agent", never a vendor name.
-- One task per run. Do not claim or start other tasks. If you discover new work, add it to the queue with the structured form so it is legible to a human:
+- One task per run. Do not claim or start other tasks. Work you discover goes through the follow-up bar at the end of this prompt: it has to be something a person would notice and not already covered by an open task, and you search the queue and fold into the nearest existing task before filing a new one. What clears the bar is filed with the structured form so it is legible to a human; what does not goes in your own task's log instead of being thrown away:
   `node queue/bin/queue.mjs addjson '{"title":"...","goal":"...","epic":"<objective id this serves>","acceptance":["...","..."],"priority":"p2-normal","notes":"..."}'`
 
 ### A bug you file must be reproduced, not just read
@@ -213,7 +213,7 @@ Rules that keep it usable:
 - **Every step is one action.** No paragraphs, no background, no justification.
 - **Ship a real screenshot when the loop is allowed to take one.** If the `Grants:` line said Screen Recording is granted, at least one step carries a `shot`, and it is a `-sc.png` from a playtest, copied next to the audit under `queue/audits/` and referenced by file name only. If the grant was denied, say that in `rough` in one plain sentence and use the offscreen renders. An audit that quietly shows a render as if it were the app is the thing this rule exists to stop.
 - **`evaluate` asks real questions**, three to five. "Does the readout land where your eye already is?" not "evaluate the readout".
-- **`rough` is honest.** This is where you admit what you could not fix, and where the mock was wrong.
+- **`rough` is honest.** This is where you admit what you could not fix, and where the mock was wrong. Writing it here is not the same as filing it: each rough item either clears the follow-up bar and becomes a task, or gets folded into the task that already covers it, or stays in your task's log. Say which in your log.
 
 The user reacts to any line of this on the dashboard, and their reaction becomes a task automatically, so write each line as something a person can agree or disagree with.
 

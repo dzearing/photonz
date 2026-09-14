@@ -44,8 +44,10 @@ and pass `"$(cat /tmp/x.json)"`, or the shell will mangle it.
 - **goal** — one or two sentences of plain language, written for someone who has
   never seen the codebase. No file names, no class names.
 - **acceptance** — verifiable items, each one checkable. Include the try path,
-  and end feature work with an audit under `queue/audits/` plus "anything rough
-  filed as a follow-up". Where a number is claimed (a size, a frame time, an
+  and end feature work with an audit under `queue/audits/` plus "anything left
+  rough is filed as a follow-up task if it clears the follow-up bar
+  (`queue/bin/follow-up-bar.md`), and written into this task's log if it does
+  not". Where a number is claimed (a size, a frame time, an
   alignment), demand it be MEASURED and put in the audit rather than eyeballed.
 - **notes** — everything technical: file paths with line numbers, what you found,
   what you did NOT confirm, and the traps a naive fix would hit. Quote the user's

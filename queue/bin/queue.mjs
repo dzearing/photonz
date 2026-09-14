@@ -10,6 +10,14 @@
 //   node queue/bin/queue.mjs status <id> <pending|in_progress|blocked|done|dropped> [note]
 //   node queue/bin/queue.mjs add <title> [priority] [notes]
 //   node queue/bin/queue.mjs addjson '<json>'   preferred: carries goal + acceptance checklist
+//   node queue/bin/queue.mjs search [--all] <words>
+//                                            open tasks whose title, goal, checklist, working detail
+//                                            or log mention those words. Search BEFORE filing a
+//                                            follow-up; --all reads done and dropped ones too
+//   node queue/bin/queue.mjs log <id> <note>    append one line to a task's log without changing its
+//                                            status: how a finding folds into a task that already
+//                                            covers it, and where a rough edge goes when it does not
+//                                            earn its own task (queue/bin/follow-up-bar.md)
 //   node queue/bin/queue.mjs priority <id> <p0-critical|p1-high|p2-normal|p3-low>
 //   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
@@ -39,6 +47,20 @@ const [cmd, ...args] = process.argv.slice(2);
 const pid = process.env.GO_LOOP_PID ? Number(process.env.GO_LOOP_PID) : null;
 const out = (v) => console.log(typeof v === 'string' ? v : JSON.stringify(v, null, 2));
 
+// A new task is born, and the queue is told which open tasks already talk about
+// the same thing. This is the follow-up bar's fold-first rule made visible at
+// the moment it matters (queue/bin/follow-up-bar.md): it warns, it never
+// blocks, and it goes to stderr so the id on stdout stays the whole of stdout.
+const added = (t) => {
+  const near = q.similarTasks(`${t.title} ${t.goal || ''}`, { exclude: t.id });
+  if (near.length) {
+    console.error(`\nThese open tasks already talk about this. Read them before leaving ${t.id} filed:`);
+    for (const r of near) console.error(`  ${r.priority}\t${r.id}\t${r.title}`);
+    console.error(`If one of them covers it, fold and drop instead:\n  node queue/bin/queue.mjs log <that-id> "<your finding>"\n  node queue/bin/queue.mjs status ${t.id} dropped "folded into <that-id>"\n`);
+  }
+  return t.id;
+};
+
 try {
   switch (cmd) {
     case 'next': {
@@ -65,13 +87,29 @@ try {
       out(q.setStatus(args[0], args[1], args.slice(2).join(' ')).id);
       break;
     case 'add':
-      out(q.addTask({ title: args[0], priority: args[1] || 'p2-normal', notes: args.slice(2).join(' ') }).id);
+      out(added(q.addTask({ title: args[0], priority: args[1] || 'p2-normal', notes: args.slice(2).join(' ') })));
       break;
     // the structured form, and the one to prefer: it can carry the plain-language
     // goal and the acceptance checklist, which the positional form cannot.
     //   queue.mjs addjson '{"title":"...","goal":"...","acceptance":["..."],"priority":"p2-normal","notes":"..."}'
     case 'addjson':
-      out(q.addTask(JSON.parse(args[0])).id);
+      out(added(q.addTask(JSON.parse(args[0]))));
+      break;
+    // Search first, file second. The default is the OPEN queue, because the
+    // question this answers is "is somebody already on this?".
+    case 'search': {
+      const all = args[0] === '--all' || args[0] === '-a';
+      const { rows, mode, terms } = q.searchTaskRows(args.slice(all ? 1 : 0).join(' '), { all });
+      if (!rows.length) { out(`no ${all ? '' : 'open '}tasks match`); break; }
+      // A widened match is a weaker claim than an exact one, and saying so is
+      // what stops a runner trusting thirteen rows of coincidence.
+      if (mode === 'widened') out(`no task carries that phrase. Widened to tasks mentioning all of: ${terms.join(', ')}`);
+      for (const r of rows) out(`${r.priority}\t${r.status}\t${r.id}\t${r.title}`);
+      out(`${rows.length} match${rows.length === 1 ? '' : 'es'}${mode === 'widened' ? ', widened' : ''}`);
+      break;
+    }
+    case 'log':
+      out(q.noteTask(args[0], args.slice(1).join(' ')).id);
       break;
     case 'priority':
       out(q.setPriority(args[0], args[1]).id);

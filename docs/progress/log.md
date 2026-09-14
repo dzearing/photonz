@@ -14881,3 +14881,49 @@ Two of the pick paths the task asked for do not exist in the app: the arrow keys
 nudge the layer that is already picked, and Command A marquees the canvas
 rather than selecting every layer. Audit:
 `queue/audits/2026-09-13-layers-follow-pick.json`.
+
+## 2026-09-14 — A follow-up has a bar to clear before it becomes a task
+
+**Why.** Every pass of the loop carried one line, "anything left rough is filed
+as a follow-up task", and obeyed it faithfully. Over the seven days to
+2026-09-13 the queue took in 315 tasks and finished 258, growing about forty a
+week against a healthy size of twelve, so a report from the user waited behind
+the loop's own homework. The measured cause was near-twins: one open task named
+twelve failing walks and six of them already had their own diagnosed task.
+
+**Shipped.** `queue/bin/follow-up-bar.md` is one page of rules, and
+`go-loop.sh` cats it onto the runner, manager and digest prompts alike, so the
+three passes cannot each invent their own. A finding earns a new task when a
+person would notice it AND no open task already covers it; anything actually
+broken clears the bar on its own, stated in as many words so the bar can never
+be read as permission to drop a defect. What does not clear it goes in the log
+of the task that found it, where search still reads it. Deliberately not a cap,
+which would lose findings silently.
+
+Three things make the rule usable rather than aspirational.
+`queue.mjs search [--all] <words>` searches title, goal, checklist, notes and
+every log line: the phrase as typed wins when it hits, and widens to all-words-
+any-order when it does not, saying which, so "corner radius popover" finds the
+task that says "the colour popover never opens in the corner-radius-rounds
+walk". `queue.mjs log <id> <note>` folds a finding into the task that already
+covers it, or records a rough edge on the task you are finishing, without
+touching status. And `add`/`addjson` now print the open near-twins of whatever
+you just filed, with the fold-and-drop commands spelled out.
+
+**Verified.** `Scripts/test.sh` green, 6426 tests. `state-poll-drill.mjs` gained
+twelve checks for the widening, the rows, the fold and the near-twin scoring,
+and passes with the churn, decision, audit-index and sweep-notes drills.
+Dogfooded end to end: filed a deliberate near-twin of
+`the-colour-popover-never-opens-in-the-corner-rad`, was warned, folded it in and
+dropped it. Dashboard search box picks the widening up too.
+
+**Rough.** The bar is instructions, and only the near-twin warning is
+mechanical. Widened search is noisy for common words ("queue size" returns
+thirteen), which it now admits rather than hides. About seventy already-filed
+tasks still carry the old acceptance line; triage rewrites them as it touches
+them rather than a bulk edit. Audit:
+`queue/audits/2026-09-14-follow-up-bar.json`.
+
+**Next.** The daily digest already reports open-task counts per priority, so the
+effect is measured without a new task. If the queue is not under twenty in a
+week, the next lever is triage dropping harder, not another rule.

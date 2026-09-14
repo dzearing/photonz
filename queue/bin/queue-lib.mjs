@@ -187,16 +187,52 @@ export function taskRow(t) {
 // exactly the ones the poll no longer ships. This looks at more than the old
 // client-side filter did: it reads the log too.
 export function searchTasks(q) {
-  const needle = String(q || '').trim().toLowerCase();
-  if (!needle) return [];
-  return readAllTasks().filter((t) => {
-    const hay = [t.title, t.id, t.status, t.goal, t.notes, t.epic, t.area]
-      .concat(t.acceptance || [])
-      .concat((t.log || []).map((e) => e && e.note))
-      .filter(Boolean).join(' ').toLowerCase();
-    return hay.includes(needle);
-  }).map((t) => t.id);
+  return searchTasksMode(q).ids;
 }
+
+// Search, and say HOW it matched, because the two modes deserve different
+// trust. `exact` is the phrase as typed, which is what the dashboard's search
+// box has always done. `widened` is every word present anywhere in the record
+// in any order, which only happens when the phrase matched nothing: it finds
+// the task that says "the colour popover never opens in the corner radius row"
+// when you searched "corner radius popover", and it also finds thirteen tasks
+// when you search two words as common as "queue size". A caller that shows
+// widened results without saying so is lying by omission, so the mode rides
+// along with the ids.
+export function searchTasksMode(q) {
+  const query = String(q || '').trim().toLowerCase();
+  if (!query) return { ids: [], mode: 'none', terms: [] };
+  const hays = readAllTasks().map((t) => [t.id, [t.title, t.id, t.status, t.goal, t.notes, t.epic, t.area]
+    .concat(t.acceptance || [])
+    .concat((t.log || []).map((e) => e && e.note))
+    .filter(Boolean).join(' ').toLowerCase()]);
+  const exact = hays.filter(([, hay]) => hay.includes(query)).map(([id]) => id);
+  if (exact.length) return { ids: exact, mode: 'exact', terms: [query] };
+  const terms = query.split(/\s+/).filter(Boolean);
+  if (terms.length < 2) return { ids: [], mode: 'none', terms };
+  const ids = hays.filter(([, hay]) => terms.every((term) => hay.includes(term))).map(([id]) => id);
+  return { ids, mode: ids.length ? 'widened' : 'none', terms };
+}
+
+// The statuses a follow-up could be folded into. A done or dropped task matches
+// too when asked for, because a finding that matches a finished task is usually
+// a regression and belongs in that history.
+export const OPEN_STATUSES = new Set(['pending', 'in_progress', 'blocked']);
+
+// The rows behind `queue.mjs search`: the same match as the dashboard, resolved
+// to enough of each task to decide whether it already covers your finding.
+export function searchTaskRows(q, { all = false } = {}) {
+  const { ids: matched, mode, terms } = searchTasksMode(q);
+  const ids = new Set(matched);
+  const rows = !ids.size ? [] : readAllTasks()
+    .filter((t) => ids.has(t.id) && (all || OPEN_STATUSES.has(t.status)))
+    .sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority)
+      || (a.seq ?? 1e9) - (b.seq ?? 1e9)
+      || a.id.localeCompare(b.id))
+    .map((t) => ({ id: t.id, title: t.title || '', status: t.status, priority: t.priority, epic: t.epic || '', goal: t.goal || '' }));
+  return { rows, mode, terms };
+}
+
 export function saveTask(task) {
   const { file, ...body } = task;
   body.updated = now();
@@ -278,6 +314,49 @@ export function addTask({ title, goal = '', epic = '', priority = 'p2-normal', n
   saveTask(task);
   appendEvent('task_created', { id, priority, title });
   return task;
+}
+
+// Words that carry no signal about what a task is about. A near-twin check that
+// counts these matches everything.
+const STOPWORDS = new Set(('a an and are as at be before but by can does for from has have in into is it its make makes not of on once one only or so than that the their them then there they this to too under until up was what when where which who why with without you your' +
+  ' task tasks app photonz next should would could still every any all more most new now').split(' '));
+
+// The near-twin check behind the follow-up bar. A brand-new title almost never
+// shares a PHRASE with the task that already covers the same ground ("the
+// colour popover never opens in the corner-radius-rounds walk" against "corner
+// radius popover"), so this scores on distinctive words instead and reports
+// anything that overlaps by half or better. It is a prompt to go read those
+// tasks, never a block: it runs after the task is written and the answer is for
+// a human or an agent to act on.
+export function similarTasks(text, { limit = 5, exclude = '' } = {}) {
+  const terms = [...new Set(String(text || '').toLowerCase().split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w)))];
+  if (terms.length < 2) return [];
+  const need = Math.max(2, Math.ceil(terms.length / 2));
+  return readAllTasks()
+    .filter((t) => t.id !== exclude && OPEN_STATUSES.has(t.status))
+    .map((t) => {
+      const hay = [t.title, t.goal, t.notes, (t.acceptance || []).join(' ')].filter(Boolean).join(' ').toLowerCase();
+      return { id: t.id, title: t.title || '', priority: t.priority, status: t.status, score: terms.filter((w) => hay.includes(w)).length };
+    })
+    .filter((r) => r.score >= need)
+    .sort((a, b) => b.score - a.score || PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority))
+    .slice(0, limit);
+}
+
+// Fold a finding into a task that already covers it, or record a rough edge on
+// the task you are finishing, without touching its status. This is the other
+// half of the follow-up bar (queue/bin/follow-up-bar.md): a finding that does
+// not earn its own task still has to land somewhere search can read it, and
+// every log note is searchable.
+export function noteTask(id, note) {
+  const t = findTask(id);
+  if (!t) throw new Error(`no task ${id}`);
+  if (!String(note || '').trim()) throw new Error('a log note cannot be empty');
+  appendLog(t, String(note).trim());
+  saveTask(t);
+  appendEvent('task_note', { id });
+  return t;
 }
 
 // Move a task file when priority changes; folder is the source of truth.

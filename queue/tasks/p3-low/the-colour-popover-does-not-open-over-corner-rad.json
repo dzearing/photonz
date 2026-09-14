@@ -1,0 +1,29 @@
+{
+  "id": "the-colour-popover-does-not-open-over-corner-rad",
+  "title": "The colour popover does not open over corner radius",
+  "goal": "Test of the near-twin warning.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 1320,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-14T07:11:39.920Z",
+  "updated": "2026-09-14T07:11:41.997Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "",
+  "acceptance": [
+    "x"
+  ],
+  "log": [
+    {
+      "t": "2026-09-14T07:11:39.922Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-14T07:11:41.996Z",
+      "note": "test of the near-twin warning at filing time; folded into the-colour-popover-never-opens-in-the-corner-rad"
+    }
+  ]
+}

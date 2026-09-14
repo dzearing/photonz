@@ -16,7 +16,7 @@ Read in this order, and read the code rather than trusting a document's claim ab
 2. The last two manager reports in `queue/manager/` (newest first), so you build on them instead of rediscovering them. Their "Open threads" section is your starting list.
 3. Every open task under `queue/tasks/` and every decision in `queue/decisions/`. Note what is pending, blocked on a decision, or parked.
 4. What the app does today for the focus: `Sources/PhotonzCore/FeatureCatalog.swift` (every flag that exists and its default), `Sources/Photonz/Releases/Next/`, and the spec for the focus (`docs/design/next-measure.md` while the focus is measure-redline, especially its "Done when" section). For each item the spec promises, find the code that delivers it or record that it is missing.
-5. The audits in `queue/audits/` from the last week: their `rough` lists are follow-ups nobody may have filed yet.
+5. The audits in `queue/audits/` from the last week: their `rough` lists are findings nobody may have filed yet. Each one still has to clear the follow-up bar at the end of this prompt before it becomes a task, and most audit `rough` lines are honest notes rather than tasks.
 6. `git log --since="7 days ago" --oneline` and the newest digest in `queue/digests/`.
 7. `docs/plan/competitive-cleanshot.md` and `docs/design/overview.md` for the competitive and architectural baseline.
 
@@ -31,7 +31,7 @@ Answer each question in writing, with evidence (a file, a flag, a page, a task i
 - **UI quality.** Is it beautiful, symmetrical and consistent: spacing, alignment, glass surfaces, light and dark, control heights, icon weights, copy tone? When possible, verify on the probe app (`Scripts/probe-app.sh`, never the Dev app) with a screenshot saved under `queue/manager/shots/`.
 - **Architecture.** Are module boundaries holding (pure core, renderer without UI, thin app shell)? Any strict-concurrency band-aids, force unwraps, or render-path regressions against the perf budget? Anything in the Current release that Next has not received (the one-way porting rule)?
 - **Repeated code.** Logic that exists twice across Current, Next and shared code, or across tools. Name the extraction and the feature it de-risks.
-- **Process.** Did every finished feature task produce an audit? Do audits' `rough` items have follow-up tasks? Are digests being generated? Is the loop healthy? File tasks against the unmanned-loop epic only when a fault is actually blocking app work.
+- **Process.** Did every finished feature task produce an audit? Did its `rough` items each go somewhere: a task for the ones that clear the bar, a fold into an existing task, or that task's own log? Are digests being generated? Is the loop healthy? File tasks against the unmanned-loop epic only when a fault is actually blocking app work.
 
 ## 3. Turn findings into tasks a runner can finish
 
@@ -45,9 +45,9 @@ Rules that make a task executable:
 
 - **One runner session.** A task is one vertical slice a fresh agent can finish, verify and commit in a single sitting (think one to three hours of focused work). If the slice is bigger, split it into ordered tasks and set `deps` so they claim in order (edit the task JSON's `deps` array after filing).
 - **Try path in the acceptance.** Any task that changes the app names the flag it ships behind and the exact steps to see it, and ends with "audit written under queue/audits/". A feature nobody can try is not done.
-- **Follow-ups are part of the task.** Every feature task's acceptance includes "anything left rough is filed as a follow-up task". That is how validation feeds the next pass.
+- **Follow-ups are part of the task, and they have a bar.** Every feature task's acceptance includes "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not". That is how validation feeds the next pass without the queue growing forty a week. The bar is at the end of this prompt and it applies to the tasks YOU file too.
 - **Goal is plain language, notes are technical.** Goal: what changes and for whom, no file names. Notes: files, flags, spec sections, the audit `rough` line it comes from.
-- **Dedupe.** Search open and recently dropped tasks before filing. Fold into an existing task rather than filing a near-twin.
+- **Dedupe.** `node queue/bin/queue.mjs search "<the words of the problem>"` before filing, and again with `--all` for done and dropped ones. Fold into an existing task (`queue.mjs log <id> "..."`) rather than filing a near-twin. See the follow-up bar at the end of this prompt.
 - **A bug you file is reproduced first.** If a finding says something is broken, run the thing and paste the command and its output into `notes`. Reading a script is not running it, and checking one with the wrong shell is how two false p1 bugs reached the front of the queue in September 2026. Cannot reproduce it, file it at p2 as something to look into, never p1. The full rule is in `queue/bin/runner-prompt.md`.
 - **Anything the user asked for is p1, sequenced first.** A task whose `source` is `user` outranks everything the loop filed for itself, however small it looks: they are reviewing the app live and a report sitting at p2 behind a queue of self-filed follow-ups is a report that does not get fixed today (said plainly on 2026-09-07). Never reprioritise a user task downward; if it is genuinely tiny, that is a reason it lands sooner, not later.
 - **Priority reflects the focus.** Focus work is p1 or p2. `now` sub-epic work is p2. `next` epic work is p3 and says in its goal what focus feature it unblocks. Nothing for a `later` epic.
