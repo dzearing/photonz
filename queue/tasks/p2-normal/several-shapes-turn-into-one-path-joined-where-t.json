@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:36:38.458Z",
-  "updated": "2026-09-15T19:43:42.909Z",
+  "updated": "2026-09-15T19:43:56.215Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-15: \"i draw 3 lines, i select the 3 layers and select convert to path, and i expected it to convert to 1 shape layer, but it didnt do that.\"\n\nTWO PROBLEMS IN ONE REPORT, and both need doing.\n\n1. The command only ever touches one layer. Sources/Photonz/EditorState+LayerOps.swift:334, turnLayerIntoPath(id:), takes a single id, as does canTurnLayerIntoPath(id:) at :322. So with three rows picked it converts whichever one the menu was opened on and leaves the rest. This is the SAME defect already filed against that menu in 'group-is-in-the-menu-you-get-when-you-right-clic', which asks for one settled rule about whether a row menu command acts on the row or on the selection, applied to every command in the menu. Read that task first; whichever lands second should follow the rule the first one set rather than inventing a second answer. If the rule task has not landed yet, this task should still fix its own command and say in the log which rule it assumed.\n\n2. What several shapes SHOULD become. The user's expectation is the useful one and worth building deliberately: three lines that meet are a triangle, not three lines in a bag. Joining open runs end to end is a standard vector operation and it is what makes a shape out of strokes.\n\nThis is NOT the booleans task and must not be folded into it. 'two-shapes-become-one-join-them-cut-one-out-keep' (pending, seq 170) is about AREA: union, subtract, intersect, exclude, on shapes that enclose something. Three lines enclose nothing, so a union of them produces nothing useful. Joining endpoints and combining areas are different operations that happen to share the word join, and conflating them is how one of them ends up unbuildable. Say so in that task's log when this lands.\n\nThe near-miss case is the one that decides whether this feels magic or maddening. Three lines drawn by hand almost never meet exactly, so a tolerance is needed, and a tolerance that is invisible is a tolerance nobody can predict. With the grid on and snapping working the ends usually DO meet exactly, which is worth checking first: the honest answer may be that joining requires coincident ends and the fix for everything else is that the app already snaps.",
@@ -65,7 +65,12 @@
     {
       "t": "2026-09-15T19:43:42.909Z",
       "note": "Left rough, below the follow-up bar and recorded here instead of filed: no keyboard shortcut (Command J is taken and nothing was displaced); the 2 pt reach is invisible on the canvas until the question names it; a joined outline takes the topmost shape's colour and line with no way to choose a different one, though the question says so and names the row; and shapes that touch nothing come out as one layer each by design, written up in docs/design/vector-paths.md. Filed instead: 'two-paths-you-drew-with-the-pen-can-be-joined-in', because two Pen paths picked together offer no command at all, which is a gap a person hits. Folded into existing tasks: 'turn-into-picture-takes-every-layer-you-picked' (Turn Into Path done, three commands left), 'two-shapes-become-one-join-them-cut-one-out-keep' (joining ends is not the booleans), 'two-timing-tests-only-fail-when-the-whole-suite' (hit it once more), and 'a-rectangle-or-an-ellipse-you-drew-becomes-a-pat' (may be stale)."
+    },
+    {
+      "t": "2026-09-15T19:43:56.213Z",
+      "note": "Turn Into Path acts on everything picked (rowMenuTargets) and welds shapes whose ends meet into ONE path: three lines end to end become one closed triangle, fillable and reshapable, in one undo step. PhotonzCore/PathJoining.swift (PathJoin.join, PathContent.reversed, PhotonzDocument.turningLayersIntoPath), plural question that states the 2pt tolerance and announces the closing, docs in docs/design/vector-paths.md. Verified by 7110 tests green incl. new PathJoiningTests (32) and PathJoinRenderTests, which composite twice and confine the moved pixels to within 10pt of a corner or an end. NOT verified in the app: the screen was locked all task, so no walk ran at all and the audit has no pictures; the new walk shapes-into-one-path-walk.json is written and a sweep was requested. Audit queue/audits/2026-09-15-shapes-into-one-path.json."
     }
   ],
-  "started": "2026-09-15T19:26:42.463Z"
+  "started": "2026-09-15T19:26:42.463Z",
+  "completed": "2026-09-15T19:43:56.214Z"
 }
