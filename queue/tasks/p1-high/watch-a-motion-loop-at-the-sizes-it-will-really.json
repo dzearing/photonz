@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 23,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:43:16.696Z",
-  "updated": "2026-09-15T11:51:56.202Z",
+  "updated": "2026-09-15T12:09:48.031Z",
   "deps": [
     "a-layer-can-be-told-to-change-one-of-its-propert"
   ],
@@ -33,6 +33,28 @@
     {
       "t": "2026-09-15T11:51:56.201Z",
       "note": "The timing strip landed (next-motion-strip) and it makes the loop-speed control from this slice matter more than it did: a 90 ms lag between two bars is under six frames, so the strip lets you SET a lag that nobody can then judge at full speed. The mock's own answer (icon-phase-wt step 6) is a speed control on the Real size card, and it is explicitly what replaces scrubbing for something that loops. The strip has no playhead scrubbing on purpose for the same reason. Please make the speed control reach the strip's playhead too, so a slowed loop is slow on the ruler as well as on the picture."
+    },
+    {
+      "t": "2026-09-15T11:54:54.476Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T11:56:54.247Z",
+      "note": "Adversarial review before building. (1) The mock puts Play and a speed menu on the Real size card, but that card is today pure chrome with allowsHitTesting(false) so it can never eat a canvas drag. Answer: only the new header row takes clicks, the chips stay pass-through, and the header only appears when there IS something moving, so a still icon's strip is exactly what it is now. (2) There would be two play buttons, one already on the Motion header in the side column. Keeping both: they mirror one state, and the mock's reason holds, the review happens at real size so the transport belongs there. (3) The mock's only speed control is on an ICON-ONLY card, but motion is on every layer: somebody animating a shape on a screen frame could never slow the loop, and the 90 ms lag they are judging is the same 90 ms. So the same speed control also goes on the timing strip header, one shared setting, which is also what makes the strip's playhead crawl. (4) Cut: no playhead scrubbing, no continuous speed slider. A named rate you can read beats a slider you cannot. (5) Space is free in an image window (the only Space binding is the Video menu, disabled without a video), so it goes in the canvas key handler rather than as a second menu shortcut."
+    },
+    {
+      "t": "2026-09-15T12:09:43.955Z",
+      "note": "Review of the built thing, read rather than run, because no walk can run on a locked screen. Two changes came out of it. The header row now fades in on its own value, since it arrives the moment the first motion is added and the card grows to hold it; without that it appeared between two frames and read as a glitch. And a version where only the header took clicks, with the glass moved into a background so the pictures stayed pass-through, was written and then BACKED OUT: it changes how the glass is drawn and there is no way to look at the result today. The card now simply takes clicks while it has a transport, which is what the zoom bar and the tool settings capsule already do, and takes none at all with a still icon, which is exactly what it did before."
+    },
+    {
+      "t": "2026-09-15T12:09:43.997Z",
+      "note": "left rough, no task earned: (1) Space is answered by the canvas keyDown, so the picture has to hold the keyboard. KeyboardHandback already gives it back after every field, but after a menu in the side column you may need one click on the picture first. Not reproduced and not reproducible today, so it is not filed as a bug; it is in the audit for the user to react to. (2) Scripts/playtest/out/ is sitting untracked in the repo from some earlier run, with pictures and a log.json in it. No walk writes there (every walk's out path is under /tmp), so it is somebody's stray --out rather than a defect, and it is left alone rather than deleted."
+    },
+    {
+      "t": "2026-09-15T12:09:48.029Z",
+      "note": "Shipped in 2bfb5ae9, Next only, under next-icon-previews and next-motion. The previews card in the canvas corner plays: every chip is drawn from the frame as it looks at THIS moment of the loop, so an icon swings at 16, 24, 32, 48 and 64 at once. It grows a Real size header with play and a rate only once something in that frame moves; with a still icon it is exactly the row of pictures it was, taking no clicks. Space is the same switch as the button, answered by the canvas so a field being typed into keeps its spaces. One rate for the window (1x, 0.25x, 0.1x): the lag between two parts slows by the same factor because a lag is the distance between two starts on the one ruler the rate scales, so the strip's playhead crawls with it, and changing rate mid lap carries on from where the loop had got to instead of starting over. The timing strip carries the same control, because motion is on every layer and a document with no icon frame has no card to reach for. Core gained MotionSpeed, PhotonzDocument.moved(layerID:toMotionTimeMS:) and Layer.hasMotionInside, written test first. VERIFIED: 15 new core tests, full suite 6800 green, plain and playtest builds green, and two perf budgets on the composite path (a whole strip of four previews of a ten shape icon is 5.1ms a frame against the 33ms the loop runs at, off the main actor; the main actor pays 0.03ms). NOT VERIFIED: anything on screen. The Mac's screen was locked for the whole task (CGSSessionScreenIsLocked true, checked three times), so macOS never drew the app and every walk refuses to run; Scripts/playtest/motion-loop-preview-walk.json is written, decodes and has never executed once. A whole-set sweep is requested for exactly this. Audit: queue/audits/2026-09-15-motion-loop-preview.json, and it says it has no pictures and why."
     }
-  ]
+  ],
+  "started": "2026-09-15T11:54:54.475Z",
+  "completed": "2026-09-15T12:09:48.030Z"
 }

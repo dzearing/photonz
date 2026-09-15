@@ -1,0 +1,30 @@
+{
+  "feature": "Watch a motion loop at the sizes it will really be used",
+  "epic": "icon-animate",
+  "summary": "The previews card in the canvas corner now plays. An icon that has been told to move swings at 16, 24, 32, 48 and 64 pixels at once, and a speed control slows the whole loop to a quarter or a tenth so a lag of ninety milliseconds is something you can actually see.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Motion, the timing strip and the icon previews on; all three are on by default in Next.",
+  "try": [
+    { "do": "File > New Frame, pick 512 under Icons, Add Frame." },
+    { "do": "Draw a rectangle inside the frame with R." },
+    { "do": "Press the plus on the Motion header in the right hand panel and choose Rotation." },
+    { "do": "Look at the top left corner of the canvas: the row of small pictures has grown a Real size header, and every picture in it is swinging." },
+    { "do": "Press the space bar twice: it stops and starts the loop, the same as the button on the card." },
+    { "do": "Draw an ellipse inside the same frame, give it Rotation too, then drag its bar 90 ms to the right on the timing strip at the bottom." },
+    { "do": "Click 1× on the Real size header and choose 0.25× · slow. Watch the small pictures and the red playhead on the strip together." },
+    { "do": "Set it back to 1× from the control on the timing strip instead, and watch the card follow." }
+  ],
+  "evaluate": [
+    "At a quarter rate, can you actually see the second shape starting behind the first, and is a quarter the right first stop or should the list start lower?",
+    "Does the transport belong on the previews card, or were you looking at the play button in the side column the whole time?",
+    "The card only grows its header once something moves. Does that read as the card waking up, or as chrome appearing out of nowhere?",
+    "Changing speed carries on from wherever the lap had got to rather than starting it over. Is that what you expected, or did you want it to restart so you could watch the whole thing at the new rate?",
+    "Two speed controls, one on the card and one on the strip, showing the same rate. Is that one setting with two doors, or two controls too many?"
+  ],
+  "rough": [
+    "NOT PHOTOGRAPHED AND NOT RUN. The Mac's screen was locked for the whole of this task (checked three times), so macOS never drew the app and every walk refuses to run in that state. There are no screenshots and no offscreen renders here, and the new walk, Scripts/playtest/motion-loop-preview-walk.json, has never been executed once. A whole-set sweep is requested so it runs as soon as the screen is unlocked.",
+    "What IS verified: 15 new tests over the rates, the clock and moving one layer subtree, the full suite of 6800 green, both builds green, and two perf budgets. A whole strip of four moving previews costs 5.1 ms a frame against the 33 ms the loop runs at, spent off the main actor; the main actor pays 0.03 ms.",
+    "Space is answered by the canvas, so the picture has to have the keyboard. Right after typing in a panel field the app hands the keyboard back on its own, but if you have just used a menu in the side column you may have to click the picture once before Space works. Not reproduced, because nothing can be driven while the screen is locked.",
+    "Changed from the mock: the mock puts the only speed control on the Real size card, which is an icon-only surface. Motion is on every layer, so the same control is also on the timing strip header, sharing one rate. A shape animating on a phone frame has no previews card to reach for.",
+    "The card takes clicks over its whole face while it has a transport, the way the zoom bar and the tool settings capsule do. With nothing moving it takes none at all, exactly as before. A version where only the header row took clicks was written and then backed out, because it changes how the glass is drawn and there was no way to look at the result."
+  ]
+}

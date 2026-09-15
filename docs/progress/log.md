@@ -15437,3 +15437,29 @@ is folded into `an-audit-gets-a-real-picture-of-the-app-again`, which has now
 been hit by two consecutive slices of this epic.
 
 Next: slice 3, the cycle timing strip in the bottom dock.
+
+## 2026-09-15 — Watching a motion loop at the sizes it will be used
+
+The previews card in the canvas corner learned to play (`next-icon-previews` +
+`next-motion`, Next only). Every chip is drawn from the frame as it looks at
+that moment of the loop, so an icon swings at 16, 24, 32, 48 and 64 at once;
+the card grows a Real size header with play and a rate only once something in
+that frame moves, and with a still icon it is exactly the row of pictures it
+was, taking no clicks. Space is the same switch as the button. One rate for the
+window (1x, 0.25x, 0.1x) scales the single playhead everything reads, so the lag
+between two parts slows by the same factor and the timing strip's playhead
+crawls with it; the strip carries the same control, because motion is on every
+layer and a document with no icon frame has no card to reach for.
+
+`PhotonzCore` gained `MotionSpeed`, `PhotonzDocument.moved(layerID:toMotionTimeMS:)`
+and `Layer.hasMotionInside`, written test first. Perf: a whole strip of four
+moving previews is 5.1ms a frame against the 33ms the loop runs at, off the main
+actor; the main actor pays 0.03ms to work out where the frame's contents are,
+which is why only one layer subtree is moved rather than the whole document.
+
+Still nothing photographed. The Mac's screen has now been locked through two
+tasks in a row, so no walk has run since the timing strip landed;
+`motion-loop-preview-walk` is written and has never executed. Sweeps are
+requested and pending.
+
+Next: slice 5 of the icon motion study, animated SVG export.
