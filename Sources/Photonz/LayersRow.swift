@@ -377,7 +377,10 @@ struct LayersRow: View, Equatable {
         // one keeps the shape editable and takes away only its being a
         // rectangle, the other makes it pixels. A row that cannot take it does
         // not show it (`ShapeToPath.swift`).
-        if display.canTurnIntoPath, editorState.canTurnLayerIntoPath(id: id) {
+        // Not gated on THIS row having an outline: with three rows picked the
+        // command acts on all of them, so a picture right clicked alongside two
+        // lines still offers it and simply leaves the picture alone.
+        if editorState.canTurnLayerIntoPath(id: id) {
             Button(TurnIntoPathPrompt.menuItem) { editorState.turnLayerIntoPath(id: id) }
         }
         if display.isRasterizable {

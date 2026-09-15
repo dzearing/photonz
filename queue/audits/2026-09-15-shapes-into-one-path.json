@@ -1,0 +1,30 @@
+{
+  "feature": "Several shapes into one path",
+  "epic": "icon-vector",
+  "summary": "Pick several shapes and Turn Into Path now acts on all of them, and shapes whose ends meet are welded into ONE path: three lines drawn end to end become a single closed triangle you can fill and reshape, in one undo step.",
+  "setup": "Photonz Dev, Experiments window, release Next. \"Turn a rectangle into a path\" is on by default. No screenshots: see rough.",
+  "try": [
+    { "do": "Open a new blank document." },
+    { "do": "Press L and drag a line, then press L and drag a second starting where the first ended, then a third back to where the first began." },
+    { "do": "Press Escape, then click the first Line row in the Layers list and shift click the other two." },
+    { "do": "Right click one of the three picked rows and choose “Turn Into Path…”." },
+    { "do": "Read the question, then press Turn Into Path." },
+    { "do": "In Appearance, give the new Path a fill colour." },
+    { "do": "Press ⌘Z twice, and watch the three lines come back." }
+  ],
+  "evaluate": [
+    "Did the question tell you what you were about to get, before you pressed the button?",
+    "Is one closed triangle what you wanted from three lines, or did you expect three outlines held in one layer?",
+    "Is 2 pt the right reach for “these ends meet”, or does a corner drawn by hand need more?",
+    "Does the triangle look identical to the three lines it replaced, or can you see the joints change?",
+    "Is calling the result “Path” right, or should it keep the name of the row you right clicked?"
+  ],
+  "rough": [
+    "There are no pictures in this audit at all. The Mac's screen was locked for the whole task, so not one playtest walk could run, including the new one written for this feature (Scripts/playtest/shapes-into-one-path-walk.json). A sweep has been requested so the loop runs it; everything claimed above rests on 7110 unit and render tests, not on the app being driven.",
+    "Shapes that touch nothing still come out as one layer EACH rather than one layer holding separate runs. A path in this app holds exactly one outline, and teaching it to hold several would change the renderer, the reshaping tools, hit testing and SVG export. The report was three lines that DO meet, so that was left alone deliberately.",
+    "Two paths you already drew with the Pen cannot be joined: the command is only offered when at least one picked layer is still a shape. Filed as its own task.",
+    "The 2 pt tolerance only appears in the question. Nothing on the canvas shows you which ends are near enough to meet before you commit.",
+    "When the picked shapes are painted differently the joined outline takes the topmost one's colour and line. The question says so and names the row, but there is no way to pick a different one.",
+    "There is no keyboard shortcut. Photoshop and Illustrator both put Join on ⌘J, which is already New Layer via Copy here, so nothing was displaced and nothing was added."
+  ]
+}

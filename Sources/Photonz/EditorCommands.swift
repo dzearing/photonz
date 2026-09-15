@@ -464,10 +464,11 @@ struct EditorCommands: Commands {
             // rather than absent on a layer that has no outline to find, so the
             // row is somewhere you can learn it exists.
             if Experiments.shared.turnIntoPathEnabled {
-                Button(TurnIntoPathPrompt.menuItem) {
-                    if let selectedID { editor?.turnLayerIntoPath(id: selectedID) }
-                }
-                .disabled(!(selectedID.map { editor?.canTurnLayerIntoPath(id: $0) ?? false } ?? false))
+                // On the whole selection, like Duplicate and Delete: picking
+                // three lines that meet and asking for a path gives you ONE
+                // path, welded where their ends meet (`PathJoining.swift`).
+                Button(TurnIntoPathPrompt.menuItem) { editor?.turnSelectionIntoPath() }
+                    .disabled(!(editor?.canTurnSelectionIntoPath ?? false))
             }
             // The one command that makes a shape or a piece of text into pixels,
             // which is what a marquee needs before it can cut a piece out of it

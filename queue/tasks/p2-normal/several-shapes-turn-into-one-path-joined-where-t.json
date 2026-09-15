@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:36:38.458Z",
-  "updated": "2026-09-15T14:36:51.731Z",
+  "updated": "2026-09-15T19:43:42.909Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-15: \"i draw 3 lines, i select the 3 layers and select convert to path, and i expected it to convert to 1 shape layer, but it didnt do that.\"\n\nTWO PROBLEMS IN ONE REPORT, and both need doing.\n\n1. The command only ever touches one layer. Sources/Photonz/EditorState+LayerOps.swift:334, turnLayerIntoPath(id:), takes a single id, as does canTurnLayerIntoPath(id:) at :322. So with three rows picked it converts whichever one the menu was opened on and leaves the rest. This is the SAME defect already filed against that menu in 'group-is-in-the-menu-you-get-when-you-right-clic', which asks for one settled rule about whether a row menu command acts on the row or on the selection, applied to every command in the menu. Read that task first; whichever lands second should follow the rule the first one set rather than inventing a second answer. If the rule task has not landed yet, this task should still fix its own command and say in the log which rule it assumed.\n\n2. What several shapes SHOULD become. The user's expectation is the useful one and worth building deliberately: three lines that meet are a triangle, not three lines in a bag. Joining open runs end to end is a standard vector operation and it is what makes a shape out of strokes.\n\nThis is NOT the booleans task and must not be folded into it. 'two-shapes-become-one-join-them-cut-one-out-keep' (pending, seq 170) is about AREA: union, subtract, intersect, exclude, on shapes that enclose something. Three lines enclose nothing, so a union of them produces nothing useful. Joining endpoints and combining areas are different operations that happen to share the word join, and conflating them is how one of them ends up unbuildable. Say so in that task's log when this lands.\n\nThe near-miss case is the one that decides whether this feels magic or maddening. Three lines drawn by hand almost never meet exactly, so a tolerance is needed, and a tolerance that is invisible is a tolerance nobody can predict. With the grid on and snapping working the ends usually DO meet exactly, which is worth checking first: the honest answer may be that joining requires coincident ends and the fix for everything else is that the app already snaps.",
@@ -33,6 +33,39 @@
     {
       "t": "2026-09-15T14:36:51.730Z",
       "note": "seq 2680 -> 9"
+    },
+    {
+      "t": "2026-09-15T19:26:42.464Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T19:43:42.909Z",
+      "note": "Adversarial pass BEFORE building. (1) The rule question this task inherits was already settled and did not need a second answer: 'group-is-in-the-menu-you-get-when-you-right-clic' landed EditorState.rowMenuTargets(_:) - the whole selection when the row you right clicked is part of it, else that row alone - so Turn Into Path just had to read it. (2) The hard call was what several shapes SHOULD become. PathContent holds exactly ONE outline, so 'one layer holding separate runs' would mean teaching the renderer, the reshaping tools, the handles, hit testing, SVG export and the inspector that a path can be more than one outline. That is far more than the report asked for and it would be built for a case nobody hit, because the report was three lines that DO meet. So: everything whose ends meet becomes one path, and anything that meets nothing stays its own layer. The acceptance item allowed exactly this with 'or the task states why the opposite is better'; this is that statement. (3) Cut from scope: a keyboard shortcut (Illustrator's Join is Command J, already New Layer via Copy here, so nothing was displaced and nothing added), and bridging a wide gap with a new straight run the way Illustrator's Join does, which would make the tolerance meaningless."
+    },
+    {
+      "t": "2026-09-15T19:43:42.909Z",
+      "note": "The tolerance question, answered rather than guessed. Line ends snap to borders, guides and the grid (AnnotationSnapping) but never to each other, so requiring exact coincidence would mean the feature almost never fires and the reported case would still fail. PathJoin.tolerance is 2 pt, welded at the midpoint so ends that already touched do not move at all and a near miss moves each end by at most one point. Ends further apart are LEFT ALONE. The number is not hidden: the question the command asks states it, in both directions ('within 2 pt ... pulled together' and 'No two of their ends are within 2 pt of each other, so they stay separate outlines')."
+    },
+    {
+      "t": "2026-09-15T19:43:42.909Z",
+      "note": "Built. Sources/PhotonzCore/PathJoining.swift is the whole geometry: PathJoin.join welds open runs end to end, turns a run round when its far end is the one that meets, walks them in a settled geometric order so the pick order cannot change the answer, and closes a run that comes back to its start unless closing it would enclose nothing (the rule the Pen already refuses on). PathContent.reversed() is new and public. PhotonzDocument.turningLayersIntoPath(ids:) is the pure 'what would happen' and turnLayersIntoPath(ids:) applies it in ONE mutation. The topmost picked layer survives a weld with its id, slot, effects and look; an app-written name like 'Line 3' becomes 'Path', a name a person typed is kept."
+    },
+    {
+      "t": "2026-09-15T19:43:42.909Z",
+      "note": "Copy. TurnIntoPathPrompt (one shape) is untouched, word for word. TurnIntoPathQuestion is its plural and carries the ANSWER, because four shapes can come out as one path or three, can close or not, and can be welded across a gap, and none of that is guessable from the canvas: 'Turn these 3 shapes into one path? ... Their ends meet, so they join into one outline. It comes back to where it started, so it closes and you can paint inside it.' Closed shapes get their own sentence ('Each becomes its own path'), because a rectangle has no free ends and telling somebody their ends did not meet would be nonsense. One silence key, the existing one: a join is VISIBLE the instant after (three rows became one), so by the app's own bar it does not earn a second question to silence."
+    },
+    {
+      "t": "2026-09-15T19:43:42.909Z",
+      "note": "Pixels. Tests/PhotonzRenderTests/PathJoinRenderTests.swift composites the document twice and checks WHERE it differs rather than just how much. Welded corners are drawn round when the ends they replace were round, because a round cap on each of two lines meeting at a point paints the disc one round join paints. What is left is about ten pixels per corner, all of them within 10 pt of a corner or an end and none anywhere along a run: at a joint two separate layers each laid down their own softened edge and the pair composited to less than solid, and at the free ends the outline is now rasterized against one box instead of two. The seam getting solid is an improvement, not a regression. A third test fills the closed triangle and checks the middle really went from transparent to blue."
+    },
+    {
+      "t": "2026-09-15T19:43:42.909Z",
+      "note": "NOT VERIFIED IN THE APP. The Mac's screen was locked for this whole task (Grants line said 'screen locked' on three attempts, each one status 'locked', 0 steps), so not one walk ran and there are no pictures of any kind. Scripts/playtest/shapes-into-one-path-walk.json is written and parses (72 steps) but has never executed. A sweep was requested with that reason. Verification here is 7110 unit and render tests green via Scripts/test.sh, and nothing more."
+    },
+    {
+      "t": "2026-09-15T19:43:42.909Z",
+      "note": "Left rough, below the follow-up bar and recorded here instead of filed: no keyboard shortcut (Command J is taken and nothing was displaced); the 2 pt reach is invisible on the canvas until the question names it; a joined outline takes the topmost shape's colour and line with no way to choose a different one, though the question says so and names the row; and shapes that touch nothing come out as one layer each by design, written up in docs/design/vector-paths.md. Filed instead: 'two-paths-you-drew-with-the-pen-can-be-joined-in', because two Pen paths picked together offer no command at all, which is a gap a person hits. Folded into existing tasks: 'turn-into-picture-takes-every-layer-you-picked' (Turn Into Path done, three commands left), 'two-shapes-become-one-join-them-cut-one-out-keep' (joining ends is not the booleans), 'two-timing-tests-only-fail-when-the-whole-suite' (hit it once more), and 'a-rectangle-or-an-ellipse-you-drew-becomes-a-pat' (may be stale)."
     }
-  ]
+  ],
+  "started": "2026-09-15T19:26:42.463Z"
 }

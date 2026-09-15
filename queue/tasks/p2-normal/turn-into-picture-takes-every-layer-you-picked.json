@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T03:34:28.834Z",
-  "updated": "2026-09-15T12:14:53.966Z",
+  "updated": "2026-09-15T19:43:21.046Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-09-13 while adding Group and Ungroup to the layer row menu. Evidence: the row menu in Sources/Photonz/LayersRow.swift calls editorState.rasterizeLayer(id:), turnLayerIntoPath(id:), separateIntoLayers(id:) and turnIntoText(id:), none of which consult multiSelectedLayerIDs, while duplicateLayer(id:), deleteLayer(id:), restack(id:_:), mergeDown(id:), toggleLayerVisibility(id:) and toggleLayerLock(id:) all route through the whole selection when the clicked row is a member. The shared rule is EditorState.rowMenuTargets(_:) in Sources/Photonz/EditorState+Layout.swift; these four just need to read it. Separate into Layers and Turn into Text are only offered on a picture, so batching them matters less than the two Turn Into commands; do those first.",
@@ -36,6 +36,10 @@
     {
       "t": "2026-09-15T12:14:53.965Z",
       "note": "seq 590 -> 630"
+    },
+    {
+      "t": "2026-09-15T19:43:21.045Z",
+      "note": "Turn Into Path is DONE as of 2026-09-15, in 'several-shapes-turn-into-one-path-joined-where-t'. It reads rowMenuTargets now, and over several shapes it does one thing more than a batch: shapes whose ends meet are welded into ONE path (PathJoining.swift), so three lines that meet become a triangle rather than three paths. Layers in the selection with no outline to find are left alone, which is this task's acceptance item 2, and it is one undo step. STILL OUTSTANDING here: Turn Into Picture, Separate into Layers and Turn into Text, which all still act on the clicked row alone. Note for whoever takes those: a batch of Turn Into Picture is N pictures, not one, so it is a plain batch with none of the joining."
     }
   ]
 }

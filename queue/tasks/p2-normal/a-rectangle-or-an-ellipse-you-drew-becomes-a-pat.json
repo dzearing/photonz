@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:07.324Z",
-  "updated": "2026-09-15T12:14:53.430Z",
+  "updated": "2026-09-15T19:43:31.690Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve",
     "a-path-can-be-reshaped-after-you-draw-it"
@@ -45,6 +45,10 @@
     {
       "t": "2026-09-15T12:14:53.429Z",
       "note": "seq 110 -> 150"
+    },
+    {
+      "t": "2026-09-15T19:43:31.689Z",
+      "note": "Worth checking whether this is still open work: Turn Into Path shipped behind next-turn-into-path (on by default in Next) and is exercised by Scripts/playtest/turn-into-a-path-walk.json, Tests/PhotonzCoreTests/TurnIntoPathTests.swift and Tests/PhotonzRenderTests/TurnIntoPathRenderTests.swift. On 2026-09-15 it also learned to act on the whole selection and to weld shapes whose ends meet into one path. Noted while finishing 'several-shapes-turn-into-one-path-joined-where-t'; not closed from here because whoever filed it may be holding it for the flag being promoted."
     }
   ]
 }

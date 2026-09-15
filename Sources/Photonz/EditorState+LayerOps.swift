@@ -314,36 +314,87 @@ extension EditorState {
 
     // MARK: - Turn Into Path (a box, an oval or a line → an outline)
 
-    /// Whether "Turn Into Path" applies to the given layer (menu enablement).
+    /// Whether "Turn Into Path" applies from a layer ROW's menu.
+    ///
+    /// It asks about everything the row menu would act on — the whole selection
+    /// when the row you right clicked is part of it, else that row alone
+    /// (`rowMenuTargets`) — and answers yes as soon as ONE of them has an
+    /// outline to find. A picture picked alongside two lines does not stop the
+    /// lines converting; it is simply left where it is.
     ///
     /// The flag is part of the answer rather than a wrapper round it, so the
     /// row and the Layer menu agree without either of them having to remember
     /// to ask twice.
     func canTurnLayerIntoPath(id: UUID) -> Bool {
-        guard Experiments.shared.turnIntoPathEnabled else { return false }
-        return document?.layer(id: id)?.canTurnIntoPath ?? false
+        canTurnLayersIntoPath(ids: rowMenuTargets(id))
     }
 
-    /// Asks the question, then turns the shape into a path if the answer is yes
-    /// (`TurnIntoPathPrompt`).
+    /// Whether Layer ▸ Turn Into Path has anything to act on: the whole
+    /// selection, the same targets Duplicate and Delete read.
+    var canTurnSelectionIntoPath: Bool {
+        canTurnLayersIntoPath(ids: actionableLayerIDs)
+    }
+
+    private func canTurnLayersIntoPath(ids: Set<UUID>) -> Bool {
+        guard Experiments.shared.turnIntoPathEnabled, let document else { return false }
+        return ids.contains { document.layer(id: $0)?.canTurnIntoPath == true }
+    }
+
+    /// The layer row menu's Turn Into Path, on the whole selection when the row
+    /// you right clicked is one of it.
+    func turnLayerIntoPath(id: UUID) {
+        turnLayersIntoPath(ids: rowMenuTargets(id))
+    }
+
+    /// Layer ▸ Turn Into Path over the selection.
+    func turnSelectionIntoPath() {
+        turnLayersIntoPath(ids: actionableLayerIDs)
+    }
+
+    /// Asks the question, then turns the shapes into paths if the answer is yes.
     ///
     /// It asks for the same reason "Turn Into Picture" does: the picture is
     /// identical the instant after, and what is gone is invisible — the layer
     /// has stopped being a rectangle, so the Corner Radius control has nothing
     /// left to act on. Same sheet, same "Don't ask again", its own answer.
-    func turnLayerIntoPath(id: UUID) {
-        guard let document, let layer = document.layer(id: id),
-              layer.canTurnIntoPath, let prompt = TurnIntoPathPrompt(layer: layer) else { return }
-        guard !Self.silencedQuestions.isSilenced(.turnIntoPath) else {
-            applyTurnIntoPath(id: id)
+    ///
+    /// With SEVERAL shapes picked the question has one more job, and it is the
+    /// reason the plural form exists: four shapes can come out as one path or
+    /// as three, they can close or stay open, and two ends can be welded across
+    /// a gap of a couple of points. None of that is guessable from the canvas,
+    /// so the question says which it will be BEFORE the button is pressed
+    /// (`TurnIntoPathQuestion`).
+    func turnLayersIntoPath(ids: Set<UUID>) {
+        guard Experiments.shared.turnIntoPathEnabled, let document, !ids.isEmpty else { return }
+        let plan = document.turningLayersIntoPath(ids: ids).plan
+        guard !plan.isEmpty else { return }
+
+        // One shape asks the question it has always asked, word for word.
+        if plan.takes == 1 {
+            guard let only = ids.first(where: { document.layer(id: $0)?.canTurnIntoPath == true }),
+                  let layer = document.layer(id: only),
+                  let prompt = TurnIntoPathPrompt(layer: layer) else { return }
+            askBeforeTurningIntoPath(title: prompt.title, message: prompt.message,
+                                     confirm: prompt.confirm, cancel: prompt.cancel,
+                                     ids: [only])
             return
         }
+        let question = TurnIntoPathQuestion(plan: plan)
+        askBeforeTurningIntoPath(title: question.title, message: question.message,
+                                 confirm: question.confirm, cancel: question.cancel, ids: ids)
+    }
 
+    private func askBeforeTurningIntoPath(title: String, message: String, confirm: String,
+                                          cancel: String, ids: Set<UUID>) {
+        guard !Self.silencedQuestions.isSilenced(.turnIntoPath) else {
+            applyTurnIntoPath(ids: ids)
+            return
+        }
         let alert = NSAlert()
-        alert.messageText = prompt.title
-        alert.informativeText = prompt.message
-        alert.addButton(withTitle: prompt.confirm)
-        alert.addButton(withTitle: prompt.cancel)
+        alert.messageText = title
+        alert.informativeText = message
+        alert.addButton(withTitle: confirm)
+        alert.addButton(withTitle: cancel)
         alert.showsSuppressionButton = true
         alert.suppressionButton?.title = TurnIntoPathPrompt.suppression
         let answer: @MainActor (NSApplication.ModalResponse) -> Void = { [weak self] response in
@@ -351,7 +402,7 @@ extension EditorState {
                 Self.silencedQuestions.silence(.turnIntoPath)
             }
             guard response == .alertFirstButtonReturn else { return }
-            self?.applyTurnIntoPath(id: id)
+            self?.applyTurnIntoPath(ids: ids)
         }
         if let window = hostWindow {
             alert.beginSheetModal(for: window) { response in
@@ -362,13 +413,20 @@ extension EditorState {
         }
     }
 
-    /// Writes the outline in, in one undo step, and leaves the layer picked so
-    /// its points are on it and ready to drag (`CanvasPathEdit`).
-    private func applyTurnIntoPath(id: UUID) {
-        guard document?.layer(id: id)?.canTurnIntoPath == true else { return }
+    /// Writes the outlines in, in ONE undo step, and leaves what survives
+    /// picked so its points are on it and ready to drag (`CanvasPathEdit`).
+    ///
+    /// Everything that was welded into another layer is gone by now, so the
+    /// selection is rebuilt from the rows that are still there rather than from
+    /// the ids that went in.
+    private func applyTurnIntoPath(ids: Set<UUID>) {
         discardDragPreview()
-        perform { $0.turnLayerIntoPath(id: id) }
-        selectedLayerID = id
+        perform { $0.turnLayersIntoPath(ids: ids) }
+        guard let document else { return }
+        let alive = ids.filter { document.layer(id: $0) != nil }
+            .sorted { (document.path(of: $0)?.last ?? 0) < (document.path(of: $1)?.last ?? 0) }
+        multiSelectedLayerIDs = alive.count > 1 ? Set(alive) : []
+        selectedLayerID = alive.last
     }
 
     // MARK: - Restacking (Photoshop ⌘] ⌘[ ⇧⌘] ⇧⌘[)

@@ -1,0 +1,28 @@
+{
+  "id": "two-paths-you-drew-with-the-pen-can-be-joined-in",
+  "title": "Two paths you drew with the Pen can be joined into one",
+  "goal": "Draw two lines with the Pen, pick both, and there is no way to make them one shape. The same command over two shapes drawn with the shape tools does exactly that: it welds them where their ends meet. Somebody who drew with the Pen instead gets nothing, which is backwards, because the Pen is the tool for people who are building an outline out of pieces.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 2730,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T19:43:21.132Z",
+  "updated": "2026-09-15T19:43:21.135Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-09-15 while building 'several-shapes-turn-into-one-path-joined-where-t'. The geometry is already done and tested: PathJoin.join in Sources/PhotonzCore/PathJoining.swift welds any list of PathContent, and PhotonzDocument.turningLayersIntoPath(ids:) already ADMITS open path layers as participants. What blocks it is only the gate: EditorState.canTurnLayersIntoPath(ids:) in Sources/Photonz/EditorState+LayerOps.swift requires at least one picked layer to still be a shape (layer.canTurnIntoPath), so two paths picked together offer no command at all. Reproduced by reading that gate and by the passing test 'An open path already on the canvas joins onto a line picked with it' in Tests/PhotonzCoreTests/PathJoiningTests.swift, which only passes because a LINE is in the selection. The open question is the NAME: Turn Into Path reads wrong over things that are already paths, and Illustrator calls this Join. Whoever takes it should settle the name first, and note that Photoshop and Illustrator both put Join on Command J, which is already New Layer via Copy here.",
+  "acceptance": [
+    "Picking two open paths drawn with the Pen and asking to join them gives one path, welded where their ends meet, closed if the last end comes back to the first",
+    "The command is reachable and named so a person can find it without knowing it is the same code as Turn Into Path",
+    "It is one undo step, and undo brings back the separate paths exactly as they were",
+    "The same stated tolerance applies and the question says what you will get, exactly as it does for shapes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T19:43:21.134Z",
+      "note": "created (manual)"
+    }
+  ]
+}

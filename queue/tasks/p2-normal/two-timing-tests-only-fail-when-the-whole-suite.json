@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T18:20:47.039Z",
-  "updated": "2026-09-15T18:20:47.042Z",
+  "updated": "2026-09-15T19:35:53.746Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-15 on main at 6b3deb32 plus the copy-a-look work.\n\nFull run:\n  $ Scripts/test.sh\n  ✘ Test \"A whole strip of moving previews fits inside one frame of the loop\" recorded an issue at IconPreviewRenderTests.swift:258:27: Issue recorded\n  ✘ Test aGridOverALargeScreenshotPaysForTheBorderQuery() recorded an issue at DrawLandingCostTests.swift:151:9: Expectation failed: (abs(dense - sparse) → 2662.0996093750005) < (dense * 0.5 → 1463.3499375)\n  ✘ Test run with 7028 tests in 564 suites failed after 84.362 seconds with 2 issues.\n\nSame binary, same commit, the two suites on their own:\n  $ Scripts/test.sh --filter DrawLandingCostTests --filter IconPreviewRenderTests\n  ✔ Test run with 10 tests in 3 suites passed after 8.120 seconds.\n\nAn earlier full run of nearly the same tree passed all 7027, so it is load dependent rather than a real regression. Both are wall-clock or work-count budgets measured while 564 suites share the machine. The renderer perf suite already solves this: it calibrates against a yardstick and reports the machine multiplier (see the [perf] lines it prints). These two do not.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-15T18:20:47.041Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T19:35:53.745Z",
+      "note": "Hit again on 2026-09-15 during 'several shapes turn into one path': Scripts/test.sh full run failed only aGridOverALargeScreenshotPaysForTheBorderQuery (DrawLandingCostTests.swift:151, abs(dense-sparse) 2508.4 < dense*0.5 1935.7), and the same filter alone passed 3/3 in 8.2s. Same shape as the two already recorded here."
     }
   ]
 }

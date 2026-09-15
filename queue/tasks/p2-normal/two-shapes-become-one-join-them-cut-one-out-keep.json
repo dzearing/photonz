@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-13T14:13:07.274Z",
-  "updated": "2026-09-15T14:36:51.779Z",
+  "updated": "2026-09-15T19:43:21.090Z",
   "deps": [
     "a-shape-can-be-any-path-straight-edges-and-curve"
   ],
@@ -49,6 +49,10 @@
     {
       "t": "2026-09-15T14:36:51.778Z",
       "note": "Scope boundary, 2026-09-15: joining OPEN runs end to end (three lines becoming a triangle) is NOT this task and is filed as several-shapes-turn-into-one-path-joined-where-t. This task is area operations on shapes that enclose something: union, subtract, intersect, exclude. A union of three zero-area lines produces nothing, so the two must not be merged however similar the word join sounds."
+    },
+    {
+      "t": "2026-09-15T19:43:21.089Z",
+      "note": "Boundary marked on 2026-09-15 by 'several-shapes-turn-into-one-path-joined-where-t', which shipped JOINING ENDS: several open outlines welded where their ends meet, in PhotonzCore/PathJoining.swift. That is NOT this task and must not be folded into it. This task is about AREA - union, subtract, intersect, exclude on shapes that enclose something - and three lines enclose nothing, so a union of them produces nothing useful. The two operations share the word join and are different. PathJoin.tolerance (2pt) and PathContent.reversed() are there to reuse; PathContent still holds exactly ONE outline, which is the thing a subtract that leaves a hole will have to face."
     }
   ]
 }

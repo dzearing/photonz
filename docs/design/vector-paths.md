@@ -578,6 +578,76 @@ and compares the two bitmaps byte for byte.
    for a gradient, so every open path in the app ended in square butts while
    asking for round ones.
 
+## Several shapes into one path
+
+Three lines drawn end to end are a triangle, not three lines in a bag. Pick all
+three, ask for a path, and you get ONE path: the runs welded where their ends
+meet, closed because the last end came back to the first, and fillable from that
+moment on. `PhotonzCore/PathJoining.swift` is the geometry;
+`PhotonzDocument.turningLayersIntoPath(ids:)` carries it to the document in one
+mutation, so the whole thing is one undo step.
+
+**This is not the boolean operations.** Union, subtract and intersect combine
+AREA, and three lines enclose no area at all, so a union of them produces
+nothing useful. Joining ends and combining areas share the word "join" and are
+different operations; conflating them is how one of them ends up unbuildable.
+
+### The rules, all of them stated
+
+* **The command acts on everything picked.** From the Layer menu that is the
+  selection; from a layer row's menu it is `rowMenuTargets` — the whole
+  selection when the row you right clicked is part of it, else that row alone.
+* **Ends within 2 points of each other MEET** (`PathJoin.tolerance`). They are
+  welded into one anchor sitting half way between, so ends that already touched
+  do not move at all and a near miss moves each end by at most one point. Ends
+  further apart than that are LEFT ALONE: they do not join, and the question
+  says so. A tolerance nobody can predict is worse than no tolerance, which is
+  why the number is in the question rather than only in this file.
+* **An outline that comes back to its start closes**, unless closing it would
+  enclose nothing — an outline doubling back along its own line sweeps no area,
+  which is the same thing the Pen already refuses to close.
+* **Order and direction do not matter.** The open runs are walked in a settled
+  geometric order rather than the order they were picked, and a run whose far
+  end is the one that meets is turned round before it is carried on.
+* **The topmost survives.** It keeps its id, its slot, its effects and its look,
+  so undo has one row to put back. It keeps its name too, unless that name was
+  one the app wrote: "Line 3" is a poor name for a triangle, so an automatic
+  name becomes "Path".
+* **Welded corners are drawn round where the ends they replace were round.** A
+  round cap on each of two lines meeting at a point paints the disc one round
+  join paints, so the picture does not change at the joint.
+
+### What does not join, and why that is the honest answer
+
+A rectangle or an oval is CLOSED and has no free ends. A locked layer is never
+swallowed. A rotated or flipped layer's outline is not where its anchors say it
+is. And shapes that touch nothing simply do not meet.
+
+All of those stay their own layer. The alternative — one layer holding several
+separate runs — would mean a path that is more than one outline, and every part
+of the app that reads a path (the renderer, the reshaping tools, the handles,
+hit testing, SVG export, the inspector) assumes exactly one. That is a much
+larger change than the thing anyone asked for, and it would be built for a case
+nobody reported: the report was three lines that DO meet.
+
+### What it says before it does it
+
+One shape asks the question it always asked (`TurnIntoPathPrompt`). Several ask
+the plural (`TurnIntoPathQuestion`), and it carries one thing the singular never
+had to: the ANSWER. Four shapes can come out as one path or as three, they can
+close or stay open, and two ends can be welded across a gap. None of that is
+guessable from the canvas beforehand, so the question says which it will be:
+
+> **Turn these 3 shapes into one path?**
+> Every point on them becomes yours to move, curve or delete. Their ends meet,
+> so they join into one outline. It comes back to where it started, so it
+> closes and you can paint inside it. They stop being shapes, so the controls
+> only a shape has go. Undo puts it back.
+
+It is the same "Don't ask again" the one-shape question carries, because it is
+the same command. Silenced, nothing is announced — which the app's own bar for
+asking allows, since a join is VISIBLE the instant after: three rows became one.
+
 ## What the next slices add
 
 * **Booleans** (`docs/design/mocks/pages/draw-boolean.html`) — union, subtract,
