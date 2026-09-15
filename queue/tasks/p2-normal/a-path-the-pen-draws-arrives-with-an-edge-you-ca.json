@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T23:17:43.378Z",
-  "updated": "2026-09-15T22:30:05.278Z",
+  "updated": "2026-09-15T22:30:20.302Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe at 2026-09-14 while giving the Pen its colour capsule.\n\nCommand:\n  Scripts/playtest.sh Scripts/playtest/pen-arms-its-colour-walk.json\n\nOutput (log.json, the expectPath step):\n  Path: 3 anchors, closed, 0 curved runs, 4 px thick, inside #2D7FF9, outline #2D7FF9, as claimed\n\nThe screen capture pen-colour-5-drawn-sc.png in that run shows the triangle with no visible edge at all. The 4px centred stroke means the painted shape reaches 2px past each clicked point, which matters on a 24px icon grid.\n\nThe rule for boxes is PhotonzCore/BorderInk.swift, reached through AnnotationStyles.arrivingStyle(forShape:); it was settled by the user on 2026-09-13 and shipped by a-shape-s-border-arrives-the-same-colour-as-its (done 2026-09-14). A path does not go through it: PenSession.content(_:closed:) in Sources/PhotonzCore/PenDrawing.swift builds PathContent with strokeWidth: startingStrokeWidth and fill: startingPaint, both the armed ink. Deciding whether a closed path arrives with no edge at all is the same decision the box already made, so it is probably a straight application of the same rule rather than a new one; the open-path case must keep its stroke, since a line IS its stroke.\n\nEvery pen walk currently claims 4 px thick and would need teaching.",
@@ -63,7 +63,12 @@
     {
       "t": "2026-09-15T22:30:05.277Z",
       "note": "Left rough, no task earned. (a) Hovering the first point to close a shape now makes the preview lose its line and become a solid fill in that instant. It is the honest preview of what lands, but it is a visible jump under the hand. (b) A filled closed path with no stroke is clickable only where it is painted: the 8 points of slop outside its edge came from the stroke width (PathContent.isHit). That matches how a filled box with no border already behaves, so it is consistency rather than a regression, but small shapes are a slightly smaller target. Both are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-15T22:30:20.300Z",
+      "note": "A closed path off the Pen arrives as its fill and nothing else, so its edges land on the points that were clicked; the first outline it is asked for is painted graphite or white, whichever reads against that fill; switching its Fill off hands back the line that carries it; an open path is untouched. PhotonzCore only (PenDrawing, BorderInk, PathLineStyle), design doc updated, audit at queue/audits/2026-09-15-path-arrives-with-no-edge.json. Verified by Scripts/test.sh, 7160 tests green. NOT verified in the app: the screen was locked for the whole task so no walk could run at all, the new path-arrives-with-no-edge-walk has never executed, and a sweep is requested."
     }
   ],
-  "started": "2026-09-15T22:20:44.481Z"
+  "started": "2026-09-15T22:20:44.481Z",
+  "completed": "2026-09-15T22:30:20.301Z"
 }
