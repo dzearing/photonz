@@ -118,8 +118,7 @@ enum MotionSVG {
         // turn, then the growth. That is the order the canvas composes them
         // in, where a move shifts the whole drawing and a turn swings what is
         // inside it (`LayerMotion.applied`).
-        let order: [MotionProperty] = [.opacity, .position, .rotation, .scale, .color, .strokeWidth]
-        for property in order {
+        for property in MotionProperty.nestingOrder {
             guard let motion = motions.first(where: { $0.property == property }) else { continue }
             guard let track = track(for: motion, layer: layer, pivot: pivot, cycleMS: cycleMS)
             else {

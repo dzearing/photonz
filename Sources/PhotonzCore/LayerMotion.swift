@@ -45,6 +45,21 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     public static let menuOrder: [MotionProperty] =
         [.position, .scale, .rotation, .opacity, .color, .strokeWidth]
 
+    /// How the properties NEST when more than one is on the same layer,
+    /// outermost first: a fade over everything, then the move, then the turn,
+    /// then the growth, and inside all of them what the shape is painted and
+    /// how thick its line is.
+    ///
+    /// One list, read by both halves of the promise. An exported file wraps the
+    /// layer in this order literally (`SVGMotionExport`), and the canvas works
+    /// the same picture out by applying them from the INSIDE out, so a shape
+    /// told to double and to thicken its line ends up with the same line in the
+    /// app and in a browser. Without it the two disagree the moment a layer
+    /// carries both, because growing something multiplies the line it is drawn
+    /// with and setting that line afterwards throws the multiplication away.
+    public static let nestingOrder: [MotionProperty] =
+        [.opacity, .position, .rotation, .scale, .color, .strokeWidth]
+
     /// One item of the plus's menu: a property, the value the layer is wearing
     /// now, and whether this layer is already animating it.
     public struct Offer: Hashable, Sendable {
@@ -698,7 +713,15 @@ extension Layer {
     /// styling strikes, where nothing is ever baked into pixels.
     public func moved(toMotionTimeMS ms: Int, cycleMS: Int) -> Layer {
         var moved = self
-        for motion in motions ?? [] where motion.isOn {
+        // From the INSIDE out, so the picture does not depend on which order
+        // somebody happened to add the rows in and matches the way an exported
+        // file nests them (`MotionProperty.nestingOrder`).
+        for motion in (motions ?? []).filter(\.isOn).sorted(by: { left, right in
+            let order = MotionProperty.nestingOrder
+            let l = order.firstIndex(of: left.property) ?? 0
+            let r = order.firstIndex(of: right.property) ?? 0
+            return l > r
+        }) {
             moved = motion.property.applied(motion.value(atMS: ms, cycleMS: cycleMS),
                                             to: moved, authored: self)
         }
@@ -725,12 +748,24 @@ extension MotionProperty {
             moved.frame.origin = CGPoint(x: moved.frame.origin.x + (point.x - authored.frame.origin.x),
                                          y: moved.frame.origin.y + (point.y - authored.frame.origin.y))
         case let (.scale, .number(percent)):
-            let factor = CGFloat(percent) / 100
-            let size = CGSize(width: authored.frame.width * factor,
-                              height: authored.frame.height * factor)
-            moved.frame = CGRect(x: moved.frame.midX - size.width / 2,
-                                 y: moved.frame.midY - size.height / 2,
-                                 width: size.width, height: size.height)
+            // A real magnification about the middle of the box, so the drawing
+            // grows and not just the box round it: anchors, endpoints, line
+            // weight, type size, corner and shadow all multiplied together
+            // (`MotionScale.swift`). Setting the frame alone left a 40pt shape
+            // painted into an 80pt box, which is why Scale looked broken.
+            //
+            // Read off `moved` rather than `authored`, and safely: scale is the
+            // only motion that changes the size of anything, and a layer is
+            // offered it once, so there is nothing here to compound. Growing
+            // what the other motions have already done is also what the export
+            // does, where the scale wraps everything inside it.
+            // The middle of what is DRAWN, which on a group is the box its
+            // contents make rather than its own anchor: a group's frame is a
+            // corner to measure its children from, and swelling about that
+            // corner would send the drawing off across the canvas.
+            let middle = moved.group == nil ? moved.frame.standardized : moved.localBounds
+            moved = moved.drawnLarger(by: CGFloat(percent) / 100,
+                                      about: CGPoint(x: middle.midX, y: middle.midY))
         case let (.rotation, .number(degrees)):
             moved.transform.rotation = CGFloat(degrees) * .pi / 180
         case let (.opacity, .number(percent)):

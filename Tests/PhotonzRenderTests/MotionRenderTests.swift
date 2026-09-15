@@ -275,3 +275,102 @@ struct MotionPivotRenderTests {
         #expect(inkBox(withMotion) == inkBox(without))
     }
 }
+
+/// A layer told to grow is DRAWN bigger, in pixels.
+///
+/// Scale used to set the box and nothing else, so a pen path went from 1600
+/// drawn pixels to 1600 drawn pixels over a lap that asked it to double: the
+/// rasterizer painted a 40pt shape into an 80pt box and scaled that box into
+/// the frame at 1:1. Counting ink at the two ends of the lap is the only check
+/// that could have caught it, so it lives here rather than in the model tests
+/// next door.
+@Suite("A layer told to grow is drawn bigger")
+struct MotionScaleRenderTests {
+
+    /// How many pixels of this picture have anything in them at all.
+    private func ink(_ image: CGImage) -> Int {
+        let width = image.width, height = image.height
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        let context = CGContext(data: &data, width: width, height: height,
+                                bitsPerComponent: 8, bytesPerRow: width * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        var lit = 0
+        for i in stride(from: 3, to: data.count, by: 4) where data[i] > 20 { lit += 1 }
+        return lit
+    }
+
+    /// A 40pt square told to go from 100% to 200% over one lap.
+    private func doubling(_ layer: Layer) -> PhotonzDocument {
+        var moving = layer
+        moving.motions = [LayerMotion(property: .scale,
+                                      from: .number(100), to: .number(200),
+                                      timing: MotionTiming(startMS: 0, durationMS: 1000),
+                                      curve: .linear, repeats: .forever)]
+        return PhotonzDocument(canvasSize: CGSize(width: 200, height: 200), layers: [moving])
+    }
+
+    private func drawnArea(_ document: PhotonzDocument, atMS ms: Int) throws -> Int {
+        let image = try #require(DocumentRenderer().render(document.moved(toMotionTimeMS: ms),
+                                                           store: ImageStore(), scale: 1))
+        return ink(image)
+    }
+
+    private func square() -> Layer {
+        let content = PathContent(anchors: [PathAnchor(point: .zero),
+                                            PathAnchor(point: CGPoint(x: 40, y: 0)),
+                                            PathAnchor(point: CGPoint(x: 40, y: 40)),
+                                            PathAnchor(point: CGPoint(x: 0, y: 40))],
+                                  isClosed: true,
+                                  paint: Paint(hex: "#FF0000"),
+                                  strokeWidth: 0,
+                                  fill: Paint(hex: "#FF0000"))
+        return PathBuilder.layer(content, at: CGPoint(x: 30, y: 30))
+    }
+
+    private func box() -> Layer {
+        Layer(name: "Box",
+              content: .annotation(AnnotationContent(shape: .rectangle,
+                                                     strokeWidth: 0,
+                                                     colorHex: "#FF0000",
+                                                     start: .zero,
+                                                     end: CGPoint(x: 40, y: 40),
+                                                     fillColorHex: "#FF0000")),
+              frame: CGRect(x: 30, y: 30, width: 40, height: 40))
+    }
+
+    /// THE TEST: twice as wide is four times the ink. Within a couple of
+    /// percent, because the last millisecond of the lap is a whisker short of
+    /// the full 200% and an edge is antialiased.
+    @Test func aPathDoubledDrawsFourTimesTheInk() throws {
+        let document = doubling(square())
+        let start = try drawnArea(document, atMS: 0)
+        let end = try drawnArea(document, atMS: 999)
+        #expect(start == 1600)
+        #expect(abs(Double(end) / Double(start) - 4) < 0.05,
+                "a 40pt square doubled covers four times the pixels, got \(end) from \(start)")
+    }
+
+    /// And a rectangle by the same amount, not the one and a quarter times it
+    /// used to manage.
+    @Test func aBoxDoubledDrawsFourTimesTheInk() throws {
+        let document = doubling(box())
+        let start = try drawnArea(document, atMS: 0)
+        let end = try drawnArea(document, atMS: 999)
+        #expect(start == 1600)
+        #expect(abs(Double(end) / Double(start) - 4) < 0.05,
+                "a 40pt box doubled covers four times the pixels, got \(end) from \(start)")
+    }
+
+    /// The two kinds agree with each other at every moment of the lap: a shape
+    /// and the path it turns into cannot grow at two different rates.
+    @Test func aPathAndABoxGrowAtTheSameRate() throws {
+        let path = doubling(square()), shape = doubling(box())
+        for ms in [0, 250, 500, 750, 999] {
+            let a = try drawnArea(path, atMS: ms), b = try drawnArea(shape, atMS: ms)
+            #expect(abs(Double(a - b)) / Double(b) < 0.02,
+                    "at \(ms)ms the path drew \(a) and the box drew \(b)")
+        }
+    }
+}

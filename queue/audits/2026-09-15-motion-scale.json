@@ -1,0 +1,28 @@
+{
+  "feature": "Scale on the Motion list",
+  "epic": "icon-animate",
+  "summary": "A layer told to change its size over time now actually changes size. Scale used to move the box round the drawing and leave the drawing the size it was, so a pen path told to double was still drawn at its original size; now the shape, the line round it, the words, the corner and the shadow all grow together, the way an exported animated SVG already grew them.",
+  "setup": "Photonz Dev, Experiments window, release Next, turn on \"Tell a layer to change one of its properties over time\". Open any document.",
+  "try": [
+    { "do": "Draw a square with the Pen and give it a thick outline." },
+    { "do": "With it picked, press the plus on the Motion header and choose Scale." },
+    { "do": "Set the entry to go from 100% to 200%.", "shot": "2026-09-15-motion-scale-at-100.png" },
+    { "do": "Press the play button on the Motion header and watch one lap.", "shot": "2026-09-15-motion-scale-at-180.png" },
+    { "do": "Draw a rectangle beside it, give it the same Scale entry, and play again: the two should swell by the same amount." },
+    { "do": "Group the two and put a Scale entry on the group instead, then play." },
+    { "do": "Export the document as an animated SVG and open it in a browser beside the app." }
+  ],
+  "evaluate": [
+    "Does a shape swell in place, or does it drift as it grows?",
+    "Does the line round a shape thickening with it look right, or would you rather a 4pt outline stayed 4pt however big the shape gets?",
+    "Do the square and the rectangle grow at visibly the same rate?",
+    "Does the icon in the browser look the same size as the icon in the app at the same point of the lap?",
+    "At 200% the shape is redrawn rather than blown up, so it stays sharp. Is that what you see at the top of the swell?"
+  ],
+  "rough": [
+    "The Mac's screen was locked for this whole run, so no walk could be run and there are no pictures of the app window at all. The two shots here are the canvas's own offscreen render of a document with a Scale entry on it, taken straight from the renderer the canvas uses, not photographs of the window.",
+    "A piece that SLIDES inside a group that GROWS still slides the distance it was given rather than that distance scaled up with the group, so an exported SVG moves it twice as far on a doubled icon. Filed separately as \"A piece that slides inside an icon that grows slides the wrong distance\".",
+    "Scaling a text layer grows its type, and its box then re-measures to however tall the bigger words need, so a label's vertical middle can drift a point or two as it swells. Every other kind grows exactly about its middle.",
+    "Growing a shape multiplies the line it is drawn with, because that is what scale() does in an SVG and the two have to agree. If you want a shape that swells with a line that holds its weight, that is a choice the row does not offer yet."
+  ]
+}
