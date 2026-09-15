@@ -1,0 +1,76 @@
+{
+  "id": "work-out-whether-the-app-needs-project-types-at-should-photonz-ask-what-you-are",
+  "taskId": "work-out-whether-the-app-needs-project-types-at",
+  "question": "Should Photonz ask what you are making, and should the answer change what you can see?",
+  "context": "The study is at http://127.0.0.1:8791/index.html#project-kinds. Drawing an icon today, you are also offered the measure tool, the highlighter, the zoom callout and the blur lens, and one day a video timeline. The question is whether the app should ask what you are making at the start and then show a smaller set of things. The study says asking is worth it and hiding is not, because one Photonz document can already hold a 24 point icon beside a 1440 point screen and there is no kind that is true of it.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Ask, then keep everything",
+      "summary": "File ▸ New asks what you are making: Icon, Screen, Capture or Recording. Picking one sets the canvas up for you, at the right size and a zoom you can work at, with the right guides on and the right export ready. From there nothing is ever taken away: every tool stays in the bar, and panels appear on the right because of what is actually on the canvas, not because of what you said at the start.",
+      "pros": [
+        "You get the helpful half straight away: today the same moment asks how big, which you can only answer if you already know the answer.",
+        "Nothing can be hidden from you at the wrong moment, so no tool ever goes missing.",
+        "It is right about a document that holds both an icon and a screen, which the app already lets you make.",
+        "Nothing is stored in the file, so old files and files from other people behave exactly the same as new ones."
+      ],
+      "cons": [
+        "The busyness the question was asked about does not go away by itself: the bar and the side pane still carry everything."
+      ],
+      "mitigation": "The side pane is where the crowding actually is, and it already shows sections based on what you picked. Tightening that so a section only appears when the thing in front of you has something to say gives the same relief, per part of the canvas, without anyone having to answer a question first.",
+      "declines": false
+    },
+    {
+      "id": "b",
+      "label": "Ask, and show only what that kind needs",
+      "summary": "The full idea as it was proposed. You pick a kind when you start, and the app remembers it: drawing an icon, the measure tool, the arrow, the highlighter, the zoom callout and the blur lens all leave the bar, and a recording loses the pen, the fill and the frame. A Show everything switch brings them back when you need one.",
+      "pros": [
+        "The quietest possible workspace for one job: five of thirteen tool slots go when you are drawing an icon.",
+        "Everything the app can do for that job is closer to hand, with nothing else in the way.",
+        "It is the most direct answer to the thing that prompted the question."
+      ],
+      "cons": [
+        "A tool that is gone looks like a tool that does not exist. Someone who pastes a screenshot into an icon to trace from will look for the measure readout, not find it, and conclude the app cannot measure.",
+        "It has no honest answer for the document that is an icon beside the screen it appears in, and that document is ordinary here.",
+        "For capture and redline work it removes nothing at all, so the main way this app gets used sees no benefit.",
+        "The kind lives in the file, so it is a promise every document has to keep from now on."
+      ],
+      "mitigation": "The Show everything switch softens the worst case, at the price of the app having two states to learn and a setting where a feature was meant to be.",
+      "declines": false
+    },
+    {
+      "id": "c",
+      "label": "Change nothing at the start, let the canvas do the talking",
+      "summary": "New keeps asking only how big, exactly as it does today. The work goes entirely into the right hand side: the panel you see follows the thing you are working in, so a 24 point frame brings the size previews and a screen brings layout and measurements, and it changes as you move around the same document.",
+      "pros": [
+        "The smallest change, and it improves every document including ones already saved.",
+        "It still fixes the document that is two things at once.",
+        "Nothing new to choose and nothing new to learn."
+      ],
+      "cons": [
+        "Somebody sitting down to draw a 24 point icon still has to know that 24 by 24 is the answer and that they want to be zoomed right in, which is the part of the complaint this leaves untouched.",
+        "The app never says out loud what it is good at, so the icon and video work stay hard to find."
+      ],
+      "mitigation": "The starting points from option a can be added later without undoing anything, since they set the canvas up rather than change how it behaves.",
+      "declines": false
+    },
+    {
+      "id": "d",
+      "label": "Leave it alone for now",
+      "summary": "Keep New Canvas as the size list it is, and do not change what appears on the right either. Revisit the question if and when the app genuinely grows tools that only one kind of work wants.",
+      "pros": [
+        "Nothing to build, nothing to get wrong, and the icon and animation work keeps the whole run of attention.",
+        "The question gets asked again later with more of the app actually built."
+      ],
+      "cons": [
+        "The complaint that prompted this is real and stays unanswered: every surface carries every tool, and the side pane already asks for more room than the largest window can give.",
+        "Each new feature makes it slightly worse, and there is no point at which it gets easier to fix."
+      ],
+      "mitigation": "Nothing here is urgent this week, so the cost of waiting is measured in how crowded things get rather than in anything breaking.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-15T10:40:38.972Z"
+}
