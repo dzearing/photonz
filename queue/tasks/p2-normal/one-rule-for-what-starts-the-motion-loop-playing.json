@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T12:15:03.625Z",
-  "updated": "2026-09-15T12:15:05.625Z",
+  "updated": "2026-09-15T19:03:32.194Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the design review of 2026-09-15. Three audits from the same day, each stating its own behaviour and none able to cite the other two:\n\nqueue/audits/2026-09-15-layer-motion.json, rough item four: \"Editing a field while the preview is PAUSED does not start it: you press play. Adding a motion does start it. Those are two different rules and somebody may well expect one.\"\n\nqueue/audits/2026-09-15-layer-motion.json, evaluate item one: \"Adding a motion starts it playing on its own. Is that the right amount of eager, or do you want to press play yourself?\"\n\nqueue/audits/2026-09-15-motion-pivot.json, evaluate item three: \"Grabbing the pivot starts the loop if it is stopped, because a still picture cannot show you a pivot. Is that helpful or is it the app taking over?\"\n\nEach of the three was argued honestly on its own and each is defensible alone. Together they are three answers to one question, shipped within eight hours of each other, and the person meeting them is meeting all three in one sitting. The pivot case has the strongest argument for starting the loop (a still picture cannot show you a pivot), so it is the one to reason from rather than the one to change first.\n\nNot seen on a screen: the Mac has been locked since 2026-09-14 20:46:47, so none of the three was ever run in a walk. The behaviours are read from the audits the runners wrote from their own code, not from watching the app.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-09-15T12:15:05.624Z",
       "note": "seq 2640 -> 85"
+    },
+    {
+      "t": "2026-09-15T19:03:32.193Z",
+      "note": "Another place the rule now has to cover: a tutorial sample that arrives already moving. Three of the new Icons guides (get-the-timing-right, two-parts-out-of-phase, export-an-animated-svg) open on a bell that swings and say so on their first card, and until 2026-09-15 that card was a lie, because opening a document with motion in it did not start the loop. EditorState.openTutorialSample now calls playMotionPreview() when the sample has motion, deliberately scoped to a guide's own sample rather than to opening any document. Whatever one rule is settled on, that special case should fold into it rather than stay beside it."
     }
   ]
 }

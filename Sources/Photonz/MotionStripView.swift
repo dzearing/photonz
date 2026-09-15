@@ -83,6 +83,10 @@ struct MotionStripView: View {
             .padding(.bottom, Self.inset)
         }
         .background(.regularMaterial)
+        // The Icons track's phase guide rings the whole strip rather than one
+        // bar: a lag is a comparison, so what it is talking about is both lanes
+        // and the ruler over them.
+        .tutorialAnchor(.timingStrip)
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 

@@ -1781,6 +1781,258 @@ public enum TutorialGuides {
                 body: "What lands on disk is the shapes you drew, laid out so a person can read them. Any site or icon set will take it."),
         ])
 
+    // MARK: - Icons that move
+
+    // The second half of the Icons track, and the half where an icon stops
+    // being a picture. Four guides, on one drawing: a bell.
+    //
+    // The bell is not decoration. It is the one everyday icon whose motion is
+    // wrong in the obvious way, so it teaches the two things nobody works out
+    // on their own. A bell swings about the point it hangs from, and a fresh
+    // rotation starts on the layer's own middle, which rocks like a bobblehead.
+    // And a bell is TWO parts: the body and the clapper under it. Move them in
+    // perfect step and the icon reads as one stamped shape being waved; let
+    // the clapper arrive a tenth of a second later and the same two shapes
+    // read as a bell being rung.
+    //
+    // The vocabulary is the app's. You do not pick a named motion, because
+    // there is no list of them: you pick a PROPERTY of the layer that changes.
+
+    /// The first motion anybody makes, and the pivot in the same guide.
+    ///
+    /// They are one guide rather than two because the pivot is not a refinement
+    /// of the swing, it is the difference between the swing being right and
+    /// being wrong: a person who stops after adding a Rotation has an icon that
+    /// rocks like a bobblehead and no idea why.
+    public static let makeSomethingMove = TutorialGuide(
+        id: "make-something-move",
+        track: .icons,
+        title: "Make something move",
+        summary: "Tell one thing about a layer to change over time, and say what it turns around.",
+        minutes: 2,
+        sample: .iconBell,
+        requires: [FeatureCatalog.motionFlag, FeatureCatalog.layerGroupsFlag,
+                   FeatureCatalog.framesFlag, FeatureCatalog.iconFramesFlag],
+        steps: [
+            TutorialStep(
+                id: "a-bell-that-does-not-ring",
+                anchor: .canvas,
+                title: "A bell, sitting still",
+                body: "Two shapes on a 24 point frame: the body, and the clapper under it. Nothing about it moves yet."),
+            TutorialStep(
+                id: "pick-the-body",
+                anchor: .canvas,
+                title: "Click the body of the bell",
+                body: "Motion is about one layer at a time, because what moves is that layer's own numbers.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "the-motion-list",
+                anchor: .panelSection("motion"),
+                title: "Motion is a list, like Effects",
+                body: "Same header, same plus, same rows. An Effects row is something the layer paints. A Motion row is something about it that changes.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "add-a-rotation",
+                anchor: .panelSection("motion"),
+                title: "Add a Rotation",
+                body: "The plus offers the properties this layer has, each with the number it is wearing. Take Rotation. It starts moving at once.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "the-bobblehead",
+                anchor: .canvas,
+                title: "That is not a bell",
+                body: "It is turning about its own middle, so the top goes one way while the bottom goes the other. Nothing is wrong with the angles. The point it turns about is."),
+            TutorialStep(
+                id: "say-what-it-turns-around",
+                anchor: .panelSection("motion"),
+                title: "Set Around to Top centre",
+                body: "A bell hangs from its crown. You can also drag the crosshair on the picture, which is the same one setting.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "nothing-is-baked-in",
+                anchor: .canvas,
+                title: "Now it swings",
+                body: "The drawing itself never changed. A motion is worked out as the picture is drawn, like a shadow, so the shape you can still drag is the one you drew."),
+        ])
+
+    /// When it happens and how long it takes, which is the whole difference
+    /// between a motion and a twitch.
+    ///
+    /// It opens on a bell that already swings, because a guide about tuning a
+    /// motion should not spend a third of itself making one.
+    public static let getTheTimingRight = TutorialGuide(
+        id: "get-the-timing-right",
+        track: .icons,
+        title: "Get the timing right",
+        summary: "Decide how long a motion takes, what shape it moves on, and how long it waits first.",
+        minutes: 2,
+        sample: .iconBellSwinging,
+        // The previews card carries the loop speed, and the last card sends
+        // people to it, so a guide offered with previews switched off would
+        // end by naming something that is not there.
+        requires: [FeatureCatalog.motionFlag, FeatureCatalog.iconPreviewsFlag,
+                   FeatureCatalog.layerGroupsFlag,
+                   FeatureCatalog.framesFlag, FeatureCatalog.iconFramesFlag],
+        steps: [
+            TutorialStep(
+                id: "already-swinging",
+                anchor: .canvas,
+                title: "This one already swings",
+                body: "Out one way, through where it was drawn, and back, for as long as you watch. Nothing about when it happens has been decided yet."),
+            TutorialStep(
+                id: "pick-the-swinging-body",
+                anchor: .canvas,
+                title: "Click the body of the bell",
+                body: "Its swing is one row in the Motion list, and the row opens into the five things that decide how it plays.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "how-long-it-takes",
+                anchor: .panelSection("motion"),
+                title: "Over is how long it takes",
+                body: "Type 600 into Over and watch it quicken. Under about 200 the swing stops reading as a swing and starts reading as a twitch.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "the-shape-it-moves-on",
+                anchor: .panelSection("motion"),
+                title: "The curve is the feel",
+                body: "Pick a different one from the Curve row. Every name has its shape drawn beside it, because nobody can tell two eases apart by reading them.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "make-it-wait-first",
+                anchor: .panelSection("motion"),
+                title: "Start is how long it waits",
+                body: "Type 300 into Start. The bell now holds still for a third of a second at the top of every lap before it goes.",
+                side: .leading,
+                advance: .waitsFor(.editMade),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "how-often",
+                anchor: .panelSection("motion"),
+                title: "And how often it repeats",
+                body: "Once, a set number of times, for ever, or for ever there and back. An icon nearly always wants the last one, which is what this started as.",
+                side: .leading,
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "slow-the-loop-down",
+                anchor: .canvas,
+                title: "Slow the whole loop to judge it",
+                body: "The speed on the previews card runs the lap at a quarter or a tenth. Everything slows together, so what you are judging is the timing and not your eyes."),
+        ])
+
+    /// The guide the whole half of the track exists for: two parts of one
+    /// drawing, moving at different moments.
+    ///
+    /// It opens on the bell with BOTH parts already swinging in lockstep, which
+    /// is the thing that looks wrong, so the one act in the guide is dragging a
+    /// bar late. Having the person add the second motion here would be the
+    /// first guide over again with the lesson buried at the end of it.
+    public static let twoPartsOutOfPhase = TutorialGuide(
+        id: "two-parts-out-of-phase",
+        track: .icons,
+        title: "Two parts, out of phase",
+        summary: "The difference between something that moves and something that feels alive.",
+        minutes: 2,
+        sample: .iconBellInStep,
+        requires: [FeatureCatalog.motionFlag, FeatureCatalog.motionStripFlag,
+                   FeatureCatalog.iconPreviewsFlag,
+                   FeatureCatalog.layerGroupsFlag, FeatureCatalog.framesFlag,
+                   FeatureCatalog.iconFramesFlag],
+        steps: [
+            TutorialStep(
+                id: "moving-as-one",
+                anchor: .canvas,
+                title: "Both parts, in perfect step",
+                body: "The body and the clapper swing at the same instant by the same amount. It reads as one stamped shape being waved about."),
+            TutorialStep(
+                id: "the-strip-across-the-bottom",
+                anchor: .timingStrip,
+                title: "One lap, drawn",
+                body: "A bar for every moving part, on one ruler. Both bars start at the left edge and are the same length, which is the problem drawn out.",
+                side: .above),
+            TutorialStep(
+                id: "pick-the-clappers-bar",
+                anchor: .timingStrip,
+                title: "Click the clapper's bar",
+                body: "Picking a bar picks the layer it belongs to, so the side column comes round to the thing you are about to time.",
+                side: .above,
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "drag-it-late",
+                anchor: .timingStrip,
+                title: "Drag it to the right",
+                body: "About 90 milliseconds is enough. While you drag, the gap to the bar above is drawn with its number on it.",
+                side: .above,
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "past-the-dashed-line",
+                anchor: .timingStrip,
+                title: "A late bar may run past the end",
+                body: "The dashed line is where the lap starts over. A bar crossing it is the clapper still finishing while the body has already set off again.",
+                side: .above),
+            TutorialStep(
+                id: "that-is-alive",
+                anchor: .canvas,
+                title: "Same two shapes, and now it rings",
+                body: "The clapper arrives after the bell rather than with it. Slow the loop down on the previews card if 90 milliseconds is too quick to see."),
+        ])
+
+    /// The end of the errand, and the one that makes the whole thing worth
+    /// doing: the motion travels with the file.
+    public static let exportAnAnimatedSVG = TutorialGuide(
+        id: "export-an-animated-svg",
+        track: .icons,
+        title: "Export it as an animated SVG",
+        summary: "Hand the icon over so it is still swinging when somebody else opens it.",
+        minutes: 2,
+        sample: .iconBellRinging,
+        requires: [FeatureCatalog.animatedSVGExportFlag, FeatureCatalog.svgExportFlag,
+                   FeatureCatalog.motionFlag, FeatureCatalog.penFlag,
+                   FeatureCatalog.layerGroupsFlag, FeatureCatalog.framesFlag,
+                   FeatureCatalog.iconFramesFlag],
+        steps: [
+            TutorialStep(
+                id: "the-motion-can-travel",
+                anchor: .canvas,
+                title: "The swing can go in the file",
+                body: "The turn, the curve, the repeat and the lag are all written as text. There is no picture inside it, so it stays sharp at every size."),
+            TutorialStep(
+                id: "pick-the-icon-frame",
+                anchor: .canvas,
+                title: "Pick the frame",
+                body: "Click its name, just above the top left corner. Export opens on the frame you are in, so the file is the icon alone.",
+                advance: .waitsFor(.layerSelected)),
+            TutorialStep(
+                id: "where-it-is-going",
+                anchor: .canvas,
+                title: "Export asks where it is going",
+                body: "Before it asks for a format. That is the question that decides whether the motion survives, and it is the one most people can answer."),
+            TutorialStep(
+                id: "what-survives-the-trip",
+                anchor: .canvas,
+                title: "It says what makes the trip",
+                body: "A code host cleans what it is given, so the animation would be stripped out and the sheet moves you to a picture instead, and says why."),
+            TutorialStep(
+                id: "open-the-export-sheet",
+                anchor: .canvas,
+                title: "Press \u{21E7}\u{2318}E",
+                body: "The Export sheet comes down over the window.",
+                advance: .waitsFor(.dialogOpened(.export))),
+            TutorialStep(
+                id: "a-web-page-and-save",
+                anchor: .dialog(.export),
+                title: "Choose a web page, then save",
+                body: "To check it, double click the file you saved. It opens in your browser and the bell rings on its own, with nothing else needed."),
+        ])
+
     // MARK: The Video track
 
     /// The smallest track, and the only one that teaches in a window with no
@@ -1925,6 +2177,7 @@ public enum TutorialSampleScreen {
         // so the page under it has to be something else or the frame has no
         // edge at all.
         case .iconFrame, .iconPath, .iconBox: "#EDF0F5"
+        case .iconBell, .iconBellSwinging, .iconBellInStep, .iconBellRinging: "#EDF0F5"
         // A recording is not drawn on a page. Its window holds media, and this
         // is never asked of it.
         case .sampleRecording: "#FFFFFF"
@@ -1948,6 +2201,7 @@ public enum TutorialSampleScreen {
         case .stylesScreen: []
         case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: []
         case .iconFrame, .iconPath, .iconBox: []
+        case .iconBell, .iconBellSwinging, .iconBellInStep, .iconBellRinging: []
         case .sampleRecording: []
         }
     }
@@ -1995,6 +2249,14 @@ public enum TutorialSampleScreen {
         case .iconFrame: [iconFrame(holding: [])]
         case .iconPath: [iconFrame(holding: [drawnBookmark()])]
         case .iconBox: [iconFrame(holding: [iconRoundedBox()])]
+        // The same workbench once the icon has to MOVE: a bell, still; its
+        // body swinging; both parts swinging in lockstep, which is the thing
+        // that looks wrong; and the finished one, where the clapper arrives
+        // after the body.
+        case .iconBell: [iconFrame(holding: bell(swing: .still))]
+        case .iconBellSwinging: [iconFrame(holding: bell(swing: .bodyOnly))]
+        case .iconBellInStep: [iconFrame(holding: bell(swing: .bothInStep))]
+        case .iconBellRinging: [iconFrame(holding: bell(swing: .clapperLate))]
         // A recording, which has no layers at all. What it IS lives in the
         // app, beside the code that can write an MP4.
         case .sampleRecording: []
@@ -2432,6 +2694,132 @@ public enum TutorialSampleScreen {
                                   strokeWidth: iconStroke,
                                   fill: Paint(hex: PathContent.defaultColorHex))
         return PathBuilder.layer(content, at: CGPoint(x: 4, y: 4), name: "Bookmark")
+    }
+
+    // MARK: The bell
+
+    /// How much of the bell is already moving in a given sample.
+    private enum BellSwing {
+        /// A drawing, and nothing else. The guide that makes the first motion
+        /// has to open on something that does not move, or there is nothing to
+        /// discover.
+        case still
+        /// The body swings about the point it hangs from, and the clapper is
+        /// still. What the timing guide tunes.
+        case bodyOnly
+        /// Both parts swing, both starting at the top of the lap. The thing
+        /// that looks wrong.
+        case bothInStep
+        /// The clapper starts a tenth of a second after the body. The finished
+        /// icon.
+        case clapperLate
+    }
+
+    /// Where the bell hangs from, in the frame's own coordinates: the middle of
+    /// its crown. Both parts turn about THIS point, which is the whole of why
+    /// the icon reads as a bell rather than as two shapes wobbling.
+    private static let bellMount = CGPoint(x: 12, y: 4)
+    /// The box the body's own outline occupies, and the box the clapper's does.
+    /// Kept here because the pivots are worked out against them.
+    private static let bellBodyBox = CGRect(x: 4, y: 4, width: 16, height: 11)
+    /// Clear of the lip, with a point of daylight under it. The first draft had
+    /// the clapper tucked up against the body, and in the same paint it simply
+    /// disappeared into it: a guide about two parts moving separately needs two
+    /// parts you can see separately.
+    private static let bellClapperBox = CGRect(x: 10, y: 17, width: 4, height: 4)
+
+    /// How far the swing goes each way, and how long one swing takes. A twelve
+    /// degree throw over nine tenths of a second is what a fresh Rotation
+    /// starts as, so a sample that arrives moving looks exactly like one
+    /// somebody had just made.
+    private static let bellThrow: Double = 12
+    private static let bellSwingMS = 900
+    /// How far behind the body the clapper arrives in the finished icon. Under
+    /// six frames at full speed, which is why the guide slows the loop down to
+    /// judge it.
+    private static let bellClapperLagMS = 90
+
+    /// The bell, in two parts, with as much of it moving as `swing` says.
+    private static func bell(swing: BellSwing) -> [Layer] {
+        var body = bellBody()
+        var clapper = bellClapper()
+        switch swing {
+        case .still:
+            break
+        case .bodyOnly:
+            body.motions = [bellTurn(of: bellBodyBox, startMS: 0)]
+        case .bothInStep:
+            body.motions = [bellTurn(of: bellBodyBox, startMS: 0)]
+            clapper.motions = [bellTurn(of: bellClapperBox, startMS: 0)]
+        case .clapperLate:
+            body.motions = [bellTurn(of: bellBodyBox, startMS: 0)]
+            clapper.motions = [bellTurn(of: bellClapperBox, startMS: bellClapperLagMS)]
+        }
+        return [body, clapper]
+    }
+
+    /// One part's swing: out one way, through where it was drawn, and back, for
+    /// as long as anybody watches. Every part turns about the same point on the
+    /// drawing, which for each of them is a different fraction of its own box.
+    private static func bellTurn(of box: CGRect, startMS: Int) -> LayerMotion {
+        LayerMotion(property: .rotation,
+                    from: .number(-bellThrow), to: .number(bellThrow),
+                    timing: MotionTiming(startMS: startMS, durationMS: bellSwingMS),
+                    curve: .easeInOutSine,
+                    repeats: .foreverThereAndBack,
+                    pivot: MotionPivot(at: bellMount, in: box))
+    }
+
+    /// The body: a dome with a flat lip, drawn so that the point it hangs from
+    /// is exactly the top middle of its own box. That is not a coincidence, it
+    /// is the lesson: the repair for a bell swinging like a bobblehead is one
+    /// named spot rather than a drag nobody could aim.
+    private static func bellBody() -> Layer {
+        // The handles at the lip lean INWARD as they rise, which is what makes
+        // this a bell rather than a dome: a bell's sides are hollow, flaring
+        // out to the lip. Handles straight up give a lamp shade.
+        let anchors = [
+            PathAnchor(point: CGPoint(x: 4, y: 15), handleOut: CGPoint(x: 1.6, y: -4.5)),
+            PathAnchor(point: bellMount,
+                       handleIn: CGPoint(x: -4.5, y: 0), handleOut: CGPoint(x: 4.5, y: 0),
+                       kind: .smooth),
+            PathAnchor(point: CGPoint(x: 20, y: 15), handleIn: CGPoint(x: -1.6, y: -4.5)),
+        ]
+        let content = PathContent(anchors: anchors, isClosed: true,
+                                  paint: Paint(hex: PathContent.defaultColorHex),
+                                  strokeWidth: iconStroke,
+                                  fill: Paint(hex: PathContent.defaultColorHex))
+        return PathBuilder.layer(content, at: bellBodyBox.origin, name: "Bell")
+    }
+
+    /// The clapper: the little ball under the bell, filled and with no outline
+    /// of its own, because a four point ball with a two point line round it is
+    /// a ring rather than a ball.
+    private static func bellClapper() -> Layer {
+        let centre = CGPoint(x: bellClapperBox.midX, y: bellClapperBox.midY)
+        let radius = bellClapperBox.width / 2
+        // A circle wants its handles at this fraction of the radius. Anything
+        // else is an oval pretending.
+        let pull = radius * 0.5523
+        let anchors = [
+            PathAnchor(point: CGPoint(x: centre.x, y: centre.y - radius),
+                       handleIn: CGPoint(x: -pull, y: 0), handleOut: CGPoint(x: pull, y: 0),
+                       kind: .smooth),
+            PathAnchor(point: CGPoint(x: centre.x + radius, y: centre.y),
+                       handleIn: CGPoint(x: 0, y: -pull), handleOut: CGPoint(x: 0, y: pull),
+                       kind: .smooth),
+            PathAnchor(point: CGPoint(x: centre.x, y: centre.y + radius),
+                       handleIn: CGPoint(x: pull, y: 0), handleOut: CGPoint(x: -pull, y: 0),
+                       kind: .smooth),
+            PathAnchor(point: CGPoint(x: centre.x - radius, y: centre.y),
+                       handleIn: CGPoint(x: 0, y: pull), handleOut: CGPoint(x: 0, y: -pull),
+                       kind: .smooth),
+        ]
+        let content = PathContent(anchors: anchors, isClosed: true,
+                                  paint: Paint(hex: PathContent.defaultColorHex),
+                                  strokeWidth: 0,
+                                  fill: Paint(hex: PathContent.defaultColorHex))
+        return PathBuilder.layer(content, at: bellClapperBox.origin, name: "Clapper")
     }
 
     /// A rounded box on the same frame, which is a box and nothing more until

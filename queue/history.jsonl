@@ -3804,3 +3804,11 @@
 {"t":"2026-09-15T18:44:00.220Z","ev":"task_note","id":"tutorials-an-icons-track"}
 {"t":"2026-09-15T18:44:00.261Z","ev":"task_note","id":"tutorials-an-icons-track"}
 {"t":"2026-09-15T18:44:21.472Z","ev":"task_done","id":"tutorials-an-icons-track","from":"in_progress","note":"Icons track shipped: five guides (start-on-an-icon-frame, draw-it-with-the-pen, reshape-what-you-drew, turn-a-shape-into-a-path, get-a-clean-svg-out) in PhotonzCore/TutorialGuides.swift, three samples that are the same 24 point icon frame in three states, a dialog anchor family and three new triggers, and the camera framing an icon sample on open. Verified by the whole suite green at 7059 tests including 31 new ones in TutorialIconsTrackTests, the catalogue and copy checks, the measured time claims and the flag rules. NOT verified live: the Mac's screen was locked all session, so none of the five new walks could run and the audit carries no pictures; a sweep was requested naming all five. Audit: queue/audits/2026-09-15-icons-tutorial-track.json. Commit ecff0134."}
+{"t":"2026-09-15T18:46:41.979Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T18:46:42.082Z","ev":"task_started","id":"tutorials-animating-an-icon","title":"Tutorials: animating an icon","priority":"p1-high"}
+{"t":"2026-09-15T18:49:03.266Z","ev":"task_note","id":"tutorials-animating-an-icon"}
+{"t":"2026-09-15T18:49:07.046Z","ev":"task_note","id":"tutorials-animating-an-icon"}
+{"t":"2026-09-15T19:03:32.195Z","ev":"task_note","id":"one-rule-for-what-starts-the-motion-loop-playing"}
+{"t":"2026-09-15T19:03:45.562Z","ev":"task_note","id":"tutorials-animating-an-icon"}
+{"t":"2026-09-15T19:03:45.606Z","ev":"task_note","id":"tutorials-animating-an-icon"}
+{"t":"2026-09-15T19:03:45.649Z","ev":"task_note","id":"tutorials-animating-an-icon"}

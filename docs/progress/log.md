@@ -15640,3 +15640,51 @@ requested naming all five.
 **Next.** The sweep runs the walks; the audit is
 `queue/audits/2026-09-15-icons-tutorial-track.json`. The second half of the
 user's ask, animating an icon, is still its own work under `icon-animate`.
+
+## 2026-09-15 — Tutorials: animating an icon
+
+The Icons track's second half. Four guides on one drawing, a bell: **Make
+something move**, **Get the timing right**, **Two parts, out of phase**,
+**Export it as an animated SVG**. The track is nine guides now, five about
+drawing an icon and four about making it move.
+
+The task was filed saying it could not be written yet, and that had stopped
+being true: the whole animation feature landed earlier the same day, so the
+first act was checking the blocker rather than believing it.
+
+What is new outside the guides themselves:
+
+- `TutorialAnchor.timingStrip`, hung on `MotionStripView`. The one anchor that
+  comes and goes with the DOCUMENT rather than with a sheet: a still picture has
+  no strip, so a guide may only ring it with a sample that already moves, and a
+  test holds that.
+- `"motion"` joins `knownPanelSections`, so a step can ring the Motion list.
+- Four bell samples (`iconBell`, `iconBellSwinging`, `iconBellInStep`,
+  `iconBellRinging`): still, body swinging, both in lockstep, and the finished
+  one with the clapper arriving 90ms late. Both parts turn about the point the
+  bell hangs from, which is a different fraction of each one's own box.
+- A guide's sample that arrives moving now starts its loop when the window
+  opens, so the first card of three guides is true on sight. Scoped to tutorial
+  samples; folded a note into `one-rule-for-what-starts-the-motion-loop-playing`.
+
+Two things the plan got wrong and the build changed. The phase guide was going
+to have you ADD the second motion, which is the first guide over again with the
+lesson buried at the end; it now opens on both parts already in lockstep, which
+is the thing that looks wrong, and the only act is dragging one bar late. And
+the first draft of the bell drew the clapper tucked under the lip in the same
+paint, where it simply vanished into the body: a guide about two parts moving
+separately needs two parts you can see separately. Found by exporting the icon
+and looking at it in a browser, not by reading the geometry.
+
+The export acceptance was checked for real: the finished bell writes a 1540 byte
+SVG with two `animateTransform` tags, no bitmap, and the lag in the file as a
+different `keyTimes` list per part. Loaded in Chrome, both parts turn and the
+clapper's angle trails the body's all the way round the lap, and the swing stays
+inside the 24 point box at both extremes (measured 1.89 to 22.11 across). Two
+tests now hold what made that true.
+
+**The Mac's screen was locked for the whole session**, so not one walk could
+run: the four new walks are written and have never been executed, and there are
+no pictures of the app anywhere in the audit. A sweep has been requested.
+
+Next: the sweep result on those four walks.

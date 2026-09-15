@@ -1,0 +1,31 @@
+{
+  "feature": "Tutorials: animating an icon",
+  "epic": "icon-svg",
+  "summary": "The Icons track now teaches the second half of the job. Four new guides take a bell from a still drawing to a file that is still ringing when somebody else opens it: tell a property to change, say what it turns around, set when it happens, let its two parts move at different moments, and hand it over as an animated SVG.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Motion, the timing strip, icon previews and animated SVG export, which are all on by default. Help then Tutorials, and open the Icons shelf.",
+  "try": [
+    { "do": "Open Help, then Tutorials, and take Make something move." },
+    { "do": "Click the body of the bell, then use the plus on the Motion header and take Rotation." },
+    { "do": "Watch the bell before you fix it. Say whether the bobblehead reads as a mistake you would want to repair." },
+    { "do": "Set Around to Top centre, and watch the same two angles again." },
+    { "do": "Close it and take Two parts, out of phase." },
+    { "do": "Click the clapper's bar on the strip across the bottom, then drag it about 90 milliseconds to the right." },
+    { "do": "Take Export it as an animated SVG, press Shift Command E, choose A web page, and save it." },
+    { "do": "Double click the file you saved. It should ring in your browser.", "shot": "2026-09-15-bell-in-a-browser.png" }
+  ],
+  "evaluate": [
+    "Does the bobblehead land as a lesson, or does it just look like the app got it wrong?",
+    "Is Top centre an answer you would have found on your own, or does the guide have to hand it to you?",
+    "On the timing guide, does Start reading as a wait make sense before you have ever seen two parts on one ruler?",
+    "Is the 90 millisecond lag big enough to see at full speed, or did you have to slow the loop down to believe it?",
+    "Is a bell the right drawing to teach all four on, or would you rather it were something you make yourself?",
+    "Four guides for the moving half against five for the drawing half: is that the right weight?"
+  ],
+  "rough": [
+    "No pictures of the app. The Mac's screen was locked for this whole task, so no walk could run and macOS refuses every capture; the one picture here is the exported file playing in a browser, not the app window. The four new walks are written but have never been run, and a sweep has been asked for.",
+    "A tutorial sample that moves now starts its loop the moment the window opens, so the first card of three guides is true on sight. That is scoped to a guide's own sample. What should start the loop for a document you open yourself is still an open question.",
+    "The bell is red, because that is the colour a freshly drawn path wears. It looks like something you just drew, which is the point, but a bell is not usually red.",
+    "The timing guide sends you to the loop speed on the previews card and cannot ring it: the card is drawn over the canvas and has no anchor of its own, so that last step points at the canvas and describes it in words.",
+    "Nothing teaches the curve you draw yourself, or the lap length. Both were cut deliberately: the first is a lesson of its own and the second follows the longest motion until you say otherwise, so a first icon never touches it."
+  ]
+}

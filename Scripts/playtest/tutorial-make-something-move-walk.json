@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-make-something-move-walk",
+  "seed": "The sixth guide of the Icons track, and the first one where the icon stops being a picture. It opens on a bell drawn in two parts and sitting still, has you pick the body, add a Rotation from the plus on the Motion header, and then repair what that first press gives you: a fresh turn pivots on the layer's own middle, which on a bell is a bobblehead, and the Around row's Top centre is where a bell really hangs from. The walk drives every step for real, and photographs the bobblehead and the repaired swing so the difference is on the record rather than described.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "make-something-move" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-bell-that-does-not-ring", "timeout": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-a-bell-sitting-still", "note": "the sample: a bell on the 24 point frame, drawn in two parts, and nothing about it moving" },
+    { "do": "snapshot", "name": "1-a-bell-sitting-still" },
+    { "do": "render", "name": "1-a-bell-sitting-still-doc" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-body", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [360, 240] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-motion-list", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "2-the-motion-list", "note": "the body picked, and the panel has a Motion section under Effects: the same header, the same plus, the same kind of rows. An Effects row is something the layer paints; a Motion row is something about it that changes." },
+    { "do": "expect", "field": "Motion Empty", "present": true },
+    { "do": "panel", "stage": "2-the-motion-list" },
+    { "do": "snapshot", "name": "2-the-motion-list" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "add-a-rotation", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Motion", "shot": "3-what-this-layer-has" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-the-plus", "note": "THE VOCABULARY TEST: the plus offers PROPERTIES of this layer, each with the number it is wearing right now. There is no Pulse and no Wiggle in it, and the guide's copy uses the same word the menu does." },
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-bobblehead", "timeout": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Rotation", "present": true },
+    { "do": "expect", "control": "Around", "reads": "Its centre" },
+    { "do": "describe", "stage": "4-the-bobblehead", "note": "THE PICTURE TO LOOK AT: one press and it moves, and it moves WRONG. It is turning about its own middle, so the crown goes one way while the lip goes the other. Nothing about the angles is wrong. The point it turns about is." },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "snapshot", "name": "4-the-bobblehead" },
+    { "do": "panel", "stage": "4-the-bobblehead" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "say-what-it-turns-around", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Around", "choose": "Top centre" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "nothing-is-baked-in", "timeout": 8 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expect", "control": "Around", "reads": "Top centre" },
+    { "do": "describe", "stage": "5-it-hangs", "note": "THE TEST: one named choice and the same two angles read as a bell. The body's own top centre IS where a bell hangs from, which is why the repair is a menu item rather than a drag nobody could aim." },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "snapshot", "name": "5-it-hangs-and-swings" },
+    { "do": "panel", "stage": "5-it-hangs" },
+
+    { "do": "render", "name": "6-the-document-never-moved" },
+    { "do": "describe", "stage": "6-nothing-is-baked-in", "note": "and the DOCUMENT is the drawing, untouched. This render is of what is stored: a motion is worked out as the picture is drawn, like a shadow, so the shape you can still drag is the one you drew." },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-finished", "note": "Done closed the guide" }
+  ]
+}

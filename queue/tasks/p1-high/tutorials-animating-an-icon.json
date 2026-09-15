@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 14,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:49:46.953Z",
-  "updated": "2026-09-15T14:49:47.046Z",
+  "updated": "2026-09-15T19:03:45.648Z",
   "deps": [
     "tutorials-an-icons-track"
   ],
@@ -37,6 +37,31 @@
     {
       "t": "2026-09-15T14:49:47.046Z",
       "note": "deps: the Icons track first; and it also waits on the animation feature being built at all"
+    },
+    {
+      "t": "2026-09-15T18:46:42.080Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T18:49:03.264Z",
+      "note": "The blocker named in the notes has cleared: the animation feature landed on 2026-09-15 (LayerMotion.swift, MotionStrip.swift, MotionScale/MotionSpeed, SVGMotionExport.swift, MotionListInspector, MotionStripView, CanvasMotionPivot, and the Export sheet's destination row). Every task the notes were waiting on is done: a-layer-can-be-told-to-change-one-of-its-propert, a-turning-layer-says-what-it-turns-around-and-yo, a-strip-across-the-bottom-shows-every-moving-par, watch-a-motion-loop-at-the-sizes-it-will-really, an-animated-icon-leaves-the-app-as-an-animated-s. So the guides can be written."
+    },
+    {
+      "t": "2026-09-15T18:49:07.044Z",
+      "note": "Adversarial review before building. (1) The mock's four guides are the right four, but two of them wanted rewriting. The phase guide was going to have you ADD the second motion, which is guide one over again with a longer pivot drag on the end; it now opens on a bell whose two parts are ALREADY moving in perfect step, which is the thing that looks wrong, and the only act is dragging one bar late. One idea, one gesture. (2) The timing guide does not need to teach opening the timing strip: the strip arrives by itself the moment anything moves, so a step about finding it would be teaching a problem nobody has. (3) The pivot teaches itself for free: a fresh Rotation deliberately arrives pivoting on the layer's MIDDLE, which on a bell is a bobblehead, and the bell path's own top centre is exactly where a bell hangs from, so the repair is one named choice rather than a drag nobody can aim. (4) Cut from the plan: a step about the custom curve handles (a curve you draw by dragging two handles is a five minute lesson on its own, and nothing in these four guides needs it) and a step about the lap length field (it follows the longest motion until you say otherwise, so a first icon never touches it). Both left out rather than crammed in."
+    },
+    {
+      "t": "2026-09-15T19:03:45.560Z",
+      "note": "Built and verified as far as a locked screen allows. Four guides added to the Icons track (data only, no UI edited), plus one new anchor (timingStrip, hung on MotionStripView), 'motion' added to knownPanelSections, and four bell samples. Full suite green: 7072 tests, including the walk coverage check, which proves every one of the four guides has a walk that waits on every step. Export acceptance checked for real rather than asserted: the finished bell writes 1540 bytes of SVG with two animateTransform tags, no bitmap, and the 90ms lag present as a different keyTimes list per part; loaded in Chrome from a file URL, both parts turn and the clapper trails the body all the way round the lap, and the drawing stays inside the 24 point box at both extremes (measured 1.89 to 22.11 across). Two new tests hold what made that true. The browser check also caught a real defect in the first draft: the clapper was tucked under the lip in the same paint and disappeared into the body, so the two-part lesson had nothing to see. Bell reshaped: lip raised to y=15, clapper moved to a clear 4 point ball below it, and the side handles leaned inward so it reads as a bell rather than a lamp."
+    },
+    {
+      "t": "2026-09-15T19:03:45.604Z",
+      "note": "NOT verified, and cannot be: the Mac's screen was locked for the whole task, so every playtest run reported status locked and exited 3. The four new walks (tutorial-make-something-move-walk, tutorial-get-the-timing-right-walk, tutorial-two-parts-out-of-phase-walk, tutorial-export-an-animated-svg-walk) have never been executed once, and the anchor check that proves a guide's steps ring real controls only runs inside the sweep. Sweep requested. The one drive I am least sure of is the phase walk's 'press control Timing Bar in Timing Clapper Rotation': every control name and menu title in all four walks was read off the source, but a press on a bar's onTapGesture is the one gesture no existing walk performs. If it turns out not to select, that step can be driven with selectRow Clapper instead and the guide is unaffected."
+    },
+    {
+      "t": "2026-09-15T19:03:45.647Z",
+      "note": "Left rough, none of it clearing the follow-up bar. (1) The bell is red, because that is the colour a freshly drawn path wears; it looks like something you just drew, which is the point, but a bell is not usually red. (2) The timing guide's last card sends you to the loop speed on the previews card and cannot ring it: that card is drawn over the canvas and has no anchor of its own, so the step points at the canvas and describes it in words. Worth an anchor if another guide ever needs one, not worth one for a single card. (3) Nothing teaches the curve you draw yourself or the lap length, both cut deliberately. The one rough item that DID need recording went into one-rule-for-what-starts-the-motion-loop-playing rather than becoming a near-twin task."
     }
-  ]
+  ],
+  "started": "2026-09-15T18:46:42.079Z"
 }

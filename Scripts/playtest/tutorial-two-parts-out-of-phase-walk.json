@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-two-parts-out-of-phase-walk",
+  "seed": "The eighth guide of the Icons track, and the one the animating half exists for. It opens on the bell with BOTH parts already swinging in perfect step, which is the thing that looks wrong: two parts of one drawing moving at the same instant read as one stamped shape being waved. The only act in the guide is dragging the clapper's bar late on the timing strip, because that is the one thing a column of numbers cannot show you: a lag is a comparison, so it needs both bars on one ruler at once. The walk photographs the lockstep and the lag so the difference is on the record.",
+  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "startGuide", "guide": "two-parts-out-of-phase" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "moving-as-one", "timeout": 10 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "1-moving-as-one", "note": "THE PICTURE TO LOOK AT: the body and the clapper swing at the same instant by the same amount, and the icon reads as one stamped shape being waved about rather than as a bell being rung." },
+    { "do": "snapshot", "name": "1-moving-as-one" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-strip-across-the-bottom", "timeout": 5 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expect", "control": "Timing Bar", "present": true },
+    { "do": "describe", "stage": "2-the-strip", "note": "THE TEST for the new anchor: the card rings the whole timing strip rather than one bar, because what it is talking about is both lanes and the ruler over them. Both bars start at the left edge and are the same length, which is the problem drawn out." },
+    { "do": "snapshot", "name": "2-the-strip" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-the-clappers-bar", "timeout": 5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Timing Bar", "in": "Timing Clapper Rotation" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "drag-it-late", "timeout": 8 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-bar-picked", "note": "picking a bar picked its layer, so the side column came round to the clapper without anybody going to the layers list for it." },
+    { "do": "panel", "stage": "3-bar-picked" },
+
+    { "do": "dragTiming", "bar": "Clapper Rotation", "grab": "body", "byMS": 90,
+      "hold": "4-the-gap-while-you-drag" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "past-the-dashed-line", "timeout": 8 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "expect", "field": "Rotation Summary", "reads": "-12° → 12° over 0.9s, after 0.09s" },
+    { "do": "describe", "stage": "4-lagged", "note": "THE TEST: the clapper now starts 90ms after the body, the gap was drawn as a bracket with its number on it while the hand was moving, and the lap held its length so the late bar runs past the dashed line where the loop starts over." },
+    { "do": "snapshot", "name": "4-the-lag" },
+    { "do": "panel", "stage": "4-lagged" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "that-is-alive", "timeout": 5 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-that-is-alive", "note": "the same two shapes, and now it rings: the clapper arrives after the bell rather than with it. The last card sends you to the loop speed, because 90ms is under six frames at full speed and slowing it down is how you judge one at all." },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "snapshot", "name": "5-that-is-alive" },
+    { "do": "render", "name": "5-the-drawing-never-changed" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+  ]
+}

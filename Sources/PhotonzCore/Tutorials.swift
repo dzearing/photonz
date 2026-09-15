@@ -50,6 +50,15 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     public static let panel = TutorialAnchor("panel")
     /// The window's title bar.
     public static let titleBar = TutorialAnchor("titleBar")
+    /// The timing strip across the bottom of the window: one lap of the
+    /// animation, with a bar for every moving part.
+    ///
+    /// A SURFACE rather than a control, like the canvas, and the one name here
+    /// that comes and goes with the DOCUMENT rather than with a sheet: a still
+    /// picture has no strip at all. So a guide may only point at it while
+    /// something in its own sample is moving, which is why the phase guide
+    /// brings a bell that already swings.
+    public static let timingStrip = TutorialAnchor("timingStrip")
 
     /// One tool's button in the floating tool bar. Named off the tool, so the
     /// button's words and its tooltip can change freely.
@@ -175,7 +184,13 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
                                             "measureTool", "measure",
                                             // A lens's own settings, which are in
                                             // the panel while a lens is picked.
-                                            "lens"]
+                                            "lens",
+                                            // What the picked layer has been told to
+                                            // change over time. In the panel for every
+                                            // layer you pick, so a guide can point at it
+                                            // before anything is moving, which is how the
+                                            // first motion ever gets made.
+                                            "motion"]
 
     /// The rows of the empty window's card a guide is allowed to name. The
     /// blank canvas row is deliberately absent: it comes and goes with a
@@ -190,7 +205,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// This is the PROMISE. That the app keeps it in a live window is checked
     /// separately, by a walk that drives the real editor.
     public static var all: [TutorialAnchor] {
-        [canvas, toolBar, panel, titleBar]
+        [canvas, toolBar, panel, titleBar, timingStrip]
             + Tool.allCases.map(tool)
             + ToolGroup.allCases.map(toolGroup)
             + knownPanelSections.map(panelSection)
@@ -475,6 +490,30 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// ones you can then pull on.
     case iconBox
 
+    /// A bell on the same frame, drawn in two parts: the body, and the clapper
+    /// hanging under it. Nothing moves.
+    ///
+    /// The bell is the drawing the whole animating half of the track teaches
+    /// on, and it was chosen rather than a checkmark or a spinner because it is
+    /// the one everyday icon whose motion is WRONG in the obvious way. A bell
+    /// swings about the point it hangs from; turn it about its own middle,
+    /// which is the answer a fresh rotation starts on, and it rocks like a
+    /// bobblehead. And it is two parts, so the difference between something
+    /// that moves and something that feels alive has somewhere to show itself.
+    case iconBell
+    /// The same bell with its body already swinging, about the point it hangs
+    /// from. The guide about timing is about tuning a motion that already
+    /// exists, so it must not open by making one.
+    case iconBellSwinging
+    /// The same bell with BOTH parts swinging, in perfect step, both starting
+    /// at the top of the lap. This is the thing that looks wrong, and it is
+    /// what the guide about phase opens on: two parts of one drawing moving in
+    /// lockstep read as one stamped shape being waved.
+    case iconBellInStep
+    /// The finished bell: the clapper arrives after the body. What the guide
+    /// about handing an animated icon over has to have in front of it.
+    case iconBellRinging
+
     /// A short recording, written to disk before the window opens.
     ///
     /// The one sample that is not a drawing. The video guides teach in a
@@ -518,6 +557,9 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
         // An icon is shapes, and shapes are the whole point of it: flatten one
         // and there is nothing to reshape and nothing to write into an SVG.
         case .iconFrame, .iconPath, .iconBox: false
+        // And a bell that swings is still shapes. Flatten it and there is
+        // nothing left to tell to move.
+        case .iconBell, .iconBellSwinging, .iconBellInStep, .iconBellRinging: false
         }
     }
 }
@@ -643,6 +685,10 @@ public enum TutorialCatalog {
         TutorialGuides.reshapeWhatYouDrew,
         TutorialGuides.turnAShapeIntoAPath,
         TutorialGuides.getACleanSVGOut,
+        TutorialGuides.makeSomethingMove,
+        TutorialGuides.getTheTimingRight,
+        TutorialGuides.twoPartsOutOfPhase,
+        TutorialGuides.exportAnAnimatedSVG,
         TutorialGuides.trimARecording,
         TutorialGuides.exportARecording,
     ]

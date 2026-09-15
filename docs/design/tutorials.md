@@ -49,7 +49,8 @@ sentences, which side the card sits on, how it advances, and what has to be on
 screen first.
 
 **`TutorialTrack`** — Basics, Redlining, Looks, Colours and Styles, Building UI,
-Components, Icons, Video. Tracks are what keep the tutorials from becoming one
+Components, Icons, Video. Icons is the longest at nine: five about drawing one,
+and four about making it move and handing it over still moving. Tracks are what keep the tutorials from becoming one
 long list: Help shows the tracks, a track shows its guides.
 
 **`TutorialCatalog`** — every guide the app ships. `populatedTracks` is what a
@@ -106,6 +107,14 @@ sheet that pointed at the canvas would park its card on top of the very thing it
 is describing. Pointing at the sheet lands the card beside it. The name only
 answers while the sheet is up, so a step may only use one AFTER a step that
 waited for `dialogOpened`, and the Icons track's own test holds that rule.
+
+**A surface that comes and goes with the DOCUMENT** is the timing strip.
+`TutorialAnchor.timingStrip` names the whole strip across the bottom rather
+than one bar on it, because what a guide about a lag is talking about is both
+lanes and the ruler over them. It is the one name here that a still picture
+cannot answer: there is no strip until something in the document moves. So a
+guide may only use it with a sample that already moves, and the Icons track's
+own test holds that rule the same way it holds the sheet rule.
 
 **Where the names live today.** The rows of the card an empty window shows
 (`start.open`, `start.capture`, `start.paste` — the only places in a window

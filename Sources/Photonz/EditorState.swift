@@ -1038,6 +1038,17 @@ final class EditorState {
             let room = icon.frame.width / 3
             pendingFocusBox = icon.frame.insetBy(dx: -room, dy: -room)
         }
+        // A sample that arrives ALREADY MOVING arrives moving. Three of the
+        // Icons track's guides open on a bell that swings and say so on their
+        // first card, and a window that opened on a still picture would make
+        // that card a lie before anybody had pressed anything. This is a
+        // reveal, not an act on the person's behalf: no step of any guide asks
+        // for the play button, so nothing is being done for them.
+        //
+        // It is deliberately scoped to a guide's own sample rather than to
+        // opening any document that moves. What should start the loop in
+        // general is its own open question.
+        if document.hasMotion { playMotionPreview() }
     }
 
     /// The document as it was last opened or saved — the clean baseline for
