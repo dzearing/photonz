@@ -1,30 +1,34 @@
 {
   "id": "work-out-whether-the-app-needs-project-types-at",
-  "title": "Work out whether the app needs project types at all",
-  "goal": "A document today is a canvas with a size, and every tool in the app is offered on it whether or not it makes sense. If somebody is drawing a 24 point icon they do not need video trimming, and if they are cutting a recording they do not need an icon grid. Work out whether the app should know what kind of thing you are making, and if so what each kind shows and hides, or whether that is a worse idea than it looks.",
+  "title": "Modes you can swap, rather than project types you are stuck in",
+  "goal": "The question was whether the app should know what kind of thing you are making. The user's answer is that a document should not be locked into a kind: you should be able to swap between modes freely, where a mode is a preset of which panes and tool groups are showing, and you can always turn a hidden thing back on by hand and get back to what you had a second ago. Prototype that in the mocks and see whether it holds up. The thing being prototyped is one app that does four jobs, not four apps sharing a window: work made in one mode has to flow into another, so a component you drew can be put on a video timeline without leaving anything or converting anything.",
   "epic": "icon-svg",
   "priority": "p1-high",
-  "seq": 30,
-  "status": "blocked",
+  "seq": 7,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.769Z",
-  "updated": "2026-09-15T12:14:53.241Z",
+  "updated": "2026-09-15T14:24:12.762905Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon",
     "say-where-animating-an-icon-and-editing-a-video"
   ],
   "blockedBy": [],
-  "notes": "Depends on both tasks before it, because the answer follows from what the flows turned out to need.\n\nThe user raised this themselves: \"we might need different project types to isolate/hide some of the scenarios.\" Treat it as a question to answer rather than a decision already made. There is a real argument against: the app has one document model and one canvas, and a type that hides tools can make a person feel the app is broken rather than focused, especially when they are one click from needing the hidden thing.\n\nWhat exists today is nothing. AppCoordinator.newBlankCanvasWindow(size:) makes a canvas of a size, File > New Blank Canvas asks for one, and that is the whole of it. There is already a weaker version of the idea in the app worth looking at first: an icon frame knows it is an icon size and changes what a shape drawn in it looks like (the done tasks a-new-frame-can-be-an-icon-size and a-shape-drawn-in-an-icon-frame-comes-in-at-a-weight). That is context following the FRAME rather than the document, and it may be the better answer: the same document can then hold an icon and a screenshot without either being in the wrong kind of project.\n\n---\nSHARED CONTEXT for the animation and video alignment study (asked for by the user on 2026-09-14).\n\nThe user's words: \"We also don't have usage clickthroughs for creating animated svgs so its unclear if anything could align with the clickthroughs of editing videos. We might want to figure out if there are opportunities to consolidate experience flows at all before building by mocking some flows up first and seeing how it will work. I want it to make sense for the user's usage scenario, and we might need different project types to isolate/hide some of the scenarios.\"\n\nTHIS IS A STUDY, NOT A BUILD. Nothing in this set changes Sources/. The deliverable is mocks and a written recommendation the user decides on. Do not start building a timeline, a keyframe model or a project type off the back of it; the whole point is to find out what to build before building it.\n\nWHAT EXISTS, checked rather than assumed:\n- Ten video clickthroughs under docs/design/mocks/pages: video-entry-wt, video-cut-wt, video-move-wt, video-zoom-wt, video-transition-wt, video-freeze-wt, video-title-wt, video-captions, video-compositing, video-speed.\n- Six drawing ones: vector-wt, icon-draw-wt, icon-gradient-wt, draw, draw-boolean, iconography.\n- ZERO for animating anything. The user is right: there is nothing to compare against.\n- No project type concept in the app at all. A document is a canvas with a size (AppCoordinator.newBlankCanvasWindow(size:), File > New Blank Canvas). There is no kind, no template, nothing that hides one scenario's tools from another.\n- Video today is a SEPARATE editor from the layer document: VideoEditorState and VideoEditorView, single clip, trim and crop and export. TrimTimeline and PlaybackScrubber are SwiftUI views bound to VideoEditorState, not a reusable time model, and PhotonzCore has no notion of time or keyframes at all. So the \"shared foundation\" is not something being reused; it is something that would have to be built, which is exactly why the user wants to look before leaping.\n\nTHE QUESTION UNDERNEATH, worth holding on to while mocking: the two things genuinely overlap in ONE place, a document that has a duration, a playhead and keyframes on properties. They diverge everywhere else. Video is sampled media: codecs, audio, frame scheduling, large data. Animated SVG is declarative: properties animate and the export emits SMIL or CSS and never rasterizes at all. A mock that pretends those are the same surface will look tidy and mislead everybody.\n\nConform to the shared mock library rather than inventing: docs/design/mocks/shared/UX-PATTERNS.md is the rulebook, docs/design/mocks/shared/AGENTS.md explains how pages are built, components/ holds the shared CSS and JS, and docs/design/mocks/dev-server.mjs serves them. A page that invents its own shell or its own controls cannot be compared with the video pages, which defeats the purpose.",
+  "notes": "REDIRECTED by the user on 2026-09-15, in their words: \"regarding separate project types - i feel like if we have to, sure, but ideally you can just swap between modes without changing a document type. if you could, for example toggle the view on certain panes or tool groups manually, there's always a way to get back to the thing you had open a second ago, but if you start at a certain project mode, it's like a preset of which things are avaialable, and easy to swap between them. I think this should be considered and prototyped in the html\".\n\nSo the answer to the original question is: not types, modes. A type is something a document IS and cannot easily stop being; a mode is something the WINDOW is in, and swapping costs nothing. That difference is the whole task. The document model should not learn about modes at all, which also means nothing here needs a migration.\n\nThere is already a prototype at docs/design/mocks/pages/project-kinds.html, built on the types framing. Revise it rather than starting again, and rename it if the word kind stops being true. Do not leave two prototypes arguing opposite things.\n\nThe strongest support for this direction is already in the app and should be cited: an icon frame knows it is an icon size and changes what a shape drawn in it looks like. That is context following the FRAME, not the document, which is the same instinct, and it means one document can hold an icon and a screenshot without either being in the wrong place.\n\nThe honest risk to answer rather than skip: a preset that hides a tool is indistinguishable from a broken app in the moment you reach for that tool. Every editor that has tried workspaces has had to solve 'where did my thing go'. The prototype earns its keep by showing the way back, not by showing the tidy default.\n\nDepends on nothing new: the pane-load study (work-out-whether-the-right-hand-pane-is-carrying) is done and its findings about what the right hand pane carries are the raw material for deciding what a mode would show and hide.\n\nSHARPENED by the user minutes later, and this is the constraint that matters most: \"there is a lot of overlap between the modes so i don't want 4 separate apps with 4 different ia. I want 1 app that can do 4 jobs pretty seamlessly. You can create a component, and then show that on a video timeline\".\n\nSo a mode is a LENS on one architecture, never a separate application. If the prototype ends up with a different layer list, a different panel arrangement or a different canvas per mode, it has failed, however tidy each one looks alone. The overlap the user names is the point: the same document, the same layers, the same components, seen with different things showing.\n\nThe component on a video timeline is the acid test and should be drawn first rather than last, because it is the flow most likely to break the design. It also has a real consequence worth stating: video cannot stay a separate single-clip editor if a component is to be placed on its timeline, since a component lives in the layer document and today's video editor knows nothing about that document. Say plainly in the report what that costs, because it is the bill attached to this direction.",
   "acceptance": [
-    "A recommendation with a clear yes or no on whether the app should have project types, argued from the flows rather than from taste",
-    "If yes: the kinds are named, and for each one it says what is shown, what is hidden, and what happens when somebody needs a hidden thing anyway",
-    "If no: it says what solves the same problem instead, since the problem is real whatever the answer is",
-    "The cost of being wrong is stated for each direction: a type that hides too much makes the app feel crippled, and no types at all makes every surface carry every tool forever",
-    "It says what happens to documents that already exist, which have no type and must not become second class",
-    "Mocked, not just written: the entry point where a kind is chosen, and one surface shown under two different kinds so the difference is visible",
-    "A decision card is opened for the user with the options and a recommendation",
-    "Audit under queue/audits/ and anything rough filed as a follow-up"
+    "The prototype shows modes as PRESETS of what is visible, not as document types: the same document can be in any mode and nothing about the document changes when you swap",
+    "Anything made in one mode stays live in another rather than arriving as a flattened picture of itself",
+    "The crossover is shown end to end, because it is the test: make a component in one mode, then place it on a video timeline in another, with no export, no import and no conversion step",
+    "One app, not four: the modes share one information architecture, and the prototype shows the SAME panels, layer list and canvas throughout rather than a different arrangement per mode",
+    "Swapping modes is quick and obvious, and the prototype shows what the window looks like in at least three of them",
+    "Anything a mode hides can be turned back on by hand, without leaving the mode, and the prototype shows how",
+    "Getting back to what you had a moment ago is always possible and is shown: no mode is a trap",
+    "It is honest about what a mode actually hides: panes, tool groups, menu items, or only some of those, stated rather than implied",
+    "The case against is answered: a person who swaps modes and finds their tool gone has been hurt, so the prototype shows what stops that feeling",
+    "It says what happens to a document made before modes existed, and what mode a new document starts in and why",
+    "A decision card is opened for the user with what the prototype found and a recommendation",
+    "Audit under queue/audits/ with the window captured in each mode, and anything rough filed as a follow-up"
   ],
   "log": [
     {
@@ -66,6 +70,18 @@
     {
       "t": "2026-09-15T12:14:53.240Z",
       "note": "seq 19 -> 30"
+    },
+    {
+      "t": "2026-09-15T14:23:48.719184Z",
+      "note": "user redirected: modes you can swap, not document types; prototype in the html; unblocked"
+    },
+    {
+      "t": "2026-09-15T14:23:48.760Z",
+      "note": "seq 30 -> 7"
+    },
+    {
+      "t": "2026-09-15T14:24:12.762905Z",
+      "note": "user sharpened: one app four jobs, shared IA; the acid test is a component placed on a video timeline"
     }
   ],
   "started": "2026-09-15T10:35:16.383Z"
