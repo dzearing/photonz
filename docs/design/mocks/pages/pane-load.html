@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · pane-load</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local scaffolding ONLY, every class prefixed `plo-`.
+
+     This page is a STUDY, not a screen of the app. The two windows in section 3
+     are real shells built from the shared dock vocabulary, so "this does not
+     fit" can be checked by eye rather than taken on trust; everything else here
+     is a table or a note about them. */
+
+  #pane-load .plo-lede{font-size:13px;line-height:1.6;color:var(--dim);max-width:88ch;margin:0}
+  #pane-load .plo-lede b{color:var(--ink);font-weight:600}
+
+  /* ---- the headline, three measured numbers ---- */
+  #pane-load .plo-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+  @media(max-width:760px){#pane-load .plo-tiles{grid-template-columns:1fr}}
+  #pane-load .plo-tile{border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);
+    padding:var(--pad);display:flex;flex-direction:column;gap:5px}
+  #pane-load .plo-tile .plo-n{font-size:30px;font-weight:680;letter-spacing:-.03em;line-height:1}
+  #pane-load .plo-tile h4{margin:0;font-size:12.5px;font-weight:640}
+  #pane-load .plo-tile p{margin:0;font-size:11px;line-height:1.5;color:var(--dim)}
+  #pane-load .plo-tile.plo-bad{border-color:var(--crit)}
+  #pane-load .plo-tile.plo-bad .plo-n{color:var(--crit)}
+  #pane-load .plo-tile.plo-mid{border-color:var(--warn)}
+  #pane-load .plo-tile.plo-mid .plo-n{color:var(--warn)}
+  #pane-load .plo-tile.plo-ok{border-color:var(--good)}
+  #pane-load .plo-tile.plo-ok .plo-n{color:var(--good)}
+
+  /* ---- the block card, reused for each section ---- */
+  #pane-load .plo-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #pane-load .plo-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);flex-wrap:wrap;
+    padding:var(--pad-sm) var(--pad);border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
+  #pane-load .plo-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #pane-load .plo-blk-h .plo-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
+  #pane-load .plo-blk-h .plo-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+  #pane-load .plo-blk-b{padding:var(--inset);display:flex;flex-direction:column;gap:var(--gap)}
+  #pane-load .plo-note{margin:0;font-size:11.5px;line-height:1.6;color:var(--dim)}
+  #pane-load .plo-note b{color:var(--ink);font-weight:600}
+
+  /* ---- THE INVENTORY TABLE ---- */
+  #pane-load .plo-inv{display:grid;grid-template-columns:150px 1fr 96px 96px 1fr;gap:1px;
+    background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r3);overflow:hidden}
+  @media(max-width:900px){#pane-load .plo-inv{grid-template-columns:1fr}}
+  #pane-load .plo-inv>*{background:var(--panel);padding:var(--pad-sm);min-width:0}
+  #pane-load .plo-inv .plo-hd{background:var(--panel-2);font-size:9.5px;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--faint);font-weight:700;display:flex;align-items:center;gap:6px}
+  #pane-load .plo-inv .plo-nm{font-size:12px;font-weight:600;line-height:1.4}
+  #pane-load .plo-inv .plo-nm small{display:block;font-weight:500;font-size:10.5px;color:var(--faint);margin-top:3px;line-height:1.4}
+  #pane-load .plo-inv .plo-c{font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #pane-load .plo-inv .plo-c b{color:var(--ink);font-weight:600}
+  #pane-load .plo-num{font-family:var(--mono);font-size:11px;color:var(--ink);display:flex;align-items:center}
+  #pane-load .plo-chip{font-size:10px;font-weight:660;border-radius:999px;padding:2px 8px;white-space:nowrap;
+    border:1px solid transparent;display:inline-flex;align-items:center;gap:4px}
+  #pane-load .plo-chip.plo-v{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent);
+    background:color-mix(in srgb,var(--warn) 12%,transparent)}
+  #pane-load .plo-chip.plo-h{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 40%,transparent);
+    background:color-mix(in srgb,var(--crit) 12%,transparent)}
+  #pane-load .plo-chip.plo-a{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent);
+    background:color-mix(in srgb,var(--accent) 12%,transparent)}
+
+  /* ---- the two windows, stacked with a caption each ---- */
+  #pane-load .plo-case{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #pane-load .plo-caseh{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap}
+  #pane-load .plo-caseh .plo-tag{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;
+    border-radius:999px;padding:3px 9px;flex:none}
+  #pane-load .plo-caseh .plo-tag.now{color:var(--crit);background:color-mix(in srgb,var(--crit) 14%,transparent)}
+  #pane-load .plo-caseh .plo-tag.next{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+  #pane-load .plo-caseh h4{margin:0;font-size:12.5px;font-weight:640}
+  #pane-load .plo-caseh .plo-m{font-size:11px;color:var(--faint);font-family:var(--mono);margin-left:auto}
+
+  /* The dock in the "today" window really is over-subscribed: the last group is
+     drawn past the bottom of the dock so the cut is the point, not a bug. */
+  #pane-load .plo-cut{position:relative;overflow:hidden}
+  #pane-load .plo-cut::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22px;pointer-events:none;
+    background:linear-gradient(to bottom,transparent,var(--panel))}
+  /* The timing dock at the height section 3 claims for a laptop window: a local
+     bar, a ruler, and one lane per animated property. */
+  #pane-load .timeline{min-height:0;padding:6px 12px 8px}
+  #pane-load .timeline .tlbar{padding:4px var(--pad-sm)}
+  #pane-load .timeline .ruler{padding:2px var(--pad-sm)}
+  #pane-load .timeline .track{padding:2px var(--pad-sm)}
+  #pane-load .timeline .track .tl{flex:0 0 96px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  #pane-load .plo-flag{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--crit);font-weight:600}
+  #pane-load .plo-flag .ic{width:12px;height:12px}
+
+  /* ---- the three window sizes ---- */
+  #pane-load .plo-sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+  @media(max-width:900px){#pane-load .plo-sizes{grid-template-columns:1fr}}
+  #pane-load .plo-size{border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);
+    padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #pane-load .plo-size h4{margin:0;font-size:12px;font-weight:640}
+  #pane-load .plo-size p{margin:0;font-size:11px;line-height:1.55;color:var(--dim)}
+  /* A to-scale sketch of the window: canvas over timing dock. */
+  #pane-load .plo-sk{border:1px solid var(--line-soft);border-radius:var(--r3);overflow:hidden;
+    display:flex;flex-direction:column;background:var(--panel-2)}
+  #pane-load .plo-sk .plo-skcnv{background:color-mix(in srgb,var(--accent) 10%,var(--panel));
+    display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim);font-family:var(--mono)}
+  #pane-load .plo-sk .plo-sktl{background:color-mix(in srgb,var(--good) 16%,var(--panel));
+    border-top:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;
+    font-size:10px;color:var(--dim);font-family:var(--mono)}
+
+  /* ---- the cost list ---- */
+  #pane-load .plo-cost{display:grid;grid-template-columns:200px 1fr 84px;gap:1px;
+    background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r3);overflow:hidden}
+  @media(max-width:760px){#pane-load .plo-cost{grid-template-columns:1fr}}
+  #pane-load .plo-cost>*{background:var(--panel);padding:var(--pad-sm);min-width:0}
+  #pane-load .plo-cost .plo-hd{background:var(--panel-2);font-size:9.5px;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--faint);font-weight:700}
+  #pane-load .plo-cost .plo-w{font-size:12px;font-weight:600;line-height:1.4}
+  #pane-load .plo-cost .plo-c{font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #pane-load .plo-cost .plo-sz{font-size:10.5px;font-weight:660;display:flex;align-items:center}
+
+  /* Kept-in-the-pane list */
+  #pane-load .plo-keep{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #pane-load .plo-keep li{font-size:11.5px;line-height:1.6;color:var(--dim)}
+  #pane-load .plo-keep li b{color:var(--ink);font-weight:600}
+  #pane-load ul.plo-keep{margin:0;padding-left:18px}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="pane-load">
+
+  <div class="scen-head"><span class="pip" style="background:var(--warn)"></span><h2>Is the right hand pane carrying too much?</h2><span class="k">· study · measured, then answered</span></div>
+
+  <p class="plo-lede">The side pane now holds the layers, what you picked, where it sits, what it looks like, what you added to it, the shelf you fetch from, and whatever the tool in your hand brought with it. The next thing wanting room is the timing of an animation, which does not fit a narrow column at all. So: is the pane overloaded, and what should live somewhere else? <b>The short answer is that it is overloaded, and the timing surface is not the reason.</b> Every number below was read out of the running app rather than estimated: a three-layer document with one piece of text picked already asks the pane for <b>1052 points</b> of room, and the tallest window this machine can give it is <b>968</b>. The pane does not fit today, at any window size, before animation exists. Moving the timing out is still right, for a different reason, and it fixes none of that.</p>
+
+  <div class="plo-tiles">
+    <div class="plo-tile plo-bad">
+      <span class="plo-n">1052</span>
+      <h4>Points the pane asks for</h4>
+      <p>Three layers, one piece of text picked, one drop shadow on it, nothing unusual. Layers 163 · Text 198 · Appearance 223 · Effects 332 · Position &amp; Size 130.</p>
+    </div>
+    <div class="plo-tile plo-mid">
+      <span class="plo-n">968</span>
+      <h4>Points a big window can give</h4>
+      <p>At 1680 by 1000 the pane's scrolling area is 968 points tall. At a 1200 by 720 laptop window it is 688, and at 1000 by 640 it is 608. Position &amp; Size is below the cut in all three.</p>
+    </div>
+    <div class="plo-tile plo-ok">
+      <span class="plo-n">2</span>
+      <h4>Tenants that actually want width</h4>
+      <p>Out of twenty-six sections, exactly two are shaped wrong for a narrow column: the Library shelf, and a timing surface. Everything else is a stack of labelled rows and a column suits it fine.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       1 · THE INVENTORY. What is in there, and what each thing is
+       competing for. Vertical room, horizontal room, or your attention.
+       ================================================================== -->
+  <div class="plo-blk">
+    <div class="plo-blk-h"><span class="plo-kind">Inventory</span><h3>What the pane carries, and what each thing is competing for</h3><span class="plo-sub">Heights measured in the running app, one piece of text picked</span></div>
+    <div class="plo-blk-b">
+      <div class="plo-inv">
+        <div class="plo-hd"><i class="ic ic-sidebar"></i>What is in the pane</div>
+        <div class="plo-hd">What it is</div>
+        <div class="plo-hd">Height</div>
+        <div class="plo-hd">Competing for</div>
+        <div class="plo-hd">Does a narrow column suit it?</div>
+
+        <div class="plo-nm">Layers<small>always there</small></div>
+        <div class="plo-c">The list of what is in the document. The one section you come back to between every other move.</div>
+        <div class="plo-num">163 pt</div>
+        <div><span class="plo-chip plo-v">Vertical</span></div>
+        <div class="plo-c"><b>Yes.</b> It is a list of rows, and it is the one section the pane is allowed to shorten, so it gives up room first and scrolls inside itself.</div>
+
+        <div class="plo-nm">Whatever you picked<small>Text · Measurement · Zoom Callout · Lens · Collage · Canvas · Component · Annotation</small></div>
+        <div class="plo-c">Eight different sections, one of which appears depending on what you clicked. Text is the tallest.</div>
+        <div class="plo-num">198 pt</div>
+        <div><span class="plo-chip plo-v">Vertical</span></div>
+        <div class="plo-c"><b>Yes.</b> Rows of labelled controls. It sits directly under Layers by a rule the user chose, so it is never the thing that falls off.</div>
+
+        <div class="plo-nm">Appearance<small>always, when something is picked</small></div>
+        <div class="plo-c">Fade, fill, outline, corners. The section reached for on nearly every layer.</div>
+        <div class="plo-num">223 pt</div>
+        <div><span class="plo-chip plo-v">Vertical</span></div>
+        <div class="plo-c"><b>Yes.</b> Four rows somebody designed, so the pane pays for it whole and never squeezes it.</div>
+
+        <div class="plo-nm">Effects<small>always, when something is picked</small></div>
+        <div class="plo-c">The list you add to: a shadow, a glow, a border, a blur. Each entry has a switch and its own settings under it.</div>
+        <div class="plo-num">332 pt</div>
+        <div><span class="plo-chip plo-v">Vertical</span></div>
+        <div class="plo-c"><b>Yes, but it is the problem.</b> One open drop shadow costs more than Text and Position &amp; Size together, and the pane must draw the open one whole, so it cannot shrink out of the way.</div>
+
+        <div class="plo-nm">Position &amp; Size<small>always, when something is picked</small></div>
+        <div class="plo-c">X, Y, width, height, angle. The plainest fact about a layer.</div>
+        <div class="plo-num">130 pt</div>
+        <div><span class="plo-chip plo-v">Vertical</span></div>
+        <div class="plo-c"><b>Yes</b> — five small boxes on one line. It is last in the order, so it is what falls off the bottom, in every window size measured.</div>
+
+        <div class="plo-nm">The tool in your hand<small>Measure · Magic Wand · Crop · Zoom Callout · Lens</small></div>
+        <div class="plo-c">Five sections that exist only while you are holding that tool, and vanish when you put it down.</div>
+        <div class="plo-num">~176 pt</div>
+        <div><span class="plo-chip plo-a">Attention</span></div>
+        <div class="plo-c"><b>Yes, but they move everything.</b> Picking up the Measure tool inserts a section near the top, so every section under it slides. Nothing was wrong with them; they just do not hold still.</div>
+
+        <div class="plo-nm">Library<small>the shelf you fetch from</small></div>
+        <div class="plo-c">Components, media, styles and icons, shown as a grid of thumbnails you browse and drag on to the canvas.</div>
+        <div class="plo-num">grows</div>
+        <div><span class="plo-chip plo-h">Horizontal</span></div>
+        <div class="plo-c"><b>No.</b> It is a grid, and a 265 point column fits two tiles across. Browsing a set of icons two at a time is the one thing in the pane that is genuinely the wrong shape.</div>
+
+        <div class="plo-nm">Timing<small>does not exist yet</small></div>
+        <div class="plo-c">When the bell's swing starts, how long it lasts, and how far behind it the knob trails.</div>
+        <div class="plo-num">—</div>
+        <div><span class="plo-chip plo-h">Horizontal</span></div>
+        <div class="plo-c"><b>No, and no height fixes it.</b> What you are reading is one bar against another bar. Two bars stacked in a 265 point column cannot show a 90 millisecond offset between them at all.</div>
+      </div>
+      <p class="plo-note"><b>Three different competitions, and only one of them is about how many things live in the pane.</b> Almost everything here competes for vertical room, and that contest is already lost: 1052 points asked for against 968 available, in a document with three layers in it. Only two things compete for horizontal room, and they are the two the pane is the wrong shape for. The tool sections compete for your attention instead: they are the right size and in the right place, they just come and go under your eyes.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       2 · THE SAME DOCUMENT, TWO WAYS. Acceptance: it is mocked, not
+       just written.
+       ================================================================== -->
+  <div class="plo-blk">
+    <div class="plo-blk-h"><span class="plo-kind">Side by side</span><h3>The same bell, animated, in the arrangement we have and the one proposed</h3><span class="plo-sub">Both windows are drawn the same size, and the first one’s panel really is cut off: that is the finding, not a drawing slip. 1052 pt was measured in the app; 1284 and 1182 add a Motion section to it at the height Effects charges for the same number of entries.</span></div>
+    <div class="plo-blk-b">
+
+      <div class="plo-case">
+        <div class="plo-caseh"><span class="plo-tag now">What we have</span><h4>Everything in the column, timing included</h4><span class="plo-m">app at 1200 × 720: the panel wants 1284 pt of the 688 it has</span></div>
+        <div class="win tall cq shell" style="height:660px" data-shell="notification-bell · 24 × 24 · SVG" data-ws="ui" data-status="everything in one column">
+          <div class="edit lean" data-dock="open">
+            <div class="cnv">
+              <div class="canvas" style="display:flex;align-items:center;justify-content:center">
+                <svg width="180" height="180" viewBox="0 0 24 24" aria-label="A bell icon on the artboard">
+                  <g fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 4.1v1.5"/>
+                    <path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/>
+                    <path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="tbar">
+                <div class="tstrip" data-radio=".tool" data-radio-class="on">
+                  <button class="tool on" title="Select"><i class="ic ic-cursor"></i></button>
+                  <button class="tool" title="Pen"><i class="ic ic-bezier"></i></button>
+                  <button class="tool" title="Shape"><i class="ic ic-square"></i></button>
+                  <button class="tool ovf" title="Text"><i class="ic ic-text"></i></button>
+                </div>
+                <span class="tsep"></span>
+                <div class="zoomctl"><input class="zslider" type="range" min="25" max="400" value="100" aria-label="Zoom"><span class="val zval">100%</span></div>
+              </div>
+            </div>
+            <div class="splitter v" data-min="240" data-max="440"></div>
+            <div class="pdock plo-cut">
+              <div class="dgrp" data-grp="layers" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">2</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow sel"><i class="ic ic-bezier"></i><span class="nm">Bell body</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-circle"></i><span class="nm">Knob</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="props" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Path</span></div>
+                <div class="dgrp-b">
+                  <div class="section">
+                    <div class="sec-h">Appearance</div>
+                    <div class="irow split"><span class="rl">Stroke</span>
+                      <span class="stepper sm"><span class="k">pt</span><input value="1.6" aria-label="Stroke width"></span>
+                      <button class="btn ghost icon sm" title="Stroke colour"><i class="ic sm ic-color"></i></button></div>
+                    <div class="irow split"><span class="rl">Corners</span><span class="stepper sm"><span class="k">r</span><input value="0.4" aria-label="Corner radius"></span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="effects" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">1</span>
+                  <button class="btn ghost icon sm" title="Add an effect"><i class="ic ic-plus"></i></button></div>
+                <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
+                  <div class="irow split"><span class="rl">Drop shadow</span><span class="switch on" role="switch" aria-checked="true" aria-label="Drop shadow"><span class="knob"></span></span></div>
+                </div>
+              </div>
+              <!-- Timing squeezed into the column: this is the arrangement being
+                   tested, and the point is that it does not work. -->
+              <div class="dgrp" data-grp="props" data-gh="lg">
+                <div class="dgrp-h"><span class="ttl">Motion</span><span class="cnt">2 properties</span>
+                  <button class="btn ghost icon sm" title="Animate a property"><i class="ic ic-plus"></i></button></div>
+                <div class="dgrp-b">
+                  <div class="section">
+                    <div class="sec-h">Bell body · Rotation</div>
+                    <div class="irow split"><span class="rl">Start</span><span class="stepper sm"><span class="k">ms</span><input value="0" aria-label="Bell body start"></span></div>
+                    <div class="irow split"><span class="rl">Over</span><span class="stepper sm"><span class="k">ms</span><input value="900" aria-label="Bell body duration"></span></div>
+                  </div>
+                  <div class="section">
+                    <div class="sec-h">Knob · Rotation</div>
+                    <div class="irow split"><span class="rl">Start</span><span class="stepper sm"><span class="k">ms</span><input value="90" aria-label="Knob start"></span></div>
+                    <div class="irow split"><span class="rl">Over</span><span class="stepper sm"><span class="k">ms</span><input value="900" aria-label="Knob duration"></span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="props" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Position &amp; Size</span></div>
+                <div class="dgrp-b">
+                  <div class="numgrid">
+                    <span class="stepper sm"><span class="k">X</span><input value="6" aria-label="X"></span>
+                    <span class="stepper sm"><span class="k">Y</span><input value="4" aria-label="Y"></span>
+                    <span class="stepper sm"><span class="k">W</span><input value="12" aria-label="Width"></span>
+                    <span class="stepper sm"><span class="k">H</span><input value="14" aria-label="Height"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="library" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Icons</span></div>
+                <div class="dgrp-b"><div class="mnone"><i class="ic sm ic-library"></i> two tiles across</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="plo-flag"><i class="ic ic-warning"></i> Position &amp; Size, Motion's second entry and the Library are all under the cut. And the one question the motion is for, does the knob trail the bell, is two numbers in two separate boxes: 0 and 90. You have to do the subtraction in your head.</p>
+      </div>
+
+      <div class="plo-case">
+        <div class="plo-caseh"><span class="plo-tag next">Proposed</span><h4>The pane keeps what changes and by how much. The bottom keeps when.</h4><span class="plo-m">app at 1200 × 720: the panel wants 1182 of 688 · the timing gets 1200 pt of width</span></div>
+        <div class="win tall cq shell" style="height:660px" data-shell="notification-bell · 24 × 24 · SVG" data-ws="ui" data-status="Bell body and Knob · rotation · 900 ms loop">
+          <div class="edit lean" data-dock="open">
+            <div class="cnv">
+              <div class="canvas" style="display:flex;align-items:center;justify-content:center">
+                <svg width="150" height="150" viewBox="0 0 24 24" aria-label="A bell icon on the artboard">
+                  <g fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 4.1v1.5"/>
+                    <path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/>
+                    <path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="tbar">
+                <div class="tstrip" data-radio=".tool" data-radio-class="on">
+                  <button class="tool on" title="Select"><i class="ic ic-cursor"></i></button>
+                  <button class="tool" title="Pen"><i class="ic ic-bezier"></i></button>
+                  <button class="tool" title="Shape"><i class="ic ic-square"></i></button>
+                  <button class="tool ovf" title="Text"><i class="ic ic-text"></i></button>
+                </div>
+                <span class="tsep"></span>
+                <div class="zoomctl"><input class="zslider" type="range" min="25" max="400" value="100" aria-label="Zoom"><span class="val zval">100%</span></div>
+              </div>
+            </div>
+            <div class="splitter v" data-min="240" data-max="440"></div>
+            <div class="pdock">
+              <div class="dgrp" data-grp="layers" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">2</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow sel"><i class="ic ic-bezier"></i><span class="nm">Bell body</span><i class="ic sm ic-loop" title="This layer has motion"></i><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-circle"></i><span class="nm">Knob</span><i class="ic sm ic-loop" title="This layer has motion"></i><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="props" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Path</span></div>
+                <div class="dgrp-b">
+                  <div class="section">
+                    <div class="sec-h">Appearance</div>
+                    <div class="irow split"><span class="rl">Stroke</span>
+                      <span class="stepper sm"><span class="k">pt</span><input value="1.6" aria-label="Stroke width"></span>
+                      <button class="btn ghost icon sm" title="Stroke colour"><i class="ic sm ic-color"></i></button></div>
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">X</span><input value="6" aria-label="X"></span>
+                      <span class="stepper sm"><span class="k">Y</span><input value="4" aria-label="Y"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="effects" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">1</span>
+                  <button class="btn ghost icon sm" title="Add an effect"><i class="ic ic-plus"></i></button></div>
+                <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
+                  <div class="irow split"><span class="rl">Drop shadow</span><span class="switch on" role="switch" aria-checked="true" aria-label="Drop shadow"><span class="knob"></span></span></div>
+                </div>
+              </div>
+              <!-- MOTION STAYS. What changes and by how much is a list you add
+                   to, the same idiom as Effects right above it. -->
+              <div class="dgrp" data-grp="effects" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Motion</span><span class="cnt">what changes</span>
+                  <button class="btn ghost icon sm" title="Animate a property"><i class="ic ic-plus"></i></button></div>
+                <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
+                  <div class="irow split"><span class="rl"><i class="ic sm ic-rotate-right"></i> Rotation</span>
+                    <span class="switch on" role="switch" aria-checked="true" aria-label="Rotation"><span class="knob"></span></span></div>
+                  <div class="irow split"><span class="rl">From → to</span><span class="val">−12° → 12°</span></div>
+                  <div class="irow split"><span class="rl">Pivot</span><span class="val">top centre</span></div>
+                  <div class="irow split"><span class="rl">Easing</span><span class="val">ease in out</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- THE TIMING DOCK. Full window width, under everything, and it only
+               exists once something is animated. -->
+          <div class="timeline" data-tl-summary="Bell body and Knob · rotation · 900 ms loop">
+            <div class="tlbar">
+              <span class="lbl">One cycle</span>
+              <span class="now"><i class="ic xs ic-loop"></i> 900 ms</span>
+              <span class="tsep"></span>
+              <button class="btn ghost sm" title="Fit the cycle to the width"><i class="ic ic-zoom-fit"></i><span class="lb">Fit</span></button>
+            </div>
+            <div class="ruler"><span>0</span><span>200</span><span>400</span><span>600</span><span>800</span><span>1000 ms</span></div>
+            <div class="track"><span class="tl"><i class="ic xs ic-bezier"></i> Bell body</span>
+              <div style="position:relative;flex:1;height:18px">
+                <div style="position:absolute;left:0;width:75%;top:2px;bottom:2px;border-radius:5px;
+                     background:color-mix(in srgb,var(--accent) 34%,transparent);
+                     border:1px solid color-mix(in srgb,var(--accent) 60%,transparent);
+                     font-size:9.5px;display:flex;align-items:center;padding-left:6px;color:var(--ink)">Rotation · 0 → 900 ms</div>
+              </div>
+            </div>
+            <div class="track"><span class="tl"><i class="ic xs ic-circle"></i> Knob</span>
+              <div style="position:relative;flex:1;height:18px">
+                <div style="position:absolute;left:7.5%;width:75%;top:2px;bottom:2px;border-radius:5px;
+                     background:color-mix(in srgb,var(--good) 30%,transparent);
+                     border:1px solid color-mix(in srgb,var(--good) 60%,transparent);
+                     font-size:9.5px;display:flex;align-items:center;padding-left:6px;color:var(--ink)">Rotation · 90 → 990 ms</div>
+                <div style="position:absolute;left:0;width:7.5%;top:2px;bottom:2px;border-radius:4px;
+                     border:1px dashed color-mix(in srgb,var(--warn) 70%,transparent);
+                     font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--warn)">90</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="plo-note"><b>The one question the motion exists to answer is now a shape.</b> The knob's bar starts a little to the right of the bell's, and the gap between them is 90 milliseconds you can see and drag. Nothing was invented to do it: the bottom dock is a region the app's own shell has always reserved for a document with time, and it collapses the same way the side dock does. <b>And the panel in this window still has to be scrolled</b>, which is the finding this study keeps coming back to: moving the timing out is the right move for timing, and it is not a fix for the pane.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       3 · WINDOW SIZES. A pane that works at full screen and not on a
+       laptop has not solved anything.
+       ================================================================== -->
+  <div class="plo-blk">
+    <div class="plo-blk-h"><span class="plo-kind">Window sizes</span><h3>What the window looks like small, ordinary, and large</h3><span class="plo-sub">Canvas heights, to scale</span></div>
+    <div class="plo-blk-b">
+      <div class="plo-sizes">
+        <div class="plo-size">
+          <h4>1000 × 640 · small</h4>
+          <div class="plo-sk">
+            <div class="plo-skcnv" style="height:96px">canvas 498</div>
+            <div class="plo-sktl" style="height:22px">timing 110</div>
+          </div>
+          <p>The timing dock opens at its shortest: the ruler and one bar per animated property, nothing else. Two properties fit without scrolling. The canvas keeps 498 points, which is more than it had before the side dock was ever opened.</p>
+          <p>Below 880 points wide the side dock already rails itself away, so the timing dock has the whole width and the canvas has the rest.</p>
+        </div>
+        <div class="plo-size">
+          <h4>1200 × 720 · laptop</h4>
+          <div class="plo-sk">
+            <div class="plo-skcnv" style="height:104px">canvas 516</div>
+            <div class="plo-sktl" style="height:34px">timing 172</div>
+          </div>
+          <p>The default. 172 points is the ruler, a local bar and room for four property bars before it scrolls inside itself. The canvas drops from 688 to 516.</p>
+          <p>One click on the × in the timing bar takes it to a 30 point row that still reads <i>Bell body and Knob · rotation · 900 ms loop</i>, and the canvas goes back to 658.</p>
+        </div>
+        <div class="plo-size">
+          <h4>1680 × 1000 · large</h4>
+          <div class="plo-sk">
+            <div class="plo-skcnv" style="height:150px">canvas 796</div>
+            <div class="plo-sktl" style="height:34px">timing 172</div>
+          </div>
+          <p>The timing dock does not grow with the window: it stays at the height it was left, and the canvas takes everything else. Width is what it gains, and width is the thing it actually wanted: at 1680 the 900 millisecond cycle is drawn over about 1400 points, so 10 milliseconds is 15 points and the knob's lag is a drag you can land.</p>
+        </div>
+      </div>
+      <p class="plo-note"><b>And when nothing is animated, there is no timing dock at all.</b> An icon document with no motion in it looks exactly like today's window: the bottom dock appears the first time you add a Motion entry, and disappears when you take the last one away. That is the same rule the app's own shell already states for a document with time, so it is not a new place to look, it is a place that was always reserved and never built.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       4 · COST
+       ================================================================== -->
+  <div class="plo-blk">
+    <div class="plo-blk-h"><span class="plo-kind">Cost</span><h3>What would have to change</h3><span class="plo-sub">Named surfaces, not a guess at hours</span></div>
+    <div class="plo-blk-b">
+      <div class="plo-cost">
+        <div class="plo-hd">Surface</div>
+        <div class="plo-hd">What has to happen to it</div>
+        <div class="plo-hd">Size</div>
+
+        <div class="plo-w">The editor window itself</div>
+        <div class="plo-c">It has never had a bottom dock. It grows one: a band across the full width under the canvas and the side dock, which appears when the document has motion and goes away when it does not.</div>
+        <div class="plo-sz" style="color:var(--crit)">Large</div>
+
+        <div class="plo-w">The push-away rule</div>
+        <div class="plo-c">The side dock today slides away entirely rather than leaving a rail. The bottom dock has to collapse to a row that says what you are still editing, and that row is a shape the app does not have yet.</div>
+        <div class="plo-sz" style="color:var(--warn)">Medium</div>
+
+        <div class="plo-w">The side pane's section list</div>
+        <div class="plo-c">One new section, Motion, built the same way Effects is: a list you add to, an entry per animated property, each with a switch and its own settings.</div>
+        <div class="plo-sz" style="color:var(--warn)">Medium</div>
+
+        <div class="plo-w">The pane's height sharing</div>
+        <div class="plo-c">Unchanged by this proposal, and that is the point: it is already over-subscribed and it stays over-subscribed. Fixing it is separate work and it is not optional.</div>
+        <div class="plo-sz" style="color:var(--crit)">Separate</div>
+
+        <div class="plo-w">Keyboard and menus</div>
+        <div class="plo-c">One more toggle beside the panel toggle, in the View menu and on the canvas, so the timing dock can be pushed away and brought back from the keyboard like everything else.</div>
+        <div class="plo-sz" style="color:var(--good)">Small</div>
+
+        <div class="plo-w">The scripted walks</div>
+        <div class="plo-c">Every walk that reads the panel's own offsets measures a window that now has a band at the bottom of it. The offsets do not change, but the window height each walk asks for does.</div>
+        <div class="plo-sz" style="color:var(--good)">Small</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       5 · WHAT DOES NOT MOVE
+       ================================================================== -->
+  <div class="plo-blk">
+    <div class="plo-blk-h"><span class="plo-kind">Held</span><h3>What stays in the pane, and why moving it would be worse</h3></div>
+    <div class="plo-blk-b">
+      <ul class="plo-keep">
+        <li><b>Motion stays.</b> What changes and by how much is a list you add to, entry by entry, with a switch on each: that is exactly what Effects already is, sitting directly above it. Splitting one idiom across two surfaces to save 130 points of height would buy nothing and cost the thing that makes it learnable.</li>
+        <li><b>Position &amp; Size stays.</b> It is five small boxes on one line. It does not want width, it wants to not be last.</li>
+        <li><b>The tool sections stay.</b> A tool's settings belong with the tool, and the app has already settled that. What they need is to stop shifting everything under them, which is a different fix.</li>
+        <li><b>The Library is the open question.</b> It is the only other thing in the pane shaped wrong for a column, and browsing a set of icons two tiles at a time is the symptom. It is not part of this proposal, because moving the shelf and moving the timing are two separate arguments and bundling them would get one of them decided by accident.</li>
+      </ul>
+      <p class="plo-note"><b>The honest tension.</b> The app deliberately keeps one dock so that everything has one home, and every surface moved out of it is a second place to look. That argument is right, and it is why this study moves exactly one thing. Timing earns the exception because it is the only thing in the app whose meaning is a <i>relationship between two layers laid out across width</i>: you are not reading a value, you are reading a gap. No amount of height in a 265 point column shows a gap.</p>
+    </div>
+  </div>
+
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

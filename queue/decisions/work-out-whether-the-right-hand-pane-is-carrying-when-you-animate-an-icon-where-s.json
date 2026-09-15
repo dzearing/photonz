@@ -1,0 +1,73 @@
+{
+  "id": "work-out-whether-the-right-hand-pane-is-carrying-when-you-animate-an-icon-where-s",
+  "taskId": "work-out-whether-the-right-hand-pane-is-carrying",
+  "question": "When you animate an icon, where should the timing of the motion appear?",
+  "context": "Measured in the running app first: with three layers in the document and one piece of text picked, the right hand panel already wants 1052 points of room and the tallest window this machine gives it is 968, so Position and Size is below the bottom edge at every window size tested. The panel is overloaded before animation is even in the picture, and moving the timing out does not fix that. This question is only about timing. The side by side is on the design dashboard under Icons, Is the right hand pane overloaded?",
+  "options": [
+    {
+      "id": "a",
+      "label": "A strip across the bottom",
+      "summary": "The right hand panel keeps WHAT moves and by how much, as a Motion list you add to beside Effects. The first time you animate something, a band appears across the bottom of the window with one bar per animated property. You drag a bar to say when that part starts, so making the knob trail the bell by 90 milliseconds is a small drag you can see.",
+      "pros": [
+        "The one question motion exists to answer, does this part trail that part, becomes a shape you can see instead of two numbers you subtract in your head",
+        "The band only exists once something is animated, so an icon with no motion looks exactly like today",
+        "One click on its close control shrinks it to a single row that still says what you are editing, and the canvas comes back"
+      ],
+      "cons": [
+        "It is a second place to look: what changes is on the right, when it happens is at the bottom",
+        "On a small laptop window it takes about 110 to 170 points off the height of the canvas while it is open"
+      ],
+      "mitigation": "It opens at its shortest, one lane per animated property, and grows only if you have a lot of them. It collapses to a 30 point row and remembers the height you left it at."
+    },
+    {
+      "id": "b",
+      "label": "Keep it all in the right hand panel",
+      "summary": "Nothing new appears. Timing is two fields on each Motion entry: Start 0 ms, Over 900 ms. To make the knob trail the bell you type 90 into the knob's Start.",
+      "pros": [
+        "One home for everything, which is the thing that makes the app easy to learn",
+        "No canvas is ever given up",
+        "Nothing new to build in the window itself"
+      ],
+      "cons": [
+        "Whether two parts overlap, and by how much, is arithmetic you do in your head across two separate boxes",
+        "The panel already runs off the bottom of the window before Motion is added to it, so this makes a measured problem worse",
+        "The example that started this, a bell whose knob lags behind it, is the exact case it cannot show"
+      ],
+      "mitigation": "Each Motion entry could carry a tiny bar beside its fields showing roughly where it sits in the cycle. That gives you the order at a glance, but not a scale you can read a 90 millisecond gap off."
+    },
+    {
+      "id": "c",
+      "label": "A timing window you open when you want it",
+      "summary": "Timing lives in a panel that floats over the canvas, opened from the Motion section and closed when you are done. Full width while it is up, nothing at all when it is down.",
+      "pros": [
+        "Costs the canvas nothing except while you are actually using it",
+        "Gets the full width of the window, so the timing is drawn as large as it can be",
+        "You decide when it is there"
+      ],
+      "cons": [
+        "It covers the drawing you are trying to watch move, which is the one thing you need to see while adjusting timing",
+        "It is a third kind of surface: the app has panels down the side and sheets that slide over, and this is neither",
+        "Opening and closing it becomes part of the loop of adjusting a value and watching the result"
+      ],
+      "mitigation": "It could be dragged out of the way and remember where you put it, but then it is a floating window to manage as well as a document."
+    },
+    {
+      "id": "d",
+      "label": "Not now: leave the panel as it is",
+      "declines": true,
+      "summary": "Animating icons waits. The panel keeps exactly the shape it has, and no timing surface is built. Picking this retires this piece of work rather than handing it back.",
+      "pros": [
+        "Nothing changes, so nothing can get worse",
+        "The panel's own problem, which is real and separate, can be fixed on its own first"
+      ],
+      "cons": [
+        "Animated icons stay out of reach",
+        "The panel still does not fit its own contents, so the thing that actually needs fixing is not fixed by choosing this either"
+      ],
+      "mitigation": "The measured panel overflow is already filed as its own piece of work, so choosing this does not lose it."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-15T08:36:56.423Z"
+}

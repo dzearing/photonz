@@ -1,0 +1,29 @@
+{
+  "feature": "Is the right hand pane carrying too much?",
+  "epic": "icon-svg",
+  "summary": "The right hand panel was measured in the running app rather than argued about, and there is now a study page showing the same bell icon in the arrangement we have and the one proposed, with a decision card waiting on the one question only you can answer.",
+  "setup": "The design dashboard, http://127.0.0.1:8791. Nothing to build or install. The page is under Icons, called Is the right hand pane overloaded?",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/index.html#pane-load and read the three numbers at the top.", "shot": "2026-09-15-pane-load-side-by-side.png" },
+    { "do": "Read the inventory table under them: every section the panel can show, and whether it is competing for height, width or your attention." },
+    { "do": "Scroll to the first window, marked What we have. Look at where the panel stops." },
+    { "do": "Scroll to the second window, marked Proposed, and look at the two bars along the bottom.", "shot": "2026-09-15-pane-load-proposed.png" },
+    { "do": "Read the three window sizes below it: what the window looks like small, ordinary and large, and what happens when nothing is animated." },
+    { "do": "Open the decision card on the dashboard, When you animate an icon, where should the timing of the motion appear, and press Explain in more detail." },
+    { "do": "Pick an option." }
+  ],
+  "evaluate": [
+    "Does the answer match your instinct? You said the side pane was overused real estate; the measurement says it is overloaded but that animation is not what is overloading it. Does that land, or does it dodge what you meant?",
+    "Looking at the second window: is one bar starting to the right of another the thing you were picturing when you said a timeline bigger than the property panel?",
+    "Is Motion staying in the right hand panel, as a list you add to beside Effects, the right split? Or did you mean the whole thing, what changes as well as when, should leave the column?",
+    "On a laptop window the timing band takes the canvas from 688 points to 516 while it is open. Is that an acceptable trade for being able to see the timing, given one click shrinks it back to a row?",
+    "Is the Library, the only other thing in the panel shaped wrong for a narrow column, worth its own question later, or should it have been part of this one?"
+  ],
+  "rough": [
+    "There are no real screenshots of the app in this audit. The probe reports Screen Recording as granted and then fails every capture with SCStreamErrorDomain -3811, so the app pictures are offscreen renders and the two shots above are of the study page in a browser. Folded into the open task an-audit-gets-a-real-picture-of-the-app-again rather than filed again.",
+    "The measured finding is worse than the question asked about: the panel does not fit its own contents at any window size today, with three layers in the document and one drop shadow. Position and Size is below the bottom edge every time. Filed as position-and-size-stays-on-screen-when-you-pick.",
+    "The study moves exactly one thing and leaves the Library where it is, even though it is the other tenant that genuinely wants width. That is deliberate, so that one answer does not decide two questions by accident, but it does mean the panel study is not finished.",
+    "The 1052 point figure is measured. The 1284 and 1182 figures in the side by side are that number plus a Motion section priced at what Effects charges for the same number of entries, which is an estimate, and the page says so.",
+    "The timing band in the proposed window is drawn at 150 points rather than the 172 the text claims for a laptop window, because the two windows on the page are drawn at the same size so the comparison is fair. The shape is right; the exact height is not to scale."
+  ]
+}

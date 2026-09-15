@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p1-high",
   "seq": 6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T01:52:13.923Z",
-  "updated": "2026-09-15T08:25:58.336Z",
+  "updated": "2026-09-15T08:37:57.263Z",
   "deps": [
     "mock-animating-any-property-of-a-layer-with-the"
   ],
@@ -41,6 +41,36 @@
     {
       "t": "2026-09-15T08:25:58.335Z",
       "note": "2026-09-15 the property-first animation mocks are one concrete answer to this, worth looking at before deciding. The user's words on the same day were 'worried the side pane is overused real estate on the app', said about animation timing specifically. What icon-animate-wt and icon-phase-wt do: the side pane keeps WHAT changes and BY HOW MUCH (Motion is a dock group beside Effects, entries with a switch and settings), and the WHEN moves to a dock across the bottom with real width. The test the pages set for that split is step 4 of icon-phase-wt: dragging the knob's bar 90 ms later so it trails the bell. That is a relationship between two bars and it cannot be read in a column, which is the argument for the bottom dock. Cost: with Layers, Properties, Effects and Motion all open, an 864px window scrolls the Motion group, so the side pane is still carrying a lot even after moving the timing out."
+    },
+    {
+      "t": "2026-09-15T08:31:23.018Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T08:37:38.406Z",
+      "note": "ADVERSARIAL REVIEW, before proposing anything. Walked the bell flow as somebody who has never seen the mock. (1) The mock's answer, Motion in the column and a timeline across the bottom, splits one thing across two surfaces: the bell's rotation is an entry on the right AND a bar at the bottom. That cost is real and the study says so out loud rather than hiding it. (2) A full video-style timeline is decorative here: for a 900 ms icon loop, transport, in/out marks and per-clip tracks are all furniture. The shortest version that delivers the same value is a ruler and one bar per animated property, which is what the proposal draws. (3) The mock takes the height out of the canvas, which on a laptop is the pocket you least want picked, since the canvas is where you judge the motion. Answered by opening at its shortest (110 pt on a small window), collapsing to a 30 pt row, and not existing at all until something is animated. (4) The mock never says what happens when nothing is animated; the study does. Conclusion: the mock is directionally right and over-built, so the study proposes the reduced version."
+    },
+    {
+      "t": "2026-09-15T08:37:41.750Z",
+      "note": "MEASURED FIRST, then answered. Ran Scripts/playtest/studies/side-pane-load-walk.json on a probe from HEAD 093c41da: a blank 900x600 document, a text layer and a rectangle drawn, the text picked, at 1000x640, 1200x720 and 1680x1000. The dock reports 1052 pt of sections (Layers 163, Text 198, Appearance 223, Effects 332, Position & Size 130) against viewports of 608, 688 and 968. dockInView is Layers, Text, Appearance at the two smaller sizes and adds Effects at the largest; Position & Size is never whole on screen. So the pane is overloaded TODAY, with three layers and one drop shadow, before animation exists, and the thing overloading it is one open effect pinning a 299 pt floor while every form above it is unsqueezable by design (InspectorDockLayout: forms paid first, lists give way). That reframes the user's question: the answer is yes it carries too much, and no, the timing surface is not why."
+    },
+    {
+      "t": "2026-09-15T08:37:44.832Z",
+      "note": "THE RECOMMENDATION, argued from the flow. Of the 26 sections InspectorSectionID can show, exactly two are the wrong shape for a 265 pt column: the Library (a thumbnail grid, two tiles across) and a timing surface. Everything else is a stack of labelled rows and competes only for height. The tool-in-hand sections (Measure, Wand, Crop, Zoom Callout, Lens) compete for attention instead: they appear and vanish as you change tool and everything under them slides. So move ONE thing: timing, because it is the only surface in the app whose meaning is a gap between two layers laid out across width rather than a value. That is not a new region either, UX-PATTERNS section 1 region 8 already reserves a bottom dock for a document with time and D9 already says how it collapses; the app has simply never built it. Motion itself STAYS in the pane, as a list you add to beside Effects, because splitting one idiom across two surfaces to save 130 pt would cost what makes it learnable. The Library is named as the other width-hungry tenant and deliberately left out, so one answer does not decide two questions."
+    },
+    {
+      "t": "2026-09-15T08:37:47.709Z",
+      "note": "SHIPPED. docs/design/mocks/pages/pane-load.html, registered in the mocks index under Icons as 'Is the right hand pane overloaded?', serves 200 from the dashboard with no console errors and passes check-reserved, check-a11y-names, check-fieldwrap, check-shortcuts, check-selection, check-elevation and check-states. It carries the inventory table, the same bell icon in two real shells drawn at the same size (the first one's dock genuinely clips, which is the point), three window sizes with canvas heights, the cost by surface, and what stays put. Decision card opened on this task with four options recommending the bottom strip, option d marked declines. Brief at queue/decisions/work-out-whether-the-right-hand-pane-is-carrying-when-you-animate-an-icon-where-s.md. Audit queue/audits/2026-09-15-pane-load.json with two page screenshots and one offscreen app render."
+    },
+    {
+      "t": "2026-09-15T08:37:50.837Z",
+      "note": "Follow-ups: filed position-and-size-stays-on-screen-when-you-pick (p2, ui-building) for the measured overflow, with the walk output in its notes and citing the done task the-properties-panel-fits-on-the-screen-it-has whose acceptance this breaks. Folded the broken screen capture into an-audit-gets-a-real-picture-of-the-app-again rather than filing a twin. Left rough, no task earned: (a) the mocks index entry says 'new' like every recent page, harmless; (b) the injected timeline close control wraps to its own line in the study page's compact timeline, a page-local styling nit nobody but a runner sees; (c) the Library being two tiles across is named in the study but deliberately not filed, because filing it would pre-empt the question the study says should be asked on its own later; (d) the study walk asserts nothing by design, so it lives in Scripts/playtest/studies/ with a README saying why the sweep's glob does not reach it."
+    },
+    {
+      "t": "2026-09-15T08:37:57.261Z",
+      "note": "Measured the dock in the running app (1052 pt of sections against a 968 pt viewport at 1680x1000, Position & Size never whole on screen at any size), then answered: the pane is overloaded today and animation is not why. Study page docs/design/mocks/pages/pane-load.html shows the same bell in both arrangements, three window sizes, and the cost by surface; decision card opened recommending a timing strip across the bottom with Motion staying in the pane; audit queue/audits/2026-09-15-pane-load.json; overflow filed as position-and-size-stays-on-screen-when-you-pick."
     }
-  ]
+  ],
+  "started": "2026-09-15T08:31:23.017Z",
+  "completed": "2026-09-15T08:37:57.262Z"
 }
