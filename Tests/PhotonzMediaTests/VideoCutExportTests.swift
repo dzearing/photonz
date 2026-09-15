@@ -8,38 +8,28 @@ import Testing
 /// What a cut recording actually turns into, checked against real MP4s rather
 /// than against bookkeeping.
 ///
-/// `TestClip` writes a brightness ramp: red climbs from 0 at the first frame to
-/// 1 at the last. That makes a frame self-identifying — read its red channel and
+/// `TestClip` paints each frame's own number into the picture as black and
+/// white stripes. That makes a frame self-identifying — read the stripes and
 /// you know which moment of the SOURCE it came from — which is how these tests
 /// prove a dropped piece is really gone and a join really joins, instead of
 /// only proving the file came out the right length.
 @Suite("Cutting a recording, end to end")
 struct VideoCutExportTests {
 
-    /// Where in the source (0...1) the frame at this brightness was recorded.
-    private func sourceFraction(ofFrameAt seconds: Double, in url: URL) async -> Double? {
-        let asset = AVURLAsset(url: url)
-        let generator = AVAssetImageGenerator(asset: asset)
-        generator.appliesPreferredTrackTransform = true
-        generator.requestedTimeToleranceBefore = .zero
-        generator.requestedTimeToleranceAfter = .zero
-        guard let image = try? await generator.image(
-            at: CMTime(seconds: seconds, preferredTimescale: 600)).image else { return nil }
-        return redLevel(of: image)
-    }
-
-    /// The red channel of the frame's centre pixel, 0...1.
-    private func redLevel(of image: CGImage) -> Double? {
-        var pixel: [UInt8] = [0, 0, 0, 0]
-        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
-              let ctx = CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8,
-                                  bytesPerRow: 4, space: space,
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        // Draw the whole frame down to one pixel: the clip is a flat colour per
-        // frame, so the average IS the colour.
-        ctx.draw(image, in: CGRect(x: 0, y: 0, width: 1, height: 1))
-        return Double(pixel[0]) / 255.0
+    /// Which second of the SOURCE recording the frame shown at `seconds` came
+    /// from, read out of the frame's own stripes.
+    private func sourceSeconds(ofFrameAt seconds: Double, in url: URL,
+                               sourceLocation: SourceLocation = #_sourceLocation) async throws -> Double {
+        let code = try #require(await TestClip.frameCode(at: seconds, in: url),
+                                "no frame at \(seconds)s of \(url.lastPathComponent)",
+                                sourceLocation: sourceLocation)
+        // Black and white survive any colour handling, so a faint read means
+        // the picture itself stopped carrying a legible number, not that the
+        // machine renders colour differently.
+        #expect(code.margin > 0.2,
+                "the stripes at \(seconds)s read faintly (margin \(code.margin)): the frame number is not legible",
+                sourceLocation: sourceLocation)
+        return code.seconds
     }
 
     @Test("Exporting a recording with the middle dropped writes only what is left")
@@ -66,15 +56,13 @@ struct VideoCutExportTests {
         #expect(abs(length - 4) < 0.2, "kept four of six seconds, got \(length)")
 
         // Half a second BEFORE the join is still the opening piece.
-        let early = try #require(await sourceFraction(ofFrameAt: 1.5, in: out))
-        #expect(abs(early - 1.5 / 6.0) < 0.12,
-                "a frame 1.5s in should look like source 1.5s, read \(early * 6)s")
+        let early = try await sourceSeconds(ofFrameAt: 1.5, in: out)
+        #expect(abs(early - 1.5) < 0.1, "a frame 1.5s in should be source 1.5s, read \(early)s")
 
         // Half a second AFTER the join is source 4.5s, NOT source 2.5s. This is
         // the whole claim: the dropped two seconds are not in the file.
-        let late = try #require(await sourceFraction(ofFrameAt: 2.5, in: out))
-        #expect(abs(late - 4.5 / 6.0) < 0.12,
-                "a frame 2.5s in should look like source 4.5s, read \(late * 6)s")
+        let late = try await sourceSeconds(ofFrameAt: 2.5, in: out)
+        #expect(abs(late - 4.5) < 0.1, "a frame 2.5s in should be source 4.5s, read \(late)s")
         #expect(late > early, "time still runs forwards across the join")
     }
 
@@ -97,9 +85,43 @@ struct VideoCutExportTests {
         let length = await TestClip.duration(of: out)
         #expect(abs(length - 3) < 0.2)
         // The first frame out is the frame the cut was made on.
-        let first = try #require(await sourceFraction(ofFrameAt: 0.2, in: out))
-        #expect(abs(first - 3.2 / 6.0) < 0.12,
-                "the export should open on source 3.2s, read \(first * 6)s")
+        let first = try await sourceSeconds(ofFrameAt: 0.2, in: out)
+        #expect(abs(first - 3.2) < 0.1, "the export should open on source 3.2s, read \(first)s")
+    }
+
+    @Test("The frame reader tells a cut recording from an uncut one")
+    func frameReaderTellsCutFromUncut() async throws {
+        let dir = TestClip.makeScratchDirectory()
+        defer { TestClip.cleanUp(dir) }
+        let source = dir.appendingPathComponent("source.mp4")
+        try await TestClip.write(to: source, seconds: 6)
+
+        // The recording itself reads as itself: 2.5s in is source 2.5s.
+        let inSource = try await sourceSeconds(ofFrameAt: 2.5, in: source)
+        #expect(abs(inSource - 2.5) < 0.1, "the source at 2.5s should be source 2.5s, read \(inSource)s")
+
+        // An export that drops nothing leaves every moment where it was. This
+        // is what a cut that quietly did nothing would produce.
+        let whole = VideoCutList(duration: 6)
+        let uncut = dir.appendingPathComponent("uncut.mp4")
+        try await VideoExporter.exportMP4(from: source, to: uncut, cuts: whole, crop: nil)
+        let keptEverything = try await sourceSeconds(ofFrameAt: 2.5, in: uncut)
+        #expect(abs(keptEverything - 2.5) < 0.1,
+                "an export with nothing dropped should still be source 2.5s at 2.5s, read \(keptEverything)s")
+
+        // Dropping the middle moves that same moment two seconds along, so the
+        // reader would catch an export that kept the dropped piece.
+        var cuts = VideoCutList(duration: 6)
+        _ = cuts.split(atTimeline: 2)
+        _ = cuts.split(atTimeline: 4)
+        _ = cuts.removePiece(at: 1)
+        let out = dir.appendingPathComponent("cut.mp4")
+        try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil)
+        let afterTheCut = try await sourceSeconds(ofFrameAt: 2.5, in: out)
+        #expect(abs(afterTheCut - 4.5) < 0.1,
+                "the cut export at 2.5s should be source 4.5s, read \(afterTheCut)s")
+        #expect(afterTheCut - keptEverything > 1.5,
+                "the two files must not read alike, or the test could not tell a broken cut from a good one")
     }
 
     @Test("The player's composition is the kept pieces, back to back")
