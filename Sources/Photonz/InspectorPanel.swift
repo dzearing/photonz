@@ -156,6 +156,10 @@ struct InspectorPanel: View {
     /// What each section costs the dock, and how tall the dock is. Together
     /// these are the whole input to `DockHeightBudget`; see `dockBudget`.
     @State private var budget = DockBudgetScratch()
+    /// Which of the optional sections you have said yes or no to. Watched
+    /// rather than read once, so ticking one in the list at the foot of the
+    /// panel redraws the dock in the same frame.
+    @State private var sectionVisibility = PanelSectionVisibilityStore.shared
 
     var body: some View {
         #if PHOTONZ_PLAYTEST
@@ -178,149 +182,159 @@ struct InspectorPanel: View {
             + "headers \(budget.headers.map { "\($0.key.rawValue)=\(Int($0.value))" }.sorted().joined(separator: ",")) "
             + "bodies \(budget.bodies.map { "\($0.key.rawValue)=\(Int($0.value))" }.sorted().joined(separator: ","))")
         #endif
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(sections, id: \.self) { id in
-                        VStack(alignment: .leading, spacing: 0) {
-                            CollapsibleSection(
-                                title: sectionTitle(id),
-                                isCollapsed: isCollapsed(id),
-                                onToggle: { toggleCollapsed(id) },
-                                onReorder: { pointerY, carriedBy in
-                                    sectionDragChanged(id, pointerY: pointerY,
-                                                       carriedBy: carriedBy, in: sections)
-                                },
-                                onReorderEnd: { endSectionDrag(in: sections) },
-                                accessory: sectionAccessory(id),
-                                // The layers list bounds itself — it has had
-                                // its own scroller and grab bar since long
-                                // before the dock had a budget — so the
-                                // ceiling reaches it through `LayersListView`
-                                // instead of through a second scroller round
-                                // the outside of the one it already has.
-                                bodyCeiling: id == .layers ? nil : ceilings[id],
-                                onBodyHeight: { height in
-                                    guard id != .layers else { return }
-                                    record(bodyHeight: height, for: id)
-                                },
-                                onHeaderHeight: { record(headerHeight: $0, for: id) },
-                                onBodyFrame: { reveal.bodyFrames[id] = $0 }
-                            ) {
-                                sectionContent(id, ceiling: ceilings[id])
+        // The dock, and under it the one row that says which sections it is
+        // showing. The row sits OUTSIDE the scroller on purpose: it is the way
+        // back to anything automatic has left out, and a way back you have to
+        // scroll to find is not a way back.
+        VStack(spacing: 0) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(sections, id: \.self) { id in
+                            VStack(alignment: .leading, spacing: 0) {
+                                CollapsibleSection(
+                                    title: sectionTitle(id),
+                                    isCollapsed: isCollapsed(id),
+                                    onToggle: { toggleCollapsed(id) },
+                                    onReorder: { pointerY, carriedBy in
+                                        sectionDragChanged(id, pointerY: pointerY,
+                                                           carriedBy: carriedBy, in: sections)
+                                    },
+                                    onReorderEnd: { endSectionDrag(in: sections) },
+                                    accessory: sectionAccessory(id),
+                                    // The layers list bounds itself — it has had
+                                    // its own scroller and grab bar since long
+                                    // before the dock had a budget — so the
+                                    // ceiling reaches it through `LayersListView`
+                                    // instead of through a second scroller round
+                                    // the outside of the one it already has.
+                                    bodyCeiling: id == .layers ? nil : ceilings[id],
+                                    onBodyHeight: { height in
+                                        guard id != .layers else { return }
+                                        record(bodyHeight: height, for: id)
+                                    },
+                                    onHeaderHeight: { record(headerHeight: $0, for: id) },
+                                    onBodyFrame: { reveal.bodyFrames[id] = $0 }
+                                ) {
+                                    sectionContent(id, ceiling: ceilings[id])
+                                }
+                                // The hairline belongs to the section above it, so
+                                // a section lifted off the panel takes its line
+                                // with it instead of leaving one hanging in the
+                                // gap it left behind.
+                                Divider().opacity(drag.section == id ? 0 : 0.4)
                             }
-                            // The hairline belongs to the section above it, so
-                            // a section lifted off the panel takes its line
-                            // with it instead of leaving one hanging in the
-                            // gap it left behind.
-                            Divider().opacity(drag.section == id ? 0 : 0.4)
+                            // Named for a tutorial off the section's id, never off
+                            // its heading, so renaming a section cannot break a
+                            // guide that points at it (`TutorialAnchorRegistry`).
+                            .tutorialAnchor(.panelSection(id.rawValue))
+                            // Where this section sits inside the dock: for the
+                            // reveal below, and for a reorder, which reads every
+                            // section's resting place the moment one is picked up.
+                            // Kept OUTSIDE @State on purpose: this fires on every
+                            // scroll tick, and re-drawing the whole dock to
+                            // remember a number nothing draws is the jank the
+                            // comment further down is about.
+                            .onGeometryChange(for: CGRect.self) {
+                                $0.frame(in: .named(inspectorDockSpace))
+                            } action: { frame in
+                                recordInspectorSection(id, title: sectionTitle(id), frame: frame)
+                                reveal.sectionFrames[id] = frame
+                                // Mid-drag a section is standing somewhere it does
+                                // not live, so its measurement is worth nothing:
+                                // the spans a reorder reads were taken before it
+                                // started.
+                                if drag.section == nil { dragScratch.frames[id] = frame }
+                                guard id == .library else { return }
+                                reveal.libraryFrame = frame
+                                if reveal.isPending { revealer(proxy).applyLibrary() }
+                            }
+                            // A section in your hand is off the surface: it wears a
+                            // card and a shadow, and it draws over its neighbours.
+                            .background { sectionLift(id) }
+                            .zIndex(drag.section == id ? 1 : 0)
+                            // Two offsets, and the order matters. The sections
+                            // moving aside SLIDE, so their offset is animated; the
+                            // one in your hand must not, because an animation
+                            // between the pointer and the section is lag.
+                            .offset(y: sectionSlide(id, in: sections))
+                            .animation(.spring(duration: 0.24), value: drag.target)
+                            .offset(y: drag.section == id ? drag.carriedBy : 0)
+                            // FILES ONLY. Reordering is this panel's own gesture,
+                            // not a drop, so a section being carried never reaches
+                            // the drop machinery and can never light up the marks
+                            // that answer for a file.
+                            .onDrop(of: FileDrop.types,
+                                    delegate: SectionFileDrop(item: id, editorState: editorState))
                         }
-                        // Named for a tutorial off the section's id, never off
-                        // its heading, so renaming a section cannot break a
-                        // guide that points at it (`TutorialAnchorRegistry`).
-                        .tutorialAnchor(.panelSection(id.rawValue))
-                        // Where this section sits inside the dock: for the
-                        // reveal below, and for a reorder, which reads every
-                        // section's resting place the moment one is picked up.
-                        // Kept OUTSIDE @State on purpose: this fires on every
-                        // scroll tick, and re-drawing the whole dock to
-                        // remember a number nothing draws is the jank the
-                        // comment further down is about.
-                        .onGeometryChange(for: CGRect.self) {
-                            $0.frame(in: .named(inspectorDockSpace))
-                        } action: { frame in
-                            recordInspectorSection(id, title: sectionTitle(id), frame: frame)
-                            reveal.sectionFrames[id] = frame
-                            // Mid-drag a section is standing somewhere it does
-                            // not live, so its measurement is worth nothing:
-                            // the spans a reorder reads were taken before it
-                            // started.
-                            if drag.section == nil { dragScratch.frames[id] = frame }
-                            guard id == .library else { return }
-                            reveal.libraryFrame = frame
-                            if reveal.isPending { revealer(proxy).applyLibrary() }
-                        }
-                        // A section in your hand is off the surface: it wears a
-                        // card and a shadow, and it draws over its neighbours.
-                        .background { sectionLift(id) }
-                        .zIndex(drag.section == id ? 1 : 0)
-                        // Two offsets, and the order matters. The sections
-                        // moving aside SLIDE, so their offset is animated; the
-                        // one in your hand must not, because an animation
-                        // between the pointer and the section is lag.
-                        .offset(y: sectionSlide(id, in: sections))
-                        .animation(.spring(duration: 0.24), value: drag.target)
-                        .offset(y: drag.section == id ? drag.carriedBy : 0)
-                        // FILES ONLY. Reordering is this panel's own gesture,
-                        // not a drop, so a section being carried never reaches
-                        // the drop machinery and can never light up the marks
-                        // that answer for a file.
-                        .onDrop(of: FileDrop.types,
-                                delegate: SectionFileDrop(item: id, editorState: editorState))
+                    }
+                    .padding(.vertical, DockMetrics.listTopPadding)
+                    // NO implicit animation on the section SET (10.7). Animating
+                    // section insert/remove forces the whole .regularMaterial panel to
+                    // re-blur and an NSColorWell to animate in/out every frame for the
+                    // spring's duration — ~350ms of pegged CPU per selection that
+                    // crosses between an annotation and a non-annotation layer (the
+                    // Annotation section toggles). Showing/hiding sections instantly
+                    // drops that to ~20ms. Collapse (chevron) and drag-reorder keep
+                    // their own explicit `withAnimation`, so they still animate.
+                }
+                .coordinateSpace(.named(inspectorDockSpace))
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                    reveal.viewportHeight = $0
+                    budget.viewportHeight = $0
+                    recordInspectorViewportHeight($0)
+                }
+                // Where the dock sits in the window. Only a scripted walk reads
+                // it, to put a pointer on a section; it is a no-op in the
+                // shipping build.
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                    recordInspectorDockFrame($0)
+                    // The edge every icon on the right of the panel is measured
+                    // against, so a walk reads "22.5pt in from the edge" rather
+                    // than a window coordinate that means nothing on its own.
+                    recordPanelEdgeFrame($0)
+                }
+                .inspectorLayoutProbe(sections: sections)
+                // A section the selection asked for that has not been built yet
+                // gets the next pass to itself. Departures are already on screen by
+                // now (they leave in the click's own pass), so this only ever fires
+                // for arrivals, and a click that keeps the same sections — moving
+                // the selection from one group to another — never reaches it at all.
+                .onChange(of: wanted) { _, latest in
+                    guard arrivals.isWaiting(for: latest) else { return }
+                    DispatchQueue.main.async {
+                        arrivals.allow(latest)
+                        arrivalPass &+= 1
                     }
                 }
-                .padding(.vertical, DockMetrics.listTopPadding)
-                // NO implicit animation on the section SET (10.7). Animating
-                // section insert/remove forces the whole .regularMaterial panel to
-                // re-blur and an NSColorWell to animate in/out every frame for the
-                // spring's duration — ~350ms of pegged CPU per selection that
-                // crosses between an annotation and a non-annotation layer (the
-                // Annotation section toggles). Showing/hiding sections instantly
-                // drops that to ~20ms. Collapse (chevron) and drag-reorder keep
-                // their own explicit `withAnimation`, so they still animate.
-            }
-            .coordinateSpace(.named(inspectorDockSpace))
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
-                reveal.viewportHeight = $0
-                budget.viewportHeight = $0
-                recordInspectorViewportHeight($0)
-            }
-            // Where the dock sits in the window. Only a scripted walk reads
-            // it, to put a pointer on a section; it is a no-op in the
-            // shipping build.
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
-                recordInspectorDockFrame($0)
-                // The edge every icon on the right of the panel is measured
-                // against, so a walk reads "22.5pt in from the edge" rather
-                // than a window coordinate that means nothing on its own.
-                recordPanelEdgeFrame($0)
-            }
-            .inspectorLayoutProbe(sections: sections)
-            // A section the selection asked for that has not been built yet
-            // gets the next pass to itself. Departures are already on screen by
-            // now (they leave in the click's own pass), so this only ever fires
-            // for arrivals, and a click that keeps the same sections — moving
-            // the selection from one group to another — never reaches it at all.
-            .onChange(of: wanted) { _, latest in
-                guard arrivals.isWaiting(for: latest) else { return }
-                DispatchQueue.main.async {
-                    arrivals.allow(latest)
-                    arrivalPass &+= 1
+                // The app opened the Library for you: put it where you can see it.
+                // On appear too, because showing the shelf opens the dock as well,
+                // and then this panel is born with the request already waiting.
+                .onChange(of: editorState.pendingLibraryReveal) { revealer(proxy).requestLibrary() }
+                .onAppear { revealer(proxy).requestLibrary() }
+                // You opened an effect, or added one: put the settings that just
+                // appeared where you can see them. This is the LAST reveal the dock
+                // has, and picking something is deliberately not one of them — the
+                // order puts what you picked under the layers list, so there is
+                // nothing to scroll to. See `InspectorDockLayout.swift`.
+                .onChange(of: editorState.effectToReveal) { _, id in
+                    guard let id else { return }
+                    let delay = InspectorDockReveal.effectRevealDelay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                        revealer(proxy).applyEffect(id)
+                    }
                 }
+                // ...and, in the release whose order still leaves a pick's own
+                // section below Appearance and Effects, the pick itself. Both
+                // stores, because a plain click and a shift click are the same act
+                // as far as the panel is concerned. A no-op in Next.
+                .onChange(of: editorState.selectedLayerID) { revealer(proxy).requestPick() }
+                .onChange(of: editorState.multiSelectedLayerIDs) { revealer(proxy).requestPick() }
             }
-            // The app opened the Library for you: put it where you can see it.
-            // On appear too, because showing the shelf opens the dock as well,
-            // and then this panel is born with the request already waiting.
-            .onChange(of: editorState.pendingLibraryReveal) { revealer(proxy).requestLibrary() }
-            .onAppear { revealer(proxy).requestLibrary() }
-            // You opened an effect, or added one: put the settings that just
-            // appeared where you can see them. This is the LAST reveal the dock
-            // has, and picking something is deliberately not one of them — the
-            // order puts what you picked under the layers list, so there is
-            // nothing to scroll to. See `InspectorDockLayout.swift`.
-            .onChange(of: editorState.effectToReveal) { _, id in
-                guard let id else { return }
-                let delay = InspectorDockReveal.effectRevealDelay
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    revealer(proxy).applyEffect(id)
-                }
+            if Experiments.shared.panelSectionsEnabled, editorState.document != nil {
+                PanelSectionsFooter(offered: offeredOptionalSections,
+                                    situation: editorState.panelSectionSituation)
             }
-            // ...and, in the release whose order still leaves a pick's own
-            // section below Appearance and Effects, the pick itself. Both
-            // stores, because a plain click and a shift click are the same act
-            // as far as the panel is concerned. A no-op in Next.
-            .onChange(of: editorState.selectedLayerID) { revealer(proxy).requestPick() }
-            .onChange(of: editorState.multiSelectedLayerIDs) { revealer(proxy).requestPick() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial)
@@ -377,14 +391,14 @@ struct InspectorPanel: View {
     /// looks up the sections it was handed — so a stale one costs nothing and
     /// is simply left where it is.
     private func record(bodyHeight: CGFloat, for id: InspectorSectionID) {
-        guard orderedAvailableSections.contains(id) else { return }
+        guard availableSections.contains(id) else { return }
         guard budget.bodies[id] != bodyHeight else { return }
         budget.bodies[id] = bodyHeight
     }
 
     /// The same, for the header row, which measures itself on the way out too.
     private func record(headerHeight: CGFloat, for id: InspectorSectionID) {
-        guard orderedAvailableSections.contains(id) else { return }
+        guard availableSections.contains(id) else { return }
         guard budget.headers[id] != headerHeight else { return }
         budget.headers[id] = headerHeight
     }
@@ -635,7 +649,51 @@ struct InspectorPanel: View {
 
     private var orderedAvailableSections: [InspectorSectionID] {
         let available = availableSections
-        return order.filter { available.contains($0) }
+        let inOrder = order.filter { available.contains($0) }
+        // ...and then the panel's own rule about which of the OPTIONAL sections
+        // are worth showing at all (Next, `next-panel-sections`). The test
+        // above says a section applies to what is picked; this one says the
+        // document is actually doing the job that section is for, which is a
+        // fact about the document rather than about the selection — so nothing
+        // here can make the panel rearrange itself as you click around. See
+        // `PanelSectionVisibility`.
+        guard Experiments.shared.panelSectionsEnabled else { return inOrder }
+        let situation = editorState.panelSectionSituation
+        return inOrder.filter {
+            PanelSectionVisibility.isShown($0.rawValue,
+                                           choices: sectionVisibility.choices,
+                                           in: situation)
+        }
+    }
+
+    /// The optional sections this release actually builds, in the order the
+    /// Sections list shows them. A section behind a flag that is off is not
+    /// offered, because a switch for something the app cannot show is a switch
+    /// that does nothing.
+    ///
+    /// The Library's own picked-tile section is never a row of its own: it is
+    /// part of the shelf and takes the shelf's answer (`PanelSectionVisibility`).
+    private var offeredOptionalSections: [InspectorSectionID] {
+        let flags = Experiments.shared
+        return PanelSectionVisibility.optionalSections
+            .compactMap(InspectorSectionID.init(rawValue:))
+            .filter { id in
+                switch id {
+                case .library: flags.libraryEnabled
+                case .libraryItem: false
+                case .measurements: flags.measurePanelEnabled
+                case .motion: flags.motionEnabled
+                case .placement: flags.placementEnabled
+                case .columns: flags.framesEnabled
+                case .arrange: flags.alignLayersEnabled
+                case .component: flags.componentsEnabled
+                // The Shadow section only exists in the release without the
+                // Appearance/Effects split; with the split on it is a row in
+                // the parts list and there is nothing here to switch.
+                case .shadow: !flags.shapePartsEnabled
+                default: true
+                }
+            }
     }
 
     /// Header furniture for sections that carry any: the Measurements group's

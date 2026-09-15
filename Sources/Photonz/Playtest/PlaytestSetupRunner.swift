@@ -47,7 +47,11 @@ extension PlaytestMemory {
              // Details. (The parts list no longer folds: a switched on part
              // shows its settings straight away.)
              MeasureInspector.detailsOpenKey,
-             LayersListView.heightKey, LibraryPanel.heightKey]
+             LayersListView.heightKey, LibraryPanel.heightKey,
+             // ...and which of the optional sections have been pinned on or
+             // turned off by hand, which decides what the dock draws at all
+             // (`next-panel-sections`).
+             PanelSectionVisibilityStore.defaultsKey(for: Experiments.shared.release)]
         case .grid:
             [EditorState.canvasGridKey]
         case .frames:
@@ -110,6 +114,7 @@ struct PlaytestSetupRunner {
             // be told, or it goes on drawing what was just thrown away.
             if setup.forget.contains(.grid) { CanvasGridStore.shared.reload() }
             if setup.forget.contains(.frames) { IconKeylinesStore.shared.reload() }
+            if setup.forget.contains(.panel) { PanelSectionVisibilityStore.shared.reload() }
             if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }
             said.append("forgot \(setup.forget.map(\.rawValue).joined(separator: ", "))"
                         + " (\(keys.count) settings)")

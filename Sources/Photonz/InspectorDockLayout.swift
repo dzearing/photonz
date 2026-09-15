@@ -43,6 +43,19 @@ import SwiftUI
 //
 // The same rule written for a reader rather than for a compiler is in
 // `docs/design/mocks/shared/UX-PATTERNS.md`, section 3, under Reveal.
+//
+// MARK: - ...and the rule about WHICH sections there are
+//
+// The rule above decides the ORDER. A second rule, in
+// `PanelSectionVisibility` (PhotonzCore, pure and tested), decides which of
+// the optional sections are drawn at all: **what you PICK never adds or
+// removes an optional section; only what the document holds, the tool in your
+// hand, and what you asked for may.** A document with no measurement in it has
+// no Measurements section; make one and it arrives, and it does not then come
+// and go as you click around. Anything automatic leaves out is one press
+// away in the Sections row at the foot of the panel, which sits OUTSIDE this
+// scroller for exactly that reason. Written for a reader in
+// `docs/design/panel-sections.md`.
 /// The numbers every section in the dock is measured in.
 enum DockMetrics {
     /// One section header's row: the height `CollapsibleSection` pins its

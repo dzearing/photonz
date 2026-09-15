@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2.2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:01:13.552Z",
-  "updated": "2026-09-15T15:01:13.640Z",
+  "updated": "2026-09-15T16:39:22.330Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's words: 'I feel like we should maybe have a way to not show some panes. I think the library pane will almost never be used. But maybe at the bottom of the panel is a way to show/hide panes that are questionably necessary so we can have an auto mode that only shows panes relevant to the situation.'\n\nThis is the same instinct as the modes work ('work-out-whether-the-app-needs-project-types-at', where a mode is a preset of what is visible and you can always turn a hidden thing back on). Read that task: if modes land, per-pane visibility is part of what a mode IS, and these two must not grow separate machinery for one idea. Say in the log which way that was resolved.\n\nThe automatic rule is the part worth thinking hardest about, because 'relevant to the situation' is easy to say and easy to get wrong. A section that appears and disappears as the selection changes makes the panel unpredictable, which is one of the things the user is already complaining about. Hiding a rarely wanted section permanently is predictable; showing and hiding sections per selection may be worse than the clutter. Weigh that honestly rather than assuming automatic is better.\n\n---\nSaid by the user on 2026-09-15, looking at the panel with a component selected:\n\n\"the number of panes is obnoxious. why would i ever care to set position and width manually? this kind of shit is really front and foreground rather than using the component instance. And i hate input box grids, it's the laziest ui possible. First, I don't need position in the pane at all. if I want to move something i use the V tool. If we want precision placement right click and have an option to do that. Same with sizing. Paddings should have a simplified way to set paddings with one row, like maybe an input and a little dropdown next to it. type 14, you get 14 on all sides, hit the dropdown and a popout lets you type individual values and input shows 'mixed' or something. But the panes are now completely cluttered and hard to read and unpredictable. total mess. I feel like we should maybe have a way to not show some panes. I think the library pane will almost never be used. But maybe at the bottom of the panel is a way to show/hide panes that are questionably necessary so we can have an auto mode that only shows panes relevant to the situation\"\n\nTHIS IS MEASURED, NOT JUST FELT. The study 'work-out-whether-the-right-hand-pane-is-carrying' (done, 2026-09-15) measured the dock in the running app: 1052 points of sections against a 968 point viewport at 1680x1000, and Position & Size never wholly on screen at any window size. Its page is docs/design/mocks/pages/pane-load.html and its audit is queue/audits/2026-09-15-pane-load.json. Read both before starting: the measuring is done and should not be redone.\n\nThe four threads are filed as four tasks because they are four different fixes, but they are one complaint and whoever picks one up should read the others.",
@@ -32,6 +32,15 @@
     {
       "t": "2026-09-15T15:01:13.639Z",
       "note": "seq 290 -> 2.2"
+    },
+    {
+      "t": "2026-09-15T16:37:53.748Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T16:39:22.329Z",
+      "note": "ADVERSARIAL REVIEW, before building. (1) The panel ALREADY only draws the sections the selection makes available (InspectorPanel.availableSections is one long selection-driven test per section), so a naive 'auto mode that shows what is relevant' adds a label and nothing else. What it lacks is the ability to say 'I never want this one', and a written-down rule for the questionable ones. (2) The task's own warning is right: a section that comes and goes as you click from layer to layer is WORSE than the clutter. So Automatic is constrained by a rule I can state in one sentence — what you PICK never adds or removes an optional section; only what the DOCUMENT holds, the tool in your hand, and what you asked for may. Every automatic answer below is a document-level or tool-level fact. (3) The bootstrap trap: if Motion is hidden until the document holds a motion, you cannot make the first one. The foot of the panel is the way in, one click, and it is always on screen because it sits outside the dock's scroller. (4) Shortest version that delivers the value: one override map (section id -> shown), default absent meaning automatic. No global Automatic/Custom mode toggle — per-section overrides are strictly more useful (pin Measurements on forever, let everything else be automatic) and are exactly the machinery a MODE preset will later set."
     }
-  ]
+  ],
+  "started": "2026-09-15T16:37:53.747Z"
 }

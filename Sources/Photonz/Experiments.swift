@@ -194,6 +194,12 @@ extension Experiments {
     /// always reads false.
     var shapePartsEnabled: Bool { isEnabled(FeatureCatalog.shapePartsFlag) }
 
+    /// `next-panel-sections`: whether the panel leaves out the sections that
+    /// answer for a job the document is not doing, and carries a Sections row
+    /// at its foot for saying which of them you want anyway. Exists only in the
+    /// Next release's catalog, so Current always reads false.
+    var panelSectionsEnabled: Bool { isEnabled(FeatureCatalog.panelSectionsFlag) }
+
     /// `next-blend-mode`: whether the Appearance section carries a Blending row
     /// under Opacity, so a layer can say how it mixes with what is under it
     /// rather than always painting straight over. Exists only in the Next
