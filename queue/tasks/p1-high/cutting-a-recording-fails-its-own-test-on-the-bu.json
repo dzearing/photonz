@@ -1,0 +1,27 @@
+{
+  "id": "cutting-a-recording-fails-its-own-test-on-the-bu",
+  "title": "Cutting a recording fails its own test on the build machine",
+  "goal": "Every run of the build machine has been red since yesterday evening, on one test about cutting a recording. Nothing about the app looks broken when the same test is run here, so either the test is measuring something that drifts on a different machine or the export really does put a slightly wrong frame at the start. Until it is settled, nothing that lands can say the build machine agreed with it.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 290,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T20:46:49.621Z",
+  "updated": "2026-09-15T20:46:49.624Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED ON CI, NOT LOCALLY. Test: Tests/PhotonzMediaTests/VideoCutExportTests.swift:70, \"Exporting a recording with the middle dropped writes only what is left\".\n\nTwo consecutive CI runs on main, two different commits, same assertion, both just over the tolerance:\n\n  $ gh run view 35017116136 --log-failed | grep \"✘ Test\"\n  ✘ Test \"Exporting a recording with the middle dropped writes only what is left\" recorded an issue at VideoCutExportTests.swift:70:9: Expectation failed: (abs(early - 1.5 / 6.0) → 0.1343137254901961) < 0.12\n\n  $ gh run view 35015376098 --log-failed | grep \"✘ Test\"\n  ✘ Test ... Expectation failed: (abs(early - 1.5 / 6.0) → 0.1264705882352941) < 0.12\n\nBoth failures are the FIRST of the two frame reads (the one before the join, at 1.5s). The second read, after the join, passes, and that second read is the one carrying the actual claim that the dropped seconds are gone. So the likely story is a grey-ramp frame landing one frame early or late on a headless VM rather than the cut being wrong, but that is a hypothesis: the drift is 0.126 and 0.134 against a 0.12 window, which is close enough that loosening the number would hide a real regression as easily as it would fix a flake.\n\nLocally the whole suite is green: Scripts/test.sh --no-parallel, 7145 tests in 572 suites passed (2026-09-15). So this reproduces only on the build machine, which is why the evidence above is CI logs rather than a local run.\n\nWorth reading sourceFraction(ofFrameAt:in:) in the same file: it averages one frame down to a single pixel and turns that grey into a time. If the generated clip ramps grey per frame rather than per second, a one-frame difference in which frame the reader lands on is worth about 1/6 of a second of apparent drift, which is the size of what is being seen.",
+  "acceptance": [
+    "The test passes on the build machine on three runs in a row",
+    "Whatever was wrong is named in the task log: either the app was writing the wrong frame, or the test was reading a frame the machine renders differently, with the evidence for which",
+    "If the test was the problem, it still fails when the export really does put the wrong frame at the start"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T20:46:49.623Z",
+      "note": "created (manual)"
+    }
+  ]
+}

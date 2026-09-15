@@ -15775,3 +15775,67 @@ up whatever the export walks report.
 **Open question:** whether the size line should also appear for PNG, and whether
 the sheet should preview what a quality costs rather than only what it saves.
 Both are asked directly in the audit rather than guessed at.
+
+## 2026-09-15 (evening) — Export as WebP
+
+**Shipped:** Export offers WebP, behind `next-export-webp` (on by default in
+Next, and off whenever `next-export-quality` is off, because WebP's whole range
+hangs off that slider).
+
+- `Vendor/libwebp` is the project's first third-party dependency: libwebp
+  1.5.0's ENCODER only, vendored as source and built as the `CWebP` target, so a
+  clean checkout builds with nothing installed. Proved by cloning to /tmp and
+  building with Homebrew off `PATH`, `swift build` and
+  `Scripts/build-app.sh --release` both clean. `Scripts/vendor-libwebp.sh` is
+  the whole update story (version + sha256 at the top, run it), and it also
+  regenerates `Sources/Photonz/OpenSourceNotices.swift`, which the new app menu
+  item **Open Source Notices…** shows. The licence is compiled in rather than
+  copied into Resources because `build-app.sh` assembles the bundle from the
+  executable alone.
+- Reading a WebP is untouched: macOS reads the format and cannot write it
+  (`CGImageDestinationCopyTypeIdentifiers` lists 22 types, none of them WebP;
+  `CGImageSourceCopyTypeIdentifiers` does list `org.webmproject.webp`).
+  `UTType.webP` exists as a system constant, so `Format.utType` stayed total and
+  the save panel needed no special case.
+- `WebPEncoder` (PhotonzRender) takes the same 0-to-1 quality as everything
+  else, where 1 means lossless. The one trap is premultiplication: CGImage hands
+  out premultiplied pixels, libwebp wants straight ones, and CGBitmapContext
+  refuses to draw into a straight-alpha bitmap, so the draw is premultiplied and
+  vImage undoes it. Tested along the fading rim of a disc, not just the middle.
+- Lossless is reached by dragging the quality to 100, where the line under the
+  slider says "Lossless" instead of "Best". No second control. On the 1800 x
+  1400 screenshot fixture: PNG 570 KB, JPEG 80% 505 KB, HEIC 80% 260 KB, WebP
+  80% 188 KB, WebP 90% 247 KB, WebP lossless 250 KB.
+- Speed, release build: 12 megapixels is 0.33s lossy at 90% and 2.92s lossless
+  (worst case, that test picture carries a full-frame gradient). Lossless level
+  6 of 9 was picked by measuring: 3 is 0.43s/287 KB, 6 is 0.51s/256 KB, 9 is
+  2.62s/155 KB.
+- `exportComposite` moved off the main actor, so no format can freeze the
+  window, and `ExportSizer` now keeps the file it made as well as the render, so
+  pressing Export after watching the size line hands over bytes that already
+  exist. A picture too big for the format (over 16383 px a side) now raises an
+  alert naming the limit rather than doing nothing.
+- Playtest gained an `exportDialogAsWebP` action and
+  `Scripts/playtest/export-webp-walk.json`.
+
+**Verified:** `Scripts/test.sh --no-parallel` green, 7145 tests in 572 suites.
+On CI (run 35021643611, clean runner): "Build (all targets)" green, and every
+WebP suite green there too. The run's overall conclusion is RED, for the
+pre-existing video-cut failure below and nothing else: 7145 tests, one issue,
+the same one that was already failing before this change. The written files were
+read back by macOS's own decoder (`sips`, `qlmanage`) and driven through Chrome
+152, which reported 1800 x 1400, corner alpha 0, centre alpha 254, rim alpha
+101, colours within 2 of the PNG reference.
+
+**Not verified:** the Mac's screen was locked for the whole session again, so
+the new walk has never run and there is no picture of the Export sheet. The
+format row is now five segments in a 320 point sheet and nobody has seen it.
+
+**Also found:** CI has been red on main since 2026-09-15 19:53, on
+`VideoCutExportTests` "Exporting a recording with the middle dropped writes only
+what is left", two commits in a row, both just over a 0.12 tolerance (0.126 and
+0.134). It passes locally. Filed as
+`cutting-a-recording-fails-its-own-test-on-the-bu`.
+
+**Next:** run `Scripts/playtest.sh Scripts/playtest/export-webp-walk.json` on an
+unlocked screen and look at the format row.
