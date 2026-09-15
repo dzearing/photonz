@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T16:14:53.606Z",
-  "updated": "2026-09-15T22:59:32.403Z",
+  "updated": "2026-09-15T22:59:49.482Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Created by position-and-size-leave-the-panel on 2026-09-15. The Position & Size section followed a drag in flight (GeometryInspector reads previewedFrame, and EditorState.regionGeometry gave a live marquee its four numbers). Taking the section out of the panel kept the typing but lost the watching: the popover is a place a thing happens, and a canvas click dismisses it, so it cannot be the live readout. This is the feature that ought to replace that half, and it is better than what it replaces because it is where the eye already is. The measure tool already draws pill readouts on the canvas (AnnotationStyles, LabelPlate, CanvasNameLabel) so the drawing is not new.\n\nFolded in from the-size-readout-keeps-up-while-you-reshape-a-pa (dropped 2026-09-15): PATH RESHAPES NEED EXTRA PLUMBING that layer moves and resizes do not.\n\nA layer move or resize writes EditorState.previewMoves[id], and everything that reads a live box goes through previewedFrame(of:)/canvasFrame(of:) (EditorState.swift:2253-2320), which read that dictionary first. A readout built on those is automatically right for move and resize.\n\nA path point or lever drag does NOT write previewMoves. EditorState.previewPath (EditorState+PathEdit.swift:17) builds the reshaped document and hands it only to the render scheduler via submit(); it never writes editorState.document and never touches previewMoves. So previewedFrame returns the PRE-DRAG box for the whole gesture, and a readout built the obvious way would sit frozen through every path reshape.\n\nThe live box is already computed, just on the AppKit side: CanvasPathEdit.swift:239 and :322 set the canvas view's own selectedLayerFrame from content.bounds each frame. Either push that into previewMoves (or a sibling preview store) from previewPath, or have the readout read the canvas value for path drags. The first is preferable: one door, and the Position and Size popover reads right too.\n\nEvidence the old symptom was real, from the 2026-09-14 run of Scripts/playtest/path-chrome-follows-walk.json: mid-drag capture 6-mid-two-anchor-drag-sc.png read X 200 Y 192 W 580 H 448 while the shot right after release, 7-after-two-anchor-drag-sc.png, read X 260 Y 189 W 580 H 381. That was the panel section, which no longer exists, but the stale source behind those numbers is unchanged.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-09-15T22:59:32.402Z",
       "note": "left rough, not filed: the pill under a two-layer drag is centred on the box the pair makes, which can be the empty gap between them (10-mid-multi-move-sc.png). It is the honest anchor and nobody has complained; it is an evaluate question in the audit instead. Also left rough: the flip above the box when there is no room below is tested in DragReadoutTests but never photographed in the app, because forcing it needs a box whose bottom is off screen and no deterministic walk gesture does that at a fixed zoom."
+    },
+    {
+      "t": "2026-09-15T22:59:49.480Z",
+      "note": "A pill rides under a drag saying the reading it is changing: position while you move, size while you resize, sweep a selection box, or pull a point on a path; gone on release. Rules in PhotonzCore/DragReadout.swift (12 tests), drawing in Sources/Photonz/CanvasDragReadout.swift, flag next-a-drag-says-its-numbers on by default in Next. Verified by Scripts/playtest/drag-readout-walk.json, 80 steps passing, which claims the exact words on the pill mid-gesture with the button still down and then proves the panel reads the same numbers after release. Two path-reshape live-box bugs found and fixed on the way (CanvasDisplay echoed the pre-drag frame back over the live one; previewPath never wrote previewMoves). Full suite green: 7176 tests. Audit: queue/audits/2026-09-15-drag-readout.json with two real window captures."
     }
   ],
-  "started": "2026-09-15T22:33:38.410Z"
+  "started": "2026-09-15T22:33:38.410Z",
+  "completed": "2026-09-15T22:59:49.481Z"
 }
