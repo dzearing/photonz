@@ -1,0 +1,30 @@
+{
+  "feature": "The panel shows the sections that matter, and you can say which",
+  "epic": "ui-building",
+  "summary": "The right hand panel now has a Sections row at its foot. It lists every section that answers for a job rather than for every layer, and you can turn any of them off for good or pin any of them on. Left alone, each follows one written rule, and that rule is only ever allowed to read what the document holds and what you asked for, never what you have picked, so the panel holds still as you click around.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is \"The panel shows the sections that matter\" (next-panel-sections), on by default. Open any document.",
+  "try": [
+    { "do": "Pick a shape on the canvas and look at the very bottom of the right hand panel. It reads Sections." },
+    { "do": "Press Sections." },
+    { "do": "Read the word under each name: it says whether that section is there automatically, hidden automatically, or set by you." },
+    { "do": "Turn Motion off." },
+    { "do": "Press Escape and look at the foot of the panel again: it now reads Sections · 1 hidden." },
+    { "do": "Quit Photonz, reopen it, pick a shape: Motion is still gone." },
+    { "do": "Press Sections, then Use Automatic For All: Motion is back and the panel is the height it was." },
+    { "do": "Choose View ▸ Show Library and watch the Library section arrive, then turn it off in the Sections list and watch it go even though the shelf is still asked for." }
+  ],
+  "evaluate": [
+    "Is the Sections row quiet enough at the foot of the panel, or does it read as one more thing competing with the settings above it?",
+    "Is \"Sections · 1 hidden\" the right thing for it to say, or would you rather it always named a count, or never did?",
+    "The word under each name (Automatic, not needed in this document yet) is there so you can tell a section you hid from one the document has nothing for. Does it earn its line, or is the list better as plain names?",
+    "Nine sections are offered. Is that the right set? Would you rather be able to turn off Appearance or Effects too, or is it right that those can never go?",
+    "Motion still arrives on every picked layer, because the plus on its header is the only way to make a first motion. Is turning it off once by hand good enough, or should a document with nothing animated in it not offer it at all?"
+  ],
+  "rough": [
+    "NO PICTURES AND NO MEASURED HEIGHTS IN THIS AUDIT. The Mac's screen was locked for the whole of this task, so macOS was not drawing the app at all: every walk refused to run and reported status locked rather than passing or failing, and screen capture is refused outright in that state. The walk that takes the pictures and reads the dock's heights back exists and parses (Scripts/playtest/panel-sections-walk.json, six stages); it has never been executed. A sweep has been requested so the loop runs it once the screen is unlocked.",
+    "So acceptance item 6, the panel being measurably shorter in points for a shape, a piece of text and a component copy, is NOT verified. The walk reads dockSections at stage 1 (everything automatic) and stage 3 (Motion turned off) for exactly that comparison, and neither number exists yet.",
+    "The automatic half of this saves very little on its own, and it would be dishonest to sell it otherwise. The panel was already selection-driven: Measurements only ever showed when the document held a measurement, Component only when a component was involved. Writing those down as one rule is worth doing, but it moves few points. The value is that you can now say \"I never want Layout\" and mean it.",
+    "Motion was nearly the big win here and was deliberately left alone. It arrives on every picked layer and costs about 130 points, so gating it on the document already moving looked obvious, until the bootstrap: the plus on the Motion section's own header is how the first motion is made, and the timing strip does not exist until something moves. Hiding the section would have left nothing in the window that could start an animation. That is written down in docs/design/panel-sections.md rather than left as a silent choice.",
+    "Turning a section off is per section and forever. There is no named preset yet, which is what the modes task is for: a mode will be a named set of these same answers and must not grow a second mechanism."
+  ]
+}

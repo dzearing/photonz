@@ -1,0 +1,28 @@
+{
+  "id": "photograph-the-sections-row-and-measure-what-it",
+  "title": "Photograph the Sections row and measure what it saves",
+  "goal": "The panel now has a Sections row at its foot for choosing which sections show, but nobody has seen a picture of it and nobody knows how much room turning a section off actually buys. The Mac was locked while it was built, so the app was never drawn on screen. Run the walk that was written for it, put the pictures in front of the user, and write the before and after heights into the audit so the claim is a number rather than a hope.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 2700,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T16:54:21.985Z",
+  "updated": "2026-09-15T16:54:21.988Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The feature shipped in 8b306e18. The walk exists and parses; it has never been executed, because Scripts/playtest.sh exited 3 with status locked on every attempt between 16:40 and 17:20 on 2026-09-15 (the Mac locked at 2026-09-14 20:46 and had not been unlocked). Nothing is broken: this is the verification half of the-panel-shows-the-panes-that-matter-and-you-ca, which could not be done.\n\nWhat to run:\n  Scripts/playtest-all.sh --no-build panel-sections\nStages 1 and 3 are the before and after: 1 is everything automatic, 3 is Motion turned off in the Sections list. Read dockSections and dockViewport out of /tmp/photonz-playtest/panel-sections/log.json.\n\nThis is NOT the same thing as an-audit-gets-a-real-picture-of-the-app-again, which is about the Screen Recording grant failing with SCStreamErrorDomain -3811 while claiming to be granted. A locked screen refuses capture for a different reason and the app already reports it correctly.",
+  "acceptance": [
+    "Scripts/playtest/panel-sections-walk.json passes on an unlocked screen, all six stages",
+    "The dock height with everything automatic and the dock height with Motion turned off are both written down in points, from that walk's dockSections",
+    "queue/audits/2026-09-15-panel-sections.json carries at least one real -sc.png of the Sections list open, copied next to it",
+    "The same two heights are read for a piece of text and for a copy of a component, which is what the original task asked for and what could not be measured"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T16:54:21.987Z",
+      "note": "created (manual)"
+    }
+  ]
+}
