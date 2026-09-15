@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.611Z",
-  "updated": "2026-09-14T15:22:36.793Z",
+  "updated": "2026-09-15T01:52:27.755Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon"
   ],
@@ -58,6 +58,10 @@
     {
       "t": "2026-09-14T15:22:36.791Z",
       "note": "Study delivered and a decision card is open for the user. The side-by-side is at docs/design/mocks/pages/time-compare.html (Icons > Animation vs video: the same job?), the long form at docs/design/animation-vs-video.md, the audit at queue/audits/2026-09-14-animation-vs-video.json. The answer: three shared controls, five surfaces that only look shared, and a ruler they cannot share because an icon repeats and a video finishes. Recommendation is to build motion as a property of a layer with no ruler at all. Waiting only on which of the four options the user picks; option d retires this task."
+    },
+    {
+      "t": "2026-09-15T01:52:27.754Z",
+      "note": "The decision card this is blocked on is premature: its recommended option a is 'pick a named motion like Pulse or Spin or Draw on', which is the assumption the user rejected on 2026-09-14 ('a fixed list of animations ... super weird and proprietary'). Do not treat the card as settled direction. The mocks are being redone on a per-property model (mock-animating-any-property-of-a-layer-with-the); re-frame the options against those pages, and keep the finding that stands on its own: an icon repeats and a video finishes, so they cannot share one ruler."
     }
   ],
   "started": "2026-09-14T15:15:38.397Z"

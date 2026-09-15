@@ -1,0 +1,42 @@
+{
+  "id": "work-out-whether-the-right-hand-pane-is-carrying",
+  "title": "Work out whether the right hand pane is carrying too much",
+  "goal": "The side pane now holds the layers, the position and size, the appearance, the effects, the library, the measurements and whatever a tool brings with it, and the next thing wanting room is a timing surface that does not fit a narrow column at all. Work out whether that pane is being asked to carry too much, and what should live somewhere else.",
+  "epic": "icon-svg",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T01:52:13.923Z",
+  "updated": "2026-09-15T01:52:14.011Z",
+  "deps": [
+    "mock-animating-any-property-of-a-layer-with-the"
+  ],
+  "blockedBy": [],
+  "notes": "Raised by the user on 2026-09-14 at the end of their critique of the animation mocks: \"hmmm worried the side pane is overused real estate on the app\". Depends on the animation mocks, because the timing surface is the concrete case that makes the question urgent rather than theoretical.\n\nThis is a study with a recommendation and a decision card, not a rebuild. Do not start moving panels.\n\nRead the dock work already done before proposing anything: there is a settled dock system with panel groups that collapse and resize, a rule about what opens when you pick something, and a pending task about that rule (picking-a-text-layer-leaves-its-settings-below-t) which is itself waiting on a user decision. Whatever is proposed here has to agree with that rule or explicitly replace it.\n\nThe honest tension to hold: the app deliberately keeps one dock so that everything has one home, and every surface moved out of it is a second place to look. The answer may well be that the pane is fine and one new surface belongs elsewhere, rather than that the pane is wrong.\n\n---\nTHE USER'S CRITIQUE OF THE FIRST ROUND, 2026-09-14, in their words:\n\n\"i don't like how a lot of your mocks assume things. Like a fixed list of animations, like the icon pulse example where you only have like a handfull of effects, which to me is super weird and proprietary. Then you have like 3 easing functions in a segmented control which also makes no sense. In html alone there are more easing models, and you can always define something custom. It's also incredibly unclear to select what you're changing. Scale? position? orientation? opacity? color? So many things can be animated and yet you're sort of glossing over this in every single icon creation example. This pulse example is so stupid - a Bell should swing back and forth from an origin at the top. And maybe the bell knob at the bottom would have a slightly different momentum. these things require much more consistent way to animate various properties similar to applying effects to a layer. But it should be applied to a timeline that is bigger than the property panel. hmmm worried the side pane is overused real estate on the app\"\n\nThey are right, and it is checkable: icon-animate-wt.html mentions \"pulse\" 45 times, offers Wiggle, Spin and Bounce as the rest of a closed menu, and names one transform-origin in the whole page. The vocabulary of what is being animated barely appears.\n\nFIVE CORRECTIONS, all of which are acceptance criteria and not opinions:\n1. NO CANNED LIST OF EFFECTS. \"Pulse\", \"Spin\", \"Bounce\" as a fixed menu is proprietary and small. A person animates a PROPERTY.\n2. WHAT IS BEING ANIMATED MUST BE THE FIRST THING THE FLOW ANSWERS: position, scale, rotation, opacity, colour, and for this app also path data, stroke width and dash. Every earlier page glossed over this.\n3. TRANSFORM ORIGIN IS FIRST CLASS. The user's example is the whole point: a bell swings about a pivot at its TOP, not its centre. A model with no origin cannot express the one animation they named.\n4. EASING IS NOT THREE BUTTONS. Named curves plus a custom one, because CSS alone has more and a custom cubic curve is ordinary. The user called this out specifically.\n5. PARTS MOVE INDEPENDENTLY. The bell's knob lags the bell: two parts of one icon, same motion, different timing. If the model cannot phase one part against another it cannot make the example the user asked for.\n\nTHE SHAPE THEY ARE POINTING AT: \"a much more consistent way to animate various properties similar to applying effects to a layer\". The app already has that idiom and it is settled - Appearance is what a layer HAS, Effects is a list you ADD to, each entry with a switch, its own settings and a colour where it has one (docs/design/shape-parts.md, PhotonzCore/LayerEffects.swift). Motion should read as another list you add to, entry per animated property, rather than as a new vocabulary. That is the consistency being asked for.\n\nAND THE PART THAT DOES NOT FIT A PANEL: \"it should be applied to a timeline that is bigger than the property panel\". Timing, overlap and phase between parts cannot be read in a narrow column, which is exactly why the bell and its knob need a surface with width. The first round's recommendation was motion as a property with no ruler at all; that answers half the problem and drops the half the user is describing.\n\nCONTEXT: the decision card 'say-where-animating-an-icon-and-editing-a-video-animating-an-icon-and-editing-a' is open and its recommended option a is literally \"pick a named motion like Pulse or Spin or Draw on\". It is built on the assumption being rejected here, so it cannot be answered honestly until this work lands. Do not treat it as settled direction.",
+  "acceptance": [
+    "An honest inventory of what the right hand pane carries today, and what each thing is competing for: vertical room, horizontal room, or a person's attention",
+    "A recommendation on what should move out of it and where to, argued from the flows rather than from taste",
+    "The case for a surface with real width is answered specifically, since that is the thing that prompted this: where does a timing surface live, and what does the window look like when it is open and when it is not",
+    "It says what happens on a small window and on a large one, because a pane that works at full screen and not on a laptop has not solved anything",
+    "It is mocked, not just written: the same document shown under the current arrangement and the proposed one",
+    "It says what it would cost to move, naming the surfaces that would have to change",
+    "A decision card is opened for the user with the options and a recommendation",
+    "Audit under queue/audits/ and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T01:52:13.925Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-15T01:52:14.006Z",
+      "note": "seq 280 -> 6"
+    },
+    {
+      "t": "2026-09-15T01:52:14.011Z",
+      "note": "deps set: the timing surface is the concrete case"
+    }
+  ]
+}
