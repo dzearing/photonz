@@ -311,6 +311,19 @@ the document's own identity in the title bar, tools/panels driven by selection,
 and the timeline appearing when the document has time. Keep a workspace concept
 only as a *starting template* chosen at New, never as a live toggle.
 
+**Reopened by the user on 2026-09-15, and the difference matters.** What §4f
+rejects is a *lens toggle that changes the experience*: three tabs in the title
+bar, UI and image as different applications. The user has asked for something
+narrower and has had it prototyped: a **mode is a named preset of what is FOLDED
+AWAY** (panel sections, tool groups), swappable in one click, with every tool
+keeping its shortcut and its menu item and everything folded one visible click
+from coming back. Nothing is stored in the document, so nothing here contradicts
+"one document, surfaces are lenses". Two things from §4f still stand and the
+prototype holds to them: **no segmented control in the title bar** (the switch is
+a quiet popup in the window's status), and **the timeline appears because the
+document has time**, never because of a mode. Prototype and full argument:
+`pages/modes.html` and `docs/design/modes.md`; a decision card is open.
+
 ---
 
 ## 4c. The screen contract: a real screen, or an honest specimen

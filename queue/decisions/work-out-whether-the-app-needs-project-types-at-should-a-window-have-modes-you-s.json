@@ -1,0 +1,72 @@
+{
+  "id": "work-out-whether-the-app-needs-project-types-at-should-a-window-have-modes-you-s",
+  "taskId": "work-out-whether-the-app-needs-project-types-at",
+  "question": "Should a window have modes you swap, and should work made in one flow into another?",
+  "context": "Prototype at http://127.0.0.1:8791/index.html#modes, with the shelves at #shelves. A mode is a preset of what the WINDOW is showing: swap it and a few panels fold away and a few tools move into the tool bar's overflow, while the document, the layers and every shortcut stay exactly as they were. Nothing is written into the file, so swapping back is free and an old document opens the same as it always did. The prototype draws the hardest flow first: an icon drawn on a grid, used inside a component, placed on a video timeline, in one document with nothing converted, and edited once so it changes in all three places. That chain only works if video stops being its own separate window, which is the one expensive thing on the page.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Modes now, the video chain later",
+      "summary": "A window gets a mode: a quiet chip beside the document's name, reading Icon or Redline or Video, that you swap in one click or with a key. Swapping folds a few panels away and moves a few tools into the tool bar's overflow, and nothing else changes: the same document, the same layers, every tool still on its shortcut and still in the menus. Anything folded is one click from coming back, and Show everything unfolds the lot. Video keeps its own window for now, so you can draw an icon and use it in a component, but not yet put that component on a video timeline.",
+      "pros": [
+        "The tidy-up you asked for, with nothing locked and nothing stored in the file, so swapping is genuinely free.",
+        "Most of it is already built: the panel already remembers which sections you turned off and can say in words that you turned them off.",
+        "Modes are written down rather than coded, so pixel art or anything else can be added without touching the app.",
+        "It does not commit us to the expensive part before you have seen modes working."
+      ],
+      "cons": [
+        "The most exciting flow, a component placed on a video timeline, is not in this slice."
+      ],
+      "mitigation": "The chain is drawn in full on the prototype page, so you can judge whether it is worth the bill separately, and nothing in this slice has to be undone to get it later.",
+      "declines": false
+    },
+    {
+      "id": "b",
+      "label": "Modes and the whole chain, video included",
+      "summary": "Everything in the first option, plus video stops being a separate window. A recording becomes one more layer in an ordinary document, and the timeline becomes a strip showing whichever layers have a start and an end. Then the icon you drew can go in a component, the component can go on the timeline over your recording, and changing the icon changes it in both places, with no export and no import anywhere.",
+      "pros": [
+        "One app that really does four jobs: one document, one undo, one export, one thing to learn.",
+        "A title, a callout or a logo on a video is the same component you use on your screens, so it stays right when you change it.",
+        "Icon animation and video editing stop being two different timelines."
+      ],
+      "cons": [
+        "It re-aims the video work already queued, because cutting and arranging would be built on the new footing instead of the editor that exists.",
+        "Playing a composite smoothly is a harder bar than drawing a still canvas, and that risk is real."
+      ],
+      "mitigation": "The video work has not started yet, so this is a re-aim rather than a rewrite, and doing it now is cheaper than building the cutting tools twice.",
+      "declines": false
+    },
+    {
+      "id": "c",
+      "label": "No named modes, keep only the switches you already have",
+      "summary": "Leave the window as it is now: you can already turn individual panel sections off one at a time and the app remembers. No chip in the title bar, no list of modes, no presets. If people end up folding the same four things every day, revisit it then.",
+      "pros": [
+        "Nothing new to learn and nothing new to go wrong.",
+        "Zero chance of somebody reaching for a tool and finding it moved."
+      ],
+      "cons": [
+        "Setting a window up for a job stays a chore you do by hand, every time, in every window.",
+        "It gives up the part you asked for: swapping between arrangements in one click."
+      ],
+      "mitigation": "The by-hand switches stay either way, so this is not lost ground, only ground not gained.",
+      "declines": false
+    },
+    {
+      "id": "d",
+      "label": "Skip this for now",
+      "summary": "Do not build modes at all and take the idea off the list. The window keeps growing the way it has been, and the crowding gets solved, if it gets solved, by the panel showing fewer sections on its own.",
+      "pros": [
+        "The loop's whole attention stays on drawing, measuring and video features."
+      ],
+      "cons": [
+        "The busyness that prompted this does not get better on its own.",
+        "The prototype work is shelved rather than used."
+      ],
+      "mitigation": "The prototype pages stay in the study, so picking it up later costs nothing but the build.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-15T17:12:38.502Z"
+}

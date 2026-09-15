@@ -71,6 +71,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-15T10:40:38.972Z"
+  "status": "resolved",
+  "created": "2026-09-15T10:40:38.972Z",
+  "answer": {
+    "choice": "a",
+    "note": "Superseded by the user's own redirect on 2026-09-15 ('not types, modes'), which rules out b and d and matches a: no kind stored in the document, nothing taken away for good. Closed by the runner so the task is not stranded behind a question the user has already answered in their own words. The live question is the new card about modes.",
+    "resolved": "2026-09-15T17:12:26.694Z"
+  }
 }

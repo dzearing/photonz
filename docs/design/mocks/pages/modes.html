@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · modes</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local scaffolding ONLY, every class prefixed `mo-`.
+
+     This page is a PROTOTYPE with an argument attached. Every window on it is
+     built from the shared shell so the modes can be compared by eye rather
+     than taken on trust; everything else is a table, a record or a note about
+     them. The windows deliberately all draw the SAME document, because the
+     claim being tested is that a mode changes the window and never the file. */
+
+  #modes .mo-lede{font-size:13px;line-height:1.6;color:var(--dim);max-width:88ch;margin:0}
+  #modes .mo-lede b{color:var(--ink);font-weight:600}
+
+  /* ---- the headline numbers ---- */
+  #modes .mo-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+  @media(max-width:760px){#modes .mo-tiles{grid-template-columns:1fr}}
+  #modes .mo-tile{border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);
+    padding:var(--pad);display:flex;flex-direction:column;gap:5px}
+  #modes .mo-tile .mo-n{font-size:30px;font-weight:680;letter-spacing:-.03em;line-height:1}
+  #modes .mo-tile h4{margin:0;font-size:12.5px;font-weight:640}
+  #modes .mo-tile p{margin:0;font-size:11px;line-height:1.5;color:var(--dim)}
+  #modes .mo-tile.mo-bad{border-color:var(--crit)}
+  #modes .mo-tile.mo-bad .mo-n{color:var(--crit)}
+  #modes .mo-tile.mo-mid{border-color:var(--warn)}
+  #modes .mo-tile.mo-mid .mo-n{color:var(--warn)}
+  #modes .mo-tile.mo-ok{border-color:var(--good)}
+  #modes .mo-tile.mo-ok .mo-n{color:var(--good)}
+
+  /* ---- the block card, reused for each section ---- */
+  #modes .mo-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #modes .mo-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);flex-wrap:wrap;
+    padding:var(--pad-sm) var(--pad);border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
+  #modes .mo-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #modes .mo-blk-h .mo-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
+  #modes .mo-blk-h .mo-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right;max-width:52ch}
+  #modes .mo-blk-b{padding:var(--inset);display:flex;flex-direction:column;gap:var(--gap)}
+  #modes .mo-note{margin:0;font-size:11.5px;line-height:1.6;color:var(--dim)}
+  #modes .mo-note b{color:var(--ink);font-weight:600}
+  #modes .mo-note code{font-family:var(--mono);font-size:10.5px;color:var(--ink)}
+
+  /* ---- THE CHAIN: three links, drawn as one run ---- */
+  #modes .mo-chain{display:flex;align-items:stretch;gap:var(--gap-sm);flex-wrap:wrap}
+  #modes .mo-link{flex:1 1 200px;min-width:0;border:1px solid var(--line);border-radius:var(--r4);
+    background:var(--panel);padding:var(--pad);display:flex;flex-direction:column;gap:8px}
+  #modes .mo-link .mo-lh{display:flex;align-items:center;gap:7px}
+  #modes .mo-link .mo-lh .ic{width:14px;height:14px;color:var(--accent);flex:none}
+  #modes .mo-link .mo-lh b{font-size:12px;font-weight:640}
+  #modes .mo-link .mo-lh .mo-step{margin-left:auto;font-size:9px;font-family:var(--mono);color:var(--faint)}
+  #modes .mo-art{border:1px solid var(--line-soft);border-radius:var(--r3);background:var(--panel-2);
+    height:118px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+    background-image:radial-gradient(circle at 1px 1px,var(--line-soft) 1px,transparent 0);background-size:12px 12px}
+  #modes .mo-link p{margin:0;font-size:11px;line-height:1.5;color:var(--dim)}
+  #modes .mo-link p b{color:var(--ink);font-weight:600}
+  #modes .mo-arrow{flex:0 0 62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+  #modes .mo-arrow .ic{width:15px;height:15px;color:var(--accent)}
+  #modes .mo-arrow small{font-size:9px;color:var(--faint);text-align:center;line-height:1.3}
+  @media(max-width:900px){#modes .mo-arrow{flex-basis:auto;width:100%;flex-direction:row}}
+
+  /* the little pieces drawn inside the chain art */
+  #modes .mo-btn-art{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--accent);
+    border-radius:7px;padding:7px 12px;background:color-mix(in srgb,var(--accent) 14%,transparent);
+    font-size:11.5px;font-weight:600;color:var(--ink)}
+  #modes .mo-btn-art .ic{width:14px;height:14px;color:var(--ink)}
+  #modes .mo-clip-art{width:92%;height:52px;border:1px solid var(--accent);border-radius:5px;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 26%,transparent),color-mix(in srgb,var(--accent) 10%,transparent));
+    display:flex;align-items:center;gap:8px;padding:0 9px;position:relative;overflow:hidden}
+  #modes .mo-clip-art .mo-cl{font-size:9.5px;font-family:var(--mono);color:var(--ink);opacity:.8}
+  #modes .mo-clip-art .mo-over{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    display:inline-flex;align-items:center;gap:5px;border:1px solid var(--accent);border-radius:5px;
+    padding:4px 8px;background:var(--panel);font-size:10px;font-weight:600}
+  #modes .mo-clip-art .mo-over .ic{width:11px;height:11px;color:var(--ink)}
+
+  /* ---- the edit flowing down the chain ---- */
+  #modes .mo-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap-sm)}
+  @media(max-width:820px){#modes .mo-flow{grid-template-columns:1fr}}
+  #modes .mo-fcell{border:1px solid var(--line-soft);border-radius:var(--r3);background:var(--panel);
+    padding:var(--pad-sm);display:flex;flex-direction:column;gap:7px;align-items:flex-start}
+  #modes .mo-fcell .mo-fl{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  #modes .mo-fpair{display:flex;align-items:center;gap:10px}
+  #modes .mo-fpair .ic{width:12px;height:12px;color:var(--faint)}
+  #modes .mo-fbox{border:1px solid var(--line-soft);border-radius:var(--r2);background:var(--panel-2);
+    width:56px;height:56px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+  #modes .mo-fbox svg{width:34px;height:34px;display:block}
+  #modes .mo-fcell small{font-size:10.5px;line-height:1.45;color:var(--dim)}
+
+  /* ---- a mode shown as a record of what it is made of ---- */
+  #modes .mo-rec{border:1px solid var(--line-soft);border-radius:var(--r3);overflow:hidden;
+    display:grid;grid-template-columns:186px 1fr;gap:1px;background:var(--line-soft)}
+  @media(max-width:820px){#modes .mo-rec{grid-template-columns:1fr}}
+  #modes .mo-rec>*{background:var(--panel);padding:var(--pad-sm);min-width:0}
+  #modes .mo-rec .mo-rk{font-size:11px;font-weight:640;display:flex;align-items:center;gap:7px}
+  #modes .mo-rec .mo-rk .ic{width:13px;height:13px;color:var(--dim);flex:none}
+  #modes .mo-rec .mo-rv{font-size:11.5px;line-height:1.55;color:var(--dim)}
+  #modes .mo-rec .mo-rv b{color:var(--ink);font-weight:600}
+  #modes .mo-rec .mo-rv code{font-family:var(--mono);font-size:10.5px;color:var(--ink)}
+  #modes .mo-rec .mo-rv em{font-style:normal;color:var(--faint);font-size:10.5px;display:block;margin-top:3px}
+  #modes .mo-rec .mo-hd{background:var(--panel-2);grid-column:1/-1;font-size:9.5px;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--faint);font-weight:700;display:flex;align-items:center;gap:7px}
+  #modes .mo-rec .mo-hd .ic{width:13px;height:13px;color:var(--accent)}
+
+  /* ---- the tables ---- */
+  #modes .mo-tbl{display:grid;gap:1px;background:var(--line-soft);
+    border:1px solid var(--line-soft);border-radius:var(--r3);overflow:hidden}
+  #modes .mo-tbl>*{background:var(--panel);padding:var(--pad-sm);min-width:0}
+  #modes .mo-tbl .mo-hd{background:var(--panel-2);font-size:9.5px;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--faint);font-weight:700;display:flex;align-items:center;gap:6px}
+  #modes .mo-tbl .mo-nm{font-size:12px;font-weight:600;line-height:1.4;display:flex;align-items:center;gap:7px}
+  #modes .mo-tbl .mo-nm .ic{width:13px;height:13px;color:var(--dim);flex:none}
+  #modes .mo-tbl .mo-nm small{display:block;font-weight:500;font-size:10.5px;color:var(--faint);margin-top:3px;line-height:1.4}
+  #modes .mo-tbl .mo-c{font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #modes .mo-tbl .mo-c b{color:var(--ink);font-weight:600}
+  #modes .mo-tbl .mo-c code{font-family:var(--mono);font-size:10.5px;color:var(--ink)}
+  #modes .mo-hides{grid-template-columns:168px 92px 1fr}
+  @media(max-width:860px){#modes .mo-hides{grid-template-columns:1fr}}
+  #modes .mo-line{grid-template-columns:1fr 1fr}
+  @media(max-width:860px){#modes .mo-line{grid-template-columns:1fr}}
+  #modes .mo-back{grid-template-columns:190px 1fr 1fr}
+  #modes .mo-back .mo-nm{display:block}
+  @media(max-width:900px){#modes .mo-back{grid-template-columns:1fr}}
+  #modes .mo-yes{color:var(--crit);font-weight:660;font-size:11px}
+  #modes .mo-no{color:var(--good);font-weight:660;font-size:11px}
+
+  /* ---- the windows, stacked with a caption each ----
+     They STACK rather than sitting side by side: a shell narrower than 880px
+     turns its dock into an overlay and drops the overflow tools
+     (responsive.css), so a two-up grid would hide the very thing being
+     compared. Same rule pane-load and the old kinds study follow. */
+  #modes .mo-pair{display:flex;flex-direction:column;gap:var(--gap-lg,20px)}
+  #modes .mo-case{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #modes .mo-caseh{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap}
+  #modes .mo-caseh .mo-tag{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;
+    border-radius:999px;padding:3px 9px;flex:none}
+  #modes .mo-caseh .mo-tag.mo-a{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+  #modes .mo-caseh .mo-tag.mo-g{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+  #modes .mo-caseh h4{margin:0;font-size:12.5px;font-weight:640}
+  #modes .mo-flag{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--good);font-weight:600}
+  #modes .mo-flag .ic{width:12px;height:12px;flex:none;color:var(--good)}
+  #modes .mo-flag.mo-warn{color:var(--warn)}
+  #modes .mo-flag.mo-warn .ic{color:var(--warn)}
+
+  /* the mode chip that lives in the window's status slot */
+  #modes .mo-modechip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--edge-lo);
+    border-radius:999px;padding:2px 8px 2px 9px;background:var(--glass-thin);font-weight:600;color:var(--ink)}
+  #modes .mo-modechip .ic{width:10px;height:10px;color:var(--faint)}
+
+  /* the mode popover, drawn as a specimen beside its caption */
+  #modes .mo-popwrap{display:flex;gap:var(--gap);align-items:flex-start;flex-wrap:wrap}
+  #modes .mo-popwrap .mo-popcol{flex:0 0 268px}
+  #modes .mo-popwrap .mo-popsay{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #modes .mo-pop{position:static;width:268px;display:block}
+  #modes .mo-pop .menuitem .mo-mm{margin-left:auto;font-size:9.5px;color:var(--faint);font-family:var(--mono)}
+  #modes .mo-pop .mo-popfoot{border-top:1px solid var(--line-soft);margin-top:4px;padding-top:4px}
+
+  /* the timeline strip when it is folded away to a lip */
+  #modes .mo-tlfold{display:flex;align-items:center;gap:8px;padding:5px 10px;border-top:1px solid var(--line-soft);
+    background:var(--panel-2);font-size:10.5px;color:var(--dim)}
+  #modes .mo-tlfold .ic{width:12px;height:12px;color:var(--faint)}
+  #modes .mo-tlfold .mo-sp{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+
+  /* The tool bar's overflow button is display:none until the window is narrow
+     (responsive.css). A mode that folds tool groups has to make it permanent,
+     because there is now always something in it, so these windows show it at
+     every width. This is a real change to the bar and the page says so. */
+  #modes .cnv .tbar .tbar-more{display:grid}
+
+  /* a Library thumbnail that holds a drawing rather than a colour */
+  #modes .mo-thart{display:flex;align-items:center;justify-content:center;color:var(--ink);background:var(--panel-2)}
+  #modes .mo-thart .ic{width:18px;height:18px;color:var(--dim)}
+
+  /* the pixel art canvas specimen */
+  #modes .mo-pix{display:grid;grid-template-columns:repeat(8,14px);grid-auto-rows:14px;gap:0;
+    border:1px solid var(--line);background:var(--panel-2)}
+  #modes .mo-pix i{display:block;border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  #modes .mo-pix i.mo-on{background:var(--accent)}
+  #modes .mo-pix i.mo-dim{background:color-mix(in srgb,var(--accent) 45%,transparent)}
+
+  /* ---- the three slices of the recommendation ---- */
+  #modes .mo-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+  @media(max-width:900px){#modes .mo-steps{grid-template-columns:1fr}}
+  #modes .mo-step{border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);
+    padding:var(--pad);display:flex;flex-direction:column;gap:6px}
+  #modes .mo-step .mo-i{width:22px;height:22px;border-radius:999px;display:flex;align-items:center;
+    justify-content:center;font-size:11px;font-weight:700;background:color-mix(in srgb,var(--accent) 18%,transparent);
+    color:var(--accent)}
+  #modes .mo-step h4{margin:0;font-size:12.5px;font-weight:640}
+  #modes .mo-step p{margin:0;font-size:11.5px;line-height:1.55;color:var(--dim)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="modes">
+
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>One app, four jobs: modes you can swap</h2><span class="k">· prototype · the chain first, then the arrangement</span></div>
+
+  <p class="mo-lede">The question used to be whether a document should know what kind of thing it is. It should not, and that answer has not changed. What changes is the thing built on top of it: <b>a mode is a preset of what the WINDOW is showing, and you swap it as freely as you change the zoom.</b> Nothing about the document moves when you do, nothing is stored in the file, and everything a mode folds away is one visible click from coming back. The hard part is not the tidy default, it is the moment you reach for a tool that is not in front of you, so the way back is drawn here before the tidy pictures are. And the test that decides whether modes are lenses on one app or four apps in a trench coat is drawn first of all: <b>draw an icon, put that icon in a component, put that component on a video timeline, in one document, with no export and no import at any step</b>, then change the icon and watch all three change.</p>
+
+  <div class="mo-tiles">
+    <div class="mo-tile mo-ok">
+      <span class="mo-n">3</span>
+      <h4>Links in the chain, nothing converted</h4>
+      <p>Icon into component into clip on a timeline, all in one document, because all three are layers. The link that makes an edit travel is the one the app already has: a component.</p>
+    </div>
+    <div class="mo-tile mo-mid">
+      <span class="mo-n">9</span>
+      <h4>Panel sections a mode may fold</h4>
+      <p>The exact list is already in the app: <code>PanelSectionVisibility.optionalSections</code>. The layers list, the section for what you picked, Appearance and Effects are not in it, so no mode can take them, and every mode is visibly the same app.</p>
+    </div>
+    <div class="mo-tile mo-ok">
+      <span class="mo-n">0</span>
+      <h4>Things a mode writes into your document</h4>
+      <p>A mode belongs to the window. Nothing to migrate, nothing to be wrong about a file from last year, and no compatibility promise. Swapping costs exactly one click and can be swapped straight back.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       1 · THE CHAIN. Drawn first, because if this does not work the
+       panel arrangement is decoration.
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">The acid test</span><h3>Draw an icon, use it in a component, put that component on a timeline</h3><span class="mo-sub">One document. No export, no import, no "convert to". Each arrow is a drag, and each thing stays exactly what it was.</span></div>
+    <div class="mo-blk-b">
+
+      <div class="mo-chain">
+        <div class="mo-link">
+          <div class="mo-lh"><i class="ic ic-star"></i><b>The icon</b><span class="mo-step">1</span></div>
+          <div class="mo-art">
+            <svg width="72" height="72" viewBox="0 0 24 24" aria-label="A bell icon on a 24 point frame">
+              <g fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4.1v1.5"/>
+                <path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/>
+                <path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/>
+              </g>
+            </svg>
+          </div>
+          <p>A 24 point frame with two paths in it, drawn on the grid. You press <b>⌥⌘K</b> and it becomes a component, which is how the app has always said "this is a thing I will use again".</p>
+        </div>
+
+        <div class="mo-arrow">
+          <i class="ic ic-arrow-right"></i>
+          <small>drag off<br>the Library</small>
+        </div>
+
+        <div class="mo-link">
+          <div class="mo-lh"><i class="ic ic-component"></i><b>The component</b><span class="mo-step">2</span></div>
+          <div class="mo-art">
+            <span class="mo-btn-art">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg>
+              Notifications
+            </span>
+          </div>
+          <p>A toolbar button, built the ordinary way. The bell inside it is an <b>instance</b> of the icon, not a picture of it: the layer list shows it nested, and it carries the same id.</p>
+        </div>
+
+        <div class="mo-arrow">
+          <i class="ic ic-arrow-right"></i>
+          <small>drag onto<br>the timeline</small>
+        </div>
+
+        <div class="mo-link">
+          <div class="mo-lh"><i class="ic ic-film"></i><b>On the timeline</b><span class="mo-step">3</span></div>
+          <div class="mo-art">
+            <div class="mo-clip-art">
+              <span class="mo-cl">demo-run</span>
+              <span class="mo-over"><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg> Notifications</span>
+            </div>
+          </div>
+          <p>The same component, over the recording, from 0:04 to 0:09. It is <b>one more layer with a start and an end</b>, so it takes a fade, a move and a scale the way any layer does.</p>
+        </div>
+      </div>
+
+      <p class="mo-note"><b>Why this works at all is one sentence: the icon, the component and the clip are all layers in the same document, and the timeline is a view of the layers that have a start and an end.</b> Nothing along the chain is converted because there is nothing to convert into. The bell placed in the button is a component instance, which is the app's existing answer to "the same thing in two places" (<code>ComponentInstances</code>, <code>ComponentVersions</code>); the button placed over the video is another instance of that; and the video is a layer whose extent in time is what the timeline draws. <b>The one thing the chain needs that does not exist yet is the last of those</b>, and it is section 2's bill.</p>
+
+      <!-- the document, at the end of the chain -->
+      <div class="mo-case">
+        <div class="mo-caseh"><span class="mo-tag mo-a">The document at step 3</span><h4>One window, one layer list, three kinds of work in it</h4></div>
+        <div class="win tall cq shell" style="height:760px" data-shell="launch-promo · 1 document" data-ws="video" data-status="<span class='mo-modechip'>Video<i class='ic xs ic-chevron-down'></i></span>">
+          <div class="edit lean" data-dock="open">
+            <div class="cnv">
+              <div class="canvas" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px">
+                <div class="empty"><i class="ic ic-film"></i> demo-run.mov · the frame at 0:06</div>
+                <span class="mo-btn-art">
+                  <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg>
+                  Notifications
+                </span>
+              </div>
+              <div class="tbar">
+                <div class="tstrip" data-radio=".tool" data-radio-class="on">
+                  <button class="tool on" title="Select"><i class="ic ic-cursor"></i></button>
+                  <button class="tool" title="Crop"><i class="ic ic-crop"></i></button>
+                  <button class="tool" title="Blade"><i class="ic ic-blade"></i></button>
+                  <button class="tool" title="Shape"><i class="ic ic-square"></i></button>
+                  <button class="tool" title="Text"><i class="ic ic-text"></i></button>
+                  <button class="tool" title="Arrow"><i class="ic ic-arrow-annotate"></i></button>
+                </div>
+                <button class="tool tbar-more" title="More tools" data-menu="#moVidOvf"><i class="ic ic-more"></i></button>
+                <span class="tsep"></span>
+                <div class="zoomctl"><input class="zslider" type="range" name="mo-z1" min="25" max="400" value="100" aria-label="Zoom"><span class="val zval">100%</span></div>
+              </div>
+              <div class="popover menu pop" id="moVidOvf" style="position:absolute;right:0;bottom:44px;width:190px;z-index:12">
+                <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                <div class="menuitem"><i class="ic ic-fill"></i> Fill <span class="sc">G</span></div>
+                <div class="menuitem"><i class="ic ic-measure"></i> Measure <span class="sc">I</span></div>
+                <div class="menuitem"><i class="ic ic-marquee-rect"></i> Marquee <span class="sc">M</span></div>
+                <div class="menuitem"><i class="ic ic-blur"></i> Lens <span class="sc">L</span></div>
+              </div>
+            </div>
+            <div class="splitter v" data-min="240" data-max="440"></div>
+            <div class="pdock">
+              <div class="dgrp" data-grp="layers" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow sel"><i class="ic ic-instance"></i><span class="nm">Notifications · 0:04 – 0:09</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-film"></i><span class="nm">demo-run</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-component"></i><span class="nm">Notifications · original</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-frame"></i><span class="nm">notification-bell · 24</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="props" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Instance</span><span class="cnt">Notifications</span></div>
+                <div class="dgrp-b">
+                  <div class="irow split wide"><span class="select comp" title="Main component: Notifications"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Notifications</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>
+                  <div class="numgrid">
+                    <span class="stepper sm"><span class="k">In</span><input name="mo-in" value="0:04" aria-label="In point"></span>
+                    <span class="stepper sm"><span class="k">Out</span><input name="mo-out" value="0:09" aria-label="Out point"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="library" data-gh="sm">
+                <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">this document</span></div>
+                <div class="dgrp-b">
+                  <div style="padding:var(--gap-sm) var(--pad-sm) 0"><div class="seg scopeseg">
+                    <button data-scope="media">Media</button>
+                    <button class="on" data-scope="components">Comp</button>
+                    <button data-scope="styles">Styles</button>
+                    <button data-scope="systems">Systems</button>
+                  </div></div>
+                  <div class="libgrid">
+                    <div class="libtile comp sel" tabindex="0"><span class="th mo-thart"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg></span><span class="cap"><span class="nm">bell</span><span class="mt">icon · 24</span></span></div>
+                    <div class="libtile comp" tabindex="0"><span class="th mo-thart"><i class="ic ic-component"></i></span><span class="cap"><span class="nm">Notifications</span><span class="mt">1 instance</span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="timeline" data-tl-summary="launch-promo · 0:06 / 0:18" style="min-height:112px">
+            <div class="ruler"><span>0s</span><span>4s</span><span>8s</span><span>12s</span><span>16s</span></div>
+            <div class="track"><span class="tl"><i class="ic xs ic-instance"></i> Graphic</span>
+              <div class="lane abs">
+                <div class="clip v2 sel" style="left:22%;width:28%" tabindex="0" role="button"><span class="lbl">Notifications</span></div>
+              </div>
+            </div>
+            <div class="track"><span class="tl"><i class="ic xs ic-film"></i> V1</span>
+              <div class="lane abs">
+                <div class="clip v1" style="left:0;width:100%" tabindex="0" role="button"><span class="lbl">demo-run</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="mo-flag"><i class="ic ic-check-circle"></i> Four rows in one layer list: the instance on the timeline, the recording, the component it follows, and the icon frame it was drawn in. Nothing here is a second document and nothing was flattened to get on screen.</p>
+      </div>
+
+      <!-- the edit flowing all the way down -->
+      <p class="mo-note"><b>Now change the icon, which is the half of the chain that decides whether it was ever a chain.</b> Open the 24 point frame, take the bell's stroke from 2 points to 1.5, and let go. The original component redraws, every instance of it redraws, and the frame on the timeline at 0:06 redraws, because they are the same drawing seen three times and not three copies of it. This is not new behaviour being proposed: it is what <code>ComponentVersions</code> already does for a button used on four screens, applied to a chain that happens to end in time.</p>
+
+      <div class="mo-flow">
+        <div class="mo-fcell">
+          <span class="mo-fl">1 · the icon frame</span>
+          <div class="mo-fpair">
+            <span class="mo-fbox"><svg viewBox="0 0 24 24" aria-label="The bell before the edit, at a 2 point stroke"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg></span>
+            <i class="ic ic-arrow-right"></i>
+            <span class="mo-fbox"><svg viewBox="0 0 24 24" aria-label="The bell after the edit, at a 1.5 point stroke"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg></span>
+          </div>
+          <small>You edit here. Stroke 2 → 1.5, one field in Appearance.</small>
+        </div>
+        <div class="mo-fcell">
+          <span class="mo-fl">2 · inside the component</span>
+          <div class="mo-fpair">
+            <span class="mo-btn-art" style="font-size:10.5px;padding:5px 9px"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg> Notifications</span>
+            <i class="ic ic-arrow-right"></i>
+            <span class="mo-btn-art" style="font-size:10.5px;padding:5px 9px"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg> Notifications</span>
+          </div>
+          <small>Not touched. It follows, the way an instance has always followed its original.</small>
+        </div>
+        <div class="mo-fcell">
+          <span class="mo-fl">3 · at 0:06 on the timeline</span>
+          <div class="mo-fpair">
+            <span class="mo-fbox" style="width:74px"><span class="mo-btn-art" style="font-size:9px;padding:3px 6px;gap:4px"><svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg> Notif</span></span>
+            <i class="ic ic-arrow-right"></i>
+            <span class="mo-fbox" style="width:74px"><span class="mo-btn-art" style="font-size:9px;padding:3px 6px;gap:4px"><svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg> Notif</span></span>
+          </div>
+          <small>Also not touched, and the render at 0:06 comes out of the same drawing.</small>
+        </div>
+      </div>
+
+      <p class="mo-note"><b>One honest wrinkle, stated rather than hidden.</b> A mark drawn to read at 24 points, blown up to 190 on a 1080p frame, is a 24 point drawing at eight times scale: the stroke goes up with it and the thing reads chunkier than the icon does. That is correct behaviour for a vector and it is still not what you wanted. The fix is the one the icon epic already has in hand, a component with a variant per size band, and it is not a mode question, so it is named here and left to the icon work.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       2 · THE BILL. What the chain costs, plainly.
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">The bill</span><h3>Video has to stop being a separate editor for any of this to be true</h3><span class="mo-sub">This is the cost attached to the direction, not a detail. It is worth paying, and it is not small.</span></div>
+    <div class="mo-blk-b">
+      <p class="mo-note">Today a recording opens into its own window with its own state (<code>VideoEditorState</code>, <code>VideoEditorView</code>), and that editor knows nothing about layers, components or the document model. It is a good single-clip editor: trim, speed, crop, save. <b>But there is no layer list for a component to be a row in, so nothing can be dragged onto its timeline, and no amount of panel arrangement fixes that.</b> The chain above needs a recording to be a LAYER in an ordinary document whose extent in time the timeline draws.</p>
+      <div class="mo-tbl mo-line">
+        <div class="mo-hd"><i class="ic ic-check-circle"></i>What paying it buys</div>
+        <div class="mo-hd"><i class="ic ic-warning"></i>What it actually costs</div>
+        <div class="mo-c">The chain, and everything shaped like it: a title that is a real text layer with your text styles, a callout that is the same component as the one on the screen you shipped, an icon animated on the same timing strip the video uses. <b>One undo stack, one selection, one export.</b></div>
+        <div class="mo-c">A recording becomes a layer type with a duration, the timeline becomes a view over layers rather than over clips, and the trim, speed and crop the video editor does today have to be re-expressed as things you do to that layer. <b>The video work already queued (cutting and arranging) would be built on the new footing rather than the old one</b>, which is cheaper than building it twice but is a real re-aim.</div>
+        <div class="mo-c">It also collapses a second window, a second set of shortcuts and a second mental model that a person currently has to learn separately.</div>
+        <div class="mo-c">Playback performance is the risk to watch: a composite that has to be right at 30 frames a second is a harder bar than a still canvas, and the renderer's target today is a still document.</div>
+      </div>
+      <p class="mo-note"><b>Say the honest alternative out loud too:</b> keep video separate and the chain stops at two links. You could still draw an icon, put it in a component, and use that component anywhere in a design document, which is most of the value, and the video editor would keep taking finished pictures. Everything else on this page works either way. The chain is the reason to pay, and it is the user's call whether to.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       3 · WHAT A MODE IS. The same document, three ways.
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">The swap</span><h3>The same document in three modes, and the swap that gets you between them</h3><span class="mo-sub">Every window below is the SAME document as section 1. Same layer list, same canvas, same dock, same tool bar. Only what is folded is different.</span></div>
+    <div class="mo-blk-b">
+
+      <div class="mo-popwrap">
+        <div class="mo-popcol">
+          <div class="popover menu pop on mo-pop" aria-label="Mode">
+            <div class="menuitem on"><i class="ic ic-film"></i> Video <span class="mo-mm">⌃3</span></div>
+            <div class="menuitem"><i class="ic ic-star"></i> Icon <span class="mo-mm">⌃1</span></div>
+            <div class="menuitem"><i class="ic ic-measure"></i> Redline <span class="mo-mm">⌃2</span></div>
+            <div class="menuitem"><i class="ic ic-frame"></i> Design <span class="mo-mm">⌃4</span></div>
+            <div class="menuitem"><i class="ic ic-canvas-grid"></i> Pixel art <span class="mo-mm">⌃5</span></div>
+            <div class="mo-popfoot">
+              <div class="menuitem"><i class="ic ic-undo"></i> Show everything</div>
+              <div class="menuitem"><i class="ic ic-sliders"></i> Edit modes…</div>
+            </div>
+          </div>
+        </div>
+        <div class="mo-popsay">
+          <p class="mo-note"><b>Where the switch lives, and why it is not a row of tabs.</b> It is a quiet chip in the window's status, beside the document's name, opening this list: the place you already look to find out what this window is set to. Three tabs in the title bar would read as navigating between three applications, which is the exact impression this whole direction is trying to avoid, and the study ruled that shape out for good reason. A popup reads as state. It is also on <b>⌃1 … ⌃5</b> and in View ▸ Mode, so the swap never needs the pointer.</p>
+          <p class="mo-note"><b>The list is not four hardcoded entries.</b> Pixel art is on it because somebody wrote a mode down, not because anybody changed the app, which is section 6. <b>Show everything</b> is the panic button: one click and every folded thing comes back, in every mode, and it is the first item under the line so it is findable when you are annoyed.</p>
+          <p class="mo-note"><b>Nothing here is stored in the document.</b> Two windows onto the same file can be in two different modes, which is genuinely useful (the icon frame open in Icon mode on one screen while the promo is in Video mode on the other), and neither window is telling the other what the file is.</p>
+        </div>
+      </div>
+
+      <div class="mo-pair">
+
+        <div class="mo-case">
+          <div class="mo-caseh"><span class="mo-tag mo-a">Mode: Icon</span><h4>The same document, folded for drawing a glyph</h4></div>
+          <div class="win tall cq shell" style="height:470px" data-shell="launch-promo · 1 document" data-ws="ui" data-status="<span class='mo-modechip'>Icon<i class='ic xs ic-chevron-down'></i></span>">
+            <div class="edit lean" data-dock="open">
+              <div class="cnv">
+                <div class="canvas" style="display:flex;align-items:center;justify-content:center">
+                  <svg width="120" height="120" viewBox="0 0 24 24" aria-label="A bell icon on a 24 point frame">
+                    <g fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 4.1v1.5"/>
+                      <path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/>
+                      <path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/>
+                    </g>
+                  </svg>
+                </div>
+                <div class="tbar">
+                  <div class="tstrip" data-radio=".tool" data-radio-class="on">
+                    <button class="tool" title="Select"><i class="ic ic-cursor"></i></button>
+                    <button class="tool on" title="Pen"><i class="ic ic-pen"></i></button>
+                    <button class="tool" title="Shape"><i class="ic ic-square"></i></button>
+                    <button class="tool" title="Fill"><i class="ic ic-fill"></i></button>
+                    <button class="tool" title="Text"><i class="ic ic-text"></i></button>
+                    <button class="tool" title="Frame"><i class="ic ic-frame"></i></button>
+                  </div>
+                  <button class="tool tbar-more" title="More tools" data-menu="#moIconOvf"><i class="ic ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <div class="zoomctl"><input class="zslider" type="range" name="mo-z2" min="25" max="1600" value="1600" aria-label="Zoom"><span class="val zval">1600%</span></div>
+                </div>
+                <div class="popover menu pop" id="moIconOvf" style="position:absolute;right:0;bottom:44px;width:190px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-measure"></i> Measure <span class="sc">I</span></div>
+                  <div class="menuitem"><i class="ic ic-arrow-annotate"></i> Arrow <span class="sc">A</span></div>
+                  <div class="menuitem"><i class="ic ic-brush"></i> Highlight <span class="sc">H</span></div>
+                  <div class="menuitem"><i class="ic ic-blur"></i> Lens <span class="sc">L</span></div>
+                  <div class="menuitem"><i class="ic ic-crop"></i> Crop <span class="sc">C</span></div>
+                </div>
+              </div>
+              <div class="splitter v" data-min="240" data-max="440"></div>
+              <div class="pdock">
+                <div class="dgrp" data-grp="layers" data-gh="sm">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow"><i class="ic ic-instance"></i><span class="nm">Notifications · 0:04 – 0:09</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-film"></i><span class="nm">demo-run</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-component"></i><span class="nm">Notifications · original</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow sel"><i class="ic ic-frame"></i><span class="nm">notification-bell · 24</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+                <div class="dgrp" data-grp="props" data-gh="sm">
+                  <div class="dgrp-h"><span class="ttl">At every size</span><span class="cnt">this frame is 24</span></div>
+                  <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
+                    <div style="display:flex;align-items:flex-end;gap:12px;padding:4px 2px">
+                      <span style="display:flex;flex-direction:column;align-items:center;gap:4px"><span style="display:block;width:16px;height:16px;color:var(--ink)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:100%;height:100%;display:block"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg></span><small style="font-size:9px;font-family:var(--mono);color:var(--faint)">16</small></span>
+                      <span style="display:flex;flex-direction:column;align-items:center;gap:4px"><span style="display:block;width:24px;height:24px;color:var(--ink)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:100%;height:100%;display:block"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg></span><small style="font-size:9px;font-family:var(--mono);color:var(--faint)">24</small></span>
+                      <span style="display:flex;flex-direction:column;align-items:center;gap:4px"><span style="display:block;width:32px;height:32px;color:var(--ink)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:100%;height:100%;display:block"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg></span><small style="font-size:9px;font-family:var(--mono);color:var(--faint)">32</small></span>
+                      <span style="display:flex;flex-direction:column;align-items:center;gap:4px"><span style="display:block;width:48px;height:48px;color:var(--ink)"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:100%;height:100%;display:block"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg></span><small style="font-size:9px;font-family:var(--mono);color:var(--faint)">48</small></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="dgrp" data-grp="props" data-gh="sm">
+                  <div class="dgrp-h"><span class="ttl">Appearance</span><span class="cnt">Path</span></div>
+                  <div class="dgrp-b">
+                    <div class="irow split"><span class="rl">Stroke</span>
+                      <span class="stepper sm"><span class="k">px</span><input name="mo-stroke" value="2" aria-label="Stroke width"></span>
+                      <button class="btn ghost icon sm" title="Stroke colour"><i class="ic sm ic-color"></i></button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mo-tlfold"><i class="ic ic-timeline"></i> Timeline · folded in this mode<span class="mo-sp">click to open · ⌥T</span></div>
+          </div>
+          <p class="mo-flag"><i class="ic ic-check-circle"></i> The layer list is the same four rows. The video did not go anywhere: its timeline is a lip at the bottom you can click, not a thing that vanished.</p>
+        </div>
+
+        <div class="mo-case">
+          <div class="mo-caseh"><span class="mo-tag mo-a">Mode: Redline</span><h4>The same document again, folded for measuring</h4></div>
+          <div class="win tall cq shell" style="height:470px" data-shell="launch-promo · 1 document" data-ws="image" data-status="<span class='mo-modechip'>Redline<i class='ic xs ic-chevron-down'></i></span>">
+            <div class="edit lean" data-dock="open">
+              <div class="cnv">
+                <div class="canvas" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px">
+                  <div class="empty"><i class="ic ic-image"></i> demo-run.mov · the frame at 0:06</div>
+                  <span class="mtag">Gap 12</span>
+                </div>
+                <div class="tbar">
+                  <div class="tstrip" data-radio=".tool" data-radio-class="on">
+                    <button class="tool" title="Select"><i class="ic ic-cursor"></i></button>
+                    <button class="tool on" title="Measure"><i class="ic ic-measure"></i></button>
+                    <button class="tool" title="Arrow"><i class="ic ic-arrow-annotate"></i></button>
+                    <button class="tool" title="Highlight"><i class="ic ic-brush"></i></button>
+                    <button class="tool" title="Lens"><i class="ic ic-blur"></i></button>
+                    <button class="tool" title="Text"><i class="ic ic-text"></i></button>
+                    <button class="tool" title="Crop"><i class="ic ic-crop"></i></button>
+                  </div>
+                  <button class="tool tbar-more" title="More tools" data-menu="#moRedOvf"><i class="ic ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <div class="zoomctl"><input class="zslider" type="range" name="mo-z3" min="25" max="400" value="100" aria-label="Zoom"><span class="val zval">100%</span></div>
+                </div>
+                <div class="popover menu pop" id="moRedOvf" style="position:absolute;right:0;bottom:44px;width:190px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                  <div class="menuitem"><i class="ic ic-fill"></i> Fill <span class="sc">G</span></div>
+                  <div class="menuitem"><i class="ic ic-frame"></i> Frame <span class="sc">F</span></div>
+                  <div class="menuitem"><i class="ic ic-blade"></i> Blade <span class="sc">B</span></div>
+                </div>
+              </div>
+              <div class="splitter v" data-min="240" data-max="440"></div>
+              <div class="pdock">
+                <div class="dgrp" data-grp="layers" data-gh="sm">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow sel"><i class="ic ic-instance"></i><span class="nm">Notifications · 0:04 – 0:09</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-film"></i><span class="nm">demo-run</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-component"></i><span class="nm">Notifications · original</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-frame"></i><span class="nm">notification-bell · 24</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+                <div class="dgrp" data-grp="props" data-gh="sm">
+                  <div class="dgrp-h"><span class="ttl">Measurements</span><span class="cnt">3</span></div>
+                  <div class="dgrp-b">
+                    <div class="irow split"><span class="rl">Button height</span><span class="stepper sm"><span class="k">pt</span><input name="mo-m1" value="32" aria-label="Button height"></span></div>
+                    <div class="irow split"><span class="rl">Icon gap</span><span class="stepper sm"><span class="k">pt</span><input name="mo-m2" value="12" aria-label="Icon gap"></span></div>
+                  </div>
+                </div>
+                <div class="dgrp" data-grp="props" data-gh="sm">
+                  <div class="dgrp-h"><span class="ttl">Appearance</span><span class="cnt">Measurement</span></div>
+                  <div class="dgrp-b">
+                    <div class="irow split"><span class="rl">Label</span><span class="seg sm" data-radio="button"><button class="on">Pill</button><button>Plain</button></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mo-tlfold"><i class="ic ic-timeline"></i> Timeline · folded in this mode<span class="mo-sp">click to open · ⌥T</span></div>
+          </div>
+          <p class="mo-flag"><i class="ic ic-check-circle"></i> Measurements came up, the pen and fill went into the <b>…</b> where overflow tools already live, and the four layers are still the four layers.</p>
+        </div>
+      </div>
+
+      <p class="mo-note"><b>Put the three windows beside each other and the thing to notice is how little moved.</b> Same title bar, same dock on the same side, same splitter, same tool bar in the same place, same four rows in Layers, same canvas. What changed is which sections are unfolded and which six or seven tools are in front, which is roughly the difference between two people's Photoshop. <b>That is the test for "one app, not four": if a mode ever earns its own layer list or its own panel arrangement, it has become a second application and it should be stopped.</b></p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       4 · THE WAY BACK. Drawn before the tidy pictures are believed.
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">The risk</span><h3>Reaching for something that is not in front of you, five ways it goes right</h3><span class="mo-sub">A preset that hides a tool is indistinguishable from a broken app in the second you reach for that tool. This is the section the prototype exists for.</span></div>
+    <div class="mo-blk-b">
+      <div class="mo-tbl mo-back">
+        <div class="mo-hd">The moment</div>
+        <div class="mo-hd">What you see</div>
+        <div class="mo-hd">Why it does not feel broken</div>
+
+        <div class="mo-nm">You reach for the measure tool in Icon mode<small>and it is not in the bar</small></div>
+        <div class="mo-c">Press <b>I</b> and the measure tool is simply armed, with a quiet line on the canvas: "Measure is folded away in Icon mode. It is in the tool bar's overflow menu." Nothing was disabled, so the muscle memory works first.</div>
+        <div class="mo-c"><b>A mode never takes a keystroke away.</b> Shortcuts and the native menu bar hold every tool in every mode, so the worst case is a tool you cannot see rather than a tool you cannot use, and the app tells you where it went.</div>
+
+        <div class="mo-nm">You go looking with the pointer<small>and there is no Measure button</small></div>
+        <div class="mo-c">The <b>…</b> at the end of the tool bar, which already exists for a narrow window, holds exactly the tools this mode folded, in the order they sit in the full bar.</div>
+        <div class="mo-c">It is a place you have already learned for a different reason, so nothing new is being taught. A folded tool is one click away and it is visibly one click away.</div>
+
+        <div class="mo-nm">A panel section is missing<small>Measurements, say</small></div>
+        <div class="mo-c">The <b>Panels</b> button at the foot of the dock lists every group with a tick beside it, and the list inside the panel says in words <b>"You turned this off"</b> rather than leaving a blank where a section was.</div>
+        <div class="mo-c">Both already exist: the dock's own pane manager is standard chrome on every window in the study, and <code>PanelSectionVisibility.Reason</code> ships the wording that tells a section you folded from a section this document has nothing for. "Where did it go" has a literal answer on screen.</div>
+
+        <div class="mo-nm">You want it back for good<small>without leaving the mode</small></div>
+        <div class="mo-c">Turn it on in the list and it stays on. The chip then reads <b>Icon, edited</b>, and <b>Reset this mode</b> is under the same popup.</div>
+        <div class="mo-c">Your change belongs to you, not to the preset. A mode you have bent is remembered bent, and nothing quietly re-folds it the next time you swap back.</div>
+
+        <div class="mo-nm">You want the window you had a second ago<small>the panic case</small></div>
+        <div class="mo-c"><b>Show everything</b> in the mode popup unfolds the lot, in one click, and swapping back to the mode you were in restores exactly the arrangement you left.</div>
+        <div class="mo-c">Proved rather than promised: <code>ModeIsAPresetTests</code> pins that a mode is a set of per-section choices, that swapping away and back lands on the identical set of sections, and that handing the lot back to automatic gives the window of somebody who never touched a mode.</div>
+      </div>
+      <p class="mo-note"><b>The escape hatch problem, and why this one is not the same trap.</b> The old objection to hiding was that a "show all tools" switch turns the bar into two states of the app to learn. What makes this different is that <b>nothing a mode does is a new place</b>: folded tools go to the overflow menu that already exists, folded sections go to the rail and the list that already exist, and every single thing stays in the native menu bar the whole time. The mode is not a second state of the app; it is a starting arrangement of the one state, and the arrangement was always adjustable by hand. That is also why this is worth doing rather than being a gate in disguise: <b>the app already shipped the by-hand version, and a mode is just a name for a set of those choices you would otherwise make one at a time.</b></p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       5 · WHAT A MODE HONESTLY HIDES.
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">Scope</span><h3>Exactly what a mode may fold, and what it may never touch</h3><span class="mo-sub">Stated rather than implied, because "it hides some things" is how a feature becomes unpredictable.</span></div>
+    <div class="mo-blk-b">
+      <div class="mo-tbl mo-hides">
+        <div class="mo-hd">Part of the app</div>
+        <div class="mo-hd">May a mode fold it?</div>
+        <div class="mo-hd">The rule</div>
+
+        <div class="mo-nm"><i class="ic ic-sliders"></i>Panel sections</div>
+        <div class="mo-yes">Yes, nine of them</div>
+        <div class="mo-c">Only the ones already marked optional: <code>library</code>, <code>libraryItem</code>, <code>measurements</code>, <code>motion</code>, <code>placement</code>, <code>columns</code>, <code>arrange</code>, <code>component</code>, <code>shadow</code>. That list is a fact about the running app, not a proposal.</div>
+
+        <div class="mo-nm"><i class="ic ic-layers"></i>The layers list</div>
+        <div class="mo-no">Never</div>
+        <div class="mo-c">It is not in the optional list, and the code refuses to write a choice for it. This is what makes every mode visibly the same app rather than four.</div>
+
+        <div class="mo-nm"><i class="ic ic-cursor"></i>The section for what you picked</div>
+        <div class="mo-no">Never</div>
+        <div class="mo-c">Pick a path and you get Path; pick a measurement and you get Measurement. A mode that could fold this could leave you holding something with no way to change it.</div>
+
+        <div class="mo-nm"><i class="ic ic-color"></i>Appearance and Effects</div>
+        <div class="mo-no">Never</div>
+        <div class="mo-c">Every layer has them and every job wants them. Folding them would be hiding the point of the panel.</div>
+
+        <div class="mo-nm"><i class="ic ic-more"></i>Tool groups in the bar</div>
+        <div class="mo-yes">Yes, into the overflow</div>
+        <div class="mo-c">By group, never one tool out of a group, so the bar keeps the same shape. It is the same overflow menu a narrow window already uses, with one honest change: <b>that button only appears today when the bar runs out of room</b>, and a mode that folds tools has to make it permanent, because there is now always something in it.</div>
+
+        <div class="mo-nm"><i class="ic ic-keyboard"></i>Shortcuts</div>
+        <div class="mo-no">Never</div>
+        <div class="mo-c">Every tool keeps its key in every mode. Pressing it arms the tool and says where it lives.</div>
+
+        <div class="mo-nm"><i class="ic ic-command"></i>The native menu bar</div>
+        <div class="mo-no">Never</div>
+        <div class="mo-c">The macOS menus stay complete in every mode, so the whole app is always one menu away and Help ▸ Search always finds it. <b>This is the safety net the whole idea rests on.</b></div>
+
+        <div class="mo-nm"><i class="ic ic-timeline"></i>The timeline</div>
+        <div class="mo-yes">Folded, not removed</div>
+        <div class="mo-c">It appears because the document has time, never because of a mode. A mode may fold it to a lip at the foot of the window; the lip stays visible and says what it is.</div>
+
+        <div class="mo-nm"><i class="ic ic-document"></i>The document</div>
+        <div class="mo-no">Never, in any sense</div>
+        <div class="mo-c">No layer is hidden, no value is changed, nothing is written to the file. Pinned by <code>ModeIsAPresetTests</code>: the same document answers the same under every mode.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       6 · A MODE IS DATA. Pixel art, added without touching the app.
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">Open set</span><h3>What a mode is made of, and a new one written out: pixel art</h3><span class="mo-sub">Four hardcoded modes would be four information architectures in a costume. This is the whole of a mode, and every line of it points at something the app already has.</span></div>
+    <div class="mo-blk-b">
+
+      <div class="mo-rec">
+        <div class="mo-hd"><i class="ic ic-canvas-grid"></i>Mode · Pixel art</div>
+
+        <div class="mo-rk"><i class="ic ic-tag"></i>Name and icon</div>
+        <div class="mo-rv"><b>Pixel art</b>, grid icon, fifth on the list, <code>⌃5</code>.</div>
+
+        <div class="mo-rk"><i class="ic ic-sliders"></i>Panel sections folded</div>
+        <div class="mo-rv">Measurements, Placement, Columns, Component, Shadow. <b>Kept:</b> Layers, the picked layer's section, Appearance, and Motion, because sprites animate and folding Motion would be wrong here even though it looks like a design thing.<em>Written as the same per-section choices the panel already stores.</em></div>
+
+        <div class="mo-rk"><i class="ic ic-more"></i>Tool groups in front</div>
+        <div class="mo-rv">Select · Marquee · <b>Pencil</b> · Fill · Eyedropper. Everything else folds into the overflow menu.<em>The pencil is the existing brush with its own defaults, not a new tool.</em></div>
+
+        <div class="mo-rk"><i class="ic ic-document-new"></i>A new document starts at</div>
+        <div class="mo-rv">32 × 32, zoom 1600%, transparent.<em>Same mechanism as the sizes already in New Frame.</em></div>
+
+        <div class="mo-rk"><i class="ic ic-canvas-grid"></i>What the canvas shows</div>
+        <div class="mo-rv">Grid at <b>one pixel</b>, and magnification that shows squares rather than smudges past 2×.<em>Both exist: <code>CanvasGridStore</code> with its settings panel, and <code>magnifyNearest</code> in the renderer, which already mirrors the canvas rule past 2×.</em></div>
+
+        <div class="mo-rk"><i class="ic ic-pencil"></i>What NEW work starts as</div>
+        <div class="mo-rv">Pencil at 1 pixel, hard edge, no antialiasing, snapped to the pixel grid.<em>A default for the next stroke you make, the same way the pen already starts at 2 points inside a 24 point icon frame.</em></div>
+
+        <div class="mo-rk"><i class="ic ic-warning"></i>What it is NOT allowed to say</div>
+        <div class="mo-rv"><b>"Draw everything in this document without antialiasing."</b> That would reach back into work that already exists and change how it comes out, which is the line below.</div>
+      </div>
+
+      <p class="mo-note"><b>Three of the five ingredients of a pixel art mode are already running in the app</b>, which is the strongest evidence that a mode is an arrangement rather than a new subsystem: the grid is settable per document with its own store and settings panel, the renderer already switches to nearest-neighbour magnification past 2× because it assumes you are inspecting pixels, and an icon frame already changes what a stroke drawn inside it comes out as. Pixel art needs a pencil default and a 32 point size on the list. <b>Nobody has to touch the editor to describe it.</b></p>
+
+      <!-- THE LINE -->
+      <div class="mo-tbl mo-line">
+        <div class="mo-hd"><i class="ic ic-check-circle"></i>A mode MAY</div>
+        <div class="mo-hd"><i class="ic ic-warning"></i>A mode MAY NOT</div>
+        <div class="mo-c"><b>Fold what the window offers.</b> Panel sections, tool groups, the timeline's lip. Nothing is removed and everything says where it went.</div>
+        <div class="mo-c"><b>Change how existing work comes out.</b> Switch to Pixel art with a smooth curve already on the canvas and that curve stays smooth. If it re-rendered hard-edged, the document would be in a mode, and swapping would no longer be free.</div>
+        <div class="mo-c"><b>Set a default for the NEXT thing you make.</b> The pencil starts at one pixel, the new frame starts at 32 square. This is the same kind of thing as the tool remembering its last size.</div>
+        <div class="mo-c"><b>Touch anything in the file.</b> No layer values, no visibility, no flags, nothing written on save. A mode is remembered per window, next to the zoom.</div>
+        <div class="mo-c"><b>Change what you are LOOKING at.</b> The grid, the magnification rule, the keylines. These are view settings, exactly like zoom, and nobody thinks the zoom changed their document.</div>
+        <div class="mo-c"><b>Take a capability away.</b> Every tool keeps its shortcut and its menu item. A mode moves things out of the front row; it never makes them unavailable.</div>
+      </div>
+
+      <div class="mo-popwrap">
+        <div class="mo-popcol">
+          <div class="mo-art" style="height:132px">
+            <div class="mo-pix" aria-label="A pixel art canvas at one device pixel per cell">
+              <i></i><i></i><i></i><i class="mo-on"></i><i class="mo-on"></i><i></i><i></i><i></i>
+              <i></i><i></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-on"></i><i></i><i></i>
+              <i></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-dim"></i><i class="mo-dim"></i><i class="mo-on"></i><i class="mo-on"></i><i></i>
+              <i></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-on"></i><i></i>
+              <i></i><i></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-on"></i><i class="mo-on"></i><i></i><i></i>
+              <i></i><i></i><i></i><i class="mo-on"></i><i class="mo-on"></i><i></i><i></i><i></i>
+            </div>
+          </div>
+        </div>
+        <div class="mo-popsay">
+          <p class="mo-note"><b>The case that tests the line, drawn out.</b> You are in Pixel art, drawing a 32 square sprite with the pencil. You swap to Design mode to borrow a shape from a component. <b>Every pixel you drew stays exactly as it is</b>, because it is a drawing, not a mode's opinion. What changes is that the grid goes back to whatever the document's grid was, the magnification stops snapping to squares, and a new shape you draw comes out smooth. Swap back and the sprite is still the sprite. <b>If this were not true, a mode would be a document type wearing a better name</b>, and the whole direction would have quietly turned back into the thing that was rejected.</p>
+          <p class="mo-note"><b>The one place this gets argued is antialiasing</b>, because a person who wants pixel art wants hard edges on what already exists too. The honest answer is that hard edges are a property of the LAYER, one you apply and can undo and can see in the panel. A mode can arm it for new work; it cannot reach backwards. That leaves one thing to build that this page is not proposing, a hard-edge switch on a raster layer, and it belongs to the drawing work, not to modes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       7 · WHERE THINGS ARE PICKED UP FROM.
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">The shelves</span><h3>The chain starts with a drag, so it matters which shelf you drag off</h3><span class="mo-sub">Settled by scope: History is everything you have ever made, the Library is what this document contains. Drawn in full on the companion page.</span></div>
+    <div class="mo-blk-b">
+      <p class="mo-note">In section 1 the bell was dragged off <b>the Library</b>, because the icon was drawn in that document and the Library is the document's own shelf. Had it been drawn last month in another file, it would have come off <b>History</b>, the global shelf that opens over everything with no window in the way. <b>The split is by how far the shelf reaches, not by what the thing is</b>, which is why a screenshot from ten minutes ago and a component you built in June can sit on the same shelf without arguing.</p>
+      <p class="mo-note">One consequence worth naming here because it is a bill like section 2's: <b>the Library's Media scope shows the global capture folder today</b> (<code>LibraryPanel</code>), which under this model belongs to History. Media in the Library should become this document's own media, and the global captures should be reachable where every other global thing is. That is a move, not a new feature. The full prototype, covering both directions of travel, what a dragged-in thing becomes, captures sitting beside components, and whether the Library is just the layers list in disguise, is the companion page: <b><button class="link" data-target="shelves">Where you pick things up</button></b>.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       8 · DOCUMENTS, OLD AND NEW.
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">Before and after</span><h3>What happens to a document made before modes, and what mode a new one starts in</h3><span class="mo-sub">The short version: nothing happens to the old ones, because there is nothing in them to happen to.</span></div>
+    <div class="mo-blk-b">
+      <p class="mo-note"><b>A document from before modes opens in whatever mode that window is in</b>, exactly like a document from before opens at whatever zoom you left the window at. There is no mode stored in a file, no missing value to guess, no dialog in front of a file somebody just double-clicked, and no compatibility promise to keep forever. This is the single biggest practical difference between a mode and the project type this replaces: the type had to be written into the format, and a format is a promise you cannot take back.</p>
+      <p class="mo-note"><b>A new document starts in the mode the window was already in, unless what you did says otherwise.</b> New ▸ Icon opens in Icon, because you just said the word. A capture opened from History opens in Redline, because that is what a capture is for. A recording opens in Video. Everything else opens where you left off, which for most people is one mode most of the time. <b>Nobody is asked a question at the front door</b>, which was the other half of the old proposal and is not needed once the choice is this cheap to change.</p>
+      <p class="mo-note"><b>And somebody who never finds modes at all loses nothing.</b> The default arrangement is the one the app has now, with the sections it already shows automatically. A mode is something you opt into when you notice you keep folding the same four things.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       9 · RECOMMENDATION
+       ================================================================== -->
+  <div class="mo-blk">
+    <div class="mo-blk-h"><span class="mo-kind">Recommendation</span><h3>Build modes as named presets. Pay the video bill only if the chain is the point.</h3><span class="mo-sub">Three slices, each judgeable on its own. The first two are small and stand alone; the third is the expensive one and is a separate yes.</span></div>
+    <div class="mo-blk-b">
+      <div class="mo-steps">
+        <div class="mo-step">
+          <span class="mo-i">1</span>
+          <h4>A mode is a named set of the choices that already exist</h4>
+          <p>The panel already stores a per-section yes/no and can say in words why a section is missing. A mode bundles those with a set of tool groups and a couple of view defaults, and puts a chip in the window's status to swap them. Small, and it makes the by-hand feature that just shipped worth having.</p>
+        </div>
+        <div class="mo-step">
+          <span class="mo-i">2</span>
+          <h4>The way back ships in the same slice, not after</h4>
+          <p>Shortcuts always work and say where the tool went, folded tools sit in the overflow that already exists, the panel list says "you turned this off", and Show everything is one click. Without these, a mode is a bug report.</p>
+        </div>
+        <div class="mo-step">
+          <span class="mo-i">3</span>
+          <h4>Modes are written down, not coded, and pixel art proves it</h4>
+          <p>If the four we ship are the only four possible, they are four applications. Pixel art is the test: describable as a record, three of its five ingredients already in the app, and nobody opens the editor to add it.</p>
+        </div>
+      </div>
+      <p class="mo-note"><b>What is deliberately NOT in this recommendation.</b> Nothing is stored in a document, so there is no migration and no format promise. No tool is removed; the native menus stay complete in every mode. And <b>the video work is a separate decision</b>: modes are worth building whether or not video moves into the layer document, but the three-link chain at the top of this page is only real if it does. That is the expensive sentence on this page and it should be answered on its own.</p>
+    </div>
+  </div>
+
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

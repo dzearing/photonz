@@ -1,0 +1,54 @@
+{
+  "feature": "Modes you can swap, and the icon into component into timeline chain",
+  "epic": "icon-svg",
+  "summary": "The window can now be drawn in a mode: a preset of which panels are unfolded and which tools are in front, swapped in one click, with nothing stored in the document and everything folded one visible click from coming back. The prototype draws the hardest flow first, an icon used inside a component placed on a video timeline in one document, and follows an edit all the way down it.",
+  "setup": "A browser at http://127.0.0.1:8791/index.html#modes (Icons ▸ \"One app, four jobs: modes you can swap\"), and #shelves for the companion. Nothing in the app changed, so there is nothing to launch. A decision card is waiting on the dashboard.",
+  "try": [
+    {
+      "do": "Open the modes page and read the first paragraph, then the three linked cards under The acid test.",
+      "shot": "2026-09-15-modes-1-chain.png"
+    },
+    {
+      "do": "Read the four rows in that window's Layers list: the instance on the timeline, the recording, the component, the icon frame. One document.",
+      "shot": "2026-09-15-modes-4-video-mode.png"
+    },
+    {
+      "do": "Read the three cells under \"Now change the icon\" and check the stroke really is thinner in all three."
+    },
+    {
+      "do": "Scroll to The swap and open the mode popup drawn beside it, then look at the Icon window under it.",
+      "shot": "2026-09-15-modes-2-icon-mode.png"
+    },
+    {
+      "do": "Compare that with the Redline window below: same layer list, different things folded.",
+      "shot": "2026-09-15-modes-5-redline-mode.png"
+    },
+    {
+      "do": "Read the five rows of The risk, the section about reaching for a tool that is not in front of you."
+    },
+    {
+      "do": "Read the pixel art record top to bottom, then the line about what a mode may and may not do.",
+      "shot": "2026-09-15-modes-3-pixel-art.png"
+    },
+    {
+      "do": "Open #shelves and look at the History strip holding a screenshot, an icon, a component and a recording together.",
+      "shot": "2026-09-15-shelves-1-history.png"
+    }
+  ],
+  "evaluate": [
+    "Does the mode chip beside the document's name read as state, or does it still read as navigating between three applications?",
+    "Put the Icon and Redline windows side by side: does it look like one app in two arrangements, or like two apps?",
+    "Is the icon into component into timeline chain worth the bill of video stopping being its own window, or would you rather have modes without it?",
+    "Would the five ways back be enough for you the first time you reached for Measure and it was not in the bar?",
+    "Is pixel art describable enough from that record that you can imagine asking for a mode of your own?",
+    "Does History holding a component beside a screenshot read sensibly, or does it feel like two things sharing a drawer?"
+  ],
+  "rough": [
+    "No live screenshots of the app exist for this one and none were claimed: this task changed no app code, so all six pictures are of the study pages in a browser at 1440 wide.",
+    "The tool bar's overflow button is hidden today until the bar runs out of room. A mode that folds tool groups has to make it permanent, and the prototype forces it visible to show that. That is a real change to the bar and it is stated on the page rather than glossed.",
+    "A 24 point icon blown up onto a 1080p frame reads chunkier than the icon does, because the stroke scales with it. Correct for a vector, still not what you wanted. Named on the page and left to the icon epic, where a variant per size band is already the plan.",
+    "The mode switcher's home is the least settled thing here. It is drawn as a popup in the window's status because a segmented control in the title bar was ruled out for reading as app-level navigation, but the dock is the other honest home since a mode is mostly an arrangement of the dock.",
+    "PRODUCT-MODEL.md section 4f says there is no mode to switch. It has a note added pointing at this prototype and saying what is different, rather than being rewritten before the decision is made.",
+    "The Library's Media scope shows the global capture folder today, which under the two-shelf model belongs to History. That is a move rather than a new feature and it is named on the shelves page."
+  ]
+}

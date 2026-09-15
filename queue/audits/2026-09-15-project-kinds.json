@@ -1,16 +1,33 @@
 {
   "feature": "Does the app need project types?",
   "epic": "icon-svg",
-  "summary": "A study, not a build. It answers the question you raised about project types: yes the app should ask what you are making, no it should not use the answer to hide anything. The New sheet is drawn, the editor is drawn twice under two different kinds with everything the kind removes still visible, and the document that breaks the idea is drawn beside them.",
-  "setup": "A browser at http://127.0.0.1:8791/index.html#project-kinds (Icons ▸ \"Does the app need project types?\"). Nothing in the app changed, so there is nothing to launch. A decision card is waiting on the dashboard.",
+  "summary": "SUPERSEDED on 2026-09-15 by the modes prototype, after the user redirected the task with 'not types, modes'. The page this audit walks was renamed from project-kinds to modes and rewritten; read queue/audits/2026-09-15-modes.json instead. Kept for the record. A study, not a build. It answers the question you raised about project types: yes the app should ask what you are making, no it should not use the answer to hide anything. The New sheet is drawn, the editor is drawn twice under two different kinds with everything the kind removes still visible, and the document that breaks the idea is drawn beside them.",
+  "setup": "The page has moved: it is now http://127.0.0.1:8791/index.html#modes. A browser at http://127.0.0.1:8791/index.html#project-kinds (Icons ▸ \"Does the app need project types?\"). Nothing in the app changed, so there is nothing to launch. A decision card is waiting on the dashboard.",
   "try": [
-    { "do": "Open the study page and read the first paragraph, which is the whole answer in six lines.", "shot": "2026-09-15-project-kinds-1-new.png" },
-    { "do": "Look at the New sheet in section 1. This is the half of the idea the study says to keep." },
-    { "do": "Scroll to section 2 and compare the two editors. Red slashes mark what each kind has taken away.", "shot": "2026-09-15-project-kinds-2-two-kinds.png" },
-    { "do": "Read the last row of the table under them: five slots gone for an icon, zero for a capture." },
-    { "do": "Scroll to section 4 and look at the 24 point bell beside the 1440 screen. That document is legal in Photonz today.", "shot": "2026-09-15-project-kinds-3-mixed-document.png" },
-    { "do": "Scroll to section 5 and compare the two windows there: same document, no kind, every tool present, different panel." },
-    { "do": "Open the decision card on the dashboard and pick an option." }
+    {
+      "do": "Open the study page and read the first paragraph, which is the whole answer in six lines.",
+      "shot": "2026-09-15-project-kinds-1-new.png"
+    },
+    {
+      "do": "Look at the New sheet in section 1. This is the half of the idea the study says to keep."
+    },
+    {
+      "do": "Scroll to section 2 and compare the two editors. Red slashes mark what each kind has taken away.",
+      "shot": "2026-09-15-project-kinds-2-two-kinds.png"
+    },
+    {
+      "do": "Read the last row of the table under them: five slots gone for an icon, zero for a capture."
+    },
+    {
+      "do": "Scroll to section 4 and look at the 24 point bell beside the 1440 screen. That document is legal in Photonz today.",
+      "shot": "2026-09-15-project-kinds-3-mixed-document.png"
+    },
+    {
+      "do": "Scroll to section 5 and compare the two windows there: same document, no kind, every tool present, different panel."
+    },
+    {
+      "do": "Open the decision card on the dashboard and pick an option."
+    }
   ],
   "evaluate": [
     "Does the New sheet in section 1 look like something you would want, separately from the hiding question?",

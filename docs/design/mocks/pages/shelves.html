@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · shelves</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local scaffolding ONLY, every class prefixed `sh-`.
+
+     Companion to the modes prototype. The chain on that page starts with a
+     drag, so this page answers which shelf you drag off: the global one that
+     reaches across every document, or this document's own. */
+
+  #shelves .sh-lede{font-size:13px;line-height:1.6;color:var(--dim);max-width:88ch;margin:0}
+  #shelves .sh-lede b{color:var(--ink);font-weight:600}
+
+  #shelves .sh-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #shelves .sh-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);flex-wrap:wrap;
+    padding:var(--pad-sm) var(--pad);border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
+  #shelves .sh-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #shelves .sh-blk-h .sh-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
+  #shelves .sh-blk-h .sh-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right;max-width:52ch}
+  #shelves .sh-blk-b{padding:var(--inset);display:flex;flex-direction:column;gap:var(--gap)}
+  #shelves .sh-note{margin:0;font-size:11.5px;line-height:1.6;color:var(--dim)}
+  #shelves .sh-note b{color:var(--ink);font-weight:600}
+  #shelves .sh-note code{font-family:var(--mono);font-size:10.5px;color:var(--ink)}
+
+  /* ---- the two shelves, as a pair of measuring sticks ---- */
+  #shelves .sh-two{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  @media(max-width:860px){#shelves .sh-two{grid-template-columns:1fr}}
+  #shelves .sh-card{border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);
+    padding:var(--pad);display:flex;flex-direction:column;gap:9px}
+  #shelves .sh-card.sh-glob{border-color:var(--accent)}
+  #shelves .sh-ch{display:flex;align-items:center;gap:8px}
+  #shelves .sh-ch .ic{width:15px;height:15px;color:var(--accent);flex:none}
+  #shelves .sh-ch b{font-size:12.5px;font-weight:640}
+  #shelves .sh-ch .sh-reach{margin-left:auto;font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+    font-weight:700;color:var(--faint);border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px}
+  #shelves .sh-card p{margin:0;font-size:11.5px;line-height:1.55;color:var(--dim)}
+  #shelves .sh-card p b{color:var(--ink);font-weight:600}
+  #shelves .sh-facts{display:flex;flex-direction:column;gap:5px;margin:0;padding:0;list-style:none}
+  #shelves .sh-facts li{display:flex;gap:7px;font-size:11px;line-height:1.5;color:var(--dim)}
+  #shelves .sh-facts li .ic{width:12px;height:12px;color:var(--good);flex:none;margin-top:2px}
+  #shelves .sh-facts li b{color:var(--ink);font-weight:600}
+
+  /* ---- tables ---- */
+  #shelves .sh-tbl{display:grid;gap:1px;background:var(--line-soft);
+    border:1px solid var(--line-soft);border-radius:var(--r3);overflow:hidden}
+  #shelves .sh-tbl>*{background:var(--panel);padding:var(--pad-sm);min-width:0}
+  #shelves .sh-tbl .sh-hd{background:var(--panel-2);font-size:9.5px;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--faint);font-weight:700;display:flex;align-items:center;gap:6px}
+  #shelves .sh-tbl .sh-nm{font-size:12px;font-weight:600;line-height:1.4;display:flex;align-items:center;gap:7px}
+  #shelves .sh-tbl .sh-nm .ic{width:13px;height:13px;color:var(--dim);flex:none}
+  #shelves .sh-tbl .sh-nm small{display:block;font-weight:500;font-size:10.5px;color:var(--faint);margin-top:3px;line-height:1.4}
+  #shelves .sh-tbl .sh-c{font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #shelves .sh-tbl .sh-c b{color:var(--ink);font-weight:600}
+  #shelves .sh-tbl .sh-c code{font-family:var(--mono);font-size:10.5px;color:var(--ink)}
+  #shelves .sh-move{grid-template-columns:200px 1fr 1fr}
+  #shelves .sh-move .sh-nm{display:block}
+  @media(max-width:900px){#shelves .sh-move{grid-template-columns:1fr}}
+  #shelves .sh-vs{grid-template-columns:150px 1fr 1fr}
+  @media(max-width:860px){#shelves .sh-vs{grid-template-columns:1fr}}
+
+  /* ---- the drag being drawn ---- */
+  #shelves .sh-drag{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;
+    border:1px dashed var(--accent);border-radius:var(--r3);padding:var(--pad-sm);
+    background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  #shelves .sh-drag .ic{width:14px;height:14px;color:var(--accent);flex:none}
+  #shelves .sh-drag span{font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #shelves .sh-drag span b{color:var(--ink);font-weight:600}
+
+  /* the desk is a specimen here rather than a whole page, so it needs a height
+     to stand in: the shared .deskbody is flex:1 with no floor of its own. */
+  #shelves .desk{min-height:400px}
+
+  #shelves .sh-thart{display:flex;align-items:center;justify-content:center;color:var(--ink);background:var(--panel-2)}
+  #shelves .sh-thart .ic{width:18px;height:18px;color:var(--dim)}
+
+  #shelves .sh-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+  @media(max-width:900px){#shelves .sh-steps{grid-template-columns:1fr}}
+  #shelves .sh-step{border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);
+    padding:var(--pad);display:flex;flex-direction:column;gap:6px}
+  #shelves .sh-step .sh-i{width:22px;height:22px;border-radius:999px;display:flex;align-items:center;
+    justify-content:center;font-size:11px;font-weight:700;background:color-mix(in srgb,var(--accent) 18%,transparent);
+    color:var(--accent)}
+  #shelves .sh-step h4{margin:0;font-size:12.5px;font-weight:640}
+  #shelves .sh-step p{margin:0;font-size:11.5px;line-height:1.55;color:var(--dim)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="shelves">
+
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Where you pick things up</h2><span class="k">· prototype · two shelves, split by how far they reach</span></div>
+
+  <p class="sh-lede">Every flow in the modes prototype starts the same way: you drag something you made earlier onto a canvas. So the app needs a clear answer to where that something was sitting. <b>There are two shelves and the difference between them is reach, not kind.</b> History is the global shelf, holding everything you have ever captured or made, reachable from the menu bar with no window open at all. The Library is this document's own shelf, holding what this file contains. A screenshot from ten minutes ago and a component you built in June sit happily on the same shelf under that rule, which is exactly what a split by kind could never manage. This page shows both, shows something moving between them in both directions, and answers the three questions the split leaves open.</p>
+
+  <!-- ==================================================================
+       1 · THE TWO SHELVES
+       ================================================================== -->
+  <div class="sh-blk">
+    <div class="sh-blk-h"><span class="sh-kind">The model</span><h3>One shelf reaches everywhere, one reaches this document</h3><span class="sh-sub">Both already exist in the app. What changes is which things are on which.</span></div>
+    <div class="sh-blk-b">
+      <div class="sh-two">
+        <div class="sh-card sh-glob">
+          <div class="sh-ch"><i class="ic ic-history"></i><b>History</b><span class="sh-reach">global</span></div>
+          <p>Everything you have made or captured, newest first, across every document and every launch. It slides down over whatever is on screen, from <b>⇧⌘H</b> or the menu bar icon, <b>with no editor window needed</b>.</p>
+          <ul class="sh-facts">
+            <li><i class="ic ic-check"></i><span>It is the app's real front door already: capture, then pick it up here.</span></li>
+            <li><i class="ic ic-check"></i><span>It survives across windows and launches, which is what lets it carry an icon from one document into another.</span></li>
+            <li><i class="ic ic-check"></i><span>It belongs to the resident menu bar app, not to a window, so it is chromeless: no title bar, no close button.</span></li>
+          </ul>
+        </div>
+        <div class="sh-card">
+          <div class="sh-ch"><i class="ic ic-library"></i><b>The Library</b><span class="sh-reach">this document</span></div>
+          <p>What <b>this file</b> contains and can place again: its components, its colour styles, its text styles, its media. A panel group in the right dock, folded away until you ask for it.</p>
+          <ul class="sh-facts">
+            <li><i class="ic ic-check"></i><span>Open the file on another machine and its shelf comes with it, because it is the file's own contents.</span></li>
+            <li><i class="ic ic-check"></i><span>Somebody who only captures and redlines never turns it on, and their dock is the dock they have today.</span></li>
+            <li><i class="ic ic-check"></i><span>It scopes: Media · Components · Styles · Systems, one flat list with a filter over it.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="sh-note"><b>The one change this model asks for, named plainly.</b> Today the Library's Media scope shows the global capture folder (<code>LibraryPanel</code>): open any document and its shelf is full of screenshots that have nothing to do with it. Under a split by reach, those captures belong on History, where they already are, and Media in the Library becomes <b>the pictures this document uses</b>. That is a move rather than a new feature, and it makes both shelves honest: neither one is quietly holding the other's contents.</p>
+
+      <p class="sh-note"><b>Why this beats the split we nearly made</b>, which was by what a thing IS: captured on one shelf, made on the other. That one has to put your last screenshot and a button you designed in June in different places for a reason nobody feels, and it has no answer at all for a capture you then drew on. Reach has an answer for everything: the question is only ever "can I get at this from another document", and that is a question with one true answer per thing.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       2 · THE GLOBAL SHELF, DRAWN
+       ================================================================== -->
+  <div class="sh-blk">
+    <div class="sh-blk-h"><span class="sh-kind">Global</span><h3>History, holding a capture and an icon on the same strip</h3><span class="sh-sub">The acceptance question was whether captures and made things read sensibly side by side. They do, because the strip is ordered by when, and when is something both of them have.</span></div>
+    <div class="sh-blk-b">
+      <div class="desk hdesk">
+        <div class="mbar">
+          <span class="sp"></span>
+          <button class="mbicon" title="Photonz"><i class="ic sm ic-aperture"></i></button>
+          <button class="mbicon" title="Sound"><i class="ic sm ic-volume"></i></button>
+          <span class="clock">Mon 9:41</span>
+        </div>
+        <div class="deskbody">
+          <p class="dhint hhint"><span class="g"><i class="ic lg ic-history"></i></span>
+            <b>No window open</b>, and everything you have made is still one keystroke away.</p>
+          <div class="sheet down hist on" aria-label="History">
+            <div class="sheet-b">
+            <div class="histbar">
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button><button>Icons</button><button>Components</button></div>
+              <span class="hb-r"><button class="btn ghost sm"><i class="ic sm ic-trash"></i> Clear All</button></span>
+            </div>
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel">
+                <span class="th sh-thart"><svg width="30" height="30" viewBox="0 0 24 24" aria-label="A bell icon"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.1v1.5"/><path d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/><path d="M10.2 18.4a1.9 1.9 0 0 0 3.6 0"/></g></svg></span>
+                <span class="cap"><span class="nm">notification-bell</span><span class="ago">icon · 4 days ago</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic sm ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic sm ic-edit"></i></button><button class="btn ghost icon sm" title="Pin"><i class="ic sm ic-pin"></i></button><button class="btn ghost icon sm" title="Delete"><i class="ic sm ic-trash"></i></button></span>
+              </div>
+              <div class="filmcard">
+                <span class="th" style="background:linear-gradient(135deg,#2b3350,#4a5578)"></span>
+                <span class="cap"><span class="nm">Settings · full screen</span><span class="ago">14 minutes ago</span></span>
+              </div>
+              <div class="filmcard">
+                <span class="th sh-thart"><i class="ic ic-component"></i></span>
+                <span class="cap"><span class="nm">Notifications</span><span class="ago">component · 2 hours ago</span></span>
+              </div>
+              <div class="filmcard">
+                <span class="th" style="background:linear-gradient(135deg,#1d2b2a,#2f5d55)"><span class="pl"><i class="ic sm ic-play"></i></span><span class="dur">0:18</span></span>
+                <span class="cap"><span class="nm">demo-run</span><span class="ago">yesterday</span></span>
+              </div>
+              <div class="filmcard">
+                <span class="th" style="background:linear-gradient(135deg,#3a2140,#6b3560)"></span>
+                <span class="cap"><span class="nm">Pricing · hero</span><span class="ago">3 days ago</span></span>
+              </div>
+              <div class="filmcard">
+                <span class="th sh-thart"><i class="ic ic-swatch"></i></span>
+                <span class="cap"><span class="nm">Brand · Accent</span><span class="ago">colour · last week</span></span>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="sh-note"><b>Two things were added to a surface that otherwise ships as it is.</b> The filter gained <b>Icons</b> and <b>Components</b> beside Screenshots and Videos, and a made thing's caption says what it is where a capture's says only when. Everything else (the chromeless glass panel, the centred filter, Clear All, the horizontal strip, the action row on the selected card) is exactly the history pane the app already has, because the claim being tested is that this shelf can carry more without becoming a different surface.</p>
+
+      <p class="sh-note"><b>Does a screenshot beside a component read sensibly?</b> Looking at it: yes, and the reason is that the strip was never sorted by kind. It is a run of things you have recently had, in the order you had them, which is how a person remembers their own work: "the bell I drew on Tuesday" sits naturally next to "the screenshot I took on Tuesday". The filter is there for the moment you want only one kind, and it now has a segment for the kinds that were missing. <b>The risk to watch is volume:</b> captures accumulate fast and a component you made once should not be pushed off the end by a hundred screenshots. Pinning already exists on the card, and it is the answer.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       3 · MOVING BETWEEN THE SCOPES, BOTH DIRECTIONS
+       ================================================================== -->
+  <div class="sh-blk">
+    <div class="sh-blk-h"><span class="sh-kind">Both ways</span><h3>Getting something from one shelf to the other</h3><span class="sh-sub">Two gestures, and both of them are gestures the app already uses for something.</span></div>
+    <div class="sh-blk-b">
+
+      <div class="sh-drag">
+        <i class="ic ic-history"></i>
+        <span><b>Global into a document.</b> Open History over the window, drag the bell onto the canvas, let go. It arrives as a component in this document and it appears in the Library, because the document now contains it.</span>
+      </div>
+      <div class="sh-drag">
+        <i class="ic ic-library"></i>
+        <span><b>This document out to global.</b> Right-click a component in the Library and choose <b>Keep in History</b>, or drag its tile onto the History pane. The tile then wears a small global mark, so you can see at a glance which of this document's things are also yours everywhere.</span>
+      </div>
+
+      <div class="sh-tbl sh-move">
+        <div class="sh-hd">The question</div>
+        <div class="sh-hd">The answer</div>
+        <div class="sh-hd">Why that answer and not another</div>
+
+        <div class="sh-nm">Is a dropped thing a copy or a link?<small>the question that decides everything else</small></div>
+        <div class="sh-c"><b>A copy that follows.</b> The document gets a complete original of its own, marked as following the shelf. Edit it in any document and the shelf takes the change; every other document picks it up the next time it is looked at.</div>
+        <div class="sh-c">This is not invented here: it is exactly what <code>SharedComponents</code> already does, answered by the user on 2026-09-09 with "one shelf the whole app shares". <b>Inventing a second linking rule for History would be the mistake</b>, so this page uses the one that exists.</div>
+
+        <div class="sh-nm">What if the shelf is not there?<small>a file sent to somebody else</small></div>
+        <div class="sh-c">It still draws, completely, because the drawing travelled inside the document. They simply do not have the shelf it was following.</div>
+        <div class="sh-c">The renderer, hit testing, export and the package writer all see an ordinary component and need to know nothing about any shelf. That property is why this is the right rule, and it is already true today.</div>
+
+        <div class="sh-nm">Does keeping something globally move it?<small>or copy it again</small></div>
+        <div class="sh-c">Neither. It stays in the document exactly where it is and gains a second home. The tile is the same tile with a mark on it.</div>
+        <div class="sh-c">A thing that vanished from your document because you shared it would be alarming, and a second unrelated copy would be worse: you would edit one and wonder why the other did not change.</div>
+
+        <div class="sh-nm">Can a capture go the other way?<small>from global into a document</small></div>
+        <div class="sh-c">Yes, and it already does: opening a capture from History is the app's front door. Dropping one into an open document places it as a picture layer.</div>
+        <div class="sh-c">Nothing new is needed, which is a good sign that reach is the right axis: the gesture that already exists turns out to be the gesture the model predicts.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       4 · IS THE LIBRARY JUST THE LAYERS LIST?
+       ================================================================== -->
+  <div class="sh-blk">
+    <div class="sh-blk-h"><span class="sh-kind">The overlap</span><h3>"A document contains its own stuff" is very close to what Layers already shows</h3><span class="sh-sub">The open question worth answering rather than assuming, because if they are the same list we should ship one.</span></div>
+    <div class="sh-blk-b">
+      <div class="sh-tbl sh-vs">
+        <div class="sh-hd"></div>
+        <div class="sh-hd"><i class="ic ic-layers"></i>Layers</div>
+        <div class="sh-hd"><i class="ic ic-library"></i>The Library</div>
+
+        <div class="sh-nm">What it lists</div>
+        <div class="sh-c">Things that are <b>placed</b>: what is on the canvas, in the order they stack, each in one spot.</div>
+        <div class="sh-c">Things that are <b>placeable</b>: what you can put down again, with no position of its own.</div>
+
+        <div class="sh-nm">What a row does</div>
+        <div class="sh-c">Selects that thing, here, now. Hide it, lock it, reorder it.</div>
+        <div class="sh-c">Drags out a new one. A tile is a source, not a location.</div>
+
+        <div class="sh-nm">How many rows for one bell</div>
+        <div class="sh-c"><b>Three</b>, if you placed it three times, because there are three of them on the canvas.</div>
+        <div class="sh-c"><b>One</b>, always, because there is one bell to place.</div>
+
+        <div class="sh-nm">Colours and text styles</div>
+        <div class="sh-c">Not there at all. A colour is not a layer.</div>
+        <div class="sh-c">Half of what is on it, and the reason it cannot collapse into Layers.</div>
+      </div>
+      <p class="sh-note"><b>So: they overlap but they are not the same list, and merging them would lose one of the two.</b> The clean sentence is <b>Layers is where things ARE, the Library is what there IS to place</b>, and once you say it that way the double appearance of a component (a frame in the layer list, a tile on the shelf) stops looking like duplication and starts looking like the two questions it answers. <b>What should change is the framing, not the panel</b>: the Library's header should say it is this document's, so nobody wonders whether the shelf they are looking at follows them around.</p>
+      <p class="sh-note"><b>The honest counter-argument, kept rather than dropped:</b> for a document with three components and no styles, the Library IS just a second view of four layer rows, and a person seeing both may reasonably ask why. That is an argument for the Library staying folded away until the document has something to put on it, which is what the app already does, since the shelf waits to be asked for. It is not an argument for one list.</p>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       5 · WHAT THIS ASKS FOR
+       ================================================================== -->
+  <div class="sh-blk">
+    <div class="sh-blk-h"><span class="sh-kind">Recommendation</span><h3>Three moves, in order, none of them large</h3><span class="sh-sub">Each is judgeable on its own, and the first one is most of the value.</span></div>
+    <div class="sh-blk-b">
+      <div class="sh-steps">
+        <div class="sh-step">
+          <span class="sh-i">1</span>
+          <h4>History holds made things, not only captures</h4>
+          <p>Add Icons and Components to the filter, let a made thing carry a caption that says what it is, and let a tile be dragged into an open document. The pane, the gesture and the linking rule all exist; what is new is what is allowed on the strip.</p>
+        </div>
+        <div class="sh-step">
+          <span class="sh-i">2</span>
+          <h4>The Library becomes this document's, honestly</h4>
+          <p>Media stops showing the global capture folder and starts showing the pictures this document uses. The header says whose shelf it is. Nothing else about the panel changes.</p>
+        </div>
+        <div class="sh-step">
+          <span class="sh-i">3</span>
+          <h4>One gesture each way, and a mark you can see</h4>
+          <p>Drag from History into a document; Keep in History from the Library. A tile that is also on the global shelf shows it, so "will this follow me to my next file" is answered by looking rather than by remembering.</p>
+        </div>
+      </div>
+      <p class="sh-note">Companion page: <button class="link" data-target="modes">One app, four jobs: modes you can swap</button>, where these shelves are what the three-link chain is dragged off.</p>
+    </div>
+  </div>
+
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>
