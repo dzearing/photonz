@@ -10,9 +10,19 @@
 # is what this script did on its first outing (2026-09-02), left the user
 # staring at a missing app for the whole compile.
 #
-# Why rebuilding the user's app is safe at all, when the playtest lock says it
-# is not: the dev cert is stable and self-signed, so a rebuilt binary keeps its
-# Screen Recording grant. The only cost is the app blinking out and back.
+# Why this used to override the playtest lock, and why it no longer does: the
+# dev cert is stable, so a rebuilt binary keeps its Screen Recording grant, and
+# the cost was written off as "the app blinking out and back". That is only true
+# when nobody is using it. On 2026-09-15 the user was drawing with the Pen while
+# the loop quit the app out from under them every time a task landed code, which
+# reads exactly like the app stealing focus: "i can't fucking type". The lock
+# exists to say someone is in there. Overriding it defeated the only guard that
+# protects a person from their own build loop.
+#
+# So the refresh now BAILS when the lock is held, and bails when the dev app is
+# the frontmost app, which catches the common case of somebody working without
+# having thought to take the lock. It leaves the app alone and says so; the next
+# task that lands code will try again.
 #
 # Env:
 #   PHOTONZ_AUTO_REFRESH=0   turn the loop's automatic refresh off entirely.
@@ -24,6 +34,18 @@ BUNDLE_ID="com.dzearing.photonz.dev"
 BIN="$APP/Contents/MacOS/Photonz Dev"
 
 say() { echo "[refresh-dev-app] $*"; }
+
+# Someone is using the app: leave it alone. Both tests are cheap and both fail
+# open, because refusing to refresh is always safer than yanking a window away
+# from somebody mid-drag.
+if [[ -f queue/playtest.lock ]]; then
+  say "someone is using the dev app (queue/playtest.lock); leaving it alone"
+  exit 0
+fi
+if lsappinfo front 2>/dev/null | grep -q "photonz.dev"; then
+  say "the dev app is frontmost, so somebody is working in it; leaving it alone"
+  exit 0
+fi
 
 quit_app() {
   local pid waited=0
@@ -56,7 +78,7 @@ fi
 #    clears that, and a bundle left half built is worse than no attempt, so a
 #    second failure rebuilds once more from nothing before giving up.
 (( RUNNING )) && { say "compiled; swapping the bundle"; quit_app; }
-bundle() { PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh; }
+bundle() { Scripts/build-app.sh; }
 if ! bundle; then
   say "bundling failed, retrying once"
   sleep 4
