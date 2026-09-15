@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-09T15:43:59.616Z",
-  "updated": "2026-09-14T12:54:44.631Z",
+  "updated": "2026-09-15T00:56:37.248Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while adding the border Offset row on 2026-09-09: the task asked for it typed and dragged like its Width, and Width turned out not to be typeable either. LayerStyleSlider (Sources/Photonz/InspectorControls.swift line 49) draws the readout as a Text with .panelReadout; making it editable there fixes every Effects row at once, and the Appearance sliders that use the same view.",
@@ -17,7 +17,8 @@
     "Clicking the number beside any Effects slider lets you type a new one and press return",
     "The number typed is clamped to the same range the slider covers, and a nonsense entry leaves the old number alone",
     "Typing a number records one undo step, the same as dragging the slider does",
-    "Every effect kind is covered: shadow, border, glow and blur"
+    "Every effect kind is covered: shadow, border, glow and blur",
+    "The sliders in Appearance take a typed number too: Thickness, Opacity and an arrow's Head Size"
   ],
   "log": [
     {
@@ -39,6 +40,10 @@
     {
       "t": "2026-09-14T12:54:44.630Z",
       "note": "seq 160 -> 190"
+    },
+    {
+      "t": "2026-09-15T00:56:37.247Z",
+      "note": "Also wanted in Appearance, not just Effects: a path drawn with the Pen now has a Thickness slider there (2026-09-14) and on a 24 pixel icon frame the useful weights are 1, 2 and 3 while the slider covers 1 to 40, so the whole icon range is the first few pixels of travel and picking 2 rather than 3 is a fight. Same for Opacity and an arrow's Head Size. Added an acceptance item for it."
     }
   ]
 }

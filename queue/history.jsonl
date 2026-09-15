@@ -3343,3 +3343,9 @@
 {"t":"2026-09-14T23:17:48.355Z","ev":"task_note","id":"a-line-drawn-with-the-pen-can-be-made-thicker-or"}
 {"t":"2026-09-14T23:17:48.399Z","ev":"task_note","id":"a-path-the-pen-draws-arrives-with-an-edge-you-ca"}
 {"t":"2026-09-14T23:18:35.375Z","ev":"task_note","id":"the-pen-arms-its-colour-from-the-tool-bar-like-e"}
+{"t":"2026-09-14T23:18:49.187Z","ev":"task_done","id":"the-pen-arms-its-colour-from-the-tool-bar-like-e","from":"in_progress","note":"The Pen wears the same single colour swatch every other drawing tool does, in the same slot and size (arrow and Pen both read Color at x 650, 52x48), opening the one app-wide picker; what it is set to is what the next path comes out in, outline and inside, and it is remembered. PhotonzCore: Tool.pen -> .toolColor, AnnotationStyles holds the Pen's ink, PenSession.startingPaint carries it. Tooltip now says Path Color. expectPath grew fill/ink claims. Verified: 6572 core tests green, new pen-arms-its-colour walk passes four times on its own, all pen/toolbar/path walks green. Audit queue/audits/2026-09-14-pen-arms-its-colour.json with real window captures. Commit eb474448, pushed."}
+{"t":"2026-09-15T00:46:27.139Z","ev":"sweep_pass","walks":421,"passed":416,"failed":5,"seconds":5196,"complete":true}
+{"t":"2026-09-15T00:46:27.254Z","ev":"task_started","id":"a-line-drawn-with-the-pen-can-be-made-thicker-or","title":"A line drawn with the Pen can be made thicker or thinner","priority":"p2-normal"}
+{"t":"2026-09-15T00:56:28.206Z","ev":"task_created","id":"the-pen-keeps-the-thickness-you-last-chose","priority":"p2-normal","title":"The Pen keeps the thickness you last chose"}
+{"t":"2026-09-15T00:56:37.249Z","ev":"task_note","id":"type-a-number-into-any-effects-slider-not-just-d"}
+{"t":"2026-09-15T00:56:37.315Z","ev":"task_note","id":"a-path-the-pen-draws-arrives-with-an-edge-you-ca"}

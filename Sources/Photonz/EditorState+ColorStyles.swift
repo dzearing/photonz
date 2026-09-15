@@ -304,6 +304,15 @@ extension EditorState {
         return document.shapeSelection(layerIDs: colorStyleTargetIDs)
     }
 
+    /// What the ONE Thickness row shows: the picked layers with a line of
+    /// their own — shapes and paths the Pen drew alike — and the weight they
+    /// read across them. Wider than `shapeSelection` on purpose: a path has a
+    /// stroke but none of the other shape settings (`OutlineWidth.swift`).
+    var outlineThicknessSelection: OutlineThicknessSelection {
+        guard let document else { return OutlineThicknessSelection(members: [], selectionCount: 0) }
+        return document.outlineThicknessSelection(layerIDs: colorStyleTargetIDs)
+    }
+
     /// What the ONE Corner Radius row shows: how round each picked layer is
     /// right now, whichever way it rounds. A rectangle curves the outline it
     /// draws and everything else has its corners masked off, and this row

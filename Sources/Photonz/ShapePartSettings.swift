@@ -38,13 +38,21 @@ struct ShapePartSettings: View {
                 ending(selection, ids: ids)
                 if selection.rows.contains(.headSize) { headSize(selection, ids: ids) }
             }
-        } else if !selection.isEmpty, let slot = row.slot {
+        } else if let slot = row.slot {
             switch slot {
-            case .stroke where selection.rows.contains(.thickness):
-                OwnedSettings(owner: row.title) {
-                    thickness(selection, ids: ids)
+            case .stroke:
+                // Asked of the LAYERS rather than of the shapes among them: a
+                // path the Pen drew has a line of its own and none of the other
+                // shape settings, so it belongs to this one row and no other
+                // (`OutlineWidth.swift`). A highlight, whose stroke is the wash
+                // it is made of rather than a line, still has nothing here.
+                let thickness = editorState.outlineThicknessSelection.of(ids)
+                if !thickness.isEmpty {
+                    OwnedSettings(owner: row.title) {
+                        self.thickness(thickness, ids: thickness.layerIDs)
+                    }
                 }
-            case .captionText:
+            case .captionText where !selection.isEmpty:
                 // The old derivation could not make an unreadable pill; it
                 // darkened the tone until white sat on it. Choosing the two
                 // colours is worth more than that guarantee, so the guarantee
@@ -90,9 +98,9 @@ struct ShapePartSettings: View {
                               selectionCount: ids.count)
     }
 
-    private func thickness(_ selection: ShapeSelection, ids: [UUID]) -> some View {
+    private func thickness(_ selection: OutlineThicknessSelection, ids: [UUID]) -> some View {
         ShapeSlider(layerIDs: ids, label: "Thickness",
-                    reading: selection.outlineWidth,
+                    reading: selection.reading,
                     range: AnnotationStyles.strokeWidthRange,
                     format: { DocumentUnit.text($0) },
                     preview: { editorState.previewOutlineWidth(ids: $0, $1) },

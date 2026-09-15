@@ -202,7 +202,17 @@ extension Layer {
     /// Effects slider left on it, colour and all, so it ends up wearing one ring
     /// instead of two (`OutlineWidth.swift`).
     mutating func setOutlineWidth(_ width: CGFloat) {
-        guard var annotation, hasOutlineThickness else { return }
+        guard hasOutlineThickness else { return }
+        // A path the Pen drew IS its stroke, exactly as a line is, so the
+        // number is that stroke's width and the colour it is drawn in is left
+        // alone: that colour is the row this slider hangs under
+        // (`OutlineWidth.swift`).
+        if var path {
+            path.strokeWidth = max(0, width)
+            content = .path(path)
+            return
+        }
+        guard var annotation else { return }
         let paint = outlinePaint
         if drawsItsOwnOutline {
             // A line and an arrow ARE their stroke, so the number is its width.

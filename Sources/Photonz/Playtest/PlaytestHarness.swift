@@ -1760,7 +1760,9 @@ private final class Run {
             // The line round a shape is ONE row now, so a walk that thickens a
             // box pulls the same slider a walk that thickens an arrow does.
             case .dragThickness:
-                let ids = editor.shapeSelection.layerIDs
+                // Every picked layer with a line of its own, which since the
+                // Pen landed includes a path it drew (`OutlineWidth.swift`).
+                let ids = editor.outlineThicknessSelection.layerIDs
                 if !ids.isEmpty {
                     for width in [5.0, 7.0, 9.0] as [CGFloat] {
                         editor.previewOutlineWidth(ids: ids, width)
@@ -1768,7 +1770,7 @@ private final class Run {
                     editor.commitOutlineWidth(ids: ids, 9)
                 }
             case .dragThicknessThin:
-                let ids = editor.shapeSelection.layerIDs
+                let ids = editor.outlineThicknessSelection.layerIDs
                 if !ids.isEmpty { editor.commitOutlineWidth(ids: ids, 3) }
             // Rounding is ONE row now, so a walk that rounds a shape and a walk
             // that rounds a picture pull the same slider.

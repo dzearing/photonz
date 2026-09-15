@@ -119,9 +119,85 @@ extension Layer {
     ///
     /// Every shape but a highlight: a line and an arrow have a stroke, a box
     /// and an oval have an edge in their Effects list, and a highlight is a
-    /// wash with neither.
+    /// wash with neither. A path the Pen drew is here too — its stroke IS the
+    /// drawing, so the weight it came out at is a weight somebody has to be
+    /// able to change afterwards.
     public var hasOutlineThickness: Bool {
+        if path != nil { return true }
         guard let annotation else { return false }
         return annotation.shape != .highlight
+    }
+}
+
+// MARK: - What the Thickness row speaks for
+
+/// The picked layers the ONE Thickness row reaches, and the weight it shows
+/// across them.
+///
+/// It is its own reading rather than a question asked of `ShapeSelection`
+/// because that selection is a list of `AnnotationContent`s: it is what the
+/// Ending picker, the head size and the caption rows all read, and a path has
+/// none of those. What a path DOES have is a line of its own, which is the one
+/// thing this row asks about, so this widens exactly that question and nothing
+/// else.
+public struct OutlineThicknessSelection: Hashable, Sendable {
+
+    public struct Member: Hashable, Sendable {
+        public let id: UUID
+        /// The ring actually on screen: a shape's stroke, a path's, or a ring
+        /// the old Effects Border slider left behind.
+        public let width: CGFloat
+
+        public init(id: UUID, width: CGFloat) {
+            self.id = id
+            self.width = width
+        }
+    }
+
+    public let members: [Member]
+    /// How many layers are picked altogether, so the row can say what it is
+    /// leaving out.
+    public let selectionCount: Int
+
+    public init(members: [Member], selectionCount: Int) {
+        self.members = members
+        self.selectionCount = selectionCount
+    }
+
+    public var count: Int { members.count }
+    public var isEmpty: Bool { members.isEmpty }
+    public var layerIDs: [UUID] { members.map(\.id) }
+
+    /// The part of this selection one row speaks for. Pick a path and a box
+    /// together and the stroke row reaches the path alone, so its Thickness
+    /// has to reach the path alone too.
+    public func of(_ ids: [UUID]) -> OutlineThicknessSelection {
+        let wanted = Set(ids)
+        return OutlineThicknessSelection(members: members.filter { wanted.contains($0.id) },
+                                         selectionCount: ids.count)
+    }
+
+    /// What the row shows: the weight they all wear, or that they differ.
+    public var reading: StyleReading<CGFloat> {
+        guard let first = members.first?.width else {
+            return StyleReading(value: nil, isMixed: false)
+        }
+        let mixed = members.dropFirst().contains { $0.width != first }
+        return StyleReading(value: first, isMixed: mixed)
+    }
+}
+
+extension PhotonzDocument {
+
+    /// The Thickness row's view of a set of picked layers, in the order given:
+    /// every unlocked one with a line of its own, shapes and drawn paths alike.
+    public func outlineThicknessSelection(layerIDs: [UUID]) -> OutlineThicknessSelection {
+        var members: [OutlineThicknessSelection.Member] = []
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked, layer.hasOutlineThickness
+            else { continue }
+            members.append(OutlineThicknessSelection.Member(id: id, width: layer.outlineWidth))
+        }
+        return OutlineThicknessSelection(members: members, selectionCount: layerIDs.count)
     }
 }

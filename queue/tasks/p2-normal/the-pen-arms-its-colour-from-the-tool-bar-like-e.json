@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-13T16:15:17.594Z",
-  "updated": "2026-09-14T23:18:35.374Z",
+  "updated": "2026-09-14T23:18:49.186Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-13-pen-draws-a-path.json: 'The Pen has no colour capsule on the tool bar: a new path is always the redline red until you repaint it in the Appearance panel. Every other drawing tool arms its colour from the bar.'\n\nCopy what the Rectangle and Ellipse tools already do rather than inventing anything; this is a gap in one tool, not a new idea. Sources/Photonz/CanvasPen.swift, behind FeatureCatalog.penFlag (\"next-pen\").\n\nRelated and NOT part of this: a closed path arrives filled and outlined the same red so its outline is invisible against its own fill. That is the same bug a new rectangle has and it is owned by a-shape-s-border-arrives-the-same-colour-as-its.",
@@ -82,7 +82,12 @@
     {
       "t": "2026-09-14T23:18:35.373Z",
       "note": "Fixed in passing, one line: Scripts/playtest/panel-says-less-walk.json had no \"out\", and Scripts/playtest.sh defaults an absent out to \"out\" beside the script, so every run of it wrote screenshots into Scripts/playtest/out/ inside the repo. That folder was sitting untracked in git status at the start of this task and would have been committed by the next runner that ran 'git add -A'. It is the only one of the 421 walks missing the field; it now writes to /tmp like the rest, and it still passes. The already-written Scripts/playtest/out/ folder is left alone, untracked, for whoever wants to delete it: it is another session's output, not mine."
+    },
+    {
+      "t": "2026-09-14T23:18:49.184Z",
+      "note": "The Pen wears the same single colour swatch every other drawing tool does, in the same slot and size (arrow and Pen both read Color at x 650, 52x48), opening the one app-wide picker; what it is set to is what the next path comes out in, outline and inside, and it is remembered. PhotonzCore: Tool.pen -> .toolColor, AnnotationStyles holds the Pen's ink, PenSession.startingPaint carries it. Tooltip now says Path Color. expectPath grew fill/ink claims. Verified: 6572 core tests green, new pen-arms-its-colour walk passes four times on its own, all pen/toolbar/path walks green. Audit queue/audits/2026-09-14-pen-arms-its-colour.json with real window captures. Commit eb474448, pushed."
     }
   ],
-  "started": "2026-09-14T23:01:15.623Z"
+  "started": "2026-09-14T23:01:15.623Z",
+  "completed": "2026-09-14T23:18:49.185Z"
 }

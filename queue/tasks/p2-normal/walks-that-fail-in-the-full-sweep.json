@@ -9,12 +9,12 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-12T17:04:44.529Z",
-  "updated": "2026-09-14T22:59:50.531Z",
+  "updated": "2026-09-15T00:46:27.084Z",
   "deps": [
     "two-effect-walks-fail-now-and-then-because-a-pre"
   ],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-14T22:27:44Z: 414 of 419 walks passed in 86 minutes.\n\nFailing walks (5): icon-stroke-weight-walk, layers-lazy-rows-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk\n\nFull output: queue/sweep/2026-09-14-140138.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-badge-can-sit-on-the-corner-of-a-card-inside-a: Changed shared auto-layout flow code (GroupFlow measuring/resolving and the out-of-the-flow pass) to add a third piece role; the surface, stack and layout walks all pass but every arranged group in every walk goes through the code I touched.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-15T00:46:26Z: 416 of 421 walks passed in 87 minutes.\n\nFailing walks (5): container-too-small-walk, icon-stroke-weight-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk\n\nStopped failing since the last sweep (1): layers-lazy-rows-walk\n\nFull output: queue/sweep/2026-09-14-161950.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a task runner: expectPath's parsing and the walk script decoder changed (new fill/ink claims), and every one of the 421 walks goes through that decoder; 23 walks run by hand here (pen, toolbar, path, panel-says-less) all pass, but the whole set is the only thing that proves no walk was refused at read time.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.\n\nWritten by hand 2026-09-13, and kept from here on: a sweep now replaces only the block above.\n\nThe ownership list in that block is built by matching the walk name against every open task, so it\ncan name a task that only mentions the walk in passing. Read the task it points at before deciding a\nwalk is not yours. If one of those tasks lands and its walk still fails in the next sweep, the walk\ncomes back here.\n",
   "acceptance": [
     "A fresh sweep is asked for after two-effect-walks-fail-now-and-then-because-a-pre lands, with queue/bin/sweep.sh request",
     "contents-for-several-walk either passes or is rewritten to match what the app does now, and passes twice on its own",
@@ -162,6 +162,10 @@
     {
       "t": "2026-09-14T22:59:50.530Z",
       "note": "measure-row-menu-walk still fails on its own as of 2026-09-14 22:xx, and it is not the colour-row-drop work: `Scripts/playtest.sh Scripts/playtest/measure-row-menu-walk.json --no-build` stops at step 13 with \"Height is not where a person could right click it: it is off the window, or the dock has scrolled it far enough that the panel's edge cuts across it. Scroll to it with a scrollPanel step first.\" So it is a real reproduction rather than a flake: the measurement's parts list has grown past the panel edge and the walk needs a scrollPanel step, or the dock needs to bring the row into view."
+    },
+    {
+      "t": "2026-09-15T00:46:27.083Z",
+      "note": "sweep 2026-09-15T00:46:26Z: 5 failing (container-too-small-walk, icon-stroke-weight-walk, measure-row-menu-walk, switch-says-mixed-walk, tick-leads-walk); stopped failing: layers-lazy-rows-walk"
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-14T10:59:17.706Z",
-  "updated": "2026-09-14T23:17:48.354Z",
+  "updated": "2026-09-15T00:56:55.105631Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe, 2026-09-14, current main plus the icon stroke weight change. Walk: blank 1600x1100, tool pen, three clicks, Return, tool select, then {\"do\":\"expect\",\"field\":\"Thickness\",\"present\":true}. It fails with: 'step 11 (expect): no field called \"Thickness\" is in the panel; the ones that are: X, Y, W, H, A, Opacity, Blending, X, Y, W, H, A'. The panel dump for the same moment lists exactly three things under Appearance: Opacity, Blending, Color.\n\nWhy: the Thickness row is built by AnnotationInspector from EditorState.shapeSelection, and ShapeSelection (Sources/PhotonzCore/ContentSelection.swift:169) holds AnnotationContent members only, so a .path layer is never in it. PhotonzDocument.shapeSelection skips it the same way. The plumbing under the row already understands paths: Layer.outlineWidth and Layer.outlinePaint both answer for a path (Sources/PhotonzCore/OutlineWidth.swift:40 and :47), and Layer.drawsItsOwnOutline returns true for one. What is missing is Layer.hasOutlineThickness (OutlineWidth.swift, guards on annotation) and Layer.setOutlineWidth (Sources/PhotonzCore/ComponentInstances-adjacent ComponentNumberKnob.swift:204, same guard), plus getting paths into the selection the row reads.\n\nThe cap and join task, a-drawn-line-has-round-ends-and-round-corners-or, assumes this row exists: its Try it step says 'turn its outline up to 8' on a path drawn with the Pen, which cannot be done today. Doing this one first makes that one possible.\n\nNext release only. Found while shipping a-shape-drawn-in-an-icon-frame-comes-in-at-a-wei, which made the weight a path ARRIVES at sensible on an icon frame but could not make it changeable afterwards.",
@@ -44,6 +44,31 @@
     {
       "t": "2026-09-14T23:17:48.353Z",
       "note": "Meets a-path-the-pen-draws-arrives-with-an-edge-you-ca, filed 2026-09-14: that one is about what a closed path ARRIVES with (today a 4px outline in exactly its own fill colour, so invisible), this one is about changing the weight afterwards. Whoever picks either up should read the other; if the arriving rule lands first, this row starts at 0 on a closed path."
+    },
+    {
+      "t": "2026-09-15T00:46:27.252Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T00:47:50.288949Z",
+      "note": "Adversarial review before building. (1) There is no mock for this; it is parity with a control that already exists, so the bar is 'exactly where a line keeps it'. A line keeps Thickness in a bracket under its Line row in Appearance, always open, no disclosure. A path already gets that same stroke colour row (Layer.colorSlots gives .stroke for every path, .fill too once it closes), so the row to hang it under is already on screen and nothing new has to be invented. (2) Shortest version that delivers the value: do NOT widen ShapeSelection to hold paths (its Member is an AnnotationContent and every arrow/caption/head row reads through it). Widen only the ONE question the Thickness row asks: which picked layers have a line of their own. (3) What the row is CALLED for a path is 'Color', because LayerParts only says 'Line' when every inked layer is a line or an arrow. Beside a Fill row on a closed path that is genuinely vague. Left alone this pass: renaming it is a separate, visible change and a-path-the-pen-draws-arrives-with-an-edge-you-ca is already open on what a closed path's edge should be. Noted as rough. (4) Risk found: making Layer.hasOutlineThickness true for a path also drops paths out of the old Effects Border row (LayerStyleSelection.borders filters on it). That row only exists where next-shape-parts is OFF, and the Pen is next-only, so no path can be drawn where that row is shown. Accepted."
+    },
+    {
+      "t": "2026-09-15T00:56:55.105631Z",
+      "note": "Built. Core (TDD, 14 new tests in OutlineWidthTests): Layer.hasOutlineThickness answers true for a path; Layer.setOutlineWidth writes path.strokeWidth and leaves the ink alone; new OutlineThicknessSelection + PhotonzDocument.outlineThicknessSelection(layerIDs:) is what the row reads, wider than ShapeSelection (which stays annotation-only) and narrowed per row by .of(ids). App: EditorState.outlineThicknessSelection; preview/commitOutlineWidth take their targets from it instead of annotationRestyleTargets; ShapePartSettings hangs the Thickness under any .stroke row that has one, not only under a shape's; the playtest dragThickness actions reach it too. Walk: Scripts/playtest/pen-path-thickness-walk.json, 85 steps, passes."
+    },
+    {
+      "t": "2026-09-15T00:56:55.105631Z",
+      "note": "Verified. Scripts/test.sh: 6584 tests, all pass. Walks run by hand: pen-path-thickness (new), outline-width, arrow-parts, arrow-endings, selection-type-and-shape all pass. icon-stroke-weight-walk fails at step 26 ('no field called \"Width\" is in the panel'), which is NOT this change: the 00:46Z sweep logged the identical failure at the identical step before this task started, and walks-that-fail-in-the-full-sweep already carries it. Asked for a sweep, because hasOutlineThickness is read by the Thickness row, by the old Effects Border row's reach and by a component's number knobs."
+    },
+    {
+      "t": "2026-09-15T00:56:55.105631Z",
+      "note": "Adversarial review of the built thing, on the probe. The row lands under Color in the same bracket a line's does, reads 4 px on bare canvas and 2 px on a 24 pixel icon frame, goes Mixed over two paths that differ and comes back to Mixed after one undo. Three rough edges, all recorded: (a) the Pen forgets a weight you pick, so the next path is 4 again while a line remembers - reproduced and filed as the-pen-keeps-the-thickness-you-last-chose; (b) no number to type, and on an icon frame the usable weights are 1-3 out of a 1-40 slider, so the whole icon range is the first tenth of the travel - folded into type-a-number-into-any-effects-slider-not-just-d, whose acceptance now covers the Appearance sliders; (c) a path's colour row is titled 'Color', which on a closed path sits right under 'Fill' and names neither as the edge - folded into a-path-the-pen-draws-arrives-with-an-edge-you-ca. Left rough, earning no task: nothing else."
+    },
+    {
+      "t": "2026-09-15T00:56:55.105631Z",
+      "note": "Audit: queue/audits/2026-09-14-path-thickness.json, with two real window captures from the walk (2026-09-14-path-thickness-row.png, 2026-09-14-path-thickness-icon-frame.png). Screen Recording was granted this run."
     }
-  ]
+  ],
+  "started": "2026-09-15T00:46:27.251Z"
 }

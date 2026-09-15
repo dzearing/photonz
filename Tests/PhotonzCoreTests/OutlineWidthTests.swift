@@ -174,4 +174,130 @@ struct OutlineWidthTests {
         #expect(doc.layer(id: box.id)?.style.borderWidth == 6)
         #expect(doc.layer(id: box.id)?.annotation?.strokeWidth == 0)
     }
+
+    // MARK: - A path drawn with the Pen
+
+    private func pen(strokeWidth: CGFloat = 4, locked: Bool = false,
+                     closed: Bool = false) -> Layer {
+        let content = PathContent(anchors: [PathAnchor(point: .zero),
+                                            PathAnchor(point: CGPoint(x: 40, y: 0)),
+                                            PathAnchor(point: CGPoint(x: 40, y: 30))],
+                                  isClosed: closed,
+                                  strokeWidth: strokeWidth)
+        var layer = Layer(name: "Path", content: .path(content),
+                          frame: CGRect(x: 0, y: 0, width: 40, height: 30))
+        layer.isLocked = locked
+        return layer
+    }
+
+    private func line(strokeWidth: CGFloat) -> Layer {
+        Layer(name: "Line",
+              content: .annotation(AnnotationContent(shape: .line, strokeWidth: strokeWidth,
+                                                     start: .zero, end: CGPoint(x: 50, y: 0))),
+              frame: CGRect(x: 0, y: 0, width: 50, height: 1))
+    }
+
+    @Test func aPathHasALineOfItsOwnToSet() {
+        // Its stroke IS the drawing: a ring round its box would be a rectangle
+        // round something that is not one.
+        #expect(pen().hasOutlineThickness)
+        #expect(pen().drawsItsOwnOutline)
+    }
+
+    @Test func theThicknessRowReadsThePathsOwnWeight() {
+        let path = pen(strokeWidth: 4)
+        let doc = document([path])
+        #expect(doc.outlineThicknessSelection(layerIDs: [path.id]).reading.value == 4)
+    }
+
+    @Test func itReadsTheThinnerWeightAPathOnAnIconFrameArrivesAt() {
+        // A 24 pixel icon frame starts a path at one point, not four
+        // (`IconStrokeWeight`). The row has to show that, not the tool default.
+        let path = pen(strokeWidth: 1)
+        let doc = document([path])
+        #expect(doc.outlineThicknessSelection(layerIDs: [path.id]).reading.value == 1)
+    }
+
+    @Test func twoPathsThatDisagreeReadMixed() {
+        let a = pen(strokeWidth: 2)
+        let b = pen(strokeWidth: 8)
+        let doc = document([a, b])
+        #expect(doc.outlineThicknessSelection(layerIDs: [a.id, b.id]).reading.isMixed)
+    }
+
+    @Test func onePullSetsTheWeightOnEveryPickedPath() {
+        let a = pen(strokeWidth: 2)
+        let b = pen(strokeWidth: 8)
+        var doc = document([a, b])
+        #expect(doc.setOutlineWidth(layerIDs: [a.id, b.id], to: 5) == 2)
+        #expect(doc.layer(id: a.id)?.path?.strokeWidth == 5)
+        #expect(doc.layer(id: b.id)?.path?.strokeWidth == 5)
+    }
+
+    @Test func aPathAndALinePickedTogetherTakeOnePull() {
+        let path = pen(strokeWidth: 2)
+        let stroke = line(strokeWidth: 2)
+        var doc = document([path, stroke])
+        let selection = doc.outlineThicknessSelection(layerIDs: [path.id, stroke.id])
+        #expect(selection.layerIDs == [path.id, stroke.id])
+        #expect(selection.reading.value == 2)
+        #expect(doc.setOutlineWidth(layerIDs: selection.layerIDs, to: 6) == 2)
+        #expect(doc.layer(id: path.id)?.path?.strokeWidth == 6)
+        #expect(doc.layer(id: stroke.id)?.annotation?.strokeWidth == 6)
+    }
+
+    @Test func aLockedPathIsLeftExactlyAsItIs() {
+        let path = pen(strokeWidth: 3, locked: true)
+        var doc = document([path])
+        #expect(doc.outlineThicknessSelection(layerIDs: [path.id]).isEmpty)
+        #expect(doc.setOutlineWidth(layerIDs: [path.id], to: 9) == 0)
+        #expect(doc.layer(id: path.id)?.path?.strokeWidth == 3)
+    }
+
+    @Test func aWidthBelowZeroIsClampedOnAPathToo() {
+        let path = pen(strokeWidth: 3)
+        var doc = document([path])
+        doc.setOutlineWidth(layerIDs: [path.id], to: -3)
+        #expect(doc.layer(id: path.id)?.path?.strokeWidth == 0)
+    }
+
+    @Test func aPathKeepsTheColourItsLineIsDrawnIn() {
+        // The row above the slider is the colour. Pulling the weight must not
+        // repaint it.
+        var content = PathContent(anchors: [PathAnchor(point: .zero),
+                                            PathAnchor(point: CGPoint(x: 10, y: 10))])
+        content.paint = Paint(hex: "#2D7FF9")
+        let path = Layer(name: "Path", content: .path(content),
+                         frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        var doc = document([path])
+        doc.setOutlineWidth(layerIDs: [path.id], to: 7)
+        #expect(doc.layer(id: path.id)?.path?.paint.hex == "#2D7FF9")
+    }
+
+    // MARK: - Who else the row reaches, and who it still does not
+
+    @Test func aHighlightIsStillOfferedNoThickness() {
+        let mark = Layer(name: "Mark",
+                         content: .annotation(AnnotationContent(shape: .highlight)),
+                         frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        let doc = document([mark])
+        #expect(doc.outlineThicknessSelection(layerIDs: [mark.id]).isEmpty)
+    }
+
+    @Test func aPictureIsStillOfferedNoThickness() {
+        let picture = Layer(name: "Shot",
+                            content: .image(ImageRef(pixelSize: CGSize(width: 40, height: 40))),
+                            frame: CGRect(x: 0, y: 0, width: 40, height: 40),
+                            style: border(4))
+        let doc = document([picture])
+        #expect(doc.outlineThicknessSelection(layerIDs: [picture.id]).isEmpty)
+    }
+
+    @Test func aBoxStillReadsTheRingItActuallyWears() {
+        // The same selection the shape rows have always read, so the one row
+        // widening to reach paths cannot change what a box shows.
+        let box = rectangle(strokeWidth: 0, style: border(6))
+        let doc = document([box])
+        #expect(doc.outlineThicknessSelection(layerIDs: [box.id]).reading.value == 6)
+    }
 }

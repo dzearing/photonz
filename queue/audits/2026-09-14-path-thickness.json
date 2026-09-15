@@ -1,0 +1,28 @@
+{
+  "feature": "A path drawn with the Pen has a Thickness",
+  "epic": "icon-vector",
+  "summary": "Pick a shape you drew with the Pen and Appearance now offers a Thickness right under its colour, exactly where a line keeps one. Before this the weight a path arrived at was the weight it kept for good.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Pen and icon frames are on by default.",
+  "try": [
+    { "do": "Press P, click three spots on the canvas, then press Return." },
+    { "do": "Press V and click the line you just drew." },
+    { "do": "Look under Color in Appearance: there is a Thickness reading 4 px.", "shot": "2026-09-14-path-thickness-row.png" },
+    { "do": "Drag Thickness up and watch the line thicken under your hand." },
+    { "do": "Press Command Z once: the whole pull comes back, not one step of it." },
+    { "do": "Draw a second path, shift click the first one, and read Thickness: it says Mixed, and one pull sets both." },
+    { "do": "New Frame, pick 24 under Icons, Add Frame, then draw a path on it: Thickness reads 2 px, the weight the frame gave it.", "shot": "2026-09-14-path-thickness-icon-frame.png" }
+  ],
+  "evaluate": [
+    "Is under the colour row where you went looking for it, or did you expect it somewhere else?",
+    "On a 24 pixel frame the useful weights are 1, 2 and 3 and the slider runs to 40. Is that too fiddly to pick a weight with?",
+    "The row a path's colour sits on is called Color. On a closed path that sits right under Fill. Does that pair of names tell you which one is the edge?",
+    "Should the Pen come back at the weight you last picked, the way a line does, or always start fresh?",
+    "Does the line thicken smoothly enough under the drag to judge the weight while you hold it?"
+  ],
+  "rough": [
+    "The Pen forgets. Set a path to 9 and the next path still comes out at 4, while a line remembers the weight you picked for it. Filed as the-pen-keeps-the-thickness-you-last-chose.",
+    "There is no number to type, only a knob to drag, and on an icon frame the whole usable range is the first tenth of the slider. Folded into type-a-number-into-any-effects-slider-not-just-d, which now covers the Appearance sliders too.",
+    "The colour row above it is called Color rather than Line, because the app only says Line when everything picked IS a line. Folded into a-path-the-pen-draws-arrives-with-an-edge-you-ca.",
+    "Both screenshots here are real window captures from the walk, not offscreen renders."
+  ]
+}

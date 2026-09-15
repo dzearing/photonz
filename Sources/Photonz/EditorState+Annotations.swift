@@ -596,7 +596,7 @@ extension EditorState {
     /// with one ring instead of two. See `OutlineWidth.swift`.
     func previewOutlineWidth(ids: [UUID], _ width: CGFloat) {
         guard var doc = document else { return }
-        let targets = annotationRestyleTargets(ids, in: doc)
+        let targets = outlineWidthTargets(ids, in: doc)
         guard !targets.isEmpty else { return }
         rememberAnnotationDefaults(targets, in: doc, strokeWidth: width,
                                    arrowheadScale: nil, cornerRadii: nil)
@@ -612,7 +612,7 @@ extension EditorState {
     /// the thickness the next shape of each kind starts at.
     func commitOutlineWidth(ids: [UUID], _ width: CGFloat) {
         guard let doc = document else { return }
-        let targets = annotationRestyleTargets(ids, in: doc)
+        let targets = outlineWidthTargets(ids, in: doc)
         guard !targets.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
@@ -625,6 +625,14 @@ extension EditorState {
     /// The picked layers a shape slider may touch: shapes, unlocked.
     private func annotationRestyleTargets(_ ids: [UUID], in doc: PhotonzDocument) -> [UUID] {
         ids.filter { doc.layer(id: $0).map { $0.annotation != nil && !$0.isLocked } == true }
+    }
+
+    /// The picked layers the Thickness row may touch, which is WIDER than the
+    /// shape sliders' reach: a path the Pen drew has a line of its own and none
+    /// of the other shape settings, so it takes this one row and no other
+    /// (`OutlineWidth.swift`).
+    private func outlineWidthTargets(_ ids: [UUID], in doc: PhotonzDocument) -> [UUID] {
+        doc.outlineThicknessSelection(layerIDs: ids).layerIDs
     }
 
     /// What the next object of each picked kind starts at.
