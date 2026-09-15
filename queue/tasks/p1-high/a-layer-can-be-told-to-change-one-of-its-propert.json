@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:43:02.559Z",
-  "updated": "2026-09-15T11:02:09.811Z",
+  "updated": "2026-09-15T11:04:19.231Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes straight from the study say-where-animating-an-icon-and-editing-a-video, answered by the user on 2026-09-15 (motion is a property of a layer, with a timing surface bigger than the property panel). Slice 1 of 5; nothing else in the set works until this does.\n\nMOCK: docs/design/mocks/pages/icon-animate-wt.html (Make a bell swing), steps 1 to 4 and 6 to 8. The Motion group is a dgrp next to Effects with the same .efx row shape (drag handle, switch, name, curve sketch, value summary). The property menu is built out of the layer: Position, Scale, Rotation, Opacity, Colour, and on a drawn path also Path points, Stroke width, Dash. There is NO canned list of named motions: the user rejected that explicitly as super weird and proprietary.\n\nENTRY FIELDS per motion: From, To, Start (ms), Over (ms), Curve, Repeat. Start and Over are the same two numbers the timeline bar carries in slice 3, so model them once.\n\nCURVES: named curves with the shape drawn beside each name plus a custom cubic-bezier(a,b,c,d). See the open task one-set-of-easing-curves-named-the-same-way-ever: settle the vocabulary there, use it here.\n\nWHERE: app work is Next only, Sources/Photonz/Releases/Next/ or behind a next-scoped flag. The model belongs in PhotonzCore (it has no notion of time today) and the sampling in PhotonzRender. Nothing is baked into pixels; motion is evaluated at render time like the other non-destructive styling.\n\nRULER: one cycle in milliseconds, NOT a document timeline. The study is explicit that an icon repeats and a video finishes and they cannot share a ruler.",
@@ -38,7 +38,12 @@
     {
       "t": "2026-09-15T11:02:09.810Z",
       "note": "Left rough, no task earned (each is written in the audit so the user can react to it, and none of them is broken):\n- Motion speaks for ONE layer while Effects directly above it speaks for the whole selection. Argued, not an oversight: a motion's From and To are that layer's own numbers.\n- Editing a field while the preview is paused does not start it; adding a motion does. Two rules, and somebody may expect one.\n- Colour From and To use the system colour panel, not this app's picker, so they do not reach the saved colours.\n- Path points and Dash are in the mock's property menu and are not built: both need a second value a number field cannot carry. Left for the pen work.\n\nFolded rather than filed: the locked screen went on the open task an-audit-gets-a-real-picture-of-the-app-again, with the walk to run when the machine is unlocked. The curve vocabulary went on one-set-of-easing-curves-named-the-same-way-ever, which is what that task asked somebody to settle.\n\nOne thing the harness gained on the way: a walk can now name a menu row by the START of its words, when no row matches exactly and exactly one row begins with it. The Motion plus builds rows like 'Rotation    0°', where the number is the whole point and changes the moment anything moves, so naming the row by its words was naming it by something that does not hold still."
+    },
+    {
+      "t": "2026-09-15T11:04:19.229Z",
+      "note": "Motion shipped in Next behind next-motion, commit 3519b8f6. The panel has a Motion list under Effects with the same header, plus and rows; the plus is built out of the layer and shows each property's current value; a row carries a switch, the name, the curve drawn small and a summary like '-12° → 12° over 0.9s'; the canvas plays it and Forever keeps it going; every change is one undo step. Model is PhotonzCore/LayerMotion.swift, written test-first, Codable and Sendable, importing nothing but CoreGraphics and Foundation; nothing is baked in, the motion is worked out in displayDocument at the moment the canvas is drawn. Verified by 6725 green tests including five new render tests that put one document through DocumentRenderer at three moments and compare the pixels. NOT verified on a real screen: the Mac was locked the whole time, so no walk could run and there is no picture of the app; the walk is written and parses, and that gap is folded into an-audit-gets-a-real-picture-of-the-app-again. Audit: queue/audits/2026-09-15-layer-motion.json. Design: docs/design/layer-motion.md."
     }
   ],
-  "started": "2026-09-15T10:43:53.263Z"
+  "started": "2026-09-15T10:43:53.263Z",
+  "completed": "2026-09-15T11:04:19.230Z"
 }
