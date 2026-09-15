@@ -1,0 +1,71 @@
+{
+  "id": "a-copy-of-a-component-is-configured-not-authored-when-you-drag-a-component-onto-t",
+  "taskId": "a-copy-of-a-component-is-configured-not-authored",
+  "question": "When you drag a component onto the canvas, should you get the original or a copy?",
+  "context": "The report was that a component copy shows a wall of authoring controls. It turns out a copy does not: it shows a short panel with the look picker and the values. What happened is that the Button dropped on the canvas was the ORIGINAL, because the first drop of any component is the original and every drop after it is a copy. So this is really a question about what a drag should hand you.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Always a copy",
+      "summary": "Dragging a Button onto the canvas always puts down a copy. The original goes off to one side, in the same place a second look of a component already lands, so it is there to edit when you want it and never the thing under your pointer. Clicking what you just dropped always gives you the short panel: pick a look, fill in the values.",
+      "pros": [
+        "What you click is always the thing you meant to click",
+        "The panel you get never depends on whether you have dropped this component before",
+        "Matches what every other design tool does with a library"
+      ],
+      "cons": [
+        "A drawing you did not ask for appears beside your drop the first time",
+        "The original sitting on the canvas can be moved, hidden or deleted by accident"
+      ],
+      "mitigation": "The original arrives where extra looks already arrive, clear of everything, and its layers row wears the four-diamond mark so it reads as the original at a glance."
+    },
+    {
+      "id": "b",
+      "label": "Say it plainly and offer a copy",
+      "summary": "Nothing moves. The first drop is still the original, but its panel says so louder and carries one press, Place a Copy, right under the name. You click the Button you dropped, read that this is the master, press once, and you have the copy you wanted.",
+      "pros": [
+        "Small, and nothing about the canvas changes",
+        "Teaches the difference at the moment it matters",
+        "The original stays where you put it"
+      ],
+      "cons": [
+        "You still have to notice and act before you can configure anything",
+        "What you get from a drag still depends on invisible history"
+      ],
+      "mitigation": "The press sits directly under the name, above everything else in the section, so it is the first thing in reach rather than something to go hunting for."
+    },
+    {
+      "id": "c",
+      "label": "Originals leave the canvas",
+      "summary": "The canvas only ever holds copies. A component original lives on the Library shelf, and you edit it by opening it in a room of its own rather than by finding it among your drawings. Dragging always gives a copy because there is nothing else it could give.",
+      "pros": [
+        "The canvas is your work, not a mix of your work and your parts bin",
+        "One rule with no exception: everything on the canvas is a copy",
+        "Editing an original is a deliberate act you cannot stumble into"
+      ],
+      "cons": [
+        "The biggest change of the three, and it touches how components are made, not just how they are dropped",
+        "Losing sight of the original makes comparing looks side by side harder"
+      ],
+      "mitigation": "The room shows every look of the component beside each other, which is the comparison the canvas was being used for."
+    },
+    {
+      "id": "d",
+      "label": "Leave it as it is",
+      "summary": "The first drop stays the original and the panel stays as it is. Somebody who wants a copy drags a second one on, or uses Place a Copy on the Library tile.",
+      "pros": [
+        "No change and no risk",
+        "The original being on the canvas is how looks are edited today"
+      ],
+      "cons": [
+        "The confusion you hit is still there for the next person, and for you next time",
+        "What a drag gives you keeps depending on history nobody can see"
+      ],
+      "mitigation": "None. This is the behaviour that produced the report.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-15T17:01:56.768Z"
+}
