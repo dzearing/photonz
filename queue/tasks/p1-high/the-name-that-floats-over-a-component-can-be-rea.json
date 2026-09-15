@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 1.8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:02:20.890Z",
-  "updated": "2026-09-15T15:02:20.978Z",
+  "updated": "2026-09-15T15:03:57.404Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-15 with a screenshot of a chip reading 'Button, rest' floating above a blue rectangle: \"i can't even read this, contrast is horrible\".\n\nThe chip carries the component's name and the version it is showing, which is the thing the shipped task 'a-copy-does-not-say-which-version-it-is-showing' added, so it is new and it arrived unreadable.\n\nThe app has solved this problem before for the same reason - a label that has to sit over a picture nobody chose. Measurement chips, caption pills and the name labels over screens all face it, and CanvasNameLabel exists in PhotonzCore. Find what those do and do that, rather than picking a lighter grey and hoping. The acceptance asks for the number because 'looks better' is how this shipped in the first place.\n\nWorth checking while in there whether the same chip is unreadable in light mode as well as dark, since the screenshot is dark and the failure may be the other way round elsewhere.",
@@ -30,6 +30,11 @@
     {
       "t": "2026-09-15T15:02:20.977Z",
       "note": "seq 290 -> 1.8"
+    },
+    {
+      "t": "2026-09-15T15:03:57.403Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-15T15:03:57.402Z"
 }
