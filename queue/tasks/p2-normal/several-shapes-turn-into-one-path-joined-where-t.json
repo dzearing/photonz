@@ -1,0 +1,38 @@
+{
+  "id": "several-shapes-turn-into-one-path-joined-where-t",
+  "title": "Several shapes turn into one path, joined where their ends meet",
+  "goal": "Draw three lines that meet at their ends, pick all three, and turn them into a path: you expect one shape, a triangle you can fill and reshape. Instead the command acts on one of them and the other two are left as they were. Turning several shapes into a path should give you one path, with runs that meet end to end joined into a single continuous outline, and closed when it comes back to where it started.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T14:36:38.458Z",
+  "updated": "2026-09-15T14:36:51.731Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-15: \"i draw 3 lines, i select the 3 layers and select convert to path, and i expected it to convert to 1 shape layer, but it didnt do that.\"\n\nTWO PROBLEMS IN ONE REPORT, and both need doing.\n\n1. The command only ever touches one layer. Sources/Photonz/EditorState+LayerOps.swift:334, turnLayerIntoPath(id:), takes a single id, as does canTurnLayerIntoPath(id:) at :322. So with three rows picked it converts whichever one the menu was opened on and leaves the rest. This is the SAME defect already filed against that menu in 'group-is-in-the-menu-you-get-when-you-right-clic', which asks for one settled rule about whether a row menu command acts on the row or on the selection, applied to every command in the menu. Read that task first; whichever lands second should follow the rule the first one set rather than inventing a second answer. If the rule task has not landed yet, this task should still fix its own command and say in the log which rule it assumed.\n\n2. What several shapes SHOULD become. The user's expectation is the useful one and worth building deliberately: three lines that meet are a triangle, not three lines in a bag. Joining open runs end to end is a standard vector operation and it is what makes a shape out of strokes.\n\nThis is NOT the booleans task and must not be folded into it. 'two-shapes-become-one-join-them-cut-one-out-keep' (pending, seq 170) is about AREA: union, subtract, intersect, exclude, on shapes that enclose something. Three lines enclose nothing, so a union of them produces nothing useful. Joining endpoints and combining areas are different operations that happen to share the word join, and conflating them is how one of them ends up unbuildable. Say so in that task's log when this lands.\n\nThe near-miss case is the one that decides whether this feels magic or maddening. Three lines drawn by hand almost never meet exactly, so a tolerance is needed, and a tolerance that is invisible is a tolerance nobody can predict. With the grid on and snapping working the ends usually DO meet exactly, which is worth checking first: the honest answer may be that joining requires coincident ends and the fix for everything else is that the app already snaps.",
+  "acceptance": [
+    "The command acts on everything picked, not on one row of the several that are selected",
+    "Three lines meeting end to end become ONE path of three runs, continuous, and closed if the last end meets the first, so it can be filled",
+    "A closed result can be filled, reshaped and exported like any path drawn with the Pen",
+    "Ends that are near but not touching are handled by a stated rule: either they join within a tolerance that is written down, or they do not join and the result says so; guessing silently is the one thing that is not allowed",
+    "Shapes that do not touch at all still come out as one layer rather than several, holding separate runs, or the task states why the opposite is better and does that instead",
+    "Order and direction do not matter: the same three lines picked in any order give the same outline",
+    "The result looks identical to what was on screen before, checked by sampling the rendered pixels, unless it closed, which is a visible change and should be announced the way the existing conversion question already announces things",
+    "It is one undo step, and undo brings back the separate shapes exactly as they were",
+    "Tests in PhotonzCore for joining runs end to end, closing, the near-miss tolerance and the non-touching case, written before the change",
+    "Audit under queue/audits/ with three lines becoming a filled triangle, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T14:36:38.460Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T14:36:51.730Z",
+      "note": "seq 2680 -> 9"
+    }
+  ]
+}
