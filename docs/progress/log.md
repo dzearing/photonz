@@ -16089,3 +16089,57 @@ changes shape per curve. `Scripts/test.sh` green (7176 tests); no Swift changed.
 
 **Next:** nothing is blocked on this. Audit at
 `queue/audits/2026-09-15-one-easing-list.json`.
+
+---
+
+## 2026-09-15 · The spinner and the toggle join the one motion model
+
+`icon-loop-wt` and `icon-states-wt` were the last two icon animation pages
+still framing motion as one property picked from a row in Properties, with no
+timing surface. Both now carry the two surfaces the bell and badge pages use:
+**Motion as a dock group beside Effects** with a plus, `.efx` entries and their
+own settings, and a **timing dock across the bottom** with a bar per animated
+property on one ruler. Finishes
+`rebuild-the-spinner-toggle-and-draw-on-flows-on`; the draw-on third landed on
+2026-09-15 with the checkmark rebuild.
+
+Neither page is a copy of the bell, because each had an argument that survives
+being drawn rather than being reversed:
+
+- **The spinner** argued a ruler was the wrong instrument for a loop. Half
+  right: what a loop cannot use is a ruler with a LAST FRAME. Its strip has no
+  end mark. The bar runs into a dashed **and again** line, the playhead crosses
+  it and reappears at zero for as long as you watch, and the Track keeps a row
+  reading `none`. The dock earns its width on a **rate nobody can type**: you
+  pick 800 ms by watching, so there has to be something to watch.
+- **The toggle** argued it had no time axis at all. Its *crossing* does, and the
+  old page could not say how long that crossing really was, because Overshoot
+  was a bare percentage with no *when* in it. The Motion list now gains a Fill
+  entry **by itself** when the two drawings stop matching, badged *from states*;
+  Scale is the one you add. The two bars are different lengths, Fill to 220 and
+  Scale to 320 with the gap bracketed, so the page can say the crossing is
+  **0.32 s and not the 0.22 you typed**.
+
+**Fixed in passing, each reproduced before fixing.** `icon-loop-wt` had fallen
+out of the mock index nav in `bd70add0`, which replaced its row rather than
+adding one; it is back in the Icons group. A `.ruler` with N labelled spans
+measures `N*step`, not `(N-1)*step` — my first version of both strips was about
+15% off against its own ruler, caught by measuring in Chrome rather than by
+reading. `Same as the stroke` was clipped in the toggle's Fill select (107px
+into 94px, confirmed against the HEAD copy of the page, so pre-existing). The
+property menu claimed Fill was greyed and it was not. Two sentences on
+`time-compare.html` that this rebuild made untrue were rewritten; that page's
+actual argument is unaffected and now stronger, since all three scenarios have
+a strip and none of them has an end frame on it.
+
+Each step now opens only the dock groups it is about, which fixes the
+below-the-fold Motion settings the source audit reported.
+
+Verified in real Chrome at 1500x1300: all 15 steps driven forwards and
+backwards, zero console errors, strip geometry measured against the ruler at
+every step, no clipped control text, no horizontal overflow at 932px, both
+themes. All eight mock gates plus `audit-keyboard` pass and all 100 pages return
+200. No Swift changed.
+
+**Next:** nothing is blocked on this. Audit at
+`queue/audits/2026-09-15-icon-motion-one-model.json`.
