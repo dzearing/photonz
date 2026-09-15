@@ -561,6 +561,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// time, so this asks for SVG the same way picking it once would and then
     /// opens the sheet.
     case exportDialogAsSVG
+    /// The Export sheet already on JPEG (Next, `next-export-quality`), for the
+    /// same reason: a walk cannot click the format row inside a sheet, and the
+    /// quality slider only exists for a format that has a quality.
+    case exportDialogAsJPEG
     /// The Export sheet with the hand-off question answered for it (Next,
     /// `next-export-animated-svg`): a walk cannot open a menu inside a sheet,
     /// so this says where the file is going and then opens it. Asked for on
@@ -1284,6 +1288,21 @@ public enum PlaytestStep: Sendable, Equatable {
     /// real vector file and what it says about the layers it could not write as
     /// shapes.
     case writeSVG(name: String)
+    /// Write the document out as a picture to `<out>/<name>.<ext>`, at the
+    /// format, quality and scale Export would use (Next,
+    /// `next-export-quality`), and log how many bytes it came to.
+    ///
+    /// The number in that log line is the number the Export sheet shows for the
+    /// same answers, because it comes from the same encoder given the same
+    /// picture. That is how a walk proves the sheet is not estimating: the file
+    /// is beside the log line and it weighs what the line said.
+    case writePicture(name: String, format: String, quality: Int, scale: CGFloat)
+    /// Set the quality a picture format is remembered at, exactly as pressing
+    /// Export at that quality would (Next, `next-export-quality`). A walk
+    /// cannot drag a slider inside a sheet, so this is how the sheet gets
+    /// photographed at a quality other than the one it opens on, and it checks
+    /// the remembering at the same time.
+    case exportQuality(format: String, percent: Int)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Properties list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -1765,9 +1784,9 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectHint", "expectInView", "expectLanding", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeSVG",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writePicture", "writeSVG",
     ]
 
     /// The `do` name this step answers to.
@@ -1800,6 +1819,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case .snapshot: "snapshot"
         case .render: "render"
         case .writeSVG: "writeSVG"
+        case .writePicture: "writePicture"
+        case .exportQuality: "exportQuality"
         case .panelMenu: "panelMenu"
         case .menuShot: "menuShot"
         case .rightClick: "rightClick"
@@ -1962,6 +1983,15 @@ public enum PlaytestStep: Sendable, Equatable {
                            scale: CGFloat(try f.optionalNumber("scale") ?? 1))
         case "writeSVG":
             self = .writeSVG(name: try f.string("name"))
+        case "writePicture":
+            self = .writePicture(name: try f.string("name"),
+                                 format: try f.string("format"),
+                                 quality: Int(try f.optionalNumber("quality")
+                                     ?? Double(ExportQuality.standard)),
+                                 scale: CGFloat(try f.optionalNumber("scale") ?? 1))
+        case "exportQuality":
+            self = .exportQuality(format: try f.string("format"),
+                                  percent: Int(try f.number("percent")))
         case "menuShot":
             self = .menuShot(menu: try f.string("menu"), name: try f.string("name"),
                              ticked: try f.optionalStrings("ticked"),

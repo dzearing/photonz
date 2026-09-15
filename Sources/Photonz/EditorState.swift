@@ -105,6 +105,11 @@ final class EditorState {
     /// Probe only: where the Export sheet says the file is going, for the same
     /// reason. Nil leaves the sheet on whatever was last picked.
     var playtestExportDestination: SVGHandoff.Destination?
+    /// Probe only: the picture format the Export sheet opens on, so a walk can
+    /// photograph the quality slider that only JPEG and HEIC have
+    /// (`PlaytestAction.exportDialogAsJPEG`). Nil leaves the sheet on whatever
+    /// was last picked.
+    var playtestOpensExportOnPicture: ImageCodec.Format?
     #endif
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false

@@ -1055,6 +1055,39 @@ private final class Run {
             note(number, step.name,
                  "\(name).svg \(written.data.count) bytes, \(pictured)\(motion)")
 
+        case .writePicture(let name, let format, let quality, let scale):
+            let editor = try requireEditor()
+            guard let picture = ImageCodec.Format(rawValue: format) else {
+                throw Failure(description: "\(format) is not a picture format Export writes")
+            }
+            guard let document = editor.document else {
+                throw Failure(description: "there is no document to write")
+            }
+            // The very path the sheet weighs with, so the bytes in this log
+            // line and the size on the sheet are one number, not two that
+            // happen to agree.
+            let sizer = ExportSizer(renderer: editor.previewRenderer, store: editor.store)
+            let started = Date()
+            guard let data = await sizer.data(of: document, frameID: editor.selectedFrameID,
+                                              scale: scale, format: picture,
+                                              quality: ExportQuality.fraction(quality)) else {
+                throw Failure(description: "the document did not write as \(format)")
+            }
+            let file = "\(name).\(picture.fileExtension)"
+            try data.write(to: out.appendingPathComponent(file))
+            let took = Int(Date().timeIntervalSince(started) * 1000)
+            note(number, step.name,
+                 "\(file) at \(quality)% is \(data.count) bytes "
+                 + "(\(ExportQuality.fileSize(bytes: data.count))), weighed in \(took) ms")
+
+        case .exportQuality(let format, let percent):
+            guard ExportQuality.applies(toFormat: format) else {
+                throw Failure(description: "\(format) has no quality to set")
+            }
+            ExportQualityMemory.remember(percent, format: format)
+            note(number, step.name,
+                 "\(format) is remembered at \(ExportQualityMemory.remembered(format: format))%")
+
         case .panelMenu(let menu, let row, let shot, let choose, let clicking):
             try await openPanelMenu(menu, in: row, shot: shot, choose: choose, clicking: clicking,
                                     number: number)
@@ -2053,6 +2086,12 @@ private final class Run {
                     editor.selectLibraryItem(first.id)
                 }
             case .exportDialog: editor.isExportDialogPresented = true
+            case .exportDialogAsJPEG:
+                // Asked for on the sheet itself, the same way SVG is, so a walk
+                // that photographs the quality slider cannot change what the
+                // NEXT walk's Export opens on.
+                editor.playtestOpensExportOnPicture = .jpeg
+                editor.isExportDialogPresented = true
             case .exportDialogAsSVG:
                 // Asked for on the sheet itself rather than written into the
                 // app's memory, so a walk that photographs Export on SVG

@@ -15730,3 +15730,48 @@ up whatever the nine walks report.
 **Open question:** none blocking. The judgement worth revisiting is whether one
 press of P per shape is an acceptable price for the Pen ending like every other
 tool; the audit asks it directly.
+
+## 2026-09-15 — Choose the quality of a lossy export and see what it will weigh
+
+**What changed:** Export offers a Quality slider for the two formats that have
+one, JPEG and HEIC, and under it says exactly what the file will weigh at that
+quality. The number is not an estimate: the picture really is encoded while you
+are still deciding, so what the line says is the size of the file that lands on
+disk, to the byte.
+
+- `PhotonzCore/ExportQuality.swift` (new) owns the rules with no pixels in them:
+  which formats have a quality, the 30 to 100 range in steps of 5, the plain
+  word for a percentage, one storage key per format, and how to say a file size.
+  The floor is 30 on purpose, argued in the audit with a 3x comparison.
+- `PhotonzRender/ExportSizer.swift` (new) is an actor that renders and encodes
+  off the main actor and KEEPS the render, because moving the quality changes the
+  encoding and not one pixel of what is encoded. Measured on a 12 megapixel
+  document: first weigh 65 to 173 ms, every quality after it about 11 ms.
+- `PhotonzCore/Frames.swift` grew `exportTarget(frameID:)`, the one answer to
+  "what is Export actually writing". The sizer and `exportComposite` both ask it,
+  so what gets weighed and what gets saved cannot be two different pictures.
+- `ExportDialog.swift` grew the row, a per-format memory written only when Export
+  is actually pressed, a 140 ms debounce, and the last known number staying up
+  (dimmed) while a new one is worked out. Behind `next-export-quality`, on by
+  default in Next; with the flag off Export writes exactly what it always wrote.
+- Playtest gained a `writePicture` step, an `exportQuality` step and an
+  `exportDialogAsJPEG` action, plus `Scripts/playtest/export-quality-walk.json`.
+
+**Verified:** `swift build` clean with and without `PHOTONZ_PLAYTEST`,
+`Scripts/test.sh` green (7127 tests, 570 suites), including a render test that
+writes the file and asserts the bytes on disk equal the number the sheet shows.
+The tradeoff artifacts in `queue/audits/` were produced through the app's own
+encoder on a real 1800 x 1400 screenshot: 191 KB at 30%, 369 KB at 60%, 1.3 MB
+at 100%, 3.6 MB at 100% and 2x, each written and weighed.
+
+**Not verified:** not one walk ran. The Mac's screen was locked for the whole
+session, so `Scripts/playtest.sh` exits 3 with `status: "locked"` and the new
+export-quality walk has never executed. A sweep was requested with the reason
+spelled out. The audit therefore ships no picture of the Export sheet and says so.
+
+**Next:** read `queue/bin/sweep.sh status` once the screen is unlocked and pick
+up whatever the export walks report.
+
+**Open question:** whether the size line should also appear for PNG, and whether
+the sheet should preview what a quality costs rather than only what it saves.
+Both are asked directly in the audit rather than guessed at.

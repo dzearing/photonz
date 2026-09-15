@@ -392,6 +392,13 @@ extension Experiments {
         penEnabled && isEnabled(FeatureCatalog.svgExportFlag)
     }
 
+    /// `next-export-quality`: whether Export offers a quality for the formats
+    /// that have one and says what the file will weigh at it. It needs nothing
+    /// else: JPEG and HEIC have been in the picker since the first build, and
+    /// the encoder has taken a quality all along. Off means Export writes what
+    /// it always wrote, at the quality it always used.
+    var exportQualityEnabled: Bool { isEnabled(FeatureCatalog.exportQualityFlag) }
+
     /// `next-export-animated-svg`: whether Export asks where the file is
     /// going and writes the motion into an SVG bound for a web page. It needs
     /// both parents: with no SVG there is nothing to animate, and with no

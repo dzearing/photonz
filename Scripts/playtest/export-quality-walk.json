@@ -1,0 +1,141 @@
+{
+  "out": "/tmp/photonz-playtest/export-quality-walk",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "0-opened",
+      "note": "a dense screenshot, which is the picture this whole feature is about: flat panels and small words, where a low quality shows up as blocks around the letters"
+    },
+    {
+      "do": "exportQuality",
+      "format": "jpeg",
+      "percent": 30
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsJPEG"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "1-jpeg-lowest",
+      "note": "Export on JPEG at the lowest quality the slider can reach. The row under the slider says what that quality is called and exactly what the file will weigh, worked out by really encoding the picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "export-quality-1-jpeg-lowest"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "writePicture",
+      "name": "export-quality-lowest",
+      "format": "jpeg",
+      "quality": 30,
+      "scale": 1
+    },
+    {
+      "do": "exportQuality",
+      "format": "jpeg",
+      "percent": 100
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsJPEG"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "2-jpeg-best",
+      "note": "the same sheet at the other end of the slider. The quality was set once and remembered, which is what a person pressing Export at eighty percent gets for free next time"
+    },
+    {
+      "do": "snapshot",
+      "name": "export-quality-2-jpeg-best"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "writePicture",
+      "name": "export-quality-best",
+      "format": "jpeg",
+      "quality": 100,
+      "scale": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-both-written",
+      "note": "the same picture written at both ends of the slider, so the tradeoff is two files a person can open rather than two numbers. The bytes in the two log lines above are the numbers the two sheets showed"
+    },
+    {
+      "do": "writePicture",
+      "name": "export-quality-best-2x",
+      "format": "jpeg",
+      "quality": 100,
+      "scale": 2
+    },
+    {
+      "do": "describe",
+      "stage": "4-twice-the-scale",
+      "note": "the same quality at 2x: a different file, so a different number. This is why the scale row and the quality slider answer the same question together"
+    },
+    {
+      "do": "exportQuality",
+      "format": "jpeg",
+      "percent": 90
+    },
+    {
+      "do": "action",
+      "action": "exportDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "5-png-has-no-quality",
+      "note": "Export back on PNG. There is no quality row at all rather than one that is dimmed: a PNG keeps every pixel, so a quality would mean nothing for it"
+    },
+    {
+      "do": "snapshot",
+      "name": "export-quality-5-png-has-no-quality"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    }
+  ]
+}

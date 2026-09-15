@@ -1,0 +1,31 @@
+{
+  "feature": "Choose the quality of a lossy export and see what it will weigh",
+  "epic": "measure-redline",
+  "summary": "Export now offers a Quality slider for JPEG and HEIC, and under it says what the file will actually weigh at that quality. The number is not an estimate: the picture really is encoded while you are still deciding, so it is the size of the file that lands on disk, to the byte. Each format remembers its own answer for next time.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is Choose the quality of an export and see what it will weigh, on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press Command E to open Export." },
+    { "do": "Pick JPEG in the format row. A Quality slider appears under the 1x/2x row." },
+    { "do": "Read the line under the slider: a word for the quality and the size of the file." },
+    { "do": "Drag the slider from end to end and watch the size follow your hand." },
+    { "do": "Press 2x. The size changes again, because that is a different file." },
+    { "do": "Press Escape, then Command E again. The quality you left it on is still there." },
+    { "do": "Pick PNG. There is no quality row at all, rather than a dead one." },
+    { "do": "Open 2026-09-15-export-quality-tradeoff.png to see what the two ends of the slider cost, at 3x so the difference is visible.", "shot": "2026-09-15-export-quality-tradeoff.png" }
+  ],
+  "evaluate": [
+    "Does the size land where your eye already is, or do you have to hunt for it after moving the slider?",
+    "Is the word beside the percentage (Best, High, Good, Low, Rough) worth its space, or is the number enough on its own?",
+    "When you drag the slider, does the number feel like it is keeping up, or does it feel like it is catching up?",
+    "The slider stops at 30%. Looking at the 3x comparison, is that floor in the right place, too cautious, or too low?",
+    "Should PNG show a size too, so choosing between PNG and JPEG is one look rather than two exports?"
+  ],
+  "rough": [
+    "THE SCREEN WAS LOCKED for this whole run, so there is no picture of the Export sheet itself: macOS stops drawing the app when the Mac is locked, and every walk refuses to run rather than report on a half-built window. The walk that photographs the sheet is written and committed (Scripts/playtest/export-quality-walk.json) and a sweep has been asked for; the sizes below were measured by writing the real files, not by reading the sheet.",
+    "The tradeoff picture and the sizes are real and were produced through the app's own encoder on a real screenshot (1800 x 1400): 30% is 191 KB, 60% is 369 KB, 100% is 1.3 MB, and 100% at 2x is 3.6 MB. Each of those was written to disk and the file weighed exactly what the sizer said.",
+    "Timing on a 12 megapixel document: the first weigh costs 65 to 173 ms across runs (render plus encode) and every quality after it costs about 11 ms, because the render is kept and only the encode repeats. The work waits 140 ms for your hand to settle and runs off the main actor, and the last number stays on screen, dimmed, while a new one is worked out.",
+    "The number answers how big, not how bad. Seeing the damage still means exporting and opening the file. A real before-and-after preview inside the sheet is the full answer and is a much bigger feature; it is not built here.",
+    "PNG shows no size. It would genuinely help when choosing between PNG and JPEG, but PNG compression of a 12 megapixel composite is far slower than JPEG and the sheet opens on PNG, so every Export would pay for a number nobody asked for. Cut on purpose, and the evaluate list asks whether that was right.",
+    "HEIC has the same slider and its own remembered number, but HEIC at 60% and JPEG at 60% are not the same picture. Nothing in the sheet says that; the size line is the only thing that tells you, and it tells you honestly."
+  ]
+}

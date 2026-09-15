@@ -152,6 +152,8 @@ public enum FeatureCatalog {
 
     public static let motionStripFlag = "next-motion-strip"
 
+    public static let exportQualityFlag = "next-export-quality"
+
     public static let animatedSVGExportFlag = "next-export-animated-svg"
 
     public static let cutRecordingFlag = "next-cut-a-recording"
@@ -555,6 +557,15 @@ public enum FeatureCatalog {
                     name: svgExportFlag,
                     title: "Export what you drew as SVG",
                     description: "Adds SVG beside PNG, JPEG and HEIC in Export, so an icon you drew leaves the app as the icon rather than as a picture of it. What you get is a real vector file any website, app or icon set can use: every shape is a shape, so it stays sharp at any size and can be opened and edited in any drawing tool. Paths keep their straight edges straight and their curves curved, a rounded box keeps its rounding, an oval is an oval, groups stay grouped in the order the layers list shows, and fills, outlines and gradients come across as they look on the canvas. Words are written as the outlines of their letters rather than as type, so the file looks the same on a machine that does not have the font, and the words themselves ride along inside it so the file can still be searched and read aloud. Anything with no way of being said in shapes, a photograph or a layer wearing a shadow or a blur, is embedded as a picture exactly where it sits, and the Export sheet says so before you save rather than leaving you to find out. Choosing SVG hides the 1x and 2x row, which means nothing for a file with no pixels in it. This goes with the Pen, Draw any shape with the Pen, which is what draws the shapes worth exporting, and turns itself off when the Pen is off. Off means Export offers the three picture formats it always did.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: exportQualityFlag,
+                    title: "Choose the quality of an export and see what it will weigh",
+                    description: "Adds a Quality slider to Export for the two formats that throw pixels away, JPEG and HEIC, and says exactly what the file will weigh at the quality you pick, before you save it. The number is not a guess and not a formula: the picture really is encoded while you watch, so the size on the line is the size of the file that lands on disk, down to the byte. Move the slider and the number follows, with a plain word beside it saying what that quality is, Best, High, Good, Low or Rough, so somebody after a file small enough to send can find it without knowing which percentage that is. Changing 1x to 2x changes the number too, because that is a different file. The slider stops at thirty percent: low enough to make a file a fraction of the size, high enough that the words in a screenshot do not break into blocks on the way past. Each format keeps its own answer for next time, because eighty for a JPEG and eighty for a HEIC are not the same picture. PNG and SVG show no slider at all, since a PNG keeps every pixel and an SVG has none, so a quality would mean nothing for either. Off means Export writes what it always wrote, at the quality it always used.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

@@ -435,4 +435,20 @@ extension PhotonzDocument {
         frame.isLocked = false
         return PhotonzDocument(canvasSize: box.size, layers: [frame], pixelScale: pixelScale)
     }
+
+    /// What Export is actually going to write: this document, or one frame of
+    /// it on its own when a frame was picked.
+    ///
+    /// One answer rather than the same two lines everywhere it is needed. It
+    /// matters that it is one answer: the sheet weighs a file by encoding it
+    /// before you save, and if what it weighed and what it saved were scoped
+    /// differently the number would be a lie about a real file.
+    ///
+    /// An id that names nothing, or names something that is not a frame, falls
+    /// back to the whole document rather than refusing.
+    public func exportTarget(frameID: UUID?) -> PhotonzDocument {
+        guard let frameID, layer(id: frameID)?.isFrame == true,
+              let scoped = frameDocument(id: frameID) else { return self }
+        return scoped
+    }
 }

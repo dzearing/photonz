@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:47:32.886Z",
-  "updated": "2026-09-15T14:47:47.605Z",
+  "updated": "2026-09-15T20:01:02.489Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked for by the user on 2026-09-15, and they were explicit after being offered the alternative: \"ok find use 3rd party. I WANT WEBP NOT AVIF.\" So the decision is made. Do not substitute AVIF, do not offer it instead, and do not reopen the question; if AVIF is added one day it is a separate task.\n\nWHY THIS NEEDS A DEPENDENCY AT ALL, checked rather than assumed on 2026-09-15: CGImageDestinationCopyTypeIdentifiers lists 22 writable types on macOS 26 and WebP is not among them, so ImageIO cannot WRITE WebP however it is asked. CGImageSourceCopyTypeIdentifiers does include org.webmproject.webp, so READING one already works today and must keep working through the system rather than through the new code.\n\nThis is the project's FIRST third party dependency - Package.swift currently has no external dependencies at all - so it sets the precedent for how one is carried. Vendor libwebp's sources as a C target in Package.swift rather than reaching for a system library or a Homebrew formula: Scripts/build-app.sh assembles the app with SwiftPM only and CI uses the same path, so anything needing an installed library breaks the build machine and every fresh clone. Pin the version, record it, and say in the audit how it would be updated.\n\nLicence: libwebp is BSD-3, which asks only that the copyright notice and disclaimer travel with binary distributions, so the app needs somewhere that notice lives and can be read. Google also ships an additional patent grant alongside it; carry that file too. This is the kind of obligation that is trivial to meet now and awkward to retrofit.\n\nStructural note, because it will not fit the existing shape: ImageCodec.encode (Sources/PhotonzRender/ImageCodec.swift:33) writes everything through a CGImageDestination, and every Format has a utType. WebP has neither, so the encode path has to branch on it, and Format.utType stops being answerable for every case. Work out what that means for the save panel and the file extension handling before writing the encoder call, not after.\n\nQuality mapping: ImageCodec.encode takes 0 to 1 and passes it to ImageIO; libwebp takes 0 to 100. Map it in one place so a quality of 0.8 means the same thing whichever format is chosen. This pairs with the task 'choose-the-quality-of-a-lossy-export-and-see-wha', which puts a quality control and a real file size in the dialog - read it first, and if it has landed, WebP simply joins the rule it established rather than inventing a second control.\n\nLossless is in the acceptance list on purpose. This app's main output is screenshots of flat interface, which is exactly the case where lossless WebP beats both PNG and lossy WebP. A WebP export that can only do lossy would miss the best thing about the format for the pictures this app actually makes.",
@@ -33,6 +33,10 @@
     {
       "t": "2026-09-15T14:47:47.604Z",
       "note": "seq 2680 -> 10.5"
+    },
+    {
+      "t": "2026-09-15T20:01:02.488Z",
+      "note": "the quality half of this is now built and landed (2026-09-15, task choose-the-quality-of-a-lossy-export-and-see-wha). WebP joins it by adding \"webp\" to ExportQuality.lossyFormats in Sources/PhotonzCore/ExportQuality.swift and adding the case to ImageCodec.Format; the Export sheet then grows the slider and the live size line for it with no further UI work, because the sheet asks ExportQuality.applies(toFormat:) rather than naming formats. Do NOT invent a second quality control for it."
     }
   ]
 }

@@ -420,6 +420,21 @@ struct FrameTests {
         #expect(document.frameDocument(id: document.layers[0].id) == nil)
     }
 
+    /// Export's own scoping, in one place: the sheet weighs a file by encoding
+    /// it before you save, so what it weighed and what it saves have to be the
+    /// same document or the number is a lie about a real file.
+    @Test("Export's target is the picked frame, or the whole document when nothing is picked")
+    func exportTarget() {
+        let document = makeDocument()
+        let id = frameID(in: document)
+        #expect(document.exportTarget(frameID: id).canvasSize == CGSize(width: 390, height: 844))
+        #expect(document.exportTarget(frameID: nil).canvasSize == document.canvasSize)
+        // An id that names something that is not a frame is the whole canvas,
+        // not a refusal: Export always has something to write.
+        #expect(document.exportTarget(frameID: document.layers[0].id).canvasSize == document.canvasSize)
+        #expect(document.exportTarget(frameID: UUID()).canvasSize == document.canvasSize)
+    }
+
     @Test("A hidden frame still exports")
     func hiddenFrameExports() {
         var document = makeDocument()

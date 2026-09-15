@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T16:35:31.769Z",
+  "updated": "2026-09-15T20:01:02.444Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -80,6 +80,10 @@
     {
       "t": "2026-09-15T16:35:31.768Z",
       "note": "Third audit in a row with no picture, and this time not the grant: the Mac's screen was locked for the whole of one-row-for-a-number-that-has-four-sides (2026-09-15 16:21 to 17:0x), so every walk returned status locked, the walk never started, and not even an offscreen render was produced. Whatever this task does about the grant, the locked case is a different one: the loop can keep building but it cannot show the user anything for hours at a stretch, and three features have now shipped on tests and reasoning alone."
+    },
+    {
+      "t": "2026-09-15T20:01:02.443Z",
+      "note": "happened again on 2026-09-15: the export-quality task ran from about 12:45 to 13:05 with the Mac locked the whole time (ioreg CGSSessionScreenIsLocked true on every check), so Scripts/playtest.sh exited 3 with status \"locked\" and the new export-quality walk never ran once. The audit at queue/audits/2026-09-15-export-quality.json therefore ships no picture of the Export sheet at all; it ships real encoded files and their byte counts instead, produced without the window server. That is the second feature in two days audited without a photograph of the app."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

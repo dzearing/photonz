@@ -36,6 +36,25 @@ enum ExportChoice: Hashable {
     }
 }
 
+/// What quality each lossy format was last exported at.
+///
+/// One number per format, kept the way the format itself is kept: somebody who
+/// always wants eighty percent sets it once. `ExportQuality` owns the rules,
+/// so a number left over from an older build, or edited by hand, comes back
+/// snapped onto the range the slider can actually reach.
+enum ExportQualityMemory {
+    static func remembered(format id: String) -> Int {
+        let stored = UserDefaults.standard.object(forKey: ExportQuality.storageKey(format: id))
+        guard let percent = stored as? Int else { return ExportQuality.standard }
+        return ExportQuality.snapped(percent)
+    }
+
+    static func remember(_ percent: Int, format id: String) {
+        UserDefaults.standard.set(ExportQuality.snapped(percent),
+                                  forKey: ExportQuality.storageKey(format: id))
+    }
+}
+
 /// Format + scale picker for Export… (⌘E). The actual rendering, encoding,
 /// and save panel live in EditorState.
 ///
@@ -61,6 +80,27 @@ struct ExportDialog: View {
     /// Parts of the motion the FILE itself cannot carry, whatever the
     /// destination: a turn on a layer that is also flipped, say.
     @State private var unmoved: [SVGExport.Fallback] = []
+    /// What each lossy format is set to while the sheet is up, seeded from what
+    /// was remembered. Held here rather than written straight back so that
+    /// moving the slider and then pressing Cancel changes nothing, and so that
+    /// going JPEG → HEIC → JPEG comes back to the number you left.
+    @State private var qualities: [String: Int] = [:]
+    /// What the picture would weigh at the answers showing now, in bytes. Nil
+    /// until the first one lands.
+    @State private var pictureBytes: Int?
+    /// A newer number is being worked out, so the one on screen is the last
+    /// one. It stays up rather than blanking: a number that flickers to nothing
+    /// every time the slider twitches is worse than one that is a moment stale.
+    @State private var weighing = false
+    /// Whether a weigh has finished at all. Without it a picture that cannot be
+    /// encoded reads as one still being worked out, forever.
+    @State private var weighed = false
+    /// Encodes the picture to find out what it weighs, off the main actor, and
+    /// keeps the render between qualities. Made when the sheet opens and gone
+    /// when it closes, which is exactly as long as the document it assumes is
+    /// standing still can be trusted to stand still.
+    @State private var sizer: ExportSizer?
+    @State private var weighTask: Task<Void, Never>?
 
     private var frames: [Layer] {
         guard Experiments.shared.framesEnabled else { return [] }
@@ -102,6 +142,11 @@ struct ExportDialog: View {
     }
 
     private func refreshSize() {
+        refreshVectorSize()
+        refreshPictureSize()
+    }
+
+    private func refreshVectorSize() {
         guard asksWhereItIsGoing, choice.isVector else {
             byteCount = nil
             unmoved = []
@@ -110,6 +155,78 @@ struct ExportDialog: View {
         let preflight = editorState.svgPreflight(frameID: frameID, animated: carriesTheMotion)
         byteCount = preflight?.bytes
         unmoved = preflight?.unmoved ?? []
+    }
+
+    // MARK: - Quality
+
+    /// Whether Export offers a quality at all (Next, `next-export-quality`).
+    private var offersQuality: Bool { Experiments.shared.exportQualityEnabled }
+
+    /// The format being exported, when it is one that throws pixels away and so
+    /// has a quality worth choosing. Nil for PNG, for SVG, and with the flag
+    /// off — and nil is what takes the whole row away rather than dimming it.
+    private var lossyFormat: ImageCodec.Format? {
+        guard offersQuality, case .picture(let format) = choice,
+              ExportQuality.applies(toFormat: format.rawValue) else { return nil }
+        return format
+    }
+
+    /// What the quality is set to for the format showing now.
+    private var qualityPercent: Int {
+        guard let lossyFormat else { return ExportQuality.standard }
+        return qualities[lossyFormat.rawValue] ?? ExportQuality.standard
+    }
+
+    private var qualityBinding: Binding<Double> {
+        Binding(get: { Double(qualityPercent) },
+                set: { value in
+                    guard let lossyFormat else { return }
+                    qualities[lossyFormat.rawValue] = ExportQuality.snapped(Int(value.rounded()))
+                })
+    }
+
+    /// What the chosen quality is called, and what it costs, on one line.
+    private var qualityNote: String {
+        let word = ExportQuality.word(for: qualityPercent)
+        if let pictureBytes { return "\(word) · \(ExportQuality.fileSize(bytes: pictureBytes))" }
+        return weighed ? word : "\(word) · working out the size"
+    }
+
+    /// Encodes the picture to find out what it really weighs.
+    ///
+    /// Everything expensive is deliberate here. There is no formula for the
+    /// size of a lossy file worth trusting, so the only honest number comes
+    /// from encoding it; that costs a render and an encode, and it is asked for
+    /// again on every stop of a slider somebody is dragging. So the work waits
+    /// for the hand to settle, it happens off the main actor, the sizer keeps
+    /// the render between qualities, and the number already on screen stays up
+    /// until a newer one is ready.
+    private func refreshPictureSize() {
+        weighTask?.cancel()
+        guard let lossyFormat, let document = editorState.document else {
+            weighTask = nil
+            pictureBytes = nil
+            weighing = false
+            weighed = false
+            return
+        }
+        let sizer = sizer ?? ExportSizer(renderer: editorState.previewRenderer,
+                                         store: editorState.store)
+        self.sizer = sizer
+        let quality = ExportQuality.fraction(qualityPercent)
+        let scale = scale
+        let frameID = frameID
+        weighing = true
+        weighTask = Task {
+            try? await Task.sleep(for: .milliseconds(140))
+            guard !Task.isCancelled else { return }
+            let bytes = await sizer.byteCount(of: document, frameID: frameID, scale: scale,
+                                              format: lossyFormat, quality: quality)
+            guard !Task.isCancelled else { return }
+            pictureBytes = bytes
+            weighed = true
+            weighing = false
+        }
     }
 
     /// What the size line describes: the chosen frame's box, else the canvas.
@@ -196,6 +313,9 @@ struct ExportDialog: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                if lossyFormat != nil {
+                    qualityRow
+                }
             }
             HStack {
                 Spacer()
@@ -206,7 +326,13 @@ struct ExportDialog: View {
                     choice.remember()
                     switch choice {
                     case .picture(let format):
-                        editorState.exportComposite(format: format, scale: scale, frameID: frameID)
+                        let percent = qualities[format.rawValue] ?? ExportQuality.standard
+                        if offersQuality, ExportQuality.applies(toFormat: format.rawValue) {
+                            ExportQualityMemory.remember(percent, format: format.rawValue)
+                        }
+                        editorState.exportComposite(format: format, scale: scale,
+                                                    quality: ExportQuality.fraction(percent),
+                                                    frameID: frameID)
                     case .svg:
                         editorState.exportSVG(frameID: frameID, animated: carriesTheMotion)
                     }
@@ -233,9 +359,24 @@ struct ExportDialog: View {
             }
             #if PHOTONZ_PLAYTEST
             if editorState.playtestOpensExportOnSVG, offersSVG { choice = .svg }
+            if let asked = editorState.playtestOpensExportOnPicture {
+                choice = .picture(asked)
+                // Taken once. A walk that photographs the quality slider and
+                // then photographs PNG gets PNG, whatever order it asks in.
+                editorState.playtestOpensExportOnPicture = nil
+            }
             #endif
+            // Only with the flag on. Off has to write what it always wrote,
+            // and a number left behind by a build with the slider in it must
+            // not quietly follow somebody back to the build without it.
+            if offersQuality {
+                qualities = Dictionary(uniqueKeysWithValues: ExportQuality.lossyFormats.map {
+                    ($0, ExportQualityMemory.remembered(format: $0))
+                })
+            }
             refreshSize()
         }
+        .onDisappear { weighTask?.cancel() }
         // Picking a destination moves the format to the one that survives the
         // trip, and says why below. The picker stays exactly where it was, so
         // it can be moved straight back.
@@ -246,6 +387,39 @@ struct ExportDialog: View {
         }
         .onChange(of: choice) { refreshSize() }
         .onChange(of: frameID) { refreshSize() }
+        // 2x is a different file, so it is a different number.
+        .onChange(of: scale) { refreshPictureSize() }
+        .onChange(of: qualityPercent) { refreshPictureSize() }
+    }
+
+    /// The quality to write at, and what the file weighs there.
+    ///
+    /// Two lines rather than one: the slider answers how much of the picture to
+    /// keep, and the line under it answers what that is called and what it
+    /// costs. The size is the whole reason the row exists, so it sits directly
+    /// under the thing that changes it rather than in the corner of the sheet.
+    @ViewBuilder private var qualityRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 10) {
+                Text("Quality")
+                Slider(value: qualityBinding,
+                       in: Double(ExportQuality.lowest)...Double(ExportQuality.highest),
+                       step: Double(ExportQuality.step))
+                    .accessibilityLabel("Quality")
+                    .accessibilityValue("\(qualityPercent) percent")
+                Text("\(qualityPercent)%")
+                    .monospacedDigit()
+                    .frame(width: 38, alignment: .trailing)
+            }
+            Text(qualityNote)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                // A number being replaced fades rather than blanking, so the
+                // line never jumps about under a hand that is still moving.
+                .opacity(weighing ? 0.45 : 1)
+                .animation(.easeOut(duration: 0.12), value: weighing)
+                .animation(.easeOut(duration: 0.12), value: pictureBytes)
+        }
     }
 
     /// What survives the trip to the chosen destination, and what does not.
