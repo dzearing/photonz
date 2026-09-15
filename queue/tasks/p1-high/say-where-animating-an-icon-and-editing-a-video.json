@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T14:04:11.611Z",
-  "updated": "2026-09-15T02:31:54.441Z",
+  "updated": "2026-09-15T08:25:58.381Z",
   "deps": [
     "mock-how-somebody-actually-animates-an-icon"
   ],
@@ -66,6 +66,10 @@
     {
       "t": "2026-09-15T02:31:54.440Z",
       "note": "decision \"Animating an icon and editing a video: one surface or two?\" resolved: Motion is a property, and it opens into a cycle strip (Answered by the user in conversation on 2026-09-14, with one correction that overrides the option text. They said motion needs 'a much more consistent way to animate various properties similar to applying effects to a layer. But it should be applied to a timeline that is bigger than the property panel.' That is option b's shape: motion as a property of a layer, opening into a strip with a lane per moving part. The correction: the option text says 'pick a named motion like Pulse or Spin or Draw on', and the user rejected exactly that as 'super weird and proprietary'. There is NO canned list of motions. A person picks a PROPERTY to animate (position, scale, rotation with a movable origin, opacity, colour, path data, stroke), with named easing curves plus a custom one, and two parts of one icon must be able to carry the same motion out of phase. The bell that swings from a pivot at its top with a knob that lags is the test. Option a is dead because it has no ruler and the user asked for a surface with width; option c is not chosen, so video stays where it is for now. See the task mock-animating-any-property-of-a-layer-with-the for the full correction.)"
+    },
+    {
+      "t": "2026-09-15T08:25:58.380Z",
+      "note": "2026-09-15 the premise this card is built on has been rejected by the user and the mocks it cites have been rebuilt. Recommended option a is 'pick a named motion like Pulse or Spin or Draw on', and the whole first round of icon animation mocks framed motion that way. The user's critique on 2026-09-14 called that 'super weird and proprietary'. The replacement is icon-animate-wt (Make a bell swing) and icon-phase-wt (Make the knob lag the bell): you animate a PROPERTY, the timing sits on a bottom dock with real width, and a lag between two parts is set by dragging one bar against another. ALSO: pages/time-compare.html, which is the evidence this card leans on, still argues the old model (icon timing is 'one field, typed, never dragged'; an Order list beats a track) and now contradicts the two new pages. It needs redoing before this card can be answered honestly. Do not resolve this card against the current option text."
     }
   ],
   "started": "2026-09-14T15:15:38.397Z"

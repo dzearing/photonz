@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T01:52:13.923Z",
-  "updated": "2026-09-15T01:52:14.011Z",
+  "updated": "2026-09-15T08:25:58.336Z",
   "deps": [
     "mock-animating-any-property-of-a-layer-with-the"
   ],
@@ -37,6 +37,10 @@
     {
       "t": "2026-09-15T01:52:14.011Z",
       "note": "deps set: the timing surface is the concrete case"
+    },
+    {
+      "t": "2026-09-15T08:25:58.335Z",
+      "note": "2026-09-15 the property-first animation mocks are one concrete answer to this, worth looking at before deciding. The user's words on the same day were 'worried the side pane is overused real estate on the app', said about animation timing specifically. What icon-animate-wt and icon-phase-wt do: the side pane keeps WHAT changes and BY HOW MUCH (Motion is a dock group beside Effects, entries with a switch and settings), and the WHEN moves to a dock across the bottom with real width. The test the pages set for that split is step 4 of icon-phase-wt: dragging the knob's bar 90 ms later so it trails the bell. That is a relationship between two bars and it cannot be read in a column, which is the argument for the bottom dock. Cost: with Layers, Properties, Effects and Motion all open, an 864px window scrolls the Motion group, so the side pane is still carrying a lot even after moving the timing out."
     }
   ]
 }

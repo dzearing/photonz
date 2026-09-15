@@ -1,0 +1,29 @@
+{
+  "id": "rebuild-the-spinner-toggle-and-draw-on-flows-on",
+  "title": "Rebuild the spinner, toggle and draw-on flows on the motion list",
+  "goal": "Three icon animation walkthroughs were half-updated when the animation model changed. They no longer offer a menu of canned effects and they use the new curve control, but they still show motion as one property chosen from a single row rather than a list you add entries to, and none of them has the timing surface across the bottom that the two bell pages use. Someone reading the icon pages in order meets two different pictures of the same feature. Bring all three onto the one model so the set reads as one product.",
+  "epic": "icon-svg",
+  "priority": "p2-normal",
+  "seq": 2710,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T08:25:58.425Z",
+  "updated": "2026-09-15T08:25:58.428Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Pages: docs/design/mocks/pages/icon-loop-wt.html, icon-states-wt.html, icon-drawon-wt.html. Reference implementation: icon-animate-wt.html and icon-phase-wt.html (2026-09-15). What those two do that these do not: a .dgrp id=gMotion sibling to gEffects, .efx rows for entries, a .timeline bottom dock with .track.bl-lt layer rows and .track.bl-pt property rows, bars positioned as percentages of a 1200ms lane with the cycle end marked. The curve menu and the property menu are already correct on all three and should be left alone. The property menu markup is duplicated per page; folding it into shared/components is in scope if it is cleaner. Raised in queue/audits/2026-09-15-motion-property-first.json.",
+  "acceptance": [
+    "The spinner, toggle and draw-on pages each show Motion as a dock group beside Effects, with a plus, entries that have a switch and their own settings, exactly as the bell pages do",
+    "Each of the three has the timing dock across the bottom, with one bar per animated property on one ruler",
+    "The draw-on page shows its two strokes overlapping as two bars offset in time rather than as a numbered Order list in the side panel",
+    "Nothing in the icon pages describes motion as one property per layer any more",
+    "Each page still teaches its own one scenario and is not a near-twin of the bell pages"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T08:25:58.427Z",
+      "note": "created (manual)"
+    }
+  ]
+}

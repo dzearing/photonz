@@ -15236,3 +15236,36 @@ points dragged together and two other zooms all read 0.0pt.
 Next: the Position and Size panel has the same staleness — it holds the
 pre-drag box for the whole reshape and jumps on release
 (`the-size-readout-keeps-up-while-you-reshape-a-pa`).
+
+## 2026-09-15 — Animating a property, with the bell as the test
+
+The icon animation mocks offered a closed menu of named motions (Pulse, Wiggle,
+Bounce, Spin) and three easing buttons. The user rejected that on 2026-09-14 as
+"super weird and proprietary", and pointed out the thing it could not express: a
+bell swings about a pivot at its top, and the knob under it lags. Redone.
+
+`pages/icon-animate-wt.html` is now **Make a bell swing** and
+`pages/icon-phase-wt.html` is **Make the knob lag the bell**. Motion is a dock
+group sitting beside Effects, wearing the same header, the same plus and the
+same `.efx` rows, and the plus opens a list of the LAYER'S OWN PROPERTIES with
+their current values rather than a list of effects somebody else named. Rotation
+puts a draggable pivot on the canvas; the bell is shown rocking about its own
+middle first, and one drag of the pivot fixes it. Curves are a real list with
+each shape drawn beside its name plus a bezier editor you can drag.
+
+The timing moved out of the side column into a dock across the bottom, one cycle
+in milliseconds, a bar per animated property. The test for whether that dock
+earns its width is step 4 of the second page: dragging the knob's bar 90 ms after
+the bell's, with the gap measured between them and the knob's bar visibly running
+past the point where the cycle repeats. That is a relationship between two bars
+and it cannot be read in a column.
+
+`icon-loop-wt`, `icon-states-wt` and `icon-drawon-wt` were revised rather than
+rebuilt: the canned menu and the three easing buttons are gone from all three, so
+nothing in the folder offers a preset any more (a spinner is Rotation 0 to 360
+forever; drawing a stroke on is Dash). They still lack the timeline dock.
+
+Next: `rebuild-the-spinner-toggle-and-draw-on-flows-on` brings those three onto
+the full model, and `pages/time-compare.html` still argues the first round's
+premise, which blocks an honest answer to the open decision card about animating
+an icon versus editing a video.

@@ -9,19 +9,25 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-14T15:20:32.315Z",
-  "updated": "2026-09-14T15:20:32.318Z",
+  "updated": "2026-09-15T08:25:58.290Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while comparing the animation and video flows (task say-where-animating-an-icon-and-editing-a-video). Reproduced, not read:\n\n  $ cd docs/design/mocks\n  $ for f in pages/icon-animate-wt.html pages/icon-loop-wt.html pages/icon-states-wt.html pages/icon-drawon-wt.html pages/video-move-wt.html pages/video-zoom-wt.html; do echo \"--- $f\"; grep -A6 'aria-label=\"Easing\"' $f | grep -o '>[A-Za-z ][A-Za-z -]*</button>' | sed 's/>//;s;</button>;;'; done\n  --- pages/icon-animate-wt.html\n  Linear / Ease in-out / Spring\n  --- pages/icon-loop-wt.html\n  Linear / Ease in-out / Spring\n  --- pages/icon-states-wt.html\n  Linear / Ease out / Spring\n  --- pages/icon-drawon-wt.html\n  Linear / Ease out / Ease in-out\n  --- pages/video-move-wt.html\n  Linear / Ease in-out\n  --- pages/video-zoom-wt.html\n  Linear / Ease in-out\n\nThe design language already has exactly three curves and names them in tokens.css: --ease-standard cubic-bezier(.4,0,.2,1), --ease-decel cubic-bezier(0,0,.2,1), --ease-spring cubic-bezier(.34,1.4,.5,1), documented on pages/lang-motion.html. None of the six user-facing controls above maps cleanly onto those three names. Deciding the mapping (which label means --ease-decel: \"Ease out\"?) is the substance of the task.\n\nWhy it matters beyond tidiness: easing is one of only three things the animation and video flows genuinely share (see docs/design/animation-vs-video.md and the time-compare page). It is the cheapest consolidation on offer and it has already drifted in mocks alone, before a line of app code exists.",
   "acceptance": [
     "One named set of curves is written down in the shared motion rules, with the design tokens each name maps to",
     "Every mock page with an Easing control offers that same set, in the same order",
-    "A check script or the page checklist catches a page that invents its own set, so this cannot drift again silently"
+    "A check script or the page checklist catches a page that invents its own set, so this cannot drift again silently",
+    "The video pages offer the same curve control as the icon pages, not their own list",
+    "The curve control is defined once rather than pasted into each page that needs it"
   ],
   "log": [
     {
       "t": "2026-09-14T15:20:32.317Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T08:25:58.289Z",
+      "note": "Partly done, on the icon side only. 2026-09-15 the property-first animation mocks landed ONE curve control and it is now on all five icon pages (icon-animate-wt, icon-phase-wt, icon-loop-wt, icon-states-wt, icon-drawon-wt): a select opening a menu of named curves with each curve's SHAPE drawn beside its name (Linear, the four standard eases, ease in out sine, ease out back, ease out elastic, steps 4) plus 'Draw a curve...' opening a cubic-bezier editor with two draggable handles and the cubic-bezier(a,b,c,d) readout. The three-button segmented easing control is gone from every icon page. What is LEFT for this task is the video side: the video pages still carry their own easing vocabularies, and the curve menu markup is duplicated per page rather than living in shared/components, so a sixth page would copy it again. Adding to acceptance: the same curve control appears on the video pages too, and it is defined once rather than pasted per page."
     }
   ]
 }

@@ -35,10 +35,13 @@
   #icon-export-anim-wt .iex-glyph{fill:none;stroke:currentColor;stroke-width:1.75;
     stroke-linecap:round;stroke-linejoin:round}
 
-  @keyframes iexPulse{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
-  #icon-export-anim-wt .iex-anim{transform-box:view-box;transform-origin:50% 50%;
-    animation:iexPulse .9s cubic-bezier(.4,0,.2,1) infinite;animation-play-state:paused}
-  #icon-export-anim-wt .iex-prev svg{animation:iexPulse .9s cubic-bezier(.4,0,.2,1) infinite;
+  /* the SWING the two animation pages build, carried through to export: one
+     property (rotation) about a pivot at the top, not a named effect. */
+  @keyframes iexSwing{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+  #icon-export-anim-wt .iex-anim{transform-box:view-box;transform-origin:12px 4.4px;
+    animation:iexSwing .9s cubic-bezier(.45,0,.55,1) infinite;animation-play-state:paused}
+  #icon-export-anim-wt .iex-prev svg{transform-box:view-box;transform-origin:12px 4.4px;
+    animation:iexSwing .9s cubic-bezier(.45,0,.55,1) infinite;
     animation-play-state:paused}
   #icon-export-anim-wt .iex-play .iex-anim,#icon-export-anim-wt .iex-play .iex-prev svg{animation-play-state:running}
   @media (prefers-reduced-motion:reduce){
@@ -226,13 +229,12 @@
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Glyph</span></div>
               <div class="dgrp-b">
                 <div class="section">
-                  <div class="sec-h">Motion <span class="mut">pulse</span></div>
-                  <div class="irow"><span class="rl">Motion</span>
-                    <span class="select" tabindex="0" role="button"><span class="lead">Pulse</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
-                  </div>
-                  <div class="irow"><span class="rl">Over</span><span class="field" style="width:100%"><span class="k">s</span><span class="v">0.9</span></span></div>
+                  <div class="sec-h">Motion <span class="mut">2 entries</span></div>
+                  <div class="irow"><span class="rl">Bell body</span><span class="field" style="width:100%"><span class="v">Rotation -12° → 12°</span></span></div>
+                  <div class="irow"><span class="rl">Knob</span><span class="field" style="width:100%"><span class="v">Rotation -17° → 17°, +90 ms</span></span></div>
+                  <div class="irow"><span class="rl">Over</span><span class="field" style="width:100%"><span class="k">ms</span><span class="v">900</span></span></div>
                   <div class="irow"><span class="rl">Repeat</span><span class="field" style="width:100%"><span class="v">Forever</span></span></div>
-                  <p class="note">Built on <button class="link" data-target="icon-animate-wt">Make an icon pulse</button>. This page picks the glyph up where that one left it and gets it out of the app.</p>
+                  <p class="note">Built on <button class="link" data-target="icon-animate-wt">Make a bell swing</button> and <button class="link" data-target="icon-phase-wt">Make the knob lag the bell</button>. This page picks the glyph up where those left it and gets it out of the app.</p>
                 </div>
                 <div class="section">
                   <div class="sec-h">Hand-off <span class="mut">2 saved</span></div>

@@ -1,0 +1,31 @@
+{
+  "feature": "Animating a property of a layer, with the bell as the test",
+  "epic": "icon-svg",
+  "summary": "The animation mocks no longer offer a menu of canned effects. You pick a PROPERTY of the layer to animate, from a list built out of what that layer actually has, and Motion is a list you add entries to in the same dock, with the same header, plus and switches, as the Effects list beside it. Rotation puts a draggable pivot on the canvas, curves are a real list with each shape drawn plus one you draw yourself, and the timing lives in a dock across the bottom where the bell and its knob can be read against each other.",
+  "setup": "The design study, not the app. Start the dashboard (it is already running on 127.0.0.1:8791), open the Icons group in the left nav, and start at 'Make a bell swing'. Nothing here exists in Photonz yet and both pages say so at the top.",
+  "try": [
+    { "do": "Open 'Make a bell swing' and click Next to step 2. Read the menu that opens: it is this layer's own properties with their current values, and there is no Pulse in it.", "shot": "2026-09-15-motion-0-properties.png" },
+    { "do": "Step to 4. The bell starts rocking about its own middle and looks like a bobblehead. That is on purpose." },
+    { "do": "Step to 5. The pivot moves to the mount at the top and it becomes a bell. Decide whether that repair is the clearest step on the page or a cheap trick.", "shot": "2026-09-15-motion-1-pivot.png" },
+    { "do": "Step to 6 and 7. Open the curve list, then the curve editor, and judge whether the drawn shapes beside the names do more work than the names.", "shot": "2026-09-15-motion-2-curve.png" },
+    { "do": "Open 'Make the knob lag the bell'. Step to 3: both parts now move in perfect lockstep and read as one stamped shape." },
+    { "do": "Step to 4 and look at the bottom dock: two bars on one ruler, the knob's starting 90 ms later, with the gap measured between them.", "shot": "2026-09-15-motion-3-lag.png" },
+    { "do": "Step to 7. The knob's bar runs past the dashed repeats line, and the 16 point copy says the whole lag is invisible at the size the icon will be used." }
+  ],
+  "evaluate": [
+    "Does picking a property first feel like the right first question, or does it make the simple case (make this thing wiggle) slower than it should be?",
+    "Is Motion sitting as its own panel group next to Effects, with the same header and plus, obviously the same idiom, or does it just look like one more panel?",
+    "Does the deliberately wrong bell in step 4 of the first page teach the pivot, or does it read as the mock being broken?",
+    "Is the curve list with each shape drawn beside its name enough, or would you always go straight to Draw a curve?",
+    "Does the bottom dock earn its width? Specifically: could you have set a 90 ms lag from the Start field alone, without seeing the two bars?",
+    "The ruler is one cycle in milliseconds rather than a document with a start and an end. Is that the right shape for something that loops forever?"
+  ],
+  "rough": [
+    "These are browser screenshots of the design-study pages served from the dashboard, not app captures. The pages ARE the deliverable here, so the picture is the real thing, but no Photonz build was launched for this task.",
+    "Three earlier pages were REVISED rather than rebuilt: 'Build a spinner that never stops', 'Animate a toggle between two states' and 'Draw a checkmark on'. Their canned motion menu and three easing buttons are gone, replaced by the same property menu and the same curve control, so nothing in the folder now offers Pulse or Spin as a thing you pick. But they still frame motion as ONE property per layer chosen from a row, not as a list you add entries to, and none of them has the bottom timeline dock. Filed as a follow-up rather than left unsaid.",
+    "'Animation vs video: the same job?' (time-compare) is built on the first round's premise. It still argues that icon timing is 'one field, typed, never dragged' and that an Order list beats a track, which the two new pages contradict on purpose. It needs redoing before the open decision card about animating an icon versus editing a video can be answered honestly. Filed.",
+    "The Motion panel scrolls on an 864px window: with Layers, Properties, Effects and Motion all open, the entry's own settings sit below the fold and the dock auto-scrolls to whatever the step is pointing at. In the real app that is fine; in a screenshot of a mock it means you rarely see the list and its settings at once.",
+    "The curve thumbnails at 22px are honest but small. Ease in out and Ease in out sine are nearly indistinguishable at that size, which slightly undercuts the argument that the shape does the work the name cannot.",
+    "The pivot the knob uses is the BELL's mount, not a point inside the knob. That is physically right and the page says so, but it is a real modelling decision the app has not made: a layer would have to be able to name a pivot that lives on another layer."
+  ]
+}

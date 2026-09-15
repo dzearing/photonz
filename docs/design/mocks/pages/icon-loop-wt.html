@@ -13,7 +13,7 @@
      end. It is not a four second animation that happens to repeat, it is one
      turn plus the word FOREVER, and a ruler with a last frame on it is simply
      the wrong instrument. So the whole flow is: pick the part that moves, pick
-     Spin, say how long one turn takes.
+     Rotation, say how far and how long one turn takes.
 
      It also carries the mistake everybody makes once. A rotation turns around a
      point, and the obvious default (the moving shape's own center) is the wrong
@@ -118,6 +118,18 @@
 
   #icon-loop-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
     color:var(--ink);aspect-ratio:16/10}
+  /* THE CURVE CONTROL · the one shared by every page with timing. Named curves
+     with their shape drawn beside them, and a custom one at the bottom, because
+     three buttons in a segmented control is not a vocabulary. */
+  #icon-loop-wt #curveMenu .menuitem{gap:var(--gap-sm)}
+  #icon-loop-wt .cvth{flex:none;width:22px;height:22px;border-radius:5px;
+    background:var(--panel-2);border:1px solid var(--line)}
+  #icon-loop-wt .cvth path{fill:none;stroke:var(--accent);stroke-width:2.4;
+    stroke-linecap:round;vector-effect:non-scaling-stroke}
+  #icon-loop-wt .menuitem .pk{margin-left:auto;font-family:var(--mono);font-size:9.5px;
+    color:var(--faint);white-space:nowrap}
+  #icon-loop-wt .mnote{padding:var(--gap-sm) var(--pad-sm) var(--s1);font-size:10.5px;
+    line-height:1.5;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:var(--s1)}
 </style>
 </head>
 <body class="page">
@@ -238,7 +250,8 @@
                 <input class="zslider" type="range" name="zoom" min="100" max="1600" value="1600" aria-label="Zoom">
                 <span class="val zval">1600%</span>
               </span>
-              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
+
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
                 <div class="menuitem"><i class="ic ic-node"></i> Edit nodes <span class="sc">A</span></div>
                 <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">I</span></div>
               </div>
@@ -302,7 +315,7 @@
                   <div class="section">
                     <div class="sec-h">Motion <span class="mut" id="pMotMut">none</span></div>
                     <div class="irow"><span class="rl">Motion</span>
-                      <span class="select" id="selMotion" tabindex="0" role="button"><span class="lead" id="motKind">None</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      <span class="select" id="selMotion" tabindex="0" role="button"><span class="lead" id="motKind">Nothing yet</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
                     <p class="note" id="motNote">Motion sits on the layer, not on the document. That is what lets one part of a two-part glyph move while the other stays put.</p>
 
@@ -310,12 +323,8 @@
                       <div class="irow"><span class="rl">Per turn</span>
                         <span class="stepper sm" style="width:100%"><span class="k">s</span><input id="pDur" value="1.2" aria-label="Seconds per turn"></span>
                       </div>
-                      <div class="irow" style="grid-template-columns:1fr"><span class="rl">Easing</span>
-                        <span class="seg pseg" role="group" aria-label="Easing">
-                          <button class="on" id="easLin">Linear</button>
-                          <button id="easInOut">Ease in-out</button>
-                          <button id="easSpring">Spring</button>
-                        </span>
+                      <div class="irow"><span class="rl">Curve</span>
+                        <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Linear</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                       </div>
                       <div class="irow"><span class="rl">Repeat</span>
                         <span class="select" id="selRepeat" tabindex="0" role="button"><span class="lead" id="repVal">Forever</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
@@ -323,7 +332,7 @@
                       <div class="irow"><span class="rl">Around</span>
                         <span class="select" id="selOrigin" tabindex="0" role="button"><span class="lead" id="oriVal">Its own center</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                       </div>
-                      <p class="note" id="timNote">Spin arrives already set to <b>Forever</b> and <b>Linear</b>, because that is what a spinner is. Neither is locked: they are just the answer you would have picked.</p>
+                      <p class="note" id="timNote">Rotation on a ring arrives at <b>0&#176; to 360&#176;</b>, <b>Forever</b> and <b>Linear</b>, because that is what you would have typed. None of it is locked: they are the answer offered, not a preset applied.</p>
                       <div class="il-caution wt-off" id="easeWarn">
                         <i class="ic sm ic-warning"></i>
                         <p><b>Easing fights a loop that never ends.</b> The turn slows to a stop at 100% and starts again from nothing, so it hesitates once every turn. Easing is for a motion that begins and finishes.</p>
@@ -396,17 +405,38 @@
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-          <div class="popover menu pop" id="motMenu" style="position:absolute;right:var(--s4);top:264px;width:238px;z-index:11">
-            <div class="mlabel">Attention</div>
-            <div class="menuitem"><i class="ic ic-loop"></i> Pulse</div>
-            <div class="menuitem"><i class="ic ic-refresh"></i> Wiggle</div>
-            <div class="menuitem"><i class="ic ic-arrow-up"></i> Bounce</div>
+              <div class="popover menu pop" id="curveMenu" style="position:absolute;right:var(--s4);top:396px;width:252px;max-height:320px;overflow:auto;z-index:11">
+            <div class="mlabel">Standard</div>
+            <div class="menuitem" id="easLin"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22 22 2"/></svg> Linear</div>
+            <div class="menuitem" id="easInOut"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C8 22 16 2 22 2"/></svg> Ease in out</div>
+            <div class="menuitem" id="easIn"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C14 22 22 14 22 2"/></svg> Ease in</div>
+            <div class="menuitem" id="easOut"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C2 10 10 2 22 2"/></svg> Ease out</div>
             <div class="menu-sep"></div>
-            <div class="mlabel">Continuous</div>
-            <div class="menuitem" id="miSpin"><i class="ic ic-rotate-right"></i> Spin</div>
-            <div class="menuitem"><i class="ic ic-opacity"></i> Breathe</div>
+            <div class="mlabel">Shaped</div>
+            <div class="menuitem" id="easSine"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C10 22 14 2 22 2"/></svg> Ease in out sine</div>
+            <div class="menuitem" id="easBack"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22C6 26 12 2 22 2"/></svg> Ease out back</div>
+            <div class="menuitem" id="easElastic"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22c3 0 4-22 6-16s3 12 5 9 2-6 9-6"/></svg> Ease out elastic</div>
+            <div class="menuitem" id="easSteps"><svg class="cvth" viewBox="0 0 24 24"><path d="M2 22h6v-7h6v-6h8V2"/></svg> Steps, 4</div>
             <div class="menu-sep"></div>
-            <div class="menuitem"><i class="ic ic-keyframe"></i> Custom&#8230;</div>
+            <div class="menuitem" id="easCustom"><i class="ic ic-curves"></i> Draw a curve&#8230; <span class="sc">&#8997;&#8984;C</span></div>
+            <p class="mnote">Named curves are the front door and <b>Draw a curve</b> is the rest of it. The shape beside each name is the point: nobody can tell <i>out back</i> from <i>out elastic</i> by reading them. Same control on every page that has timing.</p>
+          </div>
+
+          <div class="popover menu pop" id="motMenu" style="position:absolute;right:var(--s4);top:170px;width:268px;z-index:11">
+            <div class="mlabel">Transform</div>
+            <div class="menuitem" id="miPos"><i class="ic ic-move"></i> Position <span class="pk">4, 4</span></div>
+            <div class="menuitem" id="miScale"><i class="ic ic-scale"></i> Scale <span class="pk">100%</span></div>
+            <div class="menuitem" id="miSpin"><i class="ic ic-rotate-right"></i> Rotation <span class="pk">0&#176;</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Appearance</div>
+            <div class="menuitem"><i class="ic ic-opacity"></i> Opacity <span class="pk">100%</span></div>
+            <div class="menuitem"><i class="ic ic-color"></i> Colour <span class="pk">#7C4DFF</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Path &#183; only a drawn shape has these</div>
+            <div class="menuitem"><i class="ic ic-node"></i> Path points <span class="pk">6 points</span></div>
+            <div class="menuitem"><i class="ic ic-line"></i> Stroke width <span class="pk">2.4 pt</span></div>
+            <div class="menuitem"><i class="ic ic-border"></i> Dash <span class="pk">none</span></div>
+            <p class="mnote">A spinner is not a preset called Spin, it is <b>Rotation, 0&#176; to 360&#176;, forever</b>. The list is what this layer has, so a photo layer would have no Dash. Same list on <button class="link" data-target="icon-animate-wt">Make a bell swing</button>.</p>
           </div>
 
           <div class="popover menu pop" id="oriMenu" style="position:absolute;right:var(--s4);top:452px;width:232px;z-index:11">
@@ -452,7 +482,7 @@
 
       <li class="wt-step"
           data-title="Make it spin"
-          data-cue="#selMotion" data-cue-label="Click the Motion row" data-cue-place="left"
+          data-cue="#selMotion" data-cue-label="Click the Animate row" data-cue-place="left"
           data-open="#gLayers,#gProps" data-collapse="#gLibrary"
           data-select="#lrArc" data-pop="#motMenu"
           data-show="#ilSel,#propsShape" data-hide="#propsEmpty"
@@ -461,22 +491,22 @@
           <span class="wt-n">2</span>
           <p class="wt-do">the <b>Motion</b> row</p>
           <p class="wt-where">Properties, in the Motion section</p>
-          <p class="wt-res">the same short list of named motions opens as on every other glyph, and <b>Spin</b> is under <b>Continuous</b> rather than <b>Attention</b>. That split is the only place the app says out loud that some motions end and some do not.</p>
+          <p class="wt-res">the same list of <b>this layer's own properties</b> opens as on every other glyph: position, scale, rotation, opacity, colour, and the path ones. There is no entry called Spin, because a spinner is not a kind of motion, it is <b>Rotation, 0&#176; to 360&#176;, forever</b>, and the three parts of that sentence are three ordinary controls.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="And it goes wrong in the ordinary way"
-          data-cue="#miSpin" data-cue-label="Click Spin" data-cue-place="left"
+          data-cue="#miSpin" data-cue-label="Click Rotation" data-cue-place="left"
           data-open="#gLayers,#gProps" data-collapse="#gLibrary"
           data-select="#lrArc" data-pop="#motMenu"
           data-show="#propsShape,#secTiming,#lrArcMot,#ilHint" data-hide="#ilSel,#propsEmpty"
           data-class="#ilArc=il-anim|#ilWin=il-play"
-          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#chipMotion=spin|#chipCycle=1.2s &#183; forever|#motNote=Spin arrives with Repeat already on Forever, because a spinner with a count is not a spinner.">
+          data-set="#propKind=Glyph|#motKind=Rotation|#pMotMut=rotation|#chipMotion=rotation|#chipCycle=1.2s &#183; forever|#motNote=Rotation arrives at 0 to 360 with Repeat on Forever when the shape is a ring, because that is the answer you would have typed. Neither is locked.">
         <div class="wt-cap comp">
           <span class="wt-n">3</span>
-          <p class="wt-do"><b>Spin</b></p>
-          <p class="wt-where">the motion list, under Continuous</p>
+          <p class="wt-do"><b>Rotation</b>, then set <b>To</b> to 360 and <b>Repeat</b> to Forever</p>
+          <p class="wt-where">the property list</p>
           <p class="wt-res">the arc starts turning and <b>it is wrong</b>. It swings around its own middle and orbits the artboard instead of spinning in place, because the obvious default for "turn this shape" is the shape's own center and an arc's center is not the circle's center. Everyone meets this once. The fix is one row down.</p>
         </div>
       </li>
@@ -488,7 +518,7 @@
           data-select="#lrArc" data-pop="#oriMenu"
           data-show="#propsShape,#secTiming,#lrArcMot,#ilHint,#ilOrigin" data-hide="#ilSel,#propsEmpty"
           data-class="#ilArc=il-anim il-true|#ilWin=il-play"
-          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#chipMotion=spin|#chipCycle=1.2s &#183; forever|#timNote=The point it turns around is drawn on the artboard while you are choosing it, so this is a thing you see rather than a thing you work out.">
+          data-set="#propKind=Glyph|#motKind=Rotation|#pMotMut=rotation|#oriVal=The artboard center|#chipMotion=rotation|#chipCycle=1.2s &#183; forever|#timNote=The point it turns around is drawn on the artboard while you are choosing it, so this is a thing you see rather than a thing you work out.">
         <div class="wt-cap comp">
           <span class="wt-n">4</span>
           <p class="wt-do">the <b>Around</b> row, and choose <b>The artboard center</b></p>
@@ -505,7 +535,7 @@
           data-show="#propsShape,#secTiming,#lrArcMot,#ilHint" data-hide="#ilSel,#propsEmpty"
           data-class="#ilArc=il-anim il-true|#ilWin=il-play"
           data-css="#ilWin=--il-dur:0.9s"
-          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#pDur=0.9|#chipMotion=spin|#chipCycle=0.9s &#183; forever">
+          data-set="#propKind=Glyph|#motKind=Rotation|#pMotMut=rotation|#oriVal=The artboard center|#pDur=0.9|#chipMotion=rotation|#chipCycle=0.9s &#183; forever">
         <div class="wt-cap comp">
           <span class="wt-n">5</span>
           <p class="wt-do"><b>0.9</b> in the <b>Per turn</b> field</p>
@@ -516,34 +546,34 @@
 
       <li class="wt-step"
           data-title="Try to ease it, and be told why not"
-          data-cue="#easInOut" data-cue-label="Click Ease in-out" data-cue-place="left"
+          data-cue="#easInOut" data-cue-label="Click Curve, choose Ease in out" data-pop="#curveMenu" data-cue-place="left"
           data-open="#gLayers,#gProps" data-collapse="#gLibrary"
           data-select="#lrArc" data-activate="#easInOut"
           data-show="#propsShape,#secTiming,#lrArcMot,#ilHint,#easeWarn" data-hide="#ilSel,#propsEmpty"
           data-class="#ilArc=il-anim il-true|#ilWin=il-play"
           data-css="#ilWin=--il-dur:0.9s;--il-ease:cubic-bezier(.4,0,.2,1)"
-          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#pDur=0.9|#chipMotion=spin|#chipCycle=0.9s &#183; forever">
+          data-set="#propKind=Glyph|#motKind=Rotation|#pMotMut=rotation|#oriVal=The artboard center|#pDur=0.9|#chipMotion=rotation|#chipCycle=0.9s &#183; forever">
         <div class="wt-cap comp">
           <span class="wt-n">6</span>
           <p class="wt-do"><b>Ease in-out</b></p>
-          <p class="wt-where">the Easing row</p>
+          <p class="wt-where">the Curve row</p>
           <p class="wt-res">the turn now hesitates once every pass, and the panel says why <b>underneath the control that caused it</b> rather than in a dialog you have to dismiss. Easing describes something that starts and finishes; on a loop with no end it just puts a stutter at the seam. Nothing is blocked: you can leave it this way if that is what you meant.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Put it back"
-          data-cue="#easLin" data-cue-label="Click Linear" data-cue-place="left"
+          data-cue="#easLin" data-cue-label="Click Curve, choose Linear" data-pop="#curveMenu" data-cue-place="left"
           data-open="#gLayers,#gProps" data-collapse="#gLibrary"
           data-select="#lrArc" data-activate="#easLin"
           data-show="#propsShape,#secTiming,#secCycle,#lrArcMot,#ilHint" data-hide="#ilSel,#propsEmpty,#easeWarn"
           data-class="#ilArc=il-anim il-true|#ilWin=il-play"
           data-css="#ilWin=--il-dur:0.9s;--il-ease:linear"
-          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#pDur=0.9|#chipMotion=spin|#chipCycle=0.9s &#183; forever">
+          data-set="#propKind=Glyph|#motKind=Rotation|#pMotMut=rotation|#oriVal=The artboard center|#pDur=0.9|#chipMotion=rotation|#chipCycle=0.9s &#183; forever">
         <div class="wt-cap comp">
           <span class="wt-n">7</span>
           <p class="wt-do"><b>Linear</b></p>
-          <p class="wt-where">the Easing row</p>
+          <p class="wt-where">the Curve row</p>
           <p class="wt-res">the stutter goes and the caution goes with it. A <b>One turn</b> section is now showing what the motion actually is: two keys, 0&#176; and 360&#176;, and a <b>loop check</b> that says it ends where it starts. That check is the only thing a repeating animation must get right, and it is the thing nobody catches by eye.</p>
         </div>
       </li>
@@ -556,7 +586,7 @@
           data-show="#propsShape,#secTiming,#secCycle,#lrArcMot,#ilHint" data-hide="#ilSel,#propsEmpty,#easeWarn,#ilOrigin"
           data-class="#ilArc=il-anim il-true|#ilWin=il-play"
           data-css="#ilWin=--il-dur:0.9s;--il-ease:linear"
-          data-set="#propKind=Glyph|#motKind=Spin|#pMotMut=spin|#oriVal=The artboard center|#pDur=0.9|#chipMotion=spin|#chipCycle=0.9s &#183; forever">
+          data-set="#propKind=Glyph|#motKind=Rotation|#pMotMut=rotation|#oriVal=The artboard center|#pDur=0.9|#chipMotion=rotation|#chipCycle=0.9s &#183; forever">
         <div class="wt-cap comp">
           <span class="wt-n">8</span>
           <p class="wt-do">at the <b>16</b> copy, turning at the same rate as the 48</p>
@@ -577,7 +607,7 @@
   </div>
 
   <div class="caption">
-    <div class="c"><div class="lab">The idea</div><p>A continuous motion is <b>one cycle and the word forever</b>. There is no duration to give it and no last frame to draw, so a timeline has nothing to measure. Two fields and a named motion cover the whole thing.</p></div>
+    <div class="c"><div class="lab">The idea</div><p>A continuous motion is <b>one cycle and the word forever</b>. There is no duration to give it and no last frame to draw, so a timeline has nothing to measure. Two fields and one animated property cover the whole thing, and the property is <b>Rotation</b> like any other.</p></div>
     <div class="c"><div class="lab g2">The part worth arguing about</div><p>The <b>Around</b> row. A rotation needs a point, the sensible-looking default is wrong for arcs, crescents and hands, and you only find out by watching it wobble. Showing the crosshair while you choose turns a puzzle into a glance.</p></div>
     <div class="c"><div class="lab g2">A direction</div><p>The <b>loop check</b> could do more than confirm the ends match. It could catch the real seam bugs: a value that drifts a fraction each pass, a motion whose duration is not a multiple of a sibling's so two spinners slowly fall out of step.</p></div>
     <div class="c"><div class="lab g2">Open question</div><p>Should easing on a forever loop be a <b>caution</b>, as drawn here, or should the app simply not offer it? Cautions that are always right get ignored; controls that are quietly missing get reported as bugs.</p></div>

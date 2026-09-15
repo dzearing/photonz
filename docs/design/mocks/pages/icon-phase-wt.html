@@ -3,11 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Photonz · icon-animate-wt</title>
+<title>Photonz · icon-phase-wt</title>
 <link rel="stylesheet" href="/shared/photonz-ds.css">
 <style>
-  /* icon-animate-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
-     rendered once, driven by the steps below. ONE scenario: make a bell swing.
+  /* icon-phase-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, driven by the steps below. ONE scenario: make the knob lag.
+
+     This page picks up where "Make a bell swing" left off. The bell already
+     swings about the mount at its top; the knob has nothing, so it sits still
+     while the bell swings off it. The job is to give the knob the SAME motion
+     and then put it slightly out of step, which is the thing the user named:
+     "the bell knob at the bottom would have a slightly different momentum".
+
+     It is also the page that has to justify the bottom dock. Everything on the
+     previous page could have been done in the side column. This cannot: a lag
+     is a RELATIONSHIP between two bars, and a relationship needs them on one
+     ruler at once. The test is step 4. If dragging the knob's bar 90 ms later
+     does not read at a glance, the timeline is decoration.
 
      THE ARGUMENT, and why this page replaced the one that used to live here.
      The first version offered a short menu of named motions (Pulse, Wiggle,
@@ -33,31 +45,31 @@
 
      Page-local CSS: the artboard, the bell, the origin handle, the real-size
      strip, the motion rows and the cycle timeline. Everything else is the DS. */
-  #icon-animate-wt .win.shell{height:864px;min-height:0}
-  #icon-animate-wt .canvas{--artboard-glow:520px 360px}
+  #icon-phase-wt .win.shell{height:864px;min-height:0}
+  #icon-phase-wt .canvas{--artboard-glow:520px 360px}
 
   /* ---------- THE ARTBOARD · a 24 unit icon template ---------- */
-  #icon-animate-wt .bl-board{position:relative;height:min(300px,62%);width:auto;aspect-ratio:1;
+  #icon-phase-wt .bl-board{position:relative;height:min(300px,62%);width:auto;aspect-ratio:1;
     border-radius:var(--r4);background:var(--panel);border:1px solid var(--line-strong);
     box-shadow:0 26px 56px -20px rgba(0,0,0,.5);color:var(--ink)}
-  #icon-animate-wt .bl-board svg.art{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
-  #icon-animate-wt #blMinorPat path{stroke:var(--line)}
-  #icon-animate-wt .bl-live{fill:none;stroke:var(--accent);stroke-width:.05;stroke-dasharray:.42 .3;opacity:.55}
-  #icon-animate-wt .bl-glyph{fill:none;stroke:currentColor;stroke-width:1.7;
+  #icon-phase-wt .bl-board svg.art{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+  #icon-phase-wt #blMinorPat path{stroke:var(--line)}
+  #icon-phase-wt .bl-live{fill:none;stroke:var(--accent);stroke-width:.05;stroke-dasharray:.42 .3;opacity:.55}
+  #icon-phase-wt .bl-glyph{fill:none;stroke:currentColor;stroke-width:1.7;
     stroke-linecap:round;stroke-linejoin:round}
-  #icon-animate-wt .bl-glyph.solid{fill:currentColor;stroke:none}
+  #icon-phase-wt .bl-glyph.solid{fill:currentColor;stroke:none}
 
   /* ---------- THE ORIGIN · a handle on the canvas, not a hidden field -------
      --bl-ox / --bl-oy are set on the window, so the pivot the rotation turns
      about and the handle you drag can never disagree: they read the same two
      numbers. A step moves the handle by moving the pivot. */
-  #icon-animate-wt .bl-origin{transform-box:view-box;
+  #icon-phase-wt .bl-origin{transform-box:view-box;
     transform:translate(var(--bl-ox,12px),var(--bl-oy,11px));
     transition:transform .35s cubic-bezier(.4,0,.2,1)}
-  #icon-animate-wt .bl-origin circle.ring{fill:none;stroke:var(--comp);stroke-width:.16}
-  #icon-animate-wt .bl-origin circle.pv{fill:var(--comp);stroke:none}
-  #icon-animate-wt .bl-origin path{fill:none;stroke:var(--comp);stroke-width:.12}
-  #icon-animate-wt .bl-origin text{fill:var(--comp);font-size:1.1px;font-weight:700;
+  #icon-phase-wt .bl-origin circle.ring{fill:none;stroke:var(--comp);stroke-width:.16}
+  #icon-phase-wt .bl-origin circle.pv{fill:var(--comp);stroke:none}
+  #icon-phase-wt .bl-origin path{fill:none;stroke:var(--comp);stroke-width:.12}
+  #icon-phase-wt .bl-origin text{fill:var(--comp);font-size:1.1px;font-weight:700;
     font-family:var(--sans);letter-spacing:.02px}
 
   /* ---------- THE MOTION · real CSS, so the page really moves --------------
@@ -67,42 +79,59 @@
     0%,100%{transform:rotate(var(--bl-from,0deg))}
     50%    {transform:rotate(var(--bl-to,0deg))}
   }
-  #icon-animate-wt .bl-rot{transform-box:view-box;
+  #icon-phase-wt .bl-rot{transform-box:view-box;
     transform-origin:var(--bl-ox,12px) var(--bl-oy,11px);
     animation:blSwing var(--bl-dur,.9s) var(--bl-ease,linear) infinite;
     animation-play-state:paused}
-  #icon-animate-wt .bl-knob{animation-delay:var(--bl-knob-delay,0s)}
-  #icon-animate-wt .bl-play .bl-rot{animation-play-state:running}
+  /* THE KNOB runs the same shape on its own clock: its own from/to and its own
+     delay, about the SAME pivot, because it hangs from the same mount. Those
+     three numbers are the whole of "a slightly different momentum". */
+  @keyframes knSwing{
+    0%,100%{transform:rotate(var(--kn-from,0deg))}
+    50%    {transform:rotate(var(--kn-to,0deg))}
+  }
+  #icon-phase-wt .kn-rot{transform-box:view-box;
+    transform-origin:var(--bl-ox,12px) var(--bl-oy,11px);
+    animation:knSwing var(--bl-dur,.9s) var(--kn-ease,var(--bl-ease,linear)) infinite;
+    animation-delay:var(--kn-delay,0s);
+    animation-play-state:paused}
+  #icon-phase-wt .bl-play .kn-rot{animation-play-state:running}
+  #icon-phase-wt .bl-play .bl-rot{animation-play-state:running}
   /* the real-size copies run the same cycle, off the same variables, so the
      16pt bell and the artboard bell can never disagree about the motion */
-  #icon-animate-wt .bl-mini{transform-box:view-box;
+  #icon-phase-wt .bl-mini{transform-box:view-box;
     transform-origin:var(--bl-ox,12px) var(--bl-oy,11px);
     animation:blSwing var(--bl-dur,.9s) var(--bl-ease,linear) infinite;
     animation-name:none}
-  #icon-animate-wt .bl-play .bl-mini{animation-name:blSwing}
-  #icon-animate-wt .bl-miniknob{animation-name:none !important}
+  #icon-phase-wt .bl-play .bl-mini{animation-name:blSwing}
+  #icon-phase-wt .bl-miniknob{transform-box:view-box;
+    transform-origin:var(--bl-ox,12px) var(--bl-oy,11px);
+    animation:knSwing var(--bl-dur,.9s) var(--kn-ease,var(--bl-ease,linear)) infinite;
+    animation-delay:var(--kn-delay,0s);animation-name:none}
+  #icon-phase-wt .bl-play.kn-live .bl-miniknob{animation-name:knSwing}
   @media (prefers-reduced-motion:reduce){
-    #icon-animate-wt .bl-rot,#icon-animate-wt .bl-mini{animation:none}
+    #icon-phase-wt .bl-rot,#icon-phase-wt .bl-mini,
+    #icon-phase-wt .kn-rot,#icon-phase-wt .bl-miniknob{animation:none}
   }
 
   /* ---------- REAL SIZE · the preview IS the review ---------- */
-  #icon-animate-wt .bl-sizes{position:absolute;left:var(--s4);top:var(--s4);z-index:6;
+  #icon-phase-wt .bl-sizes{position:absolute;left:var(--s4);top:var(--s4);z-index:6;
     display:flex;flex-direction:column;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
     border-radius:var(--r3);background:var(--glass-2);border:1px solid var(--edge-lo);
     backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
-  #icon-animate-wt .bl-szhead{display:flex;align-items:center;gap:var(--s2)}
-  #icon-animate-wt .bl-szhead .bl-t{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  #icon-phase-wt .bl-szhead{display:flex;align-items:center;gap:var(--s2)}
+  #icon-phase-wt .bl-szhead .bl-t{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
     font-weight:660;color:var(--faint);margin-right:auto}
-  #icon-animate-wt .bl-szrow{display:flex;align-items:flex-end;gap:var(--pad-sm)}
-  #icon-animate-wt .bl-sz{display:flex;flex-direction:column;align-items:center;gap:5px}
-  #icon-animate-wt .bl-sz .px{display:grid;place-items:center;border-radius:7px;background:var(--panel-2);
+  #icon-phase-wt .bl-szrow{display:flex;align-items:flex-end;gap:var(--pad-sm)}
+  #icon-phase-wt .bl-sz{display:flex;flex-direction:column;align-items:center;gap:5px}
+  #icon-phase-wt .bl-sz .px{display:grid;place-items:center;border-radius:7px;background:var(--panel-2);
     border:1px solid var(--line);color:var(--ink);overflow:hidden}
-  #icon-animate-wt .bl-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
-  #icon-animate-wt .bl-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
-  #icon-animate-wt .bl-sz.flag .n{color:var(--warn);font-weight:660}
-  #icon-animate-wt .bl-icpause{display:none}
-  #icon-animate-wt .bl-play .bl-icpause{display:block}
-  #icon-animate-wt .bl-play .bl-icplay{display:none}
+  #icon-phase-wt .bl-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
+  #icon-phase-wt .bl-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
+  #icon-phase-wt .bl-sz.flag .n{color:var(--warn);font-weight:660}
+  #icon-phase-wt .bl-icpause{display:none}
+  #icon-phase-wt .bl-play .bl-icpause{display:block}
+  #icon-phase-wt .bl-play .bl-icplay{display:none}
 
   /* ---------- THE MOTION LIST · an .efx list, because that is what it is ----
      Not a new vocabulary. `.efx` is the Effects row the app already has: drag
@@ -110,52 +139,52 @@
      learning to add a border teaches you how to add a rotation. The only thing
      added is `.mrow`, which marks the entry you are editing and lets its
      settings sit under it. */
-  #icon-animate-wt .efx.mrow{flex-wrap:wrap;margin-bottom:var(--s1)}
+  #icon-phase-wt .efx.mrow{flex-wrap:wrap;margin-bottom:var(--s1)}
   /* the value summary gets its own line under the name rather than fighting the
      row menu for the right edge, which is what made it wrap raggedly */
-  #icon-animate-wt .efx.mrow .nm{flex:1 1 auto;min-width:0}
-  #icon-animate-wt .efx.mrow .emeta{flex:1 0 100%;margin:2px 0 0;padding-left:53px;
+  #icon-phase-wt .efx.mrow .nm{flex:1 1 auto;min-width:0}
+  #icon-phase-wt .efx.mrow .emeta{flex:1 0 100%;margin:2px 0 0;padding-left:53px;
     font-family:var(--mono);font-size:10px;color:var(--faint);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #icon-animate-wt .efx.mrow.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-  #icon-animate-wt .efx.mrow .crv{flex:none;width:18px;height:18px;border-radius:4px;
+  #icon-phase-wt .efx.mrow.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  #icon-phase-wt .efx.mrow .crv{flex:none;width:18px;height:18px;border-radius:4px;
     background:var(--panel-2);border:1px solid var(--line);display:block}
-  #icon-animate-wt .crv path{fill:none;stroke:var(--accent);stroke-width:2.6;
+  #icon-phase-wt .crv path{fill:none;stroke:var(--accent);stroke-width:2.6;
     stroke-linecap:round;vector-effect:non-scaling-stroke}
-  #icon-animate-wt .crv .cus{display:none}
-  #icon-animate-wt .crv.custom .lin{display:none}
-  #icon-animate-wt .crv.custom .cus{display:block}
-  #icon-animate-wt .mset{padding:var(--gap-sm) 0 var(--s1)}
-  #icon-animate-wt .mnone{display:flex;align-items:center;gap:var(--s2);padding:var(--pad-sm);
+  #icon-phase-wt .crv .cus{display:none}
+  #icon-phase-wt .crv.custom .lin{display:none}
+  #icon-phase-wt .crv.custom .cus{display:block}
+  #icon-phase-wt .mset{padding:var(--gap-sm) 0 var(--s1)}
+  #icon-phase-wt .mnone{display:flex;align-items:center;gap:var(--s2);padding:var(--pad-sm);
     border:1px dashed var(--line-strong);border-radius:var(--r2);color:var(--faint);font-size:11.5px}
-  #icon-animate-wt .mnone .ic{color:var(--faint);flex:none}
+  #icon-phase-wt .mnone .ic{color:var(--faint);flex:none}
 
   /* the property menu is built from what the layer HAS, so each item carries
      the value it would animate. `.pk` is that value, not a preset's name. */
-  #icon-animate-wt .menuitem .pk{margin-left:auto;font-family:var(--mono);font-size:9.5px;
+  #icon-phase-wt .menuitem .pk{margin-left:auto;font-family:var(--mono);font-size:9.5px;
     color:var(--faint);white-space:nowrap}
-  #icon-animate-wt .mnote{padding:var(--gap-sm) var(--pad-sm) var(--s1);font-size:10.5px;
+  #icon-phase-wt .mnote{padding:var(--gap-sm) var(--pad-sm) var(--s1);font-size:10.5px;
     line-height:1.5;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:var(--s1)}
 
   /* the curve menu draws the curve beside its name, because the name is not
      the thing: nobody can tell ease-out-back from ease-out-quint by reading. */
-  #icon-animate-wt #curveMenu .menuitem{gap:var(--gap-sm)}
-  #icon-animate-wt .cvth{flex:none;width:22px;height:22px;border-radius:5px;
+  #icon-phase-wt #curveMenu .menuitem{gap:var(--gap-sm)}
+  #icon-phase-wt .cvth{flex:none;width:22px;height:22px;border-radius:5px;
     background:var(--panel-2);border:1px solid var(--line)}
-  #icon-animate-wt .cvth path{fill:none;stroke:var(--accent);stroke-width:2.4;
+  #icon-phase-wt .cvth path{fill:none;stroke:var(--accent);stroke-width:2.4;
     stroke-linecap:round;vector-effect:non-scaling-stroke}
 
   /* ---------- THE CUSTOM CURVE EDITOR · handles you drag ---------- */
-  #icon-animate-wt .bez{width:100%;aspect-ratio:1;background:var(--well);border:1px solid var(--line);
+  #icon-phase-wt .bez{width:100%;aspect-ratio:1;background:var(--well);border:1px solid var(--line);
     border-radius:var(--r2);box-shadow:var(--well-sh);display:block}
-  #icon-animate-wt .bez .gr{stroke:var(--line);stroke-width:.4}
-  #icon-animate-wt .bez .cv{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;
+  #icon-phase-wt .bez .gr{stroke:var(--line);stroke-width:.4}
+  #icon-phase-wt .bez .cv{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;
     vector-effect:non-scaling-stroke}
-  #icon-animate-wt .bez .hl{stroke:var(--comp);stroke-width:1.2;vector-effect:non-scaling-stroke}
-  #icon-animate-wt .bez .hd{fill:var(--comp);stroke:var(--panel);stroke-width:1.4;
+  #icon-phase-wt .bez .hl{stroke:var(--comp);stroke-width:1.2;vector-effect:non-scaling-stroke}
+  #icon-phase-wt .bez .hd{fill:var(--comp);stroke:var(--panel);stroke-width:1.4;
     vector-effect:non-scaling-stroke;cursor:grab}
-  #icon-animate-wt .bezval{display:flex;align-items:center;gap:var(--s2);margin-top:var(--gap-sm)}
-  #icon-animate-wt .bezval code{flex:1;font-family:var(--mono);font-size:9.5px;color:var(--ink);
+  #icon-phase-wt .bezval{display:flex;align-items:center;gap:var(--s2);margin-top:var(--gap-sm)}
+  #icon-phase-wt .bezval code{flex:1;font-family:var(--mono);font-size:9.5px;color:var(--ink);
     background:var(--well);box-shadow:var(--well-sh);border-radius:var(--r2);padding:5px 8px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -163,45 +192,56 @@
      It measures ONE cycle of the loop in milliseconds, so a delay is a distance
      you can see rather than a number you have to hold in your head. The lane
      runs 0 to 1200ms; the cycle ends at 900 and the loop mark says so. */
-  #icon-animate-wt .timeline{min-height:186px}
-  #icon-animate-wt .tlbar{display:flex;align-items:center;gap:var(--s2);padding:0 0 var(--s2);
+  #icon-phase-wt .timeline{min-height:186px}
+  #icon-phase-wt .tlbar{display:flex;align-items:center;gap:var(--s2);padding:0 0 var(--s2);
     border-bottom:1px solid var(--edge-lo);margin-bottom:var(--s2)}
-  #icon-animate-wt .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  #icon-phase-wt .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;
     color:var(--faint);font-weight:660;white-space:nowrap}
-  #icon-animate-wt .tlbar .now{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);
+  #icon-phase-wt .tlbar .now{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);
     font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);
     border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
   /* a LAYER row is a labelled hairline: it groups the property rows under it
      without pretending the layer itself occupies time. */
-  #icon-animate-wt .track.bl-lt{margin:var(--s2) 0 1px}
-  #icon-animate-wt .track.bl-lt .tl{color:var(--ink);width:58px;font-size:9.5px;
+  #icon-phase-wt .track.bl-lt{margin:var(--s2) 0 1px}
+  #icon-phase-wt .track.bl-lt .tl{color:var(--ink);width:58px;font-size:9.5px;
     text-transform:none;letter-spacing:0;font-weight:660}
-  #icon-animate-wt .bl-rule{flex:1;height:1px;background:var(--line)}
-  #icon-animate-wt .track.bl-pt{margin:2px 0}
-  #icon-animate-wt .track.bl-pt .tl{font-size:9.5px;text-transform:none;letter-spacing:0;
+  #icon-phase-wt .bl-rule{flex:1;height:1px;background:var(--line)}
+  #icon-phase-wt .track.bl-pt{margin:2px 0}
+  #icon-phase-wt .track.bl-pt .tl{font-size:9.5px;text-transform:none;letter-spacing:0;
     padding-left:var(--pad-sm);color:var(--dim)}
-  #icon-animate-wt .bl-lane{height:20px;background:var(--panel-2);border:1px solid var(--line);
+  #icon-phase-wt .bl-lane{height:20px;background:var(--panel-2);border:1px solid var(--line);
     border-radius:5px;position:relative;display:block;flex:1;overflow:visible}
   /* THE BAR. One entry in the Motion list, drawn where it happens. Its width is
      the duration, its left edge the delay, and its grips are how both change. */
-  #icon-animate-wt .bl-bar{position:absolute;top:1px;bottom:1px;border-radius:4px;
+  #icon-phase-wt .bl-bar{position:absolute;top:1px;bottom:1px;border-radius:4px;
     background:linear-gradient(90deg,color-mix(in srgb,var(--comp) 70%,transparent),color-mix(in srgb,var(--comp) 40%,transparent));
     border:1px solid color-mix(in srgb,var(--comp) 80%,transparent);
     display:flex;align-items:center;padding:0 6px;gap:5px;
     font-size:8.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;cursor:grab}
-  #icon-animate-wt .bl-bar.sel{box-shadow:0 0 0 2px var(--accent)}
-  #icon-animate-wt .bl-bar .gr{position:absolute;top:2px;bottom:2px;width:5px;border-radius:2px;
+  #icon-phase-wt .bl-bar.kn{
+    background:linear-gradient(90deg,color-mix(in srgb,var(--warn) 72%,transparent),color-mix(in srgb,var(--warn) 42%,transparent));
+    border-color:color-mix(in srgb,var(--warn) 80%,transparent);color:#1a1205}
+  #icon-phase-wt .bl-bar.sel{box-shadow:0 0 0 2px var(--accent)}
+  /* THE LAG, drawn as itself: the gap between where the bell starts and where
+     the knob does. Without this the offset is two bars that look nearly the
+     same; with it the offset is a measured thing with a number on it. */
+  #icon-phase-wt .bl-gapmark{position:absolute;top:-11px;height:9px;z-index:5;
+    border-left:1px solid var(--warn);border-right:1px solid var(--warn);
+    border-bottom:1px solid var(--warn)}
+  #icon-phase-wt .bl-gapmark .lb{position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+    font-family:var(--mono);font-size:8.5px;color:var(--warn);white-space:nowrap}
+  #icon-phase-wt .bl-bar .gr{position:absolute;top:2px;bottom:2px;width:5px;border-radius:2px;
     background:rgba(255,255,255,.85)}
-  #icon-animate-wt .bl-bar .gr.l{left:1px}
-  #icon-animate-wt .bl-bar .gr.r{right:1px}
+  #icon-phase-wt .bl-bar .gr.l{left:1px}
+  #icon-phase-wt .bl-bar .gr.r{right:1px}
   /* the loop boundary: where this cycle ends and the next one starts */
   /* the loop boundary and the playhead sit on the LANE, so they take the same
      --t (0..1 in lane space) the DS playhead does and land on the same pixel a
      time on the ruler does. */
-  #icon-animate-wt .bl-loop{position:absolute;top:64px;bottom:10px;width:0;z-index:4;
+  #icon-phase-wt .bl-loop{position:absolute;top:64px;bottom:10px;width:0;z-index:4;
     border-left:1px dashed color-mix(in srgb,var(--accent) 70%,transparent);
     left:calc(66px + 12px + (100% - 66px - 24px) * var(--t,.75))}
-  #icon-animate-wt .bl-loop .lb{position:absolute;top:-13px;left:4px;font-family:var(--mono);
+  #icon-phase-wt .bl-loop .lb{position:absolute;top:-13px;left:4px;font-family:var(--mono);
     font-size:8.5px;color:var(--accent);white-space:nowrap}
 
 
@@ -209,40 +249,37 @@
      screen while you are choosing a layer and goes away once that layer is
      moving, because a static ring around a shape that is swinging reads as
      broken rather than as bounds. */
-  #icon-animate-wt .bl-selbox{position:absolute;pointer-events:none;z-index:5}
+  #icon-phase-wt .bl-selbox{position:absolute;pointer-events:none;z-index:5}
   /* ---------- WHAT THE APP HAS NO ANSWER FOR · said out loud ---------- */
-  #icon-animate-wt .bl-gap{display:flex;gap:var(--pad-sm);align-items:flex-start;
+  #icon-phase-wt .bl-gap{display:flex;gap:var(--pad-sm);align-items:flex-start;
     padding:var(--pad-sm) var(--pad);border-radius:var(--r3);margin:0 0 var(--gap);
     background:color-mix(in srgb,var(--warn) 9%,transparent);
     border:1px solid color-mix(in srgb,var(--warn) 34%,transparent)}
-  #icon-animate-wt .bl-gap .ic{color:var(--warn);flex:none;margin-top:1px}
-  #icon-animate-wt .bl-gap p{margin:0;font-size:12.5px;line-height:1.55;color:var(--dim)}
-  #icon-animate-wt .bl-gap b{color:var(--ink);font-weight:600}
-  #icon-animate-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
+  #icon-phase-wt .bl-gap .ic{color:var(--warn);flex:none;margin-top:1px}
+  #icon-phase-wt .bl-gap p{margin:0;font-size:12.5px;line-height:1.55;color:var(--dim)}
+  #icon-phase-wt .bl-gap b{color:var(--ink);font-weight:600}
+  #icon-phase-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
     color:var(--ink);aspect-ratio:16/10}
 </style>
 </head>
 <body class="page">
 <main class="stage">
-<section class="screen on" id="icon-animate-wt">
-  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Make a bell swing</h2><span class="k">· usage clickthrough · one scenario</span></div>
+<section class="screen on" id="icon-phase-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Make the knob lag the bell</h2><span class="k">· usage clickthrough · one scenario</span></div>
 
-  <p class="pglead">One job: the <b>notification bell</b> is already drawn, and it should swing when something new arrives.
-    The first question the flow asks is the one every other animation mock skipped, which is <b>what changes</b>. Not a
-    motion picked off a list of five, a <b>property of this layer</b>: its rotation, its position, its opacity, its
-    colour, or the things only a path has. Motion is a <b>list you add entries to</b>, read exactly the way the
-    <button class="link" data-target="effects">Effects</button> list on the same layer is read, and the timing lives in a
-    dock <b>across the bottom</b> where two parts of one icon can be seen against each other. Eight real clicks on ONE
-    screen, which never re-renders below.</p>
+  <p class="pglead">Picking up where <button class="link" data-target="icon-animate-wt">Make a bell swing</button> stopped.
+    The bell already swings about the mount at its top, and the <b>knob</b> underneath is still sitting where it was drawn,
+    because nothing has been asked of it. Two parts of one icon, the same motion, <b>different timing</b>: that is the
+    whole page, and it is the thing a column of numbers cannot show you. A lag is a <b>relationship</b> between two things
+    in time, so it needs both of them on one ruler at once. Seven real clicks on ONE screen, which never re-renders below.</p>
 
   <div class="bl-gap">
     <i class="ic sm ic-warning"></i>
-    <p><b>None of this exists in the app yet, and one part of it is harder than it looks.</b> PhotonzCore has no notion of
-      time, no keys and no motion on a layer, and nothing exports SVG at all. Rotation, position, scale, opacity and
-      colour would interpolate the day a time model landed. <b>Path points would not</b>: two drawings can only be
-      crossfaded point for point if they have the same number of points in the same order, and nothing in the app checks
-      that or offers to fix it. The property menu below lists it anyway, and says so on the row, because hiding the hard
-      one would make the model look tidier than it is.</p>
+    <p><b>None of this exists in the app yet.</b> PhotonzCore has no notion of time, no keys and no motion on a layer, and
+      nothing exports SVG at all. The one thing below that is more than a drawing problem is the <b>pivot the knob borrows
+      from the bell</b>: the two layers turn about the same point, which the app would have to let a layer say out loud
+      rather than each layer owning a pivot nobody else can see. That is a real modelling decision and it is called out on
+      the Around row rather than glossed over.</p>
   </div>
 
   <!-- ============================================================
@@ -251,8 +288,9 @@
   <div class="wt" id="wtBell">
 
     <div class="wt-stage">
-      <div class="win tall cq shell" id="blWin" data-shell="notification-bell · 24 × 24 · SVG" data-ws="ui"
-           data-status='<span id="chipMotion">no motion</span> · <span id="chipCycle">still</span>'>
+      <div class="win tall cq shell bl-play" id="blWin" data-shell="notification-bell · 24 × 24 · SVG" data-ws="ui"
+           style="--bl-from:-12deg;--bl-to:12deg;--bl-dur:.9s;--bl-oy:4.4px;--bl-ease:cubic-bezier(.45,0,.55,1)"
+           data-status='<span id="chipMotion">bell swings</span> · <span id="chipCycle">knob still</span>'>
 
         <div class="edit lean" id="shell" data-dock="open">
 
@@ -286,7 +324,7 @@
                   <!-- TWO LAYERS, because the bell and its knob move differently.
                        The `bl-rot` class is added by a step: until motion exists
                        the artboard shows the still drawing. -->
-                  <g id="blBody">
+                  <g id="blBody" class="bl-rot">
                     <path class="bl-glyph" d="M12 4.1v1.5"/>
                     <path class="bl-glyph" d="M5.9 16.3h12.2l-1.3-2.8V9.7a4.9 4.9 0 0 0-9.8 0v3.8L5.9 16.3Z"/>
                   </g>
@@ -295,16 +333,16 @@
                   </g>
 
                   <!-- THE PIVOT · on the canvas from the moment Rotation exists -->
-                  <g id="blOrigin" class="bl-origin wt-off">
+                  <g id="blOrigin" class="bl-origin">
                     <circle class="ring" r="1.05"/>
                     <circle class="pv" r=".26"/>
                     <path d="M0 -1.7V1.7M-1.7 0H1.7"/>
                     <text x="1.6" y="-1.3">pivot</text>
                   </g>
                 </svg>
-                <span class="bl-selbox wt-off" id="blSel" data-sel-frame="Bell body &#183; 12 &#215; 12"
-                      style="left:24.6%;top:17%;width:50.8%;height:50.8%"></span>
-                <div class="cnv-hint wt-off" id="blHint" style="bottom:-15px">Drag the pivot. The swing follows it live.</div>
+                <span class="bl-selbox wt-off" id="knSel" data-sel-frame="Knob &#183; 3 &#215; 3"
+                      style="left:44%;top:71.5%;width:12%;height:12%"></span>
+                <div class="cnv-hint" id="blHint" style="bottom:-15px">The bell swings. The knob has not been asked to.</div>
               </div>
 
               <!-- REAL SIZE · the preview IS the review, so the transport lives here -->
@@ -427,9 +465,10 @@
               </div>
               <div class="dgrp-b">
                 <div class="lrow" id="lrBody"><i class="ic ic-bezier"></i><span class="nm">Bell body</span>
-                  <i class="ic sm ic-loop wt-off" id="lrBodyMot" title="This layer has motion"></i>
+                  <i class="ic sm ic-loop" id="lrBodyMot" title="This layer has motion"></i>
                   <i class="ic sm ic-eye eye"></i></div>
                 <div class="lrow" id="lrKnob"><i class="ic ic-circle"></i><span class="nm">Knob</span>
+                  <i class="ic sm ic-loop wt-off" id="lrKnobMot" title="This layer has motion"></i>
                   <i class="ic sm ic-eye eye"></i></div>
               </div>
           </div>
@@ -438,11 +477,11 @@
 
             <!-- PROPERTIES · what the layer IS -->
             <div class="dgrp" id="gProps" data-grp="props" data-gh="sm">
-              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Path</span></div>
               <div class="dgrp-b">
-                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer</div>
+                <div class="empty wt-off" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer</div>
 
-                <div id="propsShape" class="wt-off">
+                <div id="propsShape">
                   <div class="section">
                     <div class="sec-h">Appearance <span class="mut">what it is</span></div>
                     <div class="irow split"><span class="rl">Stroke</span>
@@ -483,40 +522,70 @@
                 <button class="btn ghost icon sm" id="btnAddMotion" title="Animate a property of this layer" data-menu="#propMenu"><i class="ic ic-plus"></i></button>
               </div>
               <div class="dgrp-b" style="padding:var(--gap-sm) var(--pad-sm)">
-                    <div id="motEmpty"><div class="mnone"><i class="ic sm ic-timeline"></i> Nothing moves yet</div>
-                      <p class="note">The same shape as the list above it. An entry is one <b>property of this layer</b> that changes over time, with a switch, a summary and its own settings.</p>
-                    </div>
 
-                    <!-- one entry, wearing the Effects row unchanged -->
-                    <div class="efx mrow sel wt-off" id="mxRot">
-                      <span class="drag" title="Drag to reorder"><i class="ic sm ic-more"></i></span>
-                      <button class="en" aria-pressed="true" title="Turn this motion off"></button>
-                      <span class="nm">Rotation</span>
-                      <svg class="crv" id="crvRot" viewBox="0 0 24 24" aria-hidden="true"><path class="lin" d="M2 22 22 2"/><path class="cus" d="M2 22C10 22 14 2 22 2"/></svg>
-                      <span class="emeta" id="mxRotMeta">0° → 0°</span>
+                <!-- THE BELL's list, already holding the entry the previous page made -->
+                <div id="motBell">
+                  <div class="efx mrow sel" id="mxRot">
+                    <span class="drag" title="Drag to reorder"><i class="ic sm ic-more"></i></span>
+                    <button class="en" aria-pressed="true" title="Turn this motion off"></button>
+                    <span class="nm">Rotation</span>
+                    <svg class="crv custom" id="crvRot" viewBox="0 0 24 24" aria-hidden="true"><path class="lin" d="M2 22 22 2"/><path class="cus" d="M2 22C10 22 14 2 22 2"/></svg>
+                    <span class="emeta" id="mxRotMeta">-12° → 12°</span>
+                    <button class="btn ghost icon sm" id="btnRowMenu" title="This motion's menu" data-menu="#rowMenu"><i class="ic sm ic-more"></i></button>
+                  </div>
+                  <div id="motSettings" class="mset">
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">From</span><input id="pFrom" value="-12" aria-label="From, in degrees"></span>
+                      <span class="stepper sm"><span class="k">To</span><input id="pTo" value="12" aria-label="To, in degrees"></span>
                     </div>
+                    <div class="irow split"><span class="rl">Around</span>
+                      <span class="select sm" id="selOrigin" tabindex="0" role="button" data-menu="#oriMenu"><span class="lead" id="oriVal">12, 4.4</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      <button class="btn ghost icon sm" id="btnPickOrigin" title="Move the pivot on the canvas (Y)"><i class="ic sm ic-move"></i></button>
+                    </div>
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">Start</span><input id="pStart" value="0" aria-label="Start, in milliseconds"></span>
+                      <span class="stepper sm"><span class="k">Over</span><input id="pOver" value="900" aria-label="Duration, in milliseconds"></span>
+                    </div>
+                    <div class="irow"><span class="rl">Curve</span>
+                      <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Custom</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <div class="irow"><span class="rl">Repeat</span>
+                      <span class="select" id="selRepeat" tabindex="0" role="button" data-menu="#repMenu"><span class="lead" id="repVal">Forever</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                  </div>
+                </div>
 
-                    <div id="motSettings" class="mset wt-off">
-                      <div class="numgrid">
-                        <span class="stepper sm"><span class="k">From</span><input id="pFrom" value="0" aria-label="From, in degrees"></span>
-                        <span class="stepper sm"><span class="k">To</span><input id="pTo" value="0" aria-label="To, in degrees"></span>
-                      </div>
-                      <div class="irow split"><span class="rl">Around</span>
-                        <span class="select sm" id="selOrigin" tabindex="0" role="button" data-menu="#oriMenu"><span class="lead" id="oriVal">Its centre</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
-                        <button class="btn ghost icon sm" id="btnPickOrigin" title="Move the pivot on the canvas (Y)"><i class="ic sm ic-move"></i></button>
-                      </div>
-                      <div class="numgrid">
-                        <span class="stepper sm"><span class="k">Start</span><input id="pStart" value="0" aria-label="Start, in milliseconds"></span>
-                        <span class="stepper sm"><span class="k">Over</span><input id="pOver" value="900" aria-label="Duration, in milliseconds"></span>
-                      </div>
-                      <div class="irow"><span class="rl">Curve</span>
-                        <span class="select" id="selCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="curveVal">Linear</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
-                      </div>
-                      <div class="irow"><span class="rl">Repeat</span>
-                        <span class="select" id="selRepeat" tabindex="0" role="button" data-menu="#repMenu"><span class="lead" id="repVal">Once</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
-                      </div>
-                      <p class="note" id="motNote">Five questions, and the first one is <b>what changes</b>. Start and Over are the same two numbers the bar on the timeline has, so moving either moves both.</p>
+                <!-- THE KNOB's list, empty until something is pasted into it -->
+                <div id="motKnob" class="wt-off">
+                  <div id="knEmpty"><div class="mnone"><i class="ic sm ic-timeline"></i> Nothing moves yet</div>
+                    <p class="note">The bell's entry is not shared with this layer. Motion belongs to a layer the same way an effect does, which is exactly why two parts of one drawing can be told apart in time.</p>
+                  </div>
+                  <div class="efx mrow sel wt-off" id="mxKnob">
+                    <span class="drag" title="Drag to reorder"><i class="ic sm ic-more"></i></span>
+                    <button class="en" aria-pressed="true" title="Turn this motion off"></button>
+                    <span class="nm">Rotation</span>
+                    <svg class="crv custom" viewBox="0 0 24 24" aria-hidden="true"><path class="lin" d="M2 22 22 2"/><path class="cus" d="M2 22C10 22 14 2 22 2"/></svg>
+                    <span class="emeta" id="mxKnobMeta">-12° → 12°</span>
+                  </div>
+                  <div id="knSettings" class="mset wt-off">
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">From</span><input id="kFrom" value="-12" aria-label="From, in degrees"></span>
+                      <span class="stepper sm"><span class="k">To</span><input id="kTo" value="12" aria-label="To, in degrees"></span>
                     </div>
+                    <div class="irow split"><span class="rl">Around</span>
+                      <span class="select sm" id="kOrigin" tabindex="0" role="button"><span class="lead" id="kOriVal">12, 4.4</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      <button class="btn ghost icon sm" title="Move the pivot on the canvas (Y)"><i class="ic sm ic-move"></i></button>
+                    </div>
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">Start</span><input id="kStart" value="0" aria-label="Start, in milliseconds"></span>
+                      <span class="stepper sm"><span class="k">Over</span><input id="kOver" value="900" aria-label="Duration, in milliseconds"></span>
+                    </div>
+                    <div class="irow"><span class="rl">Curve</span>
+                      <span class="select" id="kCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead">Custom</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <p class="note" id="knNote">The pivot came across with the motion and it is the <b>bell's</b> mount, not a point inside the knob, because the knob hangs from that mount. Two layers turning about one point is a thing the app would have to be able to say.</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -575,6 +644,8 @@
                "Pulse" in here and there cannot be: a preset is a combination of
                these, and combinations are what you make, not what you pick. -->
           <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:150px;width:268px;z-index:11">
+            <div class="menuitem" id="miPasteMot"><i class="ic ic-copy"></i> Paste motion <span class="sc">⌘V</span></div>
+            <div class="menu-sep"></div>
             <div class="mlabel">Transform</div>
             <div class="menuitem" id="miPos"><i class="ic ic-move"></i> Position <span class="pk">6, 4</span></div>
             <div class="menuitem" id="miScale"><i class="ic ic-scale"></i> Scale <span class="pk">100%</span></div>
@@ -588,7 +659,7 @@
             <div class="menuitem" id="miPoints"><i class="ic ic-node"></i> Path points <span class="pk">14 points</span></div>
             <div class="menuitem" id="miStroke"><i class="ic ic-line"></i> Stroke width <span class="pk">1.7 pt</span></div>
             <div class="menuitem" id="miDash"><i class="ic ic-border"></i> Dash <span class="pk">none</span></div>
-            <p class="mnote">This list is <b>this layer</b>. A photo would have no Dash and a group would have no points, so the menu is shorter on those. <b>Path points cannot interpolate yet</b>: the two drawings would need the same points in the same order and nothing checks that.</p>
+            <p class="mnote">Paste is at the top because a motion two parts share is the ordinary case. Below it, this list is <b>this layer</b>. A photo would have no Dash and a group would have no points, so the menu is shorter on those. <b>Path points cannot interpolate yet</b>: the two drawings would need the same points in the same order and nothing checks that.</p>
           </div>
 
           <!-- ====== THE CURVE MENU · named curves, each drawn ====== -->
@@ -610,7 +681,7 @@
           </div>
 
           <!-- ====== THE CUSTOM CURVE EDITOR ====== -->
-          <div class="popover pop" id="bezPop" style="position:absolute;left:var(--s4);top:240px;width:236px;padding:var(--pad-sm);z-index:12">
+          <div class="popover pop" id="bezPop" style="position:absolute;right:392px;top:236px;width:236px;padding:var(--pad-sm);z-index:12">
             <div class="mlabel" style="margin:0 0 var(--gap-sm)">Draw a curve</div>
             <svg class="bez" viewBox="0 0 100 100" aria-label="Curve editor">
               <path class="gr" d="M0 25H100M0 50H100M0 75H100M25 0V100M50 0V100M75 0V100"/>
@@ -644,6 +715,14 @@
             <div class="menuitem"><i class="ic ic-move"></i> Somewhere else… <span class="sc">Y</span></div>
           </div>
 
+          <div class="popover menu pop" id="rowMenu" style="position:absolute;right:var(--s4);top:600px;width:224px;z-index:12">
+            <div class="menuitem" id="miCopyMot"><i class="ic ic-copy"></i> Copy motion <span class="sc">⌘C</span></div>
+            <div class="menuitem"><i class="ic ic-duplicate"></i> Duplicate</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save as a shared motion</div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-trash"></i> Remove</div>
+          </div>
+
           <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);top:330px;width:212px;z-index:11">
             <div class="menuitem"><i class="ic ic-border"></i> Border</div>
             <div class="menuitem"><i class="ic ic-shadow"></i> Drop shadow</div>
@@ -668,7 +747,7 @@
              that is a comparison and a comparison needs width. So this is where
              Start and Over live as a BAR you drag, and it is the same two
              numbers as the fields above: change one, the other follows. -->
-        <div class="timeline" id="timeline" data-tl-summary="Bell body · rotation · 900 ms loop">
+        <div class="timeline" id="timeline" data-tl-summary="Bell body and Knob · rotation · 900 ms loop">
           <div class="tlbar">
             <span class="lbl">One cycle</span>
             <span class="now" id="tlNow"><i class="ic xs ic-loop"></i> <span id="tlLen">900 ms</span></span>
@@ -681,7 +760,7 @@
           <div class="track bl-lt"><span class="tl"><i class="ic xs ic-bezier"></i> Bell body</span>
             <span class="bl-rule"></span>
           </div>
-          <div class="track bl-pt wt-off" id="trkBodyRot"><span class="tl">Rotation</span>
+          <div class="track bl-pt" id="trkBodyRot"><span class="tl">Rotation</span>
             <div class="bl-lane">
                 <div class="bl-bar sel" id="barBody" style="left:0%;width:75%" tabindex="0" role="button" aria-label="Bell body rotation, 0 to 900 milliseconds">
                   <span class="gr l"></span><span id="barBodyLb" style="padding-left:6px">0 → 900 ms</span><span class="gr r"></span>
@@ -692,11 +771,16 @@
           <div class="track bl-lt"><span class="tl"><i class="ic xs ic-circle"></i> Knob</span>
             <span class="bl-rule"></span>
           </div>
-          <div class="track bl-pt" id="trkKnobRot"><span class="tl" style="color:var(--faint)">none</span>
-            <div class="bl-lane"></div>
+          <div class="track bl-pt" id="trkKnobRot"><span class="tl" id="knTlLabel" style="color:var(--faint)">none</span>
+            <div class="bl-lane">
+              <div class="bl-bar kn sel wt-off" id="barKnob" style="left:0%;width:75%" tabindex="0" role="button" aria-label="Knob rotation">
+                <span class="gr l"></span><span id="barKnobLb" style="padding-left:6px">0 → 900 ms</span><span class="gr r"></span>
+              </div>
+              <span class="bl-gapmark wt-off" id="lagMark" style="left:0;width:7.5%"><span class="lb" id="lagLb">90 ms</span></span>
+            </div>
           </div>
 
-          <div class="bl-loop wt-off" id="loopMark" style="--t:.75"><span class="lb">repeats</span></div>
+          <div class="bl-loop" id="loopMark" style="--t:.75"><span class="lb">repeats</span></div>
           <div class="playhead" id="playhead" style="--t:0;top:64px"></div>
         </div>
       </div>
@@ -706,130 +790,115 @@
     <ol class="wt-steps">
 
       <li class="wt-step"
-          data-title="Select the bell"
-          data-cue="#lrBody" data-cue-label="Click the Bell body layer" data-cue-place="left"
+          data-title="Open the bell's motion menu"
+          data-cue="#btnRowMenu" data-cue-label="Click the menu on the Rotation entry" data-cue-place="left"
           data-open="#gLayers,#gProps,#gEffects,#gMotion" data-collapse="#gLibrary"
-          data-select="#lrBody" data-show="#propsShape,#blSel" data-hide="#propsEmpty"
+          data-select="#lrBody" data-pop="#rowMenu"
           data-set="#propKind=Path">
         <div class="wt-cap comp">
           <span class="wt-n">1</span>
-          <p class="wt-do">the <b>Bell body</b> layer</p>
-          <p class="wt-where">the Layers group, at the top of the dock</p>
-          <p class="wt-res">Properties fills in with <b>three lists that read the same way</b>: Appearance is what the layer is, Effects is what you add to it, and <b>Motion</b> is what changes over time. All three are empty-or-plus at the header. Nothing about animating is a mode you enter.</p>
+          <p class="wt-do">the <b>menu</b> on the bell's <b>Rotation</b> entry</p>
+          <p class="wt-where">the Motion list, on the row itself</p>
+          <p class="wt-res">the same menu an effect row has: copy it, duplicate it, save it as something the whole set can share, remove it. <b>Copy motion</b> is the one to take. This is the point of making motion a list entry rather than a mode: an entry is a thing you can pick up and put down somewhere else.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Ask what should change"
-          data-cue="#btnAddMotion" data-cue-label="Click the plus on Motion" data-cue-place="left"
+          data-title="Select the knob"
+          data-cue="#lrKnob" data-cue-label="Click the Knob layer" data-cue-place="left"
           data-open="#gLayers,#gProps,#gEffects,#gMotion" data-collapse="#gLibrary"
-          data-select="#lrBody" data-show="#propsShape,#blSel" data-hide="#propsEmpty"
-          data-pop="#propMenu" data-set="#propKind=Path">
+          data-select="#lrKnob" data-show="#motKnob,#knSel" data-hide="#motBell"
+          data-set="#propKind=Shape|#pMotMut=nothing yet">
         <div class="wt-cap comp">
           <span class="wt-n">2</span>
-          <p class="wt-do">the <b>plus</b> on the Motion header</p>
-          <p class="wt-where">Properties, under Effects</p>
-          <p class="wt-res">a list of <b>this layer's own properties</b> opens, each showing the value it has right now: Position 6,&nbsp;4 · Scale 100% · Rotation 0° · Opacity · Colour · and, because this layer is a drawn path, <b>Path points, Stroke width and Dash</b>. There is no Pulse and no Spin in here. A named motion is a <i>combination</i> of these rows, which is a thing you make rather than a thing you pick off a short list somebody else wrote.</p>
+          <p class="wt-do">the <b>Knob</b> layer</p>
+          <p class="wt-where">the Layers group</p>
+          <p class="wt-res">its Motion list is <b>empty</b>, and the bell keeps swinging while you look at it. Nothing about the bell's entry reached this layer: motion belongs to a layer the same way an effect does, which is the reason two parts of one drawing can be told apart in time at all.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Rotation, because a bell swings"
-          data-cue="#miRot" data-cue-label="Click Rotation" data-cue-place="left"
+          data-title="Give the knob the same motion"
+          data-cue="#miPasteMot" data-cue-label="Click Paste motion" data-cue-place="left"
           data-open="#gLayers,#gProps,#gEffects,#gMotion" data-collapse="#gLibrary"
-          data-select="#lrBody" data-pop="#propMenu"
-          data-show="#propsShape,#mxRot,#motSettings,#lrBodyMot,#blOrigin,#trkBodyRot,#blHint" data-hide="#propsEmpty,#motEmpty,#blSel"
-          data-set="#propKind=Path|#pMotMut=1 entry|#chipMotion=rotation|#chipCycle=900 ms · once">
+          data-select="#lrKnob" data-pop="#propMenu"
+          data-show="#motKnob,#mxKnob,#knSettings,#lrKnobMot,#barKnob" data-hide="#motBell,#knEmpty,#knSel"
+          data-class="#blKnob=kn-rot|#blWin=kn-live"
+          data-css="#blWin=--kn-from:-12deg;--kn-to:12deg"
+          data-set="#propKind=Shape|#pMotMut=1 entry|#knTlLabel=Rotation|#chipCycle=knob in step|#blHint=The knob moves with it, exactly. Now put it out of step.">
         <div class="wt-cap comp">
           <span class="wt-n">3</span>
-          <p class="wt-do"><b>Rotation</b></p>
-          <p class="wt-where">the property list</p>
-          <p class="wt-res">three things appear at once and they are the same one thing. A <b>row in the Motion list</b>, built exactly like an effect row: drag handle, switch, name, the curve drawn small, the values on the right. A <b>bar on the timeline</b> below, which is that entry's Start and Over. And a <b>pivot on the canvas</b>, because a rotation that does not say what it turns around has not been described yet.</p>
+          <p class="wt-do"><b>Paste motion</b></p>
+          <p class="wt-where">the top of the Motion plus menu</p>
+          <p class="wt-res">the knob joins in, a second <b>Rotation</b> entry appears under it with the same numbers, and a <b>second bar lands on the timeline</b>, exactly under the first. It also <b>looks wrong</b>, just differently from last time: the bell and the knob now move as one stamped shape, like a sticker being waved, because nothing hanging off a bell has ever moved in perfect step with it.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Say how far it swings"
-          data-cue="#pTo" data-cue-label="Type -12 and 12 into From and To" data-cue-place="left"
+          data-title="Put the knob slightly behind"
+          data-cue="#barKnob" data-cue-label="Drag the knob's bar 90 ms to the right" data-cue-place="top"
           data-open="#gLayers,#gProps,#gEffects,#gMotion" data-collapse="#gLibrary"
-          data-select="#lrBody"
-          data-show="#propsShape,#mxRot,#motSettings,#lrBodyMot,#blOrigin,#trkBodyRot,#blHint" data-hide="#propsEmpty,#motEmpty,#blSel"
-          data-class="#blBody=bl-rot|#blWin=bl-play"
-          data-css="#blWin=--bl-from:-12deg;--bl-to:12deg;--bl-dur:.9s"
-          data-set="#propKind=Path|#pFrom=-12|#pTo=12|#mxRotMeta=-12° → 12°|#pMotMut=1 entry|#chipMotion=rotation|#chipCycle=900 ms · once">
+          data-select="#lrKnob"
+          data-show="#motKnob,#mxKnob,#knSettings,#lrKnobMot,#barKnob,#lagMark" data-hide="#motBell,#knEmpty,#knSel"
+          data-class="#blKnob=kn-rot|#blWin=kn-live"
+          data-css="#blWin=--kn-from:-12deg;--kn-to:12deg;--kn-delay:90ms|#barKnob=left:7.5%"
+          data-set="#propKind=Shape|#kStart=90|#barKnobLb=90 → 990 ms|#lagLb=90 ms|#blHint=The knob trails the bell by 90 ms.|#mxKnobMeta=-12° → 12° · +90 ms|#chipCycle=knob +90 ms">
         <div class="wt-cap comp">
           <span class="wt-n">4</span>
-          <p class="wt-do"><b>-12</b> and <b>12</b> into <b>From</b> and <b>To</b></p>
-          <p class="wt-where">Properties, in the Motion entry</p>
-          <p class="wt-res">it starts moving, and <b>it is wrong</b>. The bell rocks about its own middle, so the top swings one way while the bottom swings the other and the whole thing reads as a bobblehead rather than a bell. Nothing about the numbers is wrong. The <b>pivot</b> is wrong, and until this page existed there was nowhere in the model to say so.</p>
+          <p class="wt-do" data-verb="Drag">the knob's <b>bar</b> to the right until the gap reads <b>90 ms</b></p>
+          <p class="wt-where">the timeline, across the bottom</p>
+          <p class="wt-res">and it becomes a bell. The knob is always a tenth of a second behind, so it trails through the middle and catches up at each end, which is what something hanging off a swinging object does. <b>This is the step that is not possible in the side column.</b> The Start field says 90 and it is the same number, but the number is not the point: the point is seeing one bar start after the other and being able to push it until it looks right.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Move the pivot to where it hangs"
-          data-cue="#blOrigin" data-cue-label="Drag the pivot up to the mount" data-cue-place="right"
+          data-title="Let it carry further than the bell"
+          data-cue="#kTo" data-cue-label="Type 17 into To" data-cue-place="left"
           data-open="#gLayers,#gProps,#gEffects,#gMotion" data-collapse="#gLibrary"
-          data-select="#lrBody" data-tool="#tPivot"
-          data-show="#propsShape,#mxRot,#motSettings,#lrBodyMot,#blOrigin,#trkBodyRot,#blHint" data-hide="#propsEmpty,#motEmpty,#blSel"
-          data-class="#blBody=bl-rot|#blWin=bl-play"
-          data-css="#blWin=--bl-from:-12deg;--bl-to:12deg;--bl-dur:.9s;--bl-oy:4.4px"
-          data-set="#propKind=Path|#pFrom=-12|#pTo=12|#mxRotMeta=-12° → 12°|#oriVal=12, 4.4|#chipMotion=rotation|#chipCycle=900 ms · once|#motNote=The pivot is a point on the canvas, so it is dragged on the canvas. The Around row keeps the numbers and the named spots (centre, top centre, bottom centre) for when a number is what you want.">
+          data-select="#lrKnob"
+          data-show="#motKnob,#mxKnob,#knSettings,#lrKnobMot,#barKnob,#lagMark" data-hide="#motBell,#knEmpty,#knSel"
+          data-class="#blKnob=kn-rot|#blWin=kn-live"
+          data-css="#blWin=--kn-from:-17deg;--kn-to:17deg;--kn-delay:90ms|#barKnob=left:7.5%"
+          data-set="#propKind=Shape|#kStart=90|#kFrom=-17|#kTo=17|#barKnobLb=90 → 990 ms|#lagLb=90 ms|#blHint=The knob trails the bell by 90 ms.|#mxKnobMeta=-17° → 17° · +90 ms|#chipCycle=knob +90 ms|#knNote=Two numbers now differ from the bell's: the knob starts 90 ms later and swings five degrees further. That is the whole of a different momentum, and neither of them is a preset.">
         <div class="wt-cap comp">
           <span class="wt-n">5</span>
-          <p class="wt-do" data-verb="Drag">the <b>pivot</b> from the middle of the bell up to the <b>mount at the top</b></p>
-          <p class="wt-where">on the canvas, with the pivot tool</p>
-          <p class="wt-res">and now it is a bell. Same property, same two numbers, same duration: the only thing that changed is <b>what it turns around</b>, and it changed the motion completely. <b>This is the step no preset could have done for you</b>, because the right pivot is a point on your drawing and nobody but you knows where it is. It is a handle on the canvas rather than a hidden field, which is the whole reason the swing was fixable in one drag.</p>
+          <p class="wt-do"><b>-17</b> and <b>17</b> into the knob's <b>From</b> and <b>To</b></p>
+          <p class="wt-where">the knob's Motion entry</p>
+          <p class="wt-res">the knob swings wider than the bell it hangs from, which is the other half of "a different momentum": a lighter thing on a longer arm overshoots. Two numbers now differ between the two entries, the delay and the angle, and that is the entire difference. Nothing here is a preset and nothing had to be invented to say it.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Give it the weight of a real pendulum"
-          data-cue="#selCurve" data-cue-label="Click the Curve row" data-cue-place="left"
+          data-title="Slow it down until your eye can keep up"
+          data-cue="#selSpeed" data-cue-label="Click 1×, choose 0.25×" data-cue-place="bottom"
           data-open="#gLayers,#gProps,#gEffects,#gMotion" data-collapse="#gLibrary"
-          data-select="#lrBody" data-tool="#tPivot" data-pop="#curveMenu"
-          data-show="#propsShape,#mxRot,#motSettings,#lrBodyMot,#blOrigin,#trkBodyRot,#blHint" data-hide="#propsEmpty,#motEmpty,#blSel"
-          data-class="#blBody=bl-rot|#blWin=bl-play"
-          data-css="#blWin=--bl-from:-12deg;--bl-to:12deg;--bl-dur:.9s;--bl-oy:4.4px"
-          data-set="#propKind=Path|#pFrom=-12|#pTo=12|#mxRotMeta=-12° → 12°|#oriVal=12, 4.4|#chipMotion=rotation|#chipCycle=900 ms · once">
+          data-select="#lrKnob" data-pop="#spdMenu"
+          data-show="#motKnob,#mxKnob,#knSettings,#lrKnobMot,#barKnob,#lagMark" data-hide="#motBell,#knEmpty,#knSel"
+          data-class="#blKnob=kn-rot|#blWin=kn-live"
+          data-css="#blWin=--kn-from:-17deg;--kn-to:17deg;--kn-delay:360ms;--bl-dur:3.6s|#barKnob=left:7.5%"
+          data-set="#propKind=Shape|#kStart=90|#kFrom=-17|#kTo=17|#spdVal=0.25×|#barKnobLb=90 → 990 ms|#lagLb=90 ms|#blHint=The knob trails the bell by 90 ms.|#chipCycle=knob +90 ms · 0.25×">
         <div class="wt-cap comp">
           <span class="wt-n">6</span>
-          <p class="wt-do">the <b>Curve</b> row</p>
-          <p class="wt-where">Properties, in the Motion entry</p>
-          <p class="wt-res">a real list of curves opens, <b>each one drawn beside its name</b>, and it scrolls: linear, the four standard eases, sine, back, elastic, steps, and <b>Draw a curve</b> at the bottom. This is the correction to three buttons in a segmented control. The shape matters more than the name, so the shape is what you read.</p>
+          <p class="wt-do"><b>0.25×</b></p>
+          <p class="wt-where">the speed control on the <b>Real size</b> card</p>
+          <p class="wt-res">everything runs at a quarter rate, including the lag, so you can watch the knob cross behind the bell instead of guessing. Ninety milliseconds is under six frames and no one can judge it at full speed. <b>This is what replaces scrubbing</b> for something that loops: you cannot usefully drag a playhead through 900&nbsp;ms, so you slow the loop until your eye can keep up.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Draw the curve you actually want"
-          data-cue="#bzH1" data-cue-label="Drag the first handle down" data-cue-place="left"
+          data-title="Read the overlap"
+          data-cue="#loopMark" data-cue-label="Look at where the cycle repeats" data-cue-place="top"
           data-open="#gLayers,#gProps,#gEffects,#gMotion" data-collapse="#gLibrary"
-          data-select="#lrBody" data-tool="#tPivot" data-pop="#bezPop"
-          data-show="#propsShape,#mxRot,#motSettings,#lrBodyMot,#blOrigin,#trkBodyRot,#blHint" data-hide="#propsEmpty,#motEmpty,#blSel"
-          data-class="#blBody=bl-rot|#blWin=bl-play|#crvRot=custom"
-          data-css="#blWin=--bl-from:-12deg;--bl-to:12deg;--bl-dur:.9s;--bl-oy:4.4px;--bl-ease:cubic-bezier(.45,0,.55,1)"
-          data-set="#propKind=Path|#pFrom=-12|#pTo=12|#mxRotMeta=-12° → 12°|#curveVal=Custom|#oriVal=12, 4.4|#bzVal=cubic-bezier(.45, 0, .55, 1)|#chipMotion=rotation|#chipCycle=900 ms · once">
+          data-select="#lrKnob"
+          data-show="#motKnob,#mxKnob,#knSettings,#lrKnobMot,#barKnob,#lagMark" data-hide="#motBell,#knEmpty,#knSel"
+          data-class="#blKnob=kn-rot|#blWin=kn-live|#sz16=flag"
+          data-css="#blWin=--kn-from:-17deg;--kn-to:17deg;--kn-delay:90ms|#barKnob=left:7.5%"
+          data-set="#propKind=Shape|#kStart=90|#kFrom=-17|#kTo=17|#spdVal=1×|#barKnobLb=90 → 990 ms|#lagLb=90 ms|#blHint=The knob trails the bell by 90 ms.|#chipCycle=knob +90 ms">
         <div class="wt-cap comp">
           <span class="wt-n">7</span>
-          <p class="wt-do" data-verb="Drag">a <b>handle</b> in the curve editor until the swing hangs at the ends</p>
-          <p class="wt-where">the Draw a curve popover</p>
-          <p class="wt-res">the bell slows as it reaches each extreme and hurries through the middle, which is what a pendulum does and what no named curve is exactly. The readout is <b>cubic-bezier(.45, 0, .55, 1)</b>, the same four numbers CSS and SVG take, so the curve you drew is the curve that ships. The row in the Motion list redraws its little sketch to match, so the list tells you the shape without opening anything.</p>
-        </div>
-      </li>
-
-      <li class="wt-step"
-          data-title="Let it keep ringing"
-          data-cue="#selRepeat" data-cue-label="Click Repeat, choose Forever" data-cue-place="left"
-          data-open="#gLayers,#gProps,#gEffects,#gMotion" data-collapse="#gLibrary"
-          data-select="#lrBody" data-tool="#tPivot" data-pop="#repMenu"
-          data-show="#propsShape,#mxRot,#motSettings,#lrBodyMot,#blOrigin,#trkBodyRot,#blHint,#loopMark" data-hide="#propsEmpty,#motEmpty,#blSel"
-          data-class="#blBody=bl-rot|#blWin=bl-play|#crvRot=custom"
-          data-css="#blWin=--bl-from:-12deg;--bl-to:12deg;--bl-dur:.9s;--bl-oy:4.4px;--bl-ease:cubic-bezier(.45,0,.55,1)"
-          data-set="#propKind=Path|#pFrom=-12|#pTo=12|#mxRotMeta=-12° → 12° · loop|#curveVal=Custom|#repVal=Forever|#oriVal=12, 4.4|#chipMotion=rotation|#chipCycle=900 ms · forever">
-        <div class="wt-cap comp">
-          <span class="wt-n">8</span>
-          <p class="wt-do">the <b>Repeat</b> row, and choose <b>Forever</b></p>
-          <p class="wt-where">Properties, in the Motion entry</p>
-          <p class="wt-res">a dashed <b>repeats</b> line appears at 900&nbsp;ms on the ruler, which is where this cycle ends and the next one starts. Notice what the ruler is: <b>one cycle in milliseconds</b>, not a document with a beginning and an end. That is the only shape that works for something that loops, and it is the surface the next page needs. The bell swings. <button class="link" data-target="icon-phase-wt">Now make the knob lag behind it</button>.</p>
+          <p class="wt-do">at the dashed <b>repeats</b> line, and at the <b>16</b> copy</p>
+          <p class="wt-where">the timeline, and the Real size card</p>
+          <p class="wt-res">the knob's bar <b>runs past the line where the cycle restarts</b>. It is still finishing its swing while the bell has already begun the next one, and that is not a bug to tidy up, it is what a lag IS in something that loops. You can see it because both bars are on one ruler. Then look at 16 points: a 17 degree swing on a one and a half unit knob is under two pixels, so at the size this icon will really be used the lag you just spent five minutes on is <b>invisible</b>, and the honest move is to widen it or drop the knob's entry entirely.</p>
         </div>
       </li>
 
@@ -845,10 +914,10 @@
   </div>
 
   <div class="caption">
-    <div class="c"><div class="lab">The idea</div><p>Motion is a <b>list you add entries to</b>, one entry per property that changes, wearing the same row the Effects list already uses. Learning to add a border teaches you how to add a rotation, which is the consistency that a menu of five named motions can never have.</p></div>
-    <div class="c"><div class="lab g2">The pivot is the whole bell</div><p>A rotation with no origin cannot express the one animation anybody asks for. So the pivot is a <b>handle on the canvas</b> from the moment Rotation exists, not a field somebody has to know to go looking for, and step 5 is deliberately a repair: the motion is visibly wrong first.</p></div>
-    <div class="c"><div class="lab g2">Curves are drawn, not named</div><p>The list shows the <b>shape</b> beside every name and ends in <b>Draw a curve</b>, because a person can pick a shape by eye and cannot pick <i>out back</i> from <i>out quint</i> by reading. The readout is the four numbers CSS takes, so nothing is lost on the way out.</p></div>
-    <div class="c"><div class="lab g2">Why the timing is not in this column</div><p>Start and Over are in the side panel too, and for one entry that is enough. The bar across the bottom earns its width the moment there are <b>two</b> of them: <button class="link" data-target="icon-phase-wt">the knob lagging the bell</button> is a relationship, and a relationship cannot be read in a column of numbers.</p></div>
+    <div class="c"><div class="lab">Why this page exists</div><p>Everything on <button class="link" data-target="icon-animate-wt">Make a bell swing</button> could have been done in the side column. <b>A lag cannot.</b> It is a relationship between two things in time, so it needs both of them drawn on one ruler, which is the argument for a dock across the bottom rather than another panel in a column that is already crowded.</p></div>
+    <div class="c"><div class="lab g2">Same motion, different timing</div><p>The knob's entry is a <b>copy</b> of the bell's, and then two of its numbers change: it starts 90&nbsp;ms later and swings five degrees further. That is the whole of what "a slightly different momentum" means, expressed in the same list, with no new vocabulary and no preset anywhere near it.</p></div>
+    <div class="c"><div class="lab g2">One pivot, two layers</div><p>The knob turns about the <b>bell's</b> mount, not about a point inside itself, because that is where it hangs from. A model where every layer owns a private origin cannot say this. It is the one thing on this page that is a real modelling decision rather than a drawing, and the Around row says so out loud.</p></div>
+    <div class="c"><div class="lab g2">The honest ending</div><p>Step 7 is not a victory lap. At <b>16 points</b> the lag is under two pixels and you cannot see it, so the last thing the page does is admit that the careful work might have to be thrown away at the size the icon will really be used. The real-size strip is there to tell you that <b>before</b> you ship it, not after.</p></div>
   </div>
 </section>
 </main>
@@ -858,7 +927,7 @@
      person clicks them directly. The walkthrough drives the same state
      declaratively, so nothing here is required for the steps to work. */
   (function () {
-    var root = document.getElementById('icon-animate-wt');
+    var root = document.getElementById('icon-phase-wt');
     var seg = root.querySelector('.scopeseg');
     if (seg) {
       var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));

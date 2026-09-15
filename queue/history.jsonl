@@ -3411,3 +3411,12 @@
 {"t":"2026-09-15T07:07:08.812Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
 {"t":"2026-09-15T07:07:15.790Z","ev":"task_created","id":"an-audit-gets-a-real-picture-of-the-app-again","priority":"p2-normal","title":"An audit gets a real picture of the app again"}
 {"t":"2026-09-15T07:07:31.555Z","ev":"task_done","id":"a-path-says-what-its-colour-paints-how-thick-its","from":"done","note":"A path names its parts and says what kind of line it is. A closed path shows Fill and Outline, each with a tick; an open one shows Line. Under the outline, beside its Thickness: Pattern (solid, dashed, dotted), Ends (flat, round, square) and Corners (sharp, round, flat), as pictures drawn with the setting they stand for. All three reach the canvas and the exported SVG, checked by rendering the file. Core: PhotonzCore/PathLineStyle.swift plus LayerPart.outline. 44 new tests written first, Scripts/test.sh 6667 pass, new walk path-line-style-walk plus 27 neighbouring walks run by hand. Audit queue/audits/2026-09-15-path-line-style.json."}
+{"t":"2026-09-15T07:07:41.900Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep"}
+{"t":"2026-09-15T08:15:34.005Z","ev":"sweep_pass","walks":425,"passed":310,"failed":115,"seconds":3950,"complete":true}
+{"t":"2026-09-15T08:15:34.124Z","ev":"task_started","id":"mock-animating-any-property-of-a-layer-with-the","title":"Mock animating any property of a layer, with the bell as the test","priority":"p1-high"}
+{"t":"2026-09-15T08:17:26.955Z","ev":"task_note","id":"mock-animating-any-property-of-a-layer-with-the"}
+{"t":"2026-09-15T08:25:58.292Z","ev":"task_note","id":"one-set-of-easing-curves-named-the-same-way-ever"}
+{"t":"2026-09-15T08:25:58.337Z","ev":"task_note","id":"work-out-whether-the-right-hand-pane-is-carrying"}
+{"t":"2026-09-15T08:25:58.382Z","ev":"task_note","id":"say-where-animating-an-icon-and-editing-a-video"}
+{"t":"2026-09-15T08:25:58.429Z","ev":"task_created","id":"rebuild-the-spinner-toggle-and-draw-on-flows-on","priority":"p2-normal","title":"Rebuild the spinner, toggle and draw-on flows on the motion list"}
+{"t":"2026-09-15T08:30:35.238Z","ev":"task_note","id":"mock-animating-any-property-of-a-layer-with-the"}
