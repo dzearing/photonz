@@ -333,6 +333,107 @@ public enum EasingCurve: Hashable, Codable, Sendable {
     }
 }
 
+// MARK: - What a turn turns AROUND
+
+/// The point a rotation turns the layer about.
+///
+/// A bell that swings hangs from its MOUNT, not from its middle. Put the pivot
+/// in the middle and the top of the bell swings one way while the bottom
+/// swings the other, which reads as a bobblehead: nothing about the two angles
+/// is wrong, the pivot is. So a rotation carries one of these from the moment
+/// it exists, and it is a handle on the picture rather than a field somebody
+/// has to know to go looking for.
+///
+/// It is kept as a FRACTION of the layer's own box rather than as a place on
+/// the canvas, and that is the whole design:
+///
+/// - move the bell and its mount comes with it, instead of the swing tearing
+///   loose from the drawing;
+/// - resize it and the mount stays where it was on the shape;
+/// - the named spots are ordinary values rather than a second kind of thing —
+///   the middle IS `(0.5, 0.5)`, the top edge IS `(0.5, 0)`.
+///
+/// Nothing clamps it into `0...1`. A mount is very often ABOVE the shape that
+/// swings, which is a negative y, and that is the case the feature exists for.
+public struct MotionPivot: Hashable, Codable, Sendable {
+
+    /// Where the point sits across the layer's box, as a fraction of it.
+    /// `(0, 0)` is the box's top-left corner, because the document model is
+    /// top-left origin, and `(0.5, 0.5)` is its middle.
+    public var unit: CGPoint
+
+    public init(unit: CGPoint) { self.unit = unit }
+
+    /// The pivot that puts this place on the canvas at that fraction of
+    /// `box` — what a drag on the handle and a number typed into the row both
+    /// hand in.
+    ///
+    /// A box with no width or no height cannot say where along itself a point
+    /// is, so that axis answers the middle: the alternative is a NaN, and a
+    /// NaN in the pivot goes straight into the render transform and takes the
+    /// layer off the canvas.
+    public init(at point: CGPoint, in box: CGRect) {
+        let standard = box.standardized
+        self.unit = CGPoint(
+            x: standard.width > 0 ? (point.x - standard.minX) / standard.width : 0.5,
+            y: standard.height > 0 ? (point.y - standard.minY) / standard.height : 0.5)
+    }
+
+    /// Where this lands on a layer whose box is `box`, in the space that box
+    /// is stated in.
+    public func point(in box: CGRect) -> CGPoint {
+        let standard = box.standardized
+        return CGPoint(x: standard.minX + standard.width * unit.x,
+                       y: standard.minY + standard.height * unit.y)
+    }
+
+    /// The three spots worth a name.
+    ///
+    /// Deliberately short. Everything else is a drag or two typed numbers, and
+    /// a menu of nine corners and edges is a menu nobody reads: what a person
+    /// wants by NAME is the middle they started at, the top a thing hangs
+    /// from, and the bottom a thing stands on.
+    public enum Named: String, CaseIterable, Hashable, Codable, Sendable {
+        case centre
+        case topCentre
+        case bottomCentre
+
+        public var title: String {
+            switch self {
+            case .centre: "Its centre"
+            case .topCentre: "Top centre"
+            case .bottomCentre: "Bottom centre"
+            }
+        }
+
+        public var pivot: MotionPivot {
+            switch self {
+            case .centre: MotionPivot(unit: CGPoint(x: 0.5, y: 0.5))
+            case .topCentre: MotionPivot(unit: CGPoint(x: 0.5, y: 0))
+            case .bottomCentre: MotionPivot(unit: CGPoint(x: 0.5, y: 1))
+            }
+        }
+    }
+
+    public static let centre = Named.centre.pivot
+    public static let topCentre = Named.topCentre.pivot
+    public static let bottomCentre = Named.bottomCentre.pivot
+
+    /// The spot this is sitting on, or nil where it is somewhere of its own.
+    /// It is asked after every drag, so a drag that happens to land on the top
+    /// edge reads back as "Top centre" rather than as a pair of numbers that
+    /// happen to mean it.
+    public var named: Named? {
+        Named.allCases.first { spot in
+            let other = spot.pivot.unit
+            return abs(other.x - unit.x) < 0.0005 && abs(other.y - unit.y) < 0.0005
+        }
+    }
+
+    /// What the Around row reads when it is not showing numbers.
+    public var title: String { named?.title ?? "Custom" }
+}
+
 // MARK: - When, and how long
 
 /// The two numbers that say WHEN a motion happens: how long after the top of
@@ -415,6 +516,12 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     public var timing: MotionTiming
     public var curve: EasingCurve
     public var repeats: MotionRepeat
+    /// What a TURN turns around, and nil on everything else: a fade and a
+    /// slide have no axis, and a pivot sitting unused on one would be a number
+    /// the row cannot explain. Optional so that a motion written before pivots
+    /// existed reads back untouched, and nil means the middle, which is what
+    /// it drew then (`turnsAbout`).
+    public var pivot: MotionPivot?
     /// The switch on the row. Off keeps every number on it and stops it
     /// moving, which is the same bargain the eye on an effect strikes:
     /// with-and-without is the thing you do constantly, so it is the gesture
@@ -424,7 +531,8 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     public init(id: UUID = UUID(), property: MotionProperty,
                 from: MotionValue, to: MotionValue,
                 timing: MotionTiming, curve: EasingCurve = .linear,
-                repeats: MotionRepeat = .foreverThereAndBack, isOn: Bool = true) {
+                repeats: MotionRepeat = .foreverThereAndBack, isOn: Bool = true,
+                pivot: MotionPivot? = nil) {
         self.id = id
         self.property = property
         self.from = from
@@ -433,7 +541,13 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
         self.curve = curve
         self.repeats = repeats
         self.isOn = isOn
+        self.pivot = pivot
     }
+
+    /// The point this turn turns about, with the middle standing in wherever
+    /// nothing has been said. One place asks the question so nothing can read
+    /// nil as "do not pivot at all".
+    public var turnsAbout: MotionPivot { pivot ?? .centre }
 
     // MARK: What it is at a given millisecond
 
@@ -507,10 +621,15 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             // somebody turned on purpose does not jerk upright the moment it
             // is told to move.
             let angle = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            // The pivot arrives WITH it, on the middle of the layer, and the
+            // handle for it is on the picture the same instant. That is
+            // deliberately the wrong answer for a bell — it rocks like a
+            // bobblehead — and the one drag that repairs it is the argument
+            // for the whole feature.
             return LayerMotion(property: .rotation,
                                from: .number(angle - 12), to: .number(angle + 12),
                                timing: MotionTiming(startMS: 0, durationMS: 900),
-                               curve: .easeInOutSine)
+                               curve: .easeInOutSine, pivot: .centre)
         case .scale:
             return LayerMotion(property: .scale, from: .number(100), to: .number(120),
                                timing: MotionTiming(startMS: 0, durationMS: 600),

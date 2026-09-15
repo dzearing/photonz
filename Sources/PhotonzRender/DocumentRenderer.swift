@@ -608,8 +608,12 @@ public final class DocumentRenderer: @unchecked Sendable {
             mirrored.rotation = -mirrored.rotation
             mirrored.skewX = -mirrored.skewX
             mirrored.skewY = -mirrored.skewY
+            // ...or about whatever the turn on it says it hangs from. `box` is
+            // this picture's y-up copy of `localBounds`, so the offset from
+            // the middle is the model's offset with its y sign flipped.
+            let offset = pivotOffset(of: layer)
             image = image.transformed(by: mirrored.affineTransform(
-                around: CGPoint(x: box.midX, y: box.midY)))
+                around: CGPoint(x: box.midX + offset.x, y: box.midY - offset.y)))
         }
         image = shadowed(image, glows: layer.style.paintedGlows,
                          shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
@@ -991,6 +995,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         // defined in top-left model space; CI is y-up, so mirror the angular
         // components (conjugation by a vertical flip negates rotation and skew;
         // flips are unaffected).
+        // How far the picture slides because the turn was taken about a point
+        // that is not the middle of the box. Worked out here and spent below,
+        // with the placement: a translation applied now would be undone by it,
+        // because placement is measured from wherever the extent has ended up.
+        var swing = CGPoint.zero
         if !layer.transform.isIdentity {
             var mirrored = layer.transform
             mirrored.rotation = -mirrored.rotation
@@ -998,6 +1007,7 @@ public final class DocumentRenderer: @unchecked Sendable {
             mirrored.skewY = -mirrored.skewY
             let center = CGPoint(x: image.extent.midX, y: image.extent.midY)
             image = image.transformed(by: mirrored.affineTransform(around: center))
+            swing = swingOffPivot(layer, transform: mirrored)
         }
 
         // Position on canvas: the layer's center lands on the frame's center,
@@ -1005,8 +1015,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         // rotated/skewed extents stay anchored where the frame is. Must happen
         // before the shadow, whose expanded extent would skew the centering.
         let frameCenterY = document.canvasSize.height - frame.midY
-        image = image.transformed(by: CGAffineTransform(translationX: frame.midX - image.extent.midX,
-                                                        y: frameCenterY - image.extent.midY))
+        image = image.transformed(
+            by: CGAffineTransform(translationX: frame.midX - image.extent.midX + swing.x,
+                                  y: frameCenterY - image.extent.midY + swing.y))
 
         // Style: shadow, then opacity last so it fades content, border and
         // shadow together. Text on a designed surface leaves its contrast halo
@@ -1817,6 +1828,37 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
 
     // MARK: - Helpers
+
+    /// How far the point a layer turns about sits from the middle of the box
+    /// it would otherwise turn about, in the document's own top-left space.
+    ///
+    /// Nought for everything that is not hanging from a mount, which is every
+    /// layer in every picture drawn before pivots existed.
+    private func pivotOffset(of layer: Layer) -> CGPoint {
+        let pivot = layer.turnPivot
+        let box = layer.isGroup ? layer.localBounds : layer.frame
+        return CGPoint(x: pivot.x - box.midX, y: pivot.y - box.midY)
+    }
+
+    /// How far a picture SLIDES because its turn was taken about a mount
+    /// rather than about its own middle.
+    ///
+    /// Turning about a point `d` away from the centre is the same turn taken
+    /// about the centre, followed by moving everything by `d - M(d)`, where
+    /// `M` is the turn's own linear part. Written this way because the
+    /// composite already turns about the centre and then places the result by
+    /// its extent, so the only place left to say "and it hangs from here" is a
+    /// translation folded into that placement.
+    ///
+    /// `transform` is the y-mirrored one the picture is actually drawn with,
+    /// so the offset is mirrored to match before it is turned.
+    private func swingOffPivot(_ layer: Layer, transform: LayerTransform) -> CGPoint {
+        let offset = pivotOffset(of: layer)
+        guard offset != .zero else { return .zero }
+        let inPicture = CGPoint(x: offset.x, y: -offset.y)
+        let turned = inPicture.applying(transform.affineTransform(around: .zero))
+        return CGPoint(x: inPicture.x - turned.x, y: inPicture.y - turned.y)
+    }
 
     /// A rect in the document's top-left space, in Core Image's bottom-left one.
     private func flipped(_ rect: CGRect, canvasHeight: CGFloat) -> CGRect {

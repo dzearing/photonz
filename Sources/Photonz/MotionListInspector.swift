@@ -174,6 +174,10 @@ private struct MotionRowView: View {
             MotionValueSetting(motion: motion, isFrom: true)
             MotionValueSetting(motion: motion, isFrom: false)
         }
+        if motion.property == .rotation {
+            MotionPivotSetting(motion: motion, isNumbers: false)
+            MotionPivotSetting(motion: motion, isNumbers: true)
+        }
         MotionMillisecondSetting(motion: motion, isStart: true)
         MotionMillisecondSetting(motion: motion, isStart: false)
         MotionCurveSetting(motion: motion)
@@ -310,6 +314,74 @@ private struct MotionColorSetting: View {
             .labelsHidden()
             .controlSize(.small)
             .playtestControl("Color", detail: "\(label), \(hex)")
+        }
+    }
+}
+
+/// What a turn turns AROUND, in words and in numbers.
+///
+/// The same point the crosshair on the canvas is sitting on, said three ways:
+/// the menu for the spots worth a name, the two fields for the times a number
+/// is what you want, and the handle on the picture for every other time, which
+/// is nearly always. The drag is the one that matters — the right pivot is a
+/// point on YOUR drawing and nobody but you knows where it is — and these are
+/// here so that "the top of it, exactly" does not need a steady hand.
+private struct MotionPivotSetting: View {
+    @Environment(EditorState.self) private var editorState
+    let motion: LayerMotion
+    /// The two fields, rather than the menu.
+    let isNumbers: Bool
+
+    private var box: CGRect { editorState.motionPivotHandle?.box ?? .zero }
+    private var point: CGPoint { editorState.motionPivotPoint ?? .zero }
+
+    /// What the menu reads: the spot's name where it is on one, and the two
+    /// numbers where it is somewhere of its own, because a pivot dragged to
+    /// the mount of a bell has no name and "Custom" says nothing about where
+    /// it went.
+    private var reading: String {
+        if let named = editorState.motionPivotNamed { return named.title }
+        return "\(MotionEntry.text(Double(point.x))), \(MotionEntry.text(Double(point.y)))"
+    }
+
+    var body: some View {
+        if isNumbers {
+            MotionSettingRow(label: "At",
+                             help: "The same point as two numbers on the canvas, for when a "
+                                 + "number is what you want rather than a drag") {
+                HStack(spacing: 4) {
+                    MotionNumberField(text: MotionEntry.text(Double(point.x)),
+                                      label: "Around X", suffix: nil) { typed in
+                        editorState.setMotionPivot(
+                            MotionPivot(at: CGPoint(x: typed, y: point.y), in: box), of: motion.id)
+                    }
+                    MotionNumberField(text: MotionEntry.text(Double(point.y)),
+                                      label: "Around Y", suffix: nil) { typed in
+                        editorState.setMotionPivot(
+                            MotionPivot(at: CGPoint(x: point.x, y: typed), in: box), of: motion.id)
+                    }
+                }
+            }
+        } else {
+            MotionSettingRow(label: "Around",
+                             help: "The point this layer turns about. A bell hangs from its "
+                                 + "mount, not from its middle: drag the crosshair on the "
+                                 + "picture to where yours hangs from.") {
+                Menu {
+                    ForEach(MotionPivot.Named.allCases, id: \.self) { spot in
+                        Button(spot.title) {
+                            editorState.setMotionPivot(spot.pivot, of: motion.id)
+                        }
+                    }
+                } label: {
+                    Text(reading).lineLimit(1)
+                }
+                .menuStyle(.borderlessButton)
+                .controlSize(.small)
+                .fixedSize()
+                .accessibilityLabel("Around")
+                .playtestControl("Around", detail: reading)
+            }
         }
     }
 }

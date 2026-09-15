@@ -1,9 +1,11 @@
 # Motion: a layer told to change one of its properties over time
 
-Landed 2026-09-15, Next only, behind `next-motion`. Slice 1 of the
-`icon-animate` set. Model: `Sources/PhotonzCore/LayerMotion.swift`. Panel:
+Landed 2026-09-15, Next only, behind `next-motion`. Slices 1 and 2 of the
+`icon-animate` set. Model: `Sources/PhotonzCore/LayerMotion.swift` (the pivot
+is answered by `Layer.turnPivot`, in `TransformDrag.swift`). Panel:
 `Sources/Photonz/MotionListInspector.swift`. Gestures:
-`Sources/Photonz/EditorState+Motion.swift`.
+`Sources/Photonz/EditorState+Motion.swift`. The crosshair on the canvas:
+`Sources/Photonz/CanvasMotionPivot.swift`.
 
 ## The idea in one paragraph
 
@@ -32,7 +34,8 @@ offered a second rotation.
 
 ## What one entry says
 
-**From**, **To**, **Start**, **Over**, **Curve**, **Repeat**. Start and Over
+**From**, **To**, **Around** and **At** (a turn only), **Start**, **Over**,
+**Curve**, **Repeat**. Start and Over
 are one type (`MotionTiming`) because the timing strip in slice 3 draws a bar
 whose left edge is the start and whose width is the duration: they are the same
 two numbers and moving either has to move both.
@@ -44,7 +47,58 @@ cannot share a ruler (`docs/design/animation-vs-video.md`). One cycle is as
 long as the last thing to finish, across the whole picture, so a delay on one
 part of an icon is a distance you can see against the rest.
 
-## Three places this deliberately leaves the mock
+## What a turn turns AROUND
+
+A bell that swings hangs from its **mount**, not from its middle. Put the pivot
+in the middle and the top of the bell swings one way while the bottom swings
+the other, which reads as a bobblehead: nothing about the two angles is wrong,
+the pivot is. So a Rotation carries a `MotionPivot` from the moment it exists,
+and it is a **handle on the picture** rather than a field somebody has to know
+to go looking for. Adding a turn puts a crosshair on the middle of the layer,
+which is deliberately the wrong answer, and one drag to the mount repairs it.
+
+It is kept as a **fraction of the layer's own box**, not as a place on the
+canvas. Move the bell and its mount comes with it; resize it and the mount
+stays where it was on the shape; and the three spots worth a name are ordinary
+values rather than a second kind of thing — the middle IS `(0.5, 0.5)`, the top
+edge IS `(0.5, 0)`. Nothing clamps it into `0...1`, because a mount is very
+often above the shape that swings, and that is the case the feature exists for.
+
+`Layer.turnPivot` is the ONE question the renderer, the selection outline, the
+turn knob, the handles and the hit test all ask, so the pivot is answered there:
+the drawn pixels, the box round them and the place a click lands can never
+disagree. A layer with no turn, or one still on its middle, answers exactly what
+it answered before pivots existed.
+
+Three ways in, one value:
+
+| | |
+| --- | --- |
+| The crosshair on the canvas | the one that matters. The right pivot is a point on YOUR drawing and nobody else knows where it is |
+| The **Around** menu | Its centre, Top centre, Bottom centre |
+| The **At** pair | two numbers on the canvas, for when a number is what you want |
+
+Grabbing the crosshair **starts the loop** if it is not already running, because
+a pivot cannot be judged on a still picture: with the layer sitting at nought
+degrees, changing what it turns around changes nothing you can see. Adding a
+motion already starts the preview, so it is the same habit rather than a new
+one. The whole drag is one step for undo, and the crosshair is drawn from the
+STORED layer, so while the bell swings it sits dead still underneath — which is
+both what makes it catchable and what teaches what a pivot is.
+
+Three more places this deliberately leaves the mock:
+
+1. **No pivot TOOL.** The mock puts a "Move the pivot (Y)" button on the
+   floating tool bar and gates every later step behind it, which makes moving a
+   pivot a MODE. A first-timer who sees a crosshair on their bell tries to drag
+   it; making them find a tool first is where they stop. It is directly
+   draggable with Select.
+2. **No separate move button on the Around row.** That is the tool again.
+3. **A fraction of the box, not canvas numbers.** The mock reads the pivot as
+   `12, 4.4`, which is a place on the canvas; stored that way, dragging the bell
+   tears the swing loose from it. The row still READS canvas numbers.
+
+## Three places the MOTION ITSELF leaves the mock
 
 1. **A fresh motion already moves.** The mock seeds From and To at the value
    the layer has now, so its own row reads `0° → 0°`: add a motion and nothing
@@ -106,6 +160,5 @@ moving picture is stale before it lands.
 
 ## What is NOT here, and where it goes
 
-The **pivot** on the canvas (the mock's "Around" row) is slice 2. The **cycle
-timing strip** in the bottom dock is slice 3. The looping preview at real icon
+The **cycle timing strip** in the bottom dock is slice 3. The looping preview at real icon
 sizes is slice 4, and animated SVG export is slice 5.

@@ -134,3 +134,144 @@ struct MotionRenderTests {
         #expect(difference(black, white) > 0.05)
     }
 }
+
+/// What a turn turns AROUND, in the pixels.
+///
+/// The model tests next door settle where a pivot IS. This settles that the
+/// composite actually swings about it, which is the whole claim: with the
+/// pivot in the middle a bell rocks like a bobblehead, and one drag to the
+/// mount turns it into a bell.
+@Suite("A turn swings about the pivot it was given")
+struct MotionPivotRenderTests {
+
+    /// Where the ink is, as the box that holds every pixel that is not clear.
+    private func inkBox(_ image: CGImage) -> CGRect? {
+        let width = image.width, height = image.height
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        let context = CGContext(data: &data, width: width, height: height,
+                                bitsPerComponent: 8, bytesPerRow: width * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        var minX = width, minY = height, maxX = -1, maxY = -1
+        for y in 0..<height {
+            for x in 0..<width where data[(y * width + x) * 4 + 3] > 40 {
+                minX = min(minX, x); maxX = max(maxX, x)
+                minY = min(minY, y); maxY = max(maxY, y)
+            }
+        }
+        guard maxX >= 0 else { return nil }
+        // Row nought of a bitmap context IS the top row of the picture drawn
+        // into it, and the renderer hands back a CGImage that already shares
+        // the model's top-left origin, so this is document space already.
+        return CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+    }
+
+    /// A 40x40 black square at (80, 80) on a 200x200 canvas, turned a quarter
+    /// turn, about whatever it is told to turn about.
+    private func turned(_ pivot: MotionPivot) -> PhotonzDocument {
+        var layer = Layer(name: "Box",
+                          content: .annotation(AnnotationContent(shape: .rectangle,
+                                                                 strokeWidth: 0,
+                                                                 colorHex: "#000000",
+                                                                 start: .zero,
+                                                                 end: CGPoint(x: 40, y: 40),
+                                                                 fillColorHex: "#000000")),
+                          frame: CGRect(x: 80, y: 80, width: 40, height: 40))
+        layer.transform.rotation = .pi / 2
+        layer.motions = [LayerMotion(property: .rotation,
+                                     from: .number(90), to: .number(90),
+                                     timing: MotionTiming(startMS: 0, durationMS: 900),
+                                     pivot: pivot)]
+        return PhotonzDocument(canvasSize: CGSize(width: 200, height: 200), layers: [layer])
+    }
+
+    private func render(_ document: PhotonzDocument) -> CGImage? {
+        DocumentRenderer().render(document, store: ImageStore(), scale: 1)
+    }
+
+    /// The ruler these tests are read with, checked against a layer that is
+    /// not turned at all: a 40x40 box stored at (80, 80) has its ink at
+    /// (80, 80). Without this every number below could be upside down and
+    /// still agree with itself.
+    @Test func theInkOfAnUnturnedLayerIsWhereItsFrameSays() throws {
+        var still = turned(.centre)
+        still.layers[0].transform.rotation = 0
+        still.layers[0].motions = nil
+        let image = try #require(render(still))
+        let box = try #require(inkBox(image))
+        #expect(abs(box.minX - 80) < 1.5, "got \(box)")
+        #expect(abs(box.minY - 80) < 1.5, "got \(box)")
+    }
+
+    /// A square turned about its own middle stays exactly where it was: a
+    /// square is its own quarter turn.
+    @Test func turningAboutTheMiddleLeavesASquareWhereItWas() throws {
+        let image = try #require(render(turned(.centre)))
+        let box = try #require(inkBox(image))
+        #expect(abs(box.midX - 100) < 1.5)
+        #expect(abs(box.midY - 100) < 1.5)
+    }
+
+    /// ...and the same square turned about its TOP edge swings out from under
+    /// itself. A quarter turn clockwise about (100, 80) takes the box's middle
+    /// from twenty below the pivot to twenty to its left.
+    @Test func turningAboutTheTopEdgeSwingsTheSquareOutFromUnderIt() throws {
+        let image = try #require(render(turned(.topCentre)))
+        let box = try #require(inkBox(image))
+        #expect(abs(box.midX - 80) < 1.5, "expected the middle 20 left of the pivot, got \(box)")
+        #expect(abs(box.midY - 80) < 1.5, "expected the middle level with the pivot, got \(box)")
+    }
+
+    /// A pivot ABOVE the shape altogether, which is what a bell hanging from
+    /// its mount is: the swing is wider the further the mount is.
+    @Test func aPivotAboveTheShapeSwingsItFurther() throws {
+        let mount = MotionPivot(unit: CGPoint(x: 0.5, y: -1))
+        let image = try #require(render(turned(mount)))
+        let box = try #require(inkBox(image))
+        // The pivot is at (100, 40); the middle is 60 below it, so a quarter
+        // turn clockwise puts it 60 to its left.
+        #expect(abs(box.midX - 40) < 1.5, "got \(box)")
+        #expect(abs(box.midY - 40) < 1.5, "got \(box)")
+    }
+
+    /// The pivot reaches a GROUP the same way. A card turns about its mount
+    /// too, and a group's turn is taken by the whole card at once.
+    @Test func aGroupTurnsAboutItsPivotAsWell() throws {
+        var child = Layer(name: "Box",
+                          content: .annotation(AnnotationContent(shape: .rectangle,
+                                                                 strokeWidth: 0,
+                                                                 colorHex: "#000000",
+                                                                 start: .zero,
+                                                                 end: CGPoint(x: 40, y: 40),
+                                                                 fillColorHex: "#000000")),
+                          frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        child.name = "Box"
+        var group = Layer(name: "Card", content: .group(GroupContent(children: [child])),
+                          frame: CGRect(x: 80, y: 80, width: 0, height: 0))
+        group.transform.rotation = .pi / 2
+        group.motions = [LayerMotion(property: .rotation,
+                                     from: .number(90), to: .number(90),
+                                     timing: MotionTiming(startMS: 0, durationMS: 900),
+                                     pivot: .topCentre)]
+        let document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200), layers: [group])
+        let image = try #require(render(document))
+        let box = try #require(inkBox(image))
+        // The group's box is the 40x40 its child makes, at (80, 80); its top
+        // centre is (100, 80) and its middle is 20 below that.
+        #expect(abs(box.midX - 80) < 1.5, "got \(box)")
+        #expect(abs(box.midY - 80) < 1.5, "got \(box)")
+    }
+
+    /// Nothing that does not turn is touched. This is the guard on every
+    /// picture the app has ever drawn: the pivot only ever answers for a layer
+    /// that has a rotation motion on it, and only when that motion has been
+    /// moved off the middle.
+    @Test func aLayerWithNoTurnIsRenderedExactlyAsBefore() throws {
+        var plain = turned(.centre)
+        plain.layers[0].motions = nil
+        let withMotion = try #require(render(turned(.centre)))
+        let without = try #require(render(plain))
+        #expect(inkBox(withMotion) == inkBox(without))
+    }
+}

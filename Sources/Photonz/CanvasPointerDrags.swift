@@ -370,7 +370,11 @@ extension CanvasNSView {
         if let id = selectedLayerID, let layer = selectedLayer, offersRotation(layer),
            let knob = layer.rotateKnobPoint(zoom: viewport.zoom),
            hypot(p.x - knob.x, p.y - knob.y) * viewport.zoom <= CanvasPointer.rotateTolerance {
-            let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
+            // About whatever this layer turns about, which is its middle
+            // unless a turn on it hangs it somewhere else (`Layer.turnPivot`).
+            // The knob has to measure the same turn the picture takes or it
+            // would run away from the hand on a bell.
+            let center = layer.turnPivot
             transformDrag = TransformDragSession(
                 layerID: id, kind: .rotate(grabAngle: TransformDrag.pointerAngle(p, around: center)),
                 startTransform: layer.transform, center: center,
@@ -431,6 +435,16 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
+        // The pivot: a crosshair sitting ON the drawing, and very often right
+        // in the middle of it, so it MUST be read before the press that picks
+        // the layer up — a handle you cannot reach because the thing it sits
+        // on answers first is not a handle. It is read AFTER the box's own
+        // handles, because resizing and turning are gestures with no other way
+        // in, while a pivot parked on a corner can still be set by name or by
+        // typing two numbers in the Around row. It only ever answers while a
+        // turning layer is picked, so the rest of the time there is nothing
+        // here at all.
+        if motionPivotMouseDown(at: p, event: event) { return }
         // A SELECTED collage exposes its filled cells for swap-by-drag (like
         // measure corners: selection first, then inner manipulation). Grabbing
         // a gutter, the backdrop margin, or an empty well still moves the layer,
@@ -655,6 +669,10 @@ extension CanvasNSView {
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
         if tool == .pen {
             penMouseDragged(to: p, event: event)
+            return
+        }
+        if motionPivotDrag != nil {
+            motionPivotMouseDragged(to: p, event: event)
             return
         }
         if pathAnchorDrag != nil {
@@ -1001,6 +1019,10 @@ extension CanvasNSView {
         if tool == .pen {
             penMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
                        event: event)
+            return
+        }
+        if motionPivotDrag != nil {
+            motionPivotMouseUp()
             return
         }
         if pathEditMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),

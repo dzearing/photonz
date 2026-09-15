@@ -674,6 +674,11 @@ final class EditorState {
     /// Where that pull started, so the undo step spans the whole of it.
     var lensAmountBeforeDrag: CGFloat?
 
+    /// The pivot under the hand while the crosshair on the canvas is being
+    /// dragged (`next-motion`). Kept out of the document so the whole drag is
+    /// one step to undo rather than forty.
+    var motionPivotPreview: (motionID: UUID, pivot: MotionPivot)?
+
     // MARK: Motion (`next-motion`)
 
     /// How far into one cycle of the loop the canvas is drawing, in
@@ -2726,6 +2731,21 @@ final class EditorState {
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {
             document.updateLayer(id: id) { $0.isVisible = false }
+        }
+        // The pivot under a hand. Written onto the picture the motion above
+        // has already been worked out on, which is safe because a pivot is
+        // never blended: it is read at the moment the layer is DRAWN
+        // (`Layer.turnPivot`). So the canvas shows the layer turning about
+        // where the crosshair is now, which is the whole of what dragging one
+        // is for.
+        if Experiments.shared.motionEnabled, let preview = motionPivotPreview,
+           let layer = motionLayer {
+            document.updateLayer(id: layer.id) { edited in
+                guard var motions = edited.motions,
+                      let index = motions.firstIndex(where: { $0.id == preview.motionID }) else { return }
+                motions[index].pivot = preview.pivot
+                edited.motions = motions
+            }
         }
         // A lens slider under a finger: the canvas shows where the pull is
         // now, not where the document still says it is.

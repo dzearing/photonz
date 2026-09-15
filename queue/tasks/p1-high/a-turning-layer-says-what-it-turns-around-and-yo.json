@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 21,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T08:43:10.049Z",
-  "updated": "2026-09-15T08:43:19.690Z",
+  "updated": "2026-09-15T11:21:07.004Z",
   "deps": [
     "a-layer-can-be-told-to-change-one-of-its-propert"
   ],
@@ -30,6 +30,19 @@
     {
       "t": "2026-09-15T08:43:19.691Z",
       "note": "deps set: the motion model lands first, then this"
+    },
+    {
+      "t": "2026-09-15T11:06:30.682Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T11:07:58.406Z",
+      "note": "Adversarial review BEFORE building, against the mock (icon-animate-wt.html steps 4-5):\n1. CUT the mock's pivot TOOL. The mock puts a 'Move the pivot (Y)' button on the floating toolbar and every step from 4 on has data-tool=#tPivot, so moving the pivot is a MODE. A mode you can get stuck in, for one handle, on one property. A first-timer who sees a crosshair on their bell tries to drag it; making them find a tool first is exactly where they stop. The handle is directly draggable with Select, whenever it is showing. No tool, no key, no mode.\n2. Three controls for one point is two too many. The mock's Around row is a named-spot menu PLUS a separate move button. The move button is the tool again. Around becomes: a menu for the three named spots, and an X/Y pair in the same numgrid idiom From/To and Start/Over already use. Three ways in, one value, nothing hidden.\n3. The pivot must be a point on the LAYER, not on the canvas. The mock reads it as canvas numbers (12, 4.4). Stored that way, moving the bell leaves its mount behind. Stored as a fraction of the layer's own box it follows the layer, scales with it, and the three named spots ARE values rather than a separate case: centre is (0.5,0.5), top centre (0.5,0), bottom centre (0.5,1). The row still READS canvas numbers, so what the mock shows is what you see.\n4. The handle does not swing. It is the one point a rotation leaves still, and the canvas chrome is drawn from the stored document rather than the moved one, so while the bell swings the crosshair sits dead still under it. That is the picture that teaches what a pivot is.\n5. It shows the moment Rotation exists, at the middle of the layer, which is the mock's whole argument: step 4 is deliberately WRONG and step 5 repairs it in one drag.\n6. Risk checked: Layer.turnPivot is the one question the renderer, the outline, the handles and the hit test all ask, so teaching it about the motion pivot keeps all five in agreement. A layer with no rotation motion, or one still on its centre, answers exactly what it answered before, so nothing already drawn can move."
+    },
+    {
+      "t": "2026-09-15T11:21:07.003Z",
+      "note": "BUILT. Core: MotionPivot in LayerMotion.swift, a point kept as a FRACTION of the layer's own box (so moving or resizing carries it along, and Its centre / Top centre / Bottom centre are ordinary values rather than a second kind of thing). LayerMotion.pivot is optional so yesterday's documents read back untouched, and nil means the middle. Answered through Layer.turnPivot, which is the one question the renderer, the outline, the turn knob, the handles and the hit test all ask: LayerGrouping.inheritedTurn and PhotonzDocument.canvasHitTest already asked it, so both followed for free. Renderer: leaf folds the swing into its placement translation (a translation applied earlier would be undone by it, since placement is measured from wherever the extent ended up); group turns about the offset point directly. Canvas: CanvasMotionPivot.swift draws ring + crosshair + the word pivot in view space, from the STORED layer so it sits still while the shape swings; read after the box's own handles and before the press that picks the layer up. Panel: Around menu + At pair, rotation only. Grabbing the crosshair starts the loop, because a pivot cannot be judged on a still picture.\n\nAdversarial review of the BUILT thing, as far as a locked screen allows: (a) the crosshair loses to a corner handle within ~11 view points, deliberate because resizing has no other way in and the pivot has two; (b) setting a pivot on an already-turned layer moves the layer, which is what a pivot means and what every animation tool does, but it is a jump the first time; (c) Around reads the two numbers rather than the word Custom, which duplicates the At row under it. All three are in the audit's rough list. None earned a task: (a) and (c) are judgements the user should make on the audit rather than homework I file against myself, and (b) is correct behaviour.\n\nleft rough: the walk asserts the drag indirectly (undo puts Around back to Its centre while the Rotation stays on the layer, which can only happen if the crosshair took the press rather than the shape it sits in the middle of). A direct 'is a crosshair drawn at x,y' claim would need a new expect kind in PlaytestScript, which is a bigger change than this slice earns."
     }
-  ]
+  ],
+  "started": "2026-09-15T11:06:30.681Z"
 }

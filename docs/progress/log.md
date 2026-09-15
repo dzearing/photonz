@@ -15339,3 +15339,44 @@ Slice 1 of the `icon-animate` set, Next only, behind `next-motion`.
 Next in the set: the pivot on the canvas (slice 2), then the cycle timing strip
 (slice 3). Open question for the user is on the audit: whether adding a motion
 should start the preview on its own.
+
+## 2026-09-15 — A turning layer says what it turns around
+
+Slice 2 of `icon-animate`, Next only, behind `next-motion`. A Rotation now
+carries a **pivot**, and the pivot is a crosshair on the picture you drag.
+
+- **Core, test-first.** `MotionPivot` in `LayerMotion.swift`: a point kept as a
+  fraction of the layer's own box, so moving or resizing the layer carries it
+  along and the three named spots (Its centre, Top centre, Bottom centre) are
+  ordinary values rather than a second kind of thing. `LayerMotion.pivot` is
+  optional, so every motion written yesterday reads back untouched and nil means
+  the middle. 15 tests.
+- **One question.** `Layer.turnPivot` is what the renderer, the selection
+  outline, the turn knob, the handles and the hit test all ask, so that is where
+  the pivot is answered: nothing can pivot somewhere the others do not. The
+  rotate knob now measures its angle about the same point.
+- **Renderer.** Both paths turn about it: a leaf folds the swing into its
+  placement translation (a translation before that would be undone by it,
+  because placement is measured from wherever the extent ended up), and a group
+  turns about the offset point directly. 6 tests, including one that checks the
+  ruler by rendering an unturned layer first.
+- **Canvas.** `CanvasMotionPivot.swift`: ring, crosshair and the word "pivot",
+  drawn in view space so it is one size at every zoom, and drawn from the STORED
+  layer so it sits dead still while the bell swings round it. Read after the
+  box's own handles and before the press that picks the layer up. Grabbing it
+  starts the loop, because a pivot cannot be judged on a still picture.
+- **Panel.** An **Around** menu and an **At** pair on the rotation entry only.
+
+Three departures from the mock, argued in the task log: no pivot TOOL (it is a
+mode you can get stuck in, for one handle), no separate move button on the
+Around row (the tool again), and a fraction of the box rather than the mock's
+canvas numbers (stored that way, dragging the bell tears the swing loose).
+
+Verified: 6746 tests green. **The Mac's screen was LOCKED for this whole task**,
+so no walk could run and there is no picture of the app; the audit ships
+offscreen renders of the composite instead.
+`Scripts/playtest/motion-pivot-walk.json` is written and parses, and the finding
+is folded into `an-audit-gets-a-real-picture-of-the-app-again`, which has now
+been hit by two consecutive slices of this epic.
+
+Next: slice 3, the cycle timing strip in the bottom dock.

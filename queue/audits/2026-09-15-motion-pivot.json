@@ -1,0 +1,32 @@
+{
+  "feature": "A turning layer says what it turns around",
+  "epic": "icon-animate",
+  "summary": "A layer told to turn now shows a crosshair on the picture for the point it turns about, and you drag it. That one drag is what turns a shape rocking like a bobblehead into a bell hanging from its mount.",
+  "setup": "Photonz Dev, Experiments window, release Next. Motion is on by default under next-motion. Draw one tall rectangle to stand in for a bell.",
+  "try": [
+    { "do": "Draw a tall rectangle, then press Escape and click it once to pick it." },
+    { "do": "In the panel, press the plus on the Motion header and choose Rotation." },
+    { "do": "Watch it swing. It rocks about its own middle, which is the wrong swing: the top goes one way while the bottom goes the other.", "shot": "2026-09-15-motion-pivot-middle-c.png" },
+    { "do": "Find the crosshair labelled pivot in the middle of the shape, and drag it straight up to just above the shape's top edge.", "shot": "2026-09-15-motion-pivot-mount-c.png" },
+    { "do": "Watch it swing again. Same two angles, same duration: it is now a bell." },
+    { "do": "Press Command Z once." },
+    { "do": "Open the Around menu on the Rotation entry and choose Top centre." },
+    { "do": "Type a number into either box on the At row and press Return." }
+  ],
+  "evaluate": [
+    "Did you find the crosshair without being told it was there, or did you have to go looking?",
+    "Is the difference between step 3 and step 5 obvious enough to be the reason this feature exists?",
+    "Grabbing the pivot starts the loop if it is stopped, because a still picture cannot show you a pivot. Is that helpful or is it the app taking over?",
+    "The crosshair sits still while the shape swings around it. Does that read as correct, or does it look like chrome that failed to follow?",
+    "Around names three spots: Its centre, Top centre, Bottom centre. Is anything missing that you reached for?",
+    "The word pivot sits beside the crosshair the whole time that layer is picked. Is it a help or is it in the way of judging the icon?"
+  ],
+  "rough": [
+    "NO PICTURE OF THE APP. The Mac's screen was locked for this whole task, so no walk could run and macOS refuses every screen capture: both shots here are offscreen renders of the composite, not photographs of the window, and nobody has yet seen the crosshair, the label or the Around row drawn. That is now two slices of this epic in a row.",
+    "The crosshair is read AFTER the box's own resize handles and the turn knob, so a pivot parked within about eleven points of a corner cannot be grabbed on the canvas; it can still be set from the Around menu or the At boxes. Resizing has no other way in, which is why it wins.",
+    "Setting a pivot on a layer that is ALREADY turned moves the layer, because the same angle taken about a different point lands somewhere else. That is what a pivot means and every animation tool behaves this way, but it is a jump the first time you see it.",
+    "Cut from the mock: its pivot TOOL on the floating tool bar, and its separate move button on the Around row. Moving a pivot should not be a mode you can get stuck in for the sake of one handle. Say if you disagree.",
+    "The mock reads the pivot as canvas numbers. It is STORED as a fraction of the layer's box instead, so moving or resizing the shape carries the pivot with it; the row still reads canvas numbers, so what you see matches the mock.",
+    "Around reads the two numbers when the pivot is somewhere of its own, rather than the word Custom, because Custom says nothing about where it went. It is duplicated by the At row right beneath it."
+  ]
+}

@@ -40,7 +40,11 @@ extension CanvasNSView {
                canvasGridOrigin: CGPoint,
                canvasGuides: [CanvasGuide],
                selectedGuideID: UUID?,
-               gridAdjust: CGPoint?) {
+               gridAdjust: CGPoint?,
+               motionPivot: MotionPivotHandle?) {
+        // Not drawn from here: `refreshOverlays` at the end of this pass draws
+        // the crosshair, along with every other piece of chrome.
+        self.motionPivot = motionPivot
         self.canvasGrid = canvasGrid
         self.iconKeylines = iconKeylines
         self.canvasGridOrigin = canvasGridOrigin
@@ -299,6 +303,7 @@ extension CanvasNSView {
         refreshMeasureCreation(modifierFlags: NSEvent.modifierFlags)
         refreshPenChrome()
         refreshPathEditChrome()
+        refreshMotionPivotChrome()
     }
 
     /// Editor-only collage chrome: dashed wells with a plus glyph over every

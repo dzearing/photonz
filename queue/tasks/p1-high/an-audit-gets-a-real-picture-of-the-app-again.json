@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T07:07:15.786Z",
-  "updated": "2026-09-15T11:02:09.763Z",
+  "updated": "2026-09-15T11:20:30.571Z",
   "deps": [
     "a-hundred-and-fifteen-walks-fail-on-code-that-pa"
   ],
@@ -64,6 +64,10 @@
     {
       "t": "2026-09-15T11:02:09.762Z",
       "note": "Another one, 2026-09-15 ~04:00: the motion slice (a-layer-can-be-told-to-change-one-of-its-propert) shipped with no picture of the app at all. The screen was locked for the whole task, the probe launch printed 'Grants: probe Screen Recording granted · screen locked', and Scripts/playtest.sh exited on the locked check before running a single step. queue/audits/2026-09-15-layer-motion.json therefore carries two OFFSCREEN RENDERS of the swing instead of a window capture, and says so in its first rough line.\n\nLeft behind, ready to run the moment the screen is unlocked: Scripts/playtest/motion-swings-a-layer-walk.json. It parses (checked against PlaytestScript.decode) and it asks for five window captures, including a picture of the Add Motion menu showing the properties this layer has. Whoever unlocks the machine should run it before the Motion audit is trusted:\n  Scripts/playtest.sh Scripts/playtest/motion-swings-a-layer-walk.json --no-build"
+    },
+    {
+      "t": "2026-09-15T11:20:30.570Z",
+      "note": "still locked, 2026-09-15 04:22Z. The pivot slice (a-turning-layer-says-what-it-turns-around-and-yo) hit exactly what the motion slice hit six hours ago: 'Grants: probe Screen Recording granted · this terminal Accessibility denied · screen locked', every run of Scripts/playtest/motion-pivot-walk.json comes back status locked with zero steps, and the audit ships offscreen renders instead of a picture of the window. That is now two consecutive feature slices in the same epic whose handle, crosshair and panel row nobody has seen drawn. The walk is written and parses."
     }
   ],
   "started": "2026-09-15T10:05:49.238Z"

@@ -115,6 +115,11 @@ extension CanvasNSView {
                                     captionPillSize: layer.measuredCaptionPillSize,
                                     cornerHandlesEnabled: Experiments.shared.cornerHandlesEnabled,
                                     edgeGrabEnabled: Experiments.shared.edgeGrabEnabled)
+        // The pivot, where nothing else has answered: it sits ON the drawing
+        // rather than round it, so it is read after the box's own handles and
+        // before the press that would pick the layer up, exactly as
+        // `mouseDown` reads it.
+        if cue == nil, motionPivotHit(at: p) != nil { return (.grab, .identity) }
         return cue.map { ($0, layer.transform) }
     }
 

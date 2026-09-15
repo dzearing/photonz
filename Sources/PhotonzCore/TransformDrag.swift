@@ -59,6 +59,16 @@ extension Layer {
     /// not a thing anybody can turn.
     public var turnBox: CGRect { isGroup ? localBounds : withoutSlack(frame) }
 
+    /// The box a pivot is stated as a fraction OF: the same box the turn
+    /// swings about its middle when nothing else is said.
+    public var turnPivotBox: CGRect { isGroup ? localBounds : frame }
+
+    /// What a turn on this layer turns around, where it has been told, and nil
+    /// where nothing on it turns. Only a rotation carries one.
+    public var motionPivot: MotionPivot? {
+        (motions ?? []).first { $0.property == .rotation }?.turnsAbout
+    }
+
     /// The point this layer turns ABOUT, in the same space.
     ///
     /// One question, asked by the renderer, the outline, the knob, the handles
@@ -67,8 +77,16 @@ extension Layer {
     /// point the renderer turns it about; on a text layer that is half its
     /// slack past the middle of the words the outline is drawn round. A group
     /// turns about the middle of the box it occupies.
+    ///
+    /// ...unless a turn on this layer says otherwise. A bell hangs from its
+    /// mount, and the point it hangs from is a `MotionPivot` on its rotation.
+    /// It is answered HERE rather than in the renderer alone so that the
+    /// picture, the outline round it and the place a click lands all swing
+    /// about the same point; a layer with no turn, or one still on its middle,
+    /// answers exactly what it answered before pivots existed.
     public var turnPivot: CGPoint {
-        let box = isGroup ? localBounds : frame
+        let box = turnPivotBox
+        if let pivot = motionPivot { return pivot.point(in: box) }
         return CGPoint(x: box.midX, y: box.midY)
     }
 

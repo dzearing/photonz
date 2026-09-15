@@ -89,6 +89,87 @@ extension EditorState {
         stopIfNothingMoves()
     }
 
+    // MARK: What the turn turns around
+
+    /// The turn on the picked layer, if it has one. Only a rotation has a
+    /// pivot, and one property is one answer, so there is at most one.
+    var turningMotion: LayerMotion? {
+        motionRows.first { $0.property == .rotation }
+    }
+
+    /// What the canvas draws a crosshair for, and drags: nil whenever nothing
+    /// picked is turning.
+    ///
+    /// The point comes off the STORED layer, never the moving one. A rotation
+    /// is the one thing that leaves its own pivot still, so while the bell
+    /// swings the crosshair sits dead under it, which is both what makes it
+    /// catchable and what teaches what a pivot IS.
+    var motionPivotHandle: MotionPivotHandle? {
+        guard let layer = motionLayer, let motion = turningMotion else { return nil }
+        let pivot = motionPivotPreview?.motionID == motion.id
+            ? motionPivotPreview!.pivot : motion.turnsAbout
+        return MotionPivotHandle(layerID: layer.id, motionID: motion.id,
+                                 point: pivot.point(in: layer.turnPivotBox),
+                                 box: layer.turnPivotBox)
+    }
+
+    /// Where the pivot is right now as two numbers on the canvas, which is
+    /// what the Around row types into. Nil where nothing is turning.
+    var motionPivotPoint: CGPoint? { motionPivotHandle?.point }
+
+    /// The spot the pivot is sitting on, or nil where it is somewhere of its
+    /// own — what the Around menu shows as its current answer.
+    var motionPivotNamed: MotionPivot.Named? {
+        guard let motion = turningMotion else { return nil }
+        if let preview = motionPivotPreview, preview.motionID == motion.id { return preview.pivot.named }
+        return motion.turnsAbout.named
+    }
+
+    /// The pivot handle grabbed. The loop starts if it is not already running,
+    /// because a pivot cannot be judged on a still picture: with the layer
+    /// sitting at nought degrees, changing what it turns around changes
+    /// nothing you can see. Adding a motion already starts the preview, so
+    /// this is the same habit rather than a new one.
+    func beginMotionPivotDrag() {
+        if !isMotionPlaying { playMotionPreview() }
+    }
+
+    /// The pivot under the hand: rendered straight away and kept out of
+    /// history, so the swing follows the drag and the whole drag is one step
+    /// to undo rather than forty.
+    func previewMotionPivot(at point: CGPoint) {
+        guard let layer = motionLayer, let motion = turningMotion else { return }
+        motionPivotPreview = (motion.id, MotionPivot(at: point, in: layer.turnPivotBox))
+        // Redrawn through `displayDocument` rather than by handing a changed
+        // copy straight to the renderer, because the preview's own frame loop
+        // submits the STORED document thirty times a second: a copy pushed
+        // from here would be painted back over before the hand had moved.
+        rerender()
+    }
+
+    /// The button up: one undo step from where the pivot started to where it
+    /// ended.
+    func commitMotionPivot() {
+        guard let preview = motionPivotPreview else { return }
+        motionPivotPreview = nil
+        setMotionPivot(preview.pivot, of: preview.motionID)
+    }
+
+    /// A drag that went nowhere leaves nothing behind, not even a redraw of
+    /// the picture it never changed.
+    func cancelMotionPivot() {
+        guard motionPivotPreview != nil else { return }
+        motionPivotPreview = nil
+        rerender()
+    }
+
+    /// The pivot set outright: the Around menu's three named spots, and the
+    /// two numbers beside it. One step for undo, exactly like the drag.
+    func setMotionPivot(_ pivot: MotionPivot, of motionID: UUID? = nil) {
+        guard let id = motionID ?? turningMotion?.id else { return }
+        updateMotion(id: id) { $0.pivot = pivot }
+    }
+
     // MARK: The preview
 
     /// Whether there is anything to play at all.

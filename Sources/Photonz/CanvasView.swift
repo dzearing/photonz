@@ -178,6 +178,12 @@ struct CanvasView: NSViewRepresentable {
     /// What the chip should say while a path's points are showing, and nil
     /// when it should not be up at all.
     let onPathEditHintChange: (String?) -> Void
+    /// The turn's pivot, and the four moments of dragging it.
+    let motionPivot: MotionPivotHandle?
+    let onMotionPivotBegin: () -> Void
+    let onMotionPivotMove: (CGPoint) -> Void
+    let onMotionPivotCommit: () -> Void
+    let onMotionPivotCancel: () -> Void
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void
@@ -292,7 +298,8 @@ struct CanvasView: NSViewRepresentable {
                    canvasGrid: canvasGrid, iconKeylines: iconKeylines,
                    canvasGridOrigin: canvasGridOrigin,
                    canvasGuides: canvasGuides, selectedGuideID: selectedGuideID,
-                   gridAdjust: gridAdjust)
+                   gridAdjust: gridAdjust,
+                   motionPivot: motionPivot)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
     }
 
@@ -337,6 +344,10 @@ struct CanvasView: NSViewRepresentable {
         view.onPenHintChange = onPenHintChange
         view.onPathPreview = onPathPreview
         view.onPathEditCommit = onPathEditCommit
+        view.onMotionPivotBegin = onMotionPivotBegin
+        view.onMotionPivotMove = onMotionPivotMove
+        view.onMotionPivotCommit = onMotionPivotCommit
+        view.onMotionPivotCancel = onMotionPivotCancel
         view.onPathEditHintChange = onPathEditHintChange
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
@@ -448,6 +459,12 @@ final class CanvasNSView: NSView {
     var onPathPreview: ((UUID, PathContent) -> Void) = { _, _ in }
     var onPathEditCommit: ((UUID, PathContent) -> Void) = { _, _ in }
     var onPathEditHintChange: ((String?) -> Void) = { _ in }
+    /// The pivot being grabbed, moved, let go, and let go without moving.
+    /// Live while it is held (no history), then one undo step on release.
+    var onMotionPivotBegin: (() -> Void) = {}
+    var onMotionPivotMove: ((CGPoint) -> Void) = { _ in }
+    var onMotionPivotCommit: (() -> Void) = {}
+    var onMotionPivotCancel: (() -> Void) = {}
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
@@ -921,6 +938,15 @@ final class CanvasNSView: NSView {
     let pathPickedAnchorsLayer = CAShapeLayer()
     /// The levers of the picked points: the arms and the dot on each end.
     let pathLeversLayer = CAShapeLayer()
+    /// The point the picked layer's TURN turns around (Next, `next-motion`),
+    /// echoed from the editor: nil whenever nothing picked is turning.
+    var motionPivot: MotionPivotHandle?
+    /// That point, while it is under the hand.
+    var motionPivotDrag: MotionPivotDrag?
+    /// The crosshair in its ring, its white rim, and the word for what it is.
+    let motionPivotLayer = CAShapeLayer()
+    let motionPivotHaloLayer = CAShapeLayer()
+    let motionPivotLabelLayer = CATextLayer()
     /// The shape the points on screen were last drawn FROM, and the document
     /// corner they were measured out from. Kept so a walk can ask, while the
     /// button is still down, whether the chrome is on the shape the canvas is
@@ -1879,6 +1905,7 @@ final class CanvasNSView: NSView {
         // top of it, then the handles, then the close ring, so the thing you
         // are aiming at is never buried under the thing you are drawing.
         setUpPenChrome()
+        setUpMotionPivotChrome()
         setUpPathEditChrome()
 
         // Selection handles and the snap dot sit above every other overlay.
