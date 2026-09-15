@@ -921,6 +921,15 @@ final class CanvasNSView: NSView {
     let pathPickedAnchorsLayer = CAShapeLayer()
     /// The levers of the picked points: the arms and the dot on each end.
     let pathLeversLayer = CAShapeLayer()
+    /// The shape the points on screen were last drawn FROM, and the document
+    /// corner they were measured out from. Kept so a walk can ask, while the
+    /// button is still down, whether the chrome is on the shape the canvas is
+    /// drawing (`pathChromeDrift`).
+    var pathChromeShowing: PathContent?
+    var pathChromeOrigin: CGPoint = .zero
+    /// The worst that drift got over the drag that is running, or the last one
+    /// that ran. Reset by the press that starts a drag.
+    var pathChromeDriftPeak: CGFloat = 0
     /// Set by a press that committed the fresh arrow's caption field with the
     /// Arrow tool still in hand; mouse-up decides whether it was a click (hand
     /// back to Select) or a drag (the next arrow).

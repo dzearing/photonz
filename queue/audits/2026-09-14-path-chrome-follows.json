@@ -1,0 +1,28 @@
+{
+  "feature": "The points keep up with the pointer while you bend a curve",
+  "epic": "icon-vector",
+  "summary": "Drag a point or a lever on a path and the dots, the levers and the shape now move together, every frame. Before this they stood still where the drag began and only caught up when you let go, so you were aiming with one thing and steering another.",
+  "setup": "Photonz Dev, Experiments window, release Next, with next-pen and next-reshape-a-path on. Any document will do; a blank canvas is easiest.",
+  "try": [
+    { "do": "Press P and click three times to lay down a triangle, dragging on the middle click so that point comes out curved." },
+    { "do": "Click the first point again to close the shape, then press Escape to put the Pen down." },
+    { "do": "Click the curved point so its two levers appear." },
+    { "do": "Drag one lever a long way out and STOP, holding the button down.", "shot": "2026-09-14-path-chrome-mid-lever-drag.png" },
+    { "do": "Look at where the lever end, the point and the curve are before you let go: all three should be under your pointer, not behind it." },
+    { "do": "Let go, and watch whether anything jumps at the moment you release." },
+    { "do": "Now shift click a second point and drag the pair together.", "shot": "2026-09-14-path-chrome-mid-two-anchor-drag.png" },
+    { "do": "Zoom in twice with Command plus and repeat one of the drags." }
+  ],
+  "evaluate": [
+    "While you drag a lever, does the lever end stay exactly under your pointer, or does it feel like it is being towed?",
+    "Can you now tell what the curve is going to be before you let go of it?",
+    "Does anything jump or flicker at the instant you release the button?",
+    "The blue box around the shape hides for the whole reshape drag, on purpose, so it is not chasing the shape. Is that right, or do you want it tracking?",
+    "At 400% zoom, do the dots still sit exactly on the outline rather than beside it?"
+  ],
+  "rough": [
+    "The Position and Size numbers in the panel do NOT move while you reshape: they hold the box from before the drag and jump at the release. Measured mid-drag as X 200 Y 192 W 580 H 448 against X 260 Y 189 W 580 H 381 a moment later. Filed as its own task.",
+    "The blue selection box hides for the whole reshape drag. That is deliberate and predates this work, but it means that while you are dragging, nothing on screen says how big the shape is becoming.",
+    "Screenshots here are real screen captures, taken with the button still down; the Screen Recording grant was in place."
+  ]
+}

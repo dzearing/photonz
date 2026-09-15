@@ -1114,6 +1114,22 @@ private final class Run {
                                anchorAt: anchorAt),
                  state: describe())
 
+        case .expectChrome(let within):
+            let canvas = try requireCanvas()
+            let peak = canvas.pathChromeDriftPeak
+            let now = canvas.pathChromeDrift
+            guard peak <= within else {
+                throw Failure(description: "the points on the path came off the shape while it was "
+                    + "being dragged: worst \(Self.round1(peak))pt away from where the shape the "
+                    + "canvas was drawing had them, and a walk asked for \(Self.round1(within))pt. "
+                    + "The drag draws the live shape and something behind it is painting the old "
+                    + "points back over the top.")
+            }
+            note(number, step.name,
+                 "the points stayed on the shape: worst \(Self.round1(peak))pt over the last drag, "
+                     + "\(Self.round1(now))pt now, asked for \(Self.round1(within))pt",
+                 state: describe())
+
         case .expectLayers(let atLeast, let atMost):
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
                  state: describe())

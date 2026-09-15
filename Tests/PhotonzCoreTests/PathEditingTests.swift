@@ -401,6 +401,39 @@ struct PathEditingTests {
         #expect(leaf.enclosesAnArea)
     }
 
+    // MARK: - Where a reshaped shape ends up in the document
+
+    /// The rule the points and levers drawn on the canvas are placed by, and
+    /// the reason they are placed from the box the drag STARTED in: refitting a
+    /// reshaped path moves the layer's corner by exactly as much as it pulls
+    /// the shape's own coordinates back, so every point of it stays where it
+    /// was in the document. A point at `local` inside a layer whose corner is
+    /// `o` is at `o + local` before the refit and after it.
+    ///
+    /// Get this wrong in the canvas and the points sit beside the shape instead
+    /// of on it, which is invisible to every test that only reads the document.
+    @Test func refittingAReshapedPathLeavesEveryPointWhereItWas() {
+        var bowed = Self.bowedSquare()
+        // Pulled up and to the left, out past two of the old edges, which is
+        // the case the refit exists for.
+        bowed.moveAnchors([0], by: CGPoint(x: -30, y: -40))
+        let corner = CGPoint(x: 200, y: 120)
+        let layer = PathBuilder.layer(Self.bowedSquare(), at: corner)
+        let fitted = PathBuilder.refit(layer, content: bowed)
+        guard let refitted = fitted.path else { Issue.record("a path"); return }
+        #expect(refitted.anchors.count == bowed.anchors.count)
+        for (index, anchor) in bowed.anchors.enumerated() {
+            let was = CGPoint(x: corner.x + anchor.point.x, y: corner.y + anchor.point.y)
+            let now = CGPoint(x: fitted.frame.minX + refitted.anchors[index].point.x,
+                              y: fitted.frame.minY + refitted.anchors[index].point.y)
+            #expect(abs(was.x - now.x) < 0.0001)
+            #expect(abs(was.y - now.y) < 0.0001)
+        }
+        // And the box really did grow to take in the point that moved out.
+        #expect(fitted.frame.minX == corner.x - 30)
+        #expect(fitted.frame.minY == corner.y - 40)
+    }
+
     @Test func aLeafSurvivesBeingWrittenOutAndReadBack() {
         let leaf = Self.leaf()
         let data = try! JSONEncoder().encode(leaf)

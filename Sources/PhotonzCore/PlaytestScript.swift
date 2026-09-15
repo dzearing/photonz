@@ -1464,6 +1464,21 @@ public enum PlaytestStep: Sendable, Equatable {
     case expectPath(layer: String?, anchors: Int?, closed: Bool?, curves: Int?,
                     smooth: Int?, width: CGFloat?, fill: String?, ink: String?,
                     anchorAt: PlaytestAnchorClaim?)
+    /// How far the points and levers drawn on the picked path may be from the
+    /// shape the canvas is actually drawing, in screen points, at the worst
+    /// moment of the drag that just ran.
+    ///
+    /// This is the one claim that can only be made WHILE the button is down.
+    /// On 2026-09-14 a lever drag bent the shape under a set of points that
+    /// never moved until the release, and every check there was passed: the
+    /// document was right, the render was right, and the picture taken after
+    /// the drag was right. So the app keeps a reading of its own as the drag
+    /// runs (`pathChromeDrift`), and this is a walk asking for the worst of it.
+    ///
+    /// `within` is a distance on screen, not in the document, so the same claim
+    /// holds at every zoom. Left off it is one point: the points are on the
+    /// shape, not near it.
+    case expectChrome(within: CGFloat)
     /// How many layers the document must hold right now, counting the ones
     /// inside groups.
     ///
@@ -1644,7 +1659,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragOver", "dragRow", "dragSection", "dragTile", "dropComponent",
-        "dropImage", "expect", "expectBuilds", "expectCaption", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBuilds", "expectCaption", "expectChrome", "expectInView", "expectLayers", "expectMeasures", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectRegion", "expectSectionFits", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeSVG",
     ]
@@ -1695,6 +1710,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectMeasures: "expectMeasures"
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
+        case .expectChrome: "expectChrome"
         case .expectLayers: "expectLayers"
         case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
@@ -2016,6 +2032,12 @@ public enum PlaytestStep: Sendable, Equatable {
                                curves: curves.map { Int($0) }, smooth: smooth.map { Int($0) },
                                width: width.map { CGFloat($0) }, fill: fill, ink: ink,
                                anchorAt: anchorAt)
+        case "expectChrome":
+            let within = try f.optionalNumber("within") ?? 1
+            guard within >= 0 else {
+                throw f.invalid("within", "a distance on screen is zero or more, not \(within)")
+            }
+            self = .expectChrome(within: CGFloat(within))
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

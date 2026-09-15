@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 3.2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T02:28:43.407Z",
-  "updated": "2026-09-15T02:28:43.487Z",
+  "updated": "2026-09-15T03:06:56.624Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduce before fixing, because the obvious explanation is already ruled out: the drag DOES refresh the chrome with the live shape. Sources/Photonz/CanvasPathEdit.swift:177 pathEditMouseDragged builds the reshaped content, updates selectedLayerFrame to its new bounds, then calls onPathPreview and refreshPathEditChrome(previewing: content) on every move. And refreshPathEditChrome at :318 explicitly handles the in-flight case: its own comment says \"While a drag is in flight the layer's box on disk is the old one, so the chrome is placed against the box the preview is being drawn in\", and it offsets by drag.originalFrame plus the preview bounds.\n\nSo do not \"fix\" this by adding a refresh that is already there. Something subtler is wrong: candidates are the origin arithmetic at :329 disagreeing with where the preview actually renders, the chrome reading picked.content from the document rather than the preview somewhere further down the function, or the preview and the chrome being applied on different frames. Instrument it and find out which, rather than guessing.\n\n---\nReported together by the user on 2026-09-14, first real session with the Pen, with a screenshot of a filled two-lobed shape mid-drag. Their words:\n\n\"bug 1. i make a point that is curved. i try to connect it back to the original point but i can't do that unless its 3 points. bug 2. the bezier curve when adjusted adjusts the shape but the points do not move with the mouse until you release. bug 3. I can't seem to double click a bezier point to convert a point to a 1 sided curve. bug 3. it is odd that in in appearance, there is a color but it's not clear its the stroke color and thickness and also no no brush style to choose.\"\n\nFour separate tasks, one per problem, because they are in different places and each is verifiable on its own. They came from one sitting, so whoever picks one up should read the others before deciding a fix, but should not try to fix all four at once.\n\nThe Pen, reshaping and SVG export all landed on 2026-09-13 and 2026-09-14. The user is on Next with next-pen and next-reshape-a-path on. Everything here is polish on shipped work, not new capability.",
@@ -29,6 +29,40 @@
     {
       "t": "2026-09-15T02:28:43.486Z",
       "note": "seq 280 -> 3.2"
+    },
+    {
+      "t": "2026-09-15T02:49:56.466Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T02:51:06.034Z",
+      "note": "theory from reading: pathEditMouseDragged draws the live chrome with refreshPathEditChrome(previewing:) and then immediately calls refreshOverlays(), whose refreshOverlaysInsideTransaction calls refreshPathEditChrome() with NO preview. previewPath() never writes editorState.document (submit() only feeds the render scheduler), so the document the canvas reads is the pre-drag one for the whole gesture: every frame draws the live chrome and then repaints it from the stale document. Reproducing with a mid-drag hold snapshot before touching anything."
+    },
+    {
+      "t": "2026-09-15T03:06:45.278Z",
+      "note": "REPRODUCED. Scripts/playtest/path-chrome-follows-walk.json draws a shape with the Pen, picks the curved point and drags its lever 160 document units straight up, photographing the window with the button still down. The shape had bent; the points and both levers were pixel for pixel where they were before the press. The anchors and the levers lag by the WHOLE length of the gesture, not by a frame: they do not move at all until the release. The selection box does not lag, it is hidden for the whole drag on purpose (CanvasDisplay.swift:935)."
+    },
+    {
+      "t": "2026-09-15T03:06:45.321Z",
+      "note": "CAUSE. The note was right that refreshPathEditChrome(previewing:) is called every move; what it missed is the line after it. pathEditMouseDragged ended with refreshOverlays(), and refreshOverlaysInsideTransaction calls refreshPathEditChrome() with NO preview, so the live chrome was painted and then immediately repainted from the document. And the document never changes during a reshape: EditorState.previewPath hands the reshaped document to the render scheduler with submit() and never writes editorState.document, so picked.content is the pre-drag shape for the entire gesture. The origin arithmetic was correct all along - the shift cancelled the bounds exactly - and is now written as the one term it reduces to."
+    },
+    {
+      "t": "2026-09-15T03:06:45.362Z",
+      "note": "FIX. refreshPathEditChrome no longer takes the shape from its caller: it asks pathAnchorDrag for the live shape itself, so every way the chrome can be refreshed mid-drag draws the same thing - an overlay pass, a scroll, a zoom, a resize. Release commits while the drag is still in hand so the chrome does not flash back to the old shape for the frame it takes the committed document to come round; the lever arm pixels are at identical coordinates in the held shot and the shot after the release."
+    },
+    {
+      "t": "2026-09-15T03:06:45.404Z",
+      "note": "PROOF. New expectChrome playtest step: the app measures, on every frame of a path drag, how far the points on screen are from the shape the canvas is drawing, and keeps the worst. Backed out the fix by hand and the walk failed with 'worst 160.0pt away'; with the fix in, five expectChrome steps across a lever drag, a single point drag, two points dragged together, and drags at two other zooms all read 0.0pt. Also a PhotonzCore test pinning the invariant the chrome placement rests on: PathBuilder.refit leaves every point of a reshaped path exactly where it was in the document."
+    },
+    {
+      "t": "2026-09-15T03:06:45.446Z",
+      "note": "left rough: turn-into-a-path-walk fails at step 42 and effects-open-into-view-walk is flaky; both reproduced on the unmodified main build, folded into walks-that-fail-in-the-full-sweep rather than filed. Filed as its own task: the-size-readout-keeps-up-while-you-reshape-a-pa, the panel's X/Y/W/H being frozen for the whole reshape and jumping on release, which is the same stale-document root cause one surface over."
+    },
+    {
+      "t": "2026-09-15T03:06:56.622Z",
+      "note": "The points and levers now follow the live shape every frame of a reshape drag. refreshPathEditChrome asks the in-flight drag for the shape instead of the document, which is stale for the whole gesture because a preview is rendered and never committed; the overlay pass right behind the drag was repainting the old points over the new ones. Verified by a new playtest step expectChrome that reads, every frame, how far the chrome is from the shape the canvas is drawing: 160.0pt with the fix backed out, 0.0pt with it in, across a lever drag, a point drag, two points together, and two other zooms. Scripts/test.sh green (6608 tests). Audit at queue/audits/2026-09-14-path-chrome-follows.json with mid-drag screen captures."
     }
-  ]
+  ],
+  "started": "2026-09-15T02:49:56.465Z",
+  "completed": "2026-09-15T03:06:56.623Z"
 }

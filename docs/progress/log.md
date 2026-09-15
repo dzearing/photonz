@@ -15209,3 +15209,30 @@ any walk that draws a box and photographs it is in range.
 Next: the audit at `queue/audits/2026-09-14-border-reads-as-a-border.json` asks
 whether the 2 px a first ring lands at is enough to see, since the selection
 outline sits exactly where it lands while the shape is still picked.
+
+## 2026-09-14 — The points keep up with the pointer while you bend a curve
+
+Reshaping a path drew its points and levers from the document, and the document
+does not change while a reshape is in flight: `EditorState.previewPath` hands
+the reshaped document to the render scheduler and never writes
+`editorState.document`. `pathEditMouseDragged` drew the live chrome and then
+called `refreshOverlays()`, which drew it again from that stale document. So
+the shape bent under a set of points that had not moved since the button went
+down, and only caught up on release.
+
+`refreshPathEditChrome` now asks `pathAnchorDrag` for the live shape itself
+rather than taking it from the one caller that knew, so every refresh path — an
+overlay pass, a scroll, a zoom, a window resize — draws the same shape. The
+release commits with the drag still in hand so nothing flashes back for the
+frame it takes the committed document to come round.
+
+New playtest step `expectChrome`: the app measures, on every frame of a path
+drag, how far the points on screen are from the shape the canvas is drawing,
+and a walk asks for the worst of it. Backing the fix out makes
+`path-chrome-follows-walk` fail with "worst 160.0pt away", the whole length of
+the gesture; with it in, five of them across a lever drag, a point drag, two
+points dragged together and two other zooms all read 0.0pt.
+
+Next: the Position and Size panel has the same staleness — it holds the
+pre-drag box for the whole reshape and jumps on release
+(`the-size-readout-keeps-up-while-you-reshape-a-pa`).

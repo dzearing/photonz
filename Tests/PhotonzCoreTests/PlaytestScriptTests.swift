@@ -2198,4 +2198,40 @@ struct PlaytestScriptTests {
         """)
         #expect(script.steps[0].name == "expectPath")
     }
+
+    // MARK: - Did the points keep up with the pointer?
+
+    @Test("An expectChrome step asks how far the points drifted off the shape")
+    func expectChromeTakesADistance() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectChrome", "within": 2 } ] }
+        """)
+        guard case .expectChrome(let within) = script.steps[0] else {
+            Issue.record("expectChrome"); return
+        }
+        #expect(within == 2)
+        #expect(script.steps[0].name == "expectChrome")
+    }
+
+    /// The claim worth making almost always is "they never came off it at
+    /// all", so saying nothing means one point.
+    @Test("An expectChrome step with no distance holds the points to one point")
+    func expectChromeDefaultsToOnePoint() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectChrome" } ] }
+        """)
+        guard case .expectChrome(let within) = script.steps[0] else {
+            Issue.record("expectChrome"); return
+        }
+        #expect(within == 1)
+    }
+
+    @Test("A negative drift is refused when the script is read")
+    func expectChromeRefusesANegativeDistance() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectChrome", "within": -1 } ] }
+            """)
+        }
+    }
 }

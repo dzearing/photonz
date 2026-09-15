@@ -102,6 +102,7 @@ extension CanvasNSView {
         }
         let option = event.modifierFlags.contains(.option)
         let shift = event.modifierFlags.contains(.shift)
+        pathChromeDriftPeak = 0
 
         // Two clicks in the same place change what a point IS, which is the one
         // gesture a drawing app can count on somebody trying.
@@ -196,21 +197,29 @@ extension CanvasNSView {
                                                     y: origin.y + content.bounds.minY),
                                     size: content.bounds.size)
         onPathPreview(drag.layerID, content)
-        refreshPathEditChrome(previewing: content)
         refreshOverlays()
+        // The reading is taken at the END of the frame, after every refresh
+        // this frame ran, because the fault being guarded against is a later
+        // pass undoing an earlier one.
+        pathChromeDriftPeak = max(pathChromeDriftPeak, pathChromeDrift)
     }
 
     /// The release. True when a path drag was in flight.
     @discardableResult
     func pathEditMouseUp(at p: CGPoint, event: NSEvent) -> Bool {
         guard let drag = pathAnchorDrag else { return false }
-        pathAnchorDrag = nil
         applyGrabCursor(nil)
         // A press that never really moved leaves no undo step behind: it was a
         // click that picked a point, which is not a change to the drawing.
         if drag.moved {
+            // The drag is still in hand while this runs, so the chrome the
+            // commit draws is the shape the drag ended on rather than the one
+            // the document still holds for the moment it takes the committed
+            // document to come back round. Nothing jumps on release.
             commitPathEdit(drag.layerID, drag.reshaped())
+            pathAnchorDrag = nil
         } else {
+            pathAnchorDrag = nil
             refreshPathEditChrome()
             refreshOverlays()
         }
@@ -315,27 +324,34 @@ extension CanvasNSView {
     /// twenty points wears twenty small dots rather than twenty dots, forty
     /// arms and forty more dots. It is what Figma does, and it is why you can
     /// still see what you are editing.
-    func refreshPathEditChrome(previewing: PathContent? = nil) {
+    func refreshPathEditChrome() {
         guard let viewport, let picked = editablePath else {
             for shape in [pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer] {
                 shape.isHidden = true
                 shape.path = nil
             }
+            pathChromeShowing = nil
             return
         }
-        let content = previewing ?? picked.content
-        // While a drag is in flight the layer's box on disk is the old one, so
-        // the chrome is placed against the box the preview is being drawn in.
-        let origin = pathAnchorDrag.map { drag in
-            CGPoint(x: drag.originalFrame.minX + content.bounds.minX,
-                    y: drag.originalFrame.minY + content.bounds.minY)
-        } ?? picked.layer.frame.origin
-        let shift = pathAnchorDrag != nil
-            ? CGPoint(x: -content.bounds.minX, y: -content.bounds.minY)
-            : .zero
+        // A drag in flight is the shape RIGHT NOW; the document is the shape as
+        // it was when the button went down, because a preview is rendered and
+        // never committed. The drag is asked here rather than handed in by the
+        // one caller that knows about it, so that every other way the chrome
+        // gets refreshed mid-drag — an overlay pass, a scroll, a zoom, a window
+        // resize — draws the same live shape. Handing it in was the bug: the
+        // drag drew the live points and the overlay pass right behind it
+        // painted the old ones back over them, so the shape bent under a set of
+        // points that never moved until the button came up (2026-09-14).
+        let drag = pathAnchorDrag.flatMap { $0.layerID == picked.id ? $0 : nil }
+        let content = drag?.reshaped() ?? picked.content
+        // Where the shape's own coordinates sit in the document. A committed
+        // path is normalised against its box (`PathBuilder.refit`), so it is
+        // the layer's corner; an in-flight one is still measured from the box
+        // the button went down in, which is what the preview is refitted from.
+        let origin = drag?.originalFrame.origin ?? picked.layer.frame.origin
         func chromePoint(_ local: CGPoint) -> CGPoint {
-            viewport.viewPoint(fromDocument: CGPoint(x: origin.x + local.x + shift.x,
-                                                     y: origin.y + local.y + shift.y))
+            viewport.viewPoint(fromDocument: CGPoint(x: origin.x + local.x,
+                                                     y: origin.y + local.y))
         }
         let accent = NSColor.controlAccentColor.cgColor
 
@@ -389,5 +405,41 @@ extension CanvasNSView {
         pathPickedAnchorsLayer.fillColor = accent
         pathPickedAnchorsLayer.strokeColor = NSColor.white.cgColor
         pathPickedAnchorsLayer.isHidden = pickedDots.isEmpty
+
+        pathChromeShowing = content
+        pathChromeOrigin = origin
+    }
+
+    // MARK: - Is the chrome on the shape?
+
+    /// How far the points now on screen are from the points of the shape the
+    /// canvas is drawing, in screen points: zero when the chrome is on the
+    /// shape, and the length of the whole gesture when it is stuck where the
+    /// drag began.
+    ///
+    /// It exists because the lag this measures is invisible to every other
+    /// check: the document is right, the render is right, and the picture at
+    /// the end of the drag is right. Only a reading taken WHILE the button is
+    /// down catches it, which is what `expectChrome` in a walk asks for.
+    var pathChromeDrift: CGFloat {
+        guard let viewport, let drag = pathAnchorDrag else { return 0 }
+        // A drag in flight with no points on screen is as far off the shape as
+        // it is possible to be, not zero drift.
+        guard let showing = pathChromeShowing else { return .infinity }
+        let truth = drag.reshaped()
+        guard truth.anchors.count == showing.anchors.count else { return .infinity }
+        var worst: CGFloat = 0
+        for (index, anchor) in truth.anchors.enumerated() {
+            let drawn = showing.anchors[index]
+            for (a, b) in [(anchor.point, drawn.point),
+                           (anchor.controlIn, drawn.controlIn),
+                           (anchor.controlOut, drawn.controlOut)] {
+                let here = CGPoint(x: drag.originalFrame.minX + a.x,
+                                   y: drag.originalFrame.minY + a.y)
+                let there = CGPoint(x: pathChromeOrigin.x + b.x, y: pathChromeOrigin.y + b.y)
+                worst = max(worst, hypot(here.x - there.x, here.y - there.y) * viewport.zoom)
+            }
+        }
+        return worst
     }
 }
