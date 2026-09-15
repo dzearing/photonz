@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T00:56:28.202Z",
-  "updated": "2026-09-15T14:28:56.637Z",
+  "updated": "2026-09-15T14:29:07.669Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe 2026-09-14 on main plus the path Thickness row. Walk (/tmp/pen-remember-check.json): blank 1600x1100, tool pen, three clicks, Return, tool select, action dragThickness (commits 9), expectPath width 9 passes, then tool pen, three more clicks, Return, expectPath width 9 fails with: step 20 (expectPath): Path: 3 anchors, open, 0 curved runs, 4 px thick - not the 9 px claimed.\n\nWhy: EditorState.commitOutlineWidth calls rememberAnnotationDefaults, which loops over doc.layer(id:)?.annotation?.shape and writes AnnotationStyles.setStrokeWidth(_:forShape:). A path has no AnnotationShape, so nothing is written, and there is nowhere for a pen width to be written to: PenSession.startingStrokeWidth is only ever handed PathContent.defaultStrokeWidth (4) through Sources/Photonz/StartingStrokeWidth.swift and CanvasPen.swift:190. A line remembers because its shape is a key in AnnotationStyles.\n\nCare needed on the second acceptance item: IconStrokeWeight.startingWidth only thins a line whose armed width is still AnnotationContent.defaultStrokeWidth, so once the Pen remembers 9 an icon frame stops thinning it, which is the rule it already follows for lines and is intended. Found while shipping a-line-drawn-with-the-pen-can-be-made-thicker-or.",
@@ -71,7 +71,12 @@
     {
       "t": "2026-09-15T14:28:56.636Z",
       "note": "Filed follow-up: choose-how-thick-the-pen-draws-before-you-draw. The Pen now remembers a weight but there is still nowhere to SET one without drawing a path first, so the first stroke of every icon comes out at 4 and is fixed afterwards. Audit: queue/audits/2026-09-15-pen-thickness.json with two real window captures."
+    },
+    {
+      "t": "2026-09-15T14:29:07.667Z",
+      "note": "The Pen now starts at the weight you last set on a path's Thickness row. AnnotationStyles.penStrokeWidth in PhotonzCore beside the pen's ink, armed by rememberAnnotationDefaults whenever the Thickness row reaches a path, read back through EditorState.armedPenStrokeWidth and handed to the canvas so the draft under your hand is the weight that lands. An icon frame still thins a Pen that has never been rethickened and no longer overrides one that has. Verified: the new pen-remembers-its-thickness-walk fails on stashed Sources with '4 px thick - not the 9 px claimed' and passes after (56 steps, 3 real window captures); Scripts/test.sh green at 6903 tests; playtest-all pen 14 ok, plus path, svg and thickness. Audit at queue/audits/2026-09-15-pen-thickness.json. Commit e3f91261."
     }
   ],
-  "started": "2026-09-15T13:59:28.667Z"
+  "started": "2026-09-15T13:59:28.667Z",
+  "completed": "2026-09-15T14:29:07.668Z"
 }
