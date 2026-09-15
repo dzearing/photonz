@@ -1,0 +1,29 @@
+{
+  "feature": "A colour you saved is reachable from every colour row",
+  "epic": "ui-building",
+  "summary": "Every colour row's saved-colours menu grew a second list, \"Copy a color from another style\", holding every colour you have saved anywhere in the document: the colour inside a saved border, shadow, glow or way of setting text, a saved colour kept for other parts, and a saved gradient flattened to fit. Picking one paints the colour. Before this, a colour saved inside the wrong kind of style had no way out of it.",
+  "setup": "Photonz Dev, Experiments window, release Next. Needs Library, Saved styles. Flags are on by default.",
+  "try": [
+    { "do": "Draw an ellipse, pick it, and add a Border from the Effects plus." },
+    { "do": "Give that border a colour you will recognise, from the Color row inside it." },
+    { "do": "On the Border's own Style row at the top of that section, choose Save as Style and name it Circle edge." },
+    { "do": "Draw a line somewhere else and pick it." },
+    { "do": "Open the swatch-palette menu on the line's Color row." },
+    { "do": "Under \"Copy a color from another style\", pick \"Circle edge (border)\"." },
+    { "do": "Press Undo once and check the line goes back to the colour it was." }
+  ],
+  "evaluate": [
+    "Did you find the second list without being told it was there?",
+    "Does \"Copy a color from another style\" tell you, before you pick, that the line takes the colour and not the name?",
+    "Is \"Circle edge (border)\" enough to know which colour that is, or does the row need to show the colour itself?",
+    "Now edit Circle edge's colour in the Library. The line does NOT follow it. Is that the answer you expected, or did picking the name make you think it would?",
+    "Save a colour for fills only, then look at a line's Color menu: it now reads \"Card (for fills and backgrounds)\" instead of that colour being missing. Is that better than it disappearing?"
+  ],
+  "rough": [
+    "NO SCREENSHOTS AND NO WALK. The Mac's screen was locked for this whole task, so macOS never drew the window and no walk could run, capture or not. The new walk Scripts/playtest/colour-out-of-any-style-walk.json has never been run once, and a sweep has been requested to run it and the rest.",
+    "The task file's own theory was wrong and I built something else. It said a colour saved off a circle's border was refused on a line because the two mismatch on role. That is not true and never was: saving from a border records it as ink, a line's colour is ink, and the colour is offered. What the user actually did is the OTHER Save as Style in the same Border section, the one on the effect's Style row, which makes a saved EFFECT. The colour in it had no way out.",
+    "The Border section has two things called Save as Style a few rows apart, one saving the border and one saving its colour, and neither says which. That is what sent the user down the path that did not work. It no longer stops anybody, because either one now gets the colour to the line, so it is left as wording worth tidying rather than filed.",
+    "A borrowed colour paints and does not follow. There is no live link from a line to a border's colour, and there is deliberately no way to make one: a row wearing \"Circle edge\" would claim to follow something a line cannot follow. If you want the link, save the border's COLOUR as a colour style instead and the line can wear that name.",
+    "A document holding a lot of text and effect styles in different colours would make that second section long. It is deduplicated by colour, so a palette reused across styles stays short, but nothing caps it."
+  ]
+}

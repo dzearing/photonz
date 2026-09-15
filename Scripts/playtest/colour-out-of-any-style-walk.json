@@ -1,0 +1,65 @@
+{
+  "out": "/tmp/photonz-playtest/colour-out-of-any-style",
+  "seed": "A circle with a border, and a line. The border is saved as a style from the Border section's own Style row, which is what 'the style of the circle border' means. The line's Color menu then has to offer that colour: not as a name to follow, because a line cannot follow a border, but as a colour to paint with, saying where it came from. Reported by the user on 2026-09-15: 'any style which holds a color should be usable for a color style'.",
+  "setup": {
+    "forget": ["shapes", "panel", "color", "tools", "text"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [200, 160], "to": [400, 360] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [300, 260] },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "panelMenu", "menu": "Add Effect", "choose": "@border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Slider", "in": "@border, Width", "across": 0.3 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Color", "in": "@border" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Shades 2" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-circle-with-a-border", "note": "a circle wearing one border, in a colour of its own" },
+    { "do": "panel", "stage": "1-circle-with-a-border" },
+    { "do": "snapshot", "name": "1-circle-with-a-border" },
+
+    { "do": "panelMenu", "menu": "Border Style", "choose": "Save as Style" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "type", "text": "Circle edge" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "menu": "Border Style", "reads": "Circle edge" },
+    { "do": "describe", "stage": "2-saved", "note": "THE MOVE THE USER MADE: the border saved under a name. It is a saved EFFECT, not a saved COLOUR, and before this change the colour in it had no way out of the style." },
+    { "do": "snapshot", "name": "2-border-saved-as-a-style" },
+
+    { "do": "tool", "tool": "line" },
+    { "do": "drag", "from": [520, 430], "to": [800, 430] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [660, 430] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-line-picked", "note": "THE TEST: the line's Color row. borrowedColors must read ['Circle edge (border)'] — the colour inside the saved border, offered on a line, saying where it came from. styles must still be empty, because the border is not a colour the line can WEAR." },
+    { "do": "panel", "stage": "3-line-picked" },
+    { "do": "snapshot", "name": "3-the-line-is-offered-the-border-colour" },
+    { "do": "render", "name": "3-canvas-before" },
+
+    { "do": "action", "action": "useFirstBorrowedColor" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "4-matched", "note": "the line is now the colour the circle's border is, in one pick. selectedColors must show the line's colour with no style name on it: the colour landed and the name stayed behind, which is the same answer a drag of a colour kept for other parts gives." },
+    { "do": "panel", "stage": "4-matched" },
+    { "do": "snapshot", "name": "4-the-line-matches-the-border" },
+    { "do": "render", "name": "4-canvas-matched" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-undone", "note": "ONE undo puts the line back. Undo is asked for as a menu action rather than as command Z, because a synthesized chord does not reach the Edit menu of an app that is not in front (see undo-shortcut-walk)." },
+    { "do": "render", "name": "5-canvas-undone" },
+    { "do": "snapshot", "name": "5-one-undo" }
+  ]
+}

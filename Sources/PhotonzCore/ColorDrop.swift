@@ -27,10 +27,20 @@ public enum ColorDrop {
     public struct SavedColor: Hashable, Codable, Sendable {
         public var id: UUID
         public var name: String
+        /// What this colour is kept for, in plain words — "fills and
+        /// backgrounds" — for the one sentence that has to explain why the
+        /// name stayed behind. Nil where whoever started the drag did not
+        /// know, and the sentence falls back to saying only that it is kept
+        /// for other parts.
+        ///
+        /// The words come from `BorrowedColor`, so the swatch under a drag and
+        /// the row's own menu give one reason rather than two.
+        public var keptFor: String?
 
-        public init(id: UUID, name: String) {
+        public init(id: UUID, name: String, keptFor: String? = nil) {
             self.id = id
             self.name = name
+            self.keptFor = keptFor
         }
     }
 
@@ -195,7 +205,8 @@ public enum ColorDrop {
             return "\(opening(target.part)) cannot hold a gradient, so it takes its flat colour."
         }
         if let away = turnedAway {
-            return "\(away.name) is kept for other parts, so \(target.part) takes its colour."
+            let parts = away.keptFor ?? "other parts"
+            return "\(away.name) is kept for \(parts), so \(target.part) takes its colour."
         }
         let colour = landing.brings.map { $0.name } ?? "this colour"
         // A part that is not there yet is being SWITCHED ON as well as

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T14:44:45.912Z",
-  "updated": "2026-09-15T14:44:46.005Z",
+  "updated": "2026-09-15T18:05:22.773Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-15: \"I have a circle and a line. The line is a different color than the circle's border. I want to quickly match them. It's hard. I save the style of the circle border, try to use that for the color of the line, no luck. they mismatch on type. this is weird. Any style which holds a color should be usable for a color style.\"\n\nTHE SCOPING IS DELIBERATE AND IS PROBABLY NOT THE BUG, which is why this needs reproducing rather than a quick edit. PhotonzCore/ColorStyles.swift:842, colorStyles(for slot:), filters saved colours to those whose roles include the slot's role, and the comment above ColorStyleRole at :141 explains why: a row used to offer every saved colour in the document, so the inside of a box could be painted with a colour somebody made for hairlines, and that made the menu meaningless.\n\nBut there are only TWO roles, ink and surface (ColorStyles.swift:148), and ColorSlot.styleRole at :126 puts BOTH .border and .stroke in .ink, with the comment that a line, a letter and a shadow all reach for the ink shelf. A circle's border is .border; a drawn line is .stroke. Both are ink. So the style SHOULD already be offered and the user says it is not. Something else is filtering it, and finding out what is the task.\n\nThree candidates, in order of likelihood:\n1. The gradient guard on the same line: `guard !style.isGradient || slot.acceptsGradient`. If the saved border colour is a gradient and the line's slot does not accept gradients, it is filtered out silently and the reason never reaches the person.\n2. effectiveColorStyleRoles (ColorStyles.swift:817) falls back to inferring roles from where the style is already used when the style has none of its own. A colour saved from a border and used nowhere else may come back as ink-only or as something narrower than intended.\n3. The line's colour may not be reached through .stroke at all. An annotation's parts were reorganised recently (outline moved into Effects, arrows got their parts in Appearance), so check which slot a drawn line's colour actually is before assuming.\n\nThe user's stated principle is the thing to weigh against the existing design: \"Any style which holds a color should be usable for a color style.\" The original scoping exists to keep a short list meaningful, and that is a real concern. A resolution that serves both: keep the scoped list as what is OFFERED FIRST, but never make a colour unreachable - show the rest under a heading that says they are for other parts, which is close to what the menu already does when there are no styles for a part at all (ColorStylePanel.swift has a 'Your saved colours are for other parts' section with a way into the Library). Extend that idea rather than inventing one.",
@@ -31,6 +31,27 @@
     {
       "t": "2026-09-15T14:44:46.004Z",
       "note": "seq 290 -> 11"
+    },
+    {
+      "t": "2026-09-15T17:50:23.972Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T17:53:14.927Z",
+      "note": "REPRODUCED, and the task's own hypothesis is wrong. Saving the circle's border COLOUR (the colour row inside the Border effect) already records roles=[.ink] and IS offered on a line's Color row: a headless repro prints 'OFFERED ON STROKE: [Ring]'. Role scoping is not the bug. What the user actually did is the OTHER Save as Style in the same Border section, the one on the effect's own Style row, which is what 'the style of the circle border' means. That makes an EffectStyle named 'Circle edge' holding #FF0055, and then: EFFECT STYLES: [Circle edge colour=#FF0055] / COLOUR STYLES: [] / OFFERED ON THE LINE: []. The colour is locked inside the style, the line's menu shows nothing, and the Library shows a tile that no colour row will take. That is exactly the user's sentence: 'Any style which holds a color should be usable for a color style.'"
+    },
+    {
+      "t": "2026-09-15T18:05:22.684Z",
+      "note": "BUILT. Core: BorrowedColors.swift adds PhotonzDocument.borrowedColors(for:), the list of colours a row can PAINT with but cannot wear the NAME of - a saved colour kept for other parts (saying which), a saved ramp flattened where no ramp can go, and the colour inside a saved border, shadow, glow or text style. Deduplicated against the offered list and against itself, so the same colour is never on the menu twice. 12 tests written before the code (BorrowedColorTests). App: both colour-row menus (ColorStylePanel and the component knob) gained one section, 'Copy a color from another style', with 'Change what a color is for in the Library' inside it where there is a saved colour to widen; picking one is ONE undo because setPaint already unbinds before it paints. ColorDrop.SavedColor gained keptFor so the drag now says 'Brand is kept for fills and backgrounds, so Outline takes its colour' instead of 'for other parts' - menu and drag now give one reason. Playtest: new useFirstBorrowedColor action and a borrowedColors readout, plus Scripts/playtest/colour-out-of-any-style-walk.json. Full suite 7006 tests green."
+    },
+    {
+      "t": "2026-09-15T18:05:22.729Z",
+      "note": "NOT VERIFIED IN THE APP. The Mac's screen was locked for the whole task, every launch printed 'screen locked' on its Grants line, and both attempts at the new walk returned status locked with zero steps run. So the new walk has never run once, there are no screenshots, and the audit says so in plain words. Sweep requested with that reason."
+    },
+    {
+      "t": "2026-09-15T18:05:22.772Z",
+      "note": "left rough: the Border section has two things called 'Save as Style' a few rows apart, one saving the border and one saving its colour, and neither says which - that is what sent the user down the path that did not work. It no longer stops anybody now that either one gets the colour to the line, so it is wording worth tidying rather than a task. left rough: a document with many text and effect styles in different colours makes a long second section; it is deduplicated by colour so a reused palette stays short, but nothing caps it. Folded into copy-the-look-of-one-shape-onto-another: matching JUST the colour now has an answer, and that task stays the whole-look one."
     }
-  ]
+  ],
+  "started": "2026-09-15T17:50:23.971Z"
 }

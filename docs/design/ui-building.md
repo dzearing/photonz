@@ -1494,6 +1494,17 @@ unreadable panel.
   menu is titled "Saved outline colors" and so on, so a shorter list reads as
   scoped rather than as colors having gone missing. A row with no colors for its
   part says the others are for other parts and offers the way to widen one.
+- **No colour you saved is ever unreachable.** Under the short list of names
+  sits a second list of COLOURS: everything else saved anywhere in the document,
+  including the colour held inside a saved border, shadow, glow or way of
+  setting text. It is headed "Copy a color from another style", each row says
+  where its colour came from ("Circle edge (border)", "Card (for fills and
+  backgrounds)"), and picking one paints the colour and no name, because a line
+  cannot follow a border. A saved ramp turns up there too, flattened, on a row
+  that can only draw one colour. `BorrowedColors.swift` is the one place that
+  works the list out, and a drag now names the same parts a colour is kept for
+  as the menu does. Asked for by the user on 2026-09-15: "any style which holds
+  a color should be usable for a color style".
 - **One color can serve both**, because one blue really is a button's fill and a
   link's ink. The picked style's own section grew a **Use it for** pair of
   checkboxes; unticking the last one does nothing rather than leaving a color no

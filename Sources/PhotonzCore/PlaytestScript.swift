@@ -692,6 +692,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Point the selected layer's first color at the first style on the shelf,
     /// which is what picking a name out of a color row's menu does.
     case useFirstColorStyle
+    /// Paint the selected layer's first color with the first entry in the
+    /// SECOND list its menu offers: the colours it can paint with but cannot
+    /// wear the name of — a colour kept for other parts, a ramp where no ramp
+    /// can go, or the colour inside a saved border, shadow, glow or way of
+    /// setting text (`BorrowedColors.swift`). That list lives in a menu in the
+    /// dock, which a walk cannot open with the pointer.
+    case useFirstBorrowedColor
     /// Let go of the style painting the selected layer's first color, keeping
     /// the color it is wearing.
     case unlinkColorStyle

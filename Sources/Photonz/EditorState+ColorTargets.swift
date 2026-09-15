@@ -61,6 +61,23 @@ extension EditorState {
         colorStyles(for: target.lead)
     }
 
+    /// ...and the colours it can paint with but cannot wear the name of, for
+    /// the same reason and out of the same slot (`BorrowedColors.swift`).
+    func borrowedColors(for target: ColorTarget) -> [BorrowedColor] {
+        borrowedColors(for: target.lead)
+    }
+
+    /// Paints the whole row with one of those, in one step, wearing no name.
+    func useBorrowedColor(_ target: ColorTarget, styleID: UUID) {
+        guard colorStylesEnabled,
+              let borrowed = document?.borrowedColor(id: styleID, for: target.lead) else { return }
+        // Painting a row takes it off any name it was following, in the same
+        // step, exactly as picking a plain colour does: `setPaint` unbinds
+        // before it paints, so this is ONE undo and the row never claims to
+        // follow a colour it is no longer painted.
+        setSelectionPaint(target, paint: borrowed.paint)
+    }
+
     /// What the row's layers are painted with, when they agree.
     func selectionPaint(_ target: ColorTarget) -> Paint? {
         if let place = target.effectIndex {

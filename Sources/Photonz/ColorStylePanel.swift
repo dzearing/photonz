@@ -48,6 +48,13 @@ struct ColorStyleNamingRequest: Hashable {
 /// says which part that is, so a color kept for hairlines is not on the list as
 /// something to fill a box with.
 ///
+/// Under that short list of NAMES sits a second list of COLORS: everything else
+/// you have saved anywhere in the document, including the colors held inside a
+/// saved border, shadow, glow or way of setting text. Picking one paints the
+/// color and no name. That list exists because the short list used to be the
+/// whole menu, so a color saved inside the wrong kind of style, or kept for the
+/// wrong part, simply was not there and read as lost (`BorrowedColors.swift`).
+///
 /// It sits on every row of the Color section (`SelectionColorInspector`), which
 /// is the one place a color lives whatever is picked. The mock hangs it off a
 /// Fill section of its own; one section holding every color the selection has
@@ -76,6 +83,13 @@ struct ColorStyleControl: View {
     /// is not something to fill a box with, and offering it was how the menu
     /// stopped meaning anything.
     private var styles: [ColorStyle] { editorState.colorStyles(for: target) }
+    /// ...and the colours this row can still PAINT with but cannot wear the
+    /// name of: a colour kept for other parts, a ramp where no ramp can go, and
+    /// the colour inside a saved border, shadow, glow or way of setting text.
+    /// Without this second list every one of those is simply missing, which is
+    /// what the user hit when the colour of a circle's border had no way out of
+    /// the style it was saved in (`BorrowedColors.swift`).
+    private var borrowed: [BorrowedColor] { editorState.borrowedColors(for: target) }
 
     var body: some View {
         if Experiments.shared.colorStylesEnabled, !selection.isEmpty {
@@ -120,15 +134,26 @@ struct ColorStyleControl: View {
                             }
                         }
                     }
-                } else if !editorState.colorStyles.isEmpty {
-                    // There ARE saved colors, they are just for other parts.
-                    // Saying so is the difference between a scoped list and a
-                    // list that looks as though the color you saved a minute
-                    // ago has gone, and it points at the one place that
-                    // changes what a color is for.
-                    Section("Your saved colors are for other parts") {
-                        Button("Change what one is for in the Library") {
-                            editorState.showStylesShelf()
+                }
+                // Every other colour you have saved, whichever kind of style it
+                // is inside. Picking one paints the colour and no name, because
+                // a line cannot follow a border — which is exactly what a drag
+                // of the same colour already does and says.
+                if !borrowed.isEmpty {
+                    Section(ColorStyleControl.borrowedTitle) {
+                        ForEach(borrowed) { option in
+                            Button(option.label) {
+                                editorState.useBorrowedColor(target, styleID: option.id)
+                            }
+                        }
+                        // The one place that widens what a saved colour is for,
+                        // reachable from the row that just turned it down. Only
+                        // where there IS one to widen: nobody can tick a border
+                        // into being a fill colour.
+                        if borrowed.contains(where: \.isSavedColor) {
+                            Button("Change what a color is for in the Library") {
+                                editorState.showStylesShelf()
+                            }
                         }
                     }
                 }
@@ -175,6 +200,14 @@ struct ColorStyleControl: View {
         // colors" is not a sentence.
         return noun == "color" ? "Saved colors" : "Saved \(noun) colors"
     }
+
+    /// What the second list is headed, in both menus that show one.
+    ///
+    /// A VERB, because the one thing somebody has to know before picking from
+    /// this list is that the colour comes over and the name does not. "Other
+    /// colors you have saved" would be true and would leave somebody expecting
+    /// a line to follow a border it cannot follow.
+    static let borrowedTitle = "Copy a color from another style"
 
     private func unlinkTitle(_ selection: ColorStyleSelection) -> String {
         selection.count > 1 ? "Unlink All \(selection.count)" : "Unlink"
@@ -686,7 +719,7 @@ struct SelectionColorWell: View {
                 }
                 return ColorDrag.itemProvider(paint: paint, source: wellKey,
                                               style: boundStyle.map {
-                                                  ColorDrop.SavedColor(id: $0.id, name: $0.name)
+                                                  editorState.savedColor($0)
                                               })
             })
             // Picked up and dropped on like any colour well on a Mac. Letting
@@ -700,9 +733,7 @@ struct SelectionColorWell: View {
                              // colour to pick up, and a swatch handed nothing
                              // is refused everywhere rather than guessing.
                              paint: { editorState.selectionPaint(target) },
-                             style: { boundStyle.map {
-                                 ColorDrop.SavedColor(id: $0.id, name: $0.name)
-                             } },
+                             style: { boundStyle.map { editorState.savedColor($0) } },
                              welcomes: { editorState.styleWelcome(target, styleID: $0.id) },
                              reaches: { selection.count },
                              acceptsGradient: target.acceptsGradient,
@@ -1038,9 +1069,7 @@ struct LibraryStyleTile: View {
     /// only place it is refused is the shelf it came off.
     private var dragKey: String { "library.style.\(style.id.uuidString)" }
 
-    private var saved: ColorDrop.SavedColor {
-        ColorDrop.SavedColor(id: style.id, name: style.name)
-    }
+    private var saved: ColorDrop.SavedColor { editorState.savedColor(style) }
 
     private func item() -> NSItemProvider {
         ColorDrag.itemProvider(paint: style.paint, source: dragKey, style: saved)

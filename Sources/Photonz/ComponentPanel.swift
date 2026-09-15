@@ -1825,6 +1825,10 @@ private struct InstanceColorKnob: View {
     private var styles: [ColorStyle] {
         editorState.componentColorStyles(instances: instances, property: property.id)
     }
+    /// ...and the colours it can paint with but cannot wear the name of.
+    private var borrowedColors: [BorrowedColor] {
+        editorState.componentBorrowedColors(instances: instances, property: property.id)
+    }
     /// What this well answers to, so only one picker is ever open and a walk
     /// can open this one without a pointer.
     private var wellKey: String { "knob.\(property.id.uuidString)" }
@@ -1938,14 +1942,26 @@ private struct InstanceColorKnob: View {
                         }
                     }
                 }
-            } else if !editorState.colorStyles.isEmpty {
-                // There ARE saved colours, they are just kept for other parts.
-                Section("Your saved colors are for other parts") {
-                    Button("Change what one is for in the Library") {
-                        editorState.showStylesShelf()
+            }
+            // Every other colour saved anywhere in the document, whichever kind
+            // of style holds it. Picking one paints the copies and no name, the
+            // same answer the canvas rows give (`BorrowedColors.swift`).
+            if !borrowedColors.isEmpty {
+                Section(ColorStyleControl.borrowedTitle) {
+                    ForEach(borrowedColors) { option in
+                        Button(option.label) {
+                            editorState.useComponentBorrowedColor(instances: instances,
+                                                                  property: property.id,
+                                                                  styleID: option.id)
+                        }
+                    }
+                    if borrowedColors.contains(where: \.isSavedColor) {
+                        Button("Change what a color is for in the Library") {
+                            editorState.showStylesShelf()
+                        }
                     }
                 }
-            } else {
+            } else if styles.isEmpty {
                 Text("No saved colors yet")
             }
         } label: {

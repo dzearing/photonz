@@ -1978,6 +1978,16 @@ private final class Run {
                 }).first {
                     editor.useColorStyle(slot: pair.0, styleID: pair.1)
                 }
+            case .useFirstBorrowedColor:
+                // The second list in a colour row's menu: the colours it can
+                // paint with but not wear the name of. The first pairing that
+                // is actually on offer, for the same reason `useFirstColorStyle`
+                // pairs slot and style rather than taking the first of each.
+                if let pair = editor.colorRowSlots.lazy.compactMap({ slot in
+                    editor.borrowedColors(for: slot).first.map { (slot, $0.id) }
+                }).first {
+                    editor.useBorrowedColor(ColorTarget(pair.0), styleID: pair.1)
+                }
             case .unlinkColorStyle:
                 if let slot = editor.colorStyleSlots
                     .first(where: { editor.colorStyleSelection(slot: $0).wearsAnyStyle }) {
@@ -6843,6 +6853,14 @@ private final class Run {
             "styles": (editor.document?.colorStyles ?? []).map {
                 "\($0.name) \($0.colorHex) · \(editor.colorStyleUsageCount(styleID: $0.id)) used"
             },
+            // What the picked layer's FIRST colour row can paint with but
+            // cannot wear the name of: a colour kept for other parts, a ramp
+            // where no ramp can go, and the colour inside a saved border,
+            // shadow, glow or way of setting text. A walk reads it here because
+            // the list lives in a SwiftUI menu in the dock, which the pointer
+            // cannot open (`BorrowedColors.swift`).
+            "borrowedColors": editor.colorRowSlots.first
+                .map { editor.borrowedColors(for: $0).map(\.label) } ?? [],
             // What the selected layer's colors are, and where each came from.
             "selectedColors": selectedColors,
             // The rows the Color section is showing, by their labels, in order.

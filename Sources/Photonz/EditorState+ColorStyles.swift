@@ -858,12 +858,49 @@ extension EditorState {
         return offered ? .wearsIt : .notThisOne
     }
 
+    /// A saved colour as the thing a drag carries, carrying what it is kept
+    /// for as well as its name.
+    ///
+    /// One place, because a swatch that says "Brand is kept for fills and
+    /// backgrounds" while the row's own menu says something else would be two
+    /// answers to one question (`BorrowedColors.swift`).
+    func savedColor(_ style: ColorStyle) -> ColorDrop.SavedColor {
+        ColorDrop.SavedColor(id: style.id, name: style.name,
+                             keptFor: BorrowedColor.plainWords(colorStyleRoles(styleID: style.id)))
+    }
+
     /// The saved colour the toolbar's swatch is wearing, as the thing a drag
     /// carries. The same style `toolColorStyle` reports, in the words drag and
     /// drop speaks.
     func toolSavedColor(slot: ColorSlot) -> ColorDrop.SavedColor? {
-        toolColorStyle(slot: slot).map { ColorDrop.SavedColor(id: $0.id, name: $0.name) }
+        toolColorStyle(slot: slot).map { savedColor($0) }
     }
+
+    // MARK: - The colours a row can paint with but cannot wear
+
+    /// The colours this row can paint with that are not on its short list of
+    /// names: a colour kept for other parts, a ramp where no ramp can go, and
+    /// the colour inside a saved border, shadow, glow or way of setting text.
+    ///
+    /// Reported by the user on 2026-09-15: they saved the style of a circle's
+    /// border and then had no way to put that colour on a line, because the
+    /// colour was inside a saved EFFECT and only saved COLOURS were ever
+    /// offered. Their words were "any style which holds a color should be
+    /// usable for a color style" (`BorrowedColors.swift`).
+    func borrowedColors(for slot: ColorSlot) -> [BorrowedColor] {
+        guard colorStylesEnabled else { return [] }
+        return document?.borrowedColors(for: slot) ?? []
+    }
+
+    /// Paints every layer this row speaks for with one of those colours: see
+    /// the target-shaped `useBorrowedColor(_:styleID:)`, which is what the
+    /// rows call.
+    ///
+    /// The colour lands and no name does: the name belongs to a border or to a
+    /// way of setting text, and a line claiming to follow "Circle edge" would
+    /// be claiming to follow something it cannot follow. That is the same
+    /// answer a drag gives when a saved colour lands on a part it is not kept
+    /// for, so the two ways of doing it agree.
 
     /// What the TOOLBAR's swatch would do with a saved colour let go of on it.
     ///

@@ -2115,9 +2115,7 @@ struct EditorView: View {
         // row to paint with it, or drop a saved colour here to draw in it next.
         .colorSwatchDrag(key: toolStyleWellKey, part: toolSwatchSubject,
                          paint: { activeToolPaint },
-                         style: { heldStyle.map {
-                             ColorDrop.SavedColor(id: $0.id, name: $0.name)
-                         } },
+                         style: { heldStyle.map { editorState.savedColor($0) } },
                          welcomes: {
                              editorState.toolStyleWelcome(slot: toolColorSlot, styleID: $0.id)
                          },

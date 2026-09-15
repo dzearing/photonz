@@ -712,9 +712,30 @@ extension EditorState {
     /// The saved colours a knob row offers: the ones kept for the part it
     /// paints, exactly as the canvas row scopes them.
     func componentColorStyles(instances: [UUID], property: UUID) -> [ColorStyle] {
-        guard let slot = document?.componentColorSlot(instance: instances.first ?? UUID(),
-                                                      property: property) else { return [] }
+        guard let slot = componentColorSlot(instances: instances, property: property)
+        else { return [] }
         return colorStyles(for: slot)
+    }
+
+    /// ...and the colours it can paint with but cannot wear the name of, the
+    /// same second list every other colour row grew (`BorrowedColors.swift`).
+    func componentBorrowedColors(instances: [UUID], property: UUID) -> [BorrowedColor] {
+        guard let slot = componentColorSlot(instances: instances, property: property)
+        else { return [] }
+        return borrowedColors(for: slot)
+    }
+
+    /// Paints a knob with one of those. The copies take the colour and no name,
+    /// because the name belongs to a border or to a way of setting text.
+    func useComponentBorrowedColor(instances: [UUID], property: UUID, styleID: UUID) {
+        guard let slot = componentColorSlot(instances: instances, property: property),
+              let borrowed = document?.borrowedColor(id: styleID, for: slot) else { return }
+        setInstanceColor(instances: instances, property: property, paint: borrowed.paint)
+    }
+
+    /// Which of a layer's colours this knob answers for.
+    private func componentColorSlot(instances: [UUID], property: UUID) -> ColorSlot? {
+        document?.componentColorSlot(instance: instances.first ?? UUID(), property: property)
     }
 
     /// One frame of a colour drag on a knob: paints the copies and renders,

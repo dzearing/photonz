@@ -248,14 +248,28 @@ struct DraggingASavedColourTests {
 
     /// A colour kept for fills, let go of on an outline. The colour still
     /// lands, because refusing would be a swatch that stays dark for a reason
-    /// nobody can see, but the row says the name stayed behind.
-    @Test func aNameKeptForOtherPartsLandsAsItsColourAndSaysSo() {
-        let answer = ColorDrop.answer(dropping: red, bringing: brand,
+    /// nobody can see, but the row says the name stayed behind — and says WHICH
+    /// parts it stayed behind for, in the same words the row's own menu uses
+    /// under "Other colors you have saved" (`BorrowedColors.swift`).
+    @Test func aNameKeptForOtherPartsLandsAsItsColourAndSaysWhichParts() {
+        let kept = ColorDrop.SavedColor(id: UUID(), name: "Brand",
+                                        keptFor: "fills and backgrounds")
+        let answer = ColorDrop.answer(dropping: red, bringing: kept,
                                       on: target(part: "Outline", wearing: blue,
                                                  welcome: .notThisOne))
         #expect(answer.lightsUp)
         #expect(answer.landing?.brings == nil)
         #expect(answer.landing?.paint == red)
+        #expect(answer.note
+                == "Brand is kept for fills and backgrounds, so Outline takes its colour.")
+    }
+
+    /// The same drop from somewhere that does not know what the name is kept
+    /// for: it still says the name stayed behind, in the words it always used.
+    @Test func aNameKeptForOtherPartsSaysSoEvenWithoutTheWords() {
+        let answer = ColorDrop.answer(dropping: red, bringing: brand,
+                                      on: target(part: "Outline", wearing: blue,
+                                                 welcome: .notThisOne))
         #expect(answer.note == "Brand is kept for other parts, so Outline takes its colour.")
     }
 

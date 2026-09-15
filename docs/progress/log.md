@@ -15534,3 +15534,35 @@ full sweep is requested, because a harness rule every walk uses changed.
 Next: read `queue/bin/sweep.sh status` once the screen is unlocked. The live
 half of what the section did — numbers that follow a drag — is filed as
 `a-layer-says-how-big-it-is-while-you-drag-it`.
+
+## 2026-09-15 — A saved colour goes wherever that colour belongs
+
+**Changed.** Every colour row's saved-colours menu grew a second section,
+"Copy a color from another style", listing every colour saved anywhere in the
+document that the row can paint with but cannot wear the name of: the colour
+inside a saved border, shadow, glow or way of setting text, a saved colour kept
+for other parts (now saying which parts), and a saved gradient flattened to fit
+a row that can only draw one colour. `Sources/PhotonzCore/BorrowedColors.swift`
+works the list out, deduplicated against the offered names and against itself.
+Both menus that show saved colours use it: the canvas rows and the component
+knob. `ColorDrop.SavedColor` gained `keptFor`, so a drag now says "Brand is kept
+for fills and backgrounds, so Outline takes its colour" rather than "for other
+parts", and the menu and the drag give one reason instead of two. New playtest
+action `useFirstBorrowedColor`, a `borrowedColors` readout, and
+`Scripts/playtest/colour-out-of-any-style-walk.json`.
+
+**The task's theory was wrong.** It said a colour saved off a circle's border was
+refused on a line because the two mismatch on role. Reproducing it headlessly
+showed the opposite: saving from a border records ink, a line's colour is ink,
+and the colour IS offered. What the user actually did was the other Save as
+Style in the same Border section, the one on the effect's Style row, which makes
+a saved EFFECT — and the colour in it had no way out of the style at all. That
+is what got built instead.
+
+**Not verified in the app.** The Mac's screen was locked for the whole session,
+so no walk could run: both attempts returned `status: locked` with zero steps.
+The new walk has never been run once and there are no screenshots. A sweep has
+been requested with that reason.
+
+**Next.** Run the sweep once the screen is unlocked; the new walk is the first
+thing it should prove.
