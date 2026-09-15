@@ -3852,3 +3852,10 @@
 {"t":"2026-09-15T20:58:59.034Z","ev":"task_note","id":"export-as-webp"}
 {"t":"2026-09-15T20:58:59.077Z","ev":"task_note","id":"export-as-webp"}
 {"t":"2026-09-15T20:58:59.120Z","ev":"task_done","id":"export-as-webp","from":"in_progress","note":"Export offers WebP behind next-export-webp (on by default in Next), with the same quality slider as JPEG and HEIC and lossless at the top of it, where the line says Lossless instead of Best. libwebp 1.5.0's encoder is vendored as source at Vendor/libwebp and built as the CWebP target, updated by Scripts/vendor-libwebp.sh, which also regenerates the licence shown by the new app menu item Open Source Notices. Reading a WebP is untouched and still goes through macOS. Verified: Scripts/test.sh green, 7145 tests in 572 suites; a fresh clone with Homebrew off PATH builds both swift build and Scripts/build-app.sh --release; CI's build step and every WebP suite green on a clean runner; the written files read back through sips, Quick Look and Chrome 152, which reported the right size and the right alpha. NOT verified in the running app: the Mac's screen was locked all session so no walk could run and there are no screenshots, said plainly in the audit. Audit: queue/audits/2026-09-15-export-webp.json."}
+{"t":"2026-09-15T21:01:21.033Z","ev":"sweep_pass","walks":0,"passed":0,"failed":0,"seconds":15,"complete":false,"screenLocked":true}
+{"t":"2026-09-15T21:01:21.136Z","ev":"task_started","id":"cutting-a-recording-fails-its-own-test-on-the-bu","title":"Cutting a recording fails its own test on the build machine","priority":"p1-high"}
+{"t":"2026-09-15T21:08:21.549Z","ev":"task_note","id":"cutting-a-recording-fails-its-own-test-on-the-bu"}
+{"t":"2026-09-15T22:05:37.754Z","ev":"task_note","id":"cutting-a-recording-fails-its-own-test-on-the-bu"}
+{"t":"2026-09-15T22:05:37.800Z","ev":"task_note","id":"cutting-a-recording-fails-its-own-test-on-the-bu"}
+{"t":"2026-09-15T22:05:37.842Z","ev":"task_note","id":"cutting-a-recording-fails-its-own-test-on-the-bu"}
+{"t":"2026-09-15T22:05:37.883Z","ev":"task_note","id":"cutting-a-recording-fails-its-own-test-on-the-bu"}

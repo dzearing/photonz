@@ -15839,3 +15839,40 @@ what is left", two commits in a row, both just over a 0.12 tolerance (0.126 and
 
 **Next:** run `Scripts/playtest.sh Scripts/playtest/export-webp-walk.json` on an
 unlocked screen and look at the format row.
+
+## 2026-09-15 — The build machine's red video-cut test was reading a colour
+
+**Changed:** `TestClip` (PhotonzMediaTests) no longer paints a colour ramp. Every
+frame now carries its own frame number, written across the picture as ten
+black-and-white stripes, low bit on the left, with `TestClip.frameCode(at:in:)`
+reading it back. `VideoCutExportTests` asserts in seconds of the source, ±0.1s,
+instead of in a red level within 0.12.
+
+**Why:** the test identified a frame by its colour, and that measures the colour
+pipeline rather than the cut. An H.264 round trip moves a saturated colour by as
+much as 0.26 out of 1 depending on how the file happens to be colour-tagged.
+Applying the test's own assertion to the untagged source clip locally gives
+`|red(1.5s) - 1.5/6| = 0.1343137`; the build machine's failing number was
+`0.1343137254901961`. The second assertion, at 0.75, drifts only 0.0245, which is
+exactly why one of the two reads failed and the other passed. The app was writing
+the right frames the whole time. Locally the exported file is tagged
+`ITU_R_709_2` and reads within 0.04; the source carries no colour tags at all.
+
+Black and white survive any colour matrix, range or gamma handling, so the new
+reader is exact: over 100 reads across both the untagged source and the
+re-encoded export, every stripe read at full margin (0.500) and no frame drifted
+more than 0.05s.
+
+**Verified:** the oracle was mutation-tested rather than assumed. With the cut
+quietly keeping everything, `abs(late - 4.5) -> 2.0 < 0.1` fails; with every kept
+piece starting six frames late, `abs(early - 1.5) -> 0.2 < 0.1` fails. That
+six-frame case is one the old colour test could not have caught at all (0.2s of
+source is 0.033 of red level, well inside its 0.12 window), so the replacement is
+stricter, not looser. New test "The frame reader tells a cut recording from an
+uncut one" keeps that guarantee standing.
+
+`Scripts/test.sh --no-parallel` green locally, 7146 tests in 572 suites. On the
+build machine: run 35023843252, three attempts in a row, all green including
+"Run tests". CI on main is no longer red.
+
+**Next:** the WebP export walk still has never run on an unlocked screen.

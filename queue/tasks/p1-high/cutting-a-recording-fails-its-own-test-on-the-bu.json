@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 290,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T20:46:49.621Z",
-  "updated": "2026-09-15T20:46:49.624Z",
+  "updated": "2026-09-15T22:05:37.882Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED ON CI, NOT LOCALLY. Test: Tests/PhotonzMediaTests/VideoCutExportTests.swift:70, \"Exporting a recording with the middle dropped writes only what is left\".\n\nTwo consecutive CI runs on main, two different commits, same assertion, both just over the tolerance:\n\n  $ gh run view 35017116136 --log-failed | grep \"✘ Test\"\n  ✘ Test \"Exporting a recording with the middle dropped writes only what is left\" recorded an issue at VideoCutExportTests.swift:70:9: Expectation failed: (abs(early - 1.5 / 6.0) → 0.1343137254901961) < 0.12\n\n  $ gh run view 35015376098 --log-failed | grep \"✘ Test\"\n  ✘ Test ... Expectation failed: (abs(early - 1.5 / 6.0) → 0.1264705882352941) < 0.12\n\nBoth failures are the FIRST of the two frame reads (the one before the join, at 1.5s). The second read, after the join, passes, and that second read is the one carrying the actual claim that the dropped seconds are gone. So the likely story is a grey-ramp frame landing one frame early or late on a headless VM rather than the cut being wrong, but that is a hypothesis: the drift is 0.126 and 0.134 against a 0.12 window, which is close enough that loosening the number would hide a real regression as easily as it would fix a flake.\n\nLocally the whole suite is green: Scripts/test.sh --no-parallel, 7145 tests in 572 suites passed (2026-09-15). So this reproduces only on the build machine, which is why the evidence above is CI logs rather than a local run.\n\nWorth reading sourceFraction(ofFrameAt:in:) in the same file: it averages one frame down to a single pixel and turns that grey into a time. If the generated clip ramps grey per frame rather than per second, a one-frame difference in which frame the reader lands on is worth about 1/6 of a second of apparent drift, which is the size of what is being seen.",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-15T20:46:49.623Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T21:01:21.134Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T21:08:21.547Z",
+      "note": "Diagnosis, with the reproduction: the test was measuring colour, not frames. TestClip painted a red ramp and the test turned a frame's red channel back into a moment of the recording, but an H.264 round trip moves a saturated colour by up to 0.26 out of 1 depending on how the file is colour-tagged. Reading the UNTAGGED source clip with the test's own assertion reproduces the build machine's number to the digit: |red(1.5s) - 1.5/6| = 0.1343137 locally vs CI's 0.1343137254901961, and the 0.75 assertion drifts only 0.0245 so it kept passing - exactly the signature CI showed (first read fails, second passes). Locally the export is tagged ITU_R_709_2 and reads within 0.04; the source carries no colour tags at all. So the app was writing the right frames and the test was reading the wrong thing. Fixed in 4b79df64."
+    },
+    {
+      "t": "2026-09-15T22:05:37.752Z",
+      "note": "Fix: every frame of a test clip now carries its own frame number, painted as ten black-and-white stripes (low bit left). Black stays near 0 and white near 1 through any colour matrix, range or gamma handling, so the reader returns an exact frame number and the assertions are in seconds of the source, +/- 0.1s, instead of a colour within 0.12. Measured over 100 reads across both the untagged source and the re-encoded export: every stripe read at full margin (0.500) and no frame drifted more than 0.05s."
+    },
+    {
+      "t": "2026-09-15T22:05:37.798Z",
+      "note": "Proved the new oracle still fails on a genuinely wrong export, rather than assuming it. Mutant A (the cut quietly keeps everything): 'abs(late - 4.5) -> 2.0 < 0.1' fails, four tests red. Mutant B (every kept piece starts six frames late, 0.2s): 'abs(early - 1.5) -> 0.19999999999999996 < 0.1' fails, three tests red. Mutant B is a break the OLD colour test could not have caught at all: 0.2s of source is 0.033 of red level, well inside its 0.12 window. So the replacement is stricter, not looser. Exporter restored after each mutant and the suite runs clean."
+    },
+    {
+      "t": "2026-09-15T22:05:37.840Z",
+      "note": "Verified on the build machine: run 35023843252, three attempts in a row, all success including 'Run tests' (21:08-21:27Z, 21:28-21:46Z, 21:46-22:05Z). Locally Scripts/test.sh --no-parallel: 7146 tests in 572 suites passed."
+    },
+    {
+      "t": "2026-09-15T22:05:37.881Z",
+      "note": "No audit written: this is a build-machine reliability fix with no user-facing surface to playtest. Checked the app for the same colour-tagging hazard and there is none to file - the recorder writes through ScreenCaptureKit's SCRecordingOutput, which tags its own output; the untagged file was TestClip's own AVAssetWriter. Other pixel-reading tests (PhotonzRenderTests) compare Core Image output with no codec round trip, so they do not share the hazard. Left rough: nothing."
     }
-  ]
+  ],
+  "started": "2026-09-15T21:01:21.133Z"
 }
