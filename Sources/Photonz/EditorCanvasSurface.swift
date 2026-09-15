@@ -95,6 +95,7 @@ struct EditorCanvasSurface: View {
                    onFrameCreate: { editorState.addFrame(from: $0, to: $1) },
                    onLensCreate: { editorState.addLens(from: $0, to: $1) },
                    penPaint: editorState.armedPenPaint,
+                   penStrokeWidth: editorState.armedPenStrokeWidth,
                    onPathCommit: { editorState.addPath($0) },
                    onPenHintChange: { editorState.penHint = $0 },
                    onPathPreview: { editorState.previewPath($0, $1) },

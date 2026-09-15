@@ -30,6 +30,15 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// boxes and painting a box never repaints the Pen.
     private var penInk: Paint = Paint(hex: PathContent.defaultColorHex)
 
+    /// How thick the PEN is armed: what the next path's line comes out at.
+    ///
+    /// It sits beside `penInk` for the same reason and is remembered the same
+    /// way: set a drawn path to a thinner line and the Pen keeps that weight,
+    /// so an icon built out of five strokes is drawn at one weight rather than
+    /// drawn at four and fixed five times afterwards. A path is not an
+    /// `AnnotationShape`, so it has no bucket of its own to keep it in.
+    private var penStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
+
     public init() {
         var shapes: [String: ShapeDefaults] = [:]
         for shape in AnnotationShape.allCases {
@@ -42,6 +51,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         case shapes
         case heldColorStyleNames
         case penPaint
+        case penStrokeWidth
         // Legacy single-bucket keys (pre per-shape); migrated on decode.
         case strokeColorHex, highlightColorHex, strokeWidth, arrowheadScale
     }
@@ -54,6 +64,8 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
                                                forKey: .heldColorStyleNames) ?? [:]
         penInk = try c.decodeIfPresent(Paint.self, forKey: .penPaint)
             ?? Paint(hex: PathContent.defaultColorHex)
+        penStrokeWidth = try c.decodeIfPresent(CGFloat.self, forKey: .penStrokeWidth)
+            ?? PathContent.defaultStrokeWidth
         if let decoded = try c.decodeIfPresent([String: ShapeDefaults].self, forKey: .shapes) {
             var shapes = decoded
             // Backfill any shape added after the prefs were written.
@@ -92,6 +104,9 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         // met it write exactly what they always wrote.
         if penInk != Paint(hex: PathContent.defaultColorHex) {
             try c.encode(penInk, forKey: .penPaint)
+        }
+        if penStrokeWidth != PathContent.defaultStrokeWidth {
+            try c.encode(penStrokeWidth, forKey: .penStrokeWidth)
         }
     }
 
@@ -389,12 +404,27 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     }
 
     /// The stroke width `tool` draws with: the shape's width for stroke tools,
-    /// the fixed default for highlight/non-annotation tools.
+    /// the Pen's own width for the Pen, the fixed default for
+    /// highlight/non-annotation tools.
     public func strokeWidth(for tool: Tool) -> CGFloat {
+        // The Pen draws no annotation, so it has no shape bucket — but it is a
+        // drawing tool with a line, and this is the weight it is armed with.
+        if tool == .pen { return penStrokeWidth }
         guard let shape = tool.annotationShape, tool.usesStrokeWidth else {
             return AnnotationContent.defaultStrokeWidth
         }
         return strokeWidth(forShape: shape)
+    }
+
+    /// Arms the tool in your hand with a weight. Ignored by a tool that draws
+    /// no line.
+    public mutating func setStrokeWidth(_ width: CGFloat, for tool: Tool) {
+        if tool == .pen {
+            penStrokeWidth = width
+            return
+        }
+        guard let shape = tool.annotationShape, tool.usesStrokeWidth else { return }
+        setStrokeWidth(width, forShape: shape)
     }
 
     public func arrowheadScale(for tool: Tool) -> CGFloat {

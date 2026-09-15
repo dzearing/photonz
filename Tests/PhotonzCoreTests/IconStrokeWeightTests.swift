@@ -126,6 +126,18 @@ struct IconStrokeWeightTests {
         #expect(document.startingStrokeWidth(armed: stock, drawnAt: CGPoint(x: 50, y: 50)) == stock)
     }
 
+    @Test("A weight the Pen was armed with wins on an icon frame")
+    func anArmedPenIsNotThinned() {
+        let document = document()
+        // The Pen remembering the weight you last chose means it arrives here
+        // holding something other than the stock four, and a starting value
+        // that reimposed itself over a choice would be a lock.
+        #expect(document.startingStrokeWidth(armed: 9, drawnAt: CGPoint(x: 110, y: 110)) == 9)
+        #expect(document.startingStrokeWidth(armed: 1, drawnAt: CGPoint(x: 110, y: 110)) == 1)
+        // Still at the weight it ships with, so the frame still gets its say.
+        #expect(document.startingStrokeWidth(armed: stock, drawnAt: CGPoint(x: 110, y: 110)) == 2)
+    }
+
     // MARK: - The line lands wherever this shape keeps it
 
     @Test("A line and an arrow are thinned on their own stroke")

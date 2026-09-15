@@ -413,4 +413,61 @@ struct AnnotationStylesRememberingTests {
     @Test func thePenStillDrawsNoAnnotation() {
         #expect(AnnotationStyles().content(for: .pen) == nil)
     }
+
+    // MARK: - The thickness the Pen is armed with
+
+    /// Every other drawing tool starts at the weight last chosen for it. The
+    /// Pen kept coming back at four however thin the last path was set, so an
+    /// icon drawn as five strokes meant fixing five weights afterwards.
+    @Test func thePenRemembersTheThicknessItWasArmedWith() {
+        var styles = AnnotationStyles()
+        #expect(styles.strokeWidth(for: .pen) == PathContent.defaultStrokeWidth)
+        styles.setStrokeWidth(9, for: .pen)
+        #expect(styles.strokeWidth(for: .pen) == 9)
+    }
+
+    /// The Pen's weight is its OWN, the way its ink is: setting a path thin
+    /// must not thin the boxes, and thickening a line must not thicken the Pen.
+    @Test func thePenSThicknessIsItsOwn() {
+        var styles = AnnotationStyles()
+        styles.setStrokeWidth(9, for: .pen)
+        // A box and an oval arrive with no stroke of their own at all, so
+        // "untouched" is whatever a fresh set says, not a number spelled again.
+        let stock = AnnotationStyles()
+        for tool in [Tool.rectangle, .ellipse, .line, .arrow] {
+            #expect(styles.strokeWidth(for: tool) == stock.strokeWidth(for: tool))
+        }
+        styles.setStrokeWidth(2, for: .line)
+        #expect(styles.strokeWidth(for: .pen) == 9)
+    }
+
+    /// What the Pen is holding survives a relaunch, because the whole point of
+    /// arming a tool is that the NEXT path comes out that weight too.
+    @Test func thePenSThicknessSurvivesARelaunch() throws {
+        var styles = AnnotationStyles()
+        styles.setStrokeWidth(9, for: .pen)
+        let data = try JSONEncoder().encode(styles)
+        let reopened = try JSONDecoder().decode(AnnotationStyles.self, from: data)
+        #expect(reopened.strokeWidth(for: .pen) == 9)
+    }
+
+    /// Prefs that have never met the Pen write exactly what they always wrote,
+    /// so an app rolled back reads them unchanged.
+    @Test func anUnthickenedPenAddsNothingToPrefs() throws {
+        let data = try JSONEncoder().encode(AnnotationStyles())
+        let text = String(decoding: data, as: UTF8.self)
+        #expect(!text.contains("penStrokeWidth"))
+        let reopened = try JSONDecoder().decode(AnnotationStyles.self, from: data)
+        #expect(reopened.strokeWidth(for: .pen) == PathContent.defaultStrokeWidth)
+    }
+
+    /// A tool that draws no line at all is unchanged: it still answers with the
+    /// weight everything ships with rather than the Pen's.
+    @Test func toolsThatDrawNoLineStillAnswerWithTheStockWeight() {
+        var styles = AnnotationStyles()
+        styles.setStrokeWidth(9, for: .pen)
+        for tool in [Tool.select, .crop, .text, .highlight] {
+            #expect(styles.strokeWidth(for: tool) == AnnotationContent.defaultStrokeWidth)
+        }
+    }
 }

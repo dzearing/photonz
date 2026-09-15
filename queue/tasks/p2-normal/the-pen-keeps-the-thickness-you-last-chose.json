@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-15T00:56:28.202Z",
-  "updated": "2026-09-15T13:59:28.669Z",
+  "updated": "2026-09-15T14:28:56.637Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on the probe 2026-09-14 on main plus the path Thickness row. Walk (/tmp/pen-remember-check.json): blank 1600x1100, tool pen, three clicks, Return, tool select, action dragThickness (commits 9), expectPath width 9 passes, then tool pen, three more clicks, Return, expectPath width 9 fails with: step 20 (expectPath): Path: 3 anchors, open, 0 curved runs, 4 px thick - not the 9 px claimed.\n\nWhy: EditorState.commitOutlineWidth calls rememberAnnotationDefaults, which loops over doc.layer(id:)?.annotation?.shape and writes AnnotationStyles.setStrokeWidth(_:forShape:). A path has no AnnotationShape, so nothing is written, and there is nowhere for a pen width to be written to: PenSession.startingStrokeWidth is only ever handed PathContent.defaultStrokeWidth (4) through Sources/Photonz/StartingStrokeWidth.swift and CanvasPen.swift:190. A line remembers because its shape is a key in AnnotationStyles.\n\nCare needed on the second acceptance item: IconStrokeWeight.startingWidth only thins a line whose armed width is still AnnotationContent.defaultStrokeWidth, so once the Pen remembers 9 an icon frame stops thinning it, which is the rule it already follows for lines and is intended. Found while shipping a-line-drawn-with-the-pen-can-be-made-thicker-or.",
@@ -35,6 +35,42 @@
     {
       "t": "2026-09-15T13:59:28.668Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-15T14:28:56.300Z",
+      "note": "Adversarial review BEFORE building. (1) The shortest version really is the right one: AnnotationStyles already keeps penInk beside the per-shape buckets because a path is not an AnnotationShape, so a penStrokeWidth beside it is one field, one accessor pair, and no new concept. (2) The tempting bigger version was making Tool.usesStrokeWidth true for the Pen so the tool bar grows a thickness row. That is a real gap but it is a SEPARATE thing a person would ask for, so it is filed rather than smuggled in here. (3) The thing that could go wrong for a first-time user is the icon frame: IconStrokeWeight only thins a line still at the stock 4, so the moment the Pen remembers 9 a 24 pixel frame stops rescuing it and you can draw a 9 px line across a 24 px icon. That is the rule the app already follows for lines and it is deliberate (a starting value that reimposed itself would be a lock), so it is asserted and put to the user as an evaluate question rather than quietly changed."
+    },
+    {
+      "t": "2026-09-15T14:28:56.343Z",
+      "note": "Acceptance item 3 read as: a Pen that has never been told otherwise draws at the stock 4, and nothing else leaks into it (in particular not the LINE tool's remembered weight). Not read as 'a new document resets the Pen', because nothing in the app works that way: every tool's remembered weight and colour is an app preference in UserDefaults that outlives the document, and the goal of this task is explicitly 'every other drawing tool starts at the weight you last picked for it; the Pen should too'. Making the Pen alone forget on a new document would be the inconsistency the task is about. Walk coverage: pen-remembers-its-thickness-walk forgets shapes in its setup and then claims 4 on the first path. It is in the audit's evaluate list so the user can say otherwise."
+    },
+    {
+      "t": "2026-09-15T14:28:56.385Z",
+      "note": "Reproduced before fixing, per the repo rule. Wrote the new walk, stashed Sources/, rebuilt, ran it: 'step 33 (expectPath): Path: 3 anchors, open, 0 curved runs, 4 px thick - not the 9 px claimed'. Unstashed, rebuilt, same walk passes 56 steps with 3 real window captures. So the fix is what moved it."
+    },
+    {
+      "t": "2026-09-15T14:28:56.428Z",
+      "note": "Shipped: AnnotationStyles.penStrokeWidth (PhotonzCore) beside penInk, encoded only once it differs from the stock 4 so prefs that never met it are byte-identical; strokeWidth(for:)/setStrokeWidth(_:for:) route .pen to it. EditorState+Annotations.rememberAnnotationDefaults arms it whenever the Thickness row reaches a path. EditorState.armedPenStrokeWidth -> CanvasView.penStrokeWidth -> CanvasPen.penMouseDown passes it as 'armed' to startingPathStrokeWidth, so the draft under the hand is the weight that lands. Tests: 5 new in AnnotationStylesTests, 1 in IconStrokeWeightTests (an armed weight is not thinned by an icon frame). Scripts/test.sh: 6903 tests, all pass."
+    },
+    {
+      "t": "2026-09-15T14:28:56.471Z",
+      "note": "pen-path-thickness-walk had to be restructured, not just re-numbered: it drew a path, thickened it to 9, then drew a SECOND path and claimed 4, which is exactly the behaviour this task removes. Both paths are now drawn up front while the Pen is still stock, so the Mixed row still has two lines that differ; and its last section, a path on a 24 pixel icon frame, now claims the 3 that was chosen rather than the 2 the frame hands a fresh Pen. The 'a fresh Pen is still thinned to 2' coverage lives in icon-stroke-weight-walk step 20, which still passes."
+    },
+    {
+      "t": "2026-09-15T14:28:56.512Z",
+      "note": "Walks run (not the sweep): playtest-all pen (14 ok), path (8 ok, turn-into-a-path-walk failed and is already logged as broken on clean main in walks-that-fail-in-the-full-sweep), svg (1 ok), thickness (2 ok), icon (3 ok, 2 failed). Both icon failures reproduced identically on untouched main with the screen unlocked and were folded into walks-that-fail-in-the-full-sweep. No sweep requested: this change touches the Pen and the Thickness row only, and the walks that exercise both were run directly."
+    },
+    {
+      "t": "2026-09-15T14:28:56.554Z",
+      "note": "left rough: dragging the Thickness slider arms the Pen at every value the drag passes through, not just the one it lands on, because previewOutlineWidth calls rememberAnnotationDefaults too. Harmless in practice (you cannot draw mid drag and the release settles it) and it is how the shape defaults have always worked, so it did not earn a task."
+    },
+    {
+      "t": "2026-09-15T14:28:56.595Z",
+      "note": "left rough: undo puts the path's weight back but leaves the Pen armed with the new one. Consistent with every other tool (no remembered default is undone anywhere in the app), so not filed; it is in the audit's evaluate list in case the user wants it the other way."
+    },
+    {
+      "t": "2026-09-15T14:28:56.636Z",
+      "note": "Filed follow-up: choose-how-thick-the-pen-draws-before-you-draw. The Pen now remembers a weight but there is still nowhere to SET one without drawing a path first, so the first stroke of every icon comes out at 4 and is fixed afterwards. Audit: queue/audits/2026-09-15-pen-thickness.json with two real window captures."
     }
   ],
   "started": "2026-09-15T13:59:28.667Z"

@@ -636,9 +636,18 @@ extension EditorState {
     }
 
     /// What the next object of each picked kind starts at.
+    ///
+    /// A path is not an `AnnotationShape`, so it has no bucket here — but the
+    /// Pen is a drawing tool like any other and the Thickness row reaches a
+    /// path it drew (`OutlineWidth.swift`). Set a path thinner and the Pen
+    /// keeps that weight, so an icon built out of five strokes is drawn at one
+    /// weight rather than fixed five times afterwards.
     private func rememberAnnotationDefaults(_ ids: [UUID], in doc: PhotonzDocument,
                                             strokeWidth: CGFloat?, arrowheadScale: CGFloat?,
                                             cornerRadii: CornerRadii?) {
+        if let strokeWidth, ids.contains(where: { doc.layer(id: $0)?.path != nil }) {
+            annotationStyles.setStrokeWidth(strokeWidth, for: .pen)
+        }
         for shape in Set(ids.compactMap { doc.layer(id: $0)?.annotation?.shape }) {
             if let strokeWidth, shape != .highlight {
                 annotationStyles.setStrokeWidth(strokeWidth, forShape: shape)

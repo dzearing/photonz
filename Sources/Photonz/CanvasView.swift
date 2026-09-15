@@ -164,6 +164,10 @@ struct CanvasView: NSViewRepresentable {
     /// so the path under your hand is drawn in the colour the one that lands
     /// will wear (`EditorState.armedPenPaint`).
     var penPaint: Paint = Paint(hex: PathContent.defaultColorHex)
+    /// The weight the Pen is armed with, echoed from EditorState for the same
+    /// reason as the ink: the draft under your hand is the weight that lands
+    /// (`EditorState.armedPenStrokeWidth`).
+    var penStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
     /// A path finished with the Pen (Next, `next-pen`), in document
     /// coordinates: one layer, one undo step.
     let onPathCommit: (PathContent) -> Void
@@ -312,6 +316,7 @@ struct CanvasView: NSViewRepresentable {
 
     private func update(_ view: CanvasNSView) {
         view.penPaint = penPaint
+        view.penStrokeWidth = penStrokeWidth
         view.onViewSizeChange = onViewSizeChange
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
@@ -977,6 +982,9 @@ final class CanvasNSView: NSView {
     /// What the Pen is armed with, echoed from EditorState. Read as the first
     /// anchor goes down; see `PenSession.startingPaint`.
     var penPaint: Paint = Paint(hex: PathContent.defaultColorHex)
+    /// How thick, echoed the same way and read at the same moment; see
+    /// `PenSession.startingStrokeWidth`.
+    var penStrokeWidth: CGFloat = PathContent.defaultStrokeWidth
 
     /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.

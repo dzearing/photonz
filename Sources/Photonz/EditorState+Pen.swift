@@ -49,6 +49,16 @@ extension EditorState {
         annotationStyles.paint(for: .pen) ?? Paint(hex: PathContent.defaultColorHex)
     }
 
+    /// The weight the Pen is armed with: what the next path's line comes out
+    /// at, before the frame it lands on gets its say (`IconStrokeWeight`).
+    ///
+    /// Set a drawn path's Thickness and this is where that number was kept, so
+    /// the next stroke of the same icon arrives at it. Like the ink, it is a
+    /// preference rather than part of the picture.
+    var armedPenStrokeWidth: CGFloat {
+        annotationStyles.strokeWidth(for: .pen)
+    }
+
     /// The line on the chip under the canvas while the Pen is in hand. Live
     /// state, never in the document.
     var penHintText: String {

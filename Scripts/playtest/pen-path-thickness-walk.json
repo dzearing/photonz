@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/pen-path-thickness-walk",
-  "seed": "A shape drawn with the Pen came out at whatever weight the canvas gave it and stayed there: the panel offered its colour, its opacity and its blending and nothing else, while every other shape in the app keeps a Thickness right beside its colour. The walk draws a path, picks it, and reads the row: it has to be there, read the weight the line actually has, change the line live, land as ONE undo step, reach two paths at once, and show the thinner weight a path drawn on an icon frame arrives at.",
+  "seed": "A shape drawn with the Pen came out at whatever weight the canvas gave it and stayed there: the panel offered its colour, its opacity and its blending and nothing else, while every other shape in the app keeps a Thickness right beside its colour. The walk draws two paths, picks one, and reads the row: it has to be there, read the weight the line actually has, change the line live, land as ONE undo step, reach two paths at once, and let the weight you chose win over the thinner one an icon frame would otherwise hand a fresh Pen.",
   "setup": {
     "forget": ["shapes", "frames", "tools"]
   },
@@ -10,6 +10,17 @@
 
     { "do": "key", "key": "p" },
     { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [240, 200] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [400, 200] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [470, 280] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": false, "width": 4 },
+    { "do": "describe", "stage": "1-first", "note": "the first of two open paths, out of the Pen at the weight every new line ships with. Both are drawn BEFORE anything is rethickened, because the Pen now keeps the weight you last chose and the row below needs two lines that differ." },
+
     { "do": "click", "at": [240, 640] },
     { "do": "wait", "seconds": 0.2 },
     { "do": "click", "at": [400, 640] },
@@ -19,7 +30,7 @@
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectPath", "anchors": 3, "closed": false, "width": 4 },
-    { "do": "describe", "stage": "1-drawn", "note": "an open path of three corners, out of the Pen at the weight every new line ships with" },
+    { "do": "describe", "stage": "1-drawn", "note": "the second, at the same weight, and it is the one still picked" },
 
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
@@ -44,20 +55,6 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectPath", "anchors": 3, "width": 9 },
 
-    { "do": "key", "key": "p" },
-    { "do": "waitFor", "condition": "tool", "value": "pen" },
-    { "do": "click", "at": [240, 200] },
-    { "do": "wait", "seconds": 0.2 },
-    { "do": "click", "at": [400, 200] },
-    { "do": "wait", "seconds": 0.2 },
-    { "do": "click", "at": [470, 280] },
-    { "do": "wait", "seconds": 0.2 },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expectPath", "anchors": 3, "width": 4 },
-
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.4 },
     { "do": "click", "at": [320, 200] },
     { "do": "wait", "seconds": 0.3 },
     { "do": "click", "at": [320, 640], "modifiers": ["shift"] },
@@ -95,9 +92,9 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "expectPath", "anchors": 3, "width": 2 },
-    { "do": "expect", "field": "Thickness", "reads": "2 px" },
-    { "do": "describe", "stage": "8-icon-frame", "note": "a path drawn on a 24 pixel icon frame arrives at 2, and the row says 2 rather than the 4 every new line ships with, so the weight the shape HAS is the weight on screen" },
+    { "do": "expectPath", "anchors": 3, "width": 3 },
+    { "do": "expect", "field": "Thickness", "reads": "3 px" },
+    { "do": "describe", "stage": "8-icon-frame", "note": "THE TEST: a path drawn on a 24 pixel icon frame comes out at the 3 that was CHOSEN a moment ago, not the 2 the frame hands a Pen still holding the stock weight. The frame's thinning is a starting value, and it stops the moment you pick a weight of your own. A Pen that had never been rethickened still arrives at 2 here, which is what icon-stroke-weight-walk checks." },
     { "do": "snapshot", "name": "8-icon-frame" },
     { "do": "render", "name": "9-final-render" }
   ]

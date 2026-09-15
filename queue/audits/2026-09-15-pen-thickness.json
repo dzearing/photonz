@@ -1,0 +1,27 @@
+{
+  "feature": "The Pen keeps the thickness you last chose",
+  "epic": "icon-vector",
+  "summary": "Set a path's Thickness and the next path you draw with the Pen comes out at that weight, so an icon built out of five strokes is drawn once at one weight instead of drawn at four and fixed five times. The Pen already remembered its colour this way; now it remembers its line too.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. The Pen has to have been armed at least once in this app before it can remember anything, so if you have never touched a path's Thickness it still starts at 4.",
+  "try": [
+    { "do": "Press P and click three points on the canvas, then press Return." },
+    { "do": "Press V, and in Appearance pull Thickness to 9." },
+    { "do": "Press P and draw another three-point path somewhere else, then press Return.", "shot": "2026-09-15-pen-thickness-1.png" },
+    { "do": "Press V and read the Thickness row: it says 9, and the two lines match on screen." },
+    { "do": "Pull Thickness down to 3 on that second path." },
+    { "do": "Press P and draw a third path.", "shot": "2026-09-15-pen-thickness-2.png" },
+    { "do": "Add a 24 pixel icon frame from New Frame and draw a path on it: it arrives at the 3 you chose, not the 2 the frame would hand a Pen you had never rethickened." }
+  ],
+  "evaluate": [
+    "When you draw the second stroke of an icon, does it come out looking like the first one without you thinking about it?",
+    "Once you have chosen a weight, should a 24 pixel icon frame still be allowed to thin the next path, or is your number the last word?",
+    "Undo puts the path back to its old weight but leaves the Pen armed with the new one, the same way every other tool works. Is that what you expect, or should undo hand the weight back too?",
+    "The weight carries over to the next document and across a relaunch, like the Pen's colour. Is that right, or should each document start fresh?",
+    "The FIRST stroke of a new icon still comes out at 4, because the only place to choose a weight is on a path you have already drawn. How much does that cost you in practice?"
+  ],
+  "rough": [
+    "There is still no way to set the Pen's weight BEFORE you draw. With the Pen in hand the tool bar offers a colour swatch and nothing else, so the first stroke of every icon is drawn at the wrong weight and fixed afterwards. Filed as its own task.",
+    "Dragging the Thickness slider arms the Pen at every value it passes through, so letting go anywhere other than where you meant leaves the Pen holding that number. The release settles it, so this is only visible if you draw mid drag, which you cannot.",
+    "The full walk sweep was not run here (it is 52 minutes); the pen, path, svg and icon walks were, and two icon walks fail. Both fail identically on untouched main, so neither is from this change: icon-stroke-weight-walk cannot find a Width row because a box now arrives with no border, and icon-export-animated-walk looks for a Rotation field that is now called Rotation From. Both folded into the walks-that-fail-in-the-full-sweep task."
+  ]
+}
