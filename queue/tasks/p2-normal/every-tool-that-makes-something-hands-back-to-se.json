@@ -1,0 +1,36 @@
+{
+  "id": "every-tool-that-makes-something-hands-back-to-se",
+  "title": "Every tool that makes something hands back to Select with it picked",
+  "goal": "Draw a shape and you are left holding the tool that drew it, with nothing selected, so the next thing you do is a second shape you did not want instead of moving the one you just made. Finishing something should hand you back the pointer with the new thing picked, ready to move, resize or restyle, which is what the rest of the app already does.",
+  "epic": "",
+  "priority": "p2-normal",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-15T14:31:06.145Z",
+  "updated": "2026-09-15T14:31:16.384Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-15: \"after i create a shape, it doesn't select it and switch to V tool.\"\n\nThis is about the PEN specifically, and it is a rule the rest of the app already follows. PhotonzCore/ArrowCaptionEntry.swift:57, toolAfterLanding, returns .select for everything except an arrow that is about to offer a caption, so rectangles, ellipses, lines and highlights all hand back with the new layer picked. The v0.14 changelog stated it as a principle out loud: \"Every tool that creates something, shapes, text, zoom callouts, and measures, hands you back to Select with the new object selected... Drawing five rectangles now means pressing R five times.\" The Pen does not do this.\n\nIT REVERSES A DELIBERATE DECISION, so do it knowingly rather than as a bug fix. The task 'the-pen-stays-in-your-hand-for-the-next-shape' is done and made the Pen keep itself in hand, on the reasoning that drawing several paths in a row is common. That reasoning is real, and the answer to it is the app's own: the tool's key puts it straight back, which is what every other drawing tool relies on. Consistency across ten tools beats one press saved in one of them, and the user has now run into the consequence twice.\n\nDo NOT undo what landed alongside it. The task 'a-path-you-drew-shows-you-what-you-can-do-to-it' made a picked path show its points with the Pen in hand as well as Select (CanvasPathEdit.editablePath). That stays: it is right on its own terms, and it means somebody who does keep the Pen in hand is not stranded. This task changes which tool you are holding, not what a path shows.\n\nCheck the other creating tools while in there rather than assuming the Pen is alone: the frame tool, the lens tool and the zoom callout each commit through their own path in EditorCanvasSurface.swift (onFrameCreate, onLensCreate, onZoomCalloutCommit) and none of them goes through toolAfterLanding. Whether they hand back is worth establishing rather than guessing, and if any does not, it belongs in this fix.\n\nQueue-driven app work targets the next release, and per CLAUDE.md a Current change is not finished until Next has it.",
+  "acceptance": [
+    "Check every tool that creates something and say in the log which ones already hand back and which do not, rather than assuming it is only one",
+    "After a shape is finished, Select is in hand and the new shape is the selection, so the arrow keys nudge it and the panel describes it straight away",
+    "Drawing several in a row is still cheap: the tool's own key puts it back in your hand, and the audit says how many presses a run of five costs before and after",
+    "The one deliberate exception already in the app is preserved or retired on purpose, not by accident: an arrow that offers a caption keeps the Arrow tool while the caption field is open, and hands back when it closes",
+    "A path still shows its points however you finish it, so the reachability that was just fixed is not undone by this",
+    "Undo after drawing puts back both the shape and what was selected before it, in one step",
+    "The walks that draw shapes and then act on them still pass, and any that relied on the old behaviour are updated rather than deleted",
+    "Audit under queue/audits/ with the five-in-a-row count and a shape being nudged immediately after drawing, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-15T14:31:06.147Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-15T14:31:16.383Z",
+      "note": "seq 2680 -> 3"
+    }
+  ]
+}
